@@ -26,9 +26,9 @@ def get_google_service(service_name: str, version: str, credentials_dict: Dict):
     return service
 
 
-@tool
-def create_google_doc(title: str, credentials_dict: Dict) -> str:
-
+# Plain function without decorator - can be used directly or wrapped
+def _create_google_doc_impl(title: str, credentials_dict: Dict) -> str:
+    """Implementation of Google Doc creation logic"""
     # create a google docs document
     try:
         # This connects to the google docs api
@@ -46,7 +46,7 @@ def create_google_doc(title: str, credentials_dict: Dict) -> str:
         doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
 
         # return success message
-        return f"Document created successfull!\nTitle: {title}\nID: {doc_id}\nURL: {doc_url}"
+        return f"Document created successfully!\nTitle: {title}\nID: {doc_id}\nURL: {doc_url}"
 
     except HttpError as error:
         return f"error in creating document: {error}"
@@ -54,3 +54,26 @@ def create_google_doc(title: str, credentials_dict: Dict) -> str:
         return f"Missing credentials: {error}"
     except Exception as error:
         return f"Unexpected error: {error}"
+
+
+# # Decorated version for standalone use
+# @tool
+# def create_google_doc(title: str, credentials_dict: Dict) -> str:
+#     """
+#     Creates a new Google Doc and returns its ID and URL.
+
+#     This tool connects to the Google Docs API and creates a blank document
+#     with the specified title.
+
+#     Args:
+#         title: The name of the document (e.g., "Project Notes")
+#         credentials_dict: User's OAuth tokens (access_token, refresh_token)
+
+#     Returns:
+#         Success message with document ID and URL, or error message
+#     """
+#     return _create_google_doc_impl(title, credentials_dict)
+
+# def add_text_to_doc_impl(documen_id:str, text:str, credentials_dict:Dict) -> str:
+#     """Implementation of adding text to a Google Doc"""
+#     try:
