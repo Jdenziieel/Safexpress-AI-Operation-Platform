@@ -7,6 +7,7 @@ from langchain_core.messages import SystemMessage
 from tools import (
     _create_google_doc_impl,
     _add_text_to_doc_impl,
+    _read_google_doc_impl,
 )  # Import the implementation, not the decorated version
 from dotenv import load_dotenv
 
@@ -45,8 +46,18 @@ def create_docs_agent(credentials_dict: Dict):
         result = _add_text_to_doc_impl(document_id, text, credentials_dict)
         return result
 
+    @tool
+    def read_doc(document_id: str) -> str:
+        """Reads text content from a Google Doc.
+
+        Args:
+            document_id: The ID of the document to read
+        """
+        result = _read_google_doc_impl(document_id, credentials_dict)
+        return result
+
     # define the available tools for the agent
-    tools = [create_doc, add_text]
+    tools = [create_doc, add_text, read_doc]
 
     # create the agent using langgraph's react pattern
     # model parameter is the llm, tools are the functions the agent can call

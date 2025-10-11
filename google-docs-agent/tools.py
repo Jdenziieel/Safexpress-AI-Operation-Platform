@@ -112,3 +112,58 @@ def add_text_to_doc(document_id: str, text: str, credentials_dict: Dict) -> str:
         Success message with document ID and URL, or error message
     """
     return _add_text_to_doc_impl(document_id, text, credentials_dict)
+
+
+def _read_google_doc_impl(document_id: str, credentials_dict: Dict) -> str:
+    """Implementation of reading text from a Google Doc"""
+    try:
+        docs_service = get_google_service("docs", "v1", credentials_dict)
+        document = docs_service.documents().get(documentId=document_id).execute()
+        # initilize empty string to collect text
+        text = ""
+
+        # gets the content array from document body
+        content = document.get("body", {}).get("content", [])
+
+        # loop through each element in the content
+        for element in content:
+            # this checks if the element is a paragraph
+            if "paragraph" in element:
+                # get the element in the paragraph
+                paragraph_elements = element["paragraph"].get("elements", [])
+
+                # loop through each element in the paragraph
+                for para_element in paragraph_elements:
+                    # check if the element contains text
+                    if "textRun" in para_element:
+                        # extract the text content and add it to the string
+                        text += para_element["textRun"].get("content", "")
+
+        # return the extracted text with document info
+        doc_url = f"https://docs.google.com/document/d/{document_id}/edit"
+        return (
+            f"Document content:\n\n{text}\n\nDocument ID: {document_id}\nURL: {doc_url}"
+        )
+    except HttpError as error:
+        return f"error reading document: {error}"
+    except KeyError as error:
+        return f"Missing field in document: {error}"
+    except Exception as error:
+        return f"Unexpected error: {error}"
+
+
+@tool
+def read_google_doc(document_id: str, credentials_dict: Dict) -> str:
+    """
+    Reads text content from a Google Doc.
+
+    This tool connects to the Google Docs API and retrieves the text
+    content from the specified document.
+
+    Args:
+        document_id: The ID of the document to read
+        credentials_dict: User's OAuth tokens
+
+    Returns:
+        Document text content with document ID and URL
+    """
