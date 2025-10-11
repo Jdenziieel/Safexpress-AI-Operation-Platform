@@ -1,0 +1,24 @@
+# Core LangChain Dependencies
+langchain==0.3.0
+langchain-openai==0.2.0
+langgraph==0.2.0
+langchain-core==0.3.0
+
+# Google API Dependencies
+google-auth==2.23.0
+google-auth-oauthlib==1.1.0
+google-api-python-client==2.100.0
+
+# OpenAI
+openai==1.40.0
+
+# Additional Dependencies
+python-dotenv==1.0.0
+requests==2.31.0
+pydantic==2.8.0
+
+# Optional: For development and testing
+pytest==7.4.0
+pytest-mock==3.11.1
+black==23.7.0
+flake8==6.1.0
