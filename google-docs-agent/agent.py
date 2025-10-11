@@ -105,15 +105,42 @@ def main():
         print("🤖 Initializing Google Docs Agent...")
         agent = create_docs_agent(test_credentials)
         print("✅ Agent initialized successfully!\n")
-
-        # step 4: test with a sample message
+        print("\n" + "=" * 60)
+        print("TEST OPTIONS")
         print("=" * 60)
-        print("TEST: Creating a document with content")
+        print("What would you like to test?")
+        print("1. Create a document only")
+        print("2. Create and add text")
+        print("3. Create, add text, and read back (full test)")
+        print("4. Read an existing document")
         print("=" * 60)
 
-        test_message = "Create a document called 'Project Status Report' and add the text 'Project is on track. Next milestone: December 15th.'"
-        print(f"\n📝 User Request: {test_message}\n")
-        print("🤔 Agent is thinking...\n")
+        # step 4: collect user inputs
+        choice = input("Enter your choice (1-4): ")
+
+        if choice == "1":
+            title = input("Enter document title: ")
+            test_message = f"Create a document called '{title}'"
+
+        elif choice == "2":
+            title = input("Enter document title: ")
+            text = input("Enter text to add: ")
+            test_message = (
+                f"Create a document called '{title}', then add this text: '{text}'"
+            )
+
+        elif choice == "3":
+            title = input("Enter document title: ")
+            text = input("Enter text to add: ")
+            test_message = f"Create a document called '{title}', add the text '{text}', then read it back to me to confirm it worked."
+
+        elif choice == "4":
+            doc_id = input("Enter document ID: ")
+            test_message = f"Read the document with ID: {doc_id}"
+
+        else:
+            print("Invalid choice. Using default test.")
+            test_message = "Create a document called 'AI Agent Test', add the text 'This is a test!', then read it back."
 
         # step 5: invoke the agent with system message and user request
         # system message defines the agent's role and behavior
@@ -121,10 +148,11 @@ def main():
 Your only responsibility is creating and managing Google Docs.
 
 When the supervisor agent routes a request to you:
-1. Use the create_google_doc tool to create documents
-2. Use the add_text_tool to add content to existing documents
-3. Provide clear confirmation with the document URL
-4. Report back to the supervisor with the result
+1. Use the create_doc tool to create new documents
+2. Use the add_text tool to add content to existing documents
+3. Use the read_doc tool to read content from existing documents
+4. Provide clear confirmation with the document URL
+5. Report back to the supervisor with the result
 
 Be concise and professional. Focus only on Google Docs tasks."""
 
