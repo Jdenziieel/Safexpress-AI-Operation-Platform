@@ -56,24 +56,59 @@ def _create_google_doc_impl(title: str, credentials_dict: Dict) -> str:
         return f"Unexpected error: {error}"
 
 
-# # Decorated version for standalone use
-# @tool
-# def create_google_doc(title: str, credentials_dict: Dict) -> str:
-#     """
-#     Creates a new Google Doc and returns its ID and URL.
+# Decorated version for standalone use
+@tool
+def create_google_doc(title: str, credentials_dict: Dict) -> str:
+    """
+    Creates a new Google Doc and returns its ID and URL.
 
-#     This tool connects to the Google Docs API and creates a blank document
-#     with the specified title.
+    This tool connects to the Google Docs API and creates a blank document
+    with the specified title.
 
-#     Args:
-#         title: The name of the document (e.g., "Project Notes")
-#         credentials_dict: User's OAuth tokens (access_token, refresh_token)
+    Args:
+        title: The name of the document (e.g., "Project Notes")
+        credentials_dict: User's OAuth tokens (access_token, refresh_token)
 
-#     Returns:
-#         Success message with document ID and URL, or error message
-#     """
-#     return _create_google_doc_impl(title, credentials_dict)
+    Returns:
+        Success message with document ID and URL, or error message
+    """
+    return _create_google_doc_impl(title, credentials_dict)
 
-# def add_text_to_doc_impl(documen_id:str, text:str, credentials_dict:Dict) -> str:
-#     """Implementation of adding text to a Google Doc"""
-#     try:
+
+def _add_text_to_doc_impl(document_id: str, text: str, credentials_dict: Dict) -> str:
+    """Implementation of adding text to a Google Doc"""
+    try:
+        docs_service = get_google_service("docs", "v1", credentials_dict)
+        # Create the request body for inserting text
+        requests = [{"insertText": {"location": {"index": 1}, "text": text}}]
+        result = (
+            docs_service.documents()
+            .batchUpdate(documentId=document_id, body={"requests": requests})
+            .execute()
+        )
+        doc_url = f"https://docs.google.com/document/d/{document_id}/edit"
+        return f"Text added successfully!\nDocument ID: {document_id}\nURL: {doc_url}"
+    except HttpError as error:
+        return f"error adding text to document: {error}"
+    except KeyError as error:
+        return f"Missing credentials: {error}"
+    except Exception as error:
+        return f"Unexpected error: {error}"
+
+
+@tool
+def add_text_to_doc(document_id: str, text: str, credentials_dict: Dict) -> str:
+    """
+    Adds text to an existing Google Doc.
+
+    This tool connects to the Google Docs API and inserts text at the beginning of the specified document.
+
+    Args:
+        document_id: The ID of the document to update
+        text: The text to insert into the document
+        credentials_dict: User's OAuth tokens (access_token, refresh_token)
+
+    Returns:
+        Success message with document ID and URL, or error message
+    """
+    return _add_text_to_doc_impl(document_id, text, credentials_dict)

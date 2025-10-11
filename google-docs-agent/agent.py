@@ -6,6 +6,7 @@ from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import SystemMessage
 from tools import (
     _create_google_doc_impl,
+    _add_text_to_doc_impl,
 )  # Import the implementation, not the decorated version
 from dotenv import load_dotenv
 
@@ -33,8 +34,19 @@ def create_docs_agent(credentials_dict: Dict):
         result = _create_google_doc_impl(title, credentials_dict)
         return result
 
+    @tool
+    def add_text(document_id: str, text: str) -> str:
+        """Adds text to an existing Google Doc.
+
+        Args:
+            document_id: The ID of the document
+            text: The text content to add
+        """
+        result = _add_text_to_doc_impl(document_id, text, credentials_dict)
+        return result
+
     # define the available tools for the agent
-    tools = [create_doc]
+    tools = [create_doc, add_text]
 
     # create the agent using langgraph's react pattern
     # model parameter is the llm, tools are the functions the agent can call
@@ -85,10 +97,10 @@ def main():
 
         # step 4: test with a sample message
         print("=" * 60)
-        print("TEST: Creating a document")
+        print("TEST: Creating a document with content")
         print("=" * 60)
 
-        test_message = "Create a document called 'Capstone Project - Test Document'"
+        test_message = "Create a document called 'Project Status Report' and add the text 'Project is on track. Next milestone: December 15th.'"
         print(f"\n📝 User Request: {test_message}\n")
         print("🤔 Agent is thinking...\n")
 
@@ -99,8 +111,9 @@ Your only responsibility is creating and managing Google Docs.
 
 When the supervisor agent routes a request to you:
 1. Use the create_google_doc tool to create documents
-2. Provide clear confirmation with the document URL
-3. Report back to the supervisor with the result
+2. Use the add_text_tool to add content to existing documents
+3. Provide clear confirmation with the document URL
+4. Report back to the supervisor with the result
 
 Be concise and professional. Focus only on Google Docs tasks."""
 
