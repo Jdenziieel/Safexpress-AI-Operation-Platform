@@ -167,3 +167,62 @@ def read_google_doc(document_id: str, credentials_dict: Dict) -> str:
     Returns:
         Document text content with document ID and URL
     """
+    return _read_google_doc_impl(document_id, credentials_dict)
+
+
+def _share_google_docs_impl(
+    document_id: str, email: str, role: str, credentials_dict: Dict
+) -> str:
+    """Implementation of sharing a Google Doc with a user via email
+
+    Args:
+        document_id: The ID of the document to share
+        email: Email address of the person to share with
+        role: Permission level - 'reader', 'commenter', 'writer'
+        credentials_dict: Google OAuth credentials
+
+    Returns:
+        Success message with sharing details
+    """
+    try:
+        drive_service = get_google_service("drive", "v3", credentials_dict)
+        # Define the permission body
+        permission = {
+            "type": "user",
+            "role": role,  # 'reader', 'commenter', 'writer'
+            "emailAddress": email,
+        }
+
+        # Create the permission
+        drive_service.permissions().create(
+            fileId=document_id,
+            body=permission,
+            fields="id",
+        ).execute()
+        # return success message
+        doc_url = f"https://docs.google.com/document/d/{document_id}/edit"
+        return f"Document shared successfully!\nShared with: {email}\nPermission: {role}\nURL: {doc_url}"
+
+    except HttpError as error:
+        return f"error sharing document: {error}"
+    except Exception as error:
+        return f"unexpected error: {error}"
+
+
+@tool
+def share_google_doc(
+    document_id: str, email: str, role: str, credentials_dict: Dict
+) -> str:
+    """
+    Shares a Google Doc with someone via email.
+
+    Args:
+        document_id: The ID of the document to share
+        email: Email address to share with (e.g., 'user@example.com')
+        role: Permission level - 'reader', 'writer', or 'commenter'
+        credentials_dict: User's OAuth tokens
+
+    Returns:
+        Success message with sharing details
+    """
+    return _share_google_docs_impl(document_id, email, role, credentials_dict)

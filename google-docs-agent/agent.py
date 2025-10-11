@@ -8,6 +8,7 @@ from tools import (
     _create_google_doc_impl,
     _add_text_to_doc_impl,
     _read_google_doc_impl,
+    _share_google_docs_impl,
 )  # Import the implementation, not the decorated version
 from dotenv import load_dotenv
 
@@ -56,8 +57,25 @@ def create_docs_agent(credentials_dict: Dict):
         result = _read_google_doc_impl(document_id, credentials_dict)
         return result
 
+    @tool
+    def share_doc(document_id: str, email: str, role: str = "reader") -> str:
+        """Shares a Google Doc with a specified email address.
+
+        Args:
+            document_id: The ID of the document to share
+            email: The email address to share the document with
+            role: The access role ("reader", "commenter", "writer")
+        """
+        result = _share_google_docs_impl(document_id, email, role, credentials_dict)
+        return result
+
     # define the available tools for the agent
-    tools = [create_doc, add_text, read_doc]
+    tools = [
+        create_doc,
+        add_text,
+        read_doc,
+        share_doc,
+    ]
 
     # create the agent using langgraph's react pattern
     # model parameter is the llm, tools are the functions the agent can call
@@ -113,10 +131,11 @@ def main():
         print("2. Create and add text")
         print("3. Create, add text, and read back (full test)")
         print("4. Read an existing document")
+        print("5. Share an existing document")
         print("=" * 60)
 
         # step 4: collect user inputs
-        choice = input("Enter your choice (1-4): ")
+        choice = input("Enter your choice (1-5): ")
 
         if choice == "1":
             title = input("Enter document title: ")
@@ -137,6 +156,15 @@ def main():
         elif choice == "4":
             doc_id = input("Enter document ID: ")
             test_message = f"Read the document with ID: {doc_id}"
+
+        elif choice == "5":
+            doc_id = input("Enter document ID: ")
+            email = input("Enter email address to share with: ")
+            role = (
+                input("Enter role (reader/writer/commenter) [default: reader]: ")
+                or "reader"
+            )
+            test_message = f"Share the document with ID {doc_id} with {email} as {role}"
 
         else:
             print("Invalid choice. Using default test.")
