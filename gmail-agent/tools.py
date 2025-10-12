@@ -165,3 +165,87 @@ def read_recent_emails(max_results: int, credentials_dict) -> str:
         Success message or error message
     """
     return _read_recent_emails_impl(max_results, credentials_dict)
+
+
+def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) -> str:
+    """Search emails in Gmail matching a query"""
+
+    try:
+        # get gmail service
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+        # list message IDs
+        results = (
+            gmail_service.users()
+            .messages()
+            .list(
+                userId="me",
+                q=query,  # different variable from read_recent_emails
+                maxResults=max_results,
+            )
+            .execute()
+        )
+
+        messages = results.get("messages", [])
+
+        # check if empty
+        if not messages:
+            return "No emails found matching query"
+
+        # loops through the messages and fetches details
+        email_list = []
+        for msg in messages:
+            # get message details
+            message = (
+                gmail_service.users()
+                .messages()
+                .get(userId="me", id=msg["id"])
+                .execute()
+            )
+
+            # extract headers (From, Subject, Date)
+            headers = message["payload"]["headers"]
+            from_addr = ""
+            subject = ""
+            date = ""
+
+            for header in headers:
+                if header["name"] == "From":
+                    from_addr = header["value"]
+                elif header["name"] == "Subject":
+                    subject = header["value"]
+                elif header["name"] == "Date":
+                    date = header["value"]
+
+            # get snipper(preview)
+            snippet = message.get("snippet", "")
+
+            # format this email
+            email_info = f"From: {from_addr}\nSubject: {subject}\nDate: {date}\nSnippet: {snippet}\n"
+            email_list.append(email_info)
+
+        # combine all emails into single string
+        result = f"Search results ({len(email_list)}):\n\n"
+        result += "\n---\n".join(email_list)
+
+        return result
+
+    except HttpError as error:
+        return f"Gmail API error: {error}"
+    except Exception as error:
+        return f"Unexpected error: {error}"
+
+
+@tool
+def search_emails(query: str, max_results: int, credentials_dict: Dict) -> str:
+    """Search emails in Gmail matching a query
+    This tool connects to Gmail API to search emails matching a specific query.
+
+    args:
+        query: Search query string (e.g., "from:example@example.com" or "subject:meeting")
+        max_results: number of emails to fetch (max 50)
+        credentials_dict: User's OAuth tokens
+
+    returns
+        success message or error message
+    """
+    return _search_emails_impl(query, max_results, credentials_dict)

@@ -2,7 +2,7 @@ import os
 from typing import Dict, Any
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from tools import _send_email_impl, _read_recent_emails_impl
+from tools import _send_email_impl, _read_recent_emails_impl, _search_emails_impl
 
 from dotenv import load_dotenv
 
@@ -38,7 +38,17 @@ def create_email_agent(credentials_dict: Dict):
         """
         return _read_recent_emails_impl(max_results, credentials_dict)
 
-    tools = [send_email, read_recent_emails]
+    @tool
+    def search_emails(query: str, max_results: int) -> str:
+        """Search emails in Gmail matching a query.
+
+        Args:
+            query: Search query string (e.g., "from:example@example.com")
+            max_results: Number of emails to fetch
+        """
+        return _search_emails_impl(query, max_results, credentials_dict)
+
+    tools = [send_email, read_recent_emails, search_emails]
 
     agent = create_react_agent(model=llm, tools=tools)
     return agent
@@ -84,9 +94,10 @@ def main():
         print("=" * 60)
         print("1. Send a test email")
         print("2. Read recent emails")
+        print("3. Search for specific emails")
         print("=" * 60)
 
-        choice = input("\nEnter your choice (1-2): ")
+        choice = input("\nEnter your choice (1-3): ")
 
         if choice == "1":
             to = input("Send to (email): ")
@@ -98,6 +109,17 @@ def main():
 
         elif choice == "2":
             test_message = "Show me my 5 most recent emails"
+
+        elif choice == "3":
+            print("\nSearch Examples:")
+            print("  - from:example@gmail.com")
+            print("  - subject:meeting")
+            print("  - has:attachment")
+            print("  - newer_than:7d")
+            search_query = input("\nEnter search query: ")
+            max_results = input("How many results? (default 5): ")
+            max_results = max_results if max_results else "5"
+            test_message = f"Search my emails for '{search_query}' and show me {max_results} results"
 
         else:
             print("Invalid choice.")
