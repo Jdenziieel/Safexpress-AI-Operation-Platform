@@ -2,9 +2,7 @@ import os
 from typing import Dict, Any
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from tools import (
-    _send_email_impl,
-)
+from tools import _send_email_impl, _read_recent_emails_impl
 
 from dotenv import load_dotenv
 
@@ -31,7 +29,16 @@ def create_email_agent(credentials_dict: Dict):
         result = _send_email_impl(to, subject, body, credentials_dict)
         return result
 
-    tools = [send_email]
+    @tool
+    def read_recent_emails(max_results: int) -> str:
+        """Reads recent emails from Gmail.
+
+        Args:
+            max_results: Number of recent emails to fetch
+        """
+        return _read_recent_emails_impl(max_results, credentials_dict)
+
+    tools = [send_email, read_recent_emails]
 
     agent = create_react_agent(model=llm, tools=tools)
     return agent
