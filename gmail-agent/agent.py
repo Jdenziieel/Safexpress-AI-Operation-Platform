@@ -2,7 +2,12 @@ import os
 from typing import Dict, Any
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from tools import _send_email_impl, _read_recent_emails_impl, _search_emails_impl
+from tools import (
+    _send_email_impl,
+    _read_recent_emails_impl,
+    _search_emails_impl,
+    _send_email_with_attachments_impl,
+)
 
 from dotenv import load_dotenv
 
@@ -48,7 +53,24 @@ def create_email_agent(credentials_dict: Dict):
         """
         return _search_emails_impl(query, max_results, credentials_dict)
 
-    tools = [send_email, read_recent_emails, search_emails]
+    @tool
+    def send_email_with_attachment(
+        to: str, subject: str, body: str, file_path: str
+    ) -> str:
+        """Sends an email with an attachment using Gmail API.
+
+        Args:
+            to: Recipient email address
+            subject: Subject of the email
+            body: Body content of the email
+            file_path: Path to the file to attach
+        """
+        result = _send_email_with_attachments_impl(
+            to, subject, body, file_path, credentials_dict
+        )
+        return result
+
+    tools = [send_email, read_recent_emails, search_emails, send_email_with_attachment]
 
     agent = create_react_agent(model=llm, tools=tools)
     return agent
@@ -95,9 +117,10 @@ def main():
         print("1. Send a test email")
         print("2. Read recent emails")
         print("3. Search for specific emails")
+        print("4. Send email with attachment")
         print("=" * 60)
 
-        choice = input("\nEnter your choice (1-3): ")
+        choice = input("\nEnter your choice (1-4): ")
 
         if choice == "1":
             to = input("Send to (email): ")
@@ -121,6 +144,13 @@ def main():
             max_results = max_results if max_results else "5"
             test_message = f"Search my emails for '{search_query}' and show me {max_results} results"
 
+        elif choice == "4":
+            to = input("Send to (email): ")
+            subject = input("Subject: ")
+            body = input("Body: ")
+            file_path = input("File path (e.g., C:\\Users\\...\\test.pdf): ")
+            test_message = f"Send an email to {to} with subject '{subject}', body: {body}, and attach the file at {file_path}"
+
         else:
             print("Invalid choice.")
             return
@@ -134,7 +164,8 @@ def main():
             1. Use send_email to send emails
             2. use read_recent_emails to read recent emails
             3. use search_emails to find specific emails
-            4. Provide clear confirmation of actions taken
+            4. use send_email_with_attachment to send emails with files
+            5. Provide clear confirmation of actions taken
 
             Be concise and professional. Only focus on Gmail tasks.
             """

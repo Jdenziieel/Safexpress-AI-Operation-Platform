@@ -5,6 +5,10 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+import mimetypes
 import base64
 
 
@@ -249,3 +253,77 @@ def search_emails(query: str, max_results: int, credentials_dict: Dict) -> str:
         success message or error message
     """
     return _search_emails_impl(query, max_results, credentials_dict)
+
+
+def _send_email_with_attachments_impl(
+    to: str, subject: str, body: str, file_path: str, credentials_dict: Dict
+) -> str:
+    """Send email with attachment via Gmail"""
+    try:
+        # get credentials
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        # headers
+        message = MIMEMultipart()
+        message["to"] = to
+        message["subject"] = subject
+
+        message.attach(MIMEText(body, "plain"))
+
+        if not os.path.exists(file_path):
+            return f"Error: File not found at {file_path}"
+        # open and read the file
+        with open(file_path, "rb") as file:
+            file_data = file.read()
+        # This creates the attachment
+        part = MIMEBase("application", "octet-stream")
+        part.set_payload(file_data)
+
+        encoders.encode_base64(part)
+        # add the filename header
+        filename = os.path.basename(file_path)
+        part.add_header("Content-Disposition", f"attachment; filename={filename}")
+        # attach the file to the message
+        message.attach(part)
+
+        # send the email
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+        send_result = (
+            gmail_service.users()
+            .messages()
+            .send(userId="me", body={"raw": raw_message})
+            .execute()
+        )
+
+        return f"Email with attachment sent successfully!\nTo: {to}\nSubject: {subject}\nAttachment: {filename}\nMessage ID: {send_result['id']}"
+
+    except FileNotFoundError:
+        return f"Error: File not found at {file_path}"
+    except HttpError as error:
+        return f"Gmail API error: {error}"
+    except Exception as error:
+        return f"Unexpected error: {error}"
+
+
+@tool
+def send_email_with_attachment(
+    to: str, subject: str, body: str, file_path: str, credentials_dict: Dict
+) -> str:
+    """Send email with attachment via Gmail
+
+    This tool connects to Gmail API to send an email with an attachment.
+
+    Args:
+        to: Recipient email address
+        subject: Subject of the email
+        body: Body content of the email
+        file_path: Path to the file to attach
+        credentials_dict: User's OAuth tokens
+
+    Returns:
+        Success message or error
+    """
+    result = _send_email_with_attachments_impl(
+        to, subject, body, file_path, credentials_dict
+    )
+    return result
