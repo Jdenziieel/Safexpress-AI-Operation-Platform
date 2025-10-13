@@ -138,8 +138,11 @@ def _read_recent_emails_impl(max_results: int, credentials_dict: Dict) -> str:
             # get snipper(preview)
             snippet = message.get("snippet", "")
 
+            # get message ID for replies
+            msg_id = msg["id"]
+
             # format this email
-            email_info = f"From: {from_addr}\nSubject: {subject}\nDate: {date}\nSnippet: {snippet}\n"
+            email_info = f"Message ID: {msg_id}\nFrom: {from_addr}\nSubject: {subject}\nDate: {date}\nSnippet: {snippet}\n"
             email_list.append(email_info)
 
         # combine all emails into single string
@@ -223,8 +226,11 @@ def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) ->
             # get snipper(preview)
             snippet = message.get("snippet", "")
 
+            # get message ID for searches/replies
+            msg_id = msg["id"]
+
             # format this email
-            email_info = f"From: {from_addr}\nSubject: {subject}\nDate: {date}\nSnippet: {snippet}\n"
+            email_info = f"Message ID: {msg_id}\nFrom: {from_addr}\nSubject: {subject}\nDate: {date}\nSnippet: {snippet}\n"
             email_list.append(email_info)
 
         # combine all emails into single string
@@ -327,3 +333,81 @@ def send_email_with_attachment(
         to, subject, body, file_path, credentials_dict
     )
     return result
+
+
+def _reply_to_email_impl(
+    message_id: str, reply_body: str, credentials_dict: Dict
+) -> str:
+    """Reply to an email via Gmail API"""
+    try:
+        # get gmail service
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        # get original email
+        original_message = (
+            gmail_service.users()
+            .messages()
+            .get(userId="me", id=message_id, format="full")  # this gets all the headers
+            .execute()
+        )
+
+        # Extract for threading
+        thread_id = original_message["threadId"]
+        headers = original_message["payload"]["headers"]
+
+        # initialize the variables
+        message_id_header = ""
+        subject = ""
+        to_email = ""
+
+        # loop through the headers
+        for header in headers:
+            if header["name"] == "Message-ID":
+                message_id_header = header["value"]
+            elif header["name"] == "Subject":
+                subject = header["value"]
+            elif header["name"] == "From":
+                to_email = header["value"]
+
+        # create reply message
+        message = MIMEText(reply_body)
+        message["to"] = to_email
+        message["subject"] = (
+            "Re: " + subject if not subject.startswith("Re:") else subject
+        )
+        message["In-Reply-To"] = message_id_header
+        message["References"] = message_id_header
+
+        # encodes the message
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        send_result = (
+            gmail_service.users()
+            .messages()
+            .send(userId="me", body={"raw": raw_message, "threadId": thread_id})
+            .execute()
+        )
+
+        return f"Reply sent successfully!\nTo: {to_email}\nSubject: {subject}\nMessage ID: {send_result['id']}"
+
+    except HttpError as error:
+        return f"Gmail API error: {error}"
+    except Exception as error:
+        return f"Unexpected error: {error}"
+
+
+@tool
+def reply_to_email(message_id: str, reply_body: str, credentials_dict: Dict) -> str:
+    """Reply to an email via Gmail API
+
+    This tool connects to Gmail API to reply to a specific email.
+
+    Args:
+        message_id: ID of the email to reply to
+        reply_body: Exact reply text (pre-written)
+        credentials_dict: User's OAuth tokens
+
+    Returns:
+        Success message or error
+    """
+    return _reply_to_email_impl(message_id, reply_body, credentials_dict)

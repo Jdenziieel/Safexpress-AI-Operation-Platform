@@ -7,6 +7,7 @@ from tools import (
     _read_recent_emails_impl,
     _search_emails_impl,
     _send_email_with_attachments_impl,
+    _reply_to_email_impl,
 )
 
 from dotenv import load_dotenv
@@ -70,7 +71,24 @@ def create_email_agent(credentials_dict: Dict):
         )
         return result
 
-    tools = [send_email, read_recent_emails, search_emails, send_email_with_attachment]
+    @tool
+    def reply_to_email(message_id: str, additional_context: str) -> str:
+        """Replies to a specific email using Gmail API.
+
+        Args:
+            message_id: The ID of the email message to reply to
+            additional_context: Additional context or content for the reply
+        """
+        result = _reply_to_email_impl(message_id, additional_context, credentials_dict)
+        return result
+
+    tools = [
+        send_email,
+        read_recent_emails,
+        search_emails,
+        send_email_with_attachment,
+        reply_to_email,
+    ]
 
     agent = create_react_agent(model=llm, tools=tools)
     return agent
@@ -118,9 +136,10 @@ def main():
         print("2. Read recent emails")
         print("3. Search for specific emails")
         print("4. Send email with attachment")
+        print("5. Reply to an email")
         print("=" * 60)
 
-        choice = input("\nEnter your choice (1-4): ")
+        choice = input("\nEnter your choice (1-5): ")
 
         if choice == "1":
             to = input("Send to (email): ")
@@ -151,6 +170,10 @@ def main():
             file_path = input("File path (e.g., C:\\Users\\...\\test.pdf): ")
             test_message = f"Send an email to {to} with subject '{subject}', body: {body}, and attach the file at {file_path}"
 
+        elif choice == "5":
+            message_id = input("Message ID to reply to: ")
+            additional_context = input("Additional context for the reply: ")
+            test_message = f"Reply to email with ID {message_id} and include this context: {additional_context}"
         else:
             print("Invalid choice.")
             return
@@ -165,7 +188,8 @@ def main():
             2. use read_recent_emails to read recent emails
             3. use search_emails to find specific emails
             4. use send_email_with_attachment to send emails with files
-            5. Provide clear confirmation of actions taken
+            5. use reply_to_email to reply to specific emails
+            6. Provide clear confirmation of actions taken
 
             Be concise and professional. Only focus on Gmail tasks.
             """
