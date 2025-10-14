@@ -1,0 +1,54 @@
+{
+  "plan": [
+    {
+      "agent": "gmail_agent",
+      "tool": "read_recent_emails",
+      "inputs": {
+        "max_results": 3
+      },
+      "output_variables": {
+        "emails": "List of the 3 most recent emails with sender, subject, and content"
+      },
+      "description": "Read the 3 most recent emails"
+    },
+    {
+      "agent": "gmail_agent",
+      "tool": "send_email",
+      "inputs": {
+        "to": "{{ emails.email_1.sender }}",
+        "subject": "Re: {{ emails.email_1.subject }}",
+        "body": "Thank you for your email."
+      },
+      "output_variables": {
+        "reply_status_1": "Status of reply sent to the first email"
+      },
+      "description": "Reply to the first email"
+    },
+    {
+      "agent": "gmail_agent",
+      "tool": "send_email",
+      "inputs": {
+        "to": "{{ emails.email_2.sender }}",
+        "subject": "Re: {{ emails.email_2.subject }}",
+        "body": "Thank you for your email."
+      },
+      "output_variables": {
+        "reply_status_2": "Status of reply sent to the second email"
+      },
+      "description": "Reply to the second email"
+    },
+    {
+      "agent": "gmail_agent",
+      "tool": "send_email",
+      "inputs": {
+        "to": "{{ emails.email_3.sender }}",
+        "subject": "Re: {{ emails.email_3.subject }}",
+        "body": "Thank you for your email."
+      },
+      "output_variables": {
+        "reply_status_3": "Status of reply sent to the third email"
+      },
+      "description": "Reply to the third email"
+    }
+  ]
+}

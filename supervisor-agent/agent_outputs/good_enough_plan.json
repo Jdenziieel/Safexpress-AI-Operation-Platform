@@ -1,0 +1,53 @@
+{
+  "plan": [
+    {
+      "agent": "gmail_agent",
+      "tool": "search_emails",
+      "inputs": {
+        "query": "is:unread",
+        "max_results": 10
+      },
+      "output_variables": {
+        "unread_emails": "List of unread emails with sender and content"
+      },
+      "description": "Search for unread emails"
+    },
+    {
+      "agent": "docs_agent",
+      "tool": "create_doc",
+      "inputs": {
+        "title": "Summary of Unread Emails"
+      },
+      "output_variables": {
+        "document_id": "ID of created document",
+        "document_url": "URL of created document"
+      },
+      "description": "Create a new Google Doc for summarizing the emails"
+    },
+    {
+      "agent": "docs_agent",
+      "tool": "add_text",
+      "inputs": {
+        "document_id": "{{ document_id }}",
+        "text": "{{ unread_emails }}"
+      },
+      "output_variables": {
+        "status": "Text addition status"
+      },
+      "description": "Add the summary of unread emails to the document"
+    },
+    {
+      "agent": "gmail_agent",
+      "tool": "send_email",
+      "inputs": {
+        "to": "assistant@company.com",
+        "subject": "Summary of Unread Emails",
+        "body": "Here is the summary of unread emails: {{ document_url }}"
+      },
+      "output_variables": {
+        "email_status": "Email sent status"
+      },
+      "description": "Email the document link to the assistant"
+    }
+  ]
+}

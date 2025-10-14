@@ -1,0 +1,46 @@
+{
+  "plan": [
+    {
+      "agent": "calendar_agent",
+      "tool": "check_schedule",
+      "inputs": {
+        "datetime": "tomorrow 5pm"
+      },
+      "output_variables": {
+        "is_free": "Whether the time slot is free"
+      },
+      "description": "Check if tomorrow at 5pm is free"
+    },
+    {
+      "agent": "gmail_agent",
+      "tool": "send_email",
+      "inputs": {
+        "to": "lance@example.com",
+        "subject": "Meeting Invitation",
+        "body": "Hi Lance, I would like to meet with you tomorrow at 5pm. Please let me know if this works for you."
+      },
+      "output_variables": {
+        "email_status": "Status of the sent email"
+      },
+      "description": "Send an email to Lance if the time slot is free",
+      "condition": "{{ is_free }}"
+    },
+    {
+      "agent": "calendar_agent",
+      "tool": "create_event",
+      "inputs": {
+        "title": "Meeting with Lance",
+        "datetime": "tomorrow 5pm",
+        "attendees": [
+          "lance@example.com"
+        ],
+        "description": "Meeting to discuss project details"
+      },
+      "output_variables": {
+        "event_id": "ID of the created event"
+      },
+      "description": "Create a calendar event for the meeting with Lance",
+      "condition": "{{ is_free }}"
+    }
+  ]
+}

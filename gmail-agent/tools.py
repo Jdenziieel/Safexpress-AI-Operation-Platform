@@ -67,26 +67,6 @@ def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -
     except Exception as error:
         return f"Unexpected error: {error}"
 
-
-@tool
-def send_email(to: str, subject: str, body: str, credentials_dict: Dict) -> str:
-    """
-    Sends an email via Gmail
-
-    This tool connects to Gmail API to send an email to the specified recipient
-
-    Args:
-        to: Recipient email address (e.g., "user@example.com")
-        subject: Subject of the email
-        body: Email body text
-        credentials_dict: User's OAuth tokens (access_token, refresh_token)
-
-    Returns:
-        Success message or error
-    """
-    return _send_email_impl(to, subject, body, credentials_dict)
-
-
 def _read_recent_emails_impl(max_results: int, credentials_dict: Dict) -> str:
     """Read recent emails from Gmail"""
     try:
@@ -155,24 +135,6 @@ def _read_recent_emails_impl(max_results: int, credentials_dict: Dict) -> str:
         return f"Gmail API error: {error}"
     except Exception as error:
         return f"Unexpected error: {error}"
-
-
-@tool
-def read_recent_emails(max_results: int, credentials_dict) -> str:
-    """
-    Reads recent emails from Gmail.
-
-    This tool connects to Gmail API to fetch recent emails from the user's inbox.
-
-    args:
-        max_results: number of recent emails to fetch (max 50)
-        credentials_dict: User's OAuth tokens
-
-    returns
-        Success message or error message
-    """
-    return _read_recent_emails_impl(max_results, credentials_dict)
-
 
 def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) -> str:
     """Search emails in Gmail matching a query"""
@@ -244,23 +206,6 @@ def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) ->
     except Exception as error:
         return f"Unexpected error: {error}"
 
-
-@tool
-def search_emails(query: str, max_results: int, credentials_dict: Dict) -> str:
-    """Search emails in Gmail matching a query
-    This tool connects to Gmail API to search emails matching a specific query.
-
-    args:
-        query: Search query string (e.g., "from:example@example.com" or "subject:meeting")
-        max_results: number of emails to fetch (max 50)
-        credentials_dict: User's OAuth tokens
-
-    returns
-        success message or error message
-    """
-    return _search_emails_impl(query, max_results, credentials_dict)
-
-
 def _send_email_with_attachments_impl(
     to: str, subject: str, body: str, file_path: str, credentials_dict: Dict
 ) -> str:
@@ -309,31 +254,6 @@ def _send_email_with_attachments_impl(
         return f"Gmail API error: {error}"
     except Exception as error:
         return f"Unexpected error: {error}"
-
-
-@tool
-def send_email_with_attachment(
-    to: str, subject: str, body: str, file_path: str, credentials_dict: Dict
-) -> str:
-    """Send email with attachment via Gmail
-
-    This tool connects to Gmail API to send an email with an attachment.
-
-    Args:
-        to: Recipient email address
-        subject: Subject of the email
-        body: Body content of the email
-        file_path: Path to the file to attach
-        credentials_dict: User's OAuth tokens
-
-    Returns:
-        Success message or error
-    """
-    result = _send_email_with_attachments_impl(
-        to, subject, body, file_path, credentials_dict
-    )
-    return result
-
 
 def _reply_to_email_impl(
     message_id: str, reply_body: str, credentials_dict: Dict
@@ -394,20 +314,3 @@ def _reply_to_email_impl(
         return f"Gmail API error: {error}"
     except Exception as error:
         return f"Unexpected error: {error}"
-
-
-@tool
-def reply_to_email(message_id: str, reply_body: str, credentials_dict: Dict) -> str:
-    """Reply to an email via Gmail API
-
-    This tool connects to Gmail API to reply to a specific email.
-
-    Args:
-        message_id: ID of the email to reply to
-        reply_body: Exact reply text (pre-written)
-        credentials_dict: User's OAuth tokens
-
-    Returns:
-        Success message or error
-    """
-    return _reply_to_email_impl(message_id, reply_body, credentials_dict)

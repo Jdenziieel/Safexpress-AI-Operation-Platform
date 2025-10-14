@@ -1,0 +1,17 @@
+{
+  "plan": [
+    {
+      "agent": "gmail_agent",
+      "tool": "send_email",
+      "inputs": {
+        "to": "john@example.com",
+        "subject": "Meeting Tomorrow",
+        "body": "Lets meet at 3pm"
+      },
+      "output_variables": {
+        "email_status": "Status of the sent email"
+      },
+      "description": "Send an email to John about a meeting tomorrow"
+    }
+  ]
+}

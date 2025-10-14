@@ -1,0 +1,42 @@
+{
+  "plan": [
+    {
+      "agent": "gmail_agent",
+      "tool": "search_emails",
+      "inputs": {
+        "query": "from:lance@example.com subject:agenda",
+        "max_results": 1
+      },
+      "output_variables": {
+        "latest_email": "Latest email from Lance with subject 'agenda'"
+      },
+      "description": "Search for the latest email from Lance with the subject 'agenda'"
+    },
+    {
+      "agent": "gmail_agent",
+      "tool": "send_email",
+      "inputs": {
+        "to": "{{ latest_email.sender }}",
+        "subject": "Re: {{ latest_email.subject }}",
+        "body": "Hi Lance, I will be attending the meeting. Looking forward to discussing the agenda."
+      },
+      "output_variables": {
+        "reply_status": "Status of reply sent to Lance"
+      },
+      "description": "Reply to Lance's email confirming attendance"
+    },
+    {
+      "agent": "gmail_agent",
+      "tool": "send_email",
+      "inputs": {
+        "to": "sarah@example.com",
+        "subject": "{{ latest_email.subject }}",
+        "body": "Hi Sarah, I will be attending the meeting with Lance. The agenda is as follows: {{ latest_email.content }}"
+      },
+      "output_variables": {
+        "email_status": "Status of email sent to Sarah"
+      },
+      "description": "Email Sarah about the meeting and the agenda"
+    }
+  ]
+}

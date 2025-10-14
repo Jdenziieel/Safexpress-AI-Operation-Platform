@@ -1,6 +1,5 @@
 import os
 from typing import Dict, Any
-from langchain.tools import tool
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -56,25 +55,6 @@ def _create_google_doc_impl(title: str, credentials_dict: Dict) -> str:
         return f"Unexpected error: {error}"
 
 
-# Decorated version for standalone use
-@tool
-def create_google_doc(title: str, credentials_dict: Dict) -> str:
-    """
-    Creates a new Google Doc and returns its ID and URL.
-
-    This tool connects to the Google Docs API and creates a blank document
-    with the specified title.
-
-    Args:
-        title: The name of the document (e.g., "Project Notes")
-        credentials_dict: User's OAuth tokens (access_token, refresh_token)
-
-    Returns:
-        Success message with document ID and URL, or error message
-    """
-    return _create_google_doc_impl(title, credentials_dict)
-
-
 def _add_text_to_doc_impl(document_id: str, text: str, credentials_dict: Dict) -> str:
     """Implementation of adding text to a Google Doc"""
     try:
@@ -94,24 +74,6 @@ def _add_text_to_doc_impl(document_id: str, text: str, credentials_dict: Dict) -
         return f"Missing credentials: {error}"
     except Exception as error:
         return f"Unexpected error: {error}"
-
-
-@tool
-def add_text_to_doc(document_id: str, text: str, credentials_dict: Dict) -> str:
-    """
-    Adds text to an existing Google Doc.
-
-    This tool connects to the Google Docs API and inserts text at the beginning of the specified document.
-
-    Args:
-        document_id: The ID of the document to update
-        text: The text to insert into the document
-        credentials_dict: User's OAuth tokens (access_token, refresh_token)
-
-    Returns:
-        Success message with document ID and URL, or error message
-    """
-    return _add_text_to_doc_impl(document_id, text, credentials_dict)
 
 
 def _read_google_doc_impl(document_id: str, credentials_dict: Dict) -> str:
@@ -152,24 +114,6 @@ def _read_google_doc_impl(document_id: str, credentials_dict: Dict) -> str:
         return f"Unexpected error: {error}"
 
 
-@tool
-def read_google_doc(document_id: str, credentials_dict: Dict) -> str:
-    """
-    Reads text content from a Google Doc.
-
-    This tool connects to the Google Docs API and retrieves the text
-    content from the specified document.
-
-    Args:
-        document_id: The ID of the document to read
-        credentials_dict: User's OAuth tokens
-
-    Returns:
-        Document text content with document ID and URL
-    """
-    return _read_google_doc_impl(document_id, credentials_dict)
-
-
 def _share_google_docs_impl(
     document_id: str, email: str, role: str, credentials_dict: Dict
 ) -> str:
@@ -207,22 +151,3 @@ def _share_google_docs_impl(
         return f"error sharing document: {error}"
     except Exception as error:
         return f"unexpected error: {error}"
-
-
-@tool
-def share_google_doc(
-    document_id: str, email: str, role: str, credentials_dict: Dict
-) -> str:
-    """
-    Shares a Google Doc with someone via email.
-
-    Args:
-        document_id: The ID of the document to share
-        email: Email address to share with (e.g., 'user@example.com')
-        role: Permission level - 'reader', 'writer', or 'commenter'
-        credentials_dict: User's OAuth tokens
-
-    Returns:
-        Success message with sharing details
-    """
-    return _share_google_docs_impl(document_id, email, role, credentials_dict)

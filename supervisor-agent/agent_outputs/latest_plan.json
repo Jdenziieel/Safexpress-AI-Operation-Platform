@@ -1,0 +1,12 @@
+{
+  "plan": [
+    {
+      "agent": "calendar_agent",
+      "inputs": {
+        "title": "Content Review",
+        "datetime": "Every Wednesday at 2 PM for the next 4 weeks"
+      },
+      "description": "Add 'Content Review' event to the calendar every Wednesday at 2 PM for the next 4 weeks"
+    }
+  ]
+}
