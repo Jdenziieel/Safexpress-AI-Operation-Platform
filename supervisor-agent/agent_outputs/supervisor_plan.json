@@ -2,29 +2,16 @@
   "plan": [
     {
       "agent": "gmail_agent",
-      "tool": "search_emails",
-      "inputs": {
-        "query": "to:jdenziieel",
-        "max_results": 1
-      },
-      "output_variables": {
-        "email_subject": "email_1_subject",
-        "email_body": "email_1_snippet"
-      },
-      "description": "Find the last email sent to jdenziieel"
-    },
-    {
-      "agent": "gmail_agent",
       "tool": "send_email",
       "inputs": {
-        "to": "lancejoshua.hilario.cics@ust.edu.ph, paul.chua.cics@ust.edu.ph, carlosmiguel.carla.cics@ust.edu.ph, Joshdenziel.joves.cics@ust.edu.ph",
-        "subject": "{{ email_subject }}",
-        "body": "{{ email_body }}"
+        "to": "lancejoshua.hilario.cics@ust.edu.ph",
+        "subject": "Hello",
+        "body": "This is a test email."
       },
       "output_variables": {
-        "sent_status": "success"
+        "email_sent_status": "success"
       },
-      "description": "Send the contents of the found email to the specified recipients"
+      "description": "Send an email to lancejoshua.hilario.cics@ust.edu.ph"
     }
   ]
 }
