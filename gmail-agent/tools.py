@@ -30,7 +30,7 @@ def get_google_service(service_name: str, version: str, credentials_dict: Dict):
     return service
 
 
-def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -> str:
+def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -> Dict[str, Any]:
     """
     Implementation of sending email logic
 
@@ -41,7 +41,7 @@ def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -
         credentials_dict: Google OAuth credentials
 
     Returns:
-        Success message or error
+        Dictionary with success status and email details
     """
 
     try:
@@ -60,14 +60,41 @@ def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -
             .execute()
         )
 
-        return f"Email sent successfully!\nTo: {to}\nSubject: {subject}\nMessage ID: {send_result['id']}"
+        message_id = send_result['id']
+        thread_id = send_result.get('threadId', message_id)
+
+        return {
+            "success": True,
+            "message_id": message_id,
+            "thread_id": thread_id,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "error": None
+        }
 
     except HttpError as error:
-        return f"Error in sending email: {error}"
+        return {
+            "success": False,
+            "message_id": None,
+            "thread_id": None,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "error": f"Gmail API error: {str(error)}"
+        }
     except Exception as error:
-        return f"Unexpected error: {error}"
-
-def _read_recent_emails_impl(max_results: int, credentials_dict: Dict) -> str:
+        return {
+            "success": False,
+            "message_id": None,
+            "thread_id": None,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "error": f"Unexpected error: {str(error)}"
+        }
+# checking - status: 
+def _read_recent_emails_impl(max_results: int, credentials_dict: Dict) -> Dict[str, Any]:
     """Read recent emails from Gmail"""
     try:
         # get gmail service
@@ -88,18 +115,32 @@ def _read_recent_emails_impl(max_results: int, credentials_dict: Dict) -> str:
 
         # check if empty
         if not messages:
-            return "No emails found in inbox"
+            return {
+                "success": True,
+                "emails": [],
+                "count": 0,
+                "error": None
+            }
 
         # loops through the messages and fetches details
         email_list = []
         for msg in messages:
-            # get message details
+            msg_id = msg["id"]
+            
+            # get message details with full format
             message = (
                 gmail_service.users()
                 .messages()
-                .get(userId="me", id=msg["id"])
+                .get(userId="me", id=msg_id, format="full")
                 .execute()
             )
+
+            # get thread ID
+            thread_id = message.get("threadId", "")
+
+            # get internalDate and labelIds
+            internal_date = message.get("internalDate", "")
+            label_ids = message.get("labelIds", [])
 
             # extract headers (From, Subject, Date)
             headers = message["payload"]["headers"]
@@ -115,28 +156,77 @@ def _read_recent_emails_impl(max_results: int, credentials_dict: Dict) -> str:
                 elif header["name"] == "Date":
                     date = header["value"]
 
-            # get snipper(preview)
-            snippet = message.get("snippet", "")
+            # get full message body
+            body = ""
+            if "parts" in message["payload"]:
+                # multipart message
+                for part in message["payload"]["parts"]:
+                    if part["mimeType"] == "text/plain" and "data" in part.get("body", {}):
+                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
+                        break
+                    elif part["mimeType"] == "text/html" and not body and "data" in part.get("body", {}):
+                        # fallback to HTML if no plain text
+                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
+            elif "body" in message["payload"] and "data" in message["payload"]["body"]:
+                # simple message
+                body = base64.urlsafe_b64decode(message["payload"]["body"]["data"]).decode("utf-8")
 
-            # get message ID for replies
-            msg_id = msg["id"]
+            # if body is still empty, use snippet
+            if not body:
+                body = message.get("snippet", "")
 
-            # format this email
-            email_info = f"Message ID: {msg_id}\nFrom: {from_addr}\nSubject: {subject}\nDate: {date}\nSnippet: {snippet}\n"
-            email_list.append(email_info)
+            # check for attachments
+            attachments = []
+            if "parts" in message["payload"]:
+                for part in message["payload"]["parts"]:
+                    if part.get("filename") and part.get("body", {}).get("attachmentId"):
+                        attachment_info = {
+                            "filename": part["filename"],
+                            "attachment_id": part["body"]["attachmentId"],
+                            "mime_type": part["mimeType"],
+                            "size": part["body"].get("size", 0)
+                        }
+                        attachments.append(attachment_info)
 
-        # combine all emails into single string
-        result = f"Recent Emails ({len(email_list)}):\n\n"
-        result += "\n---\n".join(email_list)
-
-        return result
+            # Create structured email object
+            email_obj = {
+                "message_id": msg_id,
+                "thread_id": thread_id,
+                "from": from_addr,
+                "subject": subject,
+                "date": date,
+                "internal_date": internal_date,
+                "label_ids": label_ids,
+                "body": body,
+                "has_attachments": len(attachments) > 0,
+                "attachments": attachments
+            }
+            email_list.append(email_obj)
+        
+        return {
+            "success": True,
+            "emails": email_list,
+            "count": len(email_list),
+            "error": None
+        }
 
     except HttpError as error:
-        return f"Gmail API error: {error}"
+        return {
+            "success": False,
+            "emails": [],
+            "count": 0,
+            "error": f"Gmail API error: {str(error)}"
+        }
     except Exception as error:
-        return f"Unexpected error: {error}"
-
-def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) -> str:
+        return {
+            "success": False,
+            "emails": [],
+            "count": 0,
+            "error": f"Unexpected error: {str(error)}"
+        }
+    
+# checking - status: 
+def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) -> Dict[str, Any]:
     """Search emails in Gmail matching a query"""
 
     try:
@@ -158,18 +248,33 @@ def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) ->
 
         # check if empty
         if not messages:
-            return "No emails found matching query"
+            return {
+                "success": True,
+                "emails": [],
+                "count": 0,
+                "query": query,
+                "error": None
+            }
 
         # loops through the messages and fetches details
         email_list = []
         for msg in messages:
-            # get message details
+            msg_id = msg["id"]
+            
+            # get message details with full format
             message = (
                 gmail_service.users()
                 .messages()
-                .get(userId="me", id=msg["id"])
+                .get(userId="me", id=msg_id, format="full")
                 .execute()
             )
+
+            # get thread ID
+            thread_id = message.get("threadId", "")
+
+            # get internalDate and labelIds
+            internal_date = message.get("internalDate", "")
+            label_ids = message.get("labelIds", [])
 
             # extract headers (From, Subject, Date)
             headers = message["payload"]["headers"]
@@ -185,30 +290,81 @@ def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) ->
                 elif header["name"] == "Date":
                     date = header["value"]
 
-            # get snipper(preview)
-            snippet = message.get("snippet", "")
+            # get full message body
+            body = ""
+            if "parts" in message["payload"]:
+                # multipart message
+                for part in message["payload"]["parts"]:
+                    if part["mimeType"] == "text/plain" and "data" in part.get("body", {}):
+                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
+                        break
+                    elif part["mimeType"] == "text/html" and not body and "data" in part.get("body", {}):
+                        # fallback to HTML if no plain text
+                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
+            elif "body" in message["payload"] and "data" in message["payload"]["body"]:
+                # simple message
+                body = base64.urlsafe_b64decode(message["payload"]["body"]["data"]).decode("utf-8")
 
-            # get message ID for searches/replies
-            msg_id = msg["id"]
+            # if body is still empty, use snippet
+            if not body:
+                body = message.get("snippet", "")
 
-            # format this email
-            email_info = f"Message ID: {msg_id}\nFrom: {from_addr}\nSubject: {subject}\nDate: {date}\nSnippet: {snippet}\n"
-            email_list.append(email_info)
+            # check for attachments
+            attachments = []
+            if "parts" in message["payload"]:
+                for part in message["payload"]["parts"]:
+                    if part.get("filename") and part.get("body", {}).get("attachmentId"):
+                        attachment_info = {
+                            "filename": part["filename"],
+                            "attachment_id": part["body"]["attachmentId"],
+                            "mime_type": part["mimeType"],
+                            "size": part["body"].get("size", 0)
+                        }
+                        attachments.append(attachment_info)
 
-        # combine all emails into single string
-        result = f"Search results ({len(email_list)}):\n\n"
-        result += "\n---\n".join(email_list)
-
-        return result
+            # Create structured email object
+            email_obj = {
+                "message_id": msg_id,
+                "thread_id": thread_id,
+                "from": from_addr,
+                "subject": subject,
+                "date": date,
+                "internal_date": internal_date,
+                "label_ids": label_ids,
+                "body": body,
+                "has_attachments": len(attachments) > 0,
+                "attachments": attachments
+            }
+            email_list.append(email_obj)
+        
+        return {
+            "success": True,
+            "emails": email_list,
+            "count": len(email_list),
+            "query": query,
+            "error": None
+        }
 
     except HttpError as error:
-        return f"Gmail API error: {error}"
+        return {
+            "success": False,
+            "emails": [],
+            "count": 0,
+            "query": query,
+            "error": f"Gmail API error: {str(error)}"
+        }
     except Exception as error:
-        return f"Unexpected error: {error}"
+        return {
+            "success": False,
+            "emails": [],
+            "count": 0,
+            "query": query,
+            "error": f"Unexpected error: {str(error)}"
+        }
 
 def _send_email_with_attachments_impl(
     to: str, subject: str, body: str, file_path: str, credentials_dict: Dict
-) -> str:
+) -> Dict[str, Any]:
     """Send email with attachment via Gmail"""
     try:
         # get credentials
@@ -222,7 +378,16 @@ def _send_email_with_attachments_impl(
         message.attach(MIMEText(body, "plain"))
 
         if not os.path.exists(file_path):
-            return f"Error: File not found at {file_path}"
+            return {
+                "success": False,
+                "message_id": None,
+                "thread_id": None,
+                "to": to,
+                "subject": subject,
+                "attachment_name": None,
+                "attachment_path": file_path,
+                "error": f"File not found at {file_path}"
+            }
         # open and read the file
         with open(file_path, "rb") as file:
             file_data = file.read()
@@ -246,18 +411,58 @@ def _send_email_with_attachments_impl(
             .execute()
         )
 
-        return f"Email with attachment sent successfully!\nTo: {to}\nSubject: {subject}\nAttachment: {filename}\nMessage ID: {send_result['id']}"
+        message_id = send_result['id']
+        thread_id = send_result.get('threadId', message_id)
+
+        return {
+            "success": True,
+            "message_id": message_id,
+            "thread_id": thread_id,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "attachment_name": filename,
+            "attachment_path": file_path,
+            "error": None
+        }
 
     except FileNotFoundError:
-        return f"Error: File not found at {file_path}"
+        return {
+            "success": False,
+            "message_id": None,
+            "thread_id": None,
+            "to": to,
+            "subject": subject,
+            "attachment_name": None,
+            "attachment_path": file_path,
+            "error": f"File not found at {file_path}"
+        }
     except HttpError as error:
-        return f"Gmail API error: {error}"
+        return {
+            "success": False,
+            "message_id": None,
+            "thread_id": None,
+            "to": to,
+            "subject": subject,
+            "attachment_name": None,
+            "attachment_path": file_path,
+            "error": f"Gmail API error: {str(error)}"
+        }
     except Exception as error:
-        return f"Unexpected error: {error}"
+        return {
+            "success": False,
+            "message_id": None,
+            "thread_id": None,
+            "to": to,
+            "subject": subject,
+            "attachment_name": None,
+            "attachment_path": file_path,
+            "error": f"Unexpected error: {str(error)}"
+        }
 
 def _reply_to_email_impl(
     message_id: str, reply_body: str, credentials_dict: Dict
-) -> str:
+) -> Dict[str, Any]:
     """Reply to an email via Gmail API"""
     try:
         # get gmail service
@@ -308,9 +513,514 @@ def _reply_to_email_impl(
             .execute()
         )
 
-        return f"Reply sent successfully!\nTo: {to_email}\nSubject: {subject}\nMessage ID: {send_result['id']}"
+        reply_message_id = send_result['id']
+        reply_thread_id = send_result.get('threadId', thread_id)
+
+        return {
+            "success": True,
+            "original_message_id": message_id,
+            "reply_message_id": reply_message_id,
+            "thread_id": reply_thread_id,
+            "to": to_email,
+            "subject": subject,
+            "reply_body": reply_body,
+            "error": None
+        }
+
+    except HttpError as error:
+        return {
+            "success": False,
+            "original_message_id": message_id,
+            "reply_message_id": None,
+            "thread_id": None,
+            "to": None,
+            "subject": None,
+            "reply_body": reply_body,
+            "error": f"Gmail API error: {str(error)}"
+        }
+    except Exception as error:
+        return {
+            "success": False,
+            "original_message_id": message_id,
+            "reply_message_id": None,
+            "thread_id": None,
+            "to": None,
+            "subject": None,
+            "reply_body": reply_body,
+            "error": f"Unexpected error: {str(error)}"
+        }
+
+
+def _get_thread_conversation_impl(thread_id: str, credentials_dict: Dict) -> str:
+    """Get all messages in an email thread/conversation"""
+    try:
+        # get gmail service
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        # get thread with all messages
+        thread = (
+            gmail_service.users()
+            .threads()
+            .get(userId="me", id=thread_id, format="full")
+            .execute()
+        )
+
+        messages = thread.get("messages", [])
+
+        if not messages:
+            return f"No messages found in thread {thread_id}"
+
+        # format each message in the thread
+        conversation = []
+        for idx, message in enumerate(messages, 1):
+            headers = message["payload"]["headers"]
+
+            # extract headers
+            from_addr = ""
+            to_addr = ""
+            subject = ""
+            date = ""
+            message_id = message["id"]
+
+            for header in headers:
+                if header["name"] == "From":
+                    from_addr = header["value"]
+                elif header["name"] == "To":
+                    to_addr = header["value"]
+                elif header["name"] == "Subject":
+                    subject = header["value"]
+                elif header["name"] == "Date":
+                    date = header["value"]
+
+            # get message body
+            body = ""
+            if "parts" in message["payload"]:
+                # multipart message
+                for part in message["payload"]["parts"]:
+                    if part["mimeType"] == "text/plain" and "data" in part["body"]:
+                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
+                        break
+            elif "body" in message["payload"] and "data" in message["payload"]["body"]:
+                # simple message
+                body = base64.urlsafe_b64decode(message["payload"]["body"]["data"]).decode("utf-8")
+
+            # get snippet if body is empty
+            if not body:
+                body = message.get("snippet", "")
+
+            # format this message
+            msg_info = f"""Message #{idx} (ID: {message_id})
+From: {from_addr}
+To: {to_addr}
+Subject: {subject}
+Date: {date}
+
+Body:
+{body}
+"""
+            conversation.append(msg_info)
+
+        # combine all messages
+        result = f"Thread Conversation ({len(messages)} messages):\nThread ID: {thread_id}\n\n"
+        result += "\n" + "="*80 + "\n\n".join(conversation)
+        
+        # Add message IDs list for chaining
+        message_ids = [msg["id"] for msg in messages]
+        result += f"\n\nAll Message IDs in Thread: {', '.join(message_ids)}"
+
+        return result
 
     except HttpError as error:
         return f"Gmail API error: {error}"
     except Exception as error:
         return f"Unexpected error: {error}"
+
+
+def _create_draft_email_impl(
+    to: str, subject: str, body: str, credentials_dict: Dict
+) -> Dict[str, Any]:
+    """Create a draft email in Gmail"""
+    try:
+        # get gmail service
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        # create message
+        message = MIMEText(body)
+        message["to"] = to
+        message["subject"] = subject
+
+        # encode message
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        # create draft
+        draft = (
+            gmail_service.users()
+            .drafts()
+            .create(
+                userId="me",
+                body={"message": {"raw": raw_message}}
+            )
+            .execute()
+        )
+
+        draft_id = draft["id"]
+        message_id = draft["message"]["id"]
+
+        return {
+            "success": True,
+            "draft_id": draft_id,
+            "message_id": message_id,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "error": None
+        }
+
+    except HttpError as error:
+        return {
+            "success": False,
+            "draft_id": None,
+            "message_id": None,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "error": f"Gmail API error: {str(error)}"
+        }
+    except Exception as error:
+        return {
+            "success": False,
+            "draft_id": None,
+            "message_id": None,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "error": f"Unexpected error: {str(error)}"
+        }
+
+
+def _send_draft_email_impl(draft_id: str, credentials_dict: Dict) -> Dict[str, Any]:
+    """Send a draft email by draft ID"""
+    try:
+        # get gmail service
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        # send the draft
+        sent_message = (
+            gmail_service.users()
+            .drafts()
+            .send(userId="me", body={"id": draft_id})
+            .execute()
+        )
+
+        message_id = sent_message["id"]
+        thread_id = sent_message.get("threadId", "")
+
+        # get message details to show what was sent
+        message_details = (
+            gmail_service.users()
+            .messages()
+            .get(userId="me", id=message_id, format="metadata", metadataHeaders=["To", "Subject"])
+            .execute()
+        )
+
+        headers = message_details["payload"]["headers"]
+        to_addr = ""
+        subject = ""
+
+        for header in headers:
+            if header["name"] == "To":
+                to_addr = header["value"]
+            elif header["name"] == "Subject":
+                subject = header["value"]
+
+        return {
+            "success": True,
+            "draft_id": draft_id,
+            "message_id": message_id,
+            "thread_id": thread_id,
+            "to": to_addr,
+            "subject": subject,
+            "error": None
+        }
+
+    except HttpError as error:
+        return {
+            "success": False,
+            "draft_id": draft_id,
+            "message_id": None,
+            "thread_id": None,
+            "to": None,
+            "subject": None,
+            "error": f"Gmail API error: {str(error)}"
+        }
+    except Exception as error:
+        return f"Unexpected error: {error}"
+
+
+def _add_label_impl(message_id: str, label: str, credentials_dict: Dict) -> Dict[str, Any]:
+    """Add a system label to an email
+    
+    Supported labels: STARRED, UNREAD, IMPORTANT, SPAM, TRASH, INBOX
+    """
+    try:
+        # get gmail service
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        # validate label
+        valid_labels = ["STARRED", "UNREAD", "IMPORTANT", "SPAM", "TRASH"]
+        label_upper = label.upper()
+        
+        if label_upper not in valid_labels:
+            return {
+                "success": False,
+                "message_id": message_id,
+                "thread_id": None,
+                "label_added": label,
+                "current_labels": None,
+                "from": None,
+                "subject": None,
+                "error": f"Invalid label '{label}'. Valid labels are: {', '.join(valid_labels)}"
+            }
+
+        # add label
+        result = (
+            gmail_service.users()
+            .messages()
+            .modify(
+                userId="me",
+                id=message_id,
+                body={"addLabelIds": [label_upper]}
+            )
+            .execute()
+        )
+
+        # get email details to confirm
+        message = (
+            gmail_service.users()
+            .messages()
+            .get(userId="me", id=message_id, format="metadata", metadataHeaders=["Subject", "From"])
+            .execute()
+        )
+
+        headers = message["payload"]["headers"]
+        subject = ""
+        from_addr = ""
+
+        for header in headers:
+            if header["name"] == "Subject":
+                subject = header["value"]
+            elif header["name"] == "From":
+                from_addr = header["value"]
+
+        thread_id = result.get("threadId", "")
+        current_labels = ", ".join(result.get("labelIds", []))
+
+        return {
+            "success": True,
+            "message_id": message_id,
+            "thread_id": thread_id,
+            "label_added": label_upper,
+            "current_labels": current_labels,
+            "from": from_addr,
+            "subject": subject,
+            "error": None
+        }
+
+    except HttpError as error:
+        return {
+            "success": False,
+            "message_id": message_id,
+            "thread_id": None,
+            "label_added": label,
+            "current_labels": None,
+            "from": None,
+            "subject": None,
+            "error": f"Gmail API error: {str(error)}"
+        }
+    except Exception as error:
+        return {
+            "success": False,
+            "message_id": message_id,
+            "thread_id": None,
+            "label_added": label,
+            "current_labels": None,
+            "from": None,
+            "subject": None,
+            "error": f"Unexpected error: {str(error)}"
+        }
+
+
+def _remove_label_impl(message_id: str, label: str, credentials_dict: Dict) -> Dict[str, Any]:
+    """Remove a system label from an email
+    
+    Supported labels: STARRED, UNREAD, IMPORTANT, SPAM, TRASH, INBOX
+    """
+    try:
+        # get gmail service
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        # validate label
+        valid_labels = ["STARRED", "UNREAD", "IMPORTANT", "SPAM", "TRASH"]
+        label_upper = label.upper()
+        
+        if label_upper not in valid_labels:
+            return {
+                "success": False,
+                "message_id": message_id,
+                "thread_id": None,
+                "label_removed": label,
+                "current_labels": None,
+                "from": None,
+                "subject": None,
+                "error": f"Invalid label '{label}'. Valid labels are: {', '.join(valid_labels)}"
+            }
+
+        # remove label
+        result = (
+            gmail_service.users()
+            .messages()
+            .modify(
+                userId="me",
+                id=message_id,
+                body={"removeLabelIds": [label_upper]}
+            )
+            .execute()
+        )
+
+        # get email details to confirm
+        message = (
+            gmail_service.users()
+            .messages()
+            .get(userId="me", id=message_id, format="metadata", metadataHeaders=["Subject", "From"])
+            .execute()
+        )
+
+        headers = message["payload"]["headers"]
+        subject = ""
+        from_addr = ""
+
+        for header in headers:
+            if header["name"] == "Subject":
+                subject = header["value"]
+            elif header["name"] == "From":
+                from_addr = header["value"]
+
+        thread_id = result.get("threadId", "")
+        current_labels = ", ".join(result.get("labelIds", []))
+
+        return {
+            "success": True,
+            "message_id": message_id,
+            "thread_id": thread_id,
+            "label_removed": label_upper,
+            "current_labels": current_labels,
+            "from": from_addr,
+            "subject": subject,
+            "error": None
+        }
+
+    except HttpError as error:
+        return {
+            "success": False,
+            "message_id": message_id,
+            "thread_id": None,
+            "label_removed": label,
+            "current_labels": None,
+            "from": None,
+            "subject": None,
+            "error": f"Gmail API error: {str(error)}"
+        }
+    except Exception as error:
+        return {
+            "success": False,
+            "message_id": message_id,
+            "thread_id": None,
+            "label_removed": label,
+            "current_labels": None,
+            "from": None,
+            "subject": None,
+            "error": f"Unexpected error: {str(error)}"
+        }
+
+
+def _download_attachment_impl(
+    message_id: str, attachment_id: str, save_path: str, credentials_dict: Dict
+) -> Dict[str, Any]:
+    """Download an email attachment"""
+    try:
+        # get gmail service
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        # get the attachment
+        attachment = (
+            gmail_service.users()
+            .messages()
+            .attachments()
+            .get(userId="me", messageId=message_id, id=attachment_id)
+            .execute()
+        )
+
+        # decode the attachment data
+        file_data = base64.urlsafe_b64decode(attachment["data"])
+
+        # save to file
+        with open(save_path, "wb") as f:
+            f.write(file_data)
+
+        file_size = len(file_data)
+        filename = os.path.basename(save_path)
+        
+        # get message details for context
+        message = (
+            gmail_service.users()
+            .messages()
+            .get(userId="me", id=message_id, format="metadata", metadataHeaders=["Subject", "From"])
+            .execute()
+        )
+        
+        thread_id = message.get("threadId", "")
+
+        return {
+            "success": True,
+            "message_id": message_id,
+            "thread_id": thread_id,
+            "attachment_id": attachment_id,
+            "filename": filename,
+            "save_path": save_path,
+            "file_size": file_size,
+            "error": None
+        }
+
+    except FileNotFoundError:
+        return {
+            "success": False,
+            "message_id": message_id,
+            "thread_id": None,
+            "attachment_id": attachment_id,
+            "filename": None,
+            "save_path": save_path,
+            "file_size": 0,
+            "error": f"Invalid save path: {save_path}"
+        }
+    except HttpError as error:
+        return {
+            "success": False,
+            "message_id": message_id,
+            "thread_id": None,
+            "attachment_id": attachment_id,
+            "filename": None,
+            "save_path": save_path,
+            "file_size": 0,
+            "error": f"Gmail API error: {str(error)}"
+        }
+    except Exception as error:
+        return {
+            "success": False,
+            "message_id": message_id,
+            "thread_id": None,
+            "attachment_id": attachment_id,
+            "filename": None,
+            "save_path": save_path,
+            "file_size": 0,
+            "error": f"Unexpected error: {str(error)}"
+        }
