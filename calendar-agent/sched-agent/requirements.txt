@@ -1,0 +1,12 @@
+
+langchain
+langgraph
+openai
+google-api-python-client
+google-auth
+google-auth-oauthlib
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv>=1.0.0
+httpx>=0.25.0

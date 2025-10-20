@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "django-social-auth-pract",
+  "private_key_id": "0c523959abcb7db968e0619c0d48da1a887db310",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCroUndjdsX35bO\nyCt9gNWrxHC2dpp0EOSgdtkm4Ew0fFjucPjVl+JHSdIqxorGiQpfv9zOvRYovBUk\niBwlMfKS5MPdpt8sCS2Su8CiXFbf4h0NVFtCkiBhu6g7Ijuy/O1gbn2UBj/HuNIW\ndE1b4cEEyATY1mBslLvagmO+0U+nKF8zdF0BxB6vHOHD1R9HRXkiurVFzeOTpQNJ\nCIYxJEYw2vS6eJIyeh2tD0eHeeYO8EEhMzBR9aVjwJGqJozIUYURbLXYXUU9kO0g\nTLj+se17ONcM0LdG9dQnh5bL0n4G+rfBYc4UiwFc/DzCqBEAw/6RE9YxRHiUVPGo\neIKu+BoNAgMBAAECggEAR+0S8JeHbuzT3ZrDpxf7870iY0U3G1cNCTZlcMZlCUXn\nWx3bGmBJgwir3CNSeztpLpFQbw+NHssbrTChYvEYsHjQoK5TLrg18h1e8Gv0OGUh\nObnVeQOWMH8dVJLXI/6dWGFVnVg1GHUbDi/1T4E/i8prRZgp1rdKNpuYQ5qiX/F5\nkcYqkNw9vTkLS1DetwDhYW+QZ25a1wREn0dT9VY3pOOW5gf8Flf1aqPTzofuM6kA\n/vpxuLP69HQndAvF7bzkghGuzoFMX1IDC+YnlxQVB5cGcE7FLozeHbiwqi+Jbwfy\n9IqBtovsU0Dfac21oQ+0xFNJhk9609Xhk4uzw67ZXQKBgQDqbbmNbFO32tcourMM\n+aXdCUfTtnAFVz8XUONm6u4mzuywSG5csuTlt9sZWOyaF/3WNa/UE9qiKr+6fs9A\nmhWmxhlwvI3uX7Th+JXSOxDD1X4g8BIpg67zwEbCiPq1dnqa+g0aQI1Zsr1CBYqY\nA8qAiAJ/YKIdwJFDnzWZNWXnlwKBgQC7bEKmutFhb/ZXOkDD3lqMF6Z7v058axq7\npPccmi6oHFHV9VrE1TuSZxzpQAM1lFt3z57oEv1UGxnD/oYUZjU1/HMXxQ8O+kjt\nczi83UPlbi0Ku+9ajO0I9m8o9jaldzyxr4VWOgC0PyV6/R74IM0biAJhYR5GjRrd\nO8dB4Wtf+wKBgQCXmT9uGkiFU8rh9uJFGMhPCWpemdMVURdmr5NvAavigtwDH8Pm\nxHVLrLrOSHgxKiSnuu4qmnA/gJ+eLdU+9KXdxKu9AOJT7aZen0/btQChc9Vt3XIR\nUKv5yzS3JrfiU2zz/ZItkOMXx4OmR0kaBxGUTuA2mTodPWNzNGkH28U7nwKBgAmk\nrFk/y34j8JzUVni9fBMxNFOxqCwmpp15A23pUPU9X8iOczklb4c83vPxYzjihUJI\n4Hg4Yeht7Il1ExkBmUNJ1fInJXszzYTKJOUyzUeEv7SJrusNzTRk2ZtV78HbvLe3\nvDiPi3G6vgbx9yH1Lhh4iwbPpGsk33j6lmoBWzD5AoGAZg0SvoTXx57TgfsJFR61\nsrgDUiI1wNOB+3iJ/rt8jvoobWskRA4gRaWK9TNJ5+NlHWE7dGl+t4xtvEyemhWH\nHnQwzi8eTnO8necQoy0FpXEIO0xs0iJfYaXlrPJeI+M6amwGT7NmNjYvJR9DxpLO\njURsp5HMScY+hE6Qqp5Rkx8=\n-----END PRIVATE KEY-----\n",
+  "client_email": "calendar-agent@django-social-auth-pract.iam.gserviceaccount.com",
+  "client_id": "113293031808773355325",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/calendar-agent%40django-social-auth-pract.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
