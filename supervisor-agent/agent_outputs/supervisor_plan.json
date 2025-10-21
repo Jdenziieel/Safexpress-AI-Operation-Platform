@@ -4,27 +4,46 @@
       "agent": "gmail_agent",
       "tool": "search_emails",
       "inputs": {
-        "query": "to:jdenziieel",
+        "query": "from:Josh Denziel Joves after:{{ today_date }}",
         "max_results": 1
       },
       "output_variables": {
-        "email_subject": "email_1_subject",
-        "email_body": "email_1_snippet"
+        "thread_id": "emails[0].thread_id"
       },
-      "description": "Find the last email sent to jdenziieel"
+      "description": "Search for the email thread from Josh Denziel Joves sent today"
+    },
+    {
+      "agent": "gmail_agent",
+      "tool": "get_thread_conversation",
+      "inputs": {
+        "thread_id": "{{ thread_id }}"
+      },
+      "output_variables": {
+        "last_response": "messages[-1].body",
+        "subject": "messages[-1].subject"
+      },
+      "description": "Retrieve the last response in the email thread"
+    },
+    {
+      "agent": "gmail_agent",
+      "tool": "create_draft_email",
+      "inputs": {
+        "to": "jdenziieel@gmail.com, carlosmiguel.carla.cics@ust.edu.ph, paul.chua.cics@ust.edu.ph",
+        "subject": "Fwd: {{ subject }}",
+        "body": "{{ last_response }}"
+      },
+      "output_variables": {
+        "draft_id": "draft_id"
+      },
+      "description": "Create a draft email to forward the last response"
     },
     {
       "agent": "gmail_agent",
       "tool": "send_draft_email",
       "inputs": {
-        "to": "lancejoshua.hilario.cics@ust.edu.ph, paul.chua.cics@ust.edu.ph, carlosmiguel.carla.cics@ust.edu.ph, Joshdenziel.joves.cics@ust.edu.ph",
-        "subject": "{{ email_subject }}",
-        "body": "{{ email_body }}"
+        "draft_id": "{{ draft_id }}"
       },
-      "output_variables": {
-        "sent_status": "success"
-      },
-      "description": "Send the contents of the found email to the specified recipients"
+      "description": "Send the draft email"
     }
   ]
 }

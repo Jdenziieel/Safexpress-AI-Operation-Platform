@@ -3,7 +3,6 @@ from typing import Dict, Any
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from tools import (
-    _read_recent_emails_impl,
     _search_emails_impl,
     _send_email_impl,
     _send_email_with_attachments_impl,
@@ -20,9 +19,10 @@ from dotenv import load_dotenv
 
 
 def create_email_agent(credentials_dict: Dict):
-    # initialize the llm with gpt-4
+    # initialize the llm with gpt-4o (128k context window)
+    # gpt-4o has 128,000 token context vs gpt-4's 8,192 tokens
     llm = ChatOpenAI(
-        model="gpt-4", temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY")
+        model="gpt-4o", temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY")
     )
 
     # import tool decorator
@@ -66,14 +66,14 @@ def create_email_agent(credentials_dict: Dict):
         result = _send_draft_email_impl(draft_id, credentials_dict)
         return result
 
-    @tool
-    def read_recent_emails(max_results: int) -> str:
-        """Reads recent emails from Gmail.
+    # @tool
+    # def read_recent_emails(max_results: int) -> str:
+    #     """Reads recent emails from Gmail.
 
-        Args:
-            max_results: Number of recent emails to fetch
-        """
-        return _read_recent_emails_impl(max_results, credentials_dict)
+    #     Args:
+    #         max_results: Number of recent emails to fetch
+    #     """
+    #     return _read_recent_emails_impl(max_results, credentials_dict)
 
     @tool
     def search_emails(query: str, max_results: int) -> str:
@@ -157,7 +157,6 @@ def create_email_agent(credentials_dict: Dict):
         send_email,
         create_draft_email,
         send_draft_email,
-        read_recent_emails,
         search_emails,
         send_email_with_attachment,
         reply_to_email,

@@ -19,10 +19,12 @@ class ActionApprovalResponse(BaseModel):
     timeout_seconds: int = 300  # 5 minutes default
 
 class ActionRiskLevel(str, Enum):
-    SAFE = "safe"              # Read-only, no approval needed
+    SAFE = "safe"              # Read-only, no approval needed  
     MODERATE = "moderate"       # Modifies data, optional approval
     DANGEROUS = "dangerous"     # Sends data out, always requires approval
     CRITICAL = "critical"       # Irreversible actions, requires approval + confirmation
+
+#In the event of rejecting or cancellation of task, we would perform rollback feature for all task created. Mostly moderate classification??
 
 # Categorize all actions by risk level
 ACTION_RISK_LEVELS = {

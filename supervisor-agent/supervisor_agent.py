@@ -4,39 +4,52 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 import json
 import httpx
-import jinja2
-import time
+from jinja2 import Template
 from typing import TypedDict, List, Optional, Dict, Any, Callable, Awaitable
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
 import os
 import uvicorn
 import asyncio
-from models.models import *
 import uuid
+import time
 
+# Import models
+from models.models import *
 
-load_dotenv()
+# Import configuration
+from config import (
+    AGENT_ENDPOINTS,
+    OUTPUT_DIR,
+    PLAN_SCHEMA,
+    GOOGLE_ACCESS_TOKEN,
+    GOOGLE_REFRESH_TOKEN,
+    OPENAI_API_KEY,
+    LLM_MODEL,
+    LLM_TEMPERATURE,
+    SERVER_PORT,
+    SERVER_HOST
+)
+
+# Import agent capabilities
+from agent_capabilities import agent_capabilities
+
+# Import utility functions
+from utils import (
+    identify_relevant_agents,
+    get_filtered_capabilities,
+    call_agent_with_retry,
+    generate_action_summary
+)
 
 # Initialize FastAPI app
 app = FastAPI(title="Supervisor Agent API")
 
+# Initialize LLM
 llm = ChatOpenAI(
-        model="gpt-4", temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY")
-    )
-
-# Microservice URLs for specialized agents
-AGENT_ENDPOINTS = {
-    "gmail_agent": os.getenv("GMAIL_AGENT_URL", "http://localhost:8001/execute_task"),
-    "docs_agent": os.getenv("DOCS_AGENT_URL", "http://localhost:8002/execute_task"),
-    "sheets_agent": os.getenv("SHEETS_AGENT_URL", "http://localhost:8003/execute_task"),
-    "calendar_agent": os.getenv("CALENDAR_AGENT_URL", "http://localhost:8004/execute_task"),
-    "drive_agent": os.getenv("DRIVE_AGENT_URL", "http://localhost:8005/execute_task"),
-}
-
-# Create output directory for saved JSON files
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "agent_outputs")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+    model=LLM_MODEL, 
+    temperature=LLM_TEMPERATURE, 
+    openai_api_key=OPENAI_API_KEY
+)
 
 # Pydantic models for API
 class UserRequest(BaseModel):
@@ -50,296 +63,191 @@ class WorkflowResponse(BaseModel):
     plan: Dict[str, Any]
     message: str
 
-plan_schema = """
-{
-  "plan": [
-    {
-      "agent": "string - name of the agent to use (e.g., 'gmail_agent', 'docs_agent')",
-      "tool": "string - exact tool name from agent's tools list (e.g., 'create_draft_email', 'search_emails', 'create_doc')",
-      "inputs": {
-        "param_name": "value or {{ variable_from_previous_step }}"
-      },
-      "output_variables": {
-        "new_variable_name": "source_field_name - create 'new_variable_name' by copying value from 'source_field_name' in the tool's result"
-      },
-      "description": "string - summary of what this step does"
-    }
-  ]
-}
-"""
-agent_capabilities = {
-    "gmail_agent": {
-        "description": "Comprehensive Gmail operations: read, search, draft, send, reply, manage labels, download attachments, and view conversation threads.",
-        "tools": {
-            "send_email": {
-                "description": "DEPRECATED: Sends an email immediately without review. Use create_draft_email + send_draft_email for safer workflow with human approval.",
-                "args": {
-                    "to": "str (required) — recipient email address",
-                    "subject": "str (required) — subject line",
-                    "body": "str (required) — email body content"
-                },
-                "returns": {
-                    "success": "bool — whether email was sent successfully",
-                    "message_id": "str — Gmail message ID",
-                    "thread_id": "str — thread ID of the email",
-                    "to": "str — recipient email address",
-                    "subject": "str — email subject",
-                    "body": "str — email body",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "read_recent_emails": {
-                "description": "Reads recent emails from Gmail inbox with full message bodies and attachment info",
-                "args": {
-                    "max_results": "int (required) — number of recent emails to fetch"
-                },
-                "returns": {
-                    "success": "bool — whether operation was successful",
-                    "emails": "list — array of email objects, each containing:",
-                    "emails[].message_id": "str — unique message ID",
-                    "emails[].thread_id": "str — conversation thread ID",
-                    "emails[].from": "str — sender email address",
-                    "emails[].subject": "str — email subject",
-                    "emails[].date": "str — email date from headers",
-                    "emails[].internal_date": "str — Gmail internal timestamp (milliseconds since epoch)",
-                    "emails[].label_ids": "list — array of label IDs (e.g., ['INBOX', 'UNREAD', 'IMPORTANT'])",
-                    "emails[].body": "str — full email body text (plain text preferred, falls back to HTML or snippet)",
-                    "emails[].has_attachments": "bool — whether email has attachments",
-                    "emails[].attachments": "list — array of attachment objects with filename, attachment_id, mime_type, size",
-                    "count": "int — number of emails returned",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "search_emails": {
-                "description": "Search emails in Gmail matching a query with full message bodies and attachment info. Supports date filters (after:YYYY/MM/DD, before:YYYY/MM/DD), sender (from:), subject, has:attachment, is:unread, etc.",
-                "args": {
-                    "query": "str (required) — search query (e.g., 'from:john@example.com', 'after:{{ yesterday_date }}', 'subject:meeting has:attachment')",
-                    "max_results": "int (required) — number of emails to fetch"
-                },
-                "returns": {
-                    "success": "bool — whether search was successful",
-                    "emails": "list — array of email objects, each containing:",
-                    "emails[].message_id": "str — unique message ID",
-                    "emails[].thread_id": "str — conversation thread ID",
-                    "emails[].from": "str — sender email address",
-                    "emails[].subject": "str — email subject",
-                    "emails[].date": "str — email date from headers",
-                    "emails[].internal_date": "str — Gmail internal timestamp (milliseconds since epoch)",
-                    "emails[].label_ids": "list — array of label IDs (e.g., ['INBOX', 'UNREAD', 'IMPORTANT'])",
-                    "emails[].body": "str — full email body text (plain text preferred, falls back to HTML or snippet)",
-                    "emails[].has_attachments": "bool — whether email has attachments",
-                    "emails[].attachments": "list — array of attachment objects with filename, attachment_id, mime_type, size",
-                    "count": "int — number of emails returned",
-                    "query": "str — the search query that was used",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "get_thread_conversation": {
-                "description": "Retrieves all messages in an email thread/conversation with full bodies",
-                "args": {
-                    "thread_id": "str (required) — thread ID from search_emails or read_recent_emails"
-                },
-                "returns": {
-                    "success": "bool — whether retrieval was successful",
-                    "thread_id": "str — the thread ID",
-                    "message_count": "int — number of messages in thread",
-                    "messages": "list — array of full message objects with id, from, to, subject, date, body",
-                    "all_message_ids": "str — comma-separated list of all message IDs in thread",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "reply_to_email": {
-                "description": "Replies to an email in its thread (maintains conversation)",
-                "args": {
-                    "message_id": "str (required) — message ID of email to reply to",
-                    "reply_body": "str (required) — reply message content"
-                },
-                "returns": {
-                    "success": "bool — whether reply was sent successfully",
-                    "original_message_id": "str — the message ID that was replied to",
-                    "reply_message_id": "str — message ID of the sent reply",
-                    "thread_id": "str — thread ID of the conversation",
-                    "to": "str — recipient email address",
-                    "subject": "str — reply subject",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "create_draft_email": {
-                "description": "Creates a draft email (does not send, waits for user approval)",
-                "args": {
-                    "to": "str (required) — recipient email address",
-                    "subject": "str (required) — subject line",
-                    "body": "str (required) — email body content"
-                },
-                "returns": {
-                    "success": "bool — whether draft was created successfully",
-                    "draft_id": "str — Gmail draft ID for sending later",
-                    "message_id": "str — underlying message ID",
-                    "to": "str — recipient email address",
-                    "subject": "str — email subject",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "send_draft_email": {
-                "description": "Sends a previously created draft email by draft ID",
-                "args": {
-                    "draft_id": "str (required) — draft ID from create_draft_email"
-                },
-                "returns": {
-                    "success": "bool — whether draft was sent successfully",
-                    "message_id": "str — Gmail message ID of sent email",
-                    "thread_id": "str — thread ID of the email",
-                    "to": "str — recipient email address",
-                    "subject": "str — email subject",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "send_email_with_attachment": {
-                "description": "Sends an email with a file attachment",
-                "args": {
-                    "to": "str (required) — recipient email address",
-                    "subject": "str (required) — subject line",
-                    "body": "str (required) — email body content",
-                    "file_path": "str (required) — absolute path to the file to attach"
-                },
-                "returns": {
-                    "success": "bool — whether email was sent successfully",
-                    "message_id": "str — Gmail message ID",
-                    "thread_id": "str — thread ID of the email",
-                    "to": "str — recipient email address",
-                    "subject": "str — email subject",
-                    "attachment_name": "str — name of attached file",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "add_label": {
-                "description": "Adds a system label to an email (star, mark unread, mark important, move to spam/trash)",
-                "args": {
-                    "message_id": "str (required) — message ID of email to label",
-                    "label": "str (required) — label to add: STARRED, UNREAD, IMPORTANT, SPAM, TRASH"
-                },
-                "returns": {
-                    "success": "bool — whether label was added successfully",
-                    "message_id": "str — the message ID that was modified",
-                    "thread_id": "str — thread ID of the email",
-                    "label_added": "str — the label that was added",
-                    "current_labels": "str — comma-separated list of all current labels",
-                    "from": "str — email sender",
-                    "subject": "str — email subject",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "remove_label": {
-                "description": "Removes a system label from an email (unstar, mark read, unmark important, remove from spam/trash)",
-                "args": {
-                    "message_id": "str (required) — message ID of email to unlabel",
-                    "label": "str (required) — label to remove: STARRED, UNREAD, IMPORTANT, SPAM, TRASH"
-                },
-                "returns": {
-                    "success": "bool — whether label was removed successfully",
-                    "message_id": "str — the message ID that was modified",
-                    "thread_id": "str — thread ID of the email",
-                    "label_removed": "str — the label that was removed",
-                    "current_labels": "str — comma-separated list of remaining labels",
-                    "from": "str — email sender",
-                    "subject": "str — email subject",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "download_attachment": {
-                "description": "Downloads an email attachment to local storage",
-                "args": {
-                    "message_id": "str (required) — message ID of email containing attachment",
-                    "attachment_id": "str (required) — attachment ID from email details",
-                    "save_path": "str (required) — absolute path where file should be saved"
-                },
-                "returns": {
-                    "success": "bool — whether download was successful",
-                    "message_id": "str — the message ID",
-                    "thread_id": "str — thread ID of the email",
-                    "attachment_id": "str — the attachment ID",
-                    "filename": "str — name of downloaded file",
-                    "save_path": "str — full path where file was saved",
-                    "file_size": "int — size in bytes",
-                    "error": "str — error message (null if successful)"
-                }
-            }
+# SharedState TypedDict for workflow
+class SharedState(TypedDict):
+    input: str
+    plan: dict
+    context: dict
+    memory: dict
+    policy: list
+    final_context: dict
+
+
+# IN MEMORY ONLY (ADJUST THIS LATER ON AND CONNECT TO DB)
+PENDING_ACTIONS = {}
+
+def get_action_risk_level(tool_name: str) -> ActionRiskLevel:
+    """Get risk level for a tool"""
+    return ACTION_RISK_LEVELS.get(tool_name, ActionRiskLevel.MODERATE)
+
+def requires_approval(tool_name: str, auto_approve_moderate: bool = True) -> bool:
+    """Check if action requires approval based on risk level"""
+    risk = get_action_risk_level(tool_name)
+    
+    if risk == ActionRiskLevel.SAFE:
+        return False
+    elif risk == ActionRiskLevel.MODERATE:
+        return not auto_approve_moderate  # Configurable
+    elif risk in [ActionRiskLevel.DANGEROUS, ActionRiskLevel.CRITICAL]:
+        return True
+    
+    return True  # Default to requiring approval
+
+class PendingAction:
+    """Represents an action waiting for approval"""
+    def __init__(self, action_id: str, step_info: dict, execution_callback: Callable):
+        self.action_id = action_id
+        self.step_info = step_info
+        self.execution_callback = execution_callback
+        self.status = "pending"
+        self.result = None
+        self.created_at = datetime.now()
+        
+    def to_dict(self):
+        return {
+            "action_id": self.action_id,
+            "step_number": self.step_info.get("step_number"),
+            "agent": self.step_info.get("agent"),
+            "tool": self.step_info.get("tool"),
+            "description": self.step_info.get("description"),
+            "inputs": self.step_info.get("inputs"),
+            "risk_level": get_action_risk_level(self.step_info.get("tool")),
+            "status": self.status,
+            "created_at": self.created_at.isoformat()
         }
-    },
-    "docs_agent": {
-        "description": "Create, edit, and read Google Docs documents.",
-        "tools": {
-            "create_doc": {
-                "description": "Creates a new Google Doc and returns its ID and URL",
-                "args": {
-                    "title": "str (required) — the name of the document (e.g., 'Project Notes')"
-                },
-                "returns": {
-                    "success": "bool — whether document was created successfully",
-                    "document_id": "str — Google Doc ID (null if failed)",
-                    "document_url": "str — URL to access the document (null if failed)",
-                    "title": "str — document title",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "add_text": {
-                "description": "Adds text to an existing Google Doc",
-                "args": {
-                    "document_id": "str (required) — the ID of the document",
-                    "text": "str (required) — the text content to add"
-                },
-                "returns": {
-                    "success": "bool — whether text was added successfully",
-                    "document_id": "str — the document that was modified",
-                    "document_url": "str — URL to access the document",
-                    "text_length": "int — length of text added",
-                    "error": "str — error message (null if successful)"
-                }
-            },
-            "read_doc": {
-                "description": "Reads text content from a Google Doc",
-                "args": {
-                    "document_id": "str (required) — the ID of the document to read"
-                },
-                "returns": {
-                    "success": "bool — whether read was successful",
-                    "document_id": "str — the document that was read",
-                    "document_url": "str — URL to access the document",
-                    "content": "str — full document text content",
-                    "title": "str — document title",
-                    "error": "str — error message (null if successful)"
-                }
-            }
-        }
-    },
-    "sheets_agent": {
-        "description": "Create or update Google Sheets.",
-        "args": {
-            "title": "str (required) — sheet title",
-            "data": "List[List[str]] (required) — 2D list of rows"
-        },
-        "returns": ["sheet_url"]
-    },
-    "calendar_agent": {
-        "description": "Create or update calendar events.",
-        "args": {
-            "title": "str (required) — event title",
-            "datetime": "str (required) — ISO date/time",
-            "attendees": "List[str] (optional) — participant emails",
-            "description": "str (optional) — event details"
-        },
-        "returns": ["event_id"]
-    },
-    "drive_agent": {
-        "description": "Upload or share files using Google Drive.",
-        "args": {
-            "filename": "str (required) — file name",
-            "file_url": "str (optional) — URL or path of file to upload",
-            "share_with": "List[str] (optional) — list of users to share with"
-        },
-        "returns": ["drive_url"]
-    }
-}
+    
+def generate_action_id() -> str:
+    """Generate unique action ID"""
+    return f"action_{uuid.uuid4().hex[:8]}"
+
+def store_pending_action(action: PendingAction):
+    """Store action waiting for approval"""
+    PENDING_ACTIONS[action.action_id] = action
+
+def get_pending_action(action_id: str) -> Optional[PendingAction]:
+    """Retrieve pending action"""
+    return PENDING_ACTIONS.get(action_id)
+
+def remove_pending_action(action_id: str):
+    """Remove completed action"""
+    if action_id in PENDING_ACTIONS:
+        del PENDING_ACTIONS[action_id]
+
+# Supervisor Node - Creates the execution plan
+def supervisor_node(state: SharedState) -> SharedState:
+    """
+    STEP 1: Supervisor generates a plan based on user input
+    Enhanced to support multi-step workflows with data dependencies
+    """
+    print("\n" + "="*60)
+    print("🧠 SUPERVISOR NODE - Planning Phase")
+    print("="*60)
+    
+    user_input = state["input"]
+    context = state.get("context", {})
+    print(f"📥 User Input: {user_input}\n")
+    
+    # Extract date info from context
+    today_date = context.get("today_date", "")
+    yesterday_date = context.get("yesterday_date", "")
+    print(f"📅 Context dates: today={today_date}, yesterday={yesterday_date}")
+        
+    # OPTIMIZATION: Filter relevant agents first (cheap)
+    relevant_agents = identify_relevant_agents(user_input)
+
+    print(f"📌 Relevant agents: {relevant_agents}")
+
+    # Get only the needed capabilities
+    filtered_capabilities = get_filtered_capabilities(relevant_agents)
+    
+    # Now send to LLM with reduced context
+    capability_summary = json.dumps(filtered_capabilities, indent=2)
+    schema_text = json.dumps(PLAN_SCHEMA, indent=2)
+
+    system_prompt = f"""You are the Supervisor agent creating multi-step execution plans.
+
+    CURRENT DATE CONTEXT:
+    - Today's date: {today_date}
+    - Yesterday's date: {yesterday_date}
+
+    PLANNING RULES:
+    1. Reference previous outputs using capability_summary syntax
+    2. Declare output_variables as {{"source_field": "source_field"}} to rename fields from tool's "returns"
+    3. Break tasks into sequential steps with clear data flow
+    4. Use date context variables: {{{{ today_date }}}}, {{{{ yesterday_date }}}} (format: YYYY-MM-DD)
+    5. For ANY email sending: create_draft_email first, then optionally send_draft_email if explicitly requested
+    6. IMPORTANT: read_recent_emails and search_emails return an "emails" array. Access items using array syntax:
+    - {{{{ emails[0].message_id }}}} for first email's message_id
+    - {{{{ emails[0].from }}}} for first email's sender
+    - {{{{ emails[0].subject }}}} for first email's subject
+    - Store array in variable: {{"recent_emails": "emails"}}, then use {{{{ recent_emails[0].from }}}}
+
+    Available agents and tools:
+    {capability_summary}
+
+    Schema:
+    {schema_text}
+
+    Return ONLY the JSON plan."""
+
+    # system_prompt = f"""You are the Supervisor agent creating multi-step execution plans.
+
+    # CURRENT DATE CONTEXT:
+    # - Today's date: {today_date}
+    # - Yesterday's date: {yesterday_date}
+
+    # PLANNING RULES:
+    # 1. Reference previous outputs using {{{{ variable_name }}}} syntax
+    # 2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from tool's "returns"
+    # 3. Break tasks into sequential steps with clear data flow
+    # 4. Use date context variables: {{{{ today_date }}}}, {{{{ yesterday_date }}}} (format: YYYY-MM-DD)
+    # 5. For ANY email sending: create_draft_email first, then optionally send_draft_email if explicitly requested
+    # 6. IMPORTANT: read_recent_emails and search_emails return an "emails" array. Access items using array syntax:
+    # - {{{{ emails[0].message_id }}}} for first email's message_id
+    # - {{{{ emails[0].from }}}} for first email's sender
+    # - {{{{ emails[0].subject }}}} for first email's subject
+    # - Store array in variable: {{"recent_emails": "emails"}}, then use {{{{ recent_emails[0].from }}}}
+
+    # Available agents and tools:
+    # {capability_summary}
+
+    # Schema:
+    # {schema_text}
+
+    # Return ONLY the JSON plan."""
+
+    print("🤖 Calling LLM to generate multi-step plan...")
+    print(f"💰 Token optimization: Using {len(relevant_agents)}/{len(agent_capabilities)} agents")
+    
+    llm_response = llm.invoke([
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_input}
+    ])
+
+    try:
+        # Extract JSON from response
+        response_text = llm_response.content.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:-3].strip()
+        elif response_text.startswith("```"):
+            response_text = response_text[3:-3].strip()
+            
+        plan = json.loads(response_text)
+        
+        print("✅ Plan generated successfully!")
+        print(f"\n📋 Generated Plan:\n{json.dumps(plan, indent=2)}")
+        
+        # Save the plan to a file for inspection
+        plan_file = os.path.join(OUTPUT_DIR, "supervisor_plan.json")
+        with open(plan_file, 'w') as f:
+            json.dump(plan, f, indent=2)
+        print(f"\n💾 Plan saved to: {plan_file}")
+        print("="*60 + "\n")
+
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to parse LLM response as JSON: {e}\nResponse: {llm_response.content}")
+    
+    return {"plan": plan, "context": state.get("context", {})}
 
 class SharedState(TypedDict):
     input: str
@@ -349,127 +257,6 @@ class SharedState(TypedDict):
     policy: list
     final_context:dict
 
-def identify_relevant_agents(user_input: str) -> List[str]:
-    """
-    Use a cheap/fast LLM call to identify which agents are relevant.
-    This is a simple classification task, much cheaper than full planning.
-    """
-    classifier_prompt = f"""
-    Based on this user request, which agents are needed? 
-    
-    Available agents:
-    - gmail_agent: Read, search, draft, send, reply to emails, manage labels, download attachments
-    - docs_agent: Create, edit, and read Google Docs documents
-    
-    Note: sheets_agent, calendar_agent, and drive_agent are defined but may not be implemented yet.
-    
-    User request: {user_input}
-    
-    Return ONLY a JSON array of agent names needed. Example: ["gmail_agent", "docs_agent"]
-    """
-    
-    # Use cheaper model (gpt-3.5-turbo) or lower temperature
-    classifier_llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
-    response = classifier_llm.invoke([{"role": "user", "content": classifier_prompt}])
-    
-    # Parse the agent list
-    agent_list = json.loads(response.content.strip())
-    return agent_list
-
-def get_filtered_capabilities(agent_names: List[str]) -> Dict:
-    """Only return capabilities for specified agents"""
-    return {
-        agent: agent_capabilities[agent]
-        for agent in agent_names
-        if agent in agent_capabilities
-    }
-
-def call_agent_with_retry(
-    agent_url: str,
-    request_payload: dict,
-    max_retries: int = 5,
-    timeout: float = 320.0,
-    backoff_factor: float = 2.0
-) -> Optional[dict]:
-    """
-    Call an agent with exponential backoff retry logic.
-    
-    Args:
-        agent_url: URL of the agent endpoint
-        request_payload: JSON payload to send
-        max_retries: Maximum number of retry attempts
-        timeout: Request timeout in seconds
-        backoff_factor: Multiplier for exponential backoff (2.0 = double each time)
-    
-    Returns:
-        Response JSON or None if all retries failed
-    """
-    last_exception = None
-    
-    for attempt in range(max_retries):
-        try:
-            print(f"🔄 Attempt {attempt + 1}/{max_retries} calling {agent_url}")
-            
-            with httpx.Client(timeout=timeout) as client:
-                response = client.post(agent_url, json=request_payload)
-                response.raise_for_status()
-                result = response.json()
-                
-                # Check if the agent actually succeeded
-                if result.get("success"):
-                    print(f"✅ Agent call succeeded on attempt {attempt + 1}")
-                    return result
-                else:
-                    # Agent returned error but HTTP was successful
-                    print(f"⚠️ Agent reported error: {result.get('error')}")
-                    if attempt < max_retries - 1:
-                        wait_time = backoff_factor ** attempt
-                        print(f"   Retrying in {wait_time}s...")
-                        time.sleep(wait_time)
-                        continue
-                    return result  # Return the error result on last attempt
-                    
-        except httpx.TimeoutException as e:
-            last_exception = e
-            print(f"⏱️ Timeout on attempt {attempt + 1}: {str(e)}")
-            if attempt < max_retries - 1:
-                wait_time = backoff_factor ** attempt
-                print(f"   Retrying in {wait_time}s...")
-                time.sleep(wait_time)
-                
-        except httpx.HTTPStatusError as e:
-            last_exception = e
-            print(f"❌ HTTP {e.response.status_code} on attempt {attempt + 1}")
-            
-            # Don't retry on 4xx client errors (except 429 rate limit)
-            if 400 <= e.response.status_code < 500 and e.response.status_code != 429:
-                print(f"   Client error - not retrying")
-                return None
-                
-            if attempt < max_retries - 1:
-                wait_time = backoff_factor ** attempt
-                print(f"   Retrying in {wait_time}s...")
-                time.sleep(wait_time)
-                
-        except httpx.HTTPError as e:
-            last_exception = e
-            print(f"❌ HTTP error on attempt {attempt + 1}: {str(e)}")
-            if attempt < max_retries - 1:
-                wait_time = backoff_factor ** attempt
-                print(f"   Retrying in {wait_time}s...")
-                time.sleep(wait_time)
-                
-        except Exception as e:
-            last_exception = e
-            print(f"❌ Unexpected error on attempt {attempt + 1}: {str(e)}")
-            if attempt < max_retries - 1:
-                wait_time = backoff_factor ** attempt
-                print(f"   Retrying in {wait_time}s...")
-                time.sleep(wait_time)
-    
-    # All retries exhausted
-    print(f"💀 All {max_retries} attempts failed. Last error: {last_exception}")
-    return None
 
 def supervisor_node(state: SharedState) -> SharedState:
     """
@@ -499,7 +286,7 @@ def supervisor_node(state: SharedState) -> SharedState:
     
     # Now send to LLM with reduced context
     capability_summary = json.dumps(filtered_capabilities, indent=2)
-    schema_text = json.dumps(plan_schema, indent=2)
+    schema_text = json.dumps(PLAN_SCHEMA, indent=2)
 
 #     system_prompt = f"""You are the Supervisor agent creating multi-step execution plans.
 
@@ -645,6 +432,56 @@ class PendingAction:
 def generate_action_id() -> str:
     """Generate unique action ID"""
     return f"action_{uuid.uuid4().hex[:8]}"
+
+def extract_nested_value(data: dict, path: str):
+    """
+    Extract value from nested dictionary/list using path notation.
+    
+    Examples:
+        path="drafts[0].id" -> data["drafts"][0]["id"]
+        path="messages[-1].body" -> data["messages"][-1]["body"]
+        path="user.name" -> data["user"]["name"]
+        path="emails[2].subject" -> data["emails"][2]["subject"]
+    
+    Returns:
+        The extracted value, or None if path not found
+    """
+    import re
+    
+    # Split path by dots, but preserve array indices
+    # Example: "drafts[0].id" -> ["drafts[0]", "id"]
+    parts = path.split('.')
+    
+    current = data
+    for part in parts:
+        # Check if this part has array index notation: "field[index]" or "field[-index]"
+        match = re.match(r'(\w+)\[(-?\d+)\]', part)
+        if match:
+            field_name = match.group(1)
+            index = int(match.group(2))
+            
+            # First access the field
+            if isinstance(current, dict) and field_name in current:
+                current = current[field_name]
+            else:
+                return None
+            
+            # Then access the array index (supports negative indexing)
+            if isinstance(current, list):
+                try:
+                    current = current[index]
+                except IndexError:
+                    return None
+            else:
+                return None
+        else:
+            # Simple field access
+            if isinstance(current, dict) and part in current:
+                current = current[part]
+            else:
+                return None
+    
+    return current
 
 def store_pending_action(action: PendingAction):
     """Store action waiting for approval"""
@@ -799,28 +636,50 @@ def orchestrator_node(state: SharedState) -> SharedState:
         }
         
         try:
-            # Make HTTP POST request to agent
-            # Increased timeout to 180 seconds for LLM-based agents that may need multiple reasoning steps
-            with httpx.Client(timeout=180.0) as client:
-                response = client.post(agent_url, json=request_payload)
-                response.raise_for_status()
-                result = response.json()
+            # Use retry logic with longer timeout (320 seconds) and exponential backoff
+            result = call_agent_with_retry(
+                agent_url=agent_url,
+                request_payload=request_payload,
+                max_retries=3,
+                timeout=320.0
+            )
+            
+            if not result:
+                raise ValueError("Agent call failed after retries")
             
             print(f"✅ Agent response received")
-            print(f"   Response: {json.dumps(result, indent=6)}")
+            print(f"\n{'─'*60}")
+            print(f"📦 FULL AGENT RESPONSE DATA:")
+            print(f"{'─'*60}")
+            print(json.dumps(result, indent=2))
+            print(f"{'─'*60}\n")
             
             # STEP 3: Extract variables from result
             if result.get("success"):
-                agent_result = result.get("result", {})
+                # The agent response can be in two formats:
+                # 1. Direct format: {"success": true, "drafts": [...], ...}
+                # 2. Wrapped format: {"success": true, "result": {"drafts": [...]}, ...}
+                # Try wrapped format first, fall back to direct format
+                agent_result = result.get("result", result)
                 
                 # First, add ALL fields from the result to context (for backward compatibility)
-                variable_context.update(agent_result)
+                # But exclude common wrapper fields
+                fields_to_add = {k: v for k, v in agent_result.items() 
+                                if k not in ["success", "error"]}
+                variable_context.update(fields_to_add)
                 
                 # Then, create renamed variables based on output_variables mapping
-                # Format: "new_variable_name": "source_field_name"
+                # Format: "new_variable_name": "source_field_name" or "nested.path[0].field"
                 print(f"\n📦 Variables added to context:")
                 for new_var_name, source_field_name in output_variables.items():
-                    if source_field_name in agent_result:
+                    # Try nested path extraction first (handles "drafts[0].id")
+                    value = extract_nested_value(agent_result, source_field_name)
+                    
+                    if value is not None:
+                        variable_context[new_var_name] = value
+                        print(f"   ✓ {new_var_name} = {value} (from {source_field_name})")
+                    # Fallback to simple field access for backward compatibility
+                    elif source_field_name in agent_result:
                         variable_context[new_var_name] = agent_result[source_field_name]
                         print(f"   ✓ {new_var_name} = {agent_result[source_field_name]} (from {source_field_name})")
                     else:
@@ -1180,42 +1039,6 @@ def execute_single_action(step_info: dict) -> dict:
         raise ValueError("Agent call failed after retries")
     
     return result
-
-
-def generate_action_summary(tool: str, inputs: dict) -> dict:
-    """Generate human-readable summary of action"""
-    summary = {
-        "action": tool,
-        "description": ""
-    }
-    
-    if tool == "send_draft_email" or tool == "send_email_with_attachment":
-        summary["description"] = f"Send email to {inputs.get('to', 'unknown')}"
-        summary["details"] = {
-            "recipient": inputs.get("to"),
-            "subject": inputs.get("subject"),
-            "body_preview": inputs.get("body", "")[:200] + "..."
-        }
-    
-    elif tool == "reply_to_email":
-        summary["description"] = f"Reply to email"
-        summary["details"] = {
-            "message_id": inputs.get("message_id"),
-            "reply_preview": inputs.get("reply_body", "")[:200] + "..."
-        }
-    
-    elif tool == "add_text":
-        summary["description"] = f"Add text to document"
-        summary["details"] = {
-            "document_id": inputs.get("document_id"),
-            "text_preview": inputs.get("text", "")[:200] + "..."
-        }
-    
-    else:
-        summary["description"] = f"Execute {tool}"
-        summary["details"] = inputs
-    
-    return summary
 
 @app.get("/health")
 async def health_check():
