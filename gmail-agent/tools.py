@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 from langchain.tools import tool
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -225,8 +225,12 @@ def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -
 #             "error": f"Unexpected error: {str(error)}"
 #         }
     
-# checking - status: 
-def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) -> Dict[str, Any]:
+# checking - status: Done (Added LabelIds is not being used nor relevant in searches currently)
+def _search_emails_impl(
+        query: str,
+        max_results: int,
+        credentials_dict: Dict,
+        label_ids: List[str] = None) -> Dict[str, Any]:
     """Search emails in Gmail matching a query"""
 
     try:
@@ -240,6 +244,7 @@ def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) ->
                 userId="me",
                 q=query,  # different variable from read_recent_emails
                 maxResults=max_results,
+                labelIds=label_ids if label_ids else None,
             )
             .execute()
         )
@@ -248,12 +253,15 @@ def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) ->
 
         # check if empty
         if not messages:
+            label_info = f" with labels: {', '.join(label_ids)}" if label_ids else ""
             return {
-                "success": True,
+                "success": False,
                 "emails": [],
                 "count": 0,
                 "query": query,
-                "error": None
+                "label_filter": label_ids,
+                "error": f"No emails found matching query: '{query}'{label_info}",
+                "no_results": True
             }
 
         # loops through the messages and fetches details
@@ -362,6 +370,7 @@ def _search_emails_impl(query: str, max_results: int, credentials_dict: Dict) ->
             "error": f"Unexpected error: {str(error)}"
         }
 
+# checking - status:
 def _send_email_with_attachments_impl(
     to: str, subject: str, body: str, file_path: str, credentials_dict: Dict
 ) -> Dict[str, Any]:
@@ -460,6 +469,7 @@ def _send_email_with_attachments_impl(
             "error": f"Unexpected error: {str(error)}"
         }
 
+# checking - status:
 def _reply_to_email_impl(
     message_id: str, reply_body: str, credentials_dict: Dict
 ) -> Dict[str, Any]:
@@ -569,11 +579,12 @@ def _get_thread_conversation_impl(thread_id: str, credentials_dict: Dict) -> Dic
 
         if not messages:
             return {
-                "success": True,
+                "success": False,
                 "thread_id": thread_id,
                 "message_count": 0,
                 "messages": [],
-                "error": None
+                "error": f"Thread '{thread_id}' exists but contains no messages",
+                "no_results": True
             }
 
         # format each message in the thread
@@ -651,7 +662,7 @@ def _get_thread_conversation_impl(thread_id: str, credentials_dict: Dict) -> Dic
             "error": f"Unexpected error: {str(error)}"
         }
 
-
+# checking - status: Done
 def _create_draft_email_impl(
     to: str, subject: str, body: str, credentials_dict: Dict
 ) -> Dict[str, Any]:
@@ -713,7 +724,7 @@ def _create_draft_email_impl(
             "error": f"Unexpected error: {str(error)}"
         }
 
-
+# checking - status: Done
 def _send_draft_email_impl(draft_id: str, credentials_dict: Dict) -> Dict[str, Any]:
     """Send a draft email by draft ID"""
     try:
@@ -780,8 +791,8 @@ def _send_draft_email_impl(draft_id: str, credentials_dict: Dict) -> Dict[str, A
             "error": f"Unexpected error: {str(error)}"
         }
 
-
-def _search_drafts_impl(
+# checking - status: Done
+def _search_drafts_impl(    
     query: str = "", max_results: int = 10, credentials_dict: Dict = None
 ) -> Dict[str, Any]:
     """Search for draft emails in Gmail
@@ -817,12 +828,14 @@ def _search_drafts_impl(
         drafts = drafts_response.get("drafts", [])
 
         if not drafts:
+            query_info = f" matching query: '{query}'" if query else ""
             return {
-                "success": True,
+                "success": False,
                 "count": 0,
                 "drafts": [],
                 "query": query,
-                "error": None
+                "error": f"No draft emails found{query_info}",
+                "no_results": True
             }
 
         # get full details for each draft
@@ -871,7 +884,7 @@ def _search_drafts_impl(
             
             # Structure to match Gmail API format with nested message object
             draft_details.append({
-                "id": draft_id,  # Top-level draft ID for send_draft_email
+                "draft_id": draft_id,  # Top-level draft ID for send_draft_email
                 "message": {
                     "id": message_id,
                     "threadId": thread_id,

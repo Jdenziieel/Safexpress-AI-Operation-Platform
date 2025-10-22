@@ -30,7 +30,8 @@ agent_capabilities = {
                 "description": "Search emails in Gmail matching a query with full message bodies and attachment info. Supports date filters (after:YYYY/MM/DD, before:YYYY/MM/DD), sender (from:), subject, has:attachment, is:unread, etc.",
                 "args": {
                     "query": "str (required) — search query (e.g., 'from:john@example.com', 'after:{{ yesterday_date }}', 'subject:meeting has:attachment')",
-                    "max_results": "int (required) — number of emails to fetch"
+                    "max_results": "int (required) — number of emails to fetch",
+                    "label_ids": "List[str] (optional) — filter by specific label IDs (e.g., ['INBOX', 'UNREAD'])"
                 },
                 "returns": {
                     "success": "bool — whether search was successful",
@@ -120,7 +121,7 @@ agent_capabilities = {
                 "returns": {
                     "success": "bool — whether search was successful",
                     "count": "int — number of drafts found",
-                    "drafts": "list — array of draft objects, each containing: {id: draft_id, message: {id, threadId, labelIds, to, subject, body, snippet, date}}",
+                    "drafts": "list — array of draft objects, each containing: {draft_id: draft_id, message: {id, threadId, labelIds, to, subject, body, snippet, date}}",
                     "query": "str — search query used",
                     "error": "str — error message (null if successful)"
                 },

@@ -94,9 +94,16 @@ async def execute_task(request: AgentTaskRequest):
         # Apply transformations for email-sending tools using simple LLM
         transformed_inputs = dict(request.inputs)
         
-        if request.tool in ["send_draft_email", "reply_to_email", "send_email", "create_draft_email"]:
-            # Only use LLM if we need to transform the body
+        # Add signature to email body for tools that send/create emails
+        if request.tool in ["reply_to_email", "send_email", "create_draft_email"]:
+            # Check for both 'body' and 'reply_body' fields
+            body_field = None
             if "body" in transformed_inputs:
+                body_field = "body"
+            elif "reply_body" in transformed_inputs:
+                body_field = "reply_body"
+            
+            if body_field:
                 from langchain_openai import ChatOpenAI
                 llm = ChatOpenAI(model="gpt-4o", temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY"))
                 
@@ -106,15 +113,17 @@ async def execute_task(request: AgentTaskRequest):
 This is written by Assistant Agent
 
 Original body:
-{transformed_inputs['body']}
+{transformed_inputs[body_field]}
 
 Return ONLY the modified body text, nothing else."""
                 
-                print(f"🤖 Using LLM to transform email body...")
+                print(f"🤖 Using LLM to transform email body ({body_field})...")
                 llm_start = time.time()
                 response = llm.invoke(transform_prompt)
-                transformed_inputs['body'] = response.content.strip()
+                transformed_inputs[body_field] = response.content.strip()
                 print(f"✅ LLM transformation completed in {time.time() - llm_start:.2f}s")
+        
+        # Note: send_draft_email doesn't need transformation - signature was added during create_draft_email
         
         # Call tool directly
         print(f"🔧 Calling tool implementation directly...")

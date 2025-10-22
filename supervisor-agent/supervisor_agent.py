@@ -714,21 +714,74 @@ def orchestrator_node(state: SharedState) -> SharedState:
                     "status": "success"
                 })
             else:
+                # Handle failure - distinguish between no_results and actual errors
                 error_msg = result.get("error", "Unknown error")
-                print(f"❌ Agent reported error: {error_msg}")
-                results.append({
-                    "step": step_num,
-                    "agent": agent_name,
-                    "tool": tool_name,
-                    "status": "error",
-                    "error": error_msg
-                })
-                # Decide: continue or stop on error?
-                # For now, continue to next step
+                is_no_results = result.get("no_results", False)
+                
+                if is_no_results:
+                    # Graceful handling for empty results
+                    print(f"ℹ️ No results found: {error_msg}")
+                    print(f"   This step returned no data, but the operation was valid.")
+                    print(f"   Continuing to next step (if any)...")
+                    
+                    # Store as a special status for tracking
+                    results.append({
+                        "step": step_num,
+                        "agent": agent_name,
+                        "tool": tool_name,
+                        "description": description,
+                        "inputs": substituted_inputs,
+                        "status": "no_results",
+                        "message": error_msg,
+                        "output": result
+                    })
+                    
+                    # Add empty result context to prevent downstream failures
+                    # Extract the result format to add empty defaults
+                    agent_result = result.get("result", result)
+                    fields_to_add = {k: v for k, v in agent_result.items() 
+                                    if k not in ["success", "error", "no_results"]}
+                    variable_context.update(fields_to_add)
+                    
+                    print(f"   Added empty context fields: {list(fields_to_add.keys())}")
+                else:
+                    # Actual error occurred - STOP EXECUTION
+                    print(f"❌ Agent reported error: {error_msg}")
+                    print(f"🛑 STOPPING WORKFLOW - Error in step {step_num}")
+                    
+                    results.append({
+                        "step": step_num,
+                        "agent": agent_name,
+                        "tool": tool_name,
+                        "description": description,
+                        "inputs": substituted_inputs,
+                        "status": "error",
+                        "error": error_msg
+                    })
+                    
+                    # Stop workflow and return early
+                    print(f"\n{'='*60}")
+                    print("🛑 ORCHESTRATOR STOPPED DUE TO ERROR")
+                    print(f"{'='*60}")
+                    print(f"📊 Completed steps: {step_num}/{len(plan)}")
+                    print(f"✓ Successful: {sum(1 for r in results if r.get('status') == 'success')}")
+                    print(f"ℹ️ No Results: {sum(1 for r in results if r.get('status') == 'no_results')}")
+                    print(f"✗ Failed at step: {step_num}")
+                    print(f"{'='*60}\n")
+                    
+                    return {
+                        "final_context": variable_context,
+                        "context": variable_context,
+                        "results": results,
+                        "stopped_at_step": step_num,
+                        "error": error_msg
+                    }
         
         except httpx.HTTPError as e:
             error_msg = f"HTTP error calling {agent_name}: {str(e)}"
             print(f"❌ {error_msg}")
+            print(f"🛑 STOPPING WORKFLOW - HTTP Error in step {step_num}")
+            
             results.append({
                 "step": step_num,
                 "agent": agent_name,
@@ -736,11 +789,32 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 "status": "error",
                 "error": error_msg
             })
+            
+            # Stop workflow and return early
+            print(f"\n{'='*60}")
+            print("🛑 ORCHESTRATOR STOPPED DUE TO HTTP ERROR")
+            print(f"{'='*60}")
+            print(f"📊 Completed steps: {step_num}/{len(plan)}")
+            print(f"✓ Successful: {sum(1 for r in results if r.get('status') == 'success')}")
+            print(f"ℹ️ No Results: {sum(1 for r in results if r.get('status') == 'no_results')}")
+            print(f"✗ Failed at step: {step_num}")
+            print(f"{'='*60}\n")
+            
+            return {
+                "final_context": variable_context,
+                "context": variable_context,
+                "results": results,
+                "stopped_at_step": step_num,
+                "error": error_msg
+            }
+            
         except Exception as e:
             error_msg = f"Unexpected error: {str(e)}"
             print(f"❌ {error_msg}")
+            print(f"🛑 STOPPING WORKFLOW - Unexpected Error in step {step_num}")
             import traceback
             traceback.print_exc()
+            
             results.append({
                 "step": step_num,
                 "agent": agent_name,
@@ -748,12 +822,31 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 "status": "error",
                 "error": error_msg
             })
+            
+            # Stop workflow and return early
+            print(f"\n{'='*60}")
+            print("🛑 ORCHESTRATOR STOPPED DUE TO UNEXPECTED ERROR")
+            print(f"{'='*60}")
+            print(f"📊 Completed steps: {step_num}/{len(plan)}")
+            print(f"✓ Successful: {sum(1 for r in results if r.get('status') == 'success')}")
+            print(f"ℹ️ No Results: {sum(1 for r in results if r.get('status') == 'no_results')}")
+            print(f"✗ Failed at step: {step_num}")
+            print(f"{'='*60}\n")
+            
+            return {
+                "final_context": variable_context,
+                "context": variable_context,
+                "results": results,
+                "stopped_at_step": step_num,
+                "error": error_msg
+            }
     
     print(f"\n{'='*60}")
     print("✅ ORCHESTRATOR COMPLETED")
     print(f"{'='*60}")
     print(f"📊 Total steps: {len(plan)}")
     print(f"✓ Successful: {sum(1 for r in results if r.get('status') == 'success')}")
+    print(f"ℹ️ No Results: {sum(1 for r in results if r.get('status') == 'no_results')}")
     print(f"✗ Failed: {sum(1 for r in results if r.get('status') == 'error')}")
     
     print(f"\n📦 FINAL CONTEXT (All Available Variables):")
