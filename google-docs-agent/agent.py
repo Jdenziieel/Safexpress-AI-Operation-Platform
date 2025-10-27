@@ -5,11 +5,16 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import SystemMessage
 from tools import (
+    _create_from_reference_impl,
+    _list_user_docs_impl,
+    _extract_template_structure_impl,
     _create_google_doc_impl,
     _add_text_to_doc_impl,
     _read_google_doc_impl,
     _share_google_docs_impl,
-)  # Import the implementation, not the decorated version
+    _edit_google_doc_impl,  # NEW: Import edit function
+    _update_entire_doc_impl,  # NEW: Import update function
+)
 from dotenv import load_dotenv
 
 
@@ -23,8 +28,93 @@ def create_docs_agent(credentials_dict: Dict):
     # import tool decorator
     from langchain_core.tools import tool
 
+    @tool
+    def list_my_docs(search_query: str = "") -> str:
+        """Lists your Google Docs to find templates.
+
+        Args:
+            search_query: Optional search term (e.g., "template", "MOM", "minutes")
+
+        Use this when user wants to:
+        - Find their template documents
+        - See what documents they have
+        - Search for a specific template
+
+        Example: list_my_docs("meeting template")
+        """
+        result = _list_user_docs_impl(credentials_dict, search_query)
+        return result
+
+    @tool
+    def extract_template_format(template_document_id: str) -> str:
+        """Analyzes a document to extract its formatting and structure.
+
+        Args:
+            template_document_id: The ID of the template document
+
+        This extracts:
+        - Font styles (bold, italic, sizes, font families)
+        - Heading styles
+        - Placeholders like [DATE], [NAME], etc.
+        - Table structures
+
+        Use this when user wants to:
+        - Use their own document as a template
+        - See what placeholders are in a template
+        - Understand the structure of a reference document
+
+        Example: extract_template_format("1abc123xyz")
+        """
+        result = _extract_template_structure_impl(
+            template_document_id, credentials_dict
+        )
+        return result
+
+    @tool
+    def create_from_my_template(
+        template_document_id: str, new_title: str, placeholders: str = ""
+    ) -> str:
+        """Creates a new document using YOUR template document as reference.
+
+        Args:
+            template_document_id: ID of your template document
+            new_title: Title for the new document
+            placeholders: JSON string of placeholder values
+                Format: '{"DATE": "Jan 15, 2025", "VENUE": "Room A"}'
+
+        This will:
+        1. Copy the formatting from your template
+        2. Replace placeholders with your values
+        3. Create a new formatted document
+
+        Use this when user wants to:
+        - Create document from their own template
+        - Fill in meeting minutes from their format
+        - Replicate their custom document style
+
+        Example:
+        create_from_my_template(
+            "1abc123xyz",
+            "Team Meeting - Jan 15",
+            '{"DATE": "January 15, 2025", "TIME": "2:00 PM"}'
+        )
+        """
+        import json
+
+        # Parse placeholder values
+        placeholder_values = {}
+        if placeholders:
+            try:
+                placeholder_values = json.loads(placeholders)
+            except:
+                pass
+
+        result = _create_from_reference_impl(
+            template_document_id, new_title, placeholder_values, credentials_dict
+        )
+        return result
+
     # create a wrapper tool with credentials already filled in
-    # this uses a closure pattern - the inner function "remembers" credentials_dict
     @tool
     def create_doc(title: str) -> str:
         """Creates a new Google Doc and returns its ID and URL.
@@ -32,7 +122,6 @@ def create_docs_agent(credentials_dict: Dict):
         Args:
             title: The name of the document (e.g., "Project Notes")
         """
-        # call the implementation function with both title and credentials
         result = _create_google_doc_impl(title, credentials_dict)
         return result
 
@@ -69,16 +158,47 @@ def create_docs_agent(credentials_dict: Dict):
         result = _share_google_docs_impl(document_id, email, role, credentials_dict)
         return result
 
+    # NEW: Edit/replace specific text in document
+    @tool
+    def edit_doc(document_id: str, old_text: str, new_text: str) -> str:
+        """Edits/replaces specific text in a Google Doc.
+
+        Args:
+            document_id: The ID of the document to edit
+            old_text: The text to find and replace
+            new_text: The replacement text
+        """
+        result = _edit_google_doc_impl(
+            document_id, old_text, new_text, credentials_dict
+        )
+        return result
+
+    # NEW: Update entire document content
+    @tool
+    def update_doc(document_id: str, new_content: str) -> str:
+        """Replaces the entire content of a Google Doc with new content.
+
+        Args:
+            document_id: The ID of the document to update
+            new_content: The new complete content for the document
+        """
+        result = _update_entire_doc_impl(document_id, new_content, credentials_dict)
+        return result
+
     # define the available tools for the agent
     tools = [
+        list_my_docs,
+        extract_template_format,
+        create_from_my_template,
         create_doc,
         add_text,
         read_doc,
         share_doc,
+        edit_doc,  # NEW
+        update_doc,  # NEW
     ]
 
     # create the agent using langgraph's react pattern
-    # model parameter is the llm, tools are the functions the agent can call
     agent = create_react_agent(model=llm, tools=tools)
     return agent
 
@@ -118,7 +238,6 @@ def main():
         )
         return
 
-    # step 3: try to run the agent
     try:
         print("🤖 Initializing Google Docs Agent...")
         agent = create_docs_agent(test_credentials)
@@ -132,10 +251,11 @@ def main():
         print("3. Create, add text, and read back (full test)")
         print("4. Read an existing document")
         print("5. Share an existing document")
+        print("6. Edit text in a document (find and replace)")  # NEW
+        print("7. Update entire document content")  # NEW
         print("=" * 60)
 
-        # step 4: collect user inputs
-        choice = input("Enter your choice (1-5): ")
+        choice = input("Enter your choice (1-7): ")
 
         if choice == "1":
             title = input("Enter document title: ")
@@ -166,21 +286,39 @@ def main():
             )
             test_message = f"Share the document with ID {doc_id} with {email} as {role}"
 
+        # NEW: Edit text option
+        elif choice == "6":
+            doc_id = input("Enter document ID: ")
+            old_text = input("Enter text to find: ")
+            new_text = input("Enter replacement text: ")
+            test_message = (
+                f"In document {doc_id}, replace '{old_text}' with '{new_text}'"
+            )
+
+        # NEW: Update entire document option
+        elif choice == "7":
+            doc_id = input("Enter document ID: ")
+            new_content = input("Enter new content for the document: ")
+            test_message = (
+                f"Update document {doc_id} with this new content: '{new_content}'"
+            )
+
         else:
             print("Invalid choice. Using default test.")
             test_message = "Create a document called 'AI Agent Test', add the text 'This is a test!', then read it back."
 
-        # step 5: invoke the agent with system message and user request
-        # system message defines the agent's role and behavior
         system_prompt = """You are the Google Docs specialist agent for SafexpressOps.
 Your only responsibility is creating and managing Google Docs.
 
 When the supervisor agent routes a request to you:
-1. Use the create_doc tool to create new documents
-2. Use the add_text tool to add content to existing documents
-3. Use the read_doc tool to read content from existing documents
-4. Provide clear confirmation with the document URL
-5. Report back to the supervisor with the result
+1. Use create_doc to create new documents
+2. Use add_text to add content to documents
+3. Use read_doc to read content from documents
+4. Use edit_doc to find and replace specific text
+5. Use update_doc to replace entire document content
+6. Use share_doc to share documents with users
+7. Provide clear confirmation with the document URL
+8. Report back to the supervisor with the result
 
 Be concise and professional. Focus only on Google Docs tasks."""
 
@@ -188,12 +326,10 @@ Be concise and professional. Focus only on Google Docs tasks."""
             {"messages": [("system", system_prompt), ("user", test_message)]}
         )
 
-        # step 6: display the result
         print("\n" + "=" * 60)
         print("AGENT RESPONSE:")
         print("=" * 60)
 
-        # langgraph returns a dict with 'messages' list
         messages = result.get("messages", [])
 
         if messages:
@@ -207,7 +343,6 @@ Be concise and professional. Focus only on Google Docs tasks."""
         print("=" * 60)
 
     except Exception as e:
-        # step 7: handle errors gracefully
         print(f"\n❌ Error: {e}")
         print(f"\n🐛 Error Type: {type(e).__name__}")
         print("\n🔧 Debugging Tips:")
@@ -223,9 +358,5 @@ Be concise and professional. Focus only on Google Docs tasks."""
 
 
 if __name__ == "__main__":
-    # this runs when you execute: python agent.py
-    # load environment variables first
     load_dotenv()
-
-    # run the test
     main()
