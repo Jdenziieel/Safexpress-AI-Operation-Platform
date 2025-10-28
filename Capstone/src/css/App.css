@@ -1,0 +1,10 @@
+.app-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.main-content {
+  margin-left: var(--sidebar-width);
+  flex-grow: 1;
+  transition: margin-left 0.2s ease-in-out;
+}

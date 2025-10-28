@@ -2,41 +2,17 @@
   "plan": [
     {
       "agent": "gmail_agent",
-      "tool": "search_emails",
-      "inputs": {
-        "query": "from:Josh Denziel Joves after:{{ today_date }}",
-        "max_results": 1
-      },
-      "output_variables": {
-        "thread_id": "emails[0].thread_id"
-      },
-      "description": "Search for the email thread from Josh Denziel Joves sent today"
-    },
-    {
-      "agent": "gmail_agent",
-      "tool": "get_thread_conversation",
-      "inputs": {
-        "thread_id": "{{ thread_id }}"
-      },
-      "output_variables": {
-        "last_response": "messages[-1].body",
-        "subject": "messages[-1].subject"
-      },
-      "description": "Retrieve the last response in the email thread"
-    },
-    {
-      "agent": "gmail_agent",
       "tool": "create_draft_email",
       "inputs": {
-        "to": "jdenziieel@gmail.com, carlosmiguel.carla.cics@ust.edu.ph, paul.chua.cics@ust.edu.ph",
-        "subject": "Fwd: {{ subject }}",
-        "body": "{{ last_response }}"
+        "to": "jdenziieel@gmail.com",
+        "subject": "Reminder for quiz",
+        "body": "We have a quiz tomorrow"
       },
       "output_variables": {
         "draft_id": "draft_id"
       },
-      "description": "Create a draft email to forward the last response"
-    },
+      "description": "Create a draft email to remind about the quiz"
+    },  
     {
       "agent": "gmail_agent",
       "tool": "send_draft_email",

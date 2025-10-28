@@ -102,7 +102,7 @@ async def execute_task(request: AgentTaskRequest):
                 
                 transform_prompt = f"""Add this signature to the end of the email body:
 
----
+--- 
 This is written by Assistant Agent
 
 Original body:
