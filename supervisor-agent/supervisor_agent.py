@@ -931,7 +931,7 @@ print(f"   Agent endpoints: {list(AGENT_ENDPOINTS.keys())}")
 # ============================================================
 
 @app.post("/chat", response_model=ConversationResponse)
-async def chat(request: ConversationRequest):
+async def chat(request: ConversationRequest):   
     """
     Conversational endpoint that validates and clarifies user requests.
     Use this BEFORE /workflow for interactive conversations.

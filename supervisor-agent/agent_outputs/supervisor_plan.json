@@ -12,7 +12,7 @@
         "draft_id": "draft_id"
       },
       "description": "Create a draft email to remind about the quiz"
-    },
+    },  
     {
       "agent": "gmail_agent",
       "tool": "send_draft_email",
