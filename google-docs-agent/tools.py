@@ -3,6 +3,7 @@ from typing import Dict, Any
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from document_format_extractor import DocumentFormatExtractor
 
 
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
@@ -151,3 +152,260 @@ def _share_google_docs_impl(
         return f"error sharing document: {error}"
     except Exception as error:
         return f"unexpected error: {error}"
+
+
+def _edit_google_doc_impl(
+    document_id: str, old_text: str, new_text: str, credentials_dict: Dict
+) -> str:
+    """Implementation of editing/replacing text in a Google Doc
+
+    Args:
+        document_id: The ID of the document to edit
+        old_text: The text to find and replace
+        new_text: The replacement text
+        credentials_dict: Google OAuth credentials
+
+    Returns:
+        Success message with edit details
+    """
+    try:
+        docs_service = get_google_service("docs", "v1", credentials_dict)
+
+        # First, read the document to find the old text
+        document = docs_service.documents().get(documentId=document_id).execute()
+
+        # Extract full document text to find the position
+        full_text = ""
+        content = document.get("body", {}).get("content", [])
+
+        for element in content:
+            if "paragraph" in element:
+                paragraph_elements = element["paragraph"].get("elements", [])
+                for para_element in paragraph_elements:
+                    if "textRun" in para_element:
+                        full_text += para_element["textRun"].get("content", "")
+
+        # Find the position of old_text
+        if old_text not in full_text:
+            return f"Error: Text '{old_text}' not found in document"
+
+        # Calculate start and end indices
+        start_index = full_text.index(old_text) + 1  # +1 because Docs API is 1-indexed
+        end_index = start_index + len(old_text)
+
+        # Create the batch update requests
+        requests = [
+            # First, delete the old text
+            {
+                "deleteContentRange": {
+                    "range": {"startIndex": start_index, "endIndex": end_index}
+                }
+            },
+            # Then, insert the new text at the same position
+            {"insertText": {"location": {"index": start_index}, "text": new_text}},
+        ]
+
+        # Execute the batch update
+        result = (
+            docs_service.documents()
+            .batchUpdate(documentId=document_id, body={"requests": requests})
+            .execute()
+        )
+
+        doc_url = f"https://docs.google.com/document/d/{document_id}/edit"
+        return (
+            f"Text edited successfully!\n"
+            f"Replaced: '{old_text}'\n"
+            f"With: '{new_text}'\n"
+            f"Document ID: {document_id}\n"
+            f"URL: {doc_url}"
+        )
+
+    except HttpError as error:
+        return f"Error editing document: {error}"
+    except ValueError as error:
+        return f"Text not found in document: {error}"
+    except Exception as error:
+        return f"Unexpected error: {error}"
+
+
+def _update_entire_doc_impl(
+    document_id: str, new_content: str, credentials_dict: Dict
+) -> str:
+    """Implementation of replacing entire document content
+
+    Args:
+        document_id: The ID of the document to update
+        new_content: The new complete content for the document
+        credentials_dict: Google OAuth credentials
+
+    Returns:
+        Success message with update details
+    """
+    try:
+        docs_service = get_google_service("docs", "v1", credentials_dict)
+
+        # First, get the document to find the end index
+        document = docs_service.documents().get(documentId=document_id).execute()
+
+        # Calculate the end index (total length of current content)
+        end_index = document.get("body", {}).get("content", [{}])[-1].get("endIndex", 1)
+
+        # Create batch update requests
+        requests = []
+
+        # Only delete if there's content to delete (end_index > 2)
+        if end_index > 2:
+            requests.append(
+                {
+                    "deleteContentRange": {
+                        "range": {
+                            "startIndex": 1,
+                            "endIndex": end_index
+                            - 1,  # -1 to avoid deleting the protected last character
+                        }
+                    }
+                }
+            )
+
+        # Always insert new content at the beginning
+        requests.append({"insertText": {"location": {"index": 1}, "text": new_content}})
+
+        # Execute the batch update
+        result = (
+            docs_service.documents()
+            .batchUpdate(documentId=document_id, body={"requests": requests})
+            .execute()
+        )
+
+        doc_url = f"https://docs.google.com/document/d/{document_id}/edit"
+        return (
+            f"Document content updated successfully!\n"
+            f"Document ID: {document_id}\n"
+            f"New content length: {len(new_content)} characters\n"
+            f"URL: {doc_url}"
+        )
+
+    except HttpError as error:
+        return f"Error updating document: {error}"
+    except Exception as error:
+        return f"Unexpected error: {error}"
+
+
+def _list_user_docs_impl(credentials_dict: Dict, search_query: str = "") -> str:
+    """List user's Google Docs (to find their templates)
+
+    Args:
+        credentials_dict: Google OAuth credentials
+        search_query: Optional search term (e.g., "template", "MOM")
+
+    Returns:
+        Formatted list of user's documents
+    """
+    try:
+        extractor = DocumentFormatExtractor(credentials_dict)
+        docs = extractor.list_my_docs(search_query)
+
+        if not docs:
+            return "No documents found. Please upload a template document to your Google Drive first."
+
+        result = f"📁 Found {len(docs)} document(s):\n\n"
+        for i, doc in enumerate(docs, 1):
+            result += f"{i}. {doc['name']}\n"
+            result += f"   ID: {doc['id']}\n"
+            result += f"   URL: {doc['url']}\n"
+            result += f"   Modified: {doc['modified']}\n\n"
+
+        return result
+
+    except Exception as error:
+        return f"Error listing documents: {error}"
+
+
+def _extract_template_structure_impl(
+    template_document_id: str, credentials_dict: Dict
+) -> str:
+    """Extract formatting and structure from a reference document
+
+    Args:
+        template_document_id: ID of the template document
+        credentials_dict: Google OAuth credentials
+
+    Returns:
+        Summary of extracted structure
+    """
+    try:
+        extractor = DocumentFormatExtractor(credentials_dict)
+        structure = extractor.extract_document_structure(template_document_id)
+
+        if "error" in structure:
+            return structure["error"]
+
+        # Identify placeholders
+        placeholders = extractor.identify_placeholders(structure)
+
+        result = f"✅ Template Structure Extracted!\n\n"
+        result += f"📄 Template: {structure['title']}\n"
+        result += f"📝 Content Blocks: {len(structure['content_blocks'])}\n\n"
+
+        if placeholders:
+            result += f"🔍 Found Placeholders:\n"
+            for placeholder in placeholders:
+                result += f"   • [{placeholder}]\n"
+            result += f"\n💡 You can fill these when creating a new document.\n"
+        else:
+            result += "ℹ️ No placeholders found. This template will be copied as-is.\n"
+
+        result += f"\n📋 Document ID: {template_document_id}"
+
+        return result
+
+    except Exception as error:
+        return f"Error extracting template: {error}"
+
+
+def _create_from_reference_impl(
+    template_document_id: str,
+    new_title: str,
+    placeholder_values: Dict[str, str],
+    credentials_dict: Dict,
+) -> str:
+    """Create a new document based on user's reference template
+
+    Args:
+        template_document_id: ID of the template document
+        new_title: Title for the new document
+        placeholder_values: Dict of placeholder replacements
+            Example: {"DATE": "Jan 15, 2025", "VENUE": "Room A"}
+        credentials_dict: Google OAuth credentials
+
+    Returns:
+        Success message with new document details
+    """
+    try:
+        extractor = DocumentFormatExtractor(credentials_dict)
+
+        result = extractor.create_from_template(
+            template_document_id=template_document_id,
+            new_title=new_title,
+            placeholder_values=placeholder_values,
+        )
+
+        if result.get("success"):
+            response = f"✅ Document created from your template!\n\n"
+            response += f"📄 Title: {result['title']}\n"
+            response += f"📋 Template Used: {result['template_used']}\n"
+            response += f"🆔 Document ID: {result['document_id']}\n"
+            response += f"🔗 URL: {result['url']}\n"
+
+            if placeholder_values:
+                response += f"\n✏️ Placeholders Filled:\n"
+                for key, value in placeholder_values.items():
+                    response += f"   • [{key}] → {value}\n"
+
+            return response
+        else:
+            return f"❌ Error: {result.get('error')}"
+
+    except Exception as error:
+        return f"Error creating document: {error}"
