@@ -2,51 +2,16 @@
   "plan": [
     {
       "agent": "gmail_agent",
-      "tool": "search_emails",
-      "inputs": {
-        "query": "from:Josh subject:Oauth 2",
-        "max_results": 1
-      },
-      "output_variables": {
-        "email_thread_id": "emails[0].thread_id",
-        "email_message_id": "emails[0].message_id"
-      },
-      "description": "Search for the email from Josh about Oauth 2"
-    },
-    {
-      "agent": "gmail_agent",
-      "tool": "get_thread_conversation",
-      "inputs": {
-        "thread_id": "{{ email_thread_id }}"
-      },
-      "output_variables": {
-        "thread_messages": "messages"
-      },
-      "description": "Get all the messages in the email thread"
-    },
-    {
-      "agent": "python_code",
-      "tool": "execute_python_code",
-      "inputs": {
-        "python_code": "next((message for message in reversed({{ thread_messages }}) if message['from'] != 'Josh'), None)"
-      },
-      "output_variables": {
-        "my_last_reply": "result"
-      },
-      "description": "Find my last reply in the email thread"
-    },
-    {
-      "agent": "gmail_agent",
       "tool": "create_draft_email",
       "inputs": {
-        "to": "Josh",
-        "subject": "Re: Oauth 2",
-        "body": "{{ my_last_reply.body }}\n\nPleasure doing business with you."
+        "to": "jdenziieel@gmail.com",
+        "subject": "Reminder for quiz",
+        "body": "We have a quiz tomorrow"
       },
       "output_variables": {
         "draft_id": "draft_id"
       },
-      "description": "Create a draft email replying to Josh with my last reply and a closing remark"
+      "description": "Create a draft email to remind about the quiz"
     },
     {
       "agent": "gmail_agent",

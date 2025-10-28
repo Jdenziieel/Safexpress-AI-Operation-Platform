@@ -41,6 +41,9 @@ from utils import (
     generate_action_summary
 )
 
+# Import conversational agent
+from conversational_agent import ConversationalAgent, ConversationState
+
 # Initialize FastAPI app
 app = FastAPI(title="Supervisor Agent API")
 
@@ -51,11 +54,36 @@ llm = ChatOpenAI(
     openai_api_key=OPENAI_API_KEY
 )
 
+# Initialize Conversational Agent
+conversational_agent = ConversationalAgent(
+    openai_api_key=OPENAI_API_KEY,
+    model=LLM_MODEL,
+    temperature=0.3  # Lower temperature for more consistent clarifications
+)
+
+# In-memory conversation storage (replace with Redis/DB in production)
+CONVERSATIONS = {}
+
 # Pydantic models for API
 class UserRequest(BaseModel):
     input: str
     memory: Optional[Dict[str, Any]] = {}
     policies: Optional[List[Dict[str, Any]]] = [{"rule": "allow all for demo"}]
+
+class ConversationRequest(BaseModel):
+    """Request for conversational endpoint"""
+    message: str
+    conversation_id: Optional[str] = None  # For continuing conversations
+    auto_execute: bool = False  # If true, auto-execute when ready
+
+class ConversationResponse(BaseModel):
+    """Response from conversational endpoint"""
+    response: str
+    conversation_id: str
+    ready_for_execution: bool
+    intent: str
+    extracted_info: Dict[str, Any] = {}
+    execution_summary: Optional[str] = None
 
 class WorkflowResponse(BaseModel):
     status: str
@@ -897,6 +925,195 @@ print("   Flow: supervisor → orchestrator → END")
 print(f"   Plans saved to: {OUTPUT_DIR}/supervisor_plan.json")
 print(f"   Agent endpoints: {list(AGENT_ENDPOINTS.keys())}")
 
+
+# ============================================================
+# CONVERSATIONAL ENDPOINTS (NEW)
+# ============================================================
+
+@app.post("/chat", response_model=ConversationResponse)
+async def chat(request: ConversationRequest):
+    """
+    Conversational endpoint that validates and clarifies user requests.
+    Use this BEFORE /workflow for interactive conversations.
+    
+    Args:
+        request: ConversationRequest containing:
+            - message: User's message
+            - conversation_id: Optional ID to continue a conversation
+            - auto_execute: If true, auto-execute when ready
+    
+    Returns:
+        ConversationResponse with bot response and execution readiness
+    """
+    try:
+        print(f"\n💬 Chat request: {request.message}")
+        
+        # Get or create conversation
+        conversation_id = request.conversation_id or f"conv_{uuid.uuid4().hex[:8]}"
+        conversation_state = CONVERSATIONS.get(conversation_id)
+        
+        # Process message through conversational agent
+        response_text, updated_state = conversational_agent.process_message(
+            user_message=request.message,
+            conversation_state=conversation_state
+        )
+        
+        # Store updated state
+        CONVERSATIONS[conversation_id] = updated_state
+        
+        print(f"🤖 Bot response: {response_text}")
+        print(f"✅ Ready to execute: {updated_state.ready_for_execution}")
+        
+        # Auto-execute if requested and ready
+        if request.auto_execute and updated_state.ready_for_execution:
+            print("🚀 Auto-executing workflow...")
+            supervisor_input = conversational_agent.build_supervisor_input(updated_state)
+            
+            # Execute workflow
+            workflow_request = UserRequest(input=supervisor_input)
+            workflow_result = await execute_workflow(workflow_request)
+            
+            # Clear conversation after execution
+            del CONVERSATIONS[conversation_id]
+            
+            return ConversationResponse(
+                response=f"{response_text}\n\n✅ Executed! {workflow_result.message}",
+                conversation_id=conversation_id,
+                ready_for_execution=False,  # Already executed
+                intent=updated_state.intent.value if updated_state.intent else "unknown",
+                extracted_info=updated_state.extracted_info,
+                execution_summary=updated_state.execution_summary
+            )
+        
+        return ConversationResponse(
+            response=response_text,
+            conversation_id=conversation_id,
+            ready_for_execution=updated_state.ready_for_execution,
+            intent=updated_state.intent.value if updated_state.intent else "unknown",
+            extracted_info=updated_state.extracted_info,
+            execution_summary=updated_state.execution_summary
+        )
+    
+    except Exception as e:
+        print(f"\n❌ Error in chat: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Chat processing failed: {str(e)}"
+        )
+
+
+@app.post("/chat/{conversation_id}/execute")
+async def execute_conversation(conversation_id: str):
+    """
+    Execute a conversation that's ready for execution.
+    
+    Args:
+        conversation_id: ID of the conversation to execute
+    
+    Returns:
+        WorkflowResponse with execution results
+    """
+    try:
+        # Get conversation
+        conversation_state = CONVERSATIONS.get(conversation_id)
+        
+        if not conversation_state:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Conversation {conversation_id} not found"
+            )
+        
+        if not conversation_state.ready_for_execution:
+            raise HTTPException(
+                status_code=400,
+                detail="Conversation is not ready for execution. Missing required information."
+            )
+        
+        print(f"\n🚀 Executing conversation: {conversation_id}")
+        
+        # Build supervisor input from conversation
+        supervisor_input = conversational_agent.build_supervisor_input(conversation_state)
+        print(f"📝 Supervisor input: {supervisor_input}")
+        
+        # Execute workflow
+        workflow_request = UserRequest(input=supervisor_input)
+        result = await execute_workflow(workflow_request)
+        
+        # Clear conversation after successful execution
+        del CONVERSATIONS[conversation_id]
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"\n❌ Error executing conversation: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Execution failed: {str(e)}"
+        )
+
+
+@app.get("/chat/{conversation_id}")
+async def get_conversation(conversation_id: str):
+    """Get conversation state and history"""
+    conversation_state = CONVERSATIONS.get(conversation_id)
+    
+    if not conversation_state:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Conversation {conversation_id} not found"
+        )
+    
+    return {
+        "conversation_id": conversation_id,
+        "ready_for_execution": conversation_state.ready_for_execution,
+        "intent": conversation_state.intent.value if conversation_state.intent else None,
+        "extracted_info": conversation_state.extracted_info,
+        "missing_fields": conversation_state.missing_fields,
+        "execution_summary": conversation_state.execution_summary,
+        "conversation_history": conversation_state.conversation_history
+    }
+
+
+@app.delete("/chat/{conversation_id}")
+async def clear_conversation(conversation_id: str):
+    """Clear/reset a conversation"""
+    if conversation_id in CONVERSATIONS:
+        del CONVERSATIONS[conversation_id]
+        return {"status": "success", "message": f"Conversation {conversation_id} cleared"}
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Conversation {conversation_id} not found"
+        )
+
+
+@app.get("/conversations")
+async def list_conversations():
+    """List all active conversations"""
+    conversations = []
+    for conv_id, state in CONVERSATIONS.items():
+        conversations.append({
+            "conversation_id": conv_id,
+            "ready_for_execution": state.ready_for_execution,
+            "intent": state.intent.value if state.intent else None,
+            "message_count": len(state.conversation_history)
+        })
+    
+    return {
+        "conversations": conversations,
+        "count": len(conversations)
+    }
+
+
+# ============================================================
+# ORIGINAL WORKFLOW ENDPOINT (Direct execution, no conversation)
+# ============================================================
 
 # FastAPI Endpoint
 @app.post("/workflow", response_model=WorkflowResponse)

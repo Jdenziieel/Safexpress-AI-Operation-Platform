@@ -32,7 +32,7 @@ agent_capabilities = {
                     "query": "str (required) — search query (e.g., 'from:john@example.com', 'after:{{ yesterday_date }}', 'subject:meeting has:attachment')",
                     "max_results": "int (required) — number of emails to fetch",
                     "label_ids": "List[str] (optional) — filter by specific label IDs (e.g., ['INBOX', 'UNREAD'])"
-                },
+                },  
                 "returns": {
                     "success": "bool — whether search was successful",
                     "emails": "list — array of email objects, each containing:",

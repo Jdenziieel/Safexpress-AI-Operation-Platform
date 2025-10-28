@@ -10,6 +10,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 import mimetypes
 import base64
+from email_formatter import format_email_list
 
 
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
@@ -93,137 +94,6 @@ def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -
             "body": body,
             "error": f"Unexpected error: {str(error)}"
         }
-# checking - status: Pending
-# def _read_recent_emails_impl(max_results: int, credentials_dict: Dict) -> Dict[str, Any]:
-#     """Read recent emails from Gmail"""
-#     try:
-#         # get gmail service
-#         gmail_service = get_google_service("gmail", "v1", credentials_dict)
-
-#         # list message IDs
-#         results = (
-#             gmail_service.users()
-#             .messages()
-#             .list(
-#                 userId="me",
-#                 maxResults=max_results,
-#             )
-#             .execute()
-#         )
-
-#         messages = results.get("messages", [])
-
-#         # check if empty
-#         if not messages:
-#             return {
-#                 "success": True,
-#                 "emails": [],
-#                 "count": 0,
-#                 "error": None
-#             }
-
-#         # loops through the messages and fetches details
-#         email_list = []
-#         for msg in messages:
-#             msg_id = msg["id"]
-            
-#             # get message details with full format
-#             message = (
-#                 gmail_service.users()
-#                 .messages()
-#                 .get(userId="me", id=msg_id, format="full")
-#                 .execute()
-#             )
-
-#             # get thread ID
-#             thread_id = message.get("threadId", "")
-
-#             # get internalDate and labelIds
-#             internal_date = message.get("internalDate", "")
-#             label_ids = message.get("labelIds", [])
-
-#             # extract headers (From, Subject, Date)
-#             headers = message["payload"]["headers"]
-#             from_addr = ""
-#             subject = ""
-#             date = ""
-
-#             for header in headers:
-#                 if header["name"] == "From":
-#                     from_addr = header["value"]
-#                 elif header["name"] == "Subject":
-#                     subject = header["value"]
-#                 elif header["name"] == "Date":
-#                     date = header["value"]
-
-#             # get full message body
-#             body = ""
-#             if "parts" in message["payload"]:
-#                 # multipart message
-#                 for part in message["payload"]["parts"]:
-#                     if part["mimeType"] == "text/plain" and "data" in part.get("body", {}):
-#                         body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
-#                         break
-#                     elif part["mimeType"] == "text/html" and not body and "data" in part.get("body", {}):
-#                         # fallback to HTML if no plain text
-#                         body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
-#             elif "body" in message["payload"] and "data" in message["payload"]["body"]:
-#                 # simple message
-#                 body = base64.urlsafe_b64decode(message["payload"]["body"]["data"]).decode("utf-8")
-
-#             # if body is still empty, use snippet
-#             if not body:
-#                 body = message.get("snippet", "")
-
-#             # check for attachments
-#             attachments = []
-#             if "parts" in message["payload"]:
-#                 for part in message["payload"]["parts"]:
-#                     if part.get("filename") and part.get("body", {}).get("attachmentId"):
-#                         attachment_info = {
-#                             "filename": part["filename"],
-#                             "attachment_id": part["body"]["attachmentId"],
-#                             "mime_type": part["mimeType"],
-#                             "size": part["body"].get("size", 0)
-#                         }
-#                         attachments.append(attachment_info)
-
-#             # Create structured email object
-#             email_obj = {
-#                 "message_id": msg_id,
-#                 "thread_id": thread_id,
-#                 "from": from_addr,
-#                 "subject": subject,
-#                 "date": date,
-#                 "internal_date": internal_date,
-#                 "label_ids": label_ids,
-#                 "body": body,
-#                 "has_attachments": len(attachments) > 0,
-#                 "attachments": attachments
-#             }
-#             email_list.append(email_obj)
-        
-#         return {
-#             "success": True,
-#             "emails": email_list,
-#             "count": len(email_list),
-#             "error": None
-#         }
-
-#     except HttpError as error:
-#         return {
-#             "success": False,
-#             "emails": [],
-#             "count": 0,
-#             "error": f"Gmail API error: {str(error)}"
-#         }
-#     except Exception as error:
-#         return {
-#             "success": False,
-#             "emails": [],
-#             "count": 0,
-#             "error": f"Unexpected error: {str(error)}"
-#         }
     
 # checking - status: Done (Added LabelIds is not being used nor relevant in searches currently)
 def _search_emails_impl(
@@ -344,6 +214,9 @@ def _search_emails_impl(
                 "attachments": attachments
             }
             email_list.append(email_obj)
+        
+        # Format all emails before returning
+        email_list = format_email_list(email_list)
         
         return {
             "success": True,
@@ -637,6 +510,9 @@ def _get_thread_conversation_impl(thread_id: str, credentials_dict: Dict) -> Dic
             }
             message_list.append(msg_obj)
 
+        # Format all messages before returning
+        message_list = format_email_list(message_list)
+
         return {
             "success": True,
             "thread_id": thread_id,
@@ -896,6 +772,14 @@ def _search_drafts_impl(
                     "date": date
                 }
             })
+
+        # Format all draft message bodies before returning
+        for draft in draft_details:
+            if "message" in draft and "body" in draft["message"]:
+                # Format the nested message object
+                formatted_messages = format_email_list([draft["message"]])
+                if formatted_messages:
+                    draft["message"] = formatted_messages[0]
 
         return {
             "success": True,
