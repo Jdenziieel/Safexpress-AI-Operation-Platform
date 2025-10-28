@@ -1,0 +1,171 @@
+.taskapproval-page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  font-family: "Inter", sans-serif;
+  padding: 32px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.taskapproval-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: 240px; /* Sidebar width, adjust as needed */
+  min-width: 0;
+  padding: 0 64px; /* Increased horizontal padding */
+}
+
+.taskapproval-header-row{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.taskapproval-header-title {
+  font-size: 2.4rem;
+  font-weight: 900;
+  margin-bottom: 2px;
+  letter-spacing: -1px;
+  color: #26326e;
+}
+
+.taskapproval-header-subtitle{
+  font-size: 1.2rem;
+  color: #555;
+  margin-top: 2px;
+}
+
+.taskapproval-header-subtitle {
+  color: #64748b; /* slate-500 */
+  margin-top: 0.25rem;
+}
+
+/* Main Content Card Wrapper */
+.taskapproval-content-card {
+  background-color: #ffffff;
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Task List & Individual Cards */
+.taskapproval-task-list {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Space between cards */
+}
+
+.taskapproval-task-card {
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 0.5rem; /* rounded-lg */
+  background-color: #fff;
+  transition: box-shadow 0.2s;
+}
+.taskapproval-task-card:hover {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Card Sections */
+.taskapproval-card-header {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.taskapproval-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b; /* slate-800 */
+  margin: 0;
+}
+
+.taskapproval-card-body {
+  padding: 0 1.5rem 1rem;
+  font-size: 0.875rem;
+}
+.taskapproval-card-body p {
+  margin: 0.5rem 0;
+  color: #475569; /* slate-600 */
+}
+.taskapproval-card-body p strong {
+  color: #334155; /* slate-700 */
+}
+
+.taskapproval-card-footer {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background-color: #f8fafc; /* slate-50 */
+  border-top: 1px solid #e2e8f0; /* slate-200 */
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+/* Status Badge */
+.taskapproval-status {
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.taskapproval-status.pending {
+  background-color: rgba(252, 177, 23, 0.18); /* soft brand accent */
+  color: #26326e; /* brand primary text */
+}
+
+/* Action Buttons */
+.taskapproval-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.taskapproval-btn:active {
+  transform: scale(0.98);
+}
+
+.taskapproval-btn-approve {
+  background-color: #26326e; /* brand primary */
+  color: #ffffff;
+}
+
+.taskapproval-btn-approve:hover {
+  background-color: #00c31d !important; /* darker hover */
+  color: #fff !important;
+}
+
+.taskapproval-btn-reject {
+  background-color: #26326e; 
+  color: #fff; 
+}
+
+
+.taskapproval-btn-reject:hover {
+  background-color: #ff0000 !important; /* darker accent hover */
+  color: #fff !important;
+}
+
+/* Message for when no tasks are available */
+.taskapproval-no-tasks-message {
+    text-align: center;
+    color: #64748b; /* slate-500 */
+    font-style: italic;
+    padding: 2rem;
+}
+
+/* Responsive Design */
+@media (min-width: 640px) {
+  .taskapproval-page-header {
+    flex-direction: row;
+    align-items: center;
+  }
+}
