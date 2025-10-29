@@ -226,11 +226,13 @@ class DocumentFormatExtractor:
         placeholder_values: Dict[str, str] = None,
     ):
         """Replicate document structure with formatting in new document"""
+
         requests = []
         current_index = 1  # Start at index 1 (after title)
 
         placeholder_values = placeholder_values or {}
 
+        # Smart key normalization (already in your code - keep this!)
         normalized_values = {}
         for key, value in placeholder_values.items():
             normalized_key = key.upper().replace(" ", "_")
@@ -240,22 +242,28 @@ class DocumentFormatExtractor:
 
         for block in structure.get("content_blocks", []):
             if block["type"] == "paragraph":
-                # Build text with placeholder replacement
-                text = block["text"]
+                # Store original text before replacement
+                original_text = block["text"]
+                replaced_text = original_text
 
                 # Replace placeholders
                 for placeholder, value in placeholder_values.items():
-                    text = text.replace(f"[{placeholder}]", value)
-                    text = text.replace(f"{{{placeholder}}}", value)
+                    replaced_text = replaced_text.replace(f"[{placeholder}]", value)
+                    replaced_text = replaced_text.replace(f"{{{placeholder}}}", value)
 
                 # Insert text
                 requests.append(
-                    {"insertText": {"location": {"index": current_index}, "text": text}}
+                    {
+                        "insertText": {
+                            "location": {"index": current_index},
+                            "text": replaced_text,
+                        }
+                    }
                 )
 
-                end_index = current_index + len(text)
+                end_index = current_index + len(replaced_text)
 
-                # Apply paragraph style
+                # Apply paragraph style (headings, alignment)
                 if block["style"].get("heading") != "NORMAL_TEXT":
                     requests.append(
                         {
@@ -275,10 +283,126 @@ class DocumentFormatExtractor:
                         }
                     )
 
+                # Apply text formatting intelligently
+                text_was_replaced = original_text != replaced_text
+
+                if text_was_replaced and block["elements"]:
+                    # Text was modified - apply uniform formatting using first element's style
+                    # This avoids index errors while keeping the template's base formatting
+                    first_style = block["elements"][0]["style"]
+                    text_style = {}
+                    fields = []
+
+                    if first_style.get("bold"):
+                        text_style["bold"] = True
+                        fields.append("bold")
+
+                    if first_style.get("italic"):
+                        text_style["italic"] = True
+                        fields.append("italic")
+
+                    if first_style.get("underline"):
+                        text_style["underline"] = True
+                        fields.append("underline")
+
+                    font_size = first_style.get("font_size")
+                    if font_size and font_size != 11:  # Only if not default
+                        text_style["fontSize"] = {"magnitude": font_size, "unit": "PT"}
+                        fields.append("fontSize")
+
+                    font_family = first_style.get("font_family")
+                    if font_family and font_family != "Arial":  # Only if not default
+                        text_style["weightedFontFamily"] = {"fontFamily": font_family}
+                        fields.append("weightedFontFamily")
+
+                    # Apply foreground color if it exists
+                    fg_color = first_style.get("foreground_color")
+                    if fg_color and fg_color.get("color", {}).get("rgbColor"):
+                        text_style["foregroundColor"] = fg_color
+                        fields.append("foregroundColor")
+
+                    if text_style and fields:
+                        requests.append(
+                            {
+                                "updateTextStyle": {
+                                    "range": {
+                                        "startIndex": current_index,
+                                        "endIndex": end_index,
+                                    },
+                                    "textStyle": text_style,
+                                    "fields": ",".join(fields),
+                                }
+                            }
+                        )
+
+                elif not text_was_replaced:
+                    # Text unchanged - apply original detailed formatting
+                    # This is safe because indices are still correct
+                    element_index = current_index
+                    for element in block["elements"]:
+                        element_text = element["text"]
+                        element_end = element_index + len(element_text)
+
+                        style = element["style"]
+                        text_style = {}
+                        fields = []
+
+                        if style.get("bold"):
+                            text_style["bold"] = True
+                            fields.append("bold")
+
+                        if style.get("italic"):
+                            text_style["italic"] = True
+                            fields.append("italic")
+
+                        if style.get("underline"):
+                            text_style["underline"] = True
+                            fields.append("underline")
+
+                        if style.get("strikethrough"):
+                            text_style["strikethrough"] = True
+                            fields.append("strikethrough")
+
+                        font_size = style.get("font_size")
+                        if font_size:
+                            text_style["fontSize"] = {
+                                "magnitude": font_size,
+                                "unit": "PT",
+                            }
+                            fields.append("fontSize")
+
+                        font_family = style.get("font_family")
+                        if font_family:
+                            text_style["weightedFontFamily"] = {
+                                "fontFamily": font_family
+                            }
+                            fields.append("weightedFontFamily")
+
+                        fg_color = style.get("foreground_color")
+                        if fg_color and fg_color.get("color", {}).get("rgbColor"):
+                            text_style["foregroundColor"] = fg_color
+                            fields.append("foregroundColor")
+
+                        if text_style and fields:
+                            requests.append(
+                                {
+                                    "updateTextStyle": {
+                                        "range": {
+                                            "startIndex": element_index,
+                                            "endIndex": element_end,
+                                        },
+                                        "textStyle": text_style,
+                                        "fields": ",".join(fields),
+                                    }
+                                }
+                            )
+
+                        element_index = element_end
+
                 current_index = end_index
 
             elif block["type"] == "table":
-                # Insert table
+                # Insert table (your existing code)
                 requests.append(
                     {
                         "insertTable": {
@@ -288,16 +412,17 @@ class DocumentFormatExtractor:
                         }
                     }
                 )
-
-                # Note: Table content replication would require more complex logic
-                # This is a simplified version
                 current_index += 2  # Move past table
 
         # Execute all requests
         if requests:
-            self.docs_service.documents().batchUpdate(
-                documentId=new_doc_id, body={"requests": requests}
-            ).execute()
+            try:
+                self.docs_service.documents().batchUpdate(
+                    documentId=new_doc_id, body={"requests": requests}
+                ).execute()
+                print(f"✅ Applied {len(requests)} formatting operations")
+            except Exception as e:
+                print(f"⚠️ Error applying formatting: {e}")
 
     def list_my_docs(self, query: str = "") -> List[Dict]:
         """

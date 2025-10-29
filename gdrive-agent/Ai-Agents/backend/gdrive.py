@@ -7,8 +7,11 @@ from tools import (
     get_or_create_folder,
     list_files,
     upload_file,
-    create_folder_in_safeexpress,
-    upload_file_to_folder
+    upload_file_to_folder,
+    get_safeexpress_folder_id,      # <-- ADD THIS
+    create_nested_folder,            # <-- ADD THIS
+    list_folders_in_safeexpress,    # <-- ADD THIS (optional, for listing folders)
+    get_folder_structure         # <-- ADD THIS (optional, for folder tree)
 )
 import os
 import re
@@ -89,17 +92,21 @@ def agent_chat():
         if "to" in message:
             parts = message.split("to")
             folder_name = parts[-1].strip()
-        file_id = upload_stream_to_folder(file.stream, file.filename, file.mimetype, folder_name, session["credentials"])
-        reply = f"Uploaded '{file.filename}' to Google Drive!"
+        # ✅ Pass service as first parameter
+        file_id = upload_stream_to_folder(service, file.stream, file.filename, file.mimetype, folder_name)
+        reply = f"Uploaded '{file.filename}' to SafeExpress!"
         if folder_name:
             reply += f" (in folder '{folder_name}')"
         return jsonify({"reply": reply, "file_id": file_id})
 
     # === Folder Creation ===
     elif "create folder" in message:
-        folder_name = message.split("create folder")[-1].strip() or "New Folder"
-        folder_id = get_or_create_folder(service, folder_name)
-        return jsonify({"reply": f"📁 Folder '{folder_name}' created!", "folder_id": folder_id})
+        match = re.search(r"create folder (?:named )?(.+)", message)
+        folder_path = match.group(1).strip() if match else "New Folder"
+        
+        # ✅ Use create_nested_folder which creates inside SafeExpress
+        folder_id = create_nested_folder(service, folder_path)
+        return jsonify({"reply": f"📁 Folder created: SafeExpress/{folder_path}", "folder_id": folder_id})
 
     # === Text-based Commands ===
     elif "list files" in message:
@@ -115,8 +122,8 @@ def agent_chat():
             filepath = match.group(2).strip()
             folder_name = match.group(3).strip()
             try:
-                file_id = upload_file_to_folder(filename, filepath, folder_name)
-                return jsonify({"reply": f"📤 File '{filename}' uploaded to folder '{folder_name}'!", "file_id": file_id})
+                file_id = upload_file_to_folder(service, filename, filepath, folder_name)  # ✅ ADD service
+                return jsonify({"reply": f"📤 File '{filename}' uploaded to SafeExpress/{folder_name}!", "file_id": file_id})
             except Exception as e:
                 return jsonify({"reply": f"Error uploading file: {str(e)}"})
 
