@@ -91,7 +91,7 @@ class SmartMappingEngine:
             "acc": "accuracy",
         }
 
-    def smart_app_columns(
+    def smart_map_columns(
         self,
         source_columns: List[str],
         target_columns: List[str],
