@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, Sparkles } from "lucide-react";
 import "../css/AIChat3.css";
-import { ACCESS_TOKEN } from "../token";
-
-const API_BASE_URL = "https://d1r565u2m90baj.cloudfront.net";
+import api from "../api";
 
 function AIChat() {
   const [messages, setMessages] = useState([]);
@@ -38,36 +36,20 @@ function AIChat() {
 
   const loadOrCreateThread = async () => {
     try {
-      const token = localStorage.getItem(ACCESS_TOKEN);
-      
-      // Try to get existing threads
-      const threadsResponse = await fetch(
-        `${API_BASE_URL}/api/chat/threads`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (threadsResponse.ok) {
-        const threadsData = await threadsResponse.json();
-        
-        // Use the most recent thread if it exists
-        if (threadsData.threads && threadsData.threads.length > 0) {
-          const latestThread = threadsData.threads[0];
-          setThreadId(latestThread.thread_id);
-          
-          // Load messages from this thread
-          await loadThreadMessages(latestThread.thread_id, token);
-          setIsLoadingThread(false);
-          return;
-        }
+      // Try to get existing conversations
+      const response = await api.get("/conversations");
+      const threadsData = response.data;
+      // Use the most recent thread if it exists
+      if (threadsData.conversations && threadsData.conversations.length > 0) {
+        const latestThread = threadsData.conversations[0];
+        setThreadId(latestThread.conversation_id);
+        // Load messages from this thread
+        await loadThreadMessages(latestThread.conversation_id);
+        setIsLoadingThread(false);
+        return;
       }
-
       // No threads exist, create a new one
       await createNewThread();
-      
     } catch (error) {
       console.error("Error loading thread:", error);
       // Create new thread as fallback
@@ -77,27 +59,10 @@ function AIChat() {
 
   const createNewThread = async () => {
     try {
-      const token = localStorage.getItem(ACCESS_TOKEN);
-      
-      const response = await fetch(
-        `${API_BASE_URL}/api/chat/threads/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: "New Conversation",
-          }),
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setThreadId(data.thread_id);
-        console.log("✅ Created new thread:", data.thread_id);
-      }
+      // Create a new conversation (thread)
+      const response = await api.post("/chat", { message: "Hello!" });
+      setThreadId(response.data.conversation_id);
+      console.log("✅ Created new thread:", response.data.conversation_id);
     } catch (error) {
       console.error("Error creating thread:", error);
     } finally {
@@ -105,31 +70,19 @@ function AIChat() {
     }
   };
 
-  const loadThreadMessages = async (thread_id, token) => {
+  const loadThreadMessages = async (thread_id) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/chat/threads/${thread_id}/messages`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Convert messages to UI format
-        const formattedMessages = data.messages.map((msg) => ({
-          id: msg.message_id,
-          role: msg.sender, // 'user' or 'assistant'
-          content: msg.content,
-          timestamp: new Date(msg.created_at),
-        }));
-        
-        setMessages(formattedMessages);
-        console.log(`✅ Loaded ${formattedMessages.length} messages`);
-      }
+      const response = await api.get(`/chat/${thread_id}`);
+      const data = response.data;
+      // Convert messages to UI format
+      const formattedMessages = (data.conversation_history || []).map((msg, idx) => ({
+        id: msg.message_id || idx,
+        role: msg.sender || (msg.role ? msg.role : "assistant"),
+        content: msg.message || msg.content,
+        timestamp: msg.created_at ? new Date(msg.created_at) : new Date(),
+      }));
+      setMessages(formattedMessages);
+      console.log(`✅ Loaded ${formattedMessages.length} messages`);
     } catch (error) {
       console.error("Error loading messages:", error);
     }
@@ -164,47 +117,22 @@ function AIChat() {
     ]);
 
     try {
-      const token = localStorage.getItem(ACCESS_TOKEN);
-
-      // ✅ Updated: Send to correct endpoint with thread_id
-      const response = await fetch(
-        `${API_BASE_URL}/api/chat/messages/send`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            thread_id: threadId,
-            message: userInput,
-            // ❌ DON'T send history - Django gets it from DynamoDB!
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      // ✅ Get response from Supervisor Lambda
+      // Send message to supervisor backend
+      const response = await api.post(`/chat/${threadId}/execute`, {
+        message: userInput,
+      });
+      const data = response.data;
+      // Get response from Supervisor Lambda
       const fullResponse = data.response || "No response received.";
-      
       // Log tool calls if any
       if (data.tool_calls && data.tool_calls.length > 0) {
         console.log("🔧 Tool calls executed:", data.tool_calls);
       }
-
       // Simulate streaming effect (word by word)
       let currentText = "";
       const words = fullResponse.split(" ");
-
       for (let i = 0; i < words.length; i++) {
         currentText += (i > 0 ? " " : "") + words[i];
-
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessageId
@@ -212,11 +140,8 @@ function AIChat() {
               : msg
           )
         );
-
-        // Small delay for streaming effect
         await new Promise((resolve) => setTimeout(resolve, 30));
       }
-      
       // Update the assistant message with actual message_id from backend
       if (data.assistant_message_id) {
         setMessages((prev) =>
@@ -227,10 +152,8 @@ function AIChat() {
           )
         );
       }
-
     } catch (error) {
       console.error("Error:", error);
-
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === assistantMessageId
