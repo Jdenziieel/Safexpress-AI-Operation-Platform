@@ -1,0 +1,53 @@
+.welcome-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-content {
+  max-width: 70%;
+}
+
+.welcome-text-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.welcome-icon-wrapper img {
+  width: 42px;
+  height: 42px;
+}
+
+.welcome-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0;
+  color: black; 
+}
+
+.welcome-name {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.welcome-description {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+.welcome-logo {
+  width: 100px;
+  opacity: 0.15;
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+}

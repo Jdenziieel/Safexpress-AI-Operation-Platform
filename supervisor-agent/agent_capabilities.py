@@ -287,6 +287,47 @@ agent_capabilities = {
                 },
             },
         },
+        "template_workflow": {
+            "when_to_use": "When user mentions 'template', 'my format', 'use my MOM', or wants to create a document with consistent structure",
+            "three_step_process": {
+                "step_1": {
+                    "tool": "list_my_docs",
+                    "purpose": "Find the template document",
+                    "example": "list_my_docs(search_query='MOM template')",
+                    "output": "template_id",
+                },
+                "step_2": {
+                    "tool": "extract_template_format",
+                    "purpose": "Get placeholders from template",
+                    "example": "extract_template_format(template_document_id='{{ template_id }}')",
+                    "output": "placeholders list",
+                },
+                "step_3": {
+                    "tool": "create_from_my_template",
+                    "purpose": "Create document with replaced placeholders",
+                    "example": 'create_from_my_template(template_document_id=\'{{ template_id }}\', new_title=\'Board Meeting - Jan 28\', placeholders=\'{"COMPANY_NAME": "SafeExpressOps", "DATE": "January 28, 2025"}\')',
+                    "output": "new document ID and URL",
+                },
+            },
+            "placeholder_key_mapping": {
+                "critical_rule": "Keys must EXACTLY match placeholder names (without brackets)",
+                "examples": {
+                    "[COMPANY_NAME]": "Use key: COMPANY_NAME",
+                    "[DATE]": "Use key: DATE",
+                    "[CHAIRMAN_NAME]": "Use key: CHAIRMAN_NAME",
+                    "[MEETING_NUMBER]": "Use key: MEETING_NUMBER",
+                    "[TIME]": "Use key: TIME",
+                    "[ADDRESS]": "Use key: ADDRESS",
+                    "[YEAR]": "Use key: YEAR",
+                },
+                "wrong_examples": {
+                    "Company Name": "❌ Has spaces and title case",
+                    "company_name": "❌ Lowercase",
+                    "CompanyName": "❌ Wrong casing",
+                    "[COMPANY_NAME]": "❌ Still has brackets",
+                },
+            },
+        },
     },
     "sheets_agent": {
         "description": "Create or update Google Sheets.",
