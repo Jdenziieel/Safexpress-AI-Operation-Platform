@@ -9,7 +9,7 @@ This agent sits BEFORE the supervisor and handles:
 5. Suggesting alternatives for complex tasks
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from typing import Optional, List, Dict, Any
 from enum import Enum
@@ -31,13 +31,19 @@ class ConversationIntent(str, Enum):
 
 class ConversationState(BaseModel):
     """Tracks conversation history and extracted information"""
-    conversation_history: List[Dict[str, str]] = []
-    extracted_info: Dict[str, Any] = {}
-    missing_fields: List[str] = []
+    conversation_history: List[Dict[str, str]] = Field(default_factory=list)
+    extracted_info: Dict[str, Any] = Field(default_factory=dict)
+    missing_fields: List[str] = Field(default_factory=list)
     intent: Optional[ConversationIntent] = None
     clarification_question: Optional[str] = None
     ready_for_execution: bool = False
     execution_summary: Optional[str] = None  # Human-readable summary
+    # Execution metadata (added to support supervisor execution history)
+    execution_history: List[Dict[str, Any]] = Field(default_factory=list)
+    executed_count: int = 0
+    last_plan_hash: Optional[str] = None
+    last_executed_at: Optional[str] = None
+    executing: bool = False
 
 
 class ConversationAnalysis(BaseModel):
@@ -46,11 +52,11 @@ class ConversationAnalysis(BaseModel):
     task_type: str  # e.g., "send_email", "search_emails", "manage_calendar"
     extracted_info: Dict[str, Any]
     missing_fields: List[str]
-    clarification_question: Optional[str]
+    clarification_question: Optional[str] = None
     reasoning: str
     suggested_alternatives: Optional[List[str]] = None
     execution_ready: bool
-    execution_summary: Optional[str]
+    execution_summary: Optional[str] = None
 
 
 class ConversationalAgent:
@@ -68,12 +74,26 @@ class ConversationalAgent:
         self.capabilities_summary = self._build_capabilities_summary()
     
     def _build_capabilities_summary(self) -> str:
-        """Build human-readable summary of what the system can do"""
+        """Build comprehensive summary of available tools with their required arguments"""
         capabilities = []
         for agent_name, agent_info in agent_capabilities.items():
+            capabilities.append(f"\n**{agent_name.upper()}:**")
             tools = agent_info.get("tools", {})
-            tool_names = list(tools.keys())
-            capabilities.append(f"- {agent_name}: {', '.join(tool_names)}")
+            for tool_name, tool_info in tools.items():
+                # Get tool description
+                desc = tool_info.get("description", "")
+                capabilities.append(f"  • {tool_name}: {desc}")
+                
+                # Extract required and optional args
+                args = tool_info.get("args", {})
+                required_args = [k for k, v in args.items() if "(required)" in str(v)]
+                optional_args = [k for k, v in args.items() if "(optional)" in str(v)]
+                
+                if required_args:
+                    capabilities.append(f"    Required: {', '.join(required_args)}")
+                if optional_args:
+                    capabilities.append(f"    Optional: {', '.join(optional_args)}")
+        
         return "\n".join(capabilities)
     
     def analyze_request(
@@ -100,6 +120,18 @@ class ConversationalAgent:
                 history_text += f"{turn['role'].upper()}: {turn['content']}\n"
             history_text += "\n"
         
+        # Add execution context if available
+        exec_context = ""
+        if conversation_state.executed_count > 0:
+            exec_context = f"\nEXECUTION CONTEXT:\n"
+            exec_context += f"- This conversation has executed {conversation_state.executed_count} task(s)\n"
+            exec_context += f"- Last execution: {conversation_state.last_executed_at or 'unknown'}\n"
+            if conversation_state.execution_history:
+                last_exec = conversation_state.execution_history[-1]
+                exec_context += f"- Last status: {last_exec.get('status', 'unknown')}\n"
+                exec_context += f"- Last message: {last_exec.get('message', 'N/A')}\n"
+            exec_context += "- User may be asking to modify, redo, or continue from previous execution\n\n"
+        
         # Build system prompt with capabilities
         system_prompt = f"""You are a conversational AI assistant that validates and clarifies user requests before executing them.
 
@@ -108,42 +140,18 @@ AVAILABLE CAPABILITIES:
 
 YOUR ROLE:
 1. Understand what the user wants to do
-2. Check if we have the tools to do it
+2. Check if we have the tools to do it (refer to AVAILABLE CAPABILITIES above)
 3. Extract all necessary information from the conversation
-4. Ask clarification questions if information is missing
-5. Explain limitations if task is not feasible
-6. Suggest alternatives for complex or infeasible tasks
+4. Identify required fields from the tool definitions above
+5. Ask clarification questions if information is missing
+6. Explain limitations if task is not feasible
+7. Suggest alternatives for complex or infeasible tasks
 
-TASK TYPES AND REQUIRED FIELDS:
-
-**Send/Create Email:**
-- Required: recipient (to), subject, body/content
-- Optional: attachments, cc, bcc
-- Note: We create drafts first for safety, then optionally send
-
-**Reply to Email:**
-- Required: which email to reply to (identified by subject, sender, or recency), reply content
-- Optional: Include original message
-
-**Search Emails:**
-- Required: search criteria (subject, sender, date range, keywords)
-- Optional: labels (INBOX, SENT, UNREAD, etc.)
-
-**Manage Drafts:**
-- For searching: query criteria
-- For sending: which draft to send
-
-**Calendar Events:**
-- Required: event title, date/time, duration OR start/end time
-- Optional: attendees, location, description
-
-**Google Drive:**
-- Required: file name OR file ID, operation type (upload, download, search)
-- Optional: folder location, permissions
-
-**Google Docs:**
-- Required: document ID OR title, operation (create, edit, read)
-- Optional: content, formatting
+IMPORTANT CONTEXT ABOUT EXECUTION:
+- After successful execution, the conversation continues (is NOT deleted)
+- If user asks to modify/redo a task that was just executed, treat it as a NEW request
+- Check if execution_history has recent entries - if so, acknowledge the previous execution
+- If executed_count > 0, user might be asking for modifications or re-runs
 
 ANALYSIS INSTRUCTIONS:
 1. Classify intent: needs_clarification, not_feasible, too_complex, ready_to_execute, or small_talk
@@ -183,29 +191,59 @@ Examples of bad questions:
 - "Please provide all information." (not specific)
 """
 
-        user_prompt = f"""{history_text}CURRENT USER MESSAGE: {user_message}
+        user_prompt = f"""{history_text}{exec_context}CURRENT USER MESSAGE: {user_message}
 
 Analyze this request and determine if we have enough information to execute it."""
 
-        # Call LLM
-        llm_response = self.llm.invoke([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ])
+        # Call LLM with timeout and retry
+        try:
+            llm_response = self.llm.invoke(
+                [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                config={"timeout": 320}  # 320 second timeout
+            )
+        except Exception as llm_error:
+            # LLM call failed - return safe fallback
+            print(f"⚠️ LLM call failed: {llm_error}")
+            return ConversationAnalysis(
+                intent=ConversationIntent.NEEDS_CLARIFICATION,
+                task_type="unknown",
+                extracted_info={},
+                missing_fields=["all"],
+                clarification_question="I'm having trouble processing that. Could you please rephrase your request?",
+                reasoning=f"LLM invocation failed: {str(llm_error)}",
+                execution_ready=False,
+                execution_summary=None
+            )
         
         # Parse response
         try:
             response_text = llm_response.content.strip()
+            
+            # Handle code blocks
             if response_text.startswith("```json"):
                 response_text = response_text[7:-3].strip()
             elif response_text.startswith("```"):
                 response_text = response_text[3:-3].strip()
             
+            # Parse JSON
             analysis_dict = json.loads(response_text)
+            
+            # Validate required fields exist
+            required_fields = ["intent", "task_type", "extracted_info", "missing_fields", "execution_ready"]
+            for field in required_fields:
+                if field not in analysis_dict:
+                    raise ValueError(f"Missing required field: {field}")
             
             return ConversationAnalysis(**analysis_dict)
             
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, ValueError) as e:
+            # JSON parsing or validation failed
+            print(f"⚠️ Failed to parse LLM response: {e}")
+            print(f"Raw response: {llm_response.content[:500]}")  # Log first 500 chars
+            
             # Fallback: treat as needing clarification
             return ConversationAnalysis(
                 intent=ConversationIntent.NEEDS_CLARIFICATION,
@@ -213,7 +251,20 @@ Analyze this request and determine if we have enough information to execute it."
                 extracted_info={},
                 missing_fields=["all"],
                 clarification_question="I'm not sure I understood that. Could you please rephrase what you'd like me to do?",
-                reasoning=f"Failed to parse LLM response: {e}",
+                reasoning=f"Failed to parse LLM response: {str(e)}",
+                execution_ready=False,
+                execution_summary=None
+            )
+        except Exception as e:
+            # Unexpected error creating ConversationAnalysis
+            print(f"⚠️ Unexpected error in analyze_request: {e}")
+            return ConversationAnalysis(
+                intent=ConversationIntent.NEEDS_CLARIFICATION,
+                task_type="unknown",
+                extracted_info={},
+                missing_fields=["all"],
+                clarification_question="Something went wrong. Could you try rephrasing your request?",
+                reasoning=f"Unexpected error: {str(e)}",
                 execution_ready=False,
                 execution_summary=None
             )
@@ -246,9 +297,14 @@ Analyze this request and determine if we have enough information to execute it."
         # Analyze the request
         analysis = self.analyze_request(user_message, conversation_state)
         
-        # Update state with analysis
+        # Update state with analysis (merge carefully to avoid overwriting valid data)
         conversation_state.intent = analysis.intent
-        conversation_state.extracted_info.update(analysis.extracted_info)
+        
+        # Only update extracted_info with non-empty values from analysis
+        for key, value in analysis.extracted_info.items():
+            if value is not None and value != "":
+                conversation_state.extracted_info[key] = value
+        
         conversation_state.missing_fields = analysis.missing_fields
         conversation_state.clarification_question = analysis.clarification_question
         conversation_state.ready_for_execution = analysis.execution_ready
@@ -289,7 +345,8 @@ Analyze this request and determine if we have enough information to execute it."
             response += "**Details:**\n"
             for key, value in analysis.extracted_info.items():
                 response += f"- {key}: {value}\n"
-            response += f"\nShould I proceed?"
+            # Note: With auto-execution, this will run immediately
+            # Remove "Should I proceed?" since it auto-executes
         
         else:
             response = "I'm processing your request..."

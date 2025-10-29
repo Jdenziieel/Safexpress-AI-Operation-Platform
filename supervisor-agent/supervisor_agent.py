@@ -6,12 +6,13 @@ import json
 import httpx
 from jinja2 import Template
 from typing import TypedDict, List, Optional, Dict, Any, Callable, Awaitable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import uvicorn
 import asyncio
 import uuid
 import time
+import hashlib
 
 # Import models
 from models.models import *
@@ -56,7 +57,7 @@ llm = ChatOpenAI(
 conversational_agent = ConversationalAgent(
     openai_api_key=OPENAI_API_KEY,
     model=LLM_MODEL,
-    temperature=0.3  # Lower temperature for more consistent clarifications
+    temperature=0.0  # Lower temperature for more consistent clarifications
 )
 
 # In-memory conversation storage (replace with Redis/DB in production)
@@ -1209,6 +1210,14 @@ async def chat(request: ConversationRequest):
         # Get or create conversation
         conversation_id = request.conversation_id or f"conv_{uuid.uuid4().hex[:8]}"
         conversation_state = CONVERSATIONS.get(conversation_id)
+
+        # If a conversation is currently executing, reject further inputs to avoid conflicts.
+        if conversation_state and conversation_state.executing:
+            print(f"⏳ Conversation {conversation_id} is executing — rejecting new input")
+            raise HTTPException(
+                status_code=409,
+                detail="Conversation is currently executing. Please wait until the operation completes."
+            )
         
         # Process message through conversational agent
         response_text, updated_state = conversational_agent.process_message(
@@ -1216,32 +1225,93 @@ async def chat(request: ConversationRequest):
             conversation_state=conversation_state
         )
         
-        # Store updated state
-        CONVERSATIONS[conversation_id] = updated_state
-        
         print(f"🤖 Bot response: {response_text}")
         print(f"✅ Ready to execute: {updated_state.ready_for_execution}")
-        
-        # Auto-execute if requested and ready
-        if request.auto_execute and updated_state.ready_for_execution:
-            print("🚀 Auto-executing workflow...")
-            supervisor_input = conversational_agent.build_supervisor_input(updated_state)
+
+        # If the conversation is ready for execution, run it immediately but KEEP the conversation.
+        if updated_state.ready_for_execution:
+            print("🚀 Conversation ready — executing workflow (conversation will be kept)...")
+
+            # Mark as executing BEFORE any async operations to prevent race conditions
+            updated_state.executing = True
+            CONVERSATIONS[conversation_id] = updated_state
+
+            try:
+                supervisor_input = conversational_agent.build_supervisor_input(updated_state)
+
+                # Execute workflow first to get the actual plan
+                workflow_request = UserRequest(input=supervisor_input)
+                now_iso = datetime.now(timezone.utc).isoformat()
+                
+                status = "unknown"
+                message = ""
+                final_context = {}
+                plan_dict = {}
+                
+                try:
+                    workflow_result = await execute_workflow(workflow_request)
+                    status = workflow_result.status
+                    message = workflow_result.message
+                    final_context = workflow_result.final_context or {}
+                    plan_dict = workflow_result.plan or {}
+                except HTTPException as he:
+                    # ApprovalRequired and other HTTPExceptions
+                    status = "approval_required" if he.status_code == 202 else "error"
+                    message = str(he.detail) if hasattr(he, "detail") else str(he)
+                except Exception as e:
+                    status = "error"
+                    message = str(e)
+                    import traceback
+                    traceback.print_exc()
+
+                # Compute plan hash from actual structured plan (more stable than string)
+                try:
+                    plan_json = json.dumps(plan_dict, sort_keys=True)
+                except Exception:
+                    plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
+                
+                plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
+
+                # Build history entry
+                history_item = {
+                    "executed_at": now_iso,
+                    "plan_hash": plan_hash,
+                    "status": status,
+                    "message": message,
+                    "final_context_snapshot": final_context,
+                }
+
+                # Append to history (limit to last 50 entries to prevent unbounded growth)
+                updated_state.execution_history.append(history_item)
+                if len(updated_state.execution_history) > 50:
+                    updated_state.execution_history = updated_state.execution_history[-50:]
+
+                updated_state.executed_count += 1
+                updated_state.last_plan_hash = plan_hash
+                updated_state.last_executed_at = now_iso
+                updated_state.execution_summary = message
+
+                # Prevent immediate re-execution until the agent sets ready_for_execution again
+                updated_state.ready_for_execution = False
+
+                # Return response with execution summary
+                return ConversationResponse(
+                    response=f"{response_text}\n\n✅ Executed! {message}",
+                    conversation_id=conversation_id,
+                    ready_for_execution=updated_state.ready_for_execution,
+                    intent=updated_state.intent.value if updated_state.intent else "unknown",
+                    extracted_info=updated_state.extracted_info,
+                    execution_summary=updated_state.execution_summary,
+                )
             
-            # Execute workflow
-            workflow_request = UserRequest(input=supervisor_input)
-            workflow_result = await execute_workflow(workflow_request)
-            
-            # Clear conversation after execution
-            del CONVERSATIONS[conversation_id]
-            
-            return ConversationResponse(
-                response=f"{response_text}\n\n✅ Executed! {workflow_result.message}",
-                conversation_id=conversation_id,
-                ready_for_execution=False,  # Already executed
-                intent=updated_state.intent.value if updated_state.intent else "unknown",
-                extracted_info=updated_state.extracted_info,
-                execution_summary=updated_state.execution_summary
-            )
+            finally:
+                # CRITICAL: Always clear executing flag, even on error
+                updated_state.executing = False
+                CONVERSATIONS[conversation_id] = updated_state
+
+        # Otherwise, return current conversational response and state (not ready yet)
+        # Store the updated state before returning
+        CONVERSATIONS[conversation_id] = updated_state
         
         return ConversationResponse(
             response=response_text,
@@ -1249,7 +1319,7 @@ async def chat(request: ConversationRequest):
             ready_for_execution=updated_state.ready_for_execution,
             intent=updated_state.intent.value if updated_state.intent else "unknown",
             extracted_info=updated_state.extracted_info,
-            execution_summary=updated_state.execution_summary
+            execution_summary=updated_state.execution_summary,
         )
     
     except Exception as e:
@@ -1334,7 +1404,13 @@ async def get_conversation(conversation_id: str):
         "extracted_info": conversation_state.extracted_info,
         "missing_fields": conversation_state.missing_fields,
         "execution_summary": conversation_state.execution_summary,
-        "conversation_history": conversation_state.conversation_history
+        "conversation_history": conversation_state.conversation_history,
+        # New metadata fields
+        "execution_history": conversation_state.execution_history,
+        "executed_count": conversation_state.executed_count,
+        "last_plan_hash": conversation_state.last_plan_hash,
+        "last_executed_at": conversation_state.last_executed_at,
+        "executing": conversation_state.executing,
     }
 
 
