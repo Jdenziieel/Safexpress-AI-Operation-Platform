@@ -17,3 +17,5 @@ jinja2
 pydantic
 boto3 
 scikit-learn
+fastapi
+uvicorn

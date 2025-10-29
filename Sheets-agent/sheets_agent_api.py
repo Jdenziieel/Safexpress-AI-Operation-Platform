@@ -13,7 +13,11 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import json
+from dotenv import load_dotenv
 
+
+# Load environment variables from .env file
+load_dotenv()
 
 # FastAPI app
 app = FastAPI(title="Google Sheets Agent API", version="2.0.0")
@@ -54,11 +58,10 @@ def create_sheets_service(credentials_dict: CredentialsDict):
     """Create authenticated Google Sheets service"""
     try:
         creds = Credentials(
-            token=credentials_dict.access_token,
-            refresh_token=credentials_dict.refresh_token,
+            token=credentials_dict.access_token or os.getenv("GOOGLE_ACCESS_TOKEN"),
+            refresh_token=credentials_dict.refresh_token or os.getenv("GOOGLE_REFRESH_TOKEN"),
             client_id=credentials_dict.client_id or os.getenv("GOOGLE_CLIENT_ID"),
-            client_secret=credentials_dict.client_secret
-            or os.getenv("GOOGLE_CLIENT_SECRET"),
+            client_secret=credentials_dict.client_secret or os.getenv("GOOGLE_CLIENT_SECRET"),
             token_uri="https://oauth2.googleapis.com/token",
         )
         return build("sheets", "v4", credentials=creds)
@@ -327,6 +330,10 @@ def upload_mapped_data(
 
         if df.empty:
             return {"success": False, "error": "Transformed data is empty"}
+        # ✅ FIX: Convert timestamps to strings
+        for col in df.columns:
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                df[col] = df[col].dt.strftime('%Y-%m-%d %H:%M:%S')
 
         # Convert DataFrame to 2D list
         # Include headers

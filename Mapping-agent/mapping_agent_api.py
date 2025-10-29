@@ -13,6 +13,11 @@ import pandas as pd
 import io
 import json
 from datetime import datetime
+from dotenv import load_dotenv
+
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Import the smart mapping engine
 try:
