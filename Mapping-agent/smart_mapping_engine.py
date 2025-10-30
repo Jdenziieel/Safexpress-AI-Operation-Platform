@@ -2,19 +2,34 @@ import pandas as pd
 import re
 from typing import Dict, List, Any, Tuple
 import numpy as np
+import os
+import json
+from openai import OpenAI
 
 
 class SmartMappingEngine:
     """
-    smart column mapping engine - uses 5 AI signals for intelligent mapping
+    Hybrid smart column mapping engine - uses 3-tier approach:
+    1. Exact matching (instant, free, perfect)
+    2. Rule-based semantic matching (fast, free, good)
+    3. OpenAI LLM fallback (slow, paid, excellent for edge cases)
     """
 
-    def __init__(self):
+    def __init__(self, use_openai: bool = True):
         # Import the actual SafExpressOps columns
         from safexpressops_target_columns import SAFEXPRESSOPS_TARGET_COLUMNS
 
         # Store the full list
         self.all_target_columns = SAFEXPRESSOPS_TARGET_COLUMNS
+
+        # OpenAI setup
+        self.use_openai = use_openai
+        if use_openai and os.getenv("OPENAI_API_KEY"):
+            self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            print("✅ OpenAI integration enabled for smart mapping")
+        else:
+            self.use_openai = False
+            print("⚠️ OpenAI integration disabled (no API key or use_openai=False)")
 
         # SafexpressOps operational terms - business language
         self.operational_vocabulary = {
@@ -30,7 +45,6 @@ class SmartMappingEngine:
                     "manhour",
                     "hour",
                 ],
-                # ✅ FIXED: Use actual column names from the list
                 "target_columns": [
                     col
                     for col in SAFEXPRESSOPS_TARGET_COLUMNS
@@ -53,7 +67,6 @@ class SmartMappingEngine:
                     "damage",
                     "fefo",
                 ],
-                # ✅ FIXED: Use actual column names
                 "target_columns": [
                     col
                     for col in SAFEXPRESSOPS_TARGET_COLUMNS
@@ -80,7 +93,6 @@ class SmartMappingEngine:
                     "customer",
                     "satisfaction",
                 ],
-                # ✅ FIXED: Use actual column names
                 "target_columns": [
                     col
                     for col in SAFEXPRESSOPS_TARGET_COLUMNS
@@ -102,7 +114,6 @@ class SmartMappingEngine:
                     "deployed",
                     "manpower",
                 ],
-                # ✅ FIXED: Use actual column names
                 "target_columns": [
                     col
                     for col in SAFEXPRESSOPS_TARGET_COLUMNS
@@ -143,56 +154,350 @@ class SmartMappingEngine:
         sample_data: pd.DataFrame = None,
     ) -> Dict[str, str]:
         """
-        Main function: intelligently map source columns to target columns
+        Main function: 3-tier intelligent mapping
 
         Args:
-            source_columns: Columns from uploaded file ["Date", "Man  Hours", "Safety Score"]
-            target_columns: Your SafexpressOps columns ["Date", "Total ManHours", "Losttime Incident"]
+            source_columns: Columns from uploaded file
+            target_columns: SafExpressOps target columns
             sample_data: Sample of the actual data to analyze
 
         Returns:
-            Dictionary mapping source to target columns
+            Dictionary mapping source to target columns with confidence scores
         """
+        print("\n🧠 Smart Mapping Engine starting...")
+        print(f"   Source columns: {len(source_columns)}")
+        print(f"   Target columns: {len(target_columns)}")
 
-        print("🧠 Smart Mapping Engine starting...")
+        # Tier 1: Exact matching (instant, free, perfect)
+        print("\n🎯 Tier 1: Exact matching...")
+        exact_matches, remaining_sources = self._exact_matching(
+            source_columns, target_columns
+        )
+        remaining_targets = [
+            t for t in target_columns if t not in exact_matches.values()
+        ]
 
-        # step 1: Basic semantic mapping
-        semantic_mappings = self._semantic_mapping(source_columns, target_columns)
+        print(f"   ✅ Exact matches: {len(exact_matches)}")
+        print(
+            f"   Remaining: {len(remaining_sources)} sources, {len(remaining_targets)} targets"
+        )
 
-        # step 2: Analyze actual data patterns if sample data is provided
-        if sample_data is not None:
-            data_insights = self._analyze_data_patterns(source_columns, sample_data)
-            # Boost confidence based on data analysis
-            semantic_mappings = self._apply_data_insights(
-                semantic_mappings, data_insights, target_columns
+        # Tier 2: Rule-based semantic mapping (fast, free, good)
+        semantic_mappings = {}
+        if remaining_sources:
+            print("\n📊 Tier 2: Semantic matching...")
+            semantic_mappings = self._semantic_mapping(
+                remaining_sources, remaining_targets
             )
 
-        # step 3: apply business domain knowledge
-        final_mappings = self._apply_business_rules(
-            semantic_mappings, source_columns, target_columns
+            # Analyze data patterns if sample data is provided
+            if sample_data is not None:
+                data_insights = self._analyze_data_patterns(
+                    remaining_sources, sample_data
+                )
+                semantic_mappings = self._apply_data_insights(
+                    semantic_mappings, data_insights, remaining_targets
+                )
+
+        # Tier 3: OpenAI LLM for difficult cases (slow, paid, excellent)
+        openai_mappings = {}
+        if self.use_openai and remaining_sources:
+            # Only send low-confidence mappings to OpenAI
+            low_confidence_sources = self._get_low_confidence_sources(
+                semantic_mappings, remaining_sources, threshold=0.6
+            )
+
+            if low_confidence_sources:
+                print(
+                    f"\n🤖 Tier 3: OpenAI LLM for {len(low_confidence_sources)} difficult columns..."
+                )
+                openai_mappings = self._openai_mapping(
+                    low_confidence_sources, remaining_targets, sample_data
+                )
+                print(f"   ✅ OpenAI returned {len(openai_mappings)} mappings")
+
+        # Combine all tiers
+        final_mappings = self._combine_tiers(
+            exact_matches,
+            semantic_mappings,
+            openai_mappings,
+            source_columns,
+            remaining_sources,
         )
 
         return final_mappings
 
+    def _exact_matching(
+        self, source_cols: List[str], target_cols: List[str]
+    ) -> Tuple[Dict[str, str], List[str]]:
+        """
+        Tier 1: Find exact matches (case-insensitive)
+        Returns: (exact_matches_dict, remaining_sources)
+        """
+        exact_matches = {}
+        remaining_sources = []
+        remaining_targets = list(target_cols)
+
+        for source_col in source_cols:
+            exact_match = None
+            for target_col in remaining_targets:
+                if source_col.lower().strip() == target_col.lower().strip():
+                    exact_match = target_col
+                    break
+
+            if exact_match:
+                exact_matches[source_col] = exact_match
+                remaining_targets.remove(exact_match)
+                if len(exact_matches) <= 5:  # Only print first 5
+                    print(f"      ✓ '{source_col}' → '{exact_match}'")
+            else:
+                remaining_sources.append(source_col)
+
+        if len(exact_matches) > 5:
+            print(f"      ... and {len(exact_matches) - 5} more exact matches")
+
+        return exact_matches, remaining_sources
+
+    def _get_low_confidence_sources(
+        self, semantic_mappings: Dict, source_cols: List[str], threshold: float = 0.6
+    ) -> List[str]:
+        """
+        Identify columns that need OpenAI help (low confidence from semantic matching)
+        """
+        low_confidence = []
+
+        for source_col in source_cols:
+            if source_col not in semantic_mappings:
+                low_confidence.append(source_col)
+                continue
+
+            # Find best score for this source
+            best_score = (
+                max(semantic_mappings[source_col].values())
+                if semantic_mappings[source_col]
+                else 0
+            )
+
+            if best_score < threshold:
+                low_confidence.append(source_col)
+
+        return low_confidence
+
+    def _openai_mapping(
+        self,
+        source_cols: List[str],
+        target_cols: List[str],
+        sample_data: pd.DataFrame = None,
+    ) -> Dict[str, str]:
+        """
+        Tier 3: Use OpenAI to map difficult columns
+        """
+        if not self.use_openai:
+            return {}
+
+        # Prepare sample data context
+        sample_context = ""
+        if sample_data is not None and len(source_cols) > 0:
+            sample_context = "\n\nSample data (first 3 rows):\n"
+            for source_col in source_cols[:10]:  # Show up to 10 columns
+                if source_col in sample_data.columns:
+                    values = sample_data[source_col].head(3).tolist()
+                    sample_context += f"- {source_col}: {values}\n"
+
+        # Create prompt
+        prompt = f"""You are a data mapping expert for SafExpressOps, a warehouse operations company.
+
+**Task**: Map source column names to target column names.
+
+**Source columns to map** ({len(source_cols)} columns):
+{json.dumps(source_cols, indent=2)}
+
+**Available target columns** ({len(target_cols)} columns):
+{json.dumps(target_cols, indent=2)}
+{sample_context}
+
+**Business context**:
+- SafExpressOps tracks: safety metrics, warehouse operations, quality, inventory, expenses
+- Common abbreviations: CV = Container Vessel, FEFO = First Expired First Out, CTS = Customer Satisfaction
+- "Manhours" refers to labor hours worked
+- "Incidents" are safety/quality issues
+- "OTD" = On-Time Delivery, "OTIF" = On-Time In Full
+
+**Instructions**:
+1. For each source column, find the BEST matching target column
+2. Only map if you're confident (>70% confidence)
+3. Return JSON format: {{"source_column": "target_column" or null}}
+4. If no good match exists, use null
+5. Consider abbreviations and business context
+
+Return ONLY valid JSON, no explanation:"""
+
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",  # Fast and cheap
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a data mapping expert. Return only valid JSON.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.1,  # Low temperature for consistent results
+                max_tokens=2000,
+            )
+
+            # Parse response
+            response_text = response.choices[0].message.content.strip()
+
+            # Remove markdown code blocks if present
+            if response_text.startswith("```json"):
+                response_text = response_text[7:-3].strip()
+            elif response_text.startswith("```"):
+                response_text = response_text[3:-3].strip()
+
+            mappings = json.loads(response_text)
+
+            # Validate mappings
+            validated_mappings = {}
+            for source, target in mappings.items():
+                if target and target in target_cols:
+                    validated_mappings[source] = target
+                    print(f"      ✓ '{source}' → '{target}' (via OpenAI)")
+
+            return validated_mappings
+
+        except Exception as e:
+            print(f"      ⚠️ OpenAI mapping failed: {str(e)}")
+            return {}
+
+    def _combine_tiers(
+        self,
+        exact_matches: Dict[str, str],
+        semantic_mappings: Dict,
+        openai_mappings: Dict[str, str],
+        all_source_cols: List[str],
+        remaining_sources: List[str],
+    ) -> Dict[str, Any]:
+        """
+        Combine results from all 3 tiers into final mappings
+        """
+        final_mappings = {}
+
+        # Add exact matches (highest confidence)
+        for source_col, target_col in exact_matches.items():
+            final_mappings[source_col] = {
+                "target": target_col,
+                "confidence_score": 1.0,
+                "confidence_level": "high",
+                "needs_review": False,
+                "method": "exact_match",
+            }
+
+        # Add OpenAI mappings (overrides semantic for low-confidence)
+        for source_col, target_col in openai_mappings.items():
+            final_mappings[source_col] = {
+                "target": target_col,
+                "confidence_score": 0.85,  # OpenAI gets high confidence
+                "confidence_level": "high",
+                "needs_review": False,
+                "method": "openai_llm",
+            }
+
+        # Add semantic mappings for remaining columns
+        remaining_targets = [
+            t
+            for t in self.all_target_columns
+            if t not in exact_matches.values() and t not in openai_mappings.values()
+        ]
+
+        for source_col in remaining_sources:
+            if source_col in openai_mappings:
+                continue  # Already handled by OpenAI
+
+            # Find best semantic match
+            best_target = None
+            best_score = 0.0
+
+            if source_col in semantic_mappings:
+                for target_col in remaining_targets:
+                    score = semantic_mappings[source_col].get(target_col, 0)
+                    if score > best_score:
+                        best_score = score
+                        best_target = target_col
+
+            # Determine confidence level
+            if best_score >= 0.7:
+                confidence_level = "high"
+            elif best_score >= 0.5:
+                confidence_level = "medium"
+            else:
+                confidence_level = "low"
+                best_target = None  # Don't map if confidence too low
+
+            final_mappings[source_col] = {
+                "target": best_target,
+                "confidence_score": best_score,
+                "confidence_level": confidence_level,
+                "needs_review": confidence_level in ["low", "medium"],
+                "method": "semantic" if best_target else "none",
+            }
+
+        # Create summary
+        high_confidence = sum(
+            1 for v in final_mappings.values() if v["confidence_level"] == "high"
+        )
+        needs_review = sum(1 for v in final_mappings.values() if v["needs_review"])
+
+        print(f"\n📊 Final Mapping Summary:")
+        print(f"   Total columns: {len(all_source_cols)}")
+        print(f"   Exact matches: {len(exact_matches)}")
+        print(f"   OpenAI matches: {len(openai_mappings)}")
+        print(
+            f"   Semantic matches: {len([v for v in final_mappings.values() if v.get('method') == 'semantic'])}"
+        )
+        print(f"   High confidence: {high_confidence}")
+        print(f"   Needs review: {needs_review}")
+        print(f"   Accuracy: {high_confidence / len(all_source_cols) * 100:.1f}%")
+
+        return {
+            "mappings": final_mappings,
+            "summary": {
+                "total_columns": len(all_source_cols),
+                "high_confidence_mappings": high_confidence,
+                "needs_review": needs_review,
+                "accuracy_estimate": (
+                    high_confidence / len(all_source_cols) if all_source_cols else 0
+                ),
+                "methods_used": {
+                    "exact": len(exact_matches),
+                    "openai": len(openai_mappings),
+                    "semantic": len(
+                        [
+                            v
+                            for v in final_mappings.values()
+                            if v.get("method") == "semantic"
+                        ]
+                    ),
+                },
+            },
+        }
+
+    # ============================================================
+    # EXISTING METHODS (Keep these unchanged)
+    # ============================================================
+
     def _semantic_mapping(
         self, source_cols: List[str], target_cols: List[str]
     ) -> Dict[str, Dict[str, float]]:
-        """
-        Step !: Better than simple string matching - understands meaning
-        """
-
+        """Step 1: Better than simple string matching - understands meaning"""
         mappings = {}
 
         for source_col in source_cols:
             mappings[source_col] = {}
-
-            # clean and expand the souurce column name
             source_clean = self._clean_and_expand(source_col)
 
             for target_col in target_cols:
                 target_clean = self._clean_and_expand(target_col)
-
-                # calculate semantic similarity
                 similarity = self._calculate_semantic_similarity(
                     source_clean, target_clean
                 )
@@ -201,14 +506,8 @@ class SmartMappingEngine:
         return mappings
 
     def _clean_and_expand(self, column_name: str) -> str:
-        """
-        Clean columnn names and expand abbreviations to understand meaning better
-        """
-
-        # convert to lowercase and remove special characters
+        """Clean column names and expand abbreviations"""
         cleaned = re.sub(r"[^\w\s]", " ", column_name.lower())
-
-        # expand abbreviations
         words = cleaned.split()
         expanded_words = []
 
@@ -223,43 +522,32 @@ class SmartMappingEngine:
     def _calculate_semantic_similarity(
         self, source_clean: str, target_clean: str
     ) -> float:
-        """
-        Calculate how similar two column names are semantically
-        """
-
+        """Calculate how similar two column names are semantically"""
         source_words = set(source_clean.split())
         target_words = set(target_clean.split())
 
         if not source_words or not target_words:
             return 0.0
 
-        # Jacred similarity (intersection over union)
         intersection = source_words & target_words
         union = source_words | target_words
-
         jaccard = len(intersection) / len(union)
 
-        # Boost for exact words matches
         exact_matches = len(intersection)
         if exact_matches > 0:
             jaccard += 0.2 * exact_matches
 
-        # boost for substring matches
         for source_word in source_words:
             for target_word in target_words:
                 if source_word in target_word or target_word in source_word:
                     jaccard += 0.1
 
-        return min(jaccard, 1.0)  # cap at 1.0
+        return min(jaccard, 1.0)
 
     def _analyze_data_patterns(
         self, source_cols: List[str], sample_data: pd.DataFrame
     ) -> Dict[str, Dict[str, Any]]:
-        """
-        Step 2 : Look at actual data to understand what each column contains
-        This is where AI can analyze patterns, data types, value ranges etc.
-        """
-
+        """Step 2: Look at actual data to understand what each column contains"""
         insights = {}
 
         for col in source_cols:
@@ -276,155 +564,60 @@ class SmartMappingEngine:
                 "business_domain": self._guess_business_domain(col, data_series),
             }
 
-            print(
-                f"📊 {col}: {insights[col]['data_type']}, domain: {insights[col]['business_domain']}"
-            )
-
         return insights
 
-    def _detect_data_type(self, series: pd.Series) -> str:
-        """
-        Detect What type of data this column contains
-        """
-
-        # check for dates first
-        if series.dtypes == "object":
-            try:
-                pd.to_datetime(series.iloc[0])
-                return "date"
-            except:
-                pass
-
-        # check for numeric patterns
-        if pd.api.types.is_numeric_dtype(series):
-            min_val = series.min()
-            max_val = series.max()
-
-            # percentage-like data
-            if 0 <= min_val and max_val <= 100:
-                return "percentage"
-            # hours-like data
-            elif 0 <= min_val and max_val <= 24:
-                return "hours"
-            # small counts (e.g. incidents)
-            elif min_val >= 0 and max_val > 50:
-                return "small_counts"
-            # large counts (like manhours)
-            elif min_val >= 0 and max_val > 50:
-                return "Large_count"
-
-        # check for text patterns
-        if series.dtype == "object":
-            unique_values = series.unique()
-
-            # week identifiers
-            if any("week" in str(val).lower() for val in unique_values):
-                return "week_identifier"
-
-            # Day names
-            days = [
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ]
-            if any(str(val).lower() in days for val in unique_values):
-                return "day_name"
-
-        return "unknown"
-
     def _detect_value_pattern(self, series: pd.Series) -> str:
-        """
-        Detect specific patterns in the values
-        """
-
+        """Detect specific patterns in the values"""
         if pd.api.types.is_numeric_dtype(series):
             min_val = series.min()
             max_val = series.max()
 
-            # Safety manhours typically 50 - 500 hours per day
             if 50 <= min_val and max_val <= 500:
                 return "typical_manhours"
-
-            # incidents typically 0-5 per day
             elif 0 <= min_val and max_val <= 5:
                 return "typical_incidents"
-
-            # Percentages/rates typically 80-100
             elif 80 <= min_val and max_val <= 100:
                 return "high_percentage"
 
         return "general"
 
     def _guess_business_domain(self, col_name: str, data_series: pd.Series) -> str:
-        """
-        Guess which SafexpressOps business domain this column belongs to
-        """
-
+        """Guess which business domain this column belongs to"""
         col_lower = col_name.lower()
 
-        # check against our business vocabulary
         for domain, info in self.operational_vocabulary.items():
             for keyword in info["keywords"]:
                 if keyword in col_lower:
                     return domain
-
-        # Use data patterns as additional hints
-        data_type = self._detect_data_type(data_series)
-        value_pattern = self._detect_value_pattern(data_series)
-
-        if data_type == "date":
-            return "temporal"
-        elif value_pattern == "typical_manhours":
-            return "safety"
-        elif value_pattern == "typical incidents":
-            return "safety"
 
         return "general"
 
     def _apply_data_insights(
         self, semantic_mappings: Dict, data_insights: Dict, target_cols: List[str]
     ) -> Dict:
-        """
-        Step 3: Use data analysis to boost confidence of good mappings
-        """
-
+        """Step 3: Use data analysis to boost confidence of good mappings"""
         for source_col, insights in data_insights.items():
             data_type = insights["data_type"]
             business_domain = insights["business_domain"]
 
-            # Boost mappings that make sense based on data analysis
             for target_col in target_cols:
                 current_score = semantic_mappings[source_col].get(target_col, 0)
 
                 # Boost based on data type alignment
-                if data_type == "date" and "date" in target_col.lower():
+                if data_type == "percentage" and "%" in target_col:
                     semantic_mappings[source_col][target_col] = min(
                         current_score + 0.3, 1.0
                     )
-                elif data_type == "percentage" and "%" in target_col:
+                elif "manhour" in target_col.lower():
                     semantic_mappings[source_col][target_col] = min(
                         current_score + 0.3, 1.0
                     )
-                elif (
-                    data_type in ["large_count", "typical_manhours"]
-                    and "manhour" in target_col.lower()
-                ):
-                    semantic_mappings[source_col][target_col] = min(
-                        current_score + 0.3, 1.0
-                    )
-                elif (
-                    data_type in ["small_count", "typical_incidents"]
-                    and "incident" in target_col.lower()
-                ):
+                elif "incident" in target_col.lower():
                     semantic_mappings[source_col][target_col] = min(
                         current_score + 0.3, 1.0
                     )
 
-                # Boost based on business domain alignment
+                # Boost based on business domain
                 if business_domain in self.operational_vocabulary:
                     domain_targets = self.operational_vocabulary[business_domain][
                         "target_columns"
@@ -435,60 +628,3 @@ class SmartMappingEngine:
                         )
 
         return semantic_mappings
-
-    def _apply_business_rules(
-        self, mappings: Dict, source_cols: List[str], target_cols: List[str]
-    ) -> Dict[str, Any]:
-        """
-        Step 4: Apply SafExpressOps business rules and create final result
-        """
-
-        final_mappings = {}
-
-        for source_col in source_cols:
-            # Find the best target column for this source
-            best_target = None
-            best_score = 0.0
-
-            for target_col in target_cols:
-                score = mappings[source_col].get(target_col, 0)
-                if score > best_score:
-                    best_score = score
-                    best_target = target_col
-
-            # Determine confidence level
-            if best_score >= 0.8:
-                confidence_level = "high"
-                confidence_score = best_score
-            elif best_score >= 0.5:
-                confidence_level = "medium"
-                confidence_score = best_score
-            else:
-                confidence_level = "low"
-                confidence_score = best_score
-                best_target = None  # Don't map if confidence too low
-
-            final_mappings[source_col] = {
-                "target": best_target,
-                "confidence_score": confidence_score,
-                "confidence_level": confidence_level,
-                "needs_review": confidence_level in ["low", "medium"],
-            }
-
-        # Create summary
-        high_confidence = [
-            k for k, v in final_mappings.items() if v["confidence_level"] == "high"
-        ]
-        needs_review = [k for k, v in final_mappings.items() if v["needs_review"]]
-
-        return {
-            "mappings": final_mappings,
-            "summary": {
-                "total_columns": len(source_cols),
-                "high_confidence_mappings": len(high_confidence),
-                "needs_review": len(needs_review),
-                "accuracy_estimate": (
-                    len(high_confidence) / len(source_cols) if source_cols else 0
-                ),
-            },
-        }

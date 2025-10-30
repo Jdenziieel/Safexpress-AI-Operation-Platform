@@ -57,7 +57,7 @@ llm = ChatOpenAI(
 conversational_agent = ConversationalAgent(
     openai_api_key=OPENAI_API_KEY,
     model=LLM_MODEL,
-    temperature=0.0  # Lower temperature for more consistent clarifications
+    temperature=0.0,  # Lower temperature for more consistent clarifications
 )
 
 # In-memory conversation storage (replace with Redis/DB in production)
@@ -292,7 +292,7 @@ calendar_agent tools:
 - list_events, create_event, update_event, delete_event
 
 Sheets_agent tools:
-- create_sheet, read_sheet, update_sheet, delete_sheet, append_rows
+- create_sheet, read_sheet, update_sheet, delete_sheet, append_rows, update_by_date_match
 
 Route to mapping_agent + sheets_agent when:
 - User wants to upload/parse Excel/CSV files to Google Sheets
@@ -1326,40 +1326,46 @@ async def chat(request: ConversationRequest):
 
         # If a conversation is currently executing, reject further inputs to avoid conflicts.
         if conversation_state and conversation_state.executing:
-            print(f"⏳ Conversation {conversation_id} is executing — rejecting new input")
+            print(
+                f"⏳ Conversation {conversation_id} is executing — rejecting new input"
+            )
             raise HTTPException(
                 status_code=409,
-                detail="Conversation is currently executing. Please wait until the operation completes."
+                detail="Conversation is currently executing. Please wait until the operation completes.",
             )
-        
+
         # Process message through conversational agent
         response_text, updated_state = conversational_agent.process_message(
             user_message=request.message, conversation_state=conversation_state
         )
-        
+
         print(f"🤖 Bot response: {response_text}")
         print(f"✅ Ready to execute: {updated_state.ready_for_execution}")
 
         # If the conversation is ready for execution, run it immediately but KEEP the conversation.
         if updated_state.ready_for_execution:
-            print("🚀 Conversation ready — executing workflow (conversation will be kept)...")
+            print(
+                "🚀 Conversation ready — executing workflow (conversation will be kept)..."
+            )
 
             # Mark as executing BEFORE any async operations to prevent race conditions
             updated_state.executing = True
             CONVERSATIONS[conversation_id] = updated_state
 
             try:
-                supervisor_input = conversational_agent.build_supervisor_input(updated_state)
+                supervisor_input = conversational_agent.build_supervisor_input(
+                    updated_state
+                )
 
                 # Execute workflow first to get the actual plan
                 workflow_request = UserRequest(input=supervisor_input)
                 now_iso = datetime.now(timezone.utc).isoformat()
-                
+
                 status = "unknown"
                 message = ""
                 final_context = {}
                 plan_dict = {}
-                
+
                 try:
                     workflow_result = await execute_workflow(workflow_request)
                     status = workflow_result.status
@@ -1374,6 +1380,7 @@ async def chat(request: ConversationRequest):
                     status = "error"
                     message = str(e)
                     import traceback
+
                     traceback.print_exc()
 
                 # Compute plan hash from actual structured plan (more stable than string)
@@ -1381,7 +1388,7 @@ async def chat(request: ConversationRequest):
                     plan_json = json.dumps(plan_dict, sort_keys=True)
                 except Exception:
                     plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
-                
+
                 plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
 
                 # Build history entry
@@ -1396,7 +1403,9 @@ async def chat(request: ConversationRequest):
                 # Append to history (limit to last 50 entries to prevent unbounded growth)
                 updated_state.execution_history.append(history_item)
                 if len(updated_state.execution_history) > 50:
-                    updated_state.execution_history = updated_state.execution_history[-50:]
+                    updated_state.execution_history = updated_state.execution_history[
+                        -50:
+                    ]
 
                 updated_state.executed_count += 1
                 updated_state.last_plan_hash = plan_hash
@@ -1412,7 +1421,7 @@ async def chat(request: ConversationRequest):
                     conversation_state=updated_state,
                     final_context=final_context,
                     execution_status=status,
-                    execution_message=message
+                    execution_message=message,
                 )
 
                 # Return response with execution summary
@@ -1420,11 +1429,15 @@ async def chat(request: ConversationRequest):
                     response=friendly_summary,
                     conversation_id=conversation_id,
                     ready_for_execution=updated_state.ready_for_execution,
-                    intent=updated_state.intent.value if updated_state.intent else "unknown",
+                    intent=(
+                        updated_state.intent.value
+                        if updated_state.intent
+                        else "unknown"
+                    ),
                     extracted_info=updated_state.extracted_info,
                     execution_summary=updated_state.execution_summary,
                 )
-            
+
             finally:
                 # CRITICAL: Always clear executing flag, even on error
                 updated_state.executing = False
@@ -1433,7 +1446,7 @@ async def chat(request: ConversationRequest):
         # Otherwise, return current conversational response and state (not ready yet)
         # Store the updated state before returning
         CONVERSATIONS[conversation_id] = updated_state
-        
+
         return ConversationResponse(
             response=response_text,
             conversation_id=conversation_id,

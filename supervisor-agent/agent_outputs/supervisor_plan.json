@@ -63,7 +63,7 @@
         "rows_updated": "rows_updated",
         "rows_not_found": "rows_not_found"
       },
-      "description": "Update the Google Sheets rows by matching dates"
+      "description": "Update the Google Sheets rows by matching dates, only updating the operational columns"
     }
   ]
 }
