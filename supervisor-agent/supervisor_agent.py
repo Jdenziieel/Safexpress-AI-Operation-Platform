@@ -1266,9 +1266,18 @@ async def chat(request: ConversationRequest):
                 # Prevent immediate re-execution until the agent sets ready_for_execution again
                 updated_state.ready_for_execution = False
 
+                # Generate user-friendly summary using conversational agent
+                print("📝 Generating user-friendly summary...")
+                friendly_summary = conversational_agent.summarize_execution(
+                    conversation_state=updated_state,
+                    final_context=final_context,
+                    execution_status=status,
+                    execution_message=message
+                )
+
                 # Return response with execution summary
                 return ConversationResponse(
-                    response=f"{response_text}\n\n✅ Executed! {message}",
+                    response=friendly_summary,
                     conversation_id=conversation_id,
                     ready_for_execution=updated_state.ready_for_execution,
                     intent=updated_state.intent.value if updated_state.intent else "unknown",

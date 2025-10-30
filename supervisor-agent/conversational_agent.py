@@ -387,6 +387,196 @@ Analyze this request and determine if we have enough information to execute it."
             return f"{task_type} with " + ", ".join(parts)
         
         return conversation_state.execution_summary
+    
+    def _filter_context_for_user(self, final_context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Filter final_context to remove technical/internal fields that users don't care about.
+        Keeps only user-relevant information for cleaner, faster summarization.
+        
+        Args:
+            final_context: Raw final_context from orchestrator
+            
+        Returns:
+            Filtered context with only user-relevant fields
+        """
+        # Fields to ALWAYS exclude (technical IDs, internal metadata)
+        EXCLUDED_FIELDS = {
+            # IDs and technical identifiers
+            "message_id", "thread_id", "draft_id", "attachment_id", "document_id",
+            "conversation_id", "session_id", "request_id", "transaction_id",
+            
+            # Timestamps and internal dates
+            "internal_date", "created_at", "updated_at", "timestamp", "last_modified",
+            
+            # System/API fields
+            "success", "error", "status_code", "api_version", "request_time",
+            
+            # Date context (already known by user)
+            "today_date", "yesterday_date", "current_year", "current_month", "current_day",
+            
+            # HTML/technical content
+            "body_html", "body_clean", "raw_content", "encoded_data",
+            
+            # Internal flags
+            "is_draft", "is_sent", "is_read", "has_attachments", "body_has_tables",
+        }
+        
+        # Fields to KEEP if they contain meaningful data (whitelist approach)
+        MEANINGFUL_FIELDS = {
+            # Communication content
+            "subject", "body", "from", "to", "cc", "bcc", "reply_to",
+            
+            # Document/file info
+            "title", "filename", "file_size", "document_url", "file_path",
+            
+            # Lists of items (but will be summarized)
+            "emails", "documents", "files", "events", "drafts",
+            
+            # Counts and summaries
+            "count", "total", "found", "created", "sent",
+            
+            # Action results
+            "label_added", "label_removed", "action_taken",
+            
+            # Links (useful for user)
+            "body_links", "attachments",
+            
+            # Extracted metadata
+            "action_items", "placeholders", "template_info",
+        }
+        
+        filtered = {}
+        
+        for key, value in final_context.items():
+            # Skip if in excluded list
+            if key in EXCLUDED_FIELDS:
+                continue
+            
+            # Handle list values (like emails, documents)
+            if isinstance(value, list):
+                if key in MEANINGFUL_FIELDS:
+                    # For email/document arrays, keep only essential fields from each item
+                    if len(value) > 0 and isinstance(value[0], dict):
+                        filtered_items = []
+                        for item in value:
+                            filtered_item = self._filter_context_for_user(item)  # Recursive
+                            if filtered_item:  # Only add if non-empty
+                                filtered_items.append(filtered_item)
+                        
+                        if filtered_items:
+                            # Limit to first 5 items to prevent overwhelming summary
+                            filtered[key] = filtered_items[:5]
+                            if len(value) > 5:
+                                filtered[f"{key}_total_count"] = len(value)
+                    else:
+                        # Simple list (not objects), keep as-is if meaningful
+                        filtered[key] = value
+            
+            # Handle dict values (nested objects)
+            elif isinstance(value, dict):
+                filtered_nested = self._filter_context_for_user(value)  # Recursive
+                if filtered_nested:
+                    filtered[key] = filtered_nested
+            
+            # Handle primitive values (strings, numbers, booleans)
+            else:
+                if key in MEANINGFUL_FIELDS:
+                    filtered[key] = value
+                # Also keep any custom fields not in excluded list
+                elif key not in EXCLUDED_FIELDS:
+                    # Only keep if value is meaningful (not empty string, not None)
+                    if value is not None and value != "":
+                        filtered[key] = value
+        
+        return filtered
+    
+    def summarize_execution(
+        self,
+        conversation_state: ConversationState,
+        final_context: Dict[str, Any],
+        execution_status: str,
+        execution_message: str
+    ) -> str:
+        """
+        Generate a human-friendly summary of the execution results.
+        
+        Args:
+            conversation_state: Current conversation state
+            final_context: The final_context from orchestrator (all variables)
+            execution_status: Status of execution (success, error, etc.)
+            execution_message: Raw execution message
+            
+        Returns:
+            Human-friendly summary for the user
+        """
+        
+        # Build context for LLM
+        original_request = conversation_state.execution_summary or "your request"
+        
+        # FILTER: Remove technical fields user doesn't care about
+        user_relevant_context = self._filter_context_for_user(final_context)
+        
+        print(f"📊 Context filtering:")
+        print(f"   Before: {len(final_context)} fields, {len(json.dumps(final_context))} chars")
+        print(f"   After: {len(user_relevant_context)} fields, {len(json.dumps(user_relevant_context))} chars")
+        
+        # Format filtered context for readability
+        context_summary = []
+        for key, value in user_relevant_context.items():
+            if isinstance(value, list):
+                context_summary.append(f"- {key}: {len(value)} items")
+                if len(value) > 0 and isinstance(value[0], dict):
+                    # Show first item preview with user-relevant fields only
+                    sample_keys = list(value[0].keys())[:5]
+                    context_summary.append(f"  (fields: {', '.join(sample_keys)})")
+            elif isinstance(value, dict):
+                context_summary.append(f"- {key}: object with {len(value)} fields")
+            else:
+                context_summary.append(f"- {key}: {value}")
+        
+        context_text = "\n".join(context_summary) if context_summary else "No data returned"
+        
+        system_prompt = f"""You are a helpful assistant that explains task execution results to users in a friendly, conversational way.
+
+Your job is to:
+1. Confirm what task was completed
+2. Highlight the key results and data
+3. Explain what variables/data are now available
+4. Be concise but informative
+
+Keep your response under 200 words. Use emojis sparingly for clarity.
+Focus on what matters to the user, not technical details."""
+
+        user_prompt = f"""The user requested: "{original_request}"
+
+Execution Status: {execution_status}
+System Message: {execution_message}
+
+Final Context (Available Data):
+{context_text}
+
+Please summarize what was accomplished and what data is now available in a friendly, user-facing way."""
+
+        try:
+            llm_response = self.llm.invoke(
+                [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                config={"timeout": 30}
+            )
+            
+            summary = llm_response.content.strip()
+            return summary
+            
+        except Exception as e:
+            # Fallback to simple summary if LLM fails
+            print(f"⚠️ Failed to generate LLM summary: {e}")
+            
+            if execution_status == "success":
+                return f"✅ Successfully completed: {original_request}\n\nResults:\n{context_text}"
+            else:
+                return f"❌ Failed to complete: {original_request}\n\nError: {execution_message}"
 
 
 # Example usage and testing
