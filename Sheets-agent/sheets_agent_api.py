@@ -59,9 +59,11 @@ def create_sheets_service(credentials_dict: CredentialsDict):
     try:
         creds = Credentials(
             token=credentials_dict.access_token or os.getenv("GOOGLE_ACCESS_TOKEN"),
-            refresh_token=credentials_dict.refresh_token or os.getenv("GOOGLE_REFRESH_TOKEN"),
+            refresh_token=credentials_dict.refresh_token
+            or os.getenv("GOOGLE_REFRESH_TOKEN"),
             client_id=credentials_dict.client_id or os.getenv("GOOGLE_CLIENT_ID"),
-            client_secret=credentials_dict.client_secret or os.getenv("GOOGLE_CLIENT_SECRET"),
+            client_secret=credentials_dict.client_secret
+            or os.getenv("GOOGLE_CLIENT_SECRET"),
             token_uri="https://oauth2.googleapis.com/token",
         )
         return build("sheets", "v4", credentials=creds)
@@ -333,7 +335,7 @@ def upload_mapped_data(
         # ✅ FIX: Convert timestamps to strings
         for col in df.columns:
             if pd.api.types.is_datetime64_any_dtype(df[col]):
-                df[col] = df[col].dt.strftime('%Y-%m-%d %H:%M:%S')
+                df[col] = df[col].dt.strftime("%Y-%m-%d %H:%M:%S")
 
         # Convert DataFrame to 2D list
         # Include headers
@@ -483,6 +485,382 @@ def clear_sheet(
         return {"success": False, "error": f"Failed to clear sheet: {str(e)}"}
 
 
+def update_by_date_match(
+    sheet_id: str,
+    transformed_data: str,  # JSON string
+    rows_with_dates: Any,  # Can be list, dict, or string
+    sheet_name: str = "DATA ENTRY",
+    date_column: str = "Date",
+    credentials_dict: Optional[CredentialsDict] = None,
+) -> Dict[str, Any]:
+    """
+    Update Google Sheets rows by matching dates (no append, only update)
+
+    Args:
+        sheet_id: Google Sheets ID
+        transformed_data: JSON string of transformed operational data
+        rows_with_dates: List of {row_index, date, row_data} from mapping agent (can be string or list)
+        sheet_name: Name of the sheet to update
+        date_column: Column name for date matching (default: "Date")
+        credentials_dict: Google credentials
+
+    Returns:
+        Success status and number of rows updated
+    """
+    try:
+        print(f"\n📊 Update by Date Match")
+        print(f"   Sheet: {sheet_id}/{sheet_name}")
+        print(f"   Date column: {date_column}")
+
+        if not credentials_dict:
+            return {"success": False, "error": "Credentials required"}
+
+        # ✅ BULLETPROOF PARSING - Handle any format
+        print(f"\n🔍 Parsing rows_with_dates...")
+        print(f"   Received type: {type(rows_with_dates).__name__}")
+
+        if isinstance(rows_with_dates, str):
+            print(f"   String length: {len(rows_with_dates)}")
+            print(f"   First 200 chars: {rows_with_dates[:200]}")
+
+            import ast
+
+            # Try multiple parsing strategies
+            parsed = None
+
+            # Strategy 1: Standard JSON
+            try:
+                import json
+
+                parsed = json.loads(rows_with_dates)
+                print(f"   ✅ Parsed with json.loads()")
+            except json.JSONDecodeError as e1:
+                print(f"   ❌ json.loads() failed: {str(e1)}")
+
+                # Strategy 2: Fix single quotes and try again
+                try:
+                    fixed = rows_with_dates.replace("'", '"')
+                    parsed = json.loads(fixed)
+                    print(f"   ✅ Parsed after fixing quotes")
+                except json.JSONDecodeError as e2:
+                    print(f"   ❌ Quote fix failed: {str(e2)}")
+
+                    # Strategy 3: Python literal_eval (handles Python dict format)
+                    try:
+                        parsed = ast.literal_eval(rows_with_dates)
+                        print(f"   ✅ Parsed with ast.literal_eval()")
+                    except (ValueError, SyntaxError) as e3:
+                        print(f"   ❌ literal_eval failed: {str(e3)}")
+
+                        # Strategy 4: Extract from wrapper if it has one
+                        try:
+                            # Sometimes it comes wrapped like: "rows_with_dates=[...]"
+                            if "=" in rows_with_dates:
+                                json_part = rows_with_dates.split("=", 1)[1].strip()
+                                parsed = ast.literal_eval(json_part)
+                                print(f"   ✅ Parsed after extracting from wrapper")
+                            else:
+                                raise ValueError("No wrapper found")
+                        except Exception as e4:
+                            return {
+                                "success": False,
+                                "error": f"Could not parse rows_with_dates after trying all strategies. Last error: {str(e4)}",
+                            }
+
+            rows_with_dates = parsed
+
+        elif isinstance(rows_with_dates, dict):
+            # Sometimes it comes as a dict with 'rows_with_dates' key
+            if "rows_with_dates" in rows_with_dates:
+                rows_with_dates = rows_with_dates["rows_with_dates"]
+                print(f"   ✅ Extracted from dict wrapper")
+            else:
+                return {
+                    "success": False,
+                    "error": f"Received dict but no 'rows_with_dates' key. Keys: {list(rows_with_dates.keys())}",
+                }
+
+        # Validate it's now a list
+        if not isinstance(rows_with_dates, list):
+            return {
+                "success": False,
+                "error": f"After parsing, expected list but got {type(rows_with_dates).__name__}",
+            }
+
+        if len(rows_with_dates) == 0:
+            return {"success": False, "error": "rows_with_dates is empty"}
+
+        print(f"   ✅ Validated: {len(rows_with_dates)} rows with dates")
+        print(f"   Sample row: {rows_with_dates[0]}")
+
+        # Parse transformed data
+        import pandas as pd
+
+        transformed_df = pd.read_json(transformed_data)
+
+        print(
+            f"\n   Transformed data: {len(transformed_df)} rows, {len(transformed_df.columns)} columns"
+        )
+
+        # Get Google Sheets service
+        service = create_sheets_service(credentials_dict)
+
+        # Read existing sheet to get date column and row positions
+        result = (
+            service.spreadsheets()
+            .values()
+            .get(spreadsheetId=sheet_id, range=f"{sheet_name}!A:AZ")
+            .execute()
+        )
+
+        sheet_values = result.get("values", [])
+        if not sheet_values:
+            return {"success": False, "error": "Sheet is empty"}
+
+        # Get header row
+        header_row = sheet_values[0]
+        print(f"\n   Sheet header ({len(header_row)} columns): {header_row[:10]}...")
+
+        # Find date column index in Google Sheets
+        date_col_index = None
+        try:
+            date_col_index = header_row.index(date_column)
+            print(
+                f"   Found '{date_column}' at column index {date_col_index} (Column {chr(65 + date_col_index)})"
+            )
+        except ValueError:
+            # Try alternate date column names
+            date_alternatives = ["Date", "DATE", "date", "Day"]
+            for alt in date_alternatives:
+                try:
+                    date_col_index = header_row.index(alt)
+                    date_column = alt
+                    print(f"   Found date column '{alt}' at index {date_col_index}")
+                    break
+                except ValueError:
+                    continue
+
+        if date_col_index is None:
+            return {
+                "success": False,
+                "error": f"Date column not found in sheet. Available columns: {header_row}",
+            }
+
+        # Find where operational columns start in Google Sheets
+        operational_start_col = None
+        operational_markers = [
+            "Total Manhours",
+            "Total manhours",
+            "Safe man-hours",
+            "Safe Man-hours",
+        ]
+        for marker in operational_markers:
+            try:
+                operational_start_col = header_row.index(marker)
+                print(
+                    f"   Operational data starts at column {operational_start_col} ({chr(65 + operational_start_col)}) - '{marker}'"
+                )
+                break
+            except ValueError:
+                continue
+
+        if operational_start_col is None:
+            # Fallback: assume operational starts after Day column (column E = index 4)
+            operational_start_col = 4
+            print(
+                f"   ⚠️ Could not find operational column marker, using default: column E (index 4)"
+            )
+
+        # Create date-to-row mapping from Google Sheets
+        sheet_date_map = {}
+        for row_idx, row in enumerate(sheet_values[1:], start=2):
+            if len(row) > date_col_index:
+                date_value = row[date_col_index]
+                try:
+                    from datetime import datetime
+
+                    parsed = None
+                    for fmt in [
+                        "%d-%b-%y",
+                        "%d-%b-%Y",
+                        "%Y-%m-%d",
+                        "%m/%d/%Y",
+                        "%d/%m/%Y",
+                    ]:
+                        try:
+                            parsed = datetime.strptime(str(date_value).strip(), fmt)
+                            break
+                        except:
+                            continue
+
+                    if parsed:
+                        formatted_date = parsed.strftime("%Y-%m-%d")
+                        sheet_date_map[formatted_date] = row_idx
+                except Exception:
+                    continue
+
+        if not sheet_date_map:
+            return {"success": False, "error": "No valid dates found in Google Sheets"}
+
+        min_date = min(sheet_date_map.keys())
+        max_date = max(sheet_date_map.keys())
+        print(f"\n   Found {len(sheet_date_map)} dated rows in Google Sheets")
+        print(f"   Date range in sheet: {min_date} to {max_date}")
+
+        # Match dates and prepare updates
+        updates = []
+        rows_updated = 0
+        rows_not_found = []
+
+        print(f"\n🔍 Date Matching Debug:")
+        print(f"   Excel dates to match: {len(rows_with_dates)}")
+        if len(rows_with_dates) > 0:
+            print(
+                f"   First Excel date: {rows_with_dates[0].get('date')} (formatted: {rows_with_dates[0].get('date_formatted', 'N/A')})"
+            )
+        print(f"   Sheet dates available: {len(sheet_date_map)}")
+        if len(sheet_date_map) > 0:
+            sample_sheet_dates = list(sheet_date_map.keys())[:3]
+            print(f"   First 3 Sheet dates: {sample_sheet_dates}")
+
+        for row_with_date in rows_with_dates:
+            # Handle different row_with_date formats
+            if isinstance(row_with_date, dict):
+                date = row_with_date.get("date")
+                row_idx = row_with_date.get("row_index", 0)
+                date_formatted = row_with_date.get("date_formatted", "")
+            else:
+                print(f"   ⚠️ Unexpected row_with_date format: {type(row_with_date)}")
+                continue
+
+            if not date:
+                print(f"   ⚠️ Row missing 'date' field: {row_with_date}")
+                continue
+
+            # ✅ TRY MULTIPLE DATE FORMATS FOR MATCHING
+            dates_to_try = [date]  # Start with the primary format
+
+            # Also try the formatted version if available
+            if date_formatted:
+                try:
+                    from datetime import datetime
+
+                    # Parse the formatted date and convert to YYYY-MM-DD
+                    parsed = datetime.strptime(date_formatted, "%d-%b-%y")
+                    alt_format = parsed.strftime("%Y-%m-%d")
+                    if alt_format not in dates_to_try:
+                        dates_to_try.append(alt_format)
+                except:
+                    pass
+
+            # Try parsing the date itself in different formats
+            try:
+                from datetime import datetime
+
+                for fmt in ["%Y-%m-%d", "%d-%b-%y", "%d-%b-%Y", "%m/%d/%Y", "%d/%m/%Y"]:
+                    try:
+                        parsed = datetime.strptime(str(date), fmt)
+                        normalized = parsed.strftime("%Y-%m-%d")
+                        if normalized not in dates_to_try:
+                            dates_to_try.append(normalized)
+                    except:
+                        pass
+            except:
+                pass
+
+            # Try to find a match
+            matched = False
+            matched_date = None
+
+            for date_variant in dates_to_try:
+                if date_variant in sheet_date_map:
+                    matched = True
+                    matched_date = date_variant
+                    break
+
+            if matched:
+                sheet_row_number = sheet_date_map[matched_date]
+
+                # Get transformed data for this row
+                if row_idx < len(transformed_df):
+                    transformed_row = transformed_df.iloc[row_idx]
+
+                    # Prepare row values (only operational columns)
+                    row_values = []
+                    for col in transformed_df.columns:
+                        value = transformed_row[col]
+                        row_values.append(str(value) if pd.notna(value) else "")
+
+                    # Calculate end column dynamically
+                    end_col_index = operational_start_col + len(row_values) - 1
+
+                    # Create update range
+                    start_col_letter = chr(65 + operational_start_col)
+                    # Handle columns beyond Z (AA, AB, etc.)
+                    if end_col_index > 25:
+                        end_col_letter = chr(64 + (end_col_index // 26)) + chr(
+                            65 + (end_col_index % 26)
+                        )
+                    else:
+                        end_col_letter = chr(65 + end_col_index)
+
+                    update_range = f"{sheet_name}!{start_col_letter}{sheet_row_number}:{end_col_letter}{sheet_row_number}"
+
+                    updates.append({"range": update_range, "values": [row_values]})
+
+                    rows_updated += 1
+                    if rows_updated <= 3:  # Only print first 3 for brevity
+                        print(
+                            f"   ✓ Matched {date} ({matched_date}) → Row {sheet_row_number} (range: {update_range})"
+                        )
+            else:
+                rows_not_found.append(date)
+                if len(rows_not_found) <= 3:  # Only print first 3 for brevity
+                    print(
+                        f"   ✗ Date {date} (tried: {dates_to_try}) not found in Google Sheets"
+                    )
+
+        if rows_updated > 3:
+            print(f"   ... and {rows_updated - 3} more successful matches")
+        if len(rows_not_found) > 3:
+            print(f"   ... and {len(rows_not_found) - 3} more dates not found")
+
+        # Batch update
+        print(f"\n📤 Updating {len(updates)} rows...")
+        body = {"valueInputOption": "USER_ENTERED", "data": updates}
+
+        result = (
+            service.spreadsheets()
+            .values()
+            .batchUpdate(spreadsheetId=sheet_id, body=body)
+            .execute()
+        )
+
+        total_updated = result.get("totalUpdatedRows", 0)
+        print(f"   ✅ Successfully updated {total_updated} rows in Google Sheets")
+
+        return {
+            "success": True,
+            "rows_updated": rows_updated,
+            "total_rows_processed": len(rows_with_dates),
+            "rows_not_found": rows_not_found,
+            "message": f"Successfully updated {rows_updated} rows by date matching",
+        }
+
+    except HttpError as e:
+        print(f"❌ Google Sheets API error: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
+        return {"success": False, "error": f"Google Sheets API error: {str(e)}"}
+    except Exception as e:
+        print(f"❌ Error updating by date: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
+        return {"success": False, "error": f"Update failed: {str(e)}"}
+
+
 # ============================================================
 # TOOL REGISTRY
 # ============================================================
@@ -513,6 +891,10 @@ TOOL_REGISTRY = {
         "func": clear_sheet,
         "description": "Clear data from a sheet range",
     },
+    "update_by_date_match": {
+        "func": update_by_date_match,
+        "description": "Update Google Sheets rows by matching dates (no append, only update)",
+    },
 }
 
 
@@ -521,7 +903,7 @@ TOOL_REGISTRY = {
 # ============================================================
 
 
-@app.post("/execute", response_model=ToolResponse)
+@app.post("/execute_task", response_model=ToolResponse)
 async def execute_tool(request: ToolRequest):
     """
     Execute a Google Sheets tool

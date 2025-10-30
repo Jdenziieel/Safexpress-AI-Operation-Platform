@@ -10,7 +10,13 @@ class SmartMappingEngine:
     """
 
     def __init__(self):
-        # SafexpressOps operational terms - this teaches the system the business language
+        # Import the actual SafExpressOps columns
+        from safexpressops_target_columns import SAFEXPRESSOPS_TARGET_COLUMNS
+
+        # Store the full list
+        self.all_target_columns = SAFEXPRESSOPS_TARGET_COLUMNS
+
+        # SafexpressOps operational terms - business language
         self.operational_vocabulary = {
             # safety domain
             "safety": {
@@ -24,11 +30,14 @@ class SmartMappingEngine:
                     "manhour",
                     "hour",
                 ],
+                # ✅ FIXED: Use actual column names from the list
                 "target_columns": [
-                    "Total Manhours",
-                    "Safe man-hours",
-                    "Losttime Incident",
-                    "Days Without Lost Time Incident",
+                    col
+                    for col in SAFEXPRESSOPS_TARGET_COLUMNS
+                    if any(
+                        kw in col.lower()
+                        for kw in ["manhour", "safe", "incident", "lost time"]
+                    )
                 ],
             },
             # warehouse domain
@@ -44,12 +53,20 @@ class SmartMappingEngine:
                     "damage",
                     "fefo",
                 ],
+                # ✅ FIXED: Use actual column names
                 "target_columns": [
-                    "No. of CV received",
-                    "Ave Picked Qty Per Hr",
-                    "Cycle Count Accuracy",
-                    "Warehouse Damage Incident",
-                    "FEFO Incident",
+                    col
+                    for col in SAFEXPRESSOPS_TARGET_COLUMNS
+                    if any(
+                        kw in col.lower()
+                        for kw in [
+                            "cv received",
+                            "picked qty",
+                            "cycle count",
+                            "warehouse damage",
+                            "fefo",
+                        ]
+                    )
                 ],
             },
             # quality domain
@@ -63,16 +80,43 @@ class SmartMappingEngine:
                     "customer",
                     "satisfaction",
                 ],
+                # ✅ FIXED: Use actual column names
                 "target_columns": [
-                    "CTS %",
-                    "Cycle Count Accuracy",
-                    "Expired Product Incident",
+                    col
+                    for col in SAFEXPRESSOPS_TARGET_COLUMNS
+                    if any(
+                        kw in col.lower()
+                        for kw in ["cts", "accuracy", "expired", "quality"]
+                    )
                 ],
             },
             # Attendance Domain
             "attendance": {
-                "keywords": ["present", "attendance", "staff", "employee", "people"],
-                "target_columns": ["Present"],
+                "keywords": [
+                    "present",
+                    "attendance",
+                    "staff",
+                    "employee",
+                    "people",
+                    "worker",
+                    "deployed",
+                    "manpower",
+                ],
+                # ✅ FIXED: Use actual column names
+                "target_columns": [
+                    col
+                    for col in SAFEXPRESSOPS_TARGET_COLUMNS
+                    if any(
+                        kw in col.lower()
+                        for kw in [
+                            "present",
+                            "attendance",
+                            "deployed",
+                            "manpower",
+                            "late",
+                        ]
+                    )
+                ],
             },
         }
 
@@ -83,6 +127,7 @@ class SmartMappingEngine:
             "cts": "customer satisfaction",
             "fefo": "first expired first out",
             "hrs": "hours",
+            "hours": "manhours",
             "hr": "hours",
             "qty": "quantity",
             "ave": "average",
@@ -93,11 +138,11 @@ class SmartMappingEngine:
 
     def smart_map_columns(
         self,
-        source_columns: List[str],
+        source_columns: Any,
         target_columns: List[str],
         sample_data: pd.DataFrame = None,
     ) -> Dict[str, str]:
-        """ "
+        """
         Main function: intelligently map source columns to target columns
 
         Args:
