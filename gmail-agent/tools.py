@@ -434,6 +434,134 @@ def _reply_to_email_impl(
         }
 
 
+def _forward_email_impl(
+    message_id: str, to: str, forward_message: str = "", credentials_dict: Dict = None
+) -> Dict[str, Any]:
+    """Forward an email to another recipient via Gmail API
+    
+    Args:
+        message_id: The ID of the email message to forward
+        to: Recipient email address to forward to
+        forward_message: Optional message to add before the forwarded content
+        credentials_dict: Gmail OAuth credentials
+        
+    Returns:
+        Dictionary with success status and forwarded email details
+    """
+    try:
+        # get gmail service
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        # get original email
+        original_message = (
+            gmail_service.users()
+            .messages()
+            .get(userId="me", id=message_id, format="full")
+            .execute()
+        )
+
+        # Extract headers
+        headers = original_message["payload"]["headers"]
+        original_subject = ""
+        original_from = ""
+        original_date = ""
+        
+        for header in headers:
+            if header["name"] == "Subject":
+                original_subject = header["value"]
+            elif header["name"] == "From":
+                original_from = header["value"]
+            elif header["name"] == "Date":
+                original_date = header["value"]
+
+        # Get original body
+        original_body = ""
+        if "parts" in original_message["payload"]:
+            for part in original_message["payload"]["parts"]:
+                if part["mimeType"] == "text/plain":
+                    if "data" in part["body"]:
+                        original_body = base64.urlsafe_b64decode(
+                            part["body"]["data"]
+                        ).decode("utf-8")
+                    break
+        else:
+            if "body" in original_message["payload"] and "data" in original_message["payload"]["body"]:
+                original_body = base64.urlsafe_b64decode(
+                    original_message["payload"]["body"]["data"]
+                ).decode("utf-8")
+
+        # Build forwarded message
+        forward_subject = f"Fwd: {original_subject}" if not original_subject.startswith("Fwd:") else original_subject
+        
+        # Create multipart message
+        message = MIMEMultipart()
+        message["to"] = to
+        message["subject"] = forward_subject
+        
+        # Build forward body
+        forward_body = ""
+        if forward_message:
+            forward_body = f"{forward_message}\n\n"
+        
+        forward_body += f"---------- Forwarded message ---------\n"
+        forward_body += f"From: {original_from}\n"
+        forward_body += f"Date: {original_date}\n"
+        forward_body += f"Subject: {original_subject}\n\n"
+        forward_body += original_body
+        
+        message.attach(MIMEText(forward_body, "plain"))
+
+        # Encode and send
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+        
+        send_result = (
+            gmail_service.users()
+            .messages()
+            .send(userId="me", body={"raw": raw_message})
+            .execute()
+        )
+
+        forwarded_message_id = send_result['id']
+        forwarded_thread_id = send_result.get('threadId', forwarded_message_id)
+
+        return {
+            "success": True,
+            "original_message_id": message_id,
+            "forwarded_message_id": forwarded_message_id,
+            "thread_id": forwarded_thread_id,
+            "to": to,
+            "subject": forward_subject,
+            "original_from": original_from,
+            "forward_message": forward_message,
+            "error": None
+        }
+
+    except HttpError as error:
+        return {
+            "success": False,
+            "original_message_id": message_id,
+            "forwarded_message_id": None,
+            "thread_id": None,
+            "to": to,
+            "subject": None,
+            "original_from": None,
+            "forward_message": forward_message,
+            "error": f"Gmail API error: {str(error)}"
+        }
+    except Exception as error:
+        return {
+            "success": False,
+            "original_message_id": message_id,
+            "forwarded_message_id": None,
+            "thread_id": None,
+            "to": to,
+            "subject": None,
+            "original_from": None,
+            "forward_message": forward_message,
+            "error": f"Unexpected error: {str(error)}"
+        }
+
+
 def _get_thread_conversation_impl(thread_id: str, credentials_dict: Dict) -> Dict[str, Any]:
     """Get all messages in an email thread/conversation"""
     try:

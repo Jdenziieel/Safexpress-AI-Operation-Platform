@@ -81,6 +81,24 @@ agent_capabilities = {
                     "error": "str — error message (null if successful)",
                 },
             },
+            "forward_email": {
+                "description": "Forwards an email to another recipient with optional message",
+                "args": {
+                    "message_id": "str (required) — message ID of email to forward",
+                    "to": "str (required) — recipient email address to forward to",
+                    "forward_message": "str (optional) — additional message to include with the forward",
+                },
+                "returns": {
+                    "success": "bool — whether forward was sent successfully",
+                    "original_message_id": "str — the message ID that was forwarded",
+                    "forwarded_message_id": "str — message ID of the forwarded email",
+                    "thread_id": "str — thread ID of the new forward",
+                    "to": "str — recipient email address",
+                    "subject": "str — forward subject (Fwd: ...)",
+                    "original_from": "str — original sender of the forwarded email",
+                    "error": "str — error message (null if successful)",
+                },
+            },
             "create_draft_email": {
                 "description": "Creates a draft email without sending it (safer than send_email)",
                 "args": {

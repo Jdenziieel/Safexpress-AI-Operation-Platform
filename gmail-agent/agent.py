@@ -7,6 +7,7 @@ from tools import (
     _send_email_impl,
     _send_email_with_attachments_impl,
     _reply_to_email_impl,
+    _forward_email_impl,
     _create_draft_email_impl,
     _send_draft_email_impl,
     _get_thread_conversation_impl,
@@ -114,6 +115,18 @@ def create_email_agent(credentials_dict: Dict):
         return result
 
     @tool
+    def forward_email(message_id: str, to: str, forward_message: str = "") -> str:
+        """Forwards an email to another recipient using Gmail API.
+
+        Args:
+            message_id: The ID of the email message to forward
+            to: Recipient email address to forward to
+            forward_message: Optional message to add before the forwarded content
+        """
+        result = _forward_email_impl(message_id, to, forward_message, credentials_dict)
+        return result
+
+    @tool
     def get_thread_conversation(thread_id: str) -> str:
         """Gets all messages in an email thread/conversation.
 
@@ -160,6 +173,7 @@ def create_email_agent(credentials_dict: Dict):
         search_emails,
         send_email_with_attachment,
         reply_to_email,
+        forward_email,
         get_thread_conversation,
         add_label,
         remove_label,

@@ -60,6 +60,7 @@ async def execute_task(request: AgentTaskRequest):
             _send_email_impl,
             _send_email_with_attachments_impl,
             _reply_to_email_impl,
+            _forward_email_impl,
             _create_draft_email_impl,
             _send_draft_email_impl,
             _search_drafts_impl,
@@ -75,6 +76,7 @@ async def execute_task(request: AgentTaskRequest):
             "send_email": _send_email_impl,
             "send_email_with_attachment": _send_email_with_attachments_impl,
             "reply_to_email": _reply_to_email_impl,
+            "forward_email": _forward_email_impl,
             "create_draft_email": _create_draft_email_impl,
             "send_draft_email": _send_draft_email_impl,
             "search_drafts": _search_drafts_impl,
@@ -94,27 +96,41 @@ async def execute_task(request: AgentTaskRequest):
         # Apply transformations for email-sending tools using simple LLM
         transformed_inputs = dict(request.inputs)
         
-        if request.tool in ["send_draft_email", "reply_to_email", "send_email", "create_draft_email"]:
+        if request.tool in ["send_draft_email", "reply_to_email", "forward_email", "send_email", "create_draft_email"]:
             # Only use LLM if we need to transform the body
-            if "body" in transformed_inputs:
+            if "body" in transformed_inputs or "reply_body" in transformed_inputs or "forward_message" in transformed_inputs:
                 from langchain_openai import ChatOpenAI
                 llm = ChatOpenAI(model="gpt-4o", temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY"))
                 
-                transform_prompt = f"""Add this signature to the end of the email body:
+                # Determine which field to transform
+                body_field = None
+                original_content = ""
+                if "body" in transformed_inputs:
+                    body_field = "body"
+                    original_content = transformed_inputs['body']
+                elif "reply_body" in transformed_inputs:
+                    body_field = "reply_body"
+                    original_content = transformed_inputs['reply_body']
+                elif "forward_message" in transformed_inputs:
+                    body_field = "forward_message"
+                    original_content = transformed_inputs['forward_message']
+                
+                if body_field and original_content:
+                    transform_prompt = f"""Add this signature to the end of the email body:
 
 --- 
 This is written by Assistant Agent
 
 Original body:
-{transformed_inputs['body']}
+{original_content}
 
 Return ONLY the modified body text, nothing else."""
-                
-                print(f"🤖 Using LLM to transform email body...")
-                llm_start = time.time()
-                response = llm.invoke(transform_prompt)
-                transformed_inputs['body'] = response.content.strip()
-                print(f"✅ LLM transformation completed in {time.time() - llm_start:.2f}s")
+                    
+                    print(f"🤖 Using LLM to transform email {body_field}...")
+                    llm_start = time.time()
+                    response = llm.invoke(transform_prompt)
+                    transformed_inputs[body_field] = response.content.strip()
+                    print(f"✅ LLM transformation completed in {time.time() - llm_start:.2f}s")
         
         # Call tool directly
         print(f"🔧 Calling tool implementation directly...")

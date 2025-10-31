@@ -7,6 +7,7 @@ import httpx
 from jinja2 import Template
 from typing import TypedDict, List, Optional, Dict, Any, Callable, Awaitable
 from datetime import datetime, timedelta, timezone
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import uvicorn
 import asyncio
@@ -47,6 +48,17 @@ from conversational_agent import ConversationalAgent, ConversationState
 
 # Initialize FastAPI app
 app = FastAPI(title="Supervisor Agent API")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Allow your React dev server
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],  # Allow all headers
+    # You might want to be more specific in production
+    # allow_origins=["https://yourproductiondomain.com"],
+)
 
 # Initialize LLM
 llm = ChatOpenAI(
