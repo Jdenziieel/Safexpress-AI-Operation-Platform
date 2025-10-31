@@ -69,7 +69,7 @@ llm = ChatOpenAI(
 conversational_agent = ConversationalAgent(
     openai_api_key=OPENAI_API_KEY,
     model=LLM_MODEL,
-    temperature=0.0  # Lower temperature for more consistent clarifications
+    temperature=0.0,  # Lower temperature for more consistent clarifications
 )
 
 # In-memory conversation storage (replace with Redis/DB in production)
@@ -303,6 +303,14 @@ gmail_agent tools:
 calendar_agent tools:
 - list_events, create_event, update_event, delete_event
 
+Sheets_agent tools:
+- create_sheet, read_sheet, update_sheet, delete_sheet, append_rows, update_by_date_match
+
+Route to mapping_agent + sheets_agent when:
+- User wants to upload/parse Excel/CSV files to Google Sheets
+- User mentions "map columns", "smart mapping", "upload to sheets"
+- Phrases like "Parse Excel file and upload"
+
 === ROUTING RULES ===
 
 Route to docs_agent when:
@@ -340,6 +348,124 @@ Route to calendar_agent when:
 
 6. **CRITICAL: Use EXACT placeholder keys from template (without brackets)**
    If template has "[COMPANY_NAME]", use key "COMPANY_NAME" (not "Company Name")
+
+=== EXCEL/CSV TO GOOGLE SHEETS WORKFLOW - DATE-BASED UPDATE (CRITICAL) ===
+
+**CONTEXT:** Google Sheets already has Wee, Week, Date, Day columns pre-filled for entire month.
+**GOAL:** Match dates from Excel to existing rows in Sheets, update ONLY operational columns.
+**DO NOT APPEND** - only UPDATE existing rows by date match.
+
+MANDATORY 5-STEP WORKFLOW (DO NOT SKIP ANY STEP):
+
+STEP 1: Parse Excel file
+{{
+  "agent": "mapping_agent",
+  "tool": "parse_file",
+  "inputs": {{
+    "file_content": "[EXACT file path from user]",
+    "file_type": "xlsx"
+  }},
+  "output_variables": {{
+    "parsed_columns": "columns",
+    "parsed_data": "full_data",
+    "sample_data": "sample_data"
+  }}
+}}
+
+STEP 2: Extract ALL dates from Excel (for row matching)
+{{
+  "agent": "mapping_agent",
+  "tool": "extract_dates_from_all_rows",
+  "inputs": {{
+    "data": "{{{{ parsed_data }}}}",
+    "date_column_name": "Date"
+  }},
+  "output_variables": {{
+    "excel_dates": "rows_with_dates",
+    "total_excel_rows": "total_rows"
+  }}
+}}
+
+STEP 3: Smart map OPERATIONAL columns ONLY (skip temporal)
+{{
+  "agent": "mapping_agent",
+  "tool": "smart_column_mapping",
+  "inputs": {{
+    "source_columns": "{{{{ parsed_columns }}}}",
+    "skip_temporal": true
+  }},
+  "output_variables": {{
+    "column_mappings": "mappings"
+  }}
+}}
+STEP 4: Transform data (operational columns only)
+{{
+  "agent": "mapping_agent",
+  "tool": "transform_data",
+  "inputs": {{
+    "source_data": "{{{{ parsed_data }}}}",
+    "mappings": "{{{{ column_mappings }}}}"
+  }},
+  "output_variables": {{
+    "transformed_operational_data": "transformed_data"
+  }}
+}}
+
+STEP 5: Update Sheets by DATE MATCHING (NOT append!)
+{{
+  "agent": "sheets_agent",
+  "tool": "update_by_date_match",
+  "inputs": {{
+    "sheet_id": "[Google Sheets ID from user]",
+    "transformed_data": "{{{{ transformed_operational_data }}}}",
+    "rows_with_dates": "{{{{ excel_dates }}}}",
+    "sheet_name": "DATA ENTRY",
+    "date_column": "Date"
+  }},
+  "output_variables": {{
+    "update_count": "rows_updated",
+    "missing_dates": "rows_not_found"
+  }}
+}}
+
+CRITICAL VALIDATION CHECKLIST:
+✓ STEP 2 must extract dates from ALL rows (not just first row)
+✓ STEP 3 must have skip_temporal=true
+✓ STEP 5 must use update_by_date_match (NOT upload_mapped_data)
+✓ STEP 5 requires BOTH transformed_data AND rows_with_dates
+
+=== SAFEXPRESSOPS TARGET SCHEMA (USE THIS EXACT LIST) ===
+
+[
+  "Date", "Week", "Day", 
+  "Total Manhours", "Safe man-hours", "Overtime Hours", "Present", "Absent", "Training Hours",
+  "Losttime Incident", "Days Without Lost Time Incident", "Near Miss", "Safety Training Completed",
+  "Total Recordable Incident Rate", "Lost Time Incident Rate", "Severity Rate", "First Aid Cases",
+  "Cycle Count Accuracy", "Warehouse Damage Incident", "FEFO Incident", "Expired Product Incident", 
+  "Pick Accuracy %", "Inventory Variance %", "Putaway Accuracy", "Receiving Accuracy",
+  "Productivity Index", "Cost Per Unit", "Cost Per Shipment", "System Uptime %", 
+  "Equipment Downtime", "Throughput Rate", "Order Fulfillment Rate",
+  "CTS %", "OPR Score", "Alpha Metric", "Regional Performance", "Compliance Score", 
+  "Quality Score", "Customer Satisfaction",
+  "Inventory Turns", "Stockout Incidents", "Overstock Incidents", "Dead Stock Value", 
+  "Inventory Accuracy", "Physical Count Variance",
+  "Energy Consumption", "Waste Generation", "Delivery Performance", "Return Rate", 
+  "Damage Rate", "Shrinkage Rate",
+  "No. of CV Received", "Ave Picked Qty Per Hr", "Total Number of MHE", "Total Stock On-Hand", 
+  "Total Overtime (Hours)", "Total Expenses", "Warehouse Damage Incident Cost", 
+  "Return Performance", "Attendance Perf %"
+]
+
+=== WHEN TO USE SMART VS EXPLICIT MAPPING ===
+
+**Use smart_column_mapping when:**
+- User says "intelligently map", "auto-detect", "smart mapping"
+- User uploads file without specifying exact mappings
+
+**Use direct mappings in transform_data when:** 
+- User explicitly states mappings: "Map Employee to Present and Hours to Total Manhours"
+- Skip smart_column_mapping step and use direct mappings dict
+
 
 === CURRENT CONTEXT ===
 
@@ -776,10 +902,24 @@ def orchestrator_node(state: SharedState) -> SharedState:
             # Substitute variables first so user sees actual values
             substituted_inputs = {}
             for key, value in inputs.items():
-                if isinstance(value, str):
+                if isinstance(value, str) and "{{" in value and "}}" in value:
+                    # Only use Jinja2 if the string contains template variables
                     template = Template(value)
-                    substituted_inputs[key] = template.render(**variable_context)
+                    rendered = template.render(**variable_context)
+                    # Try to parse rendered value back to its original type
+                    try:
+                        # If it looks like JSON, parse it
+                        if rendered.startswith("[") or rendered.startswith("{"):
+                            substituted_inputs[key] = json.loads(
+                                rendered.replace("'", '"')
+                            )
+                        else:
+                            substituted_inputs[key] = rendered
+                    except (json.JSONDecodeError, ValueError):
+                        # If parsing fails, keep as string
+                        substituted_inputs[key] = rendered
                 else:
+                    # No template variables, keep original value and type
                     substituted_inputs[key] = value
 
             # Create action approval request
@@ -1198,40 +1338,46 @@ async def chat(request: ConversationRequest):
 
         # If a conversation is currently executing, reject further inputs to avoid conflicts.
         if conversation_state and conversation_state.executing:
-            print(f"⏳ Conversation {conversation_id} is executing — rejecting new input")
+            print(
+                f"⏳ Conversation {conversation_id} is executing — rejecting new input"
+            )
             raise HTTPException(
                 status_code=409,
-                detail="Conversation is currently executing. Please wait until the operation completes."
+                detail="Conversation is currently executing. Please wait until the operation completes.",
             )
-        
+
         # Process message through conversational agent
         response_text, updated_state = conversational_agent.process_message(
             user_message=request.message, conversation_state=conversation_state
         )
-        
+
         print(f"🤖 Bot response: {response_text}")
         print(f"✅ Ready to execute: {updated_state.ready_for_execution}")
 
         # If the conversation is ready for execution, run it immediately but KEEP the conversation.
         if updated_state.ready_for_execution:
-            print("🚀 Conversation ready — executing workflow (conversation will be kept)...")
+            print(
+                "🚀 Conversation ready — executing workflow (conversation will be kept)..."
+            )
 
             # Mark as executing BEFORE any async operations to prevent race conditions
             updated_state.executing = True
             CONVERSATIONS[conversation_id] = updated_state
 
             try:
-                supervisor_input = conversational_agent.build_supervisor_input(updated_state)
+                supervisor_input = conversational_agent.build_supervisor_input(
+                    updated_state
+                )
 
                 # Execute workflow first to get the actual plan
                 workflow_request = UserRequest(input=supervisor_input)
                 now_iso = datetime.now(timezone.utc).isoformat()
-                
+
                 status = "unknown"
                 message = ""
                 final_context = {}
                 plan_dict = {}
-                
+
                 try:
                     workflow_result = await execute_workflow(workflow_request)
                     status = workflow_result.status
@@ -1246,6 +1392,7 @@ async def chat(request: ConversationRequest):
                     status = "error"
                     message = str(e)
                     import traceback
+
                     traceback.print_exc()
 
                 # Compute plan hash from actual structured plan (more stable than string)
@@ -1253,7 +1400,7 @@ async def chat(request: ConversationRequest):
                     plan_json = json.dumps(plan_dict, sort_keys=True)
                 except Exception:
                     plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
-                
+
                 plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
 
                 # Build history entry
@@ -1268,7 +1415,9 @@ async def chat(request: ConversationRequest):
                 # Append to history (limit to last 50 entries to prevent unbounded growth)
                 updated_state.execution_history.append(history_item)
                 if len(updated_state.execution_history) > 50:
-                    updated_state.execution_history = updated_state.execution_history[-50:]
+                    updated_state.execution_history = updated_state.execution_history[
+                        -50:
+                    ]
 
                 updated_state.executed_count += 1
                 updated_state.last_plan_hash = plan_hash
@@ -1278,16 +1427,29 @@ async def chat(request: ConversationRequest):
                 # Prevent immediate re-execution until the agent sets ready_for_execution again
                 updated_state.ready_for_execution = False
 
+                # Generate user-friendly summary using conversational agent
+                print("📝 Generating user-friendly summary...")
+                friendly_summary = conversational_agent.summarize_execution(
+                    conversation_state=updated_state,
+                    final_context=final_context,
+                    execution_status=status,
+                    execution_message=message,
+                )
+
                 # Return response with execution summary
                 return ConversationResponse(
-                    response=f"{response_text}\n\n✅ Executed! {message}",
+                    response=friendly_summary,
                     conversation_id=conversation_id,
                     ready_for_execution=updated_state.ready_for_execution,
-                    intent=updated_state.intent.value if updated_state.intent else "unknown",
+                    intent=(
+                        updated_state.intent.value
+                        if updated_state.intent
+                        else "unknown"
+                    ),
                     extracted_info=updated_state.extracted_info,
                     execution_summary=updated_state.execution_summary,
                 )
-            
+
             finally:
                 # CRITICAL: Always clear executing flag, even on error
                 updated_state.executing = False
@@ -1296,7 +1458,7 @@ async def chat(request: ConversationRequest):
         # Otherwise, return current conversational response and state (not ready yet)
         # Store the updated state before returning
         CONVERSATIONS[conversation_id] = updated_state
-        
+
         return ConversationResponse(
             response=response_text,
             conversation_id=conversation_id,

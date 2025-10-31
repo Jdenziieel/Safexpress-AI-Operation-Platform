@@ -14,6 +14,7 @@ import io
 import json
 from datetime import datetime
 from dotenv import load_dotenv
+from safexpressops_target_columns import SAFEXPRESSOPS_TARGET_COLUMNS
 
 
 # Load environment variables from .env file
@@ -62,29 +63,51 @@ MAPPING_TEMPLATES = {}
 
 def parse_file(file_content: str, file_type: str = "csv") -> Dict[str, Any]:
     """
-    Parse uploaded file content into structured data
+    Parse uploaded file content OR file path into structured data
 
     Args:
-        file_content: File content as string or bytes
+        file_content: File content as string/bytes OR file path
         file_type: Type of file (csv, xlsx, xls, excel, json)
 
     Returns:
         Dictionary with parsed data, columns, and metadata
     """
     try:
+        # Check if file_content is actually a file path
+        is_file_path = False
+        if isinstance(file_content, str) and (
+            file_content.startswith("/")
+            or file_content.startswith("C:")
+            or file_content.startswith("c:")
+            or "\\" in file_content
+        ):
+            is_file_path = True
+            print(f"📁 Detected file path: {file_content}")
+
         # Parse based on file type
         if file_type.lower() == "csv":
-            df = pd.read_csv(io.StringIO(file_content))
+            if is_file_path:
+                df = pd.read_csv(file_content)
+            else:
+                df = pd.read_csv(io.StringIO(file_content))
+
         elif file_type.lower() in ["xlsx", "xls", "excel"]:
-            df = pd.read_excel(
-                io.BytesIO(
-                    file_content.encode()
-                    if isinstance(file_content, str)
-                    else file_content
+            if is_file_path:
+                df = pd.read_excel(file_content)  # ✅ Direct path reading
+            else:
+                df = pd.read_excel(
+                    io.BytesIO(
+                        file_content.encode()
+                        if isinstance(file_content, str)
+                        else file_content
+                    )
                 )
-            )
+
         elif file_type.lower() == "json":
-            df = pd.read_json(io.StringIO(file_content))
+            if is_file_path:
+                df = pd.read_json(file_content)
+            else:
+                df = pd.read_json(io.StringIO(file_content))
         else:
             return {
                 "success": False,
@@ -147,18 +170,19 @@ def parse_file(file_content: str, file_type: str = "csv") -> Dict[str, Any]:
 
 
 def smart_column_mapping(
-    source_columns: List[str],
-    target_columns: List[str],
+    source_columns: Any,  # Changed from List[str] to Any for flexibility
+    target_columns: List[str] = None,  # ✅ CHANGED: Made optional with default None
     sample_data: Optional[List[Dict]] = None,
     source_data_types: Optional[Dict[str, str]] = None,
     sample_values: Optional[Dict[str, List[str]]] = None,
+    skip_temporal: bool = True,
 ) -> Dict[str, Any]:
     """
     Intelligently map source columns to target columns using AI/heuristics
 
     Args:
-        source_columns: List of source column names
-        target_columns: List of target column names
+        source_columns: List of source column names (or string representation)
+        target_columns: List of target column names (optional, uses SAFEXPRESSOPS_TARGET_COLUMNS by default)
         sample_data: Optional sample data for better analysis
         source_data_types: Optional data types for source columns
         sample_values: Optional sample values for each source column
@@ -167,6 +191,84 @@ def smart_column_mapping(
         Dictionary with mappings, confidence scores, and recommendations
     """
     try:
+        print(f"\n🔍 Smart Column Mapping - Input Validation")
+        print(f"   source_columns type: {type(source_columns).__name__}")
+
+        if isinstance(source_columns, str):
+            print(f"   ⚠️ source_columns is a string, parsing...")
+            print(f"   String length: {len(source_columns)}")
+            print(f"   First 100 chars: {source_columns[:100]}")
+
+            import ast
+
+            # Try multiple parsing strategies
+            parsed = None
+
+            # Strategy 1: JSON loads
+            try:
+                import json
+
+                parsed = json.loads(source_columns)
+                print(f"   ✅ Parsed with json.loads() - {len(parsed)} columns")
+            except json.JSONDecodeError as e1:
+                print(f"   ❌ json.loads() failed: {str(e1)}")
+
+                # Strategy 2: Fix quotes and retry
+                try:
+                    fixed = source_columns.replace("'", '"')
+                    parsed = json.loads(fixed)
+                    print(f"   ✅ Parsed after fixing quotes - {len(parsed)} columns")
+                except json.JSONDecodeError as e2:
+                    print(f"   ❌ Quote fix failed: {str(e2)}")
+
+                    # Strategy 3: ast.literal_eval
+                    try:
+                        parsed = ast.literal_eval(source_columns)
+                        print(
+                            f"   ✅ Parsed with ast.literal_eval() - {len(parsed)} columns"
+                        )
+                    except (ValueError, SyntaxError) as e3:
+                        return {
+                            "success": False,
+                            "error": f"Could not parse source_columns: {str(e3)}",
+                        }
+
+            source_columns = parsed
+
+        # ✅ Validate it's now a list
+        if not isinstance(source_columns, list):
+            return {
+                "success": False,
+                "error": f"source_columns must be a list, got {type(source_columns).__name__}. Value: {str(source_columns)[:200]}",
+            }
+
+        if len(source_columns) == 0:
+            return {"success": False, "error": "source_columns is empty"}
+
+        print(f"   ✅ Validated source_columns: {len(source_columns)} columns")
+        print(f"   First 5 columns: {source_columns[:5]}")
+
+        # ✅ NOW CONTINUE WITH YOUR EXISTING CODE BELOW
+        # ✅ ADDED: Import operational columns
+        from safexpressops_target_columns import (
+            SAFEXPRESSOPS_OPERATIONAL_ONLY,
+            TEMPORAL_COLUMNS,
+        )
+
+        # ✅ Use operational columns only if skip_temporal is True
+        if target_columns is None:
+            if skip_temporal:
+                target_columns = SAFEXPRESSOPS_OPERATIONAL_ONLY
+        # ✅ ADDED: Import operational columns
+        from safexpressops_target_columns import (
+            SAFEXPRESSOPS_OPERATIONAL_ONLY,
+            TEMPORAL_COLUMNS,
+        )
+
+        # ✅ Use operational columns only if skip_temporal is True
+        if target_columns is None and skip_temporal:
+            target_columns = SAFEXPRESSOPS_OPERATIONAL_ONLY
+
         if SMART_MAPPING_AVAILABLE:
             # Use the smart mapping engine
             print("🧠 Using SmartMappingEngine for AI-powered mapping...")
@@ -174,7 +276,40 @@ def smart_column_mapping(
             # Convert sample_data to DataFrame if provided
             sample_df = None
             if sample_data:
-                sample_df = pd.DataFrame(sample_data)
+                try:
+                    # ✅ Handle different sample_data formats
+                    if isinstance(sample_data, str):
+                        # If it's a JSON string, parse it
+                        import json
+
+                        sample_data = json.loads(sample_data)
+
+                    if isinstance(sample_data, list):
+                        # If it's a list of dicts (expected format)
+                        sample_df = pd.DataFrame(sample_data)
+                    elif isinstance(sample_data, dict):
+                        # If it's a single dict, wrap it in a list
+                        sample_df = pd.DataFrame([sample_data])
+                    else:
+                        print(
+                            f"⚠️ Unexpected sample_data type: {type(sample_data)}, ignoring"
+                        )
+                        sample_df = None
+
+                    if sample_df is not None and not sample_df.empty:
+                        print(
+                            f"   Sample data converted: {len(sample_df)} rows, {len(sample_df.columns)} columns"
+                        )
+                    else:
+                        print(f"   No valid sample data provided")
+                        sample_df = None
+
+                except Exception as e:
+                    print(
+                        f"⚠️ Warning: Could not convert sample_data to DataFrame: {str(e)}"
+                    )
+                    print(f"   Continuing without sample data")
+                    sample_df = None
 
             smart_engine = SmartMappingEngine()
             result = smart_engine.smart_map_columns(
@@ -211,7 +346,6 @@ def smart_column_mapping(
                 "accuracy_estimate": result["summary"]["accuracy_estimate"],
                 "method": "smart_mapping_engine",
             }
-
         else:
             # Fallback: Simple string similarity matching
             print("📊 Using fallback string similarity matching...")
@@ -266,8 +400,11 @@ def smart_column_mapping(
                 ),
                 "method": "string_similarity_fallback",
             }
-
     except Exception as e:
+        print(f"❌ Smart mapping error: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
         return {"success": False, "error": f"Mapping failed: {str(e)}"}
 
 
@@ -390,9 +527,80 @@ def validate_mapping(
         return {"success": False, "error": f"Validation failed: {str(e)}"}
 
 
+def extract_date_from_data(
+    data: str,
+    date_column_hints: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Extract date from parsed data"""
+    try:
+        print(f"\n📅 Extracting date from data...")
+        df = pd.read_json(data)
+
+        if date_column_hints is None:
+            date_column_hints = ["Date", "date", "DATE", "Day", "day"]
+
+        date_col_name = None
+        for hint in date_column_hints:
+            if hint in df.columns:
+                date_col_name = hint
+                break
+
+        if not date_col_name:
+            date_col_name = df.columns[0]
+
+        first_date_value = df[date_col_name].iloc[0]
+
+        date_formats = [
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%d",
+            "%d-%b-%y",
+            "%d-%b-%Y",
+            "%m/%d/%Y",
+            "%d/%m/%Y",
+        ]
+
+        parsed_date = None
+        if isinstance(first_date_value, (pd.Timestamp, datetime)):
+            parsed_date = first_date_value
+        else:
+            date_str = str(first_date_value).strip()
+            for fmt in date_formats:
+                try:
+                    parsed_date = datetime.strptime(date_str, fmt)
+                    break
+                except:
+                    continue
+            if not parsed_date:
+                try:
+                    parsed_date = pd.to_datetime(date_str)
+                except:
+                    pass
+
+        if not parsed_date:
+            return {
+                "success": False,
+                "error": f"Could not parse date: {first_date_value}",
+            }
+
+        if isinstance(parsed_date, pd.Timestamp):
+            parsed_date = parsed_date.to_pydatetime()
+
+        print(f"   ✅ Parsed date: {parsed_date.strftime('%Y-%m-%d')}")
+
+        return {
+            "success": True,
+            "date": parsed_date.strftime("%Y-%m-%d"),
+            "date_object": parsed_date.isoformat(),
+            "source_column": date_col_name,
+            "formatted_display": parsed_date.strftime("%d-%b-%Y"),
+        }
+    except Exception as e:
+        return {"success": False, "error": f"Failed to extract date: {str(e)}"}
+
+
 def transform_data(
     source_data: str,  # JSON string from parse_file
-    mappings: Dict[str, str],
+    mappings: Any,  # Changed from Dict to Any for flexibility
     target_columns: Optional[List[str]] = None,
     fill_missing: bool = True,
 ) -> Dict[str, Any]:
@@ -401,7 +609,7 @@ def transform_data(
 
     Args:
         source_data: JSON string of source data (from parse_file)
-        mappings: Dictionary of source -> target column mappings
+        mappings: Dictionary of source -> target column mappings (or string representation)
         target_columns: Optional list of target columns (for ordering)
         fill_missing: If True, fill unmapped target columns with empty values
 
@@ -409,8 +617,43 @@ def transform_data(
         Transformed data ready for upload to destination
     """
     try:
+        # ✅ DEFENSIVE TYPE CHECK - Handle string representation of dict
+        if isinstance(mappings, str):
+            print(f"⚠️ Warning: mappings received as string, converting to dict")
+            print(f"   Original value: {mappings[:200]}...")  # Show first 200 chars
+            import ast
+
+            try:
+                mappings = ast.literal_eval(mappings)
+                print(f"   Converted successfully")
+            except (ValueError, SyntaxError) as e:
+                # If literal_eval fails, try JSON
+                import json
+
+                try:
+                    mappings = json.loads(mappings)
+                    print(f"   Converted via JSON successfully")
+                except json.JSONDecodeError:
+                    return {
+                        "success": False,
+                        "error": f"Could not parse mappings: {str(e)}",
+                    }
+
+        # Validate it's now a dict
+        if not isinstance(mappings, dict):
+            return {
+                "success": False,
+                "error": f"mappings must be a dict, got {type(mappings).__name__}. Value: {mappings}",
+            }
+
+        print(f"\n🔄 Transform Data")
+        print(f"   Mappings ({len(mappings)}): {mappings}")
+
         # Parse source data
         source_df = pd.read_json(source_data)
+
+        print(f"   Source data shape: {source_df.shape}")
+        print(f"   Source columns: {list(source_df.columns)}")
 
         # Create new dataframe with target structure
         transformed_rows = []
@@ -447,6 +690,9 @@ def transform_data(
             ]
             transformed_df = transformed_df[available_cols]
 
+        print(f"   Transformed shape: {transformed_df.shape}")
+        print(f"   Transformed columns: {list(transformed_df.columns)}")
+
         # Get statistics
         mapped_columns = [col for col in mappings.values() if col]
         unmapped_source = [col for col in source_df.columns if col not in mappings]
@@ -468,6 +714,10 @@ def transform_data(
         }
 
     except Exception as e:
+        print(f"❌ Transformation error: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
         return {"success": False, "error": f"Transformation failed: {str(e)}"}
 
 
@@ -589,6 +839,97 @@ def list_mapping_templates() -> Dict[str, Any]:
         return {"success": False, "error": f"Failed to list templates: {str(e)}"}
 
 
+def extract_dates_from_all_rows(
+    data: str, date_column_name: str = "Date"
+) -> Dict[str, Any]:
+    """
+    Extract dates from ALL rows for date-based row matching
+
+    Args:
+        data: JSON string of full data
+        date_column_name: Name of the date column
+
+    Returns:
+        List of {row_index, date, data} for each row
+    """
+    try:
+        print(f"\n📅 Extracting dates from all rows...")
+        df = pd.read_json(data)
+
+        if date_column_name not in df.columns:
+            return {
+                "success": False,
+                "error": f"Date column '{date_column_name}' not found. Available: {list(df.columns)}",
+            }
+
+        # Extract dates for all rows
+        rows_with_dates = []
+        date_formats = [
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%d",
+            "%d-%b-%y",
+            "%d-%b-%Y",
+            "%m/%d/%Y",
+            "%d/%m/%Y",
+        ]
+
+        for idx, row in df.iterrows():
+            date_value = row[date_column_name]
+
+            # Parse date
+            parsed_date = None
+            if isinstance(date_value, (pd.Timestamp, datetime)):
+                parsed_date = date_value
+            else:
+                date_str = str(date_value).strip()
+                for fmt in date_formats:
+                    try:
+                        parsed_date = datetime.strptime(date_str, fmt)
+                        break
+                    except:
+                        continue
+                if not parsed_date:
+                    try:
+                        parsed_date = pd.to_datetime(date_str)
+                    except:
+                        pass
+
+            if parsed_date:
+                if isinstance(parsed_date, pd.Timestamp):
+                    parsed_date = parsed_date.to_pydatetime()
+
+                rows_with_dates.append(
+                    {
+                        "row_index": int(idx),
+                        "date": parsed_date.strftime("%Y-%m-%d"),
+                        "date_formatted": parsed_date.strftime(
+                            "%d-%b-%y"
+                        ),  # Matches your sheet format
+                        "row_data": row.to_dict(),
+                    }
+                )
+
+        print(f"   ✅ Extracted {len(rows_with_dates)} dates")
+        if rows_with_dates:
+            print(
+                f"   Date range: {rows_with_dates[0]['date']} to {rows_with_dates[-1]['date']}"
+            )
+
+        return {
+            "success": True,
+            "rows_with_dates": rows_with_dates,
+            "total_rows": len(rows_with_dates),
+            "date_column": date_column_name,
+        }
+
+    except Exception as e:
+        print(f"❌ Error extracting dates: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
+        return {"success": False, "error": f"Failed to extract dates: {str(e)}"}
+
+
 # ============================================================
 # TOOL REGISTRY
 # ============================================================
@@ -597,6 +938,10 @@ TOOL_REGISTRY = {
     "parse_file": {
         "func": parse_file,
         "description": "Parse CSV/Excel/JSON files into structured data",
+    },
+    "extract_dates_from_all_rows": {  # ✅ NEW
+        "func": extract_dates_from_all_rows,
+        "description": "Extract dates from all rows for date-based matching",
     },
     "smart_column_mapping": {
         "func": smart_column_mapping,
@@ -622,6 +967,10 @@ TOOL_REGISTRY = {
         "func": list_mapping_templates,
         "description": "List all saved mapping templates",
     },
+    "extract_date_from_data": {
+        "func": extract_date_from_data,
+        "description": "Extract date from parsed data for data identification",
+    },
 }
 
 
@@ -630,7 +979,7 @@ TOOL_REGISTRY = {
 # ============================================================
 
 
-@app.post("/execute", response_model=ToolResponse)
+@app.post("/execute_task", response_model=ToolResponse)
 async def execute_tool(request: ToolRequest):
     """
     Execute a mapping tool

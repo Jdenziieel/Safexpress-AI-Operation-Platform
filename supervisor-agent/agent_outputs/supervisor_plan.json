@@ -2,15 +2,24 @@
   "plan": [
     {
       "agent": "gmail_agent",
-      "tool": "search_emails",
+      "tool": "create_draft_email",
       "inputs": {
-        "query": "from:cm.carla03@gmail.com subject:HELLO123",
-        "max_results": 1
+        "to": "jdenziieel@gmail.com",
+        "subject": "Reminder for quiz",
+        "body": "We have a quiz tomorrow"
       },
       "output_variables": {
-        "recent_email": "emails[0]"
+        "draft_id": "draft_id"
       },
-      "description": "Search for the most recent email from 'cm.carla03@gmail.com' with the subject 'HELLO123'"
+      "description": "Create a draft email to remind about the quiz"
+    },  
+    {
+      "agent": "gmail_agent",
+      "tool": "send_draft_email",
+      "inputs": {
+        "draft_id": "{{ draft_id }}"
+      },
+      "description": "Send the draft email"
     }
   ]
 }

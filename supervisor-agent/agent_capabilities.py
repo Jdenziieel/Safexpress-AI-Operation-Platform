@@ -347,13 +347,118 @@ agent_capabilities = {
             },
         },
     },
-    "sheets_agent": {
-        "description": "Create or update Google Sheets.",
-        "args": {
-            "title": "str (required) — sheet title",
-            "data": "List[List[str]] (required) — 2D list of rows",
+    "mapping_agent": {
+        "description": "Parse files (CSV/Excel/JSON), intelligently map columns, validate mappings, transform data structure. NO Google Sheets operations.",
+        "tools": {
+            "parse_file": {
+                "description": "Parse CSV/Excel/JSON files into structured data",
+                "args": {
+                    "file_content": "str (required) — file path or content",
+                    "file_type": "str (required) — csv, xlsx, xls, excel, or json",
+                },
+                "returns": {
+                    "success": "bool",
+                    "columns": "list — column names",
+                    "row_count": "int",
+                    "full_data": "str — JSON string of all data",
+                    "sample_data": "list — first 5 rows for analysis",
+                },
+            },
+            "extract_dates_from_all_rows": {  # ✅ NEW
+                "description": "Extract dates from ALL rows for date-based matching",
+                "args": {
+                    "data": "str (required) — JSON string from parse_file's full_data",
+                    "date_column_name": "str (optional) — default 'Date'",
+                },
+                "returns": {
+                    "success": "bool",
+                    "rows_with_dates": "list — [{row_index, date, date_formatted, row_data}]",
+                    "total_rows": "int",
+                    "date_column": "str",
+                },
+            },
+            "smart_column_mapping": {
+                "description": "AI-powered intelligent column mapping (skips temporal columns)",
+                "args": {
+                    "source_columns": "List[str] (required)",
+                    "sample_data": "list (optional)",
+                    "skip_temporal": "bool (optional) — default true, skips Wee/Week/Date/Day",
+                },
+                "returns": {
+                    "success": "bool",
+                    "mappings": "dict — source to target column mappings",
+                    "confidence_scores": "dict",
+                },
+            },
+            "transform_data": {
+                "description": "Transform data using column mappings (MAIN TOOL)",
+                "args": {
+                    "source_data": "str (required) — JSON string from parse_file",
+                    "mappings": "dict (required) — column mappings",
+                    "target_columns": "List[str] (optional)",
+                },
+                "returns": {
+                    "success": "bool",
+                    "transformed_data": "str — JSON string ready for sheets_agent",
+                },
+            },
+            "extract_date_from_data": {
+                "description": "Extract date from parsed file data (first row only)",
+                "args": {
+                    "data": "str (required) — JSON string from parse_file's full_data",
+                    "date_column_hints": "List[str] (optional) — column names that might contain dates",
+                },
+                "returns": {
+                    "success": "bool",
+                    "date": "str — extracted date in YYYY-MM-DD format",
+                    "formatted_display": "str — human-readable format (DD-MMM-YYYY)",
+                },
+            },
         },
-        "returns": ["sheet_url"],
+    },
+    "sheets_agent": {
+        "description": "Google Sheets CRUD operations. Upload pre-transformed data from mapping_agent.",
+        "tools": {
+            "update_by_date_match": {  # ✅ NEW - PRIMARY TOOL FOR DATE-BASED UPDATES
+                "description": "Update Google Sheets rows by matching dates (NO append, only update existing rows)",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID",
+                    "transformed_data": "str (required) — JSON from mapping_agent.transform_data",
+                    "rows_with_dates": "list (required) — from mapping_agent.extract_dates_from_all_rows",
+                    "sheet_name": "str (optional) — default 'DATA ENTRY'",
+                    "date_column": "str (optional) — default 'Date'",
+                },
+                "returns": {
+                    "success": "bool",
+                    "rows_updated": "int — number of rows successfully updated",
+                    "rows_not_found": "list — dates in Excel but not in Sheets",
+                },
+            },
+            "upload_mapped_data": {
+                "description": "Upload/append pre-transformed data (USE update_by_date_match FOR DATE MATCHING)",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID",
+                    "transformed_data": "str (required) — JSON from mapping_agent.transform_data",
+                    "sheet_name": "str (optional) — default 'Sheet1'",
+                    "append_mode": "bool (optional) — true to append",
+                },
+                "returns": {
+                    "success": "bool",
+                    "rows_added": "int",
+                },
+            },
+            "create_sheet": {
+                "description": "Create new Google Spreadsheet",
+                "args": {
+                    "title": "str (required)",
+                },
+                "returns": {
+                    "success": "bool",
+                    "sheet_id": "str",
+                    "sheet_url": "str",
+                },
+            },
+        },
     },
     "calendar_agent": {
         "description": "Create or update calendar events.",

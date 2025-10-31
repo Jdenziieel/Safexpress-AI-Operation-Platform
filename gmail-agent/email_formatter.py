@@ -178,17 +178,21 @@ def format_email_object(email_obj: Dict[str, Any]) -> Dict[str, Any]:
     Enhance email object with formatted body and extracted metadata.
     This is called by gmail-agent before returning emails.
     
+    For HTML emails, adds:
+        - body_clean: Clean text version
+        - body_html: Original HTML (preserved)
+        - body_links: Extracted links
+        - body_images: Extracted images
+        - body_has_tables: Boolean
+        - action_items: Potential action items
+    
+    For plain text emails, leaves object unchanged (no extra fields).
+    
     Args:
         email_obj: Email dictionary with 'body' field
         
     Returns:
-        Enhanced email object with additional fields:
-            - body_clean: Clean text version
-            - body_html: Original HTML (renamed from body)
-            - body_links: Extracted links
-            - body_images: Extracted images
-            - body_has_tables: Boolean
-            - action_items: Potential action items
+        Enhanced email object (HTML) or unchanged object (plain text)
     """
     if 'body' not in email_obj or not email_obj['body']:
         return email_obj
@@ -199,7 +203,7 @@ def format_email_object(email_obj: Dict[str, Any]) -> Dict[str, Any]:
     is_html = bool(re.search(r'<[^>]+>', original_body))
     
     if is_html:
-        # Format HTML body
+        # HTML email: Format and add metadata fields
         formatted = clean_email_body(original_body)
         
         # Keep original HTML in body_html field
@@ -208,7 +212,7 @@ def format_email_object(email_obj: Dict[str, Any]) -> Dict[str, Any]:
         # Replace body with clean text
         email_obj['body'] = formatted['clean_text']
         
-        # Add metadata
+        # Add metadata fields
         email_obj['body_clean'] = formatted['clean_text']
         email_obj['body_links'] = formatted['links']
         email_obj['body_images'] = formatted['images']
@@ -216,14 +220,7 @@ def format_email_object(email_obj: Dict[str, Any]) -> Dict[str, Any]:
         
         # Extract action items
         email_obj['action_items'] = extract_action_items(formatted['clean_text'])
-    else:
-        # Plain text email
-        email_obj['body_clean'] = original_body
-        email_obj['body_html'] = None
-        email_obj['body_links'] = []
-        email_obj['body_images'] = []
-        email_obj['body_has_tables'] = False
-        email_obj['action_items'] = extract_action_items(original_body)
+    # else: Plain text email - return unchanged, no extra fields added
     
     return email_obj
 

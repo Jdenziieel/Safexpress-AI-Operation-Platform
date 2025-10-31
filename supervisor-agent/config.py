@@ -1,9 +1,10 @@
 """
 Configuration settings for the Supervisor Agent
 
-This file contains environment variables, endpoint URLs, 
+This file contains environment variables, endpoint URLs,
 and other configuration constants.
 """
+
 import os
 from dotenv import load_dotenv
 
@@ -13,9 +14,16 @@ load_dotenv()
 AGENT_ENDPOINTS = {
     "gmail_agent": os.getenv("GMAIL_AGENT_URL", "http://localhost:8001/execute_task"),
     "docs_agent": os.getenv("DOCS_AGENT_URL", "http://localhost:8002/execute_task"),
-    "sheets_agent": os.getenv("SHEETS_AGENT_URL", "http://localhost:8003/execute_task"),
-    "calendar_agent": os.getenv("CALENDAR_AGENT_URL", "http://localhost:8004/execute_task"),
-    "drive_agent": os.getenv("DRIVE_AGENT_URL", "http://localhost:8005/execute_task"),
+    "sheets_agent": os.getenv(
+        "SHEETS_AGENT_URL", "http://localhost:8003/execute_task"
+    ),  # ✅ FIXED
+    "mapping_agent": os.getenv(
+        "MAPPING_AGENT_URL", "http://localhost:8004/execute_task"
+    ),  # ✅ Already correct
+    "calendar_agent": os.getenv(
+        "CALENDAR_AGENT_URL", "http://localhost:8005/execute_task"
+    ),
+    "drive_agent": os.getenv("DRIVE_AGENT_URL", "http://localhost:8006/execute_task"),
 }
 
 # Output directory for saved JSON files (plans, logs, etc.)
