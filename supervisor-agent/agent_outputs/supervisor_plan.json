@@ -1,25 +1,17 @@
 {
   "plan": [
     {
-      "agent": "gmail_agent",
-      "tool": "create_draft_email",
+      "agent": "drive_agent",
+      "tool": "create_folder",
       "inputs": {
-        "to": "jdenziieel@gmail.com",
-        "subject": "Reminder for quiz",
-        "body": "We have a quiz tomorrow"
+        "folder_path": "TestFolderFromSupervisor"
       },
       "output_variables": {
-        "draft_id": "draft_id"
+        "new_folder_id": "folder_id",
+        "new_folder_url": "folder_url",
+        "new_folder_path": "folder_path"
       },
-      "description": "Create a draft email to remind about the quiz"
-    },  
-    {
-      "agent": "gmail_agent",
-      "tool": "send_draft_email",
-      "inputs": {
-        "draft_id": "{{ draft_id }}"
-      },
-      "description": "Send the draft email"
+      "description": "Create a new folder named 'TestFolderFromSupervisor' within the SafeExpress root folder"
     }
   ]
 }
