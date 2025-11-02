@@ -460,23 +460,268 @@ agent_capabilities = {
             },
         },
     },
-    "calendar_agent": {
-        "description": "Create or update calendar events.",
-        "args": {
-            "title": "str (required) — event title",
-            "datetime": "str (required) — ISO date/time",
-            "attendees": "List[str] (optional) — participant emails",
-            "description": "str (optional) — event details",
+"calendar_agent": {
+    "description": "Manage Google Calendar events: list, create, update, delete events and calendars. Supports Google Meet integration and multi-calendar management.",
+    "tools": {
+        "list_events": {
+            "description": "List upcoming calendar events with structured output",
+            "args": {
+                "time_min": "str (optional) - Start time (YYYY-MM-DD or ISO)",
+                "time_max": "str (optional) - End time (YYYY-MM-DD or ISO)",
+                "max_results": "int (optional) - Number of events (default: 10)",
+                "calendar_name": "str (optional) - Calendar name (defaults to 'primary')",
+            },
+            "returns": {
+                "success": "bool",
+                "events": "list - array of event objects",
+                "events[].event_id": "str",
+                "events[].summary": "str",
+                "events[].start": "str",
+                "events[].end": "str",
+                "events[].location": "str",
+                "events[].attendees": "list",
+                "count": "int",
+                "message": "str",
+            },
         },
-        "returns": ["event_id"],
-    },
-    "drive_agent": {
-        "description": "Upload or share files using Google Drive.",
-        "args": {
-            "filename": "str (required) — file name",
-            "file_url": "str (optional) — URL or path of file to upload",
-            "share_with": "List[str] (optional) — list of users to share with",
+        "create_event": {
+            "description": "Create a new calendar event with optional Google Meet link. Automatically sends invitations to attendees.",
+            "args": {
+                "summary": "str (required) - Event title",
+                "start_time": "str (required) - Start datetime (supports '12 AM', 'tomorrow 2pm', etc.)",
+                "end_time": "str (optional) - End datetime (auto-calculated as start_time + 1 hour if not provided)",
+                "description": "str (optional)",
+                "location": "str (optional)",
+                "attendees": "list (optional) - List of email addresses",
+                "calendar_name": "str (optional) - Calendar name (defaults to 'primary')",
+                "add_meet_link": "bool (optional) - Add Google Meet link (default: false)",
+            },
+            "returns": {
+                "success": "bool",
+                "event_id": "str",
+                "event_url": "str",
+                "meet_link": "str - Google Meet link if add_meet_link=true",
+                "message": "str",
+                "status": "str - 'conflict' if scheduling conflict detected",
+                "conflict_id": "str - ID of conflicting event if status='conflict'",
+            },
         },
-        "returns": ["drive_url"],
+        "update_event": {
+            "description": "Update an existing calendar event (title, time, location, attendees). Automatically notifies attendees.",
+            "args": {
+                "event_id": "str (required) - From list_events or create_event",
+                "new_summary": "str (optional)",
+                "new_start": "str (optional)",
+                "new_end": "str (optional)",
+                "new_description": "str (optional)",
+                "new_location": "str (optional)",
+                "new_attendees": "list (optional) - New list of attendee emails",
+                "calendar_name": "str (optional)",
+            },
+            "returns": {
+                "success": "bool",
+                "event_id": "str",
+                "event_url": "str",
+                "changes": "list - what was changed",
+                "message": "str",
+            },
+        },
+        "delete_event": {
+            "description": "Delete a calendar event (requires confirmation first). Sends cancellation emails to attendees.",
+            "args": {
+                "event_id": "str (required)",
+                "calendar_name": "str (optional)",
+                "confirmed": "bool (optional) - Set true to skip confirmation",
+            },
+            "returns": {
+                "success": "bool",
+                "deleted": "bool",
+                "requires_confirmation": "bool - true if confirmation needed",
+                "event_title": "str",
+                "event_start": "str",
+                "confirmation_prompt": "str - if confirmation needed",
+                "message": "str",
+            },
+        },
+        "confirm_delete_event": {
+            "description": "Confirm and execute deletion after delete_event returns requires_confirmation=true",
+            "args": {
+                "event_id": "str (required)",
+                "calendar_name": "str (optional)",
+            },
+            "returns": {
+                "success": "bool",
+                "deleted": "bool",
+                "message": "str",
+            },
+        },
+        "list_calendars": {
+            "description": "List all user's calendars",
+            "args": {},
+            "returns": {
+                "success": "bool",
+                "calendars": "list - array of {id, name, primary}",
+                "message": "str",
+            },
+        },
+        "create_calendar": {
+            "description": "Create a new Google Calendar",
+            "args": {
+                "calendar_name": "str (required)",
+                "description": "str (optional)",
+            },
+            "returns": {
+                "success": "bool",
+                "calendar_id": "str",
+                "message": "str",
+            },
+        },
+        "resolve_conflict": {
+            "description": "Resolve scheduling conflict by moving conflicting event 1 hour later, then create new event",
+            "args": {
+                "conflict_id": "str (required) - From create_event's conflict_id",
+                "new_event": "dict (required) - {summary, start_time, end_time, attendees, description, location}",
+                "calendar_name": "str (optional)",
+            },
+            "returns": {
+                "success": "bool",
+                "event_id": "str",
+                "message": "str",
+            },
+        },
     },
+},
+ "drive_agent": {
+        "description": "Manages Google Drive operations: upload files, create folders, list files/folders, search files, and get folder information. All operations are within the SafeExpress root folder.",
+        "tools": {
+            "upload_file": {
+                "description": "Upload a file to Google Drive (SafeExpress folder or specific path)",
+                "args": {
+                    "file_path": "str (required) — Local file path to upload",
+                    "filename": "str (required) — Name for the uploaded file",
+                    "folder_path": "str (optional) — Target folder path (e.g., 'Operations/2024')",
+                    "mime_type": "str (optional) — MIME type of the file (default: application/octet-stream)"
+                },
+                "returns": {
+                    "success": "bool — whether upload was successful",
+                    "file_id": "str — Google Drive file ID",
+                    "file_url": "str — Direct link to file (https://drive.google.com/file/d/{file_id}/view)",
+                    "filename": "str — Name of uploaded file",
+                    "folder_path": "str — Full path where file was uploaded (e.g., 'SafeExpress/Operations/2024')",
+                    "message": "str — Human-readable success message",
+                    "error": "str — Error message (null if successful)"
+                },
+                "example": "upload_file(file_path='/tmp/report.pdf', filename='Q4_Report.pdf', folder_path='Operations/2024')"
+            },
+            "create_folder": {
+                "description": "Create a folder or nested folder structure in SafeExpress",
+                "args": {
+                    "folder_path": "str (required) — Folder path to create (e.g., 'Operations/2024/Reports')"
+                },
+                "returns": {
+                    "success": "bool — whether folder was created successfully",
+                    "folder_id": "str — Google Drive folder ID",
+                    "folder_url": "str — Direct link to folder (https://drive.google.com/drive/folders/{folder_id})",
+                    "folder_path": "str — Full path created (e.g., 'SafeExpress/Operations/2024/Reports')",
+                    "message": "str — Human-readable success message",
+                    "error": "str — Error message (null if successful)"
+                },
+                "example": "create_folder(folder_path='Operations/2024/Reports')",
+                "notes": "Automatically creates parent folders if they don't exist. For example, 'Operations/2024/Reports' will create 'Operations', then '2024', then 'Reports'."
+            },
+            "list_folders": {
+                "description": "List all folders in SafeExpress with tree structure",
+                "args": {},
+                "returns": {
+                    "success": "bool — whether listing was successful",
+                    "folders": "list — Array of folder objects with id, name, display, level",
+                    "folders[].id": "str — Folder ID",
+                    "folders[].name": "str — Folder name",
+                    "folders[].display": "str — Tree display format (e.g., '  📁 Reports')",
+                    "folders[].level": "int — Nesting level (0=root, 1=first level, etc.)",
+                    "count": "int — Total number of folders",
+                    "tree": "str — Full tree structure as formatted string",
+                    "message": "str — Human-readable message with count",
+                    "error": "str — Error message (null if successful)"
+                },
+                "example": "list_folders()"
+            },
+            "list_files": {
+                "description": "List files in SafeExpress root or specific folder",
+                "args": {
+                    "folder_path": "str (optional) — Folder path to list files from (e.g., 'Operations/2024'). If not provided, lists files in SafeExpress root."
+                },
+                "returns": {
+                    "success": "bool — whether listing was successful",
+                    "files": "list — Array of file objects with id, name, mimeType, size, createdTime",
+                    "files[].id": "str — File ID",
+                    "files[].name": "str — File name",
+                    "files[].mimeType": "str — MIME type",
+                    "files[].size": "str — File size in bytes",
+                    "files[].createdTime": "str — ISO timestamp",
+                    "count": "int — Number of files found",
+                    "folder_path": "str — Location where files were listed",
+                    "message": "str — Formatted file list or 'No files' message",
+                    "error": "str — Error message (null if successful)"
+                },
+                "example": "list_files(folder_path='Operations/2024')"
+            },
+            "search_files": {
+                "description": "Search for files in SafeExpress by name or keywords",
+                "args": {
+                    "search_term": "str (required) — Keywords to search for in file names"
+                },
+                "returns": {
+                    "success": "bool — whether search was successful",
+                    "results": "list — Array of matching file objects (same structure as list_files)",
+                    "results[].id": "str — File ID",
+                    "results[].name": "str — File name",
+                    "results[].mimeType": "str — MIME type",
+                    "count": "int — Number of results found",
+                    "search_term": "str — Search term that was used",
+                    "message": "str — Formatted results or 'No files found' message",
+                    "error": "str — Error message (null if successful)"
+                },
+                "example": "search_files(search_term='report')"
+            },
+            "get_folder_info": {
+                "description": "Get detailed information about a specific folder (file count, subfolder count)",
+                "args": {
+                    "folder_path": "str (required) — Folder path to get info for (e.g., 'Operations/2024')"
+                },
+                "returns": {
+                    "success": "bool — whether operation was successful",
+                    "folder_id": "str — Google Drive folder ID",
+                    "folder_name": "str — Folder name (last part of path)",
+                    "folder_path": "str — Full path (e.g., 'SafeExpress/Operations/2024')",
+                    "file_count": "int — Number of files in folder",
+                    "subfolder_count": "int — Number of subfolders",
+                    "message": "str — Summary (e.g., '📁 Operations/2024: 5 file(s), 3 subfolder(s)')",
+                    "error": "str — Error message (null if successful)"
+                },
+                "example": "get_folder_info(folder_path='Operations/2024')"
+            }
+        },
+        "usage_patterns": {
+            "upload_workflow": {
+                "description": "Common workflow for uploading files to organized folders",
+                "steps": [
+                    "1. Create folder structure if needed: create_folder(folder_path='Operations/2024/Q4')",
+                    "2. Upload file to that location: upload_file(file_path='/tmp/report.pdf', filename='Q4_Report.pdf', folder_path='Operations/2024/Q4')"
+                ]
+            },
+            "organization_best_practices": {
+                "folder_structure": "Use hierarchical paths like 'Department/Year/Quarter' or 'Projects/ProjectName/Documents'",
+                "naming_convention": "Use descriptive folder names without special characters",
+                "search_vs_list": "Use search_files for quick lookups by name, list_files for browsing specific folders"
+            }
+        },
+        "important_notes": [
+            "All operations are scoped to the 'SafeExpress' root folder",
+            "Folder paths are relative to SafeExpress (don't include 'SafeExpress/' prefix)",
+            "Nested folder creation is automatic (parent folders created if needed)",
+            "File uploads support any MIME type",
+            "Search is case-insensitive and matches partial file names"
+        ]
+    }
 }

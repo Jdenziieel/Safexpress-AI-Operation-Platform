@@ -2,15 +2,24 @@
   "plan": [
     {
       "agent": "gmail_agent",
-      "tool": "search_emails",
+      "tool": "create_draft_email",
       "inputs": {
-        "query": "from:JOSH DENZIEL JOVES",
-        "max_results": 10
+        "to": "jdenziieel@gmail.com",
+        "subject": "Reminder for quiz",
+        "body": "We have a quiz tomorrow"
       },
       "output_variables": {
-        "found_emails": "emails"
+        "draft_id": "draft_id"
       },
-      "description": "Search emails from sender 'JOSH DENZIEL JOVES'"
+      "description": "Create a draft email to remind about the quiz"
+    },  
+    {
+      "agent": "gmail_agent",
+      "tool": "send_draft_email",
+      "inputs": {
+        "draft_id": "{{ draft_id }}"
+      },
+      "description": "Send the draft email"
     }
   ]
 }

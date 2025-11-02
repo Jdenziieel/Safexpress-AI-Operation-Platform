@@ -36,6 +36,8 @@ def identify_relevant_agents(user_input: str) -> List[str]:
     - docs_agent: Create, edit, and read Google Docs documents
     - mapping_agent: Parse CSV/Excel/JSON files, smart column mapping, data transformation
     - sheets_agent: Google Sheets CRUD operations, upload data to sheets
+    - drive_agent: Manage Google Drive files and folders, upload/download files
+    - calendar_agent: Create, update, delete, and read calendar events
     
     Note: calendar_agent, and drive_agent are defined but may not be implemented yet.
     

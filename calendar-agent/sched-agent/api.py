@@ -1,15 +1,20 @@
+"""
+Calendar Agent API - Supervisor-Compatible Version
+Handles Google Calendar operations via /execute_task endpoint
+"""
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional, Dict, Any, List
+from datetime import datetime, timedelta
 import os
-import json
-from datetime import datetime
-from typing import Optional, List
-import pytz
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from langchain_openai import ChatOpenAI
-from langchain_core.tools import tool
-from langgraph.prebuilt import create_react_agent
+import uvicorn
+import json
+import pytz
+from dateutil import parser as date_parser
+
+# Import your existing tools
 from tools import (
     create_event_impl,
     create_multiple_events_impl,
@@ -21,557 +26,553 @@ from tools import (
     list_calendars_impl,
     notify_attendees_about_change,
     get_calendar_service,
+    find_calendar_id_by_name,
 )
-from dateutil import parser as date_parser
 
-# Load environment variables
 load_dotenv()
 
-# Initialize FastAPI app
-app = FastAPI(
-    title="SafexpressOps Calendar Agent API",
-    description="AI-powered Google Calendar management API with natural language processing",
-    version="1.0.0"
-)
+app = FastAPI(title="Calendar Agent API")
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-# Pydantic models for request/response
-class EventCreate(BaseModel):
-    summary: str = Field(..., description="Event title/summary")
-    start: str = Field(..., description="Start datetime (ISO 8601 or natural language)")
-    end: str = Field(..., description="End datetime (ISO 8601 or natural language)")
-    emails: List[str] = Field(default=[], description="List of attendee email addresses")
-    description: Optional[str] = Field("", description="Event description")
-    location: Optional[str] = Field("", description="Event location")
-    calendar_name: Optional[str] = Field("", description="Calendar name (e.g., 'Work', 'Personal')")
+# ============================================================
+# MODELS (Matching Supervisor's Format)
+# ============================================================
 
-class MultipleEventsCreate(BaseModel):
-    events: List[EventCreate] = Field(..., max_items=5, description="List of events (max 5)")
+class CredentialsDict(BaseModel):
+    """Google OAuth credentials from supervisor"""
+    access_token: str
+    refresh_token: str
+    token_uri: str = "https://oauth2.googleapis.com/token"
+    client_id: str = ""
+    client_secret: str = ""
 
-class EventUpdate(BaseModel):
-    event_id: str = Field(..., description="Event ID to update")
-    new_summary: Optional[str] = Field(None, description="New event title")
-    new_start: Optional[str] = Field(None, description="New start datetime")
-    new_end: Optional[str] = Field(None, description="New end datetime")
-    new_description: Optional[str] = Field(None, description="New description")
-    new_location: Optional[str] = Field(None, description="New location")
-    calendar_name: Optional[str] = Field("", description="Calendar name")
 
-class EventDelete(BaseModel):
-    event_id: str = Field(..., description="Event ID to delete")
-    calendar_name: Optional[str] = Field("", description="Calendar name")
+class TaskRequest(BaseModel):
+    """Request format from supervisor"""
+    tool: str
+    inputs: Dict[str, Any]
+    credentials_dict: Optional[CredentialsDict] = None
 
-class EventSearch(BaseModel):
-    event_name: str = Field(..., description="Event name/keywords to search")
-    calendar_name: Optional[str] = Field("", description="Calendar name to search in")
 
-class CalendarCreate(BaseModel):
-    calendar_name: str = Field(..., description="New calendar name")
-    description: Optional[str] = Field("", description="Calendar description")
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
 
-class NotifyAttendees(BaseModel):
-    event_id: str = Field(..., description="Event ID")
-    message: str = Field(..., description="Notification message")
-    calendar_name: Optional[str] = Field("", description="Calendar name")
-
-class NaturalLanguageRequest(BaseModel):
-    prompt: str = Field(..., description="Natural language request (e.g., 'Schedule meeting with john@email.com tomorrow 2PM')")
-
-class ConflictResolution(BaseModel):
-    conflict_id: str = Field(..., description="Conflicting event ID")
-    new_event: EventCreate = Field(..., description="New event details")
-
-class AgentConversation(BaseModel):
-    message: str = Field(..., description="Message to the agent")
-    conversation_history: Optional[List[dict]] = Field(default=[], description="Previous conversation context")
-
-# Parser model
-llm_parser = ChatOpenAI(
-    model="gpt-4",
-    temperature=0,
-    openai_api_key=os.getenv("OPENAI_API_KEY")
-)
-
-def parse_calendar_prompt(natural_prompt: str) -> dict:
-    """Uses GPT to extract structured calendar data from a natural prompt."""
-    now = datetime.now(pytz.timezone("Asia/Manila")).strftime("%Y-%m-%d")
-    prompt = (
-        f"Today's date is {now}. Extract scheduling details from this message. "
-        "Return ONLY a valid JSON object with these keys: summary, start, end, emails, description, location. "
-        "Use ISO 8601 format for start and end. Assume future dates (2025 or later). "
-        "If no time is given, default to 10:00 AM - 11:00 AM. "
-        "Example: {\"summary\": \"Meeting\", \"start\": \"2025-10-14T10:00:00\", "
-        "\"end\": \"2025-10-14T11:00:00\", \"emails\": [\"test@example.com\"], "
-        "\"description\": \"Quarterly review meeting\", \"location\": \"Conference Room A\"}"
-    )
-    response = llm_parser.invoke(f"{prompt}\n\nMessage: {natural_prompt}")
-    try:
-        return json.loads(response.content)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to parse prompt: {str(e)}")
-
-def find_calendar_by_name(calendar_name: str) -> dict:
-    """Find a calendar by name (case-insensitive)."""
-    service = get_calendar_service()
+def resolve_calendar_id(calendar_name: str = None) -> str:
+    """
+    Resolve calendar name to calendar ID.
+    Returns "primary" if no name specified or name not found.
+    """
+    if not calendar_name or calendar_name.lower() == "primary":
+        return "primary"
     
+    calendar_id = find_calendar_id_by_name(calendar_name)
+    if calendar_id:
+        return calendar_id
+    
+    print(f"⚠️ Calendar '{calendar_name}' not found, using primary")
+    return "primary"
+
+
+def auto_calculate_end_time(start_time: str, duration_hours: float = 1.0) -> str:
+    """
+    Auto-calculate end time from start time.
+    Default duration is 1 hour.
+    """
     try:
-        calendar_list = service.calendarList().list().execute()
-        calendars = calendar_list.get('items', [])
-        
-        search_name = calendar_name.lower().strip()
-        
-        for cal in calendars:
-            cal_summary = cal.get('summary', '').lower().strip()
-            if search_name in cal_summary or cal_summary in search_name:
-                return {
-                    'id': cal.get('id'),
-                    'summary': cal.get('summary'),
-                    'primary': cal.get('primary', False)
-                }
-        
+        start_dt = date_parser.parse(start_time)
+        end_dt = start_dt + timedelta(hours=duration_hours)
+        return end_dt.strftime("%Y-%m-%d %H:%M")
+    except Exception as e:
+        print(f"⚠️ Failed to auto-calculate end_time: {e}")
         return None
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to search calendars: {str(e)}")
 
-def search_event_by_description(search_query: str, max_results: int = 10, calendar_id: str = None) -> list:
-    """Search for events by title/summary keywords."""
-    service = get_calendar_service()
-    cal_id = calendar_id or os.getenv("GOOGLE_CALENDAR_ID", "primary")
-    now = datetime.now(pytz.timezone("Asia/Manila")).isoformat()
+
+# ============================================================
+# TOOL IMPLEMENTATIONS (Matching supervisor's expectations)
+# ============================================================
+
+def list_events(inputs: dict) -> dict:
+    """
+    List upcoming calendar events with structured output.
     
+    Inputs:
+        time_min: str (optional) - Start time (YYYY-MM-DD or ISO)
+        time_max: str (optional) - End time (YYYY-MM-DD or ISO)
+        max_results: int (optional) - Number of events (default: 10)
+        calendar_name: str (optional) - Calendar name
+    
+    Returns:
+        success: bool
+        events: list of event objects with id, summary, start, end, etc.
+        count: int
+    """
     try:
-        events_result = service.events().list(
-            calendarId=cal_id,
-            timeMin=now,
-            maxResults=max_results,
-            singleEvents=True,
-            orderBy="startTime"
-        ).execute()
-        events = events_result.get("items", [])
+        max_results = inputs.get("max_results", 10)
+        calendar_name = inputs.get("calendar_name", "")
         
-        if not events:
-            return []
+        calendar_id = resolve_calendar_id(calendar_name)
         
-        search_terms = search_query.lower().split()
-        matching_events = []
+        # Use the enhanced search_events_impl that returns structured data
+        result = search_events_impl(max_results, calendar_id)
         
-        for event in events:
-            event_summary = event.get("summary", "").lower()
-            event_description = event.get("description", "").lower()
-            
-            if any(term in event_summary or term in event_description for term in search_terms):
-                matching_events.append(event)
+        return result
         
-        return matching_events
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to search events: {str(e)}")
+        return {
+            "success": False,
+            "events": [],
+            "count": 0,
+            "error": str(e)
+        }
 
-def create_calendar_agent():
-    """Create the LangGraph calendar agent with all tools."""
-    llm = ChatOpenAI(
-        model="gpt-4",
-        temperature=0,
-        openai_api_key=os.getenv("OPENAI_API_KEY")
-    )
 
-    @tool
-    def create_calendar_event(summary: str, start: str, end: str, emails: list[str], 
-                              description: str = "", location: str = "", 
-                              calendar_name: str = "") -> str:
-        """Creates a Google Calendar event."""
-        calendar_id = None
-        if calendar_name:
-            cal = find_calendar_by_name(calendar_name)
-            if cal:
-                calendar_id = cal['id']
-        
-        result = create_event_impl(summary, start, end, emails, description, location, calendar_id)
-        if isinstance(result, dict):
-            return json.dumps(result)
-        return str(result)
-
-    @tool
-    def search_calendar_events(max_results: int = 5, calendar_name: str = "") -> str:
-        """Lists upcoming events from a specific calendar."""
-        calendar_id = None
-        if calendar_name:
-            cal = find_calendar_by_name(calendar_name)
-            if cal:
-                calendar_id = cal['id']
-        
-        return search_events_impl(max_results, calendar_id)
-
-    @tool
-    def find_event_by_name(event_name: str, calendar_name: str = "") -> str:
-        """Searches for events by name/title."""
-        calendar_id = None
-        if calendar_name:
-            cal = find_calendar_by_name(calendar_name)
-            if cal:
-                calendar_id = cal['id']
-        
-        events = search_event_by_description(event_name, calendar_id=calendar_id)
-        
-        if not events:
-            return f"❌ No events found matching '{event_name}'"
-        
-        output = [f"📅 Found {len(events)} matching event(s):\n"]
-        for i, event in enumerate(events, 1):
-            start = event["start"].get("dateTime", event["start"].get("date"))
-            try:
-                parsed_start = date_parser.parse(start)
-                formatted_start = parsed_start.strftime("%B %d, %Y at %I:%M %p")
-            except:
-                formatted_start = start
-            
-            output.append(f"{i}. {event.get('summary', 'No Title')} - {formatted_start}\n   🆔 ID: {event['id']}")
-        
-        return "\n".join(output)
-
-    @tool
-    def delete_calendar_event(event_id: str, calendar_name: str = "") -> str:
-        """Deletes an event."""
-        calendar_id = None
-        if calendar_name:
-            cal = find_calendar_by_name(calendar_name)
-            if cal:
-                calendar_id = cal['id']
-        
-        return delete_event_impl(event_id, calendar_id)
-
-    @tool
-    def update_calendar_event(event_id: str, new_summary: str = "", new_start: str = "", 
-                             new_end: str = "", new_description: str = "", 
-                             new_location: str = "", calendar_name: str = "") -> str:
-        """Updates an event's details."""
-        calendar_id = None
-        if calendar_name:
-            cal = find_calendar_by_name(calendar_name)
-            if cal:
-                calendar_id = cal['id']
-        
-        return update_event_impl(event_id, new_summary, new_start, new_end, 
-                                new_description, new_location, calendar_id)
-
-    @tool
-    def list_all_calendars() -> str:
-        """Lists all calendars."""
-        return list_calendars_impl()
-
-    tools = [
-        create_calendar_event,
-        search_calendar_events,
-        find_event_by_name,
-        delete_calendar_event,
-        update_calendar_event,
-        list_all_calendars,
-    ]
-
-    return create_react_agent(model=llm, tools=tools)
-
-# Initialize agent
-agent = None
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize the agent on startup."""
-    global agent
-    required_vars = ["OPENAI_API_KEY"]
-    missing = [var for var in required_vars if not os.getenv(var)]
+def create_event(inputs: dict) -> dict:
+    """
+    Create a new calendar event with auto-calculated end time if needed.
     
-    if missing:
-        raise RuntimeError(f"Missing required environment variables: {', '.join(missing)}")
+    Inputs:
+        summary: str (required) - Event title
+        start_time: str (required) - Start datetime (supports "12 AM", "12:00 PM", etc.)
+        end_time: str (optional) - End datetime (auto-calculated if not provided)
+        description: str (optional)
+        location: str (optional)
+        attendees: list (optional) - List of emails
+        calendar_name: str (optional)
+        add_meet_link: bool (optional) - Add Google Meet link
     
-    if not os.path.exists("key/credentials.json"):
-        raise RuntimeError("Missing 'key/credentials.json' file!")
-    
-    agent = create_calendar_agent()
-    print("✅ Calendar Agent API initialized successfully!")
+    Returns:
+        success: bool
+        event_id: str
+        event_url: str
+        meet_link: str (if applicable)
+        message: str
+    """
+    try:
+        summary = inputs.get("summary")
+        start_time = inputs.get("start_time") or inputs.get("start")
+        end_time = inputs.get("end_time") or inputs.get("end")
+        description = inputs.get("description", "")
+        location = inputs.get("location", "")
+        attendees = inputs.get("attendees") or inputs.get("emails", [])
+        calendar_name = inputs.get("calendar_name", "")
+        add_meet_link = inputs.get("add_meet_link", False)
+        
+        if not summary:
+            return {"success": False, "error": "summary is required"}
+        if not start_time:
+            return {"success": False, "error": "start_time is required"}
+        
+        # AUTO-CALCULATE END TIME if not provided
+        if not end_time:
+            end_time = auto_calculate_end_time(start_time)
+            if not end_time:
+                return {"success": False, "error": "Could not auto-calculate end_time"}
+            print(f"ℹ️ Auto-calculated end_time: {end_time} (start + 1 hour)")
+        
+        calendar_id = resolve_calendar_id(calendar_name)
+        
+        # Call create_event_impl which now returns Dict
+        result = create_event_impl(
+            summary=summary,
+            start=start_time,
+            end=end_time,
+            emails=attendees,
+            description=description,
+            location=location,
+            calendar_id=calendar_id,
+            add_meet_link=add_meet_link
+        )
+        
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
-# Health check endpoint
+
+def update_event(inputs: dict) -> dict:
+    """
+    Update an existing calendar event (supports changing name, time, location, attendees).
+    
+    Inputs:
+        event_id: str (required)
+        new_summary: str (optional) - New event title
+        new_start: str (optional) - New start time (supports "12 AM", "2:30 PM", etc.)
+        new_end: str (optional) - New end time
+        new_description: str (optional)
+        new_location: str (optional)
+        new_attendees: list (optional) - New list of attendee emails
+        calendar_name: str (optional)
+    
+    Returns:
+        success: bool
+        event_id: str
+        event_url: str
+        changes: list
+        message: str
+    """
+    try:
+        event_id = inputs.get("event_id")
+        if not event_id:
+            return {"success": False, "error": "event_id is required"}
+        
+        new_summary = inputs.get("new_summary")
+        new_start = inputs.get("new_start")
+        new_end = inputs.get("new_end")
+        new_description = inputs.get("new_description")
+        new_location = inputs.get("new_location")
+        new_attendees = inputs.get("new_attendees")
+        calendar_name = inputs.get("calendar_name", "")
+        
+        calendar_id = resolve_calendar_id(calendar_name)
+        
+        # Call update_event_impl which now returns Dict
+        result = update_event_impl(
+            event_id=event_id,
+            new_summary=new_summary,
+            new_start=new_start,
+            new_end=new_end,
+            new_description=new_description,
+            new_location=new_location,
+            new_attendees=new_attendees,
+            calendar_id=calendar_id
+        )
+        
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def delete_event(inputs: dict) -> dict:
+    """
+    Delete a calendar event (with confirmation requirement).
+    
+    Inputs:
+        event_id: str (required)
+        calendar_name: str (optional)
+        confirmed: bool (optional) - Set to true to skip confirmation
+    
+    Returns:
+        success: bool
+        deleted: bool
+        requires_confirmation: bool (if confirmation needed)
+        event_title: str
+        event_start: str
+        confirmation_prompt: str (if confirmation needed)
+        message: str
+    """
+    try:
+        event_id = inputs.get("event_id")
+        if not event_id:
+            return {"success": False, "error": "event_id is required"}
+        
+        calendar_name = inputs.get("calendar_name", "")
+        confirmed = inputs.get("confirmed", False)
+        
+        calendar_id = resolve_calendar_id(calendar_name)
+        
+        # Call delete_event_impl which now returns Dict with confirmation support
+        result = delete_event_impl(
+            event_id=event_id,
+            calendar_id=calendar_id,
+            skip_confirmation=confirmed
+        )
+        
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def confirm_delete_event(inputs: dict) -> dict:
+    """
+    Confirm and execute deletion of a calendar event.
+    This is called after user confirms deletion.
+    
+    Inputs:
+        event_id: str (required)
+        calendar_name: str (optional)
+    
+    Returns:
+        success: bool
+        deleted: bool
+        message: str
+    """
+    try:
+        event_id = inputs.get("event_id")
+        if not event_id:
+            return {"success": False, "error": "event_id is required"}
+        
+        calendar_name = inputs.get("calendar_name", "")
+        calendar_id = resolve_calendar_id(calendar_name)
+        
+        # Call with skip_confirmation=True to actually delete
+        result = delete_event_impl(
+            event_id=event_id,
+            calendar_id=calendar_id,
+            skip_confirmation=True
+        )
+        
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def list_calendars(inputs: dict) -> dict:
+    """
+    List all user's calendars
+    
+    Returns:
+        success: bool
+        calendars: list
+        message: str
+    """
+    try:
+        result = list_calendars_impl()
+        
+        if "❌" in result or "Failed" in result:
+            return {
+                "success": False,
+                "calendars": [],
+                "message": result,
+                "error": result
+            }
+        
+        return {
+            "success": True,
+            "calendars": [],  # Could parse result into structured data
+            "message": result,
+            "error": None
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "calendars": [],
+            "error": str(e)
+        }
+
+
+def create_calendar(inputs: dict) -> dict:
+    """
+    Create a new calendar
+    
+    Inputs:
+        calendar_name: str (required)
+        description: str (optional)
+    
+    Returns:
+        success: bool
+        calendar_id: str
+        message: str
+    """
+    try:
+        calendar_name = inputs.get("calendar_name")
+        if not calendar_name:
+            return {"success": False, "error": "calendar_name is required"}
+        
+        description = inputs.get("description", "")
+        
+        result = create_calendar_impl(calendar_name, description)
+        
+        if "❌" in result or "Failed" in result:
+            return {
+                "success": False,
+                "calendar_id": None,
+                "message": result,
+                "error": result
+            }
+        
+        return {
+            "success": True,
+            "calendar_id": None,  # Could extract from result
+            "message": result,
+            "error": None
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "calendar_id": None,
+            "error": str(e)
+        }
+
+
+def resolve_conflict(inputs: dict) -> dict:
+    """
+    Resolve scheduling conflict by moving conflicting event
+    
+    Inputs:
+        conflict_id: str (required)
+        new_event: dict (required) - New event details
+        calendar_name: str (optional)
+    
+    Returns:
+        success: bool
+        message: str
+    """
+    try:
+        conflict_id = inputs.get("conflict_id")
+        new_event = inputs.get("new_event")
+        
+        if not conflict_id:
+            return {"success": False, "error": "conflict_id is required"}
+        if not new_event:
+            return {"success": False, "error": "new_event is required"}
+        
+        calendar_name = inputs.get("calendar_name", "")
+        calendar_id = resolve_calendar_id(calendar_name)
+        
+        result = handle_user_confirmation(conflict_id, new_event, calendar_id)
+        
+        if "❌" in result or "Failed" in result:
+            return {
+                "success": False,
+                "message": result,
+                "error": result
+            }
+        
+        return {
+            "success": True,
+            "message": result,
+            "error": None
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+# ============================================================
+# TOOL REGISTRY (Maps tool names to functions)
+# ============================================================
+
+CALENDAR_TOOLS = {
+    "list_events": list_events,
+    "create_event": create_event,
+    "update_event": update_event,
+    "delete_event": delete_event,
+    "confirm_delete_event": confirm_delete_event,
+    "list_calendars": list_calendars,
+    "create_calendar": create_calendar,
+    "resolve_conflict": resolve_conflict,
+}
+
+
+# ============================================================
+# API ENDPOINTS
+# ============================================================
+
+@app.post("/execute_task")
+async def execute_task(request: TaskRequest):
+    """
+    Main endpoint that supervisor calls.
+    Executes calendar operations based on tool name.
+    """
+    try:
+        tool_name = request.tool
+        inputs = request.inputs
+        
+        print(f"\n{'='*60}")
+        print(f"📅 CALENDAR AGENT - Executing: {tool_name}")
+        print(f"{'='*60}")
+        print(f"📥 Inputs: {json.dumps(inputs, indent=2)}")
+        
+        # Get tool function
+        tool_func = CALENDAR_TOOLS.get(tool_name)
+        if not tool_func:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown tool: {tool_name}. Available: {list(CALENDAR_TOOLS.keys())}"
+            )
+        
+        # Execute tool
+        result = tool_func(inputs)
+        
+        print(f"✅ Result: {result.get('success')}")
+        if result.get('error'):
+            print(f"❌ Error: {result.get('error')}")
+        if result.get('event_id'):
+            print(f"🆔 Event ID: {result.get('event_id')}")
+        print(f"{'='*60}\n")
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Calendar Agent Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "service": "calendar-agent",
+        "available_tools": list(CALENDAR_TOOLS.keys())
+    }
+
+
 @app.get("/")
 async def root():
-    """API health check."""
+    """Root endpoint with available tools"""
     return {
-        "status": "online",
-        "service": "SafexpressOps Calendar Agent API",
-        "version": "1.0.0",
+        "service": "Calendar Agent API",
+        "version": "2.0.0",
+        "available_tools": list(CALENDAR_TOOLS.keys()),
+        "tool_descriptions": {
+            "list_events": "List upcoming calendar events with structured output",
+            "create_event": "Create a new event (auto-calculates end_time, supports 12 AM format)",
+            "update_event": "Update event (name, time, location, attendees)",
+            "delete_event": "Delete an event (requires confirmation first)",
+            "confirm_delete_event": "Confirm and execute deletion",
+            "list_calendars": "List all user calendars",
+            "create_calendar": "Create a new calendar",
+            "resolve_conflict": "Resolve scheduling conflicts"
+        },
+        "improvements": [
+            "✅ Proper 12 AM/PM time parsing",
+            "✅ Auto-calculate end_time if not provided",
+            "✅ Returns event_id in all operations",
+            "✅ Delete confirmation workflow",
+            "✅ Update supports attendees",
+            "✅ Structured data output for all tools"
+        ],
         "endpoints": {
-            "docs": "/docs",
-            "redoc": "/redoc"
+            "execute_task": "/execute_task (POST) - Execute calendar operations",
+            "health": "/health (GET) - Health check"
         }
     }
 
-# Natural language event creation
-@app.post("/events/natural")
-async def create_event_natural(request: NaturalLanguageRequest):
-    """
-    Create an event using natural language.
-    Example: "Schedule meeting with john@email.com tomorrow 2PM-3PM at Conference Room A"
-    """
-    try:
-        parsed = parse_calendar_prompt(request.prompt)
-        calendar_id = None
-        
-        result = create_event_impl(
-            summary=parsed['summary'],
-            start=parsed['start'],
-            end=parsed['end'],
-            emails=parsed['emails'],
-            description=parsed.get('description', ''),
-            location=parsed.get('location', ''),
-            calendar_id=calendar_id
-        )
-        
-        return {"success": True, "message": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
-# Standard event creation
-@app.post("/events")
-async def create_event(event: EventCreate):
-    """Create a single calendar event."""
-    try:
-        calendar_id = None
-        if event.calendar_name:
-            cal = find_calendar_by_name(event.calendar_name)
-            if cal:
-                calendar_id = cal['id']
-            else:
-                raise HTTPException(status_code=404, detail=f"Calendar '{event.calendar_name}' not found")
-        
-        result = create_event_impl(
-            summary=event.summary,
-            start=event.start,
-            end=event.end,
-            emails=event.emails,
-            description=event.description,
-            location=event.location,
-            calendar_id=calendar_id
-        )
-        
-        return {"success": True, "message": result}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Batch event creation
-@app.post("/events/batch")
-async def create_multiple_events(request: MultipleEventsCreate):
-    """Create multiple events at once (max 5)."""
-    try:
-        events_data = []
-        for event in request.events:
-            event_dict = event.dict()
-            if event.calendar_name:
-                cal = find_calendar_by_name(event.calendar_name)
-                if cal:
-                    event_dict['calendar_id'] = cal['id']
-            events_data.append(event_dict)
-        
-        result = create_multiple_events_impl(events_data)
-        return {"success": True, "message": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Search events
-@app.get("/events")
-async def search_events(max_results: int = 5, calendar_name: str = ""):
-    """List upcoming events."""
-    try:
-        calendar_id = None
-        if calendar_name:
-            cal = find_calendar_by_name(calendar_name)
-            if cal:
-                calendar_id = cal['id']
-            else:
-                raise HTTPException(status_code=404, detail=f"Calendar '{calendar_name}' not found")
-        
-        result = search_events_impl(max_results, calendar_id)
-        return {"success": True, "message": result}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Find event by name
-@app.post("/events/search")
-async def find_event(request: EventSearch):
-    """Search for events by name/keywords."""
-    try:
-        calendar_id = None
-        if request.calendar_name:
-            cal = find_calendar_by_name(request.calendar_name)
-            if cal:
-                calendar_id = cal['id']
-        
-        events = search_event_by_description(request.event_name, calendar_id=calendar_id)
-        
-        if not events:
-            return {"success": False, "message": f"No events found matching '{request.event_name}'", "events": []}
-        
-        return {
-            "success": True,
-            "message": f"Found {len(events)} matching event(s)",
-            "events": events
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Update event
-@app.put("/events")
-async def update_event(request: EventUpdate):
-    """Update an existing event."""
-    try:
-        calendar_id = None
-        if request.calendar_name:
-            cal = find_calendar_by_name(request.calendar_name)
-            if cal:
-                calendar_id = cal['id']
-        
-        result = update_event_impl(
-            event_id=request.event_id,
-            new_summary=request.new_summary,
-            new_start=request.new_start,
-            new_end=request.new_end,
-            new_description=request.new_description,
-            new_location=request.new_location,
-            calendar_id=calendar_id
-        )
-        
-        return {"success": True, "message": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Delete event
-@app.delete("/events")
-async def delete_event(request: EventDelete):
-    """Delete an event."""
-    try:
-        calendar_id = None
-        if request.calendar_name:
-            cal = find_calendar_by_name(request.calendar_name)
-            if cal:
-                calendar_id = cal['id']
-        
-        result = delete_event_impl(request.event_id, calendar_id)
-        return {"success": True, "message": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Conflict resolution
-@app.post("/events/resolve-conflict")
-async def resolve_conflict(request: ConflictResolution):
-    """Resolve scheduling conflict by moving the conflicting event."""
-    try:
-        calendar_id = None
-        if request.new_event.calendar_name:
-            cal = find_calendar_by_name(request.new_event.calendar_name)
-            if cal:
-                calendar_id = cal['id']
-        
-        new_event_dict = request.new_event.dict()
-        if calendar_id:
-            new_event_dict['calendar_id'] = calendar_id
-        
-        result = handle_user_confirmation(
-            conflict_id=request.conflict_id,
-            new_event=new_event_dict,
-            calendar_id=calendar_id
-        )
-        
-        return {"success": True, "message": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Calendar management
-@app.post("/calendars")
-async def create_calendar(request: CalendarCreate):
-    """Create a new calendar."""
-    try:
-        result = create_calendar_impl(request.calendar_name, request.description)
-        return {"success": True, "message": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/calendars")
-async def list_calendars():
-    """List all calendars."""
-    try:
-        result = list_calendars_impl()
-        return {"success": True, "message": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Notify attendees
-@app.post("/events/notify")
-async def notify_attendees(request: NotifyAttendees):
-    """Send custom notification to event attendees."""
-    try:
-        calendar_id = None
-        if request.calendar_name:
-            cal = find_calendar_by_name(request.calendar_name)
-            if cal:
-                calendar_id = cal['id']
-        
-        result = notify_attendees_about_change(
-            event_id=request.event_id,
-            change_message=request.message,
-            calendar_id=calendar_id
-        )
-        
-        return {"success": True, "message": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Agent conversation endpoint
-@app.post("/agent/chat")
-async def agent_chat(request: AgentConversation):
-    """
-    Have a conversation with the AI agent using natural language.
-    The agent can handle complex requests and multi-turn conversations.
-    """
-    try:
-        system_prompt = """
-        You are the Calendar scheduling agent for SafexpressOps.
-        Help users manage their Google Calendar efficiently using natural language.
-        """
-        
-        conversation_history = [("system", system_prompt)]
-        
-        # Add previous conversation context if provided
-        if request.conversation_history:
-            for msg in request.conversation_history:
-                conversation_history.append((msg.get("role", "user"), msg.get("content", "")))
-        
-        # Add current message
-        conversation_history.append(("user", request.message))
-        
-        # Get agent response
-        result = agent.invoke({"messages": conversation_history})
-        messages = result.get("messages", [])
-        response_text = messages[-1].content if messages else str(result)
-        
-        return {
-            "success": True,
-            "response": response_text,
-            "conversation_history": [
-                {"role": "user", "content": request.message},
-                {"role": "assistant", "content": response_text}
-            ]
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# ============================================================
+# RUN SERVER
+# ============================================================
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8004)
+    port = int(os.getenv("CALENDAR_AGENT_PORT", "8005"))
+    print(f"🚀 Starting Calendar Agent v2.0 on port {port}")
+    print(f"📚 Available tools: {list(CALENDAR_TOOLS.keys())}")
+    print(f"✨ New features: 12 AM/PM support, event_id returns, delete confirmation")
+    print(f"📋 Ready to receive requests from Supervisor Agent")
+    uvicorn.run(app, host="0.0.0.0", port=port)

@@ -35,12 +35,14 @@ def parse_calendar_prompt(natural_prompt: str) -> dict:
     now = datetime.now(pytz.timezone("Asia/Manila")).strftime("%Y-%m-%d")
     prompt = (
         f"Today's date is {now}. Extract scheduling details from this message. "
-        "Return ONLY a valid JSON object with these keys: summary, start, end, emails, description, location. "
+        "Return ONLY a valid JSON object with these keys: summary, start, end, emails, description, location, add_meet_link. "
         "Use ISO 8601 format for start and end. Assume future dates (2025 or later). "
         "If no time is given, default to 10:00 AM - 11:00 AM. "
-        "Example: {\"summary\": \"Meeting\", \"start\": \"2025-10-14T10:00:00\", "
+        "Set add_meet_link to true if user mentions: 'google meet', 'meet link', 'virtual meeting', 'online meeting', 'video call', or 'zoom' (use google meet instead). "
+        "Set add_meet_link to false if user does NOT explicitly mention virtual/online meeting terms. "
+        "Example: {\"summary\": \"Team Meeting\", \"start\": \"2025-10-14T10:00:00\", "
         "\"end\": \"2025-10-14T11:00:00\", \"emails\": [\"test@example.com\"], "
-        "\"description\": \"Quarterly review meeting\", \"location\": \"Conference Room A\"}"
+        "\"description\": \"Quarterly review meeting\", \"location\": \"Conference Room A\", \"add_meet_link\": false}"
     )
     response = llm_parser.invoke(f"{prompt}\n\nMessage: {natural_prompt}")
     try:
@@ -53,7 +55,8 @@ def parse_calendar_prompt(natural_prompt: str) -> dict:
             "end": "",
             "emails": [],
             "description": "",
-            "location": ""
+            "location": "",
+            "add_meet_link": False
         }
 
 def parse_multiple_events_prompt(natural_prompt: str) -> list:
@@ -62,12 +65,13 @@ def parse_multiple_events_prompt(natural_prompt: str) -> list:
     prompt = (
         f"Today's date is {now}. Extract multiple event scheduling details from this message. "
         "Return ONLY a valid JSON array of event objects (max 5 events). "
-        "Each event should have: summary, start, end, emails, description, location. "
+        "Each event should have: summary, start, end, emails, description, location, add_meet_link. "
         "Use ISO 8601 format for dates. Assume future dates (2025 or later). "
         "If no time given, default to 10:00 AM - 11:00 AM. "
+        "Set add_meet_link to true if user mentions: 'google meet', 'meet link', 'virtual meeting', 'online meeting', 'video call' for that event. "
         "Example: [{\"summary\": \"Meeting 1\", \"start\": \"2025-10-14T10:00:00\", "
         "\"end\": \"2025-10-14T11:00:00\", \"emails\": [\"test@example.com\"], "
-        "\"description\": \"First meeting\", \"location\": \"Room A\"}]"
+        "\"description\": \"First meeting\", \"location\": \"Room A\", \"add_meet_link\": false}]"
     )
     response = llm_parser.invoke(f"{prompt}\n\nMessage: {natural_prompt}")
     try:
@@ -156,27 +160,28 @@ def create_calendar_agent():
     @tool
     def create_calendar_event(summary: str, start: str, end: str, emails: list[str], 
                               description: str = "", location: str = "", 
-                              calendar_name: str = "") -> str:
+                              calendar_name: str = "primary", add_google_meet: bool = False) -> str:
         """
         Creates a Google Calendar event with title, time, attendees, description, and location.
         calendar_name: Name of the calendar (e.g., 'Work', 'Personal', 'Team Calendar'). 
-                      Leave empty to ask user which calendar to use.
+                      Use 'primary' for the default calendar.
+        add_google_meet: Set to True to automatically add a Google Meet link to the event.
+                        Use when user mentions: 'google meet', 'meet link', 'virtual meeting', 
+                        'online meeting', 'video call', 'video conference'.
         """
         calendar_id = None
         
-        # If no calendar specified, return a prompt to ask user
-        if not calendar_name:
-            calendars_list = list_calendars_impl()
-            return f"📋 Please specify which calendar to use:\n\n{calendars_list}\n\n❓ Which calendar would you like to use for '{summary}'?"
-        
-        if calendar_name:
+        # Handle "primary" calendar explicitly
+        if calendar_name.lower() == "primary":
+            calendar_id = "primary"
+        elif calendar_name:
             cal = find_calendar_by_name(calendar_name)
             if cal:
                 calendar_id = cal['id']
             else:
                 return f"❌ Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
         
-        result = create_event_impl(summary, start, end, emails, description, location, calendar_id)
+        result = create_event_impl(summary, start, end, emails, description, location, calendar_id, add_google_meet)
         if isinstance(result, dict):
             return json.dumps(result)
         return str(result)
@@ -186,7 +191,7 @@ def create_calendar_agent():
         """
         Creates up to 5 calendar events at once. 
         events_json should be a JSON array of event objects with keys: 
-        summary, start, end, emails, description, location, calendar_id (optional)
+        summary, start, end, emails, description, location, calendar_id (optional), add_meet_link (optional)
         """
         try:
             events = json.loads(events_json)
@@ -204,20 +209,18 @@ def create_calendar_agent():
             return "❌ Invalid event data format"
 
     @tool
-    def search_calendar_events(max_results: int = 5, calendar_name: str = "") -> str:
+    def search_calendar_events(max_results: int = 5, calendar_name: str = "primary") -> str:
         """
         Lists upcoming events from a specific calendar or the primary calendar.
         calendar_name: Name of the calendar (e.g., 'Work', 'Personal'). 
-                      Leave empty to ask user which calendar to search.
+                      Use 'primary' for the default calendar.
         """
         calendar_id = None
         
-        # If no calendar specified, return a prompt to ask user
-        if not calendar_name:
-            calendars_list = list_calendars_impl()
-            return f"📋 Please specify which calendar to search:\n\n{calendars_list}\n\n❓ Which calendar would you like to search?"
-        
-        if calendar_name:
+        # Handle "primary" calendar explicitly
+        if calendar_name.lower() == "primary":
+            calendar_id = "primary"
+        elif calendar_name:
             cal = find_calendar_by_name(calendar_name)
             if cal:
                 calendar_id = cal['id']
@@ -227,22 +230,20 @@ def create_calendar_agent():
         return search_events_impl(max_results, calendar_id)
 
     @tool
-    def find_event_by_name(event_name: str, calendar_name: str = "") -> str:
+    def find_event_by_name(event_name: str, calendar_name: str = "primary") -> str:
         """
         Searches for events by name/title. Returns matching events with their IDs.
         Use this to find events before updating or deleting them.
         calendar_name: Name of the calendar to search in. 
-                      Leave empty to ask user which calendar to search.
+                      Use 'primary' for the default calendar.
         Example: "team meeting", "project review", "lunch with client"
         """
         calendar_id = None
         
-        # If no calendar specified, return a prompt to ask user
-        if not calendar_name:
-            calendars_list = list_calendars_impl()
-            return f"📋 Please specify which calendar to search for '{event_name}':\n\n{calendars_list}\n\n❓ Which calendar should I search?"
-        
-        if calendar_name:
+        # Handle "primary" calendar explicitly
+        if calendar_name.lower() == "primary":
+            calendar_id = "primary"
+        elif calendar_name:
             cal = find_calendar_by_name(calendar_name)
             if cal:
                 calendar_id = cal['id']
@@ -268,8 +269,13 @@ def create_calendar_agent():
             location = event.get("location", "")
             location_info = f"\n   📍 {location}" if location else ""
             
+            # Check for Google Meet link
+            meet_info = ""
+            if event.get("conferenceData"):
+                meet_info = "\n   🎥 Has Google Meet link"
+            
             output.append(
-                f"{i}. {event.get('summary', 'No Title')} - {formatted_start}{attendee_info}{location_info}\n"
+                f"{i}. {event.get('summary', 'No Title')} - {formatted_start}{attendee_info}{location_info}{meet_info}\n"
                 f"   🆔 ID: {event['id']}"
             )
         
@@ -367,7 +373,7 @@ def create_calendar_agent():
 
 def main():
     print("=" * 60)
-    print("📅 ENHANCED GOOGLE CALENDAR AGENT")
+    print("📅 ENHANCED GOOGLE CALENDAR AGENT WITH GOOGLE MEET")
     print("=" * 60)
 
     required_vars = ["OPENAI_API_KEY"]
@@ -391,7 +397,7 @@ def main():
 
         print("AVAILABLE FEATURES")
         print("=" * 60)
-        print("1. Schedule a single meeting/appointment")
+        print("1. Schedule a single meeting/appointment (with optional Google Meet)")
         print("2. Schedule multiple events (up to 5 at once)")
         print("3. Search upcoming events")
         print("4. Delete an event (by name)")
@@ -404,7 +410,7 @@ def main():
         choice = input("\nEnter your choice (1-8): ").strip()
 
         if choice == "1":
-            prompt = input("Describe your event (e.g., 'Schedule meeting with john@email.com tomorrow 2PM-3PM at Conference Room A'): ").strip()
+            prompt = input("Describe your event (e.g., 'Schedule meeting with john@email.com tomorrow 2PM-3PM in kasane_teto calendar'): ").strip()
             parsed = parse_calendar_prompt(prompt)
             test_message = (
                 f"Schedule an event titled '{parsed['summary']}' from {parsed['start']} to {parsed['end']} "
@@ -414,9 +420,11 @@ def main():
                 test_message += f". Description: {parsed['description']}"
             if parsed.get('location'):
                 test_message += f". Location: {parsed['location']}"
+            if parsed.get('add_meet_link'):
+                test_message += ". Add a Google Meet link for this event"
 
         elif choice == "2":
-            prompt = input("Describe multiple events (e.g., 'Schedule team meetings: Monday 10AM with alice@email.com, Tuesday 2PM with bob@email.com'): ").strip()
+            prompt = input("Describe multiple events (e.g., 'Schedule team meetings: Monday 10AM with alice@email.com, Tuesday 2PM virtual meeting with bob@email.com'): ").strip()
             parsed_events = parse_multiple_events_prompt(prompt)
             if not parsed_events:
                 print("❌ Could not parse events from prompt")
@@ -457,11 +465,11 @@ def main():
 
         system_prompt = """
         You are the Calendar scheduling agent for SafexpressOps.
-        Your job is to manage Google Calendar events efficiently.
+        Your job is to manage Google Calendar events efficiently with Google Meet integration.
 
         Available Tools:
-        - create_calendar_event: Schedule events with optional calendar_name parameter
-        - create_multiple_events: Batch schedule up to 5 events at once
+        - create_calendar_event: Schedule events with optional calendar_name and add_google_meet parameters
+        - create_multiple_events: Batch schedule up to 5 events at once (supports Google Meet links)
         - confirm_and_reschedule: Resolve scheduling conflicts by moving conflicting events
         - search_calendar_events: List upcoming events with optional calendar_name parameter
         - find_event_by_name: Search for events by name (use before update/delete)
@@ -472,21 +480,45 @@ def main():
         - find_calendar_by_name_tool: Find calendar details by name
         - notify_attendees: Send custom notifications with optional calendar_name parameter
 
+        GOOGLE MEET INTEGRATION - PROACTIVE SUGGESTION:
+        - When a user schedules a meeting with attendees BUT does NOT mention Google Meet:
+          * FIRST acknowledge the request with event details
+          * THEN ask: "Would you like me to add a Google Meet link for this meeting?"
+          * WAIT for user confirmation (yes/no)
+          * If yes, create event with add_google_meet=True
+          * If no, create event with add_google_meet=False
+        
+        - When user EXPLICITLY mentions virtual meeting keywords:
+          * "google meet", "meet link", "virtual meeting", "online meeting", "video call", "video conference"
+          * Automatically set add_google_meet=True WITHOUT asking
+          * Confirm in response that Google Meet link will be included
+        
+        - Examples:
+          USER: "Schedule meeting with john@email.com tomorrow 2PM"
+          AGENT: "Got it! I'll schedule a meeting with john@email.com tomorrow at 2PM. Would you like me to add a Google Meet link for this meeting?"
+          USER: "Yes"
+          AGENT: *creates event with Google Meet link*
+          
+          USER: "Schedule virtual meeting with team tomorrow 3PM"
+          AGENT: *creates event with Google Meet link immediately* "✅ Created virtual meeting with Google Meet link"
+
         CALENDAR NAME SUPPORT:
-        - Users can now specify calendars by name instead of ID
-        - Examples: "Schedule meeting in Work Calendar", "Add to Personal calendar"
+        - Users can specify calendars by name or use "primary" for default calendar
+        - Examples: "Schedule meeting in Work Calendar", "Add to Personal calendar", "Use primary calendar"
+        - Default to "primary" calendar when no specific calendar is mentioned
         - If calendar name is mentioned, use the calendar_name parameter (NOT calendar_id)
         - The system automatically converts calendar names to IDs
         - If calendar not found, suggest using list_all_calendars
         
         CALENDAR SELECTION WORKFLOW:
-        - If user doesn't specify a calendar when creating/searching/updating/deleting events:
-          1. FIRST call list_all_calendars to show available options
-          2. Ask user "Which calendar would you like to use?" with the list
-          3. Wait for user response before proceeding
-        - If user says "default" or "primary", use the primary calendar without asking
-        - If only ONE calendar exists (just primary), use it without asking
-        - This ensures users always know which calendar they're working with
+        - ALWAYS default to "primary" calendar unless user explicitly mentions a different calendar
+        - If user mentions a specific calendar by name (e.g., "Work", "Personal", "Team", "kasane_teto"), use that calendar
+        - Only ask which calendar to use if the user's request is ambiguous
+        - Examples:
+          * "Schedule meeting with john@email.com" → Use primary calendar
+          * "Schedule meeting in Work Calendar" → Use Work Calendar
+          * "Add to my Personal calendar" → Use Personal calendar
+          * "Schedule in kasane_teto calendar" → Use kasane_teto calendar
 
         CRITICAL WORKFLOW FOR UPDATE/DELETE OPERATIONS:
         1. When user wants to UPDATE or DELETE an event by name:
@@ -500,9 +532,11 @@ def main():
            Step 2: If 1 match found, call delete_calendar_event(event_id, calendar_name="Work Calendar")
            Step 3: Confirm deletion with attendee notification
 
-        3. Example: "Schedule sprint planning in Team Calendar with john@email.com tomorrow 2PM":
-           Step 1: Call create_calendar_event with calendar_name="Team Calendar"
-           Step 2: Confirm creation with attendee notification
+        3. Example: "Schedule meeting in kasane_teto calendar with john@email.com tomorrow 2PM":
+           Step 1: Ask user if they want Google Meet link
+           Step 2: Wait for confirmation
+           Step 3: Call create_calendar_event with calendar_name="kasane_teto" and add_google_meet based on user response
+           Step 4: Confirm creation with attendee notification
 
         OTHER IMPORTANT GUIDELINES:
         1. CONFLICT HANDLING: When create_calendar_event returns a conflict:
@@ -513,11 +547,12 @@ def main():
 
         2. BATCH SCHEDULING: For multiple events (up to 5):
            - Use create_multiple_events with JSON array of events
-           - Each event needs: summary, start, end, emails, description, location
+           - Each event needs: summary, start, end, emails, description, location, add_meet_link (optional)
            - Report success/failure for each event
 
         3. EMAIL NOTIFICATIONS:
            - All create/update/delete operations automatically notify attendees
+           - Google Meet links are included in invitation emails
            - Use notify_attendees for custom messages about changes
            - Always confirm when emails are sent
 
@@ -531,7 +566,7 @@ def main():
            - Validate email formats before creating events
            - Confirm attendee list in your response
 
-        Always provide clear confirmation messages with event links when available.
+        Always provide clear confirmation messages with event links and Google Meet links when available.
         Be conversational and helpful - the goal is to make calendar management effortless.
         """
 
@@ -559,7 +594,8 @@ def main():
             is_success = any(keyword in response_text.lower() for keyword in [
                 "successfully created", "✅", "event created", "deleted successfully", 
                 "updated successfully", "upcoming events:", "moved", "calendar created",
-                "your calendars:", "notification sent", "successfully deleted", "successfully updated"
+                "your calendars:", "notification sent", "successfully deleted", "successfully updated",
+                "google meet:"
             ]) and not any(word in response_text.lower() for word in ["conflict", "failed", "error"])
 
             if is_success and not is_question:
