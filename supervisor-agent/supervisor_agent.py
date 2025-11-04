@@ -1403,6 +1403,74 @@ async def approve_action(action_id: str, approval: ActionApprovalRequest):
             "error": str(e),
             "message": f"Action execution failed: {str(e)}",
         }
+    
+@app.post("/actions/cleanup")
+async def cleanup_expired_actions():
+    """Clean up expired or completed pending actions"""
+    cleaned = []
+    now = datetime.now()
+    
+    # Create a list of actions to remove (can't modify dict during iteration)
+    actions_to_remove = []
+    
+    for action_id, action in PENDING_ACTIONS.items():
+        # Remove if expired (older than 5 minutes)
+        if now - action.created_at > timedelta(minutes=5):
+            actions_to_remove.append(action_id)
+            cleaned.append({
+                "action_id": action_id,
+                "reason": "expired",
+                "age_seconds": (now - action.created_at).total_seconds()
+            })
+        # Remove if already processed (not pending)
+        elif action.status != "pending":
+            actions_to_remove.append(action_id)
+            cleaned.append({
+                "action_id": action_id,
+                "reason": f"already_{action.status}",
+                "status": action.status
+            })
+    
+    # Remove the actions
+    for action_id in actions_to_remove:
+        remove_pending_action(action_id)
+    
+    return {
+        "cleaned_count": len(cleaned),
+        "cleaned_actions": cleaned,
+        "remaining_pending": len([a for a in PENDING_ACTIONS.values() if a.status == "pending"])
+    }
+
+
+@app.get("/actions/pending")
+async def list_pending_actions():
+    """List all actions waiting for approval (with automatic cleanup)"""
+    # First, clean up expired actions
+    now = datetime.now()
+    expired_ids = []
+    
+    for action_id, action in list(PENDING_ACTIONS.items()):
+        # Remove expired actions (older than 5 minutes)
+        if now - action.created_at > timedelta(minutes=5):
+            expired_ids.append(action_id)
+            remove_pending_action(action_id)
+        # Remove non-pending actions
+        elif action.status != "pending":
+            remove_pending_action(action_id)
+    
+    if expired_ids:
+        print(f"🧹 Cleaned up {len(expired_ids)} expired actions")
+    
+    # Return only pending actions
+    pending = []
+    for action_id, action in PENDING_ACTIONS.items():
+        if action.status == "pending":
+            pending.append(action.to_dict())
+
+    return {
+        "pending_actions": pending, 
+        "count": len(pending)
+    }
 
 
 def execute_single_action(step_info: dict) -> dict:
