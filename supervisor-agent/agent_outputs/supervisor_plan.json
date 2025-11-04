@@ -1,17 +1,17 @@
 {
   "plan": [
     {
-      "agent": "drive_agent",
-      "tool": "create_folder",
+      "agent": "calendar_agent",
+      "tool": "create_event",
       "inputs": {
-        "folder_path": "TestFolderFromSupervisor"
+        "summary": "Scheduled Meeting",
+        "start_time": "2025-11-01 12:00:00",
+        "end_time": "2025-11-01 13:00:00"
       },
       "output_variables": {
-        "new_folder_id": "folder_id",
-        "new_folder_url": "folder_url",
-        "new_folder_path": "folder_path"
+        "created_event_id": "event_id"
       },
-      "description": "Create a new folder named 'TestFolderFromSupervisor' within the SafeExpress root folder"
+      "description": "Create a new calendar event for the meeting on Nov 1 at 12PM"
     }
   ]
 }

@@ -1,4 +1,4 @@
-'''# tools.py - Google Calendar Agent Tools with SUPERVISOR-COMPATIBLE OUTPUT'''
+'''# tools.py - Google Calendar Agent Tools with PAST DATE VALIDATION'''
 import os
 from typing import List, Optional, Dict, Union
 from pydantic import BaseModel
@@ -95,6 +95,54 @@ def format_datetime(dt_str: str) -> Optional[str]:
         print(f"⚠️ Error formatting datetime '{dt_str}': {str(e)}")
         return None
 
+def validate_future_datetime(dt_str: str) -> Dict:
+    """
+    Validate that a datetime is in the future.
+    Returns dict with 'valid' bool and 'error' message if invalid.
+    """
+    try:
+        tz = pytz.timezone("Asia/Manila")
+        now = datetime.now(tz)
+        
+        # Handle relative dates first
+        dt_str_lower = dt_str.lower()
+        if "tomorrow" in dt_str_lower:
+            tomorrow = (now + timedelta(days=1)).strftime("%Y-%m-%d")
+            dt_str = dt_str_lower.replace("tomorrow", tomorrow)
+        elif "today" in dt_str_lower:
+            dt_str = dt_str_lower.replace("today", now.strftime("%Y-%m-%d"))
+        
+        # Parse the datetime
+        dt = parser.parse(dt_str)
+        dt = dt if dt.tzinfo else tz.localize(dt)
+        dt = dt.astimezone(tz)
+        
+        # Check if it's in the past
+        if dt < now:
+            # Format the parsed date for a clear error message
+            formatted_date = dt.strftime("%B %d, %Y at %I:%M %p")
+            return {
+                "valid": False,
+                "error": f"Cannot schedule events in the past. '{formatted_date}' has already passed. Today is {now.strftime('%B %d, %Y')}.",
+                "parsed_datetime": dt,
+                "current_datetime": now
+            }
+        
+        return {
+            "valid": True,
+            "error": None,
+            "parsed_datetime": dt,
+            "current_datetime": now
+        }
+        
+    except Exception as e:
+        return {
+            "valid": False,
+            "error": f"Invalid date format: {str(e)}",
+            "parsed_datetime": None,
+            "current_datetime": None
+        }
+
 def check_conflicts(start: str, end: str, calendar_id: str = None) -> List[Dict]:
     """Check for conflicting events"""
     service = get_calendar_service()
@@ -127,9 +175,46 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
                       calendar_id: str = None, add_meet_link: bool = False) -> Dict:
     """
     Create event - RETURNS DICT for supervisor compatibility
+    NOW WITH PAST DATE VALIDATION
     """
     service = get_calendar_service()
     cal_id = calendar_id or CALENDAR_ID
+    
+    # ⭐ NEW: Validate that start time is in the future
+    start_validation = validate_future_datetime(start)
+    if not start_validation["valid"]:
+        return {
+            "success": False,
+            "event_id": None,
+            "event_url": None,
+            "message": f"❌ {start_validation['error']}",
+            "error": start_validation['error'],
+            "error_type": "past_date"
+        }
+    
+    # ⭐ NEW: Validate that end time is in the future
+    end_validation = validate_future_datetime(end)
+    if not end_validation["valid"]:
+        return {
+            "success": False,
+            "event_id": None,
+            "event_url": None,
+            "message": f"❌ {end_validation['error']}",
+            "error": end_validation['error'],
+            "error_type": "past_date"
+        }
+    
+    # ⭐ NEW: Validate that end is after start
+    if end_validation["parsed_datetime"] <= start_validation["parsed_datetime"]:
+        return {
+            "success": False,
+            "event_id": None,
+            "event_url": None,
+            "message": "❌ End time must be after start time.",
+            "error": "End time must be after start time",
+            "error_type": "invalid_time_range"
+        }
+    
     formatted_start = format_datetime(start)
     formatted_end = format_datetime(end)
 
@@ -139,7 +224,8 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
             "event_id": None,
             "event_url": None,
             "message": "Invalid datetime format",
-            "error": "Invalid datetime format. Please provide valid date and time."
+            "error": "Invalid datetime format. Please provide valid date and time.",
+            "error_type": "format_error"
         }
 
     # Check conflicts
@@ -153,6 +239,7 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
             "conflict_title": conflict.get("summary", "No Title"),
             "message": f"⚠️ Scheduling conflict detected with '{conflict.get('summary')}'",
             "error": "Scheduling conflict detected",
+            "error_type": "conflict",
             "new_event": {
                 "summary": summary,
                 "start": start,
@@ -227,7 +314,8 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
             "event_id": None,
             "event_url": None,
             "message": f"Failed to create event: {str(e)}",
-            "error": str(e)
+            "error": str(e),
+            "error_type": "api_error"
         }
 
 
@@ -310,6 +398,7 @@ def update_event_impl(event_id: str, new_summary: Optional[str] = None,
                       calendar_id: str = None) -> Dict:
     """
     Update event - RETURNS DICT for supervisor compatibility
+    NOW WITH PAST DATE VALIDATION FOR NEW TIMES
     """
     service = get_calendar_service()
     cal_id = calendar_id or CALENDAR_ID
@@ -319,19 +408,41 @@ def update_event_impl(event_id: str, new_summary: Optional[str] = None,
         old_summary = event.get("summary", "Untitled Event")
         changes = []
 
-        if new_summary:
-            event["summary"] = new_summary
-            changes.append(f"title to '{new_summary}'")
+        # ⭐ NEW: Validate new start time if provided
         if new_start:
+            start_validation = validate_future_datetime(new_start)
+            if not start_validation["valid"]:
+                return {
+                    "success": False,
+                    "event_id": event_id,
+                    "message": f"❌ {start_validation['error']}",
+                    "error": start_validation['error'],
+                    "error_type": "past_date"
+                }
             formatted_start = format_datetime(new_start)
             if formatted_start:
                 event["start"]["dateTime"] = formatted_start
                 changes.append(f"start time to {new_start}")
+
+        # ⭐ NEW: Validate new end time if provided
         if new_end:
+            end_validation = validate_future_datetime(new_end)
+            if not end_validation["valid"]:
+                return {
+                    "success": False,
+                    "event_id": event_id,
+                    "message": f"❌ {end_validation['error']}",
+                    "error": end_validation['error'],
+                    "error_type": "past_date"
+                }
             formatted_end = format_datetime(new_end)
             if formatted_end:
                 event["end"]["dateTime"] = formatted_end
                 changes.append(f"end time to {new_end}")
+
+        if new_summary:
+            event["summary"] = new_summary
+            changes.append(f"title to '{new_summary}'")
         if new_description:
             event["description"] = new_description
             changes.append("description")
