@@ -1,69 +1,25 @@
 {
   "plan": [
     {
-      "agent": "mapping_agent",
-      "tool": "parse_file",
+      "agent": "gmail_agent",
+      "tool": "create_draft_email",
       "inputs": {
-        "file_content": "C:\\Users\\lance\\OneDrive\\Documents\\GitHub\\Ai-Agents\\Sample_OPR_January_2025.xlsx",
-        "file_type": "xlsx"
+        "to": "jdenziieel@gmail.com",
+        "subject": "Reminder for quiz",
+        "body": "We have a quiz tomorrow"
       },
       "output_variables": {
-        "parsed_data": "full_data",
-        "parsed_columns": "columns",
-        "sample_data": "sample_data"
+        "draft_id": "draft_id"
       },
-      "description": "Parse the Excel file into structured data"
-    },
+      "description": "Create a draft email to remind about the quiz"
+    },  
     {
-      "agent": "mapping_agent",
-      "tool": "extract_dates_from_all_rows",
+      "agent": "gmail_agent",
+      "tool": "send_draft_email",
       "inputs": {
-        "data": "{{ parsed_data }}"
+        "draft_id": "{{ draft_id }}"
       },
-      "output_variables": {
-        "rows_with_dates": "rows_with_dates"
-      },
-      "description": "Extract dates from all rows for date-based matching"
-    },
-    {
-      "agent": "mapping_agent",
-      "tool": "smart_column_mapping",
-      "inputs": {
-        "source_columns": "{{ parsed_columns }}",
-        "sample_data": "{{ sample_data }}",
-        "skip_temporal": true
-      },
-      "output_variables": {
-        "column_mappings": "mappings"
-      },
-      "description": "Map the columns intelligently, skipping temporal columns"
-    },
-    {
-      "agent": "mapping_agent",
-      "tool": "transform_data",
-      "inputs": {
-        "source_data": "{{ parsed_data }}",
-        "mappings": "{{ column_mappings }}"
-      },
-      "output_variables": {
-        "transformed_data": "transformed_data"
-      },
-      "description": "Transform the data using the column mappings"
-    },
-    {
-      "agent": "sheets_agent",
-      "tool": "update_by_date_match",
-      "inputs": {
-        "sheet_id": "1IqP1zrw1rvk9Aij1Kzp_fILiXwhP7c5c9pYbjIxY-sc",
-        "transformed_data": "{{ transformed_data }}",
-        "rows_with_dates": "{{ rows_with_dates }}",
-        "sheet_name": "DATA ENTRY"
-      },
-      "output_variables": {
-        "rows_updated": "rows_updated",
-        "rows_not_found": "rows_not_found"
-      },
-      "description": "Update the Google Sheets rows by matching dates, only updating the operational columns"
+      "description": "Send the draft email"
     }
   ]
 }

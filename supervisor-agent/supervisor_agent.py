@@ -7,6 +7,7 @@ import httpx
 from jinja2 import Template
 from typing import TypedDict, List, Optional, Dict, Any, Callable, Awaitable
 from datetime import datetime, timedelta, timezone
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import uvicorn
 import asyncio
@@ -47,6 +48,17 @@ from conversational_agent import ConversationalAgent, ConversationState
 
 # Initialize FastAPI app
 app = FastAPI(title="Supervisor Agent API")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Allow your React dev server
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],  # Allow all headers
+    # You might want to be more specific in production
+    # allow_origins=["https://yourproductiondomain.com"],
+)
 
 # Initialize LLM
 llm = ChatOpenAI(
@@ -177,11 +189,15 @@ def remove_pending_action(action_id: str):
     if action_id in PENDING_ACTIONS:
         del PENDING_ACTIONS[action_id]
 
+
+
+
 def supervisor_node(state: SharedState) -> SharedState:
     """
     STEP 1: Supervisor generates a plan based on user input
     Enhanced to support multi-step workflows with data dependencies
     """
+    print(">>> RUNNING SUPERVISOR NODE VERSION 2 <<<")
     print("\n" + "=" * 60)
     print("🧠 SUPERVISOR NODE - Planning Phase")
     print("=" * 60)
@@ -582,9 +598,12 @@ def orchestrator_node(state: SharedState) -> SharedState:
             "tool": tool_name,
             "inputs": substituted_inputs,
             "credentials_dict": {
-                "access_token": os.getenv("GOOGLE_ACCESS_TOKEN"),
-                "refresh_token": os.getenv("GOOGLE_REFRESH_TOKEN"),
-            },
+            "access_token": os.getenv("GOOGLE_ACCESS_TOKEN"),
+            "refresh_token": os.getenv("GOOGLE_REFRESH_TOKEN"),
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
+            "client_secret": os.getenv("GOOGLE_CLIENT_SECRET", ""),
+        },
         }
 
         try:
@@ -1495,6 +1514,74 @@ async def approve_action(action_id: str, approval: ActionApprovalRequest):
             "error": str(e),
             "message": f"Action execution failed: {str(e)}",
         }
+    
+@app.post("/actions/cleanup")
+async def cleanup_expired_actions():
+    """Clean up expired or completed pending actions"""
+    cleaned = []
+    now = datetime.now()
+    
+    # Create a list of actions to remove (can't modify dict during iteration)
+    actions_to_remove = []
+    
+    for action_id, action in PENDING_ACTIONS.items():
+        # Remove if expired (older than 5 minutes)
+        if now - action.created_at > timedelta(minutes=5):
+            actions_to_remove.append(action_id)
+            cleaned.append({
+                "action_id": action_id,
+                "reason": "expired",
+                "age_seconds": (now - action.created_at).total_seconds()
+            })
+        # Remove if already processed (not pending)
+        elif action.status != "pending":
+            actions_to_remove.append(action_id)
+            cleaned.append({
+                "action_id": action_id,
+                "reason": f"already_{action.status}",
+                "status": action.status
+            })
+    
+    # Remove the actions
+    for action_id in actions_to_remove:
+        remove_pending_action(action_id)
+    
+    return {
+        "cleaned_count": len(cleaned),
+        "cleaned_actions": cleaned,
+        "remaining_pending": len([a for a in PENDING_ACTIONS.values() if a.status == "pending"])
+    }
+
+
+@app.get("/actions/pending")
+async def list_pending_actions():
+    """List all actions waiting for approval (with automatic cleanup)"""
+    # First, clean up expired actions
+    now = datetime.now()
+    expired_ids = []
+    
+    for action_id, action in list(PENDING_ACTIONS.items()):
+        # Remove expired actions (older than 5 minutes)
+        if now - action.created_at > timedelta(minutes=5):
+            expired_ids.append(action_id)
+            remove_pending_action(action_id)
+        # Remove non-pending actions
+        elif action.status != "pending":
+            remove_pending_action(action_id)
+    
+    if expired_ids:
+        print(f"🧹 Cleaned up {len(expired_ids)} expired actions")
+    
+    # Return only pending actions
+    pending = []
+    for action_id, action in PENDING_ACTIONS.items():
+        if action.status == "pending":
+            pending.append(action.to_dict())
+
+    return {
+        "pending_actions": pending, 
+        "count": len(pending)
+    }
 
 
 def execute_single_action(step_info: dict) -> dict:

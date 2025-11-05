@@ -43,6 +43,7 @@ ACTION_RISK_LEVELS = {
     # DANGEROUS - Sends data externally
     "send_draft_email": ActionRiskLevel.DANGEROUS,
     "reply_to_email": ActionRiskLevel.DANGEROUS,
+    "forward_email": ActionRiskLevel.DANGEROUS,
     "send_email_with_attachment": ActionRiskLevel.DANGEROUS,
     "add_text": ActionRiskLevel.DANGEROUS,           # Modifies shared doc
     
