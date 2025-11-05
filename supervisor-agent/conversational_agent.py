@@ -19,6 +19,15 @@ import os
 # Import agent capabilities for feasibility checking
 from agent_capabilities import agent_capabilities
 
+# Import utility functions for agent filtering
+from utils import identify_relevant_agents, get_filtered_capabilities
+
+# Import conversation memory manager
+from conversation_memory import ConversationMemoryManager
+
+# Import thread manager for persistent storage
+from thread_manager import ThreadManager
+
 
 class ConversationIntent(str, Enum):
     """Intent classification for conversation state"""
@@ -27,11 +36,12 @@ class ConversationIntent(str, Enum):
     TOO_COMPLEX = "too_complex"  # Task needs breaking down
     READY_TO_EXECUTE = "ready_to_execute"  # All info present, proceed
     SMALL_TALK = "small_talk"  # Not a task request
+    CANCELLED = "cancelled"  # User cancelled the request but data preserved
 
 
 class ConversationState(BaseModel):
     """Tracks conversation history and extracted information"""
-    conversation_history: List[Dict[str, str]] = Field(default_factory=list)
+    conversation_history: List[Dict[str, str]] = Field(default_factory=list)  # DEPRECATED: Use memory_manager instead
     extracted_info: Dict[str, Any] = Field(default_factory=dict)
     missing_fields: List[str] = Field(default_factory=list)
     intent: Optional[ConversationIntent] = None
@@ -44,6 +54,9 @@ class ConversationState(BaseModel):
     last_plan_hash: Optional[str] = None
     last_executed_at: Optional[str] = None
     executing: bool = False
+    
+    # NEW: Memory manager state (for persistence)
+    memory_state: Optional[Dict[str, Any]] = None
 
 
 class ConversationAnalysis(BaseModel):
@@ -65,18 +78,46 @@ class ConversationalAgent:
     Uses LLM to understand intent and gather complete information.
     """
     
-    def __init__(self, openai_api_key: str, model: str = "gpt-4o", temperature: float = 0.3):
+    def __init__(
+        self, 
+        openai_api_key: str, 
+        model: str = "gpt-4o", 
+        temperature: float = 0.3, 
+        db_path: str = "threads.db"
+    ):
         self.llm = ChatOpenAI(
             model=model,
             temperature=temperature,
             openai_api_key=openai_api_key
         )
-        self.capabilities_summary = self._build_capabilities_summary()
+        self.openai_api_key = openai_api_key
+        self.model = model
+        self.temperature = temperature
+        
+        # Build FULL capabilities summary once (for "what can you do?" questions)
+        self.full_capabilities_summary = self._build_capabilities_summary()
+        
+        # Memory managers (one per conversation, keyed by conversation_id or state)
+        self.memory_managers: Dict[str, ConversationMemoryManager] = {}
+        
+        # Thread manager for persistent storage with SQLite
+        self.thread_manager = ThreadManager(db_path=db_path)
     
-    def _build_capabilities_summary(self) -> str:
-        """Build comprehensive summary of available tools with their required arguments"""
+    def _build_capabilities_summary(self, agent_names: Optional[List[str]] = None) -> str:
+        """
+        Build comprehensive summary of available tools with their required arguments.
+        
+        Args:
+            agent_names: Optional list of agent names to include. If None, includes all agents.
+        
+        Returns:
+            Formatted string with capabilities
+        """
+        # Use filtered agents if provided, otherwise use all
+        agents_to_include = agent_capabilities if agent_names is None else get_filtered_capabilities(agent_names)
+        
         capabilities = []
-        for agent_name, agent_info in agent_capabilities.items():
+        for agent_name, agent_info in agents_to_include.items():
             capabilities.append(f"\n**{agent_name.upper()}:**")
             tools = agent_info.get("tools", {})
             for tool_name, tool_info in tools.items():
@@ -96,10 +137,646 @@ class ConversationalAgent:
         
         return "\n".join(capabilities)
     
+    def _get_memory_manager(self, state_id: str = "default", memory_state: Optional[Dict[str, Any]] = None) -> ConversationMemoryManager:
+        """
+        Get or create a memory manager for the given conversation.
+        
+        Args:
+            state_id: Unique identifier for this conversation (for multi-conversation support)
+            memory_state: Optional persisted memory state to restore from
+            
+        Returns:
+            ConversationMemoryManager instance
+        """
+        # Check if memory manager already exists
+        if state_id not in self.memory_managers:
+            # Create new memory manager
+            self.memory_managers[state_id] = ConversationMemoryManager(
+                openai_api_key=self.openai_api_key,
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens_before_summary=2000  # 2000 tokens before summarization
+            )
+            
+            # Load from persisted state if available
+            if memory_state:
+                self.memory_managers[state_id].load_memory(memory_state)
+                print(f"📥 Loaded memory from state: {len(memory_state.get('raw_history', []))} messages")
+        
+        return self.memory_managers[state_id]
+    
+    def _save_memory_to_state(self, conversation_state: ConversationState, state_id: str = "default") -> None:
+        """
+        Save memory manager state to conversation state for persistence.
+        
+        Args:
+            conversation_state: Conversation state to update
+            state_id: Unique identifier for this conversation
+        """
+        if state_id in self.memory_managers:
+            conversation_state.memory_state = self.memory_managers[state_id].export_memory()
+            # # Also update conversation_history for backward compatibility
+            # conversation_state.conversation_history = self.memory_managers[state_id].get_full_history()
+
+    # =============================================================================
+    # TIER 0: PATTERN-BASED QUICK CHECKS (NO LLM - INSTANT RESPONSE)
+    # =============================================================================
+    
+    def _quick_greeting_check(self, user_message: str) -> Optional[ConversationAnalysis]:
+        """
+        Instant response to greetings without LLM call.
+        Pattern-based recognition for common greetings.
+        
+        Args:
+            user_message: Current user input
+            
+        Returns:
+            ConversationAnalysis with greeting response, or None if not a greeting
+        """
+        greetings = [
+            "hello", "hi", "hey", "good morning", "good afternoon", 
+            "good evening", "greetings", "howdy", "what's up", "sup", "yo"
+        ]
+        
+        user_lower = user_message.lower().strip()
+        
+        # Check if it's JUST a greeting (no task request)
+        # Must start with greeting and be short
+        is_greeting = any(user_lower.startswith(g) for g in greetings) and len(user_message) < 30
+        
+        if is_greeting:
+            # Make sure it's not "hi, send email to..." (greeting + task)
+            task_indicators = ["send", "search", "create", "find", "schedule", "draft", "reply", "make", "write"]
+            if not any(task in user_lower for task in task_indicators):
+                print(f"⚡ Tier 0: Greeting detected - instant response (0 tokens)")
+                
+                greeting_response = """Hello! 👋 I'm here to help you with:
+
+📧 **Emails** - Send, search, reply, draft
+📄 **Documents** - Create and edit Google Docs
+📅 **Calendar** - Schedule meetings (coming soon)
+
+What would you like to do today?"""
+                
+                return ConversationAnalysis(
+                    intent=ConversationIntent.SMALL_TALK,
+                    task_type="greeting",
+                    extracted_info={},
+                    missing_fields=[],
+                    clarification_question=greeting_response,
+                    reasoning="Simple greeting - instant response",
+                    execution_ready=False,
+                    execution_summary=None
+                )
+        
+        return None
+    
+    def _quick_repeat_check(self, user_message: str, conversation_state: ConversationState, state_id: str = "default") -> Optional[ConversationAnalysis]:
+        """
+        Detect requests to repeat last response.
+        Uses memory manager to retrieve last assistant message.
+        
+        Args:
+            user_message: Current user input
+            conversation_state: Previous conversation context
+            state_id: Conversation identifier for memory manager
+            
+        Returns:
+            ConversationAnalysis with repeated message, or None if not a repeat request
+        """
+        repeat_keywords = [
+            "repeat", "say that again", "what did you say", 
+            "come again", "pardon", "didn't catch that", "what was that"
+        ]
+        
+        user_lower = user_message.lower().strip()
+        
+        if any(keyword in user_lower for keyword in repeat_keywords):
+            print(f"⚡ Tier 0: Repeat request - retrieving last response (0 tokens)")
+            
+            # Get memory manager to retrieve last assistant message
+            memory_manager = self._get_memory_manager(state_id, conversation_state.memory_state)
+            recent = memory_manager.get_recent_messages(n=5)
+            
+            last_assistant = None
+            for msg in reversed(recent):
+                if msg['role'] == 'assistant':
+                    last_assistant = msg['content']
+                    break
+            
+            if last_assistant:
+                return ConversationAnalysis(
+                    intent=ConversationIntent.SMALL_TALK,
+                    task_type="repeat_request",
+                    extracted_info={},
+                    missing_fields=[],
+                    clarification_question=f"Sure, here's what I said:\n\n{last_assistant}",
+                    reasoning="User requested repeat of last message",
+                    execution_ready=False,
+                    execution_summary=None
+                )
+        
+        return None
+    
+    def _quick_capability_list_check(self, user_message: str) -> Optional[ConversationAnalysis]:
+        """
+        Instant list of capabilities for specific questions.
+        Uses cached capabilities summary built in __init__.
+        
+        Args:
+            user_message: Current user input
+            
+        Returns:
+            ConversationAnalysis with capabilities list, or None if not a capability question
+        """
+        capability_questions = [
+            "what can you do", "what are you capable of", "capabilities",
+            "what do you do", "what tasks", "features", "functions",
+            "what can i ask", "what are your features"
+        ]
+        
+        user_lower = user_message.lower().strip()
+        
+        if any(q in user_lower for q in capability_questions):
+            print(f"⚡ Tier 0: Capabilities request - returning cached list (0 tokens)")
+            
+            # Use cached full_capabilities_summary (already built in __init__)
+            capabilities_response = f"""Here's what I can help you with:
+
+{self.full_capabilities_summary}
+
+**To get started, try saying:**
+- "Send an email to john@example.com"
+- "Search my emails for invoices from last week"
+- "Create a document about project planning"
+
+What would you like to try?"""
+            
+            return ConversationAnalysis(
+                intent=ConversationIntent.SMALL_TALK,
+                task_type="capabilities_inquiry",
+                extracted_info={},
+                missing_fields=[],
+                clarification_question=capabilities_response,
+                reasoning="User asking about capabilities - used cached summary",
+                execution_ready=False,
+                execution_summary=None
+            )
+        
+        return None
+    
+    def _quick_examples_check(self, user_message: str) -> Optional[ConversationAnalysis]:
+        """
+        Provide examples when requested.
+        Pattern-based detection for example requests.
+        
+        Args:
+            user_message: Current user input
+            
+        Returns:
+            ConversationAnalysis with examples, or None if not an example request
+        """
+        example_keywords = ["example", "show me", "demonstrate", "sample", "give me an example"]
+        
+        user_lower = user_message.lower().strip()
+        
+        if any(keyword in user_lower for keyword in example_keywords):
+            print(f"⚡ Tier 0: Examples request - returning samples (0 tokens)")
+            
+            examples = """Here are some examples of what you can ask me:
+
+📧 **Email Examples:**
+- "Send an email to john@example.com about the Q4 report"
+- "Search my emails from alice@company.com from last week"
+- "Draft an email to the team about project updates"
+- "Reply to the last email from bob@example.com"
+
+📄 **Document Examples:**
+- "Create a Google doc titled Meeting Notes"
+- "Add this text to my document: [your content]"
+- "Edit my document with id abc123"
+
+📅 **Calendar Examples (coming soon):**
+- "Schedule a meeting with Sarah tomorrow at 3pm"
+- "Check my availability for next week"
+
+Try one of these or tell me what you'd like to do!"""
+            
+            return ConversationAnalysis(
+                intent=ConversationIntent.SMALL_TALK,
+                task_type="examples_request",
+                extracted_info={},
+                missing_fields=[],
+                clarification_question=examples,
+                reasoning="User requested examples",
+                execution_ready=False,
+                execution_summary=None
+            )
+        
+        return None
+
+    # =============================================================================
+    # TIER 0.5: UNIFIED LIGHTWEIGHT LLM CHECK (~100-250 TOKENS)
+    # =============================================================================
+    
+    def _unified_quick_check(self, user_message: str, conversation_state: ConversationState, state_id: str = "default") -> Optional[ConversationAnalysis]:
+        """
+        UNIFIED Tier 0.5 LLM check - detects ALL non-task intents in ONE call.
+        Handles: confirmation, cancellation, casual conversation, unintelligible input,
+        followup answers, and simple modifications.
+        
+        Args:
+            user_message: Current user input
+            conversation_state: Previous conversation context
+            state_id: Conversation identifier for memory manager
+            
+        Returns:
+            ConversationAnalysis if handled by quick check, None if needs full analysis
+        """
+        
+        # Get memory manager
+        memory_manager = self._get_memory_manager(state_id, conversation_state.memory_state)
+        
+        # Build context for LLM
+        history_snippet = ""
+        last_bot_message = ""
+        recent_messages = memory_manager.get_recent_messages(n=3)
+        
+        if recent_messages:
+            history_snippet = "Recent context:\n"
+            for turn in recent_messages:
+                content_preview = turn['content'][:80]
+                history_snippet += f"  {turn['role']}: {content_preview}\n"
+            
+            assistant_turns = [t for t in recent_messages if t['role'] == 'assistant']
+            if assistant_turns:
+                last_bot_message = assistant_turns[-1]['content']
+        
+        # Build state context
+        is_awaiting_confirmation = (
+            conversation_state.ready_for_execution or 
+            conversation_state.intent == ConversationIntent.READY_TO_EXECUTE or
+            "ready to execute" in last_bot_message.lower() or
+            "should i proceed" in last_bot_message.lower()
+        )
+        
+        is_awaiting_clarification = (
+            conversation_state.intent == ConversationIntent.NEEDS_CLARIFICATION and
+            conversation_state.clarification_question is not None
+        )
+        
+        has_extracted_info = bool(conversation_state.extracted_info)
+        missing_field = conversation_state.missing_fields[0] if conversation_state.missing_fields else None
+        
+        # Build unified prompt
+        context_note = ""
+        if is_awaiting_confirmation:
+            context_note = "\n⚠️ CONTEXT: Bot asked for confirmation to proceed."
+        elif is_awaiting_clarification and missing_field:
+            context_note = f"\n⚠️ CONTEXT: Bot asked about missing '{missing_field}': '{conversation_state.clarification_question}'"
+        elif has_extracted_info:
+            context_note = f"\n⚠️ CONTEXT: Current request data: {json.dumps(conversation_state.extracted_info)}"
+        
+        # UNIFIED prompt that handles ALL Tier 0.5 categories
+        unified_prompt = f"""Classify user intent and extract data. Return JSON only.
+
+CATEGORIES (pick ONE):
+1. confirmation - Approval to proceed ("yes", "ok", "proceed")
+2. cancellation - Stop current task ("cancel", "no", "forget it") | Check for compound: cancel + new task in same message
+3. modification - Change single field ("change X to Y") | Multi-field → task_request
+4. followup_answer - Direct answer to question ("john@example.com") | Complex → task_request  
+5. casual_conversation - Chitchat ("how are you")
+6. unintelligible - Unclear input ("asdfkj3489")
+7. task_request - Action request or complex multi-step ("send email to...")
+
+QUERY SCOPE (for task_request only):
+- general: User asking about capabilities/features ("what can you do?", "show me features")
+- specific: User wants to perform a task ("send email", "search for invoices")
+
+{history_snippet}{context_note}
+User: "{user_message}"
+
+OUTPUT (JSON only):
+{{
+    "category": "confirmation|cancellation|modification|followup_answer|casual_conversation|unintelligible|task_request",
+    "confidence": "high|medium|low",
+    "reasoning": "1 sentence",
+    "query_scope": "general|specific",  // only for task_request, default "specific"
+    "has_compound_cancel": false,  // only for cancellation with new task
+    "extracted_value": null,       // only for followup_answer
+    "field_to_modify": null,       // only for modification
+    "new_value": null              // only for modification
+}}
+
+EXAMPLES:
+User: "yes" (context: awaiting confirmation) → {{"category": "confirmation", "confidence": "high", "reasoning": "Clear approval"}}
+User: "john@example.com" (context: asked for email) → {{"category": "followup_answer", "confidence": "high", "reasoning": "Direct answer", "extracted_value": "john@example.com"}}
+User: "change subject to Q4" (context: has data) → {{"category": "modification", "confidence": "high", "reasoning": "Single field", "field_to_modify": "subject", "new_value": "Q4"}}
+User: "cancel and search invoices" → {{"category": "cancellation", "confidence": "high", "reasoning": "Compound cancel", "has_compound_cancel": true}}
+User: "what can you do?" → {{"category": "task_request", "confidence": "high", "reasoning": "Capabilities inquiry", "query_scope": "general"}}
+User: "send email" → {{"category": "task_request", "confidence": "high", "reasoning": "New action", "query_scope": "specific"}}
+"""
+
+        try:
+            llm_response = self.llm.invoke(
+                [{"role": "user", "content": unified_prompt}],
+                config={"timeout": 15}
+            )
+            
+            response_text = llm_response.content.strip()
+            
+            # Remove markdown code blocks if present
+            if response_text.startswith("```json"):
+                response_text = response_text[7:-3].strip()
+            elif response_text.startswith("```"):
+                response_text = response_text[3:-3].strip()
+            
+            # Validate response_text is not empty
+            if not response_text:
+                print("⚠️ Empty response from LLM, falling back to full analysis")
+                return None, "specific"
+            
+            # Parse JSON with better error handling
+            try:
+                result = json.loads(response_text)
+            except json.JSONDecodeError as json_err:
+                print(f"⚠️ JSON parse error: {json_err}")
+                print(f"   Response text: {response_text[:200]}")
+                return None, "specific"
+            
+            category = result.get("category")
+            
+            print(f"⚡ Tier 0.5 Unified: {category.upper()} detected")
+            
+            # === HANDLE EACH CATEGORY ===
+            
+            # 1. TASK REQUEST - needs full analysis
+            if category == "task_request":
+                query_scope = result.get("query_scope", "specific")
+                print(f"  → Proceeding to full analysis (query_scope: {query_scope})")
+                return None, query_scope  # Pass query_scope to Tier 1
+            
+            # 2. CONFIRMATION
+            if category == "confirmation":
+                print(f"  → User confirmed action")
+                return ConversationAnalysis(
+                        intent=ConversationIntent.READY_TO_EXECUTE,
+                        task_type=conversation_state.extracted_info.get("task_type", "task"),
+                        extracted_info=conversation_state.extracted_info,
+                        missing_fields=[],
+                        clarification_question=None,
+                        reasoning="User confirmed execution",
+                        execution_ready=True,
+                        execution_summary=conversation_state.execution_summary
+                    ), None  # No query_scope for non-task_request            # 3. CANCELLATION
+            if category == "cancellation":
+                has_compound = result.get("has_compound_cancel", False)
+                if has_compound:
+                    print(f"  → Compound cancel+task, proceeding to full analysis")
+                    return None, "specific"  # Compound cancel → default to specific
+                else:
+                    print(f"  → Pure cancellation")
+                    cancelled_task_info = conversation_state.extracted_info.copy()
+                    return ConversationAnalysis(
+                        intent=ConversationIntent.CANCELLED,
+                        task_type="cancellation",
+                        extracted_info={},
+                        missing_fields=[],
+                        clarification_question=None,
+                        reasoning=f"User cancelled request. Previous data: {cancelled_task_info}",
+                        execution_ready=False,
+                        execution_summary=None
+                    ), None  # No query_scope for non-task_request
+            
+            # 4. MODIFICATION
+            if category == "modification":
+                field = result.get("field_to_modify")
+                new_value = result.get("new_value")
+                
+                if field and new_value:
+                    print(f"  → Modified {field} to {new_value}")
+                    updated_info = conversation_state.extracted_info.copy()
+                    updated_info[field] = new_value
+                    
+                    if not conversation_state.missing_fields:
+                        return ConversationAnalysis(
+                            intent=ConversationIntent.READY_TO_EXECUTE,
+                            task_type=updated_info.get("task_type", "task"),
+                            extracted_info=updated_info,
+                            missing_fields=[],
+                            clarification_question=None,
+                            reasoning=f"Modified {field} to {new_value}",
+                            execution_ready=True,
+                            execution_summary=conversation_state.execution_summary
+                        ), None  # No query_scope for non-task_request
+                    else:
+                        return ConversationAnalysis(
+                            intent=ConversationIntent.NEEDS_CLARIFICATION,
+                            task_type=updated_info.get("task_type", "task"),
+                            extracted_info=updated_info,
+                            missing_fields=conversation_state.missing_fields,
+                            clarification_question=conversation_state.clarification_question,
+                            reasoning=f"Modified {field}, still need clarification",
+                            execution_ready=False,
+                            execution_summary=None
+                        ), None  # No query_scope for non-task_request
+                else:
+                    # Complex modification, needs full analysis
+                    print(f"  → Complex modification, proceeding to full analysis")
+                    return None, "specific"  # Complex modification → default to specific
+            
+            # 5. FOLLOWUP ANSWER
+            if category == "followup_answer":
+                extracted_value = result.get("extracted_value")
+                
+                if extracted_value and missing_field:
+                    print(f"  → Extracted {missing_field} = {extracted_value}")
+                    updated_info = conversation_state.extracted_info.copy()
+                    updated_info[missing_field] = extracted_value
+                    
+                    remaining_missing = [f for f in conversation_state.missing_fields if f != missing_field]
+                    
+                    if not remaining_missing:
+                        return ConversationAnalysis(
+                            intent=ConversationIntent.READY_TO_EXECUTE,
+                            task_type=updated_info.get("task_type", "task"),
+                            extracted_info=updated_info,
+                            missing_fields=[],
+                            clarification_question=None,
+                            reasoning="All required fields collected",
+                            execution_ready=True,
+                            execution_summary=conversation_state.execution_summary
+                        ), None  # No query_scope for non-task_request
+                    else:
+                        next_field = remaining_missing[0]
+                        return ConversationAnalysis(
+                            intent=ConversationIntent.NEEDS_CLARIFICATION,
+                            task_type=updated_info.get("task_type", "task"),
+                            extracted_info=updated_info,
+                            missing_fields=remaining_missing,
+                            clarification_question=f"Great! What should the {next_field} be?",
+                            reasoning=f"Extracted {missing_field}, still need {next_field}",
+                            execution_ready=False,
+                            execution_summary=None
+                        ), None  # No query_scope for non-task_request
+                else:
+                    # Complex answer, needs full analysis
+                    print(f"  → Complex answer, proceeding to full analysis")
+                    return None, "specific"  # Complex answer → default to specific
+            
+            # 6. CASUAL CONVERSATION
+            if category == "casual_conversation":
+                print(f"  → Casual conversation")
+                return ConversationAnalysis(
+                    intent=ConversationIntent.SMALL_TALK,
+                    task_type="conversation",
+                    extracted_info={},
+                    missing_fields=[],
+                    clarification_question=None,
+                    reasoning="User is engaging in casual conversation",
+                    execution_ready=False,
+                    execution_summary=None
+                ), None  # No query_scope for non-task_request
+            
+            # 7. UNINTELLIGIBLE
+            if category == "unintelligible":
+                print(f"  → Unintelligible input")
+                return ConversationAnalysis(
+                    intent=ConversationIntent.NEEDS_CLARIFICATION,
+                    task_type="unknown",
+                    extracted_info={},
+                    missing_fields=["all"],
+                    clarification_question="I didn't quite catch that. Could you rephrase what you'd like me to help with?",
+                    reasoning="User input is not intelligible",
+                    execution_ready=False,
+                    execution_summary=None
+                ), None  # No query_scope for non-task_request
+            
+        except Exception as e:
+            print(f"⚠️ Unified quick check failed: {e}, falling back to full analysis")
+            return None, "specific"  # Fallback: default to specific
+        
+        # Default: proceed to full analysis
+        return None, "specific"  # Fallback: default to specific
+    
+    
+    def _quick_help_check(self, user_message: str, conversation_state: ConversationState) -> Optional[ConversationAnalysis]:
+        """
+        Detect help/tutorial requests and provide structured guidance.
+        Uses pattern matching for instant response without LLM call.
+        
+        Args:
+            user_message: Current user input
+            conversation_state: Previous conversation context
+            
+        Returns:
+            ConversationAnalysis with help response, or None if not a help request
+        """
+        help_keywords = ["help", "how", "guide", "tutorial", "teach me", "explain", "instructions", "show me how"]
+        user_lower = user_message.lower().strip()
+        
+        # Check if this is a help request
+        if not any(keyword in user_lower for keyword in help_keywords):
+            return None
+        
+        # Check if it's a general help request (not task-specific like "how do I send email")
+        task_indicators = ["send", "search", "find", "create", "delete", "schedule", "reply"]
+        is_general_help = not any(task in user_lower for task in task_indicators)
+        
+        if is_general_help:
+            print(f"🔍 Quick help: General help request detected")
+            
+            help_response = """I can help you with several tasks:
+
+📧 **Email Management:**
+- Send emails to anyone
+- Search your inbox
+- Reply to emails
+- Draft emails for later
+
+📄 **Document Creation:**
+- Create Google Docs
+- Edit existing documents
+- Add content to documents
+
+📅 **Calendar (coming soon):**
+- Schedule meetings
+- Check availability
+
+**To get started, try saying:**
+- "Send an email to john@example.com"
+- "Search my emails for invoices from last week"
+- "Create a document about project planning"
+
+What would you like to do?"""
+            
+            return ConversationAnalysis(
+                intent=ConversationIntent.SMALL_TALK,
+                task_type="help_request",
+                extracted_info={},
+                missing_fields=[],
+                clarification_question=help_response,
+                reasoning="User requested general help",
+                execution_ready=False,
+                execution_summary=None
+            )
+        
+        # Task-specific help, let full analysis handle it
+        return None
+    
+    def _quick_status_check(self, user_message: str, conversation_state: ConversationState) -> Optional[ConversationAnalysis]:
+        """
+        Detect status check requests after execution and provide quick update.
+        Uses pattern matching + execution history lookup.
+        
+        Args:
+            user_message: Current user input
+            conversation_state: Previous conversation context
+            
+        Returns:
+            ConversationAnalysis with status response, or None if not a status check
+        """
+        status_keywords = ["status", "done", "finished", "complete", "did it work", "success", "result", "what happened"]
+        user_lower = user_message.lower().strip()
+        
+        # Check if this is a status request
+        if not any(keyword in user_lower for keyword in status_keywords):
+            return None
+        
+        # Only respond if we have execution history
+        if conversation_state.executed_count == 0:
+            return None
+        
+        print(f"🔍 Quick status: Status check request detected")
+        
+        last_exec = conversation_state.execution_history[-1] if conversation_state.execution_history else {}
+        status = last_exec.get('status', 'unknown')
+        message = last_exec.get('message', 'No details available')
+        task = last_exec.get('task', 'the task')
+        
+        if status == "success":
+            status_response = f"✅ **Last execution: Successful**\n\n{message}\n\nAnything else you'd like to do?"
+        elif status == "error":
+            status_response = f"❌ **Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again or do something else?"
+        else:
+            status_response = f"📊 **Last execution status:** {status}\n\n{message}"
+        
+        return ConversationAnalysis(
+            intent=ConversationIntent.SMALL_TALK,
+            task_type="status_check",
+            extracted_info={},
+            missing_fields=[],
+            clarification_question=status_response,
+            reasoning="User checking execution status",
+            execution_ready=False,
+            execution_summary=None
+        )
+    
     def analyze_request(
         self, 
         user_message: str, 
-        conversation_state: ConversationState
+        conversation_state: ConversationState,
+        state_id: str = "default"
     ) -> ConversationAnalysis:
         """
         Analyze user message to determine intent and completeness.
@@ -107,93 +784,136 @@ class ConversationalAgent:
         Args:
             user_message: Current user input
             conversation_state: Previous conversation context
+            state_id: Conversation identifier for memory manager
             
         Returns:
             ConversationAnalysis with intent, missing fields, and questions
         """
         
-        # Build conversation history for context
-        history_text = ""
-        if conversation_state.conversation_history:
-            history_text = "PREVIOUS CONVERSATION:\n"
-            for turn in conversation_state.conversation_history[-5:]:  # Last 5 turns
-                history_text += f"{turn['role'].upper()}: {turn['content']}\n"
-            history_text += "\n"
+        # === TIER 0: PATTERN-BASED QUICK CHECKS (NO LLM - INSTANT) ===
         
-        # Add execution context if available
+        # Check for greetings first (most common)
+        greeting_result = self._quick_greeting_check(user_message)
+        if greeting_result is not None:
+            return greeting_result
+        
+        # Check for capability questions (uses cached summary)
+        capability_result = self._quick_capability_list_check(user_message)
+        if capability_result is not None:
+            return capability_result
+        
+        # Check for repeat requests
+        repeat_result = self._quick_repeat_check(user_message, conversation_state, state_id)
+        if repeat_result is not None:
+            return repeat_result
+        
+        # Check for example requests
+        examples_result = self._quick_examples_check(user_message)
+        if examples_result is not None:
+            return examples_result
+        
+        # Quick help check (pattern-based, instant response)
+        help_result = self._quick_help_check(user_message, conversation_state)
+        if help_result is not None:
+            return help_result
+        
+        # Quick status check (pattern-based + history lookup)
+        status_result = self._quick_status_check(user_message, conversation_state)
+        if status_result is not None:
+            return status_result
+        
+        # === TIER 0.5: UNIFIED LIGHTWEIGHT LLM CHECK (~100-250 TOKENS) ===
+        
+        # Single unified LLM call handles: confirmation, cancellation, modification,
+        # followup answers, casual conversation, unintelligible input
+        # Also classifies query_scope for task_request (general vs specific)
+        unified_result, query_scope_hint = self._unified_quick_check(user_message, conversation_state, state_id)
+        if unified_result is not None:
+            return unified_result
+        
+        # === TIER 1: FULL TASK ANALYSIS (~500-1500 TOKENS) ===
+        print(f"🔍 Performing full task analysis with capabilities...")
+        
+        # Get memory manager and build context using it
+        memory_manager = self._get_memory_manager(state_id, conversation_state.memory_state)
+        
+        # Get context from memory manager (includes summary, entities, recent messages)
+        history_text = memory_manager.get_context_for_llm()
+        if history_text:
+            history_text = f"{history_text}\n\n"
+        
+        # Add execution context if available (helps LLM understand post-execution modifications)
         exec_context = ""
         if conversation_state.executed_count > 0:
-            exec_context = f"\nEXECUTION CONTEXT:\n"
-            exec_context += f"- This conversation has executed {conversation_state.executed_count} task(s)\n"
-            exec_context += f"- Last execution: {conversation_state.last_executed_at or 'unknown'}\n"
-            if conversation_state.execution_history:
-                last_exec = conversation_state.execution_history[-1]
-                exec_context += f"- Last status: {last_exec.get('status', 'unknown')}\n"
-                exec_context += f"- Last message: {last_exec.get('message', 'N/A')}\n"
-            exec_context += "- User may be asking to modify, redo, or continue from previous execution\n\n"
+            last_exec = conversation_state.execution_history[-1] if conversation_state.execution_history else {}
+            exec_context = (
+                f"\nEXECUTION CONTEXT:\n"
+                f"- Executed {conversation_state.executed_count} task(s) | "
+                f"Last: {conversation_state.last_executed_at or 'unknown'} | "
+                f"Status: {last_exec.get('status', 'unknown')} | "
+                f"Result: {last_exec.get('message', 'N/A')}\n"
+                f"- User may be modifying/redoing previous execution\n\n"
+            )
+            
+        # Use query_scope from Tier 0.5 if available (for task_request fallthrough)
+        # Otherwise use pattern-based fallback
+        if query_scope_hint is None:
+            # Fallback: Pattern-based check for general capability questions
+            general_patterns = ["what can you do", "capabilities", "features", "what tasks", "show me everything"]
+            query_scope = "general" if any(pattern in user_message.lower() for pattern in general_patterns) else "specific"
+        else:
+            # Use query_scope from Tier 0.5 LLM classification
+            query_scope = query_scope_hint
+            print(f"🎯 Using query_scope from Tier 0.5: {query_scope}")
+        
+        # Choose capabilities based on query scope
+        if query_scope == "general":
+            # Show ALL capabilities for general questions
+            capabilities_to_show = self.full_capabilities_summary 
+            print(f"🔍 Query classified as GENERAL - showing all capabilities")
+        else:
+            # Filter capabilities to relevant agents for specific tasks
+            relevant_agents = identify_relevant_agents(user_message)
+            capabilities_to_show = self._build_capabilities_summary(relevant_agents)
+            print(f"🔍 Query classified as SPECIFIC - filtered to agents: {relevant_agents}")
         
         # Build system prompt with capabilities
-        system_prompt = f"""You are a conversational AI assistant that validates and clarifies user requests before executing them.
+        system_prompt = f"""Validate and clarify user requests before execution. Check feasibility against AVAILABLE CAPABILITIES, extract required fields, ask specific questions for missing info.
 
 AVAILABLE CAPABILITIES:
-{self.capabilities_summary}
+{capabilities_to_show}
 
-YOUR ROLE:
-1. Understand what the user wants to do
-2. Check if we have the tools to do it (refer to AVAILABLE CAPABILITIES above)
-3. Extract all necessary information from the conversation
-4. Identify required fields from the tool definitions above
-5. Ask clarification questions if information is missing
-6. Explain limitations if task is not feasible
-7. Suggest alternatives for complex or infeasible tasks
+CONTEXT RULES:
+- Post-execution: Conversation continues. Treat modification requests as NEW tasks
+- Compound cancel ("cancel X and do Y"): Extract ONLY new task (Y), ignore old context, set intent based on new task
 
-IMPORTANT CONTEXT ABOUT EXECUTION:
-- After successful execution, the conversation continues (is NOT deleted)
-- If user asks to modify/redo a task that was just executed, treat it as a NEW request
-- Check if execution_history has recent entries - if so, acknowledge the previous execution
-- If executed_count > 0, user might be asking for modifications or re-runs
+INTENT CLASSIFICATION:
+- needs_clarification: Missing required fields
+- not_feasible: No matching capability (explain why, suggest alternatives)
+- too_complex: Multi-step/unclear (break down, suggest simpler approach)
+- ready_to_execute: All fields present
+- small_talk: Non-task conversation
 
-ANALYSIS INSTRUCTIONS:
-1. Classify intent: needs_clarification, not_feasible, too_complex, ready_to_execute, or small_talk
-2. Extract all information mentioned so far (combine current + history)
-3. List missing required fields
-4. If missing fields exist, generate a helpful clarification question
-5. If task is too complex, break it down or suggest alternatives
-6. If not feasible, explain why and suggest what IS possible
-7. Provide execution summary if ready to execute
-
-Return your analysis as JSON with this structure:
+JSON OUTPUT:
 {{
-    "intent": "needs_clarification | not_feasible | too_complex | ready_to_execute | small_talk",
-    "task_type": "send_email | search_emails | reply_to_email | manage_calendar | etc",
-    "extracted_info": {{
-        "recipient": "john@example.com",
-        "subject": "Meeting notes",
-        "body": "..."
-    }},
-    "missing_fields": ["recipient", "subject"],
-    "clarification_question": "Who would you like to send this email to?",
-    "reasoning": "User wants to send an email but didn't specify recipient",
-    "suggested_alternatives": ["Search for similar emails first", "Create a draft instead"],
+    "intent": "needs_clarification|not_feasible|too_complex|ready_to_execute|small_talk",
+    "task_type": "send_email|search_emails|reply_to_email|etc",
+    "extracted_info": {{"recipient": "john@example.com", "subject": "Meeting"}},
+    "missing_fields": ["recipient"],
+    "clarification_question": "Who should I send this to?",
+    "reasoning": "1 sentence explanation",
+    "suggested_alternatives": ["Alternative 1", "Alternative 2"],
     "execution_ready": false,
-    "execution_summary": "Send email to john@example.com with subject 'Meeting notes'"
+    "execution_summary": "Send email to john@example.com about Meeting"
 }}
 
-Be conversational, helpful, and specific in your clarification questions.
-Examples of good questions:
-- "Who would you like to send this email to?"
-- "What should the subject line be?"
-- "When should this meeting take place? Please provide a date and time."
-- "I can search emails by sender, subject, or date. What would you like to search for?"
-
-Examples of bad questions:
-- "What are the details?" (too vague)
-- "Please provide all information." (not specific)
+CLARIFICATION QUESTIONS - Be specific:
+✓ "Who would you like to send this email to?"
+✓ "What should the subject line be?"
+✗ "What are the details?" (too vague)
 """
 
-        user_prompt = f"""{history_text}{exec_context}CURRENT USER MESSAGE: {user_message}
-
-Analyze this request and determine if we have enough information to execute it."""
+        user_prompt = f"""{history_text}{exec_context}CURRENT USER MESSAGE: {user_message}"""
 
         # Call LLM with timeout and retry
         try:
@@ -272,7 +992,9 @@ Analyze this request and determine if we have enough information to execute it."
     def process_message(
         self, 
         user_message: str, 
-        conversation_state: Optional[ConversationState] = None
+        conversation_state: Optional[ConversationState] = None,
+        state_id: str = "default",
+        auto_save: bool = False
     ) -> tuple[str, ConversationState]:
         """
         Process a user message and return response + updated state.
@@ -280,39 +1002,97 @@ Analyze this request and determine if we have enough information to execute it."
         Args:
             user_message: User's input
             conversation_state: Previous conversation state (None for new conversation)
+            state_id: Unique conversation identifier for memory management (thread_id)
+            auto_save: If True, automatically save to database (for thread mode)
             
         Returns:
             Tuple of (response_text, updated_conversation_state)
         """
         # Initialize state if new conversation
-        if conversation_state is None:
-            conversation_state = ConversationState()
+        # if conversation_state is None:
+        #     conversation_state = ConversationState()
         
-        # Add user message to history
-        conversation_state.conversation_history.append({
-            "role": "user",
-            "content": user_message
-        })
+        # Get or create memory manager for this conversation
+        memory_manager = self._get_memory_manager(state_id, conversation_state.memory_state if conversation_state else None)
+        
+        # Add user message to memory manager (automatically handles summarization)
+        memory_manager.add_message("user", user_message)
+        
+        # Also store in messages table if this is a persistent thread
+        if auto_save and state_id != "default":
+            self.thread_manager.add_message(state_id, "user", user_message)
         
         # Analyze the request
-        analysis = self.analyze_request(user_message, conversation_state)
+        analysis = self.analyze_request(user_message, conversation_state, state_id)
         
-        # Update state with analysis (merge carefully to avoid overwriting valid data)
+        # Detect compound "cancel + new task" scenario
+        # Check if user message has both cancel words AND task keywords
+        cancel_keywords = ["cancel", "nevermind", "forget", "stop"]
+        task_keywords = ["send", "search", "create", "schedule", "find", "draft", "reply", "add", "edit", "delete", "update"]
+        user_lower = user_message.lower()
+        
+        has_cancel = any(keyword in user_lower for keyword in cancel_keywords)
+        has_task = any(keyword in user_lower for keyword in task_keywords)
+        is_compound_cancel = has_cancel and has_task and analysis.intent != ConversationIntent.CANCELLED
+        
+        if is_compound_cancel:
+            # User said "cancel X and do Y" in one message
+            # Clear old state and ONLY use the new task data from analysis
+            print(f"🔄 Compound cancel+task detected - clearing old state, using only new task data")
+            conversation_state.extracted_info = {}  # Clear everything first
+        
+        # Handle cancellation first - clear everything!
+        if analysis.intent == ConversationIntent.CANCELLED:
+            conversation_state.extracted_info = {}  # ✅ Empty for multi-task scenarios
+            conversation_state.missing_fields = []
+            conversation_state.clarification_question = None
+            conversation_state.ready_for_execution = False
+            conversation_state.execution_summary = None
+        else:
+            # Update extracted information (merge new with existing)
+            for key, value in analysis.extracted_info.items():
+                if value is not None and value != "":
+                    conversation_state.extracted_info[key] = value
+            
+            # Update other state fields
+            conversation_state.missing_fields = analysis.missing_fields
+            conversation_state.clarification_question = analysis.clarification_question
+            conversation_state.ready_for_execution = analysis.execution_ready
+            conversation_state.execution_summary = analysis.execution_summary
+        
+        # Update state with analysis intent
         conversation_state.intent = analysis.intent
-        
-        # Only update extracted_info with non-empty values from analysis
-        for key, value in analysis.extracted_info.items():
-            if value is not None and value != "":
-                conversation_state.extracted_info[key] = value
-        
-        conversation_state.missing_fields = analysis.missing_fields
-        conversation_state.clarification_question = analysis.clarification_question
-        conversation_state.ready_for_execution = analysis.execution_ready
-        conversation_state.execution_summary = analysis.execution_summary
         
         # Generate response based on intent
         if analysis.intent == ConversationIntent.SMALL_TALK:
-            response = "I'm here to help you manage your emails, calendar, and documents. What would you like me to do?"
+            # Check if this is a cancellation
+            if analysis.task_type == "cancellation":
+                response = "👍 No problem! Request cancelled. Let me know if you need anything else."
+            else:
+                response = "I'm here to help you manage your emails, calendar, and documents. What would you like me to do?"
+        
+        elif analysis.intent == ConversationIntent.CANCELLED:
+            response = "👍 No problem! Request cancelled.\n\n"
+            
+            # Extract cancelled info from reasoning field for user feedback
+            # reasoning format: "User cancelled request. Previous data: {...}"
+            import re
+            if "Previous data:" in analysis.reasoning:
+                try:
+                    # Extract the dict from reasoning string
+                    match = re.search(r"Previous data: ({.*})", analysis.reasoning)
+                    if match:
+                        cancelled_info = eval(match.group(1))  # Safe here since we created it
+                        if cancelled_info:
+                            response += "**Cancelled request:**\n"
+                            for key, value in cancelled_info.items():
+                                if key != "task_type":  # Don't show internal task_type
+                                    response += f"- {key}: {value}\n"
+                            response += "\n"
+                except:
+                    pass  # If parsing fails, just show generic message
+            
+            response += "What would you like to do next?"
         
         elif analysis.intent == ConversationIntent.NOT_FEASIBLE:
             response = f"❌ I'm unable to help with that request.\n\n"
@@ -351,17 +1131,39 @@ Analyze this request and determine if we have enough information to execute it."
         else:
             response = "I'm processing your request..."
         
-        # Add assistant response to history
-        conversation_state.conversation_history.append({
-            "role": "assistant",
-            "content": response
-        })
+        # Add assistant response to memory manager
+        memory_manager.add_message("assistant", response)
+        
+        # Also store in messages table if this is a persistent thread
+        if auto_save and state_id != "default":
+            self.thread_manager.add_message(state_id, "assistant", response)
+        
+        # Save memory state back to conversation_state for persistence
+        self._save_memory_to_state(conversation_state, state_id)
+        
+        # Auto-save to database if requested (for thread mode)
+        if auto_save and state_id != "default":
+            self._save_thread_to_db(state_id, conversation_state)
         
         return response, conversation_state
     
     def should_execute(self, conversation_state: ConversationState) -> bool:
         """Check if conversation is ready for execution"""
         return conversation_state.ready_for_execution
+    
+    def get_memory_stats(self, conversation_state: ConversationState, state_id: str = "default") -> Dict[str, Any]:
+        """
+        Get memory statistics for debugging and monitoring.
+        
+        Args:
+            conversation_state: Current conversation state
+            state_id: Conversation identifier
+            
+        Returns:
+            Dictionary with memory stats
+        """
+        memory_manager = self._get_memory_manager(state_id, conversation_state.memory_state)
+        return memory_manager.get_stats()
     
     def build_supervisor_input(self, conversation_state: ConversationState) -> str:
         """
@@ -577,6 +1379,310 @@ Please summarize what was accomplished and what data is now available in a frien
                 return f"✅ Successfully completed: {original_request}\n\nResults:\n{context_text}"
             else:
                 return f"❌ Failed to complete: {original_request}\n\nError: {execution_message}"
+    
+    # =============================================================================
+    # THREAD MANAGEMENT METHODS
+    # =============================================================================
+    
+    def create_new_thread(
+        self, 
+        user_id: str, 
+        initial_message: Optional[str] = None,
+        title: Optional[str] = None,
+        tags: Optional[List[str]] = None
+    ) -> tuple[str, ConversationState, Optional[str]]:
+        """
+        Create a new conversation thread with persistent storage.
+        
+        Args:
+            user_id: Unique identifier for the user
+            initial_message: Optional first message to process
+            title: Optional custom title (will be auto-generated if not provided)
+            tags: Optional tags for categorization
+            
+        Returns:
+            Tuple of (thread_id, initial_conversation_state, bot_response)
+            bot_response is None if no initial_message provided
+        """
+        # Create thread in database
+        thread_metadata = self.thread_manager.create_thread(
+            user_id=user_id,
+            title=title,  # Will be auto-generated if None
+            tags=tags or []
+        )
+        thread_id = thread_metadata.thread_id
+        
+        # Initialize conversation state
+        conversation_state = ConversationState()
+        bot_response = None
+        
+        # Process initial message if provided
+        if initial_message:
+            bot_response, conversation_state = self.process_message(
+                user_message=initial_message,
+                conversation_state=conversation_state,
+                state_id=thread_id,  # Use thread_id as state_id for consistency
+                auto_save=True  # Auto-save to database
+            )
+            
+            # Auto-generate title from first message if not provided
+            if not title:
+                new_title = self.thread_manager.auto_generate_title(initial_message)
+                self.thread_manager.update_thread(thread_id, title=new_title)
+        else:
+            # Save initial empty state
+            self._save_thread_to_db(thread_id, conversation_state)
+        
+        print(f"✅ Created new thread: {thread_id} for user: {user_id}")
+        
+        return thread_id, conversation_state, bot_response
+    
+    def continue_thread(
+        self,
+        thread_id: str,
+        new_message: str
+    ) -> tuple[str, ConversationState]:
+        """
+        Continue an existing conversation thread.
+        
+        Args:
+            thread_id: Thread identifier
+            new_message: New user message to process
+            
+        Returns:
+            Tuple of (response, updated_conversation_state)
+        """
+        # Load thread state from database
+        conversation_state = self._load_thread_from_db(thread_id)
+        
+        if conversation_state is None:
+            raise ValueError(f"Thread {thread_id} not found")
+        
+        # Process the new message with auto-save enabled
+        response, conversation_state = self.process_message(
+            user_message=new_message,
+            conversation_state=conversation_state,
+            state_id=thread_id,  # Use thread_id as state_id
+            auto_save=True  # Auto-save to database
+        )
+        
+        return response, conversation_state
+    
+    def list_user_threads(
+        self,
+        user_id: str,
+        status: Optional[str] = "active",
+        limit: int = 50,
+        offset: int = 0
+    ) -> List[Dict[str, Any]]:
+        """
+        List all threads for a user.
+        
+        Args:
+            user_id: User identifier
+            status: Filter by status (active, archived, all)
+            limit: Maximum number of threads to return
+            offset: Offset for pagination
+            
+        Returns:
+            List of thread metadata dictionaries
+        """
+        threads = self.thread_manager.list_threads(
+            user_id=user_id,
+            status=status,
+            limit=limit,
+            offset=offset
+        )
+        
+        # Pydantic v2
+        return [thread.model_dump() for thread in threads]
+    
+    def get_thread_metadata(self, thread_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get metadata for a specific thread.
+        
+        Args:
+            thread_id: Thread identifier
+            
+        Returns:
+            Thread metadata dictionary or None if not found
+        """
+        thread = self.thread_manager.get_thread(thread_id)
+        if not thread:
+            return None
+        
+        # Pydantic v2
+        return thread.model_dump()
+    
+    def get_thread_messages(
+        self,
+        thread_id: str,
+        limit: int = 50,
+        offset: int = 0
+    ) -> Optional[List[Dict[str, Any]]]:
+        """
+        Get full conversation history from messages table.
+        
+        Args:
+            thread_id: Thread identifier
+            limit: Maximum messages to return (default: 50)
+            offset: Pagination offset (default: 0)
+            
+        Returns:
+            List of message dictionaries with role, content, and created_at
+        """
+        # Get messages from database table (not memory_states)
+        messages = self.thread_manager.get_messages(thread_id, limit=limit, offset=offset)
+        
+        if messages is None:
+            return None
+        
+        return messages
+    
+    def update_thread_metadata(
+        self,
+        thread_id: str,
+        title: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        status: Optional[str] = None
+    ) -> bool:
+        """
+        Update thread metadata.
+        
+        Args:
+            thread_id: Thread identifier
+            title: New title (optional)
+            tags: New tags (optional)
+            status: New status (optional)
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        return self.thread_manager.update_thread(
+            thread_id=thread_id,
+            title=title,
+            tags=tags,
+            status=status
+        )
+    
+    def archive_thread(self, thread_id: str) -> bool:
+        """
+        Archive a thread (soft delete).
+        
+        Args:
+            thread_id: Thread identifier
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        return self.thread_manager.archive_thread(thread_id)
+    
+    def delete_thread(self, thread_id: str, hard_delete: bool = False) -> bool:
+        """
+        Delete a thread.
+        
+        Args:
+            thread_id: Thread identifier
+            hard_delete: If True, permanently delete. If False, archive only.
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if hard_delete:
+            return self.thread_manager.delete_thread(thread_id, hard_delete=True)
+        else:
+            return self.archive_thread(thread_id)
+    
+    def search_threads(
+        self,
+        user_id: str,
+        query: str,
+        limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """
+        Search user's threads by title.
+        
+        Args:
+            user_id: User identifier
+            query: Search query
+            limit: Maximum results
+            
+        Returns:
+            List of matching thread metadata
+        """
+        threads = self.thread_manager.search_threads(
+            user_id=user_id,
+            query=query,
+            limit=limit
+        )
+        
+        # Pydantic v2
+        return [thread.model_dump() for thread in threads]
+    
+    def _save_thread_to_db(self, thread_id: str, conversation_state: ConversationState) -> None:
+        """
+        Save conversation state and memory to database.
+        
+        Args:
+            thread_id: Thread identifier
+            conversation_state: Current conversation state
+        """
+        # Save conversation state
+        self.thread_manager.save_thread_state(thread_id, conversation_state)
+        
+        # Save memory state if memory manager exists
+        if thread_id in self.memory_managers:
+            memory_data = self.memory_managers[thread_id].export_memory()
+            self.thread_manager.save_memory_state(thread_id, memory_data)
+            
+            # Update thread message count
+            message_count = len(memory_data.get("raw_history", []))
+            
+            # Update last message preview
+            raw_history = memory_data.get("raw_history", [])
+            last_message_preview = None
+            if raw_history:
+                last_msg = raw_history[-1]
+                content = last_msg.get("content", "")
+                # Truncate to 100 chars
+                last_message_preview = content[:100] + "..." if len(content) > 100 else content
+            
+            self.thread_manager.update_thread(
+                thread_id=thread_id,
+                message_count=message_count,
+                last_message_preview=last_message_preview
+            )
+    
+    def _load_thread_from_db(self, thread_id: str) -> Optional[ConversationState]:
+        """
+        Load conversation state and memory from database.
+        
+        Args:
+            thread_id: Thread identifier
+            
+        Returns:
+            ConversationState or None if not found
+        """
+        # Load conversation state
+        state_data = self.thread_manager.load_thread_state(thread_id)
+        
+        if state_data is None:
+            return None
+        
+        # Reconstruct ConversationState from dict
+        conversation_state = ConversationState(**state_data)
+        
+        # Load memory state
+        memory_data = self.thread_manager.load_memory_state(thread_id)
+        
+        if memory_data:
+            # Store memory data in conversation state
+            conversation_state.memory_state = memory_data
+            
+            # Initialize memory manager with loaded data
+            self._get_memory_manager(thread_id, memory_data)
+        
+        return conversation_state
 
 
 # Example usage and testing

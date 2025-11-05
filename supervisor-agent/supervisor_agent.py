@@ -57,7 +57,7 @@ llm = ChatOpenAI(
 conversational_agent = ConversationalAgent(
     openai_api_key=OPENAI_API_KEY,
     model=LLM_MODEL,
-    temperature=0.0,  # Lower temperature for more consistent clarifications
+    temperature=0.2,  # Lower temperature for more consistent clarifications
 )
 
 # In-memory conversation storage (replace with Redis/DB in production)
@@ -77,6 +77,8 @@ class ConversationRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None  # For continuing conversations
     auto_execute: bool = False  # If true, auto-execute when ready
+    user_id: Optional[str] = None  # Optional: auto-create persistent thread
+    persist: bool = False  # If true with user_id, create persistent thread
 
 
 class ConversationResponse(BaseModel):
@@ -174,414 +176,6 @@ def remove_pending_action(action_id: str):
     """Remove completed action"""
     if action_id in PENDING_ACTIONS:
         del PENDING_ACTIONS[action_id]
-
-
-# Supervisor Node - Creates the execution plan
-def supervisor_node(state: SharedState) -> SharedState:
-    """
-    STEP 1: Supervisor generates a plan based on user input
-    Enhanced to support multi-step workflows with data dependencies
-    """
-    print("\n" + "=" * 60)
-    print("🧠 SUPERVISOR NODE - Planning Phase")
-    print("=" * 60)
-
-    user_input = state["input"]
-    context = state.get("context", {})
-    print(f"📥 User Input: {user_input}\n")
-
-    # Extract date info from context
-    today_date = context.get("today_date", "")
-    yesterday_date = context.get("yesterday_date", "")
-    print(f"📅 Context dates: today={today_date}, yesterday={yesterday_date}")
-
-    # OPTIMIZATION: Filter relevant agents first (cheap)
-    relevant_agents = identify_relevant_agents(user_input)
-
-    print(f"📌 Relevant agents: {relevant_agents}")
-
-    # Get only the needed capabilities
-    filtered_capabilities = get_filtered_capabilities(relevant_agents)
-
-    # Now send to LLM with reduced context
-    capability_summary = json.dumps(filtered_capabilities, indent=2)
-    schema_text = json.dumps(PLAN_SCHEMA, indent=2)
-
-    system_prompt = f"""You are the Supervisor agent creating multi-step execution plans.
-
-     === GOOGLE DOCS AGENT - TEMPLATE WORKFLOW ===
-
-IMPORTANT: Google Docs Agent now supports USER TEMPLATES!
-
-When user wants to create a document, follow this workflow:
-
-STEP 1: Check for Template
-- If user mentions "template", "my format", "use my MOM" → Template workflow
-- If user just asks to "create document" → Ask: "Do you have a template in your Google Drive for this?"
-
-STEP 2A: If User Has Template (PREFERRED):
-1. Create plan step: list_my_docs(search_query="[keyword from user request]")
-   Example: If user says "MOM template" → search_query="MOM"
-   
-2. After templates are found, user will select one or you identify it
-   
-3. Create plan step: extract_template_format(template_document_id="[id from previous step]")
-   This will return placeholders like: ["[DATE]", "[COMPANY_NAME]", "[CHAIRMAN_NAME]"]
-
-4. Parse user input to extract values for placeholders
-   Example: "SafeExpressOps meeting on Jan 28" contains:
-   - COMPANY_NAME = "SafeExpressOps"
-   - DATE = "Jan 28"
-   
-5. Create plan step: create_from_my_template(
-        template_document_id="[id]",
-        new_title="[descriptive title]",
-        placeholders="{{JSON string with placeholder values}}"
-    )
-
-STEP 2B: If User Doesn't Have Template:
-- Create plan step for blank document creation
-- Or suggest user creates a template first
-
-
-=== PLACEHOLDER KEY MAPPING RULES (CRITICAL!) ===
-
-**MOST IMPORTANT: Placeholder keys in the JSON MUST exactly match the template placeholder names (without brackets).**
-
-PROCESS:
-1. extract_template_format returns: ["[MEETING_NUMBER]", "[COMPANY_NAME]", "[DATE]", "[CHAIRMAN_NAME]"]
-2. Strip brackets to get keys: "MEETING_NUMBER", "COMPANY_NAME", "DATE", "CHAIRMAN_NAME"
-3. Use these EXACT keys (not "Meeting Number", not "Company Name")
-
-MAPPING EXAMPLES:
-- Template has: "[COMPANY_NAME]" → Use key: "COMPANY_NAME" (not "Company Name")
-- Template has: "[DATE]" → Use key: "DATE" (not "Date")
-- Template has: "[CHAIRMAN_NAME]" → Use key: "CHAIRMAN_NAME" (not "Chairman Name")
-- Template has: "[MEETING_NUMBER]" → Use key: "MEETING_NUMBER" (not "Meeting Number")
-
-❌ WRONG (will NOT replace placeholders):
-'{{"Meeting Number": "2025-01", "Company Name": "SafeExpressOps", "Date": "Jan 28"}}'
-
-✅ CORRECT (will replace placeholders):
-'{{"MEETING_NUMBER": "2025-01", "COMPANY_NAME": "SafeExpressOps", "DATE": "Jan 28"}}'
-
-COMPLETE EXAMPLE:
-User: "Create MOM for SafeExpressOps, meeting 2025-01, Jan 28 2025 at 2PM in La Trinidad, chairman Lance, year 2024"
-Template placeholders: ["[MEETING_NUMBER]", "[COMPANY_NAME]", "[DATE]", "[TIME]", "[ADDRESS]", "[CHAIRMAN_NAME]", "[YEAR]"]
-
-Correct placeholders JSON:
-'{{"MEETING_NUMBER": "2025-01", "COMPANY_NAME": "SafeExpressOps", "DATE": "January 28, 2025", "TIME": "2:00 PM", "ADDRESS": "La Trinidad, Benguet, Philippines", "CHAIRMAN_NAME": "Lance Joshua Hilario", "YEAR": "2024"}}'
-
-=== AGENT CAPABILITIES ===
-
-docs_agent tools:
-- list_my_docs(search_query) - Find templates in Google Drive
-- extract_template_format(template_document_id) - Analyze template structure
-- create_from_my_template(template_document_id, new_title, placeholders) - Create from template
-- create_doc(title) - Create blank document
-- add_text(document_id, text) - Add text to document
-- read_doc(document_id) - Read document content
-- share_doc(document_id, email, role) - Share document
-- edit_doc(document_id, old_text, new_text) - Edit document
-- update_doc(document_id, new_content) - Replace document content
-
-gmail_agent tools:
-- search_emails, send_email, read_email, etc.
-
-calendar_agent tools:
-- list_events, create_event, update_event, delete_event
-
-Sheets_agent tools:
-- create_sheet, read_sheet, update_sheet, delete_sheet, append_rows, update_by_date_match
-
-Route to mapping_agent + sheets_agent when:
-- User wants to upload/parse Excel/CSV files to Google Sheets
-- User mentions "map columns", "smart mapping", "upload to sheets"
-- Phrases like "Parse Excel file and upload"
-
-=== ROUTING RULES ===
-
-Route to docs_agent when:
-- User wants to create/edit/read documents
-- User mentions: "template", "my format", "use my MOM", "use my template"
-- User references existing documents
-- Document operations needed
-
-Route to gmail_agent when:
-- Email operations
-
-Route to calendar_agent when:
-- Calendar/scheduling operations
-
-=== CRITICAL RULES FOR TEMPLATE WORKFLOW ===
-
-1. **Always check for templates first** when user wants to create documents
-2. **Template workflow requires 3 steps** - this is NORMAL and EXPECTED:
-   - Step 1: Find template (list_my_docs)
-   - Step 2: Analyze template (extract_template_format)
-   - Step 3: Create document (create_from_my_template)
-   
-3. **Use {{{{ variable_name }}}} syntax** for variable substitution
-
-4. **Parse user input intelligently** to extract placeholder values:
-   - Company names: "SafeExpressOps", "Acme Corp"
-   - Dates: "Jan 28, 2025", "January 28, 2025"
-   - Names: "Lance Joshua Hilario", "John Doe"
-   - Times: "2PM", "2:00 PM", "14:00"
-   - Locations: "La Trinidad, Benguet", "Unit 1234, Manila"
-
-5. **placeholders parameter must be JSON string**:
-   Correct: '{{"DATE": "Jan 28", "NAME": "Lance"}}'
-   Wrong: {{"DATE": "Jan 28", "NAME": "Lance"}} (not a string)
-
-6. **CRITICAL: Use EXACT placeholder keys from template (without brackets)**
-   If template has "[COMPANY_NAME]", use key "COMPANY_NAME" (not "Company Name")
-
-=== EXCEL/CSV TO GOOGLE SHEETS WORKFLOW - DATE-BASED UPDATE (CRITICAL) ===
-
-**CONTEXT:** Google Sheets already has Wee, Week, Date, Day columns pre-filled for entire month.
-**GOAL:** Match dates from Excel to existing rows in Sheets, update ONLY operational columns.
-**DO NOT APPEND** - only UPDATE existing rows by date match.
-
-MANDATORY 5-STEP WORKFLOW (DO NOT SKIP ANY STEP):
-
-STEP 1: Parse Excel file
-{{
-  "agent": "mapping_agent",
-  "tool": "parse_file",
-  "inputs": {{
-    "file_content": "[EXACT file path from user]",
-    "file_type": "xlsx"
-  }},
-  "output_variables": {{
-    "parsed_columns": "columns",
-    "parsed_data": "full_data",
-    "sample_data": "sample_data"
-  }}
-}}
-
-STEP 2: Extract ALL dates from Excel (for row matching)
-{{
-  "agent": "mapping_agent",
-  "tool": "extract_dates_from_all_rows",
-  "inputs": {{
-    "data": "{{{{ parsed_data }}}}",
-    "date_column_name": "Date"
-  }},
-  "output_variables": {{
-    "excel_dates": "rows_with_dates",
-    "total_excel_rows": "total_rows"
-  }}
-}}
-
-STEP 3: Smart map OPERATIONAL columns ONLY (skip temporal)
-{{
-  "agent": "mapping_agent",
-  "tool": "smart_column_mapping",
-  "inputs": {{
-    "source_columns": "{{{{ parsed_columns }}}}",
-    "skip_temporal": true
-  }},
-  "output_variables": {{
-    "column_mappings": "mappings"
-  }}
-}}
-STEP 4: Transform data (operational columns only)
-{{
-  "agent": "mapping_agent",
-  "tool": "transform_data",
-  "inputs": {{
-    "source_data": "{{{{ parsed_data }}}}",
-    "mappings": "{{{{ column_mappings }}}}"
-  }},
-  "output_variables": {{
-    "transformed_operational_data": "transformed_data"
-  }}
-}}
-
-STEP 5: Update Sheets by DATE MATCHING (NOT append!)
-{{
-  "agent": "sheets_agent",
-  "tool": "update_by_date_match",
-  "inputs": {{
-    "sheet_id": "[Google Sheets ID from user]",
-    "transformed_data": "{{{{ transformed_operational_data }}}}",
-    "rows_with_dates": "{{{{ excel_dates }}}}",
-    "sheet_name": "DATA ENTRY",
-    "date_column": "Date"
-  }},
-  "output_variables": {{
-    "update_count": "rows_updated",
-    "missing_dates": "rows_not_found"
-  }}
-}}
-
-CRITICAL VALIDATION CHECKLIST:
-✓ STEP 2 must extract dates from ALL rows (not just first row)
-✓ STEP 3 must have skip_temporal=true
-✓ STEP 5 must use update_by_date_match (NOT upload_mapped_data)
-✓ STEP 5 requires BOTH transformed_data AND rows_with_dates
-
-=== SAFEXPRESSOPS TARGET SCHEMA (USE THIS EXACT LIST) ===
-
-[
-  "Date", "Week", "Day", 
-  "Total Manhours", "Safe man-hours", "Overtime Hours", "Present", "Absent", "Training Hours",
-  "Losttime Incident", "Days Without Lost Time Incident", "Near Miss", "Safety Training Completed",
-  "Total Recordable Incident Rate", "Lost Time Incident Rate", "Severity Rate", "First Aid Cases",
-  "Cycle Count Accuracy", "Warehouse Damage Incident", "FEFO Incident", "Expired Product Incident", 
-  "Pick Accuracy %", "Inventory Variance %", "Putaway Accuracy", "Receiving Accuracy",
-  "Productivity Index", "Cost Per Unit", "Cost Per Shipment", "System Uptime %", 
-  "Equipment Downtime", "Throughput Rate", "Order Fulfillment Rate",
-  "CTS %", "OPR Score", "Alpha Metric", "Regional Performance", "Compliance Score", 
-  "Quality Score", "Customer Satisfaction",
-  "Inventory Turns", "Stockout Incidents", "Overstock Incidents", "Dead Stock Value", 
-  "Inventory Accuracy", "Physical Count Variance",
-  "Energy Consumption", "Waste Generation", "Delivery Performance", "Return Rate", 
-  "Damage Rate", "Shrinkage Rate",
-  "No. of CV Received", "Ave Picked Qty Per Hr", "Total Number of MHE", "Total Stock On-Hand", 
-  "Total Overtime (Hours)", "Total Expenses", "Warehouse Damage Incident Cost", 
-  "Return Performance", "Attendance Perf %"
-]
-
-=== WHEN TO USE SMART VS EXPLICIT MAPPING ===
-
-**Use smart_column_mapping when:**
-- User says "intelligently map", "auto-detect", "smart mapping"
-- User uploads file without specifying exact mappings
-
-**Use direct mappings in transform_data when:** 
-- User explicitly states mappings: "Map Employee to Present and Hours to Total Manhours"
-- Skip smart_column_mapping step and use direct mappings dict
-
-
-=== CURRENT CONTEXT ===
-
-Today's date: {today_date}
-Yesterday's date: {yesterday_date}
-
-Available agents and their capabilities:
-{capability_summary}
-
-=== YOUR TASK ===
-
-Based on the user input and available capabilities, create a detailed execution plan.
-
-**PLAN SCHEMA:**
-{schema_text}
-
-**IMPORTANT RULES:**
-1. Each step must use ONLY tools from the capabilities above
-2. Use ${{step_N_result.field}} syntax for dependencies
-3. For template workflow, create 3 separate steps (find, extract, create)
-4. Extract values from user input for template placeholders
-5. Return ONLY valid JSON matching the schema - no extra text
-6. Plan steps should be executable without human intervention (except approvals)
-
-User Input: {user_input}
-
-Generate the execution plan now (JSON only):
-
-    
-    
-    CURRENT DATE CONTEXT:
-    - Today's date: {today_date}
-    - Yesterday's date: {yesterday_date}
-
-    PLANNING RULES:
-    1. Reference previous outputs using capability_summary syntax
-    2. Declare output_variables as {{"source_field": "source_field"}} to rename fields from tool's "returns"
-    3. Break tasks into sequential steps with clear data flow
-    4. Use date context variables: {{{{ today_date }}}}, {{{{ yesterday_date }}}} (format: YYYY-MM-DD)
-    5. For ANY email sending: create_draft_email first, then optionally send_draft_email if explicitly requested
-    6. IMPORTANT: read_recent_emails and search_emails return an "emails" array. Access items using array syntax:
-    - {{{{ emails[0].message_id }}}} for first email's message_id
-    - {{{{ emails[0].from }}}} for first email's sender
-    - {{{{ emails[0].subject }}}} for first email's subject
-    - Store array in variable: {{"recent_emails": "emails"}}, then use {{{{ recent_emails[0].from }}}}
-
-    Available agents and tools:
-    {capability_summary}
-
-    Schema:
-    {schema_text}
-
-    Return ONLY the JSON plan."""
-
-    # system_prompt = f"""You are the Supervisor agent creating multi-step execution plans.
-
-    # CURRENT DATE CONTEXT:
-    # - Today's date: {today_date}
-    # - Yesterday's date: {yesterday_date}
-
-    # PLANNING RULES:
-    # 1. Reference previous outputs using {{{{ variable_name }}}} syntax
-    # 2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from tool's "returns"
-    # 3. Break tasks into sequential steps with clear data flow
-    # 4. Use date context variables: {{{{ today_date }}}}, {{{{ yesterday_date }}}} (format: YYYY-MM-DD)
-    # 5. For ANY email sending: create_draft_email first, then optionally send_draft_email if explicitly requested
-    # 6. IMPORTANT: read_recent_emails and search_emails return an "emails" array. Access items using array syntax:
-    # - {{{{ emails[0].message_id }}}} for first email's message_id
-    # - {{{{ emails[0].from }}}} for first email's sender
-    # - {{{{ emails[0].subject }}}} for first email's subject
-    # - Store array in variable: {{"recent_emails": "emails"}}, then use {{{{ recent_emails[0].from }}}}
-
-    # Available agents and tools:
-    # {capability_summary}
-
-    # Schema:
-    # {schema_text}
-
-    # Return ONLY the JSON plan."""
-
-    print("🤖 Calling LLM to generate multi-step plan...")
-    print(
-        f"💰 Token optimization: Using {len(relevant_agents)}/{len(agent_capabilities)} agents"
-    )
-
-    llm_response = llm.invoke(
-        [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input},
-        ]
-    )
-
-    try:
-        # Extract JSON from response
-        response_text = llm_response.content.strip()
-        if response_text.startswith("```json"):
-            response_text = response_text[7:-3].strip()
-        elif response_text.startswith("```"):
-            response_text = response_text[3:-3].strip()
-
-        plan = json.loads(response_text)
-
-        print("✅ Plan generated successfully!")
-        print(f"\n📋 Generated Plan:\n{json.dumps(plan, indent=2)}")
-
-        # Save the plan to a file for inspection
-        plan_file = os.path.join(OUTPUT_DIR, "supervisor_plan.json")
-        with open(plan_file, "w") as f:
-            json.dump(plan, f, indent=2)
-        print(f"\n💾 Plan saved to: {plan_file}")
-        print("=" * 60 + "\n")
-
-    except json.JSONDecodeError as e:
-        raise ValueError(
-            f"Failed to parse LLM response as JSON: {e}\nResponse: {llm_response.content}"
-        )
-
-    return {"plan": plan, "context": state.get("context", {})}
-
-
-class SharedState(TypedDict):
-    input: str
-    plan: dict
-    context: dict
-    memory: dict
-    policy: list
-    final_context: dict
-
 
 def supervisor_node(state: SharedState) -> SharedState:
     """
@@ -1320,9 +914,42 @@ async def chat(request: ConversationRequest):
     try:
         print(f"\n💬 Chat request: {request.message}")
 
+        # Handle persistent thread creation if user_id and persist are provided
+        if request.persist and request.user_id and not request.conversation_id:
+            print(f"🔄 Creating persistent thread for user {request.user_id}")
+            # Create new thread
+            thread_id, conversation_state, bot_response = conversational_agent.create_new_thread(
+                user_id=request.user_id,
+                initial_message=request.message,
+                title=None,  # Will auto-generate
+                tags=[]
+            )
+            
+            # Store in memory for compatibility with legacy system
+            CONVERSATIONS[thread_id] = conversation_state
+            
+            # Get thread metadata
+            metadata = conversational_agent.get_thread_metadata(thread_id)
+            
+            return ConversationResponse(
+                response=bot_response or "Thread created",
+                conversation_id=thread_id,
+                ready_for_execution=conversation_state.ready_for_execution,
+                intent=conversation_state.intent.value if conversation_state.intent else "unknown",
+                extracted_info=conversation_state.extracted_info,
+                execution_summary=conversation_state.execution_summary,
+            )
+
         # Get or create conversation
         conversation_id = request.conversation_id or f"conv_{uuid.uuid4().hex[:8]}"
         conversation_state = CONVERSATIONS.get(conversation_id)
+        
+        # Check if this conversation has a corresponding thread in database
+        thread_exists = False
+        if conversation_id.startswith("conv_"):
+            # Legacy conversation ID format - check if thread exists
+            thread_metadata = conversational_agent.get_thread_metadata(conversation_id)
+            thread_exists = thread_metadata is not None
 
         # If a conversation is currently executing, reject further inputs to avoid conflicts.
         if conversation_state and conversation_state.executing:
@@ -1335,8 +962,12 @@ async def chat(request: ConversationRequest):
             )
 
         # Process message through conversational agent
+        # Use auto_save=True if this is a persistent thread conversation
         response_text, updated_state = conversational_agent.process_message(
-            user_message=request.message, conversation_state=conversation_state
+            user_message=request.message, 
+            conversation_state=conversation_state,
+            state_id=conversation_id,
+            auto_save=thread_exists  # Auto-save if thread exists in DB
         )
 
         print(f"🤖 Bot response: {response_text}")
@@ -1574,6 +1205,78 @@ async def list_conversations():
                 "message_count": len(state.conversation_history),
             }
         )
+
+    return {"conversations": conversations, "count": len(conversations)}
+
+
+@app.post("/chat/{conversation_id}/persist")
+async def persist_conversation_to_thread(conversation_id: str, request: dict):
+    """
+    Convert a legacy in-memory conversation to a persistent thread.
+    
+    Args:
+        conversation_id: Existing conversation ID
+        request: {"user_id": str (required), "title": str (optional), "tags": List[str] (optional)}
+    
+    Returns:
+        Thread metadata with new thread_id
+    """
+    try:
+        user_id = request.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
+        
+        # Get conversation from memory
+        conversation_state = CONVERSATIONS.get(conversation_id)
+        if not conversation_state:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Conversation {conversation_id} not found"
+            )
+        
+        # Create thread with existing state
+        title = request.get("title") or f"Chat {conversation_id}"
+        tags = request.get("tags", [])
+        
+        # Create thread in database
+        thread_metadata = conversational_agent.thread_manager.create_thread(
+            user_id=user_id,
+            title=title,
+            tags=tags
+        )
+        thread_id = thread_metadata.thread_id
+        
+        # Save existing state to thread
+        conversational_agent._save_thread_to_db(thread_id, conversation_state)
+        
+        # Migrate messages from memory to messages table
+        if thread_id in conversational_agent.memory_managers:
+            memory_manager = conversational_agent.memory_managers[thread_id]
+            messages = memory_manager.get_recent_messages(n=1000)  # Get all messages
+            
+            for msg in messages:
+                conversational_agent.thread_manager.add_message(
+                    thread_id=thread_id,
+                    role=msg["role"],
+                    content=msg["content"]
+                )
+        
+        # Keep conversation in memory but also return thread_id
+        print(f"✅ Persisted conversation {conversation_id} to thread {thread_id}")
+        
+        return {
+            "conversation_id": conversation_id,
+            "thread_id": thread_id,
+            "user_id": user_id,
+            "message": "Conversation persisted to thread successfully",
+            "note": "You can now use either the conversation_id or thread_id"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error persisting conversation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
     return {"conversations": conversations, "count": len(conversations)}
 
@@ -1822,6 +1525,501 @@ def execute_single_action(step_info: dict) -> dict:
         raise ValueError("Agent call failed after retries")
 
     return result
+
+
+# ============================================================
+# THREAD MANAGEMENT ENDPOINTS (NEW)
+# ============================================================
+
+
+@app.post("/threads")
+async def create_thread(request: dict):
+    """
+    Create a new conversation thread.
+    
+    Args:
+        request: {
+            "user_id": str (required),
+            "message": str (optional - first message),
+            "title": str (optional - custom title),
+            "tags": List[str] (optional)
+        }
+    
+    Returns:
+        Thread metadata with thread_id
+    """
+    try:
+        user_id = request.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
+        
+        initial_message = request.get("message")
+        title = request.get("title")
+        tags = request.get("tags", [])
+        
+        # Create thread using conversational agent
+        thread_id, conversation_state, bot_response = conversational_agent.create_new_thread(
+            user_id=user_id,
+            initial_message=initial_message,
+            title=title,
+            tags=tags
+        )
+        
+        # If ready for execution after initial message, execute immediately
+        if initial_message and conversation_state.ready_for_execution:
+            print(f"🚀 Thread {thread_id} ready - executing workflow...")
+            
+            # Mark as executing to prevent conflicts
+            conversation_state.executing = True
+            conversational_agent._save_thread_to_db(thread_id, conversation_state)
+            
+            try:
+                supervisor_input = conversational_agent.build_supervisor_input(conversation_state)
+                workflow_request = UserRequest(input=supervisor_input)
+                now_iso = datetime.now(timezone.utc).isoformat()
+                
+                status = "unknown"
+                message = ""
+                final_context = {}
+                plan_dict = {}
+                
+                try:
+                    workflow_result = await execute_workflow(workflow_request)
+                    status = workflow_result.status
+                    message = workflow_result.message
+                    final_context = workflow_result.final_context or {}
+                    plan_dict = workflow_result.plan or {}
+                except HTTPException as he:
+                    status = "approval_required" if he.status_code == 202 else "error"
+                    message = str(he.detail) if hasattr(he, "detail") else str(he)
+                except Exception as e:
+                    status = "error"
+                    message = str(e)
+                    import traceback
+                    traceback.print_exc()
+                
+                # Compute plan hash
+                try:
+                    plan_json = json.dumps(plan_dict, sort_keys=True)
+                except Exception:
+                    plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
+                plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
+                
+                # Build history entry
+                history_item = {
+                    "executed_at": now_iso,
+                    "plan_hash": plan_hash,
+                    "status": status,
+                    "message": message,
+                    "final_context_snapshot": final_context,
+                }
+                
+                # Update execution history
+                conversation_state.execution_history.append(history_item)
+                if len(conversation_state.execution_history) > 50:
+                    conversation_state.execution_history = conversation_state.execution_history[-50:]
+                
+                conversation_state.executed_count += 1
+                conversation_state.last_plan_hash = plan_hash
+                conversation_state.last_executed_at = now_iso
+                conversation_state.execution_summary = message
+                conversation_state.ready_for_execution = False
+                
+                # Generate user-friendly summary
+                print("📝 Generating user-friendly summary...")
+                friendly_summary = conversational_agent.summarize_execution(
+                    conversation_state=conversation_state,
+                    final_context=final_context,
+                    execution_status=status,
+                    execution_message=message,
+                )
+                
+                bot_response = friendly_summary
+                
+            finally:
+                # Clear executing flag and save
+                conversation_state.executing = False
+                conversational_agent._save_thread_to_db(thread_id, conversation_state)
+        
+        # Get thread metadata
+        thread_metadata = conversational_agent.get_thread_metadata(thread_id)
+        
+        response = {
+            "thread_id": thread_id,
+            "user_id": user_id,
+            "metadata": thread_metadata,
+            "message": "Thread created successfully"
+        }
+        
+        # If there was an initial message, include the bot's response
+        if initial_message and bot_response:
+            response["bot_response"] = bot_response
+            response["ready_for_execution"] = conversation_state.ready_for_execution
+        
+        return response
+        
+    except Exception as e:
+        print(f"❌ Error creating thread: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/threads")
+async def list_threads(user_id: str, status: str = "active", limit: int = 50, offset: int = 0):
+    """
+    List all threads for a user.
+    
+    Args:
+        user_id: User identifier (required)
+        status: Filter by status (active, archived, all) - default: active
+        limit: Maximum results - default: 50
+        offset: Pagination offset - default: 0
+    
+    Returns:
+        List of thread metadata
+    """
+    try:
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
+        
+        threads = conversational_agent.list_user_threads(
+            user_id=user_id,
+            status=status,
+            limit=limit,
+            offset=offset
+        )
+        
+        return {
+            "user_id": user_id,
+            "threads": threads,
+            "count": len(threads),
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except Exception as e:
+        print(f"❌ Error listing threads: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/threads/{thread_id}")
+async def get_thread(thread_id: str):
+    """
+    Get metadata for a specific thread.
+    
+    Args:
+        thread_id: Thread identifier
+    
+    Returns:
+        Thread metadata
+    """
+    try:
+        metadata = conversational_agent.get_thread_metadata(thread_id)
+        
+        if not metadata:
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        return {
+            "thread_id": thread_id,
+            "metadata": metadata
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error getting thread: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/threads/{thread_id}/messages")
+async def get_thread_messages(thread_id: str, limit: int = 50, offset: int = 0):
+    """
+    Get full conversation history for a thread from messages table.
+    
+    Args:
+        thread_id: Thread identifier
+        limit: Maximum messages to return (default: 50)
+        offset: Pagination offset (default: 0)
+    
+    Returns:
+        List of messages with role, content, and created_at
+    """
+    try:
+        messages = conversational_agent.get_thread_messages(
+            thread_id=thread_id,
+            limit=limit,
+            offset=offset
+        )
+        
+        if messages is None:
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        return {
+            "thread_id": thread_id,
+            "messages": messages,
+            "count": len(messages),
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error getting thread messages: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/threads/{thread_id}/messages")
+async def send_message_to_thread(thread_id: str, request: dict):
+    """
+    Continue a thread by sending a new message.
+    
+    Args:
+        thread_id: Thread identifier
+        request: {"message": str (required)}
+    
+    Returns:
+        Bot response and updated thread metadata
+    """
+    try:
+        message = request.get("message")
+        if not message:
+            raise HTTPException(status_code=400, detail="message is required")
+        
+        # Load current conversation state
+        conversation_state = conversational_agent._load_thread_from_db(thread_id)
+        
+        if conversation_state is None:
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        # Check if conversation is currently executing - reject to avoid conflicts
+        if conversation_state.executing:
+            print(f"⏳ Thread {thread_id} is executing — rejecting new input")
+            raise HTTPException(
+                status_code=409,
+                detail="Thread is currently executing. Please wait until the operation completes.",
+            )
+        
+        # Continue the thread
+        response_text, conversation_state = conversational_agent.continue_thread(
+            thread_id=thread_id,
+            new_message=message
+        )
+        
+        # If ready for execution, execute immediately
+        if conversation_state.ready_for_execution:
+            print(f"🚀 Thread {thread_id} ready - executing workflow...")
+            
+            # Mark as executing to prevent conflicts
+            conversation_state.executing = True
+            conversational_agent._save_thread_to_db(thread_id, conversation_state)
+            
+            try:
+                supervisor_input = conversational_agent.build_supervisor_input(conversation_state)
+                workflow_request = UserRequest(input=supervisor_input)
+                now_iso = datetime.now(timezone.utc).isoformat()
+                
+                status = "unknown"
+                message_text = ""
+                final_context = {}
+                plan_dict = {}
+                
+                try:
+                    workflow_result = await execute_workflow(workflow_request)
+                    status = workflow_result.status
+                    message_text = workflow_result.message
+                    final_context = workflow_result.final_context or {}
+                    plan_dict = workflow_result.plan or {}
+                except HTTPException as he:
+                    status = "approval_required" if he.status_code == 202 else "error"
+                    message_text = str(he.detail) if hasattr(he, "detail") else str(he)
+                except Exception as e:
+                    status = "error"
+                    message_text = str(e)
+                    import traceback
+                    traceback.print_exc()
+                
+                # Compute plan hash
+                try:
+                    plan_json = json.dumps(plan_dict, sort_keys=True)
+                except Exception:
+                    plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
+                plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
+                
+                # Build history entry
+                history_item = {
+                    "executed_at": now_iso,
+                    "plan_hash": plan_hash,
+                    "status": status,
+                    "message": message_text,
+                    "final_context_snapshot": final_context,
+                }
+                
+                # Update execution history
+                conversation_state.execution_history.append(history_item)
+                if len(conversation_state.execution_history) > 50:
+                    conversation_state.execution_history = conversation_state.execution_history[-50:]
+                
+                conversation_state.executed_count += 1
+                conversation_state.last_plan_hash = plan_hash
+                conversation_state.last_executed_at = now_iso
+                conversation_state.execution_summary = message_text
+                conversation_state.ready_for_execution = False
+                
+                # Generate user-friendly summary
+                print("📝 Generating user-friendly summary...")
+                friendly_summary = conversational_agent.summarize_execution(
+                    conversation_state=conversation_state,
+                    final_context=final_context,
+                    execution_status=status,
+                    execution_message=message_text,
+                )
+                
+                response_text = friendly_summary
+                
+            finally:
+                # Clear executing flag and save
+                conversation_state.executing = False
+                conversational_agent._save_thread_to_db(thread_id, conversation_state)
+        
+        # Get updated metadata
+        metadata = conversational_agent.get_thread_metadata(thread_id)
+        
+        return {
+            "thread_id": thread_id,
+            "bot_response": response_text,
+            "ready_for_execution": conversation_state.ready_for_execution,
+            "metadata": metadata
+        }
+        
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        print(f"❌ Error sending message to thread: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/threads/{thread_id}")
+async def update_thread(thread_id: str, request: dict):
+    """
+    Update thread metadata.
+    
+    Args:
+        thread_id: Thread identifier
+        request: {
+            "title": str (optional),
+            "tags": List[str] (optional),
+            "status": str (optional)
+        }
+    
+    Returns:
+        Updated thread metadata
+    """
+    try:
+        title = request.get("title")
+        tags = request.get("tags")
+        status = request.get("status")
+        
+        success = conversational_agent.update_thread_metadata(
+            thread_id=thread_id,
+            title=title,
+            tags=tags,
+            status=status
+        )
+        
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        # Get updated metadata
+        metadata = conversational_agent.get_thread_metadata(thread_id)
+        
+        return {
+            "thread_id": thread_id,
+            "metadata": metadata,
+            "message": "Thread updated successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error updating thread: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/threads/{thread_id}")
+async def delete_thread(thread_id: str, hard_delete: bool = False):
+    """
+    Delete a thread (archive by default, hard delete if specified).
+    
+    Args:
+        thread_id: Thread identifier
+        hard_delete: If true, permanently delete. Otherwise, archive.
+    
+    Returns:
+        Success message
+    """
+    try:
+        success = conversational_agent.delete_thread(
+            thread_id=thread_id,
+            hard_delete=hard_delete
+        )
+        
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        action = "deleted permanently" if hard_delete else "archived"
+        
+        return {
+            "thread_id": thread_id,
+            "message": f"Thread {action} successfully",
+            "hard_delete": hard_delete
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error deleting thread: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/threads/search")
+async def search_threads(user_id: str, q: str, limit: int = 20):
+    """
+    Search user's threads by title.
+    
+    Args:
+        user_id: User identifier (required)
+        q: Search query (required)
+        limit: Maximum results - default: 20
+    
+    Returns:
+        List of matching threads
+    """
+    try:
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
+        if not q:
+            raise HTTPException(status_code=400, detail="search query (q) is required")
+        
+        threads = conversational_agent.search_threads(
+            user_id=user_id,
+            query=q,
+            limit=limit
+        )
+        
+        return {
+            "user_id": user_id,
+            "query": q,
+            "threads": threads,
+            "count": len(threads)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error searching threads: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/health")

@@ -74,15 +74,33 @@ function AIChat() {
     try {
       const response = await api.get(`/chat/${thread_id}`);
       const data = response.data;
-      // Convert messages to UI format
+      
+      // Convert conversation_history to UI format
       const formattedMessages = (data.conversation_history || []).map((msg, idx) => ({
         id: msg.message_id || idx,
-        role: msg.sender || (msg.role ? msg.role : "assistant"),
-        content: msg.message || msg.content,
+        role: msg.role || "assistant", // Use 'role' field from conversation_history
+        content: msg.content, // Use 'content' field
         timestamp: msg.created_at ? new Date(msg.created_at) : new Date(),
       }));
+      
+      // If there's a last_execution_summary, add it as the most recent assistant message
+      // (only if it's not already in conversation_history)
+      if (data.last_execution_summary && data.executed_count > 0) {
+        const lastMessage = formattedMessages[formattedMessages.length - 1];
+        // Check if last message is already the execution summary
+        if (!lastMessage || lastMessage.content !== data.last_execution_summary) {
+          formattedMessages.push({
+            id: `exec-${data.last_executed_at}`,
+            role: "assistant",
+            content: data.last_execution_summary,
+            timestamp: new Date(data.last_executed_at),
+            isExecutionResult: true, // Flag to style differently if needed
+          });
+        }
+      }
+      
       setMessages(formattedMessages);
-      console.log(`✅ Loaded ${formattedMessages.length} messages`);
+      console.log(`✅ Loaded ${formattedMessages.length} messages (${data.executed_count} executions)`);
     } catch (error) {
       console.error("Error loading messages:", error);
     }
@@ -117,17 +135,24 @@ function AIChat() {
     ]);
 
     try {
-      // Send message to supervisor backend
-      const response = await api.post(`/chat/${threadId}/execute`, {
+      // Send message to supervisor backend using POST /chat (with auto-execution)
+      const response = await api.post(`/chat`, {
         message: userInput,
+        conversation_id: threadId,
       });
       const data = response.data;
-      // Get response from Supervisor Lambda
+      
+      // Get response (either clarification or execution summary)
       const fullResponse = data.response || "No response received.";
-      // Log tool calls if any
-      if (data.tool_calls && data.tool_calls.length > 0) {
-        console.log("🔧 Tool calls executed:", data.tool_calls);
+      
+      // Log execution info if available
+      if (data.ready_for_execution) {
+        console.log("✅ Task ready for execution");
       }
+      if (data.execution_summary) {
+        console.log("� Execution summary:", data.execution_summary);
+      }
+      
       // Simulate streaming effect (word by word)
       let currentText = "";
       const words = fullResponse.split(" ");
@@ -142,16 +167,19 @@ function AIChat() {
         );
         await new Promise((resolve) => setTimeout(resolve, 30));
       }
-      // Update the assistant message with actual message_id from backend
-      if (data.assistant_message_id) {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessageId
-              ? { ...msg, id: data.assistant_message_id }
-              : msg
-          )
-        );
-      }
+      
+      // Update the assistant message with final data
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? { 
+                ...msg, 
+                content: fullResponse,
+                isExecutionResult: data.execution_summary ? true : false 
+              }
+            : msg
+        )
+      );
     } catch (error) {
       console.error("Error:", error);
       setMessages((prev) =>
