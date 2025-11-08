@@ -69,7 +69,7 @@ llm = ChatOpenAI(
 conversational_agent = ConversationalAgent(
     openai_api_key=OPENAI_API_KEY,
     model=LLM_MODEL,
-    temperature=0.0,  # Lower temperature for more consistent clarifications
+    temperature=0.2,  # Lower temperature for more consistent clarifications
 )
 
 # In-memory conversation storage (replace with Redis/DB in production)
@@ -89,6 +89,8 @@ class ConversationRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None  # For continuing conversations
     auto_execute: bool = False  # If true, auto-execute when ready
+    user_id: Optional[str] = None  # Optional: auto-create persistent thread
+    persist: bool = False  # If true with user_id, create persistent thread
 
 
 class ConversationResponse(BaseModel):
@@ -931,9 +933,42 @@ async def chat(request: ConversationRequest):
     try:
         print(f"\n💬 Chat request: {request.message}")
 
+        # Handle persistent thread creation if user_id and persist are provided
+        if request.persist and request.user_id and not request.conversation_id:
+            print(f"🔄 Creating persistent thread for user {request.user_id}")
+            # Create new thread
+            thread_id, conversation_state, bot_response = conversational_agent.create_new_thread(
+                user_id=request.user_id,
+                initial_message=request.message,
+                title=None,  # Will auto-generate
+                tags=[]
+            )
+            
+            # Store in memory for compatibility with legacy system
+            CONVERSATIONS[thread_id] = conversation_state
+            
+            # Get thread metadata
+            metadata = conversational_agent.get_thread_metadata(thread_id)
+            
+            return ConversationResponse(
+                response=bot_response or "Thread created",
+                conversation_id=thread_id,
+                ready_for_execution=conversation_state.ready_for_execution,
+                intent=conversation_state.intent.value if conversation_state.intent else "unknown",
+                extracted_info=conversation_state.extracted_info,
+                execution_summary=conversation_state.execution_summary,
+            )
+
         # Get or create conversation
         conversation_id = request.conversation_id or f"conv_{uuid.uuid4().hex[:8]}"
         conversation_state = CONVERSATIONS.get(conversation_id)
+        
+        # Check if this conversation has a corresponding thread in database
+        thread_exists = False
+        if conversation_id.startswith("conv_"):
+            # Legacy conversation ID format - check if thread exists
+            thread_metadata = conversational_agent.get_thread_metadata(conversation_id)
+            thread_exists = thread_metadata is not None
 
         # If a conversation is currently executing, reject further inputs to avoid conflicts.
         if conversation_state and conversation_state.executing:
@@ -946,8 +981,12 @@ async def chat(request: ConversationRequest):
             )
 
         # Process message through conversational agent
+        # Use auto_save=True if this is a persistent thread conversation
         response_text, updated_state = conversational_agent.process_message(
-            user_message=request.message, conversation_state=conversation_state
+            user_message=request.message, 
+            conversation_state=conversation_state,
+            state_id=conversation_id,
+            auto_save=thread_exists  # Auto-save if thread exists in DB
         )
 
         print(f"🤖 Bot response: {response_text}")
@@ -1185,6 +1224,78 @@ async def list_conversations():
                 "message_count": len(state.conversation_history),
             }
         )
+
+    return {"conversations": conversations, "count": len(conversations)}
+
+
+@app.post("/chat/{conversation_id}/persist")
+async def persist_conversation_to_thread(conversation_id: str, request: dict):
+    """
+    Convert a legacy in-memory conversation to a persistent thread.
+    
+    Args:
+        conversation_id: Existing conversation ID
+        request: {"user_id": str (required), "title": str (optional), "tags": List[str] (optional)}
+    
+    Returns:
+        Thread metadata with new thread_id
+    """
+    try:
+        user_id = request.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
+        
+        # Get conversation from memory
+        conversation_state = CONVERSATIONS.get(conversation_id)
+        if not conversation_state:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Conversation {conversation_id} not found"
+            )
+        
+        # Create thread with existing state
+        title = request.get("title") or f"Chat {conversation_id}"
+        tags = request.get("tags", [])
+        
+        # Create thread in database
+        thread_metadata = conversational_agent.thread_manager.create_thread(
+            user_id=user_id,
+            title=title,
+            tags=tags
+        )
+        thread_id = thread_metadata.thread_id
+        
+        # Save existing state to thread
+        conversational_agent._save_thread_to_db(thread_id, conversation_state)
+        
+        # Migrate messages from memory to messages table
+        if thread_id in conversational_agent.memory_managers:
+            memory_manager = conversational_agent.memory_managers[thread_id]
+            messages = memory_manager.get_recent_messages(n=1000)  # Get all messages
+            
+            for msg in messages:
+                conversational_agent.thread_manager.add_message(
+                    thread_id=thread_id,
+                    role=msg["role"],
+                    content=msg["content"]
+                )
+        
+        # Keep conversation in memory but also return thread_id
+        print(f"✅ Persisted conversation {conversation_id} to thread {thread_id}")
+        
+        return {
+            "conversation_id": conversation_id,
+            "thread_id": thread_id,
+            "user_id": user_id,
+            "message": "Conversation persisted to thread successfully",
+            "note": "You can now use either the conversation_id or thread_id"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error persisting conversation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
     return {"conversations": conversations, "count": len(conversations)}
 
@@ -1501,6 +1612,501 @@ def execute_single_action(step_info: dict) -> dict:
         raise ValueError("Agent call failed after retries")
 
     return result
+
+
+# ============================================================
+# THREAD MANAGEMENT ENDPOINTS (NEW)
+# ============================================================
+
+
+@app.post("/threads")
+async def create_thread(request: dict):
+    """
+    Create a new conversation thread.
+    
+    Args:
+        request: {
+            "user_id": str (required),
+            "message": str (optional - first message),
+            "title": str (optional - custom title),
+            "tags": List[str] (optional)
+        }
+    
+    Returns:
+        Thread metadata with thread_id
+    """
+    try:
+        user_id = request.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
+        
+        initial_message = request.get("message")
+        title = request.get("title")
+        tags = request.get("tags", [])
+        
+        # Create thread using conversational agent
+        thread_id, conversation_state, bot_response = conversational_agent.create_new_thread(
+            user_id=user_id,
+            initial_message=initial_message,
+            title=title,
+            tags=tags
+        )
+        
+        # If ready for execution after initial message, execute immediately
+        if initial_message and conversation_state.ready_for_execution:
+            print(f"🚀 Thread {thread_id} ready - executing workflow...")
+            
+            # Mark as executing to prevent conflicts
+            conversation_state.executing = True
+            conversational_agent._save_thread_to_db(thread_id, conversation_state)
+            
+            try:
+                supervisor_input = conversational_agent.build_supervisor_input(conversation_state)
+                workflow_request = UserRequest(input=supervisor_input)
+                now_iso = datetime.now(timezone.utc).isoformat()
+                
+                status = "unknown"
+                message = ""
+                final_context = {}
+                plan_dict = {}
+                
+                try:
+                    workflow_result = await execute_workflow(workflow_request)
+                    status = workflow_result.status
+                    message = workflow_result.message
+                    final_context = workflow_result.final_context or {}
+                    plan_dict = workflow_result.plan or {}
+                except HTTPException as he:
+                    status = "approval_required" if he.status_code == 202 else "error"
+                    message = str(he.detail) if hasattr(he, "detail") else str(he)
+                except Exception as e:
+                    status = "error"
+                    message = str(e)
+                    import traceback
+                    traceback.print_exc()
+                
+                # Compute plan hash
+                try:
+                    plan_json = json.dumps(plan_dict, sort_keys=True)
+                except Exception:
+                    plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
+                plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
+                
+                # Build history entry
+                history_item = {
+                    "executed_at": now_iso,
+                    "plan_hash": plan_hash,
+                    "status": status,
+                    "message": message,
+                    "final_context_snapshot": final_context,
+                }
+                
+                # Update execution history
+                conversation_state.execution_history.append(history_item)
+                if len(conversation_state.execution_history) > 50:
+                    conversation_state.execution_history = conversation_state.execution_history[-50:]
+                
+                conversation_state.executed_count += 1
+                conversation_state.last_plan_hash = plan_hash
+                conversation_state.last_executed_at = now_iso
+                conversation_state.execution_summary = message
+                conversation_state.ready_for_execution = False
+                
+                # Generate user-friendly summary
+                print("📝 Generating user-friendly summary...")
+                friendly_summary = conversational_agent.summarize_execution(
+                    conversation_state=conversation_state,
+                    final_context=final_context,
+                    execution_status=status,
+                    execution_message=message,
+                )
+                
+                bot_response = friendly_summary
+                
+            finally:
+                # Clear executing flag and save
+                conversation_state.executing = False
+                conversational_agent._save_thread_to_db(thread_id, conversation_state)
+        
+        # Get thread metadata
+        thread_metadata = conversational_agent.get_thread_metadata(thread_id)
+        
+        response = {
+            "thread_id": thread_id,
+            "user_id": user_id,
+            "metadata": thread_metadata,
+            "message": "Thread created successfully"
+        }
+        
+        # If there was an initial message, include the bot's response
+        if initial_message and bot_response:
+            response["bot_response"] = bot_response
+            response["ready_for_execution"] = conversation_state.ready_for_execution
+        
+        return response
+        
+    except Exception as e:
+        print(f"❌ Error creating thread: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/threads")
+async def list_threads(user_id: str, status: str = "active", limit: int = 50, offset: int = 0):
+    """
+    List all threads for a user.
+    
+    Args:
+        user_id: User identifier (required)
+        status: Filter by status (active, archived, all) - default: active
+        limit: Maximum results - default: 50
+        offset: Pagination offset - default: 0
+    
+    Returns:
+        List of thread metadata
+    """
+    try:
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
+        
+        threads = conversational_agent.list_user_threads(
+            user_id=user_id,
+            status=status,
+            limit=limit,
+            offset=offset
+        )
+        
+        return {
+            "user_id": user_id,
+            "threads": threads,
+            "count": len(threads),
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except Exception as e:
+        print(f"❌ Error listing threads: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/threads/{thread_id}")
+async def get_thread(thread_id: str):
+    """
+    Get metadata for a specific thread.
+    
+    Args:
+        thread_id: Thread identifier
+    
+    Returns:
+        Thread metadata
+    """
+    try:
+        metadata = conversational_agent.get_thread_metadata(thread_id)
+        
+        if not metadata:
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        return {
+            "thread_id": thread_id,
+            "metadata": metadata
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error getting thread: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/threads/{thread_id}/messages")
+async def get_thread_messages(thread_id: str, limit: int = 50, offset: int = 0):
+    """
+    Get full conversation history for a thread from messages table.
+    
+    Args:
+        thread_id: Thread identifier
+        limit: Maximum messages to return (default: 50)
+        offset: Pagination offset (default: 0)
+    
+    Returns:
+        List of messages with role, content, and created_at
+    """
+    try:
+        messages = conversational_agent.get_thread_messages(
+            thread_id=thread_id,
+            limit=limit,
+            offset=offset
+        )
+        
+        if messages is None:
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        return {
+            "thread_id": thread_id,
+            "messages": messages,
+            "count": len(messages),
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error getting thread messages: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/threads/{thread_id}/messages")
+async def send_message_to_thread(thread_id: str, request: dict):
+    """
+    Continue a thread by sending a new message.
+    
+    Args:
+        thread_id: Thread identifier
+        request: {"message": str (required)}
+    
+    Returns:
+        Bot response and updated thread metadata
+    """
+    try:
+        message = request.get("message")
+        if not message:
+            raise HTTPException(status_code=400, detail="message is required")
+        
+        # Load current conversation state
+        conversation_state = conversational_agent._load_thread_from_db(thread_id)
+        
+        if conversation_state is None:
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        # Check if conversation is currently executing - reject to avoid conflicts
+        if conversation_state.executing:
+            print(f"⏳ Thread {thread_id} is executing — rejecting new input")
+            raise HTTPException(
+                status_code=409,
+                detail="Thread is currently executing. Please wait until the operation completes.",
+            )
+        
+        # Continue the thread
+        response_text, conversation_state = conversational_agent.continue_thread(
+            thread_id=thread_id,
+            new_message=message
+        )
+        
+        # If ready for execution, execute immediately
+        if conversation_state.ready_for_execution:
+            print(f"🚀 Thread {thread_id} ready - executing workflow...")
+            
+            # Mark as executing to prevent conflicts
+            conversation_state.executing = True
+            conversational_agent._save_thread_to_db(thread_id, conversation_state)
+            
+            try:
+                supervisor_input = conversational_agent.build_supervisor_input(conversation_state)
+                workflow_request = UserRequest(input=supervisor_input)
+                now_iso = datetime.now(timezone.utc).isoformat()
+                
+                status = "unknown"
+                message_text = ""
+                final_context = {}
+                plan_dict = {}
+                
+                try:
+                    workflow_result = await execute_workflow(workflow_request)
+                    status = workflow_result.status
+                    message_text = workflow_result.message
+                    final_context = workflow_result.final_context or {}
+                    plan_dict = workflow_result.plan or {}
+                except HTTPException as he:
+                    status = "approval_required" if he.status_code == 202 else "error"
+                    message_text = str(he.detail) if hasattr(he, "detail") else str(he)
+                except Exception as e:
+                    status = "error"
+                    message_text = str(e)
+                    import traceback
+                    traceback.print_exc()
+                
+                # Compute plan hash
+                try:
+                    plan_json = json.dumps(plan_dict, sort_keys=True)
+                except Exception:
+                    plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
+                plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
+                
+                # Build history entry
+                history_item = {
+                    "executed_at": now_iso,
+                    "plan_hash": plan_hash,
+                    "status": status,
+                    "message": message_text,
+                    "final_context_snapshot": final_context,
+                }
+                
+                # Update execution history
+                conversation_state.execution_history.append(history_item)
+                if len(conversation_state.execution_history) > 50:
+                    conversation_state.execution_history = conversation_state.execution_history[-50:]
+                
+                conversation_state.executed_count += 1
+                conversation_state.last_plan_hash = plan_hash
+                conversation_state.last_executed_at = now_iso
+                conversation_state.execution_summary = message_text
+                conversation_state.ready_for_execution = False
+                
+                # Generate user-friendly summary
+                print("📝 Generating user-friendly summary...")
+                friendly_summary = conversational_agent.summarize_execution(
+                    conversation_state=conversation_state,
+                    final_context=final_context,
+                    execution_status=status,
+                    execution_message=message_text,
+                )
+                
+                response_text = friendly_summary
+                
+            finally:
+                # Clear executing flag and save
+                conversation_state.executing = False
+                conversational_agent._save_thread_to_db(thread_id, conversation_state)
+        
+        # Get updated metadata
+        metadata = conversational_agent.get_thread_metadata(thread_id)
+        
+        return {
+            "thread_id": thread_id,
+            "bot_response": response_text,
+            "ready_for_execution": conversation_state.ready_for_execution,
+            "metadata": metadata
+        }
+        
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        print(f"❌ Error sending message to thread: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/threads/{thread_id}")
+async def update_thread(thread_id: str, request: dict):
+    """
+    Update thread metadata.
+    
+    Args:
+        thread_id: Thread identifier
+        request: {
+            "title": str (optional),
+            "tags": List[str] (optional),
+            "status": str (optional)
+        }
+    
+    Returns:
+        Updated thread metadata
+    """
+    try:
+        title = request.get("title")
+        tags = request.get("tags")
+        status = request.get("status")
+        
+        success = conversational_agent.update_thread_metadata(
+            thread_id=thread_id,
+            title=title,
+            tags=tags,
+            status=status
+        )
+        
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        # Get updated metadata
+        metadata = conversational_agent.get_thread_metadata(thread_id)
+        
+        return {
+            "thread_id": thread_id,
+            "metadata": metadata,
+            "message": "Thread updated successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error updating thread: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/threads/{thread_id}")
+async def delete_thread(thread_id: str, hard_delete: bool = False):
+    """
+    Delete a thread (archive by default, hard delete if specified).
+    
+    Args:
+        thread_id: Thread identifier
+        hard_delete: If true, permanently delete. Otherwise, archive.
+    
+    Returns:
+        Success message
+    """
+    try:
+        success = conversational_agent.delete_thread(
+            thread_id=thread_id,
+            hard_delete=hard_delete
+        )
+        
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        action = "deleted permanently" if hard_delete else "archived"
+        
+        return {
+            "thread_id": thread_id,
+            "message": f"Thread {action} successfully",
+            "hard_delete": hard_delete
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error deleting thread: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/threads/search")
+async def search_threads(user_id: str, q: str, limit: int = 20):
+    """
+    Search user's threads by title.
+    
+    Args:
+        user_id: User identifier (required)
+        q: Search query (required)
+        limit: Maximum results - default: 20
+    
+    Returns:
+        List of matching threads
+    """
+    try:
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
+        if not q:
+            raise HTTPException(status_code=400, detail="search query (q) is required")
+        
+        threads = conversational_agent.search_threads(
+            user_id=user_id,
+            query=q,
+            limit=limit
+        )
+        
+        return {
+            "user_id": user_id,
+            "query": q,
+            "threads": threads,
+            "count": len(threads)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error searching threads: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/health")

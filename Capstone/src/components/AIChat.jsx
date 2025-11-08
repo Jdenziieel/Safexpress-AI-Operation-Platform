@@ -278,6 +278,23 @@ function AIChat() {
         content: msg.message || msg.content || "No content", // Fallback if content field varies
         timestamp: msg.created_at ? new Date(msg.created_at) : new Date(),
       }));
+      
+      // If there's a last_execution_summary, add it as the most recent assistant message
+      // (only if it's not already in conversation_history)
+      if (data.last_execution_summary && data.executed_count > 0) {
+        const lastMessage = formattedMessages[formattedMessages.length - 1];
+        // Check if last message is already the execution summary
+        if (!lastMessage || lastMessage.content !== data.last_execution_summary) {
+          formattedMessages.push({
+            id: `exec-${data.last_executed_at}`,
+            role: "assistant",
+            content: data.last_execution_summary,
+            timestamp: new Date(data.last_executed_at),
+            isExecutionResult: true, // Flag to style differently if needed
+          });
+        }
+      }
+      
       setMessages(formattedMessages);
       console.log(`✅ Loaded ${formattedMessages.length} messages for thread ${thread_id}`);
     } catch (error) {

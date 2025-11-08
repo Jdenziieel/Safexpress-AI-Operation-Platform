@@ -137,7 +137,7 @@ def _search_emails_impl(
             }
 
         # loops through the messages and fetches details
-        email_list = []
+        emails = []
         for msg in messages:
             msg_id = msg["id"]
             
@@ -215,11 +215,11 @@ def _search_emails_impl(
                 "has_attachments": len(attachments) > 0,
                 "attachments": attachments
             }
-            email_list.append(email_obj)
+            emails.append(email_obj)
         
         # Format all emails before returning
-        email_list = format_email_list(email_list)
-        
+        email_list = format_email_list(emails)
+
         return {
             "success": True,
             "emails": email_list,
