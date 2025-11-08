@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Docs Agent Test Cases</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f1f3f4;
+            border-bottom: 2px solid #dadce0;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5f6368;
+            transition: all 0.3s;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        .tab.active {
+            color: #4285f4;
+            background: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #4285f4;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .sheet {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .sheet.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4285f4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+        }
+
+        .btn-success {
+            background: #34a853;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #2d8e47;
+        }
+
+        .search-box {
+            padding: 10px 15px;
+            border: 2px solid #dadce0;
+            border-radius: 6px;
+            font-size: 14px;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-card h3 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-pass {
+            color: #34a853;
+            font-weight: bold;
+        }
+
+        .status-fail {
+            color: #ea4335;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            color: #fbbc04;
+            font-weight: bold;
+        }
+
+        .priority-high {
+            color: #ea4335;
+            font-weight: bold;
+        }
+
+        .priority-medium {
+            color: #fbbc04;
+            font-weight: bold;
+        }
+
+        .priority-low {
+            color: #34a853;
+            font-weight: bold;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-api {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge-unit {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .badge-integration {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .info-box {
+            background: #e8f4fd;
+            border-left: 4px solid #4285f4;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                max-width: 100%;
+            }
+
+            table {
+                font-size: 11px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls {
+                display: none;
+            }
+            
+            .tabs {
+                display: none;
+            }
+            
+            .sheet {
+                display: block !important;
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Google Docs Agent - Test Cases</h1>
+            <p>Comprehensive Test Suite | Designed by: Paul Andrew T. Chua | Date: 7/7/2025</p>
+        </div>
+
+        <div class="tabs" id="tabs">
+            <button class="tab active" onclick="switchTab(0)">📊 API Endpoints</button>
+            <button class="tab" onclick="switchTab(1)">🔧 Tool Operations</button>
+            <button class="tab" onclick="switchTab(2)">🤖 Task-Based</button>
+            <button class="tab" onclick="switchTab(3)">📝 Template Ops</button>
+            <button class="tab" onclick="switchTab(4)">⚠️ Error Handling</button>
+            <button class="tab" onclick="switchTab(5)">🔍 Edge Cases</button>
+            <button class="tab" onclick="switchTab(6)">🔄 Integration</button>
+            <button class="tab" onclick="switchTab(7)">📈 Summary</button>
+        </div>
+
+        <div class="content">
+            <div class="controls">
+                <button class="btn btn-primary" onclick="exportToCSV()">📥 Export to CSV</button>
+                <button class="btn btn-success" onclick="window.print()">🖨️ Print</button>
+                <input type="text" class="search-box" placeholder="🔍 Search test cases..." id="searchBox" oninput="searchTests()">
+            </div>
+
+            <!-- Sheet 1: API Endpoints -->
+            <div class="sheet active" id="sheet0">
+                <div class="info-box">
+                    <strong>Test Category:</strong> API Endpoints Testing<br>
+                    <strong>Purpose:</strong> Validate root, health, and execute_task endpoints
+                </div>
+                <div class="table-wrapper">
+                    <table id="table0"></table>
+                </div>
+            </div>
+
+            <!-- Sheet 2: Tool Operations -->
+            <div class="sheet" id="sheet1">
+                <div class="info-box">
+                    <strong>Test Category:</strong> Direct Tool Operations<br>
+                    <strong>Purpose:</strong> Test individual Google Docs operations (create, read, update, share, etc.)
+                </div>
+                <div class="table-wrapper">
+                    <table id="table1"></table>
+                </div>
+            </div>
+
+            <!-- Sheet 3: Task-Based -->
+            <div class="sheet" id="sheet2">
+                <div class="info-box">
+                    <strong>Test Category:</strong> Task-Based Requests<br>
+                    <strong>Purpose:</strong> Test intelligent agent task execution with reasoning
+                </div>
+                <div class="table-wrapper">
+                    <table id="table2"></table>
+                </div>
+            </div>
+
+            <!-- Sheet 4: Template Operations -->
+            <div class="sheet" id="sheet3">
+                <div class="info-box">
+                    <strong>Test Category:</strong> Template Operations<br>
+                    <strong>Purpose:</strong> Test template extraction, placeholder handling, and document creation from templates
+                </div>
+                <div class="table-wrapper">
+                    <table id="table3"></table>
+                </div>
+            </div>
+
+            <!-- Sheet 5: Error Handling -->
+            <div class="sheet" id="sheet4">
+                <div class="info-box">
+                    <strong>Test Category:</strong> Error Handling & Recovery<br>
+                    <strong>Purpose:</strong> Validate error responses, exception handling, and recovery mechanisms
+                </div>
+                <div class="table-wrapper">
+                    <table id="table4"></table>
+                </div>
+            </div>
+
+            <!-- Sheet 6: Edge Cases -->
+            <div class="sheet" id="sheet5">
+                <div class="info-box">
+                    <strong>Test Category:</strong> Edge Cases & Input Validation<br>
+                    <strong>Purpose:</strong> Test boundary conditions, special characters, and unusual inputs
+                </div>
+                <div class="table-wrapper">
+                    <table id="table5"></table>
+                </div>
+            </div>
+
+            <!-- Sheet 7: Integration -->
+            <div class="sheet" id="sheet6">
+                <div class="info-box">
+                    <strong>Test Category:</strong> Integration & Workflows<br>
+                    <strong>Purpose:</strong> Test complete end-to-end workflows combining multiple operations
+                </div>
+                <div class="table-wrapper">
+                    <table id="table6"></table>
+                </div>
+            </div>
+
+            <!-- Sheet 8: Summary -->
+            <div class="sheet" id="sheet7">
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3 id="totalTests">0</h3>
+                        <p>Total Test Cases</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="passedTests">0</h3>
+                        <p>Passed Tests</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="coverage">0%</h3>
+                        <p>Test Coverage</p>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="summaryTable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const testData = {
+            apiEndpoints: [
+                {
+                    id: "TC_API_001",
+                    priority: "High",
+                    module: "API Endpoints",
+                    title: "Root Endpoint Returns API Info",
+                    description: "Verify GET / returns service information and available endpoints",
+                    precondition: "API server is running",
+                    dependencies: "None",
+                    steps: [
+                        "Send GET request to /",
+                        "Verify response status is 200",
+                        "Check response contains 'service' field",
+                        "Verify 'endpoints' array is present"
+                    ],
+                    testData: "URL: http://localhost:8000/",
+                    expectedResults: "Status: 200, Response contains service info with endpoints list",
+                    status: "Pass",
+                    type: "API"
+                },
+                {
+                    id: "TC_API_002",
+                    priority: "High",
+                    module: "API Endpoints",
+                    title: "Health Endpoint Returns Healthy Status",
+                    description: "Verify GET /health returns service health status",
+                    precondition: "API server is running",
+                    dependencies: "None",
+                    steps: [
+                        "Send GET request to /health",
+                        "Verify response status is 200",
+                        "Check 'status' field equals 'healthy'",
+                        "Verify 'service' and 'version' fields exist"
+                    ],
+                    testData: "URL: http://localhost:8000/health",
+                    expectedResults: "Status: 200, Response: {status: 'healthy', service: 'google-docs-agent', version: '1.0.0'}",
+                    status: "Pass",
+                    type: "API"
+                }
+            ],
+            toolOperations: [
+                {
+                    id: "TC_TOOL_001",
+                    priority: "High",
+                    module: "Tool Operations",
+                    title: "Create Document Tool Success",
+                    description: "Test creating a new Google Docs document using tool format",
+                    precondition: "Valid OAuth credentials available",
+                    dependencies: "Google Docs API access",
+                    steps: [
+                        "Prepare request with tool='create_doc' and title input",
+                        "Include valid credentials_dict",
+                        "POST to /execute_task",
+                        "Verify document_id and document_url in response"
+                    ],
+                    testData: '{"tool": "create_doc", "inputs": {"title": "Test Document"}, "credentials_dict": {...}}',
+                    expectedResults: "Status: 200, success: true, document_id present, document_url contains docs.google.com",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_TOOL_002",
+                    priority: "High",
+                    module: "Tool Operations",
+                    title: "Add Text Tool Success",
+                    description: "Test adding text to an existing document",
+                    precondition: "Document with known ID exists",
+                    dependencies: "TC_TOOL_001",
+                    steps: [
+                        "Prepare request with tool='add_text'",
+                        "Provide document_id and text content",
+                        "POST to /execute_task",
+                        "Verify text_length in response"
+                    ],
+                    testData: '{"tool": "add_text", "inputs": {"document_id": "doc123", "text": "Hello, test!"}}',
+                    expectedResults: "Status: 200, success: true, text added confirmation",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_TOOL_003",
+                    priority: "High",
+                    module: "Tool Operations",
+                    title: "Read Document Tool Success",
+                    description: "Test reading document content",
+                    precondition: "Document with content exists",
+                    dependencies: "TC_TOOL_001, TC_TOOL_002",
+                    steps: [
+                        "Prepare request with tool='read_doc'",
+                        "Provide document_id",
+                        "POST to /execute_task",
+                        "Verify content field contains document text"
+                    ],
+                    testData: '{"tool": "read_doc", "inputs": {"document_id": "doc123"}}',
+                    expectedResults: "Status: 200, success: true, content field populated with document text",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_TOOL_004",
+                    priority: "Medium",
+                    module: "Tool Operations",
+                    title: "Share Document Tool Success",
+                    description: "Test sharing document with another user",
+                    precondition: "Document exists",
+                    dependencies: "TC_TOOL_001",
+                    steps: [
+                        "Prepare request with tool='share_doc'",
+                        "Provide document_id, email, and role",
+                        "POST to /execute_task",
+                        "Verify shared_with in response"
+                    ],
+                    testData: '{"tool": "share_doc", "inputs": {"document_id": "doc123", "email": "user@example.com", "role": "reader"}}',
+                    expectedResults: "Status: 200, success: true, shared_with: 'user@example.com'",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_TOOL_005",
+                    priority: "Medium",
+                    module: "Tool Operations",
+                    title: "Edit Document Tool Success",
+                    description: "Test editing specific text in document",
+                    precondition: "Document with searchable text exists",
+                    dependencies: "TC_TOOL_001, TC_TOOL_002",
+                    steps: [
+                        "Prepare request with tool='edit_doc'",
+                        "Provide document_id, old_text, new_text",
+                        "POST to /execute_task",
+                        "Verify edit confirmation"
+                    ],
+                    testData: '{"tool": "edit_doc", "inputs": {"document_id": "doc123", "old_text": "Hello", "new_text": "Hi"}}',
+                    expectedResults: "Status: 200, success: true, old_text and new_text in response",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_TOOL_006",
+                    priority: "High",
+                    module: "Tool Operations",
+                    title: "Update Document Tool - Replace All Content",
+                    description: "Test replacing entire document content with new content",
+                    precondition: "Document exists with some content",
+                    dependencies: "TC_TOOL_001",
+                    steps: [
+                        "Prepare request with tool='update_doc'",
+                        "Provide document_id and new_content",
+                        "POST to /execute_task",
+                        "Verify all old content is replaced"
+                    ],
+                    testData: '{"tool": "update_doc", "inputs": {"document_id": "doc123", "new_content": "Complete new content"}}',
+                    expectedResults: "Status: 200, success: true, new_content_length in response",
+                    status: "Pass",
+                    type: "Unit"
+                }
+            ],
+            taskBased: [
+                {
+                    id: "TC_TASK_001",
+                    priority: "High",
+                    module: "Task Execution",
+                    title: "Create and Populate Task",
+                    description: "Test task-based request for creating and populating a document",
+                    precondition: "Valid credentials available",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare request with task='create_and_populate'",
+                        "Provide instruction, title, and content inputs",
+                        "Include expected_output specification",
+                        "POST to /execute_task",
+                        "Verify document created with content"
+                    ],
+                    testData: '{"task": "create_and_populate", "instruction": "Create report", "inputs": {"title": "Q4 Report", "content": "Revenue: +25%"}}',
+                    expectedResults: "Status: 200, success: true, document_id and document_url present",
+                    status: "Pass",
+                    type: "Integration"
+                },
+                {
+                    id: "TC_TASK_002",
+                    priority: "Medium",
+                    module: "Task Execution",
+                    title: "Task with Expected Output Validation",
+                    description: "Test that agent validates expected output keys",
+                    precondition: "Valid credentials",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare task request",
+                        "Specify expected_output with required keys",
+                        "POST to /execute_task",
+                        "Verify expected keys are present or warnings logged"
+                    ],
+                    testData: '{"task": "create_document", "expected_output": {"document_id": "ID", "document_url": "URL"}}',
+                    expectedResults: "Status: 200, success: true, expected output keys validated",
+                    status: "Pass",
+                    type: "Integration"
+                },
+                {
+                    id: "TC_TASK_003",
+                    priority: "Low",
+                    module: "Task Execution",
+                    title: "Task Without Explicit Instruction",
+                    description: "Test task execution when instruction field is omitted",
+                    precondition: "Valid credentials",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare task request without instruction field",
+                        "Provide only task name and inputs",
+                        "POST to /execute_task",
+                        "Verify agent infers task from inputs"
+                    ],
+                    testData: '{"task": "create_document", "inputs": {"title": "Auto Doc"}}',
+                    expectedResults: "Status: 200, success: true, task completed without explicit instruction",
+                    status: "Pass",
+                    type: "Integration"
+                }
+            ],
+            templates: [
+                {
+                    id: "TC_TMPL_001",
+                    priority: "Medium",
+                    module: "Template Operations",
+                    title: "List User Documents",
+                    description: "Test listing user's Google Docs with optional search",
+                    precondition: "User has documents in Google Drive",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare request with tool='list_docs'",
+                        "Provide search_query (optional)",
+                        "POST to /execute_task",
+                        "Verify documents array in response"
+                    ],
+                    testData: '{"tool": "list_docs", "inputs": {"search_query": "template"}}',
+                    expectedResults: "Status: 200, success: true, documents array with id and name fields",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_TMPL_002",
+                    priority: "High",
+                    module: "Template Operations",
+                    title: "Extract Template Structure",
+                    description: "Test extracting placeholders from a template document",
+                    precondition: "Template document exists with [PLACEHOLDER] format",
+                    dependencies: "TC_TMPL_001",
+                    steps: [
+                        "Prepare request with tool='extract_template'",
+                        "Provide template_document_id",
+                        "POST to /execute_task",
+                        "Verify placeholders array in response"
+                    ],
+                    testData: '{"tool": "extract_template", "inputs": {"template_document_id": "doc123"}}',
+                    expectedResults: "Status: 200, success: true, placeholders: ['DATE', 'VENUE', 'ATTENDEES']",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_TMPL_003",
+                    priority: "High",
+                    module: "Template Operations",
+                    title: "Create Document from Template",
+                    description: "Test creating new document from template with placeholder substitution",
+                    precondition: "Template extracted with placeholders",
+                    dependencies: "TC_TMPL_002",
+                    steps: [
+                        "Prepare request with tool='create_from_template'",
+                        "Provide template_document_id, new_title, placeholder_values",
+                        "POST to /execute_task",
+                        "Verify new document created with substituted values"
+                    ],
+                    testData: '{"tool": "create_from_template", "inputs": {"template_document_id": "doc123", "new_title": "Minutes-Jan15", "placeholder_values": {"DATE": "Jan 15"}}}',
+                    expectedResults: "Status: 200, success: true, document_id for new doc, placeholders_filled object",
+                    status: "Pass",
+                    type: "Integration"
+                },
+                {
+                    id: "TC_TMPL_004",
+                    priority: "Low",
+                    module: "Template Operations",
+                    title: "Template Without Placeholders",
+                    description: "Test extracting template that has no [PLACEHOLDER] markers",
+                    precondition: "Plain document without placeholders exists",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare extract_template request",
+                        "Use document_id of plain document",
+                        "POST to /execute_task",
+                        "Verify empty placeholders array"
+                    ],
+                    testData: '{"tool": "extract_template", "inputs": {"template_document_id": "plain_doc"}}',
+                    expectedResults: "Status: 200, success: true, placeholders: [], note about no placeholders",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_TMPL_005",
+                    priority: "Medium",
+                    module: "Template Operations",
+                    title: "Incomplete Placeholder Values",
+                    description: "Test creating from template with missing placeholder values",
+                    precondition: "Template has multiple placeholders",
+                    dependencies: "TC_TMPL_002",
+                    steps: [
+                        "Extract template to get all placeholders",
+                        "Create from template with only some values",
+                        "POST to /execute_task",
+                        "Verify warning about unfilled placeholders"
+                    ],
+                    testData: '{"tool": "create_from_template", "inputs": {"placeholder_values": {"DATE": "Jan 15"}}}',
+                    expectedResults: "Status: 200, success: true, warning field, unfilled: ['VENUE', 'TIME']",
+                    status: "Pass",
+                    type: "Integration"
+                }
+            ],
+            errorHandling: [
+                {
+                    id: "TC_ERR_001",
+                    priority: "High",
+                    module: "Error Handling",
+                    title: "Missing Credentials",
+                    description: "Test request without credentials_dict",
+                    precondition: "None",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare request without credentials_dict field",
+                        "POST to /execute_task",
+                        "Verify 422 validation error"
+                    ],
+                    testData: '{"tool": "create_doc", "inputs": {"title": "Test"}}',
+                    expectedResults: "Status: 422, validation error for missing credentials_dict",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_ERR_002",
+                    priority: "High",
+                    module: "Error Handling",
+                    title: "Missing Tool and Task",
+                    description: "Test request without tool or task specified",
+                    precondition: "Valid credentials",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare request with neither tool nor task",
+                        "POST to /execute_task",
+                        "Verify error response"
+                    ],
+                    testData: '{"inputs": {"title": "Test"}, "credentials_dict": {...}}',
+                    expectedResults: "Status: 200, success: false, error message about missing tool/task",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_ERR_003",
+                    priority: "High",
+                    module: "Error Handling",
+                    title: "Agent Exception Handling",
+                    description: "Test graceful handling when agent throws exception",
+                    precondition: "Mock agent configured to throw exception",
+                    dependencies: "None",
+                    steps: [
+                        "Mock agent.invoke to raise Exception",
+                        "POST to /execute_task",
+                        "Verify error captured and returned"
+                    ],
+                    testData: '{"tool": "create_doc", "inputs": {"title": "Test"}}',
+                    expectedResults: "Status: 200, success: false, error field with exception message",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_ERR_004",
+                    priority: "Medium",
+                    module: "Error Handling",
+                    title: "Invalid JSON Response",
+                    description: "Test handling when agent returns non-JSON response",
+                    precondition: "Mock agent returns plain text",
+                    dependencies: "None",
+                    steps: [
+                        "Mock agent to return non-JSON string",
+                        "POST to /execute_task",
+                        "Verify response wrapped properly"
+                    ],
+                    testData: "Agent returns: 'This is not JSON'",
+                    expectedResults: "Status: 200, success: true, response field with raw text",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_ERR_005",
+                    priority: "Medium",
+                    module: "Error Handling",
+                    title: "Empty Agent Response",
+                    description: "Test handling when agent returns empty messages array",
+                    precondition: "Mock agent returns empty messages",
+                    dependencies: "None",
+                    steps: [
+                        "Mock agent.invoke to return empty messages",
+                        "POST to /execute_task",
+                        "Verify error response"
+                    ],
+                    testData: "Agent returns: {messages: []}",
+                    expectedResults: "Status: 200, success: false, error about empty response",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_ERR_006",
+                    priority: "High",
+                    module: "Error Handling",
+                    title: "Invalid Document ID",
+                    description: "Test reading non-existent document",
+                    precondition: "None",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare read_doc request with invalid ID",
+                        "POST to /execute_task",
+                        "Verify error response from Google API"
+                    ],
+                    testData: '{"tool": "read_doc", "inputs": {"document_id": "invalid_id_123"}}',
+                    expectedResults: "Status: 200, success: false, error: 'Document not found'",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_ERR_007",
+                    priority: "Medium",
+                    module: "Error Handling",
+                    title: "Permission Denied Error",
+                    description: "Test handling when user lacks document permissions",
+                    precondition: "Document exists but user has no access",
+                    dependencies: "None",
+                    steps: [
+                        "Attempt to read restricted document",
+                        "POST to /execute_task",
+                        "Verify permission error handled"
+                    ],
+                    testData: '{"tool": "read_doc", "inputs": {"document_id": "restricted_doc"}}',
+                    expectedResults: "Status: 200, success: false, error: 'Permission denied'",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_ERR_008",
+                    priority: "Medium",
+                    module: "Error Handling",
+                    title: "Network Timeout",
+                    description: "Test handling of network timeout errors",
+                    precondition: "Mock timeout exception",
+                    dependencies: "None",
+                    steps: [
+                        "Mock agent to raise TimeoutError",
+                        "POST to /execute_task",
+                        "Verify timeout handled gracefully"
+                    ],
+                    testData: "Mock raises: TimeoutError('Request timed out')",
+                    expectedResults: "Status: 200, success: false, error about timeout",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_ERR_009",
+                    priority: "Low",
+                    module: "Error Handling",
+                    title: "API Quota Exceeded",
+                    description: "Test handling when Google API quota is exceeded",
+                    precondition: "Mock quota exceeded error",
+                    dependencies: "None",
+                    steps: [
+                        "Mock agent to return quota error",
+                        "POST to /execute_task",
+                        "Verify quota error message"
+                    ],
+                    testData: "Agent returns: {success: false, error: 'Quota exceeded'}",
+                    expectedResults: "Status: 200, success: false, error: 'Quota exceeded'",
+                    status: "Pass",
+                    type: "Unit"
+                }
+            ],
+            edgeCases: [
+                {
+                    id: "TC_EDGE_001",
+                    priority: "Medium",
+                    module: "Input Validation",
+                    title: "Empty Title for Create Document",
+                    description: "Test creating document with empty string as title",
+                    precondition: "Valid credentials",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare create_doc request with empty title",
+                        "POST to /execute_task",
+                        "Verify validation error or default title"
+                    ],
+                    testData: '{"tool": "create_doc", "inputs": {"title": ""}}',
+                    expectedResults: "Status: 200, success: false, error: 'Title cannot be empty'",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_EDGE_002",
+                    priority: "Medium",
+                    module: "Input Validation",
+                    title: "Add None as Text",
+                    description: "Test adding null/None value as text content",
+                    precondition: "Document exists",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare add_text request with null text",
+                        "POST to /execute_task",
+                        "Verify error response"
+                    ],
+                    testData: '{"tool": "add_text", "inputs": {"document_id": "doc123", "text": null}}',
+                    expectedResults: "Status: 200, success: false, error: 'Text cannot be None'",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_EDGE_003",
+                    priority: "Low",
+                    module: "Input Validation",
+                    title: "Very Long Text Content",
+                    description: "Test adding text exceeding 1MB in size",
+                    precondition: "Document exists",
+                    dependencies: "None",
+                    steps: [
+                        "Generate 1.5MB text string",
+                        "Prepare add_text request",
+                        "POST to /execute_task",
+                        "Verify handling of large content"
+                    ],
+                    testData: "Text: 1,500,000 characters (1.5MB)",
+                    expectedResults: "Status: 200, success: true or handles size limit gracefully",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_EDGE_004",
+                    priority: "Medium",
+                    module: "Input Validation",
+                    title: "Special Characters in Text",
+                    description: "Test Unicode, emojis, tabs, newlines, and special characters",
+                    precondition: "Document exists",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare text with emojis, Unicode, tabs, newlines",
+                        "Add text to document",
+                        "POST to /execute_task",
+                        "Verify special characters handled"
+                    ],
+                    testData: 'Text: "Hello 👋\\nWorld 🌍\\n日本語\\tTab"',
+                    expectedResults: "Status: 200, success: true, special_chars_handled: true",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_EDGE_005",
+                    priority: "Medium",
+                    module: "Input Validation",
+                    title: "Invalid Email for Sharing",
+                    description: "Test sharing document with invalid email format",
+                    precondition: "Document exists",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare share_doc with invalid email",
+                        "POST to /execute_task",
+                        "Verify validation error"
+                    ],
+                    testData: '{"tool": "share_doc", "inputs": {"email": "not-an-email", "role": "reader"}}',
+                    expectedResults: "Status: 200, success: false, error: 'Invalid email address'",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_EDGE_006",
+                    priority: "Medium",
+                    module: "Input Validation",
+                    title: "Invalid Role for Sharing",
+                    description: "Test sharing with unsupported role value",
+                    precondition: "Document exists",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare share_doc with role='admin'",
+                        "POST to /execute_task",
+                        "Verify role validation error"
+                    ],
+                    testData: '{"tool": "share_doc", "inputs": {"email": "user@example.com", "role": "admin"}}',
+                    expectedResults: "Status: 200, success: false, error: 'Invalid role' (valid: reader/writer)",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_EDGE_007",
+                    priority: "Low",
+                    module: "Input Validation",
+                    title: "Empty Search Query",
+                    description: "Test list_docs with empty search string",
+                    precondition: "User has documents",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare list_docs with empty search_query",
+                        "POST to /execute_task",
+                        "Verify returns all documents or handles gracefully"
+                    ],
+                    testData: '{"tool": "list_docs", "inputs": {"search_query": ""}}',
+                    expectedResults: "Status: 200, success: true, returns all documents",
+                    status: "Pass",
+                    type: "Unit"
+                },
+                {
+                    id: "TC_EDGE_008",
+                    priority: "Medium",
+                    module: "Input Validation",
+                    title: "Update Document with Empty Content",
+                    description: "Test update_doc with empty string to clear document",
+                    precondition: "Document with content exists",
+                    dependencies: "None",
+                    steps: [
+                        "Prepare update_doc with empty new_content",
+                        "POST to /execute_task",
+                        "Verify document is cleared"
+                    ],
+                    testData: '{"tool": "update_doc", "inputs": {"document_id": "doc123", "new_content": ""}}',
+                    expectedResults: "Status: 200, success: true, content_cleared: true",
+                    status: "Pass",
+                    type: "Unit"
+                }
+            ],
+            integration: [
+                {
+                    id: "TC_INT_001",
+                    priority: "High",
+                    module: "Integration Workflows",
+                    title: "Create, Populate, and Share Workflow",
+                    description: "Complete workflow: create doc → add text → share with user",
+                    precondition: "Valid credentials",
+                    dependencies: "None",
+                    steps: [
+                        "Step 1: Create document with title 'Team Report'",
+                        "Step 2: Add text content to document",
+                        "Step 3: Share document with team@example.com as reader",
+                        "Verify all steps succeed"
+                    ],
+                    testData: "3 sequential API calls",
+                    expectedResults: "All steps return success: true, document created, populated, and shared",
+                    status: "Pass",
+                    type: "Integration"
+                },
+                {
+                    id: "TC_INT_002",
+                    priority: "High",
+                    module: "Integration Workflows",
+                    title: "Template Extraction to Document Creation",
+                    description: "Complete workflow: list docs → extract template → create from template → read result",
+                    precondition: "Template document exists",
+                    dependencies: "None",
+                    steps: [
+                        "Step 1: List documents with search 'template'",
+                        "Step 2: Extract placeholders from template_id",
+                        "Step 3: Create new doc from template with values",
+                        "Step 4: Read new document to verify substitution",
+                        "Verify complete flow"
+                    ],
+                    testData: "4 sequential operations on template",
+                    expectedResults: "All steps succeed, placeholders correctly substituted",
+                    status: "Pass",
+                    type: "Integration"
+                },
+                {
+                    id: "TC_INT_003",
+                    priority: "High",
+                    module: "Integration Workflows",
+                    title: "Complete Edit Workflow",
+                    description: "Workflow: create → add text → edit text → update entire doc → read",
+                    precondition: "Valid credentials",
+                    dependencies: "None",
+                    steps: [
+                        "Step 1: Create new document",
+                        "Step 2: Add initial text 'Hello World'",
+                        "Step 3: Edit 'World' to 'Universe'",
+                        "Step 4: Update entire doc with new content",
+                        "Step 5: Read final result",
+                        "Verify final content matches update"
+                    ],
+                    testData: "5 sequential operations",
+                    expectedResults: "All steps succeed, final content is from update_doc",
+                    status: "Pass",
+                    type: "Integration"
+                },
+                {
+                    id: "TC_INT_004",
+                    priority: "Medium",
+                    module: "Integration Workflows",
+                    title: "Multi-User Sharing Workflow",
+                    description: "Workflow: create doc → share with user1 (reader) → share with user2 (writer)",
+                    precondition: "Valid credentials",
+                    dependencies: "None",
+                    steps: [
+                        "Step 1: Create team document",
+                        "Step 2: Share with user1@example.com as reader",
+                        "Step 3: Share with user2@example.com as writer",
+                        "Verify all sharing operations succeed"
+                    ],
+                    testData: "3 operations: 1 create, 2 shares",
+                    expectedResults: "All steps succeed, document shared with 2 users with different roles",
+                    status: "Pass",
+                    type: "Integration"
+                }
+            ]
+        };
+
+        function createTable(data, tableId) {
+            const table = document.getElementById(tableId);
+            table.innerHTML = '';
+
+            // Header row
+            const headerRow = table.insertRow();
+            const headers = ['Test Case ID', 'Priority', 'Module', 'Title', 'Description', 'Precondition', 'Dependencies', 'Test Steps', 'Test Data', 'Expected Results', 'Status', 'Type'];
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+
+            // Data rows
+            data.forEach(test => {
+                const row = table.insertRow();
+                
+                // ID
+                const idCell = row.insertCell();
+                idCell.textContent = test.id;
+                idCell.style.fontWeight = 'bold';
+                idCell.style.color = '#1a73e8';
+
+                // Priority
+                const priorityCell = row.insertCell();
+                priorityCell.textContent = test.priority;
+                priorityCell.className = `priority-${test.priority.toLowerCase()}`;
+
+                // Module
+                row.insertCell().textContent = test.module;
+
+                // Title
+                const titleCell = row.insertCell();
+                titleCell.textContent = test.title;
+                titleCell.style.fontWeight = '500';
+
+                // Description
+                row.insertCell().textContent = test.description;
+
+                // Precondition
+                row.insertCell().textContent = test.precondition;
+
+                // Dependencies
+                row.insertCell().textContent = test.dependencies;
+
+                // Test Steps
+                const stepsCell = row.insertCell();
+                if (Array.isArray(test.steps)) {
+                    const ol = document.createElement('ol');
+                    ol.style.margin = '0';
+                    ol.style.paddingLeft = '20px';
+                    test.steps.forEach(step => {
+                        const li = document.createElement('li');
+                        li.textContent = step;
+                        li.style.marginBottom = '4px';
+                        ol.appendChild(li);
+                    });
+                    stepsCell.appendChild(ol);
+                } else {
+                    stepsCell.textContent = test.steps;
+                }
+
+                // Test Data
+                const dataCell = row.insertCell();
+                dataCell.textContent = test.testData;
+                dataCell.style.fontFamily = 'monospace';
+                dataCell.style.fontSize = '11px';
+
+                // Expected Results
+                row.insertCell().textContent = test.expectedResults;
+
+                // Status
+                const statusCell = row.insertCell();
+                statusCell.textContent = test.status;
+                statusCell.className = `status-${test.status.toLowerCase()}`;
+
+                // Type
+                const typeCell = row.insertCell();
+                const badge = document.createElement('span');
+                badge.className = `badge badge-${test.type.toLowerCase()}`;
+                badge.textContent = test.type;
+                typeCell.appendChild(badge);
+            });
+        }
+
+        function createSummaryTable() {
+            const table = document.getElementById('summaryTable');
+            table.innerHTML = '';
+
+            const categories = [
+                { name: 'API Endpoints', data: testData.apiEndpoints },
+                { name: 'Tool Operations', data: testData.toolOperations },
+                { name: 'Task-Based Requests', data: testData.taskBased },
+                { name: 'Template Operations', data: testData.templates },
+                { name: 'Error Handling', data: testData.errorHandling },
+                { name: 'Edge Cases', data: testData.edgeCases },
+                { name: 'Integration Workflows', data: testData.integration }
+            ];
+
+            // Header
+            const headerRow = table.insertRow();
+            ['Category', 'Total Tests', 'Passed', 'Failed', 'Pending', 'Pass Rate'].forEach(text => {
+                const th = document.createElement('th');
+                th.textContent = text;
+                headerRow.appendChild(th);
+            });
+
+            let totalTests = 0;
+            let totalPassed = 0;
+
+            categories.forEach(cat => {
+                const row = table.insertRow();
+                const total = cat.data.length;
+                const passed = cat.data.filter(t => t.status === 'Pass').length;
+                const failed = cat.data.filter(t => t.status === 'Fail').length;
+                const pending = cat.data.filter(t => t.status === 'Pending').length;
+                const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
+
+                totalTests += total;
+                totalPassed += passed;
+
+                row.insertCell().textContent = cat.name;
+                row.insertCell().textContent = total;
+                
+                const passedCell = row.insertCell();
+                passedCell.textContent = passed;
+                passedCell.className = 'status-pass';
+                
+                const failedCell = row.insertCell();
+                failedCell.textContent = failed;
+                if (failed > 0) failedCell.className = 'status-fail';
+                
+                const pendingCell = row.insertCell();
+                pendingCell.textContent = pending;
+                if (pending > 0) pendingCell.className = 'status-pending';
+                
+                const rateCell = row.insertCell();
+                rateCell.textContent = passRate + '%';
+                rateCell.style.fontWeight = 'bold';
+                if (passRate >= 90) rateCell.style.color = '#34a853';
+                else if (passRate >= 70) rateCell.style.color = '#fbbc04';
+                else rateCell.style.color = '#ea4335';
+            });
+
+            // Update stats
+            document.getElementById('totalTests').textContent = totalTests;
+            document.getElementById('passedTests').textContent = totalPassed;
+            document.getElementById('coverage').textContent = ((totalPassed / totalTests) * 100).toFixed(1) + '%';
+        }
+
+        function switchTab(index) {
+            // Update tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Update sheets
+            const sheets = document.querySelectorAll('.sheet');
+            sheets.forEach((sheet, i) => {
+                if (i === index) {
+                    sheet.classList.add('active');
+                } else {
+                    sheet.classList.remove('active');
+                }
+            });
+        }
+
+        function exportToCSV() {
+            let csv = 'Test Case ID,Priority,Module,Title,Description,Precondition,Dependencies,Test Steps,Test Data,Expected Results,Status,Type\n';
+            
+            const allData = [
+                ...testData.apiEndpoints,
+                ...testData.toolOperations,
+                ...testData.taskBased,
+                ...testData.templates,
+                ...testData.errorHandling,
+                ...testData.edgeCases,
+                ...testData.integration
+            ];
+
+            allData.forEach(test => {
+                const steps = Array.isArray(test.steps) ? test.steps.join('; ') : test.steps;
+                const row = [
+                    test.id,
+                    test.priority,
+                    test.module,
+                    test.title,
+                    test.description,
+                    test.precondition,
+                    test.dependencies,
+                    steps,
+                    test.testData,
+                    test.expectedResults,
+                    test.status,
+                    test.type
+                ].map(cell => `"${String(cell).replace(/"/g, '""')}"`);
+                
+                csv += row.join(',') + '\n';
+            });
+
+            // Create download link using data URI
+            const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+            const link = document.createElement('a');
+            link.href = dataUri;
+            link.download = 'gdocs_agent_test_cases.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function searchTests() {
+            const query = document.getElementById('searchBox').value.toLowerCase();
+            const activeSheet = document.querySelector('.sheet.active');
+            const table = activeSheet.querySelector('table');
+            const rows = table.querySelectorAll('tr');
+
+            rows.forEach((row, index) => {
+                if (index === 0) return; // Skip header
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // Initialize tables
+        window.addEventListener('DOMContentLoaded', () => {
+            createTable(testData.apiEndpoints, 'table0');
+            createTable(testData.toolOperations, 'table1');
+            createTable(testData.taskBased, 'table2');
+            createTable(testData.templates, 'table3');
+            createTable(testData.errorHandling, 'table4');
+            createTable(testData.edgeCases, 'table5');
+            createTable(testData.integration, 'table6');
+            createSummaryTable();
+        });
+    </script>
+</body>
+</html>
