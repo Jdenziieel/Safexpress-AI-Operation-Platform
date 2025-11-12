@@ -510,6 +510,10 @@ async def execute_task(request: TaskRequest):
             print(f"❌ Error: {result.get('error')}")
         if result.get('event_id'):
             print(f"🆔 Event ID: {result.get('event_id')}")
+        
+        # Print complete result before returning
+        print(f"\n📤 Complete Result:")
+        print(json.dumps(result, indent=2, default=str))
         print(f"{'='*60}\n")
         
         return result

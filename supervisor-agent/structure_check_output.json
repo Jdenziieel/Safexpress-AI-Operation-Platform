@@ -1,0 +1,73 @@
+{
+  "agents": {
+    "gmail_agent": {
+      "exists": true,
+      "tools": [
+        "search_emails",
+        "get_thread_conversation",
+        "reply_to_email",
+        "forward_email",
+        "create_draft_email",
+        "send_draft_email",
+        "search_drafts",
+        "send_email_with_attachment",
+        "add_label",
+        "remove_label",
+        "download_attachment"
+      ]
+    },
+    "docs_agent": {
+      "exists": true,
+      "tools": [
+        "create_doc",
+        "list_my_docs",
+        "extract_template_format",
+        "create_from_my_template",
+        "add_text",
+        "read_doc"
+      ]
+    },
+    "mapping_agent": {
+      "exists": true,
+      "tools": [
+        "parse_file",
+        "extract_dates_from_all_rows",
+        "smart_column_mapping",
+        "transform_data",
+        "extract_date_from_data"
+      ]
+    },
+    "sheets_agent": {
+      "exists": true,
+      "tools": [
+        "update_by_date_match",
+        "upload_mapped_data",
+        "create_sheet"
+      ]
+    },
+    "calendar_agent": {
+      "exists": true,
+      "tools": [
+        "list_events",
+        "create_event",
+        "update_event",
+        "delete_event",
+        "confirm_delete_event",
+        "list_calendars",
+        "create_calendar",
+        "resolve_conflict"
+      ]
+    },
+    "drive_agent": {
+      "exists": true,
+      "tools": [
+        "upload_file",
+        "create_folder",
+        "list_folders",
+        "list_files",
+        "search_files",
+        "get_folder_info"
+      ]
+    }
+  }
+}

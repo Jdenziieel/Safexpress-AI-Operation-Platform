@@ -1,8 +1,13 @@
 """
-Agent Capabilities Configuration
+Agent Capabilities Configuration V2
 
 This file defines the tools and capabilities of each specialized agent in the system.
 Each agent has a description, and a list of tools with their arguments and return values.
+
+VERSION 2 ENHANCEMENTS:
+- Added "can_be_derived_from" metadata for tools requiring technical IDs
+- Enables smart field inference for multi-step workflows
+- Supports conversational UX improvements (ask for search criteria instead of IDs)
 """
 
 agent_capabilities = {
@@ -47,6 +52,11 @@ agent_capabilities = {
                     "all_message_ids": "str — comma-separated list of all message IDs in thread",
                     "error": "str — error message (null if successful)",
                 },
+                "can_be_derived_from": {
+                    "thread_id": {
+                        "source_tool": "search_emails",
+                    }
+                }
             },
             "reply_to_email": {
                 "description": "Replies to an email in its thread (maintains conversation)",
@@ -63,6 +73,12 @@ agent_capabilities = {
                     "subject": "str — reply subject",
                     "error": "str — error message (null if successful)",
                 },
+                "can_be_derived_from": {
+                    "message_id": {
+                        "source_tool": "search_emails",
+
+                    }
+                }
             },
             "forward_email": {
                 "description": "Forwards an email to another recipient with optional message",
@@ -81,6 +97,12 @@ agent_capabilities = {
                     "original_from": "str — original sender of the forwarded email",
                     "error": "str — error message (null if successful)",
                 },
+                "can_be_derived_from": {
+                    "message_id": {
+                        "source_tool": "search_emails",
+                        
+                    }
+                }
             },
             "create_draft_email": {
                 "description": "Creates a draft email without sending it (safer than send_email)",
@@ -112,6 +134,12 @@ agent_capabilities = {
                     "subject": "str — email subject",
                     "error": "str — error message (null if successful)",
                 },
+                "can_be_derived_from": {
+                    "draft_id": {
+                        "source_tool": "search_drafts",
+                        
+                    }
+                }
             },
             "search_drafts": {
                 "description": "Search for draft emails in Gmail. Returns drafts with nested message details matching Gmail API format.",
@@ -159,40 +187,6 @@ agent_capabilities = {
                     "error": "str — error message (null if successful)",
                 },
             },
-            "add_label": {
-                "description": "Adds a system label to an email (star, mark unread, mark important, move to spam/trash)",
-                "args": {
-                    "message_id": "str (required) — message ID of email to label",
-                    "label": "str (required) — label to add: STARRED, UNREAD, IMPORTANT, SPAM, TRASH",
-                },
-                "returns": {
-                    "success": "bool — whether label was added successfully",
-                    "message_id": "str — the message ID that was modified",
-                    "thread_id": "str — thread ID of the email",
-                    "label_added": "str — the label that was added",
-                    "current_labels": "str — comma-separated list of all current labels",
-                    "from": "str — email sender",
-                    "subject": "str — email subject",
-                    "error": "str — error message (null if successful)",
-                },
-            },
-            "remove_label": {
-                "description": "Removes a system label from an email (unstar, mark read, unmark important, remove from spam/trash)",
-                "args": {
-                    "message_id": "str (required) — message ID of email to unlabel",
-                    "label": "str (required) — label to remove: STARRED, UNREAD, IMPORTANT, SPAM, TRASH",
-                },
-                "returns": {
-                    "success": "bool — whether label was removed successfully",
-                    "message_id": "str — the message ID that was modified",
-                    "thread_id": "str — thread ID of the email",
-                    "label_removed": "str — the label that was removed",
-                    "current_labels": "str — comma-separated list of remaining labels",
-                    "from": "str — email sender",
-                    "subject": "str — email subject",
-                    "error": "str — error message (null if successful)",
-                },
-            },
             "download_attachment": {
                 "description": "Downloads an email attachment to local storage",
                 "args": {
@@ -209,6 +203,12 @@ agent_capabilities = {
                     "save_path": "str — full path where file was saved",
                     "file_size": "int — size in bytes",
                     "error": "str — error message (null if successful)",
+                },
+                "can_be_derived_from": {
+                    "message_id": {
+                        "source_tool": "search_emails",
+                        
+                    }
                 },
             },
         },
@@ -244,6 +244,12 @@ agent_capabilities = {
                 "description": "Analyze template to find placeholders",
                 "args": {"template_document_id": "str (required)"},
                 "returns": {"success": "bool", "placeholders": "list", "error": "str"},
+                "can_be_derived_from": {
+                    "template_document_id": {
+                        "source_tool": "list_my_docs",
+                        
+                    }
+                }
             },
             "create_from_my_template": {
                 "description": "Create from template with placeholder replacement",
@@ -258,6 +264,12 @@ agent_capabilities = {
                     "url": "str",
                     "error": "str",
                 },
+                "can_be_derived_from": {
+                    "template_document_id": {
+                        "source_tool": "list_my_docs",
+                        
+                    }
+                }
             },
             "add_text": {
                 "description": "Adds text to an existing Google Doc",
@@ -272,6 +284,12 @@ agent_capabilities = {
                     "text_length": "int — length of text added",
                     "error": "str — error message (null if successful)",
                 },
+                "can_be_derived_from": {
+                    "document_id": {
+                        "source_tool": "list_my_docs",
+                        
+                    }
+                }
             },
             "read_doc": {
                 "description": "Reads text content from a Google Doc",
@@ -286,6 +304,12 @@ agent_capabilities = {
                     "title": "str — document title",
                     "error": "str — error message (null if successful)",
                 },
+                "can_be_derived_from": {
+                    "document_id": {
+                        "source_tool": "list_my_docs",
+                        
+                    }
+                }
             },
         },
         "template_workflow": {
@@ -347,7 +371,7 @@ agent_capabilities = {
                     "sample_data": "list — first 5 rows for analysis",
                 },
             },
-            "extract_dates_from_all_rows": {  # ✅ NEW
+            "extract_dates_from_all_rows": {
                 "description": "Extract dates from ALL rows for date-based matching",
                 "args": {
                     "data": "str (required) — JSON string from parse_file's full_data",
@@ -402,7 +426,7 @@ agent_capabilities = {
     "sheets_agent": {
         "description": "Google Sheets CRUD operations. Upload pre-transformed data from mapping_agent.",
         "tools": {
-            "update_by_date_match": {  # ✅ NEW - PRIMARY TOOL FOR DATE-BASED UPDATES
+            "update_by_date_match": {
                 "description": "Update Google Sheets rows by matching dates (NO append, only update existing rows)",
                 "args": {
                     "sheet_id": "str (required) — Google Sheets ID",
@@ -416,6 +440,12 @@ agent_capabilities = {
                     "rows_updated": "int — number of rows successfully updated",
                     "rows_not_found": "list — dates in Excel but not in Sheets",
                 },
+                "can_be_derived_from": {
+                    "sheet_id": {
+                        "source_tool": "drive_agent.search_files",
+                        
+                    }
+                }
             },
             "upload_mapped_data": {
                 "description": "Upload/append pre-transformed data (USE update_by_date_match FOR DATE MATCHING)",
@@ -429,6 +459,12 @@ agent_capabilities = {
                     "success": "bool",
                     "rows_added": "int",
                 },
+                "can_be_derived_from": {
+                    "sheet_id": {
+                        "source_tool": "drive_agent.search_files",
+                        
+                    }
+                }
             },
             "create_sheet": {
                 "description": "Create new Google Spreadsheet",
@@ -508,6 +544,12 @@ agent_capabilities = {
                     "changes": "list - what was changed",
                     "message": "str",
                 },
+                "can_be_derived_from": {
+                    "event_id": {
+                        "source_tool": "list_events",
+                        
+                    }
+                }
             },
             "delete_event": {
                 "description": "Delete a calendar event (requires confirmation first). Sends cancellation emails to attendees.",
@@ -525,6 +567,12 @@ agent_capabilities = {
                     "confirmation_prompt": "str - if confirmation needed",
                     "message": "str",
                 },
+                "can_be_derived_from": {
+                    "event_id": {
+                        "source_tool": "list_events",
+                       
+                    }
+                }
             },
             "confirm_delete_event": {
                 "description": "Confirm and execute deletion after delete_event returns requires_confirmation=true",
@@ -537,6 +585,12 @@ agent_capabilities = {
                     "deleted": "bool",
                     "message": "str",
                 },
+                "can_be_derived_from": {
+                    "event_id": {
+                        "source_tool": "list_events",
+                        
+                    }
+                }
             },
             "list_calendars": {
                 "description": "List all user's calendars",
@@ -571,6 +625,12 @@ agent_capabilities = {
                     "event_id": "str",
                     "message": "str",
                 },
+                "can_be_derived_from": {
+                    "conflict_id": {
+                        "source_tool": "create_event",
+                        
+                    }
+                }
             },
         },
     },

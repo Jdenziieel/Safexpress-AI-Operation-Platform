@@ -140,17 +140,19 @@ function AIChat() {
   }, [isStreaming, threadId]); // Add threadId dependency
 
 
-  // Add this new function after fetchPendingActions (around line 110)
+  // Fetch threads from new thread API
   const fetchThreads = async () => {
     setIsLoadingThreads(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/conversations`);
+      // Use hardcoded user_id for now - you can make this dynamic later
+      const userId = "default_user";
+      const response = await fetch(`${API_BASE_URL}/threads?user_id=${userId}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch threads: ${response.status}`);
       }
       const data = await response.json();
       console.log("Fetched threads:", data);
-      setThreads(data.conversations || []);
+      setThreads(data.threads || []);
     } catch (error) {
       console.error("Error fetching threads:", error);
     } finally {
@@ -173,7 +175,7 @@ function AIChat() {
     }
   };
 
-  // Add this new function after handleThreadSelect
+  // Delete thread using new thread API
   const handleDeleteThread = async (thread_id, e) => {
     e.stopPropagation(); // Prevent thread selection when clicking delete
     
@@ -182,7 +184,7 @@ function AIChat() {
     }
     
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/${thread_id}`, {
+      const response = await fetch(`${API_BASE_URL}/threads/${thread_id}`, {
         method: "DELETE",
       });
       
@@ -202,51 +204,56 @@ function AIChat() {
     }
   };
 
-  // Update loadOrCreateThread function (around line 83) - add fetchThreads at the end
+  // Load or create thread using new thread API
   const loadOrCreateThread = async () => {
     setIsLoadingThread(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/conversations`);
+      const userId = "default_user";
+      const response = await fetch(`${API_BASE_URL}/threads?user_id=${userId}`);
       if (!response.ok) {
-        throw new Error(`Failed to list conversations: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to list threads: ${response.status} ${response.statusText}`);
       }
       const threadsData = await response.json();
-      console.log("Fetched conversations:", threadsData);
+      console.log("Fetched threads:", threadsData);
 
-      if (threadsData.conversations && threadsData.conversations.length > 0) {
-        const latestThread = threadsData.conversations[0];
-        setThreadId(latestThread.conversation_id);
-        await loadThreadMessages(latestThread.conversation_id);
+      if (threadsData.threads && threadsData.threads.length > 0) {
+        const latestThread = threadsData.threads[0];
+        setThreadId(latestThread.thread_id);
+        await loadThreadMessages(latestThread.thread_id);
         setIsLoadingThread(false);
-        console.log("Loaded existing thread:", latestThread.conversation_id);
+        console.log("Loaded existing thread:", latestThread.thread_id);
         await fetchThreads();
         return;
       }
       
-      // No existing threads, create new one (without sending message)
-      await createNewThread();
+      // No existing threads, start fresh (don't create until user sends first message)
+      setMessages([]);
+      setThreadId(null);
+      setIsLoadingThread(false);
+      await fetchThreads();
       
     } catch (error) {
-      console.error("Error loading or creating thread:", error);
-      await createNewThread(); // Fallback to creating new thread
+      console.error("Error loading threads:", error);
+      setMessages([]);
+      setThreadId(null);
+      setIsLoadingThread(false);
     }
   };
 
 
   const createNewThread = async () => {
     try {
-      // Generate conversation ID locally (no backend call, no tokens)
-      const newThreadId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setThreadId(newThreadId);
-      
-      // Start with empty chat - user will manually type first message
+      // Clear current state
       setMessages([]);
+      setThreadId(null);
+      setPendingActions([]);
       
-      console.log("✅ Created new thread (no tokens used):", newThreadId);
+      // Thread will be created when user sends first message
+      console.log("✅ Ready for new thread (will be created on first message)");
       await fetchThreads(); // Refresh threads list
       
     } catch (error) {
-      console.error("Error creating thread:", error);
+      console.error("Error preparing new thread:", error);
       setMessages(prev => [...prev, {
           id: `error-${Date.now()}`,
           role: "assistant",
@@ -261,39 +268,22 @@ function AIChat() {
 
   const loadThreadMessages = async (thread_id) => {
     try {
-      // Fetch conversation details including history
-      // const response = await api.get(`/chat/${thread_id}`); // If using api.js
-      const response = await fetch(`${API_BASE_URL}/chat/${thread_id}`);
+      // Fetch thread messages from new API
+      const response = await fetch(`${API_BASE_URL}/threads/${thread_id}/messages`);
       if (!response.ok) {
           const errorData = await response.json().catch(() => ({ detail: `HTTP error! status: ${response.status}` }));
           throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log("Loaded conversation details:", data);
+      console.log("Loaded thread messages:", data);
 
-      // Convert messages to UI format using the backend's structure
-      const formattedMessages = (data.conversation_history || []).map((msg, idx) => ({
-        id: msg.message_id || `msg-${thread_id}-${idx}`, // Use backend ID or generate one
-        role: msg.sender || msg.role || "assistant", // Fallback if sender is not set
-        content: msg.message || msg.content || "No content", // Fallback if content field varies
+      // Convert messages to UI format
+      const formattedMessages = (data.messages || []).map((msg, idx) => ({
+        id: msg.message_id || `msg-${thread_id}-${idx}`,
+        role: msg.role || "assistant",
+        content: msg.content || "No content",
         timestamp: msg.created_at ? new Date(msg.created_at) : new Date(),
       }));
-      
-      // If there's a last_execution_summary, add it as the most recent assistant message
-      // (only if it's not already in conversation_history)
-      if (data.last_execution_summary && data.executed_count > 0) {
-        const lastMessage = formattedMessages[formattedMessages.length - 1];
-        // Check if last message is already the execution summary
-        if (!lastMessage || lastMessage.content !== data.last_execution_summary) {
-          formattedMessages.push({
-            id: `exec-${data.last_executed_at}`,
-            role: "assistant",
-            content: data.last_execution_summary,
-            timestamp: new Date(data.last_executed_at),
-            isExecutionResult: true, // Flag to style differently if needed
-          });
-        }
-      }
       
       setMessages(formattedMessages);
       console.log(`✅ Loaded ${formattedMessages.length} messages for thread ${thread_id}`);
@@ -483,38 +473,59 @@ function AIChat() {
       console.log("📤 Sending message:", userMessage);
       console.log("📍 Thread ID:", currentThreadId || "null (first message)");
 
-      // Send to backend - it will create conversation on first message
-      const response = await fetch(`${API_BASE_URL}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMessage,
-          conversation_id: currentThreadId, // May be null for first message
-        }),
-      });
+      let responseData;
+      
+      // If no thread exists, create one with initial message
+      if (!currentThreadId) {
+        const response = await fetch(`${API_BASE_URL}/threads`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: "default_user",
+            message: userMessage,
+            tags: []
+          }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          detail: `HTTP error! status: ${response.status}`,
-        }));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({
+            detail: `HTTP error! status: ${response.status}`,
+          }));
+          throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        }
 
-      const data = await response.json();
-      console.log("📥 Received response:", data);
+        responseData = await response.json();
+        console.log("📥 Created thread:", responseData);
+        
+        // Set the new thread ID
+        setThreadId(responseData.thread_id);
+        await fetchThreads(); // Refresh threads list
+      } else {
+        // Thread exists, send message to existing thread
+        const response = await fetch(`${API_BASE_URL}/threads/${currentThreadId}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: userMessage,
+          }),
+        });
 
-      // Update threadId if this was first message (backend created new conversation)
-      if (!currentThreadId && data.conversation_id) {
-        setThreadId(data.conversation_id);
-        console.log("✅ Created conversation:", data.conversation_id);
-        await fetchThreads(); // Refresh threads list to show new conversation
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({
+            detail: `HTTP error! status: ${response.status}`,
+          }));
+          throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+
+        responseData = await response.json();
+        console.log("📥 Received response:", responseData);
       }
 
       // Get the bot's response text
-      const fullResponse = data.response || "No response received from the assistant.";
+      const fullResponse = responseData.bot_response || "No response received from the assistant.";
       
       // Check if the conversation is now ready for execution
-      const isReadyForExecution = !!data.ready_for_execution;
+      const isReadyForExecution = !!responseData.ready_for_execution;
       
       if (isReadyForExecution) {
         console.log("✅ Workflow ready for execution based on response.");
@@ -535,20 +546,10 @@ function AIChat() {
         await new Promise((resolve) => setTimeout(resolve, 30));
       }
 
-      // Update the assistant message with actual message_id from backend if provided
-      if (data.assistant_message_id) {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessageId
-              ? { ...msg, id: data.assistant_message_id }
-              : msg
-          )
-        );
-      }
-
       // Auto-execute when ready (requires manual approval if risk level is DANGEROUS)
       if (isReadyForExecution) {
-        console.log("🔄 Auto-executing conversation:", data.conversation_id || currentThreadId);
+        const execThreadId = responseData.thread_id || currentThreadId;
+        console.log("🔄 Auto-executing conversation:", execThreadId);
         
         // Call the execute endpoint
         const execResponse = await fetch(
@@ -696,19 +697,19 @@ function AIChat() {
             ) : (
               threads.map((thread) => (
                 <div
-                  key={thread.conversation_id}
-                  className={`thread-item ${thread.conversation_id === threadId ? 'active' : ''}`}
-                  onClick={() => handleThreadSelect(thread.conversation_id)}
+                  key={thread.thread_id}
+                  className={`thread-item ${thread.thread_id === threadId ? 'active' : ''}`}
+                  onClick={() => handleThreadSelect(thread.thread_id)}
                 >
                   <div className="thread-content">
                     <div className="thread-header">
                       <MessageSquare size={16} />
                       <span className="thread-id">
-                        {thread.conversation_id.substring(0, 12)}...
+                        {thread.title || thread.thread_id.substring(0, 12) + '...'}
                       </span>
                     </div>
-                    {thread.intent && (
-                      <span className="thread-intent">{thread.intent}</span>
+                    {thread.status && (
+                      <span className="thread-status">{thread.status}</span>
                     )}
                     <span className="thread-messages">
                       {thread.message_count || 0} messages
@@ -716,7 +717,7 @@ function AIChat() {
                   </div>
                   <button
                     className="thread-delete"
-                    onClick={(e) => handleDeleteThread(thread.conversation_id, e)}
+                    onClick={(e) => handleDeleteThread(thread.thread_id, e)}
                     title="Delete conversation"
                   >
                     <Trash2 size={14} />
@@ -823,13 +824,13 @@ function AIChat() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me to create documents, send emails, or help with tasks..."
-                  disabled={isStreaming || !threadId}
+                  disabled={isStreaming}
                   className="message-textarea"
                   rows={1}
                 />
                 <button
                   type="submit"
-                  disabled={isStreaming || !input.trim() || !threadId}
+                  disabled={isStreaming || !input.trim()}
                   className="send-button"
                 >
                   <Send size={20} />

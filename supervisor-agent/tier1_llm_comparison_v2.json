@@ -1,0 +1,25 @@
+{
+  "response": "{\n    \"intent\": \"too_complex\",\n    \"task_type\": \"search_emails|forward_email|list_events|create_event|create_doc|create_sheet\",\n    \"extracted_info\": {\n        \"search_query\": \"joshdenziel.joves.cics@ust.edu.ph\",\n        \"forward_to\": \"jdenziieel@gmail.com\",\n        \"time_min\": \"5pm\",\n        \"time_max\": \"6pm\",\n        \"attendees\": [\"joshdenziel.joves.cics@ust.edu.ph\", \"jdenziieel@gmail.com\"]\n    },\n    \"missing_fields\": [],\n    \"clarification_question\": \"\",\n    \"reasoning\": \"The user request involves multiple tasks across different agents which makes it too complex to handle in a single step.\",\n    \"suggested_alternatives\": [\n        \"Break down the task into smaller steps: 1. Find and forward the email. 2. Check the schedule. 3. If available, schedule a meeting. 4. Write the meeting details in a document and a sheet.\"\n    ],\n    \"execution_ready\": false,\n    \"execution_summary\": \"\"\n}",
+  "parsed": {
+    "intent": "too_complex",
+    "task_type": "search_emails|forward_email|list_events|create_event|create_doc|create_sheet",
+    "extracted_info": {
+      "search_query": "joshdenziel.joves.cics@ust.edu.ph",
+      "forward_to": "jdenziieel@gmail.com",
+      "time_min": "5pm",
+      "time_max": "6pm",
+      "attendees": [
+        "joshdenziel.joves.cics@ust.edu.ph",
+        "jdenziieel@gmail.com"
+      ]
+    },
+    "missing_fields": [],
+    "clarification_question": "",
+    "reasoning": "The user request involves multiple tasks across different agents which makes it too complex to handle in a single step.",
+    "suggested_alternatives": [
+      "Break down the task into smaller steps: 1. Find and forward the email. 2. Check the schedule. 3. If available, schedule a meeting. 4. Write the meeting details in a document and a sheet."
+    ],
+    "execution_ready": false,
+    "execution_summary": ""
+  }
+}

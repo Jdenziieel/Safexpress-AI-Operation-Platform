@@ -15,9 +15,10 @@ from typing import Optional, List, Dict, Any
 from enum import Enum
 import json
 import os
+import re
 
 # Import agent capabilities for feasibility checking
-from agent_capabilities import agent_capabilities
+from agent_capabilities_v2 import agent_capabilities
 
 # Import utility functions for agent filtering
 from utils import identify_relevant_agents, get_filtered_capabilities
@@ -82,8 +83,10 @@ class ConversationalAgent:
         self, 
         openai_api_key: str, 
         model: str = "gpt-4o", 
-        temperature: float = 0.3, 
-        db_path: str = "threads.db"
+        temperature: float = 0.2, 
+        db_path: str = "threads.db",
+        test_mode: bool = False,  # Enable to only test Unified LLM
+        test_n_responses: int = 5  # Number of responses to generate in test mode
     ):
         self.llm = ChatOpenAI(
             model=model,
@@ -93,6 +96,8 @@ class ConversationalAgent:
         self.openai_api_key = openai_api_key
         self.model = model
         self.temperature = temperature
+        self.test_mode = test_mode  # Store test mode flag
+        self.test_n_responses = test_n_responses  # Store n parameter for testing
         
         # Build FULL capabilities summary once (for "what can you do?" questions)
         self.full_capabilities_summary = self._build_capabilities_summary()
@@ -121,19 +126,35 @@ class ConversationalAgent:
             capabilities.append(f"\n**{agent_name.upper()}:**")
             tools = agent_info.get("tools", {})
             for tool_name, tool_info in tools.items():
-                # Get tool description
-                desc = tool_info.get("description", "")
-                capabilities.append(f"  • {tool_name}: {desc}")
-                
                 # Extract required and optional args
                 args = tool_info.get("args", {})
                 required_args = [k for k, v in args.items() if "(required)" in str(v)]
                 optional_args = [k for k, v in args.items() if "(optional)" in str(v)]
                 
-                if required_args:
-                    capabilities.append(f"    Required: {', '.join(required_args)}")
+                # Check for can_be_derived_from metadata
+                derivation_info = tool_info.get("can_be_derived_from", {})
+                
+                # Build compact format with derivation hints
+                arg_parts = []
+                for req_arg in required_args:
+                    if req_arg in derivation_info:
+                        # Add derivation hint inline
+                        deriv = derivation_info[req_arg]
+                        source = deriv.get("source_tool", "")
+                        criteria = ", ".join(deriv.get("search_criteria", []))
+                        arg_parts.append(f'{req_arg} [via {source}: {criteria}]')
+                    else:
+                        arg_parts.append(req_arg)
+                
+                # Build final argument string
+                arg_list = []
+                if arg_parts:
+                    arg_list.append(', '.join(arg_parts))
                 if optional_args:
-                    capabilities.append(f"    Optional: {', '.join(optional_args)}")
+                    arg_list.append(f"[{', '.join(optional_args)}]")
+                
+                args_str = f"({', '.join(arg_list)})" if arg_list else "()"
+                capabilities.append(f"  • {tool_name}{args_str}")
         
         return "\n".join(capabilities)
     
@@ -405,7 +426,7 @@ Try one of these or tell me what you'd like to do!"""
         if recent_messages:
             history_snippet = "Recent context:\n"
             for turn in recent_messages:
-                content_preview = turn['content'][:80]
+                content_preview = turn['content']
                 history_snippet += f"  {turn['role']}: {content_preview}\n"
             
             assistant_turns = [t for t in recent_messages if t['role'] == 'assistant']
@@ -428,6 +449,11 @@ Try one of these or tell me what you'd like to do!"""
         has_extracted_info = bool(conversation_state.extracted_info)
         missing_field = conversation_state.missing_fields[0] if conversation_state.missing_fields else None
         
+        # Display current state for debugging
+        print(f"  → Current extracted_info: {json.dumps(conversation_state.extracted_info, indent=2)}")
+        print(f"  → Current missing_fields: {conversation_state.missing_fields}")
+        print(f"  → First missing_field: {missing_field}")
+        
         # Build unified prompt
         context_note = ""
         if is_awaiting_confirmation:
@@ -436,6 +462,19 @@ Try one of these or tell me what you'd like to do!"""
             context_note = f"\n⚠️ CONTEXT: Bot asked about missing '{missing_field}': '{conversation_state.clarification_question}'"
         elif has_extracted_info:
             context_note = f"\n⚠️ CONTEXT: Current request data: {json.dumps(conversation_state.extracted_info)}"
+        
+        # Add extracted_info and missing_fields to context for LLM
+        state_context = ""
+        if has_extracted_info or conversation_state.missing_fields or conversation_state.execution_summary:
+            state_context = f"\n\n📋 CURRENT STATE:\n"
+            if has_extracted_info:
+                state_context += f"- Extracted so far: {json.dumps(conversation_state.extracted_info)}\n"
+            if conversation_state.missing_fields:
+                state_context += f"- Still missing: {conversation_state.missing_fields}\n"
+                if missing_field:
+                    state_context += f"- Next to collect: {missing_field}\n"
+            if conversation_state.execution_summary:
+                state_context += f"- Current task description: {conversation_state.execution_summary}\n"
         
         # UNIFIED prompt that handles ALL Tier 0.5 categories
         unified_prompt = f"""Classify user intent and extract data. Return JSON only.
@@ -453,7 +492,9 @@ QUERY SCOPE (for task_request only):
 - general: User asking about capabilities/features ("what can you do?", "show me features")
 - specific: User wants to perform a task ("send email", "search for invoices")
 
-{history_snippet}{context_note}
+- Use exact field names from tool criteria and capabilities_to_show when extracting fields and naming them.
+
+{history_snippet}{context_note}{state_context}
 User: "{user_message}"
 
 OUTPUT (JSON only):
@@ -465,16 +506,10 @@ OUTPUT (JSON only):
     "has_compound_cancel": false,  // only for cancellation with new task
     "extracted_value": null,       // only for followup_answer
     "field_to_modify": null,       // only for modification
-    "new_value": null              // only for modification
+    "new_value": null,             // only for modification
+    "execution_summary": null      // only for followup_answer - human-readable task description
 }}
 
-EXAMPLES:
-User: "yes" (context: awaiting confirmation) → {{"category": "confirmation", "confidence": "high", "reasoning": "Clear approval"}}
-User: "john@example.com" (context: asked for email) → {{"category": "followup_answer", "confidence": "high", "reasoning": "Direct answer", "extracted_value": "john@example.com"}}
-User: "change subject to Q4" (context: has data) → {{"category": "modification", "confidence": "high", "reasoning": "Single field", "field_to_modify": "subject", "new_value": "Q4"}}
-User: "cancel and search invoices" → {{"category": "cancellation", "confidence": "high", "reasoning": "Compound cancel", "has_compound_cancel": true}}
-User: "what can you do?" → {{"category": "task_request", "confidence": "high", "reasoning": "Capabilities inquiry", "query_scope": "general"}}
-User: "send email" → {{"category": "task_request", "confidence": "high", "reasoning": "New action", "query_scope": "specific"}}
 """
 
         try:
@@ -503,7 +538,7 @@ User: "send email" → {{"category": "task_request", "confidence": "high", "reas
                 print(f"⚠️ JSON parse error: {json_err}")
                 print(f"   Response text: {response_text[:200]}")
                 return None, "specific"
-            
+
             category = result.get("category")
             
             print(f"⚡ Tier 0.5 Unified: {category.upper()} detected")
@@ -588,15 +623,46 @@ User: "send email" → {{"category": "task_request", "confidence": "high", "reas
             # 5. FOLLOWUP ANSWER
             if category == "followup_answer":
                 extracted_value = result.get("extracted_value")
+                execution_summary_from_llm = result.get("execution_summary")  # ✅ Get execution_summary from LLM
                 
                 if extracted_value and missing_field:
                     print(f"  → Extracted {missing_field} = {extracted_value}")
+                    print(f"  → Current extracted_info: {conversation_state.extracted_info}")
+                    print(f"  → Current missing_fields: {conversation_state.missing_fields}")
                     updated_info = conversation_state.extracted_info.copy()
-                    updated_info[missing_field] = extracted_value
                     
-                    remaining_missing = [f for f in conversation_state.missing_fields if f != missing_field]
+                    # Check if extracted_value is a dict with multiple fields
+                    if isinstance(extracted_value, dict):
+                        # User provided multiple pieces of info - merge all fields
+                        print(f"  → Multi-field answer detected, merging all fields")
+                        for key, val in extracted_value.items():
+                            updated_info[key] = val
+                        
+                        # Remove all fields that were provided from missing_fields
+                        remaining_missing = [f for f in conversation_state.missing_fields if f not in extracted_value]
+                    else:
+                        # Single field answer - assign to missing_field
+                        updated_info[missing_field] = extracted_value
+                        remaining_missing = [f for f in conversation_state.missing_fields if f != missing_field]
+                    
+                    print(f"  → Updated extracted_info: {updated_info}")
+                    print(f"  → Remaining missing_fields: {remaining_missing}")
                     
                     if not remaining_missing:
+                        # ✅ All fields complete - use execution_summary from LLM or generate fallback
+                        final_execution_summary = execution_summary_from_llm or conversation_state.execution_summary
+                        
+                        # If still no execution_summary, generate from extracted_info
+                        if not final_execution_summary:
+                            task_type = updated_info.get("task_type", "task")
+                            summary_parts = []
+                            for key, value in updated_info.items():
+                                if key != "task_type" and value:
+                                    summary_parts.append(f"{key}: {value}")
+                            final_execution_summary = f"{task_type} - " + ", ".join(summary_parts) if summary_parts else task_type
+                        
+                        print(f"  → Execution summary: {final_execution_summary}")
+                        
                         return ConversationAnalysis(
                             intent=ConversationIntent.READY_TO_EXECUTE,
                             task_type=updated_info.get("task_type", "task"),
@@ -605,7 +671,7 @@ User: "send email" → {{"category": "task_request", "confidence": "high", "reas
                             clarification_question=None,
                             reasoning="All required fields collected",
                             execution_ready=True,
-                            execution_summary=conversation_state.execution_summary
+                            execution_summary=final_execution_summary  # ✅ Use generated summary
                         ), None  # No query_scope for non-task_request
                     else:
                         next_field = remaining_missing[0]
@@ -615,7 +681,7 @@ User: "send email" → {{"category": "task_request", "confidence": "high", "reas
                             extracted_info=updated_info,
                             missing_fields=remaining_missing,
                             clarification_question=f"Great! What should the {next_field} be?",
-                            reasoning=f"Extracted {missing_field}, still need {next_field}",
+                            reasoning=f"Extracted {list(extracted_value.keys()) if isinstance(extracted_value, dict) else missing_field}, still need {next_field}",
                             execution_ready=False,
                             execution_summary=None
                         ), None  # No query_scope for non-task_request
@@ -876,16 +942,27 @@ What would you like to do?"""
             relevant_agents = identify_relevant_agents(user_message)
             capabilities_to_show = self._build_capabilities_summary(relevant_agents)
             print(f"🔍 Query classified as SPECIFIC - filtered to agents: {relevant_agents}")
-        
+            print(f"🔍 Capabilities are: {capabilities_to_show}")
+            
         # Build system prompt with capabilities
-        system_prompt = f"""Validate and clarify user requests before execution. Check feasibility against AVAILABLE CAPABILITIES, extract required fields, ask specific questions for missing info.
+        system_prompt = f"""Validate and clarify user requests before execution. Check feasibility against available agents and tools, extract required fields, ask specific questions for missing info.
 
-AVAILABLE CAPABILITIES:
+Available agents and tools:
 {capabilities_to_show}
 
 CONTEXT RULES:
 - Post-execution: Conversation continues. Treat modification requests as NEW tasks
 - Compound cancel ("cancel X and do Y"): Extract ONLY new task (Y), ignore old context, set intent based on new task
+
+
+-DERIVABLE FIELDS [via tool: criteria]:
+Fields marked [via tool: criteria] are derived by calling that tool. Extract the tool criteria instead of asking for the field directly based on the capabilities_to_show already exposed and use exact field names for the args.
+
+Example: forward_email(message_id [via search_emails: query, max_results, label_ids], to)
+- User: "forward email from john@example.com to jane@example.com"
+- extracted_info: {{"query": "john@example.com", "to": "jane@example.com"}}
+- missing_fields: ["message_id"] (derived via search)
+- DON'T ask for message_id - it's derived from from_email
 
 INTENT CLASSIFICATION:
 - needs_clarification: Missing required fields
@@ -898,8 +975,8 @@ JSON OUTPUT:
 {{
     "intent": "needs_clarification|not_feasible|too_complex|ready_to_execute|small_talk",
     "task_type": "send_email|search_emails|reply_to_email|etc",
-    "extracted_info": {{"recipient": "john@example.com", "subject": "Meeting"}},
-    "missing_fields": ["recipient"],
+    "extracted_info": {{"to": "john@example.com", "subject": "Meeting"}},
+    "missing_fields": ["to", "subject"],
     "clarification_question": "Who should I send this to?",
     "reasoning": "1 sentence explanation",
     "suggested_alternatives": ["Alternative 1", "Alternative 2"],
@@ -907,10 +984,16 @@ JSON OUTPUT:
     "execution_summary": "Send email to john@example.com about Meeting"
 }}
 
-CLARIFICATION QUESTIONS - Be specific:
-✓ "Who would you like to send this email to?"
-✓ "What should the subject line be?"
-✗ "What are the details?" (too vague)
+IMPORTANT: Always provide execution_summary - a human-readable description of what the user wants to do.
+- For needs_clarification: Describe the task being clarified (e.g., "Send email to john@example.com")
+- For too_complex: High-level description of what user wants
+- This helps track conversation context across multiple turns and provides meaningful input to supervisor
+
+CLARIFICATION QUESTIONS - Be specific
+
+ROLE DISAMBIGUATION RULE:
+When the user mentions multiple emails or entities, infer each role only from explicit linguistic cues (“from”, “to”, “search”, “forward”, “reply”, etc.). Never assume roles based on mere presence. If any role is unclear, ask for clarification.
+
 """
 
         user_prompt = f"""{history_text}{exec_context}CURRENT USER MESSAGE: {user_message}"""
@@ -951,13 +1034,32 @@ CLARIFICATION QUESTIONS - Be specific:
             # Parse JSON
             analysis_dict = json.loads(response_text)
             
+            # Save for comparison
+            with open("tier1_llm_comparison.json", "w") as f:
+                json.dump({"response": response_text, "parsed": analysis_dict}, f, indent=2)
+            
             # Validate required fields exist
             required_fields = ["intent", "task_type", "extracted_info", "missing_fields", "execution_ready"]
             for field in required_fields:
                 if field not in analysis_dict:
                     raise ValueError(f"Missing required field: {field}")
             
-            return ConversationAnalysis(**analysis_dict)
+            analysis_result = ConversationAnalysis(**analysis_dict)
+            
+            # Print analysis result for debugging
+            print(f"\n{'='*60}")
+            print(f"📊 CONVERSATION ANALYSIS RESULT:")
+            print(f"{'='*60}")
+            print(f"Intent: {analysis_result.intent}")
+            print(f"Task Type: {analysis_result.task_type}")
+            print(f"Extracted Info: {json.dumps(analysis_result.extracted_info, indent=2)}")
+            print(f"Missing Fields: {analysis_result.missing_fields}")
+            print(f"Clarification Question: {analysis_result.clarification_question}")
+            print(f"Execution Ready: {analysis_result.execution_ready}")
+            print(f"Reasoning: {analysis_result.reasoning}")
+            print(f"{'='*60}\n")
+            
+            return analysis_result
             
         except (json.JSONDecodeError, ValueError) as e:
             # JSON parsing or validation failed
@@ -1063,6 +1165,20 @@ CLARIFICATION QUESTIONS - Be specific:
         # Update state with analysis intent
         conversation_state.intent = analysis.intent
         
+        # Print updated conversation state for debugging
+        print(f"\n{'='*60}")
+        print(f"💬 UPDATED CONVERSATION STATE:")
+        print(f"{'='*60}")
+        print(f"Intent: {conversation_state.intent}")
+        print(f"Task Type: {conversation_state.extracted_info.get('task_type', 'N/A')}")
+        print(f"Extracted Info: {json.dumps(conversation_state.extracted_info, indent=2)}")
+        print(f"Missing Fields: {conversation_state.missing_fields}")
+        print(f"Clarification Question: {conversation_state.clarification_question}")
+        print(f"Ready for Execution: {conversation_state.ready_for_execution}")
+        print(f"Execution Summary: {conversation_state.execution_summary}")
+        print(f"{'='*60}\n")
+    # In case of compound cancel detected, we should proceed with the task and if cancel only just return response that cancelle just fine.
+
         # Generate response based on intent
         if analysis.intent == ConversationIntent.SMALL_TALK:
             # Check if this is a cancellation
@@ -1070,13 +1186,14 @@ CLARIFICATION QUESTIONS - Be specific:
                 response = "👍 No problem! Request cancelled. Let me know if you need anything else."
             else:
                 response = "I'm here to help you manage your emails, calendar, and documents. What would you like me to do?"
-        
+            # ------- Can improve small_talk response into not being static later -------
+
         elif analysis.intent == ConversationIntent.CANCELLED:
             response = "👍 No problem! Request cancelled.\n\n"
             
             # Extract cancelled info from reasoning field for user feedback
             # reasoning format: "User cancelled request. Previous data: {...}"
-            import re
+            #  ----  CHECK THIS ONE AS WELL. I DON'T UNDERSTAND BUT I THINK THIS WILL CAUSE BUGS ----
             if "Previous data:" in analysis.reasoning:
                 try:
                     # Extract the dict from reasoning string
@@ -1111,7 +1228,8 @@ CLARIFICATION QUESTIONS - Be specific:
                 for i, alt in enumerate(analysis.suggested_alternatives, 1):
                     response += f"{i}. {alt}\n"
             response += f"\nWould you like to proceed with one of these approaches?"
-        
+
+        # IMPROVE CLARIFICATION RESPONSE  OR TO BE MORE DYNAMIC LATER
         elif analysis.intent == ConversationIntent.NEEDS_CLARIFICATION:
             response = f"📋 {analysis.clarification_question}\n\n"
             if analysis.extracted_info:
@@ -1168,13 +1286,15 @@ CLARIFICATION QUESTIONS - Be specific:
     def build_supervisor_input(self, conversation_state: ConversationState) -> str:
         """
         Build a complete, well-formed input for the supervisor agent.
+        Includes both execution_summary and extracted_info for comprehensive planning.
         
         Args:
             conversation_state: Current conversation state
             
         Returns:
-            Clean input string for supervisor
+            Clean input string for supervisor with task description and parameters
         """
+        # Get execution summary (with fallback)
         if not conversation_state.execution_summary:
             # Fallback: reconstruct from extracted info
             info = conversation_state.extracted_info
@@ -1186,9 +1306,25 @@ CLARIFICATION QUESTIONS - Be specific:
                 if key != "task_type":
                     parts.append(f"{key}: {value}")
             
-            return f"{task_type} with " + ", ".join(parts)
+            execution_summary = f"{task_type} with " + ", ".join(parts)
+        else:
+            execution_summary = conversation_state.execution_summary
         
-        return conversation_state.execution_summary
+        # Build comprehensive input with both summary and detailed parameters
+        supervisor_input = execution_summary
+        
+        # Add extracted_info as structured parameters if available
+        if conversation_state.extracted_info:
+            supervisor_input += "\n\nParameters:\n"
+            for key, value in conversation_state.extracted_info.items():
+                # Format the value for better readability
+                if isinstance(value, (list, dict)):
+                    value_str = json.dumps(value, indent=2)
+                else:
+                    value_str = str(value)
+                supervisor_input += f"- {key}: {value_str}\n"
+        
+        return supervisor_input
     
     def _filter_context_for_user(self, final_context: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -1217,10 +1353,16 @@ CLARIFICATION QUESTIONS - Be specific:
             "today_date", "yesterday_date", "current_year", "current_month", "current_day",
             
             # HTML/technical content
-            "body_html", "body_clean", "raw_content", "encoded_data",
+            "body_html", "body_clean", "raw_content", "encoded_data", "body",  # Full body is too verbose
             
             # Internal flags
             "is_draft", "is_sent", "is_read", "has_attachments", "body_has_tables",
+            
+            # Duplicate data
+            "latest_email", "first_email",  # Redundant if emails array exists
+            
+            # Query details (user already knows what they asked)
+            "query",
         }
         
         # Fields to KEEP if they contain meaningful data (whitelist approach)
@@ -1322,42 +1464,67 @@ CLARIFICATION QUESTIONS - Be specific:
         print(f"   Before: {len(final_context)} fields, {len(json.dumps(final_context))} chars")
         print(f"   After: {len(user_relevant_context)} fields, {len(json.dumps(user_relevant_context))} chars")
         
-        # Format filtered context for readability
-        context_summary = []
+        # NEW: Build READABLE context with actual content (not just field names)
+        context_lines = []
+        
         for key, value in user_relevant_context.items():
-            if isinstance(value, list):
-                context_summary.append(f"- {key}: {len(value)} items")
-                if len(value) > 0 and isinstance(value[0], dict):
-                    # Show first item preview with user-relevant fields only
-                    sample_keys = list(value[0].keys())[:5]
-                    context_summary.append(f"  (fields: {', '.join(sample_keys)})")
+            # For arrays of objects (emails, documents, etc.)
+            if isinstance(value, list) and len(value) > 0:
+                if isinstance(value[0], dict):
+                    # Show FIRST ITEM with actual content
+                    first_item = value[0]
+                    context_lines.append(f"\n{key} (found {len(value)}):")
+                    
+                    # Extract key user-facing fields with actual values
+                    for item_key, item_value in first_item.items():
+                        # Truncate long values
+                        if isinstance(item_value, str) and len(item_value) > 150:
+                            item_value = item_value[:150] + "..."
+                        context_lines.append(f"  • {item_key}: {item_value}")
+                    
+                    # If multiple items, show count
+                    if len(value) > 1:
+                        context_lines.append(f"  (+ {len(value) - 1} more)")
+                else:
+                    # Simple array (strings, numbers)
+                    context_lines.append(f"{key}: {value}")
+            
+            # For single objects
             elif isinstance(value, dict):
-                context_summary.append(f"- {key}: object with {len(value)} fields")
+                context_lines.append(f"\n{key}:")
+                for sub_key, sub_value in value.items():
+                    if isinstance(sub_value, str) and len(sub_value) > 150:
+                        sub_value = sub_value[:150] + "..."
+                    context_lines.append(f"  • {sub_key}: {sub_value}")
+            
+            # For primitives (count, total, etc.)
             else:
-                context_summary.append(f"- {key}: {value}")
+                context_lines.append(f"{key}: {value}")
         
-        context_text = "\n".join(context_summary) if context_summary else "No data returned"
+        context_text = "\n".join(context_lines) if context_lines else "No data returned"
         
-        system_prompt = f"""You are a helpful assistant that explains task execution results to users in a friendly, conversational way.
+        print(f"\n📝 Generating user-friendly summary...")
+        print(f"📊 Context for LLM ({len(context_text)} chars):\n{context_text[:500]}...\n")
+        
+        system_prompt = f"""You are a concise AI assistant summarizing task results.
 
-Your job is to:
-1. Confirm what task was completed
-2. Highlight the key results and data
-3. Explain what variables/data are now available
-4. Be concise but informative
+RULES:
+1. Start with outcome: ✅ success or ❌ failed
+2. Use ACTUAL DATA from context (names, subjects, dates - NOT "email data")
+3. NEVER say: "variables", "fields available", "data includes"
+4. Be SPECIFIC: "Found email from Mike about Rovo AI sent yesterday"
 
-Keep your response under 200 words. Use emojis sparingly for clarity.
-Focus on what matters to the user, not technical details."""
 
-        user_prompt = f"""The user requested: "{original_request}"
+Use the ACTUAL content below, not generic descriptions."""
 
-Execution Status: {execution_status}
-System Message: {execution_message}
+        user_prompt = f"""Task: {original_request}
+Status: {execution_status}
+Message: {execution_message}
 
-Final Context (Available Data):
+Context (use ACTUAL values below):
 {context_text}
 
-Please summarize what was accomplished and what data is now available in a friendly, user-facing way."""
+Summarize the results using specific data"""
 
         try:
             llm_response = self.llm.invoke(

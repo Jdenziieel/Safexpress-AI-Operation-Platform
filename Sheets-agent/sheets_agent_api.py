@@ -938,6 +938,11 @@ async def execute_tool(request: ToolRequest):
         print(
             f"   {'✅' if result.get('success') else '❌'} Result: {result.get('success', False)}"
         )
+        
+        # Print complete result before returning
+        print(f"\n📤 Complete Result:")
+        print(json.dumps(result, indent=2, default=str))
+        print(f"{'='*60}\n")
 
         return ToolResponse(
             success=result.get("success", False),

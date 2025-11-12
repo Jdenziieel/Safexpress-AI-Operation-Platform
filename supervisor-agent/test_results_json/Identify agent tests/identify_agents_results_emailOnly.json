@@ -1,0 +1,25 @@
+{
+    "count": 2,
+    "user_message": "find the latest email from joshdenziel.joves.cics@ust.edu.ph and forward it to jdenziieel@gmail.com with the exact content",
+    "responses": [
+        {
+            "response_number": 1,
+            "agents": [
+                "gmail_agent"
+            ],
+            "raw_response": "[\n    \"gmail_agent\"\n]",
+            "success": true,
+            "error": null
+        },
+        {
+            "response_number": 2,
+            "agents": [
+                "gmail_agent"
+            ],
+            "raw_response": "[\n    \"gmail_agent\"\n]",
+            "success": true,
+            "error": null
+        }
+    ],
+    "prompt_used": "Based on this user request, which agents are needed? \n\nAvailable agents:\n- gmail_agent, docs_agent, mapping_agent, sheets_agent, calendar_agent,drive_agent\nUser request: find the latest email from joshdenziel.joves.cics@ust.edu.ph and forward it to jdenziieel@gmail.com with the exact content\n\nReturn ONLY a JSON array of agent names needed with exact name.\n"
+}

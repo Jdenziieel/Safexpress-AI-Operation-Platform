@@ -174,6 +174,11 @@ async def execute_task(request: AgentTaskRequest):
                 if missing_keys:
                     print(f"⚠️ Warning: Missing expected keys: {missing_keys}")
             
+            # Print complete result before returning
+            print(f"\n📤 Complete Result:")
+            print(json.dumps(parsed_result, indent=2, default=str))
+            print(f"{'='*60}\n")
+            
             return AgentTaskResponse(
                 success=True,
                 result=parsed_result,

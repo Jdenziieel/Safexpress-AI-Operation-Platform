@@ -1,0 +1,103 @@
+{
+    "count": 10,
+    "responses": [
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Repetition of previous cancellation request confirms intent to stop task",
+            "query_scope": "specific",
+            "has_compound_cancel": false,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Repeated request to stop current task",
+            "query_scope": "specific",
+            "has_compound_cancel": false,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Repeated request to stop current task",
+            "has_compound_cancel": false,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Clear intent to stop the current task",
+            "query_scope": "specific",
+            "has_compound_cancel": false,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Clear intent to stop current task",
+            "query_scope": "specific",
+            "has_compound_cancel": false,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Repetition of 'cancel' confirms intent to stop task",
+            "query_scope": "specific",
+            "has_compound_cancel": false,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Repeated request to stop current task",
+            "query_scope": "specific",
+            "has_compound_cancel": false,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Repetition of 'cancel' indicates clear intent to stop task",
+            "query_scope": "specific",
+            "has_compound_cancel": false,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Repetition of previous cancellation request confirms intent to stop task",
+            "has_compound_cancel": false,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "User explicitly requested to stop the current task.",
+            "query_scope": "specific",
+            "has_compound_cancel": false,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        }
+    ]
+}

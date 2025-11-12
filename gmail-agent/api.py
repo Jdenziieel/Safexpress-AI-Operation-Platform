@@ -138,6 +138,10 @@ Return ONLY the modified body text, nothing else."""
         result = tool_impl(**transformed_inputs, credentials_dict=request.credentials_dict)
         print(f"✅ Tool executed in {time.time() - tool_start:.2f}s")
         
+        # Print complete result before returning
+        print(f"\n📤 Complete Result:")
+        print(json.dumps(result, indent=2, default=str))
+        
         print(f"\n{'='*60}")
         print(f"✅ Success! Total time: {time.time() - start_time:.2f}s")
         print(f"{'='*60}\n")

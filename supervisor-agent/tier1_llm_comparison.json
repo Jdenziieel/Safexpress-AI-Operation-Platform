@@ -1,0 +1,17 @@
+{
+  "response": "{\n    \"intent\": \"needs_clarification\",\n    \"task_type\": \"forward_email\",\n    \"extracted_info\": {},\n    \"missing_fields\": [\"query\", \"to\"],\n    \"clarification_question\": \"Could you please specify the email you want to forward and to whom should I forward it?\",\n    \"reasoning\": \"The user didn't provide the necessary information to forward an email.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": false,\n    \"execution_summary\": \"Forward an email\"\n}",
+  "parsed": {
+    "intent": "needs_clarification",
+    "task_type": "forward_email",
+    "extracted_info": {},
+    "missing_fields": [
+      "query",
+      "to"
+    ],
+    "clarification_question": "Could you please specify the email you want to forward and to whom should I forward it?",
+    "reasoning": "The user didn't provide the necessary information to forward an email.",
+    "suggested_alternatives": [],
+    "execution_ready": false,
+    "execution_summary": "Forward an email"
+  }
+}

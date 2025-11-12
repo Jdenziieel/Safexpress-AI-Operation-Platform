@@ -533,6 +533,10 @@ async def execute_task(request: TaskRequest):
             print(f"🆔 File ID: {result.get('file_id')}")
         if result.get('folder_id'):
             print(f"📁 Folder ID: {result.get('folder_id')}")
+        
+        # Print complete result before returning
+        print(f"\n📤 Complete Result:")
+        print(json.dumps(result, indent=2, default=str))
         print(f"{'='*60}\n")
         
         return result

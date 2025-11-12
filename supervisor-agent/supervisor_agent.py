@@ -49,15 +49,15 @@ from conversational_agent import ConversationalAgent, ConversationState
 # Initialize FastAPI app
 app = FastAPI(title="Supervisor Agent API")
 
-# Add CORS middleware
+# Add CORS middleware (permissive for development)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Allow your React dev server
+    allow_origins=["*"],  # Allow all origins in development
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
     allow_headers=["*"],  # Allow all headers
-    # You might want to be more specific in production
-    # allow_origins=["https://yourproductiondomain.com"],
+    # In production, change to specific origins:
+    # allow_origins=["http://localhost:5173", "https://yourproductiondomain.com"],
 )
 
 # Initialize LLM
@@ -265,29 +265,29 @@ def supervisor_node(state: SharedState) -> SharedState:
 
     system_prompt = f"""You are the Supervisor agent creating multi-step execution plans.
 
-    CURRENT DATE CONTEXT:
-    - Today's date: {today_date}
-    - Yesterday's date: {yesterday_date}
+CURRENT DATE CONTEXT:
+- Today's date: {today_date}
+- Yesterday's date: {yesterday_date}
 
-    PLANNING RULES:
-    1. Reference previous outputs using {{{{ variable_name }}}} syntax
-    2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from tool's "returns"
-    3. Break tasks into sequential steps with clear data flow
-    4. Use date context variables: {{{{ today_date }}}}, {{{{ yesterday_date }}}} (format: YYYY-MM-DD)
-    5. For ANY email sending: create_draft_email first, then optionally send_draft_email if explicitly requested
-    6. IMPORTANT: read_recent_emails and search_emails return an "emails" array. Access items using array syntax:
-    - {{{{ emails[0].message_id }}}} for first email's message_id
-    - {{{{ emails[0].from }}}} for first email's sender
-    - {{{{ emails[0].subject }}}} for first email's subject
-    - Store array in variable: {{"recent_emails": "emails"}}, then use {{{{ recent_emails[0].from }}}}
+PLANNING RULES:
+1. Reference previous outputs using {{{{ variable_name }}}} syntax
+2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from tool's "returns"
+3. Break tasks into sequential steps with clear data flow
+4. Use date context variables: {{{{ today_date }}}}, {{{{ yesterday_date }}}} (format: YYYY-MM-DD)
+5. For ANY email sending: create_draft_email first, then optionally send_draft_email if explicitly requested
+6. IMPORTANT: read_recent_emails and search_emails return an "emails" array. Access items using array syntax:
+   - {{{{ emails[0].message_id }}}} for first email's message_id
+   - {{{{ emails[0].from }}}} for first email's sender
+   - {{{{ emails[0].subject }}}} for first email's subject
+   - Store array in variable: {{"recent_emails": "emails"}}, then use {{{{ recent_emails[0].from }}}}
 
-    Available agents and tools:
-    {capability_summary}
+Available agents and tools:
+{capability_summary}
 
-    Schema:
-    {schema_text}
+Schema:
+{schema_text}
 
-    Return ONLY the JSON plan."""
+CRITICAL: Return ONLY valid JSON matching the schema above. NO explanations, NO text before or after the JSON."""
 
     print("🤖 Calling LLM to generate multi-step plan...")
     print(
@@ -302,12 +302,27 @@ def supervisor_node(state: SharedState) -> SharedState:
     )
 
     try:
-        # Extract JSON from response
+        # Extract JSON from response (handle text before JSON block)
         response_text = llm_response.content.strip()
-        if response_text.startswith("```json"):
-            response_text = response_text[7:-3].strip()
-        elif response_text.startswith("```"):
-            response_text = response_text[3:-3].strip()
+        
+        # Check if response contains markdown code block
+        if "```json" in response_text:
+            # Extract content between ```json and ```
+            start = response_text.find("```json") + 7
+            end = response_text.find("```", start)
+            response_text = response_text[start:end].strip()
+        elif "```" in response_text:
+            # Extract content between ``` and ```
+            start = response_text.find("```") + 3
+            end = response_text.find("```", start)
+            response_text = response_text[start:end].strip()
+        
+        # If still no valid JSON, try to find JSON object directly
+        if not response_text.startswith("{"):
+            # Try to find JSON object in the text
+            json_start = response_text.find("{")
+            if json_start != -1:
+                response_text = response_text[json_start:]
 
         plan = json.loads(response_text)
 
@@ -1454,7 +1469,7 @@ async def approve_action(action_id: str, approval: ActionApprovalRequest):
         raise HTTPException(status_code=400, detail=f"Action already {action.status}")
 
     # Check timeout
-    if datetime.now() - action.created_at > timedelta(minutes=5):
+    if datetime.now() - action.created_at > timedelta(minutes=360):
         action.status = "expired"
         raise HTTPException(status_code=400, detail="Action approval expired")
 
@@ -1638,7 +1653,7 @@ async def create_thread(request: dict):
     try:
         user_id = request.get("user_id")
         if not user_id:
-            raise HTTPException(status_code=400, detail="user_id is required")
+            raise HTTPException(status_code=400, detail="No user_id detected")
         
         initial_message = request.get("message")
         title = request.get("title")
@@ -1662,6 +1677,8 @@ async def create_thread(request: dict):
             
             try:
                 supervisor_input = conversational_agent.build_supervisor_input(conversation_state)
+                print("HERE IS THE SUPERVISOR INPUT")
+                print(supervisor_input)
                 workflow_request = UserRequest(input=supervisor_input)
                 now_iso = datetime.now(timezone.utc).isoformat()
                 
@@ -1714,6 +1731,17 @@ async def create_thread(request: dict):
                 
                 # Generate user-friendly summary
                 print("📝 Generating user-friendly summary...")
+                print("\n" + "=" * 60)
+                print("📊 INPUTS TO summarize_execution:")
+                print("=" * 60)
+                print(f"conversation_state.execution_summary: {conversation_state.execution_summary}")
+                print(f"conversation_state.extracted_info: {json.dumps(conversation_state.extracted_info, indent=2)}")
+                print(f"execution_status: {status}")
+                print(f"execution_message: {message}")
+                print(f"\nfinal_context keys: {list(final_context.keys())}")
+                print(f"final_context: {json.dumps(final_context, indent=2)}")
+                print("=" * 60 + "\n")
+                
                 friendly_summary = conversational_agent.summarize_execution(
                     conversation_state=conversation_state,
                     final_context=final_context,
@@ -1742,6 +1770,13 @@ async def create_thread(request: dict):
         if initial_message and bot_response:
             response["bot_response"] = bot_response
             response["ready_for_execution"] = conversation_state.ready_for_execution
+            
+            # Simple check: if not ready for execution, it needs clarification
+            if not conversation_state.ready_for_execution:
+                response["needs_clarification"] = True
+                response["clarification_question"] = conversation_state.clarification_question
+            else:
+                response["needs_clarification"] = False
         
         return response
         
@@ -1954,6 +1989,17 @@ async def send_message_to_thread(thread_id: str, request: dict):
                 
                 # Generate user-friendly summary
                 print("📝 Generating user-friendly summary...")
+                print("\n" + "=" * 60)
+                print("📊 INPUTS TO summarize_execution:")
+                print("=" * 60)
+                print(f"conversation_state.execution_summary: {conversation_state.execution_summary}")
+                print(f"conversation_state.extracted_info: {json.dumps(conversation_state.extracted_info, indent=2)}")
+                print(f"execution_status: {status}")
+                print(f"execution_message: {message_text}")
+                print(f"\nfinal_context keys: {list(final_context.keys())}")
+                print(f"final_context: {json.dumps(final_context, indent=2)}")
+                print("=" * 60 + "\n")
+                
                 friendly_summary = conversational_agent.summarize_execution(
                     conversation_state=conversation_state,
                     final_context=final_context,
