@@ -17,36 +17,46 @@ from google.oauth2.credentials import Credentials
 
 # === Config ===
 SCOPES = [
-    'https://www.googleapis.com/auth/drive.file',
+    'https://www.googleapis.com/auth/drive',
     'https://www.googleapis.com/auth/gmail.modify',
     'https://www.googleapis.com/auth/documents',
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/drive.file'
 ]
-TOKEN_PATH = 'key/token.json'
-CREDENTIALS_PATH = 'key/credentials.json'
+
 
 
 # ============================================================
 # AUTH FUNCTIONS
 # ============================================================
-
+TOKEN_PATH = 'key/token.json'
+CREDENTIALS_PATH = 'key/credentials.json'
 def get_token_drive_service():
     """Get Drive service using token.json (for standalone use)"""
     creds = None
+    TOKEN_PATH = 'key/token.json'
+    CREDENTIALS_PATH = 'key/credentials.json'
     if os.path.exists(TOKEN_PATH):
         creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
     
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception as e:
+                print(f"⚠️ Token refresh failed: {e}")
+                print("🔄 Re-authenticating...")
+                creds = None  # Force re-auth
+        
+        if not creds:  # Re-auth needed
             if not os.path.exists(CREDENTIALS_PATH):
                 raise FileNotFoundError(f"credentials.json not found at {CREDENTIALS_PATH}")
             
             flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
             creds = flow.run_local_server(port=0)
         
+        # Save refreshed/new token
         os.makedirs('key', exist_ok=True)
         with open(TOKEN_PATH, 'w') as token:
             token.write(creds.to_json())

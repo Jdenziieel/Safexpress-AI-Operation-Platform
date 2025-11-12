@@ -107,7 +107,7 @@ def get_service_from_creds(credentials_dict: CredentialsDict):
         "token_uri": credentials_dict.token_uri,
         "client_id": client_id,
         "client_secret": client_secret,
-        "scopes": ["https://www.googleapis.com/auth/drive.file"],
+        "scopes": ["https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/drive.file"],
     }
     return get_session_drive_service(creds_dict)
 
