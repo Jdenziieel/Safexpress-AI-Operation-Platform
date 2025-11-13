@@ -1,17 +1,17 @@
 {
-  "response": "{\n    \"intent\": \"needs_clarification\",\n    \"task_type\": \"forward_email\",\n    \"extracted_info\": {},\n    \"missing_fields\": [\"query\", \"to\"],\n    \"clarification_question\": \"Could you please specify the email you want to forward and to whom should I forward it?\",\n    \"reasoning\": \"The user didn't provide the necessary information to forward an email.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": false,\n    \"execution_summary\": \"Forward an email\"\n}",
+  "response": "{\n    \"intent\": \"ready_to_execute\",\n    \"task_type\": \"search_emails\",\n    \"extracted_info\": {\"query\": \"juanrafael.evangelista.comm@ust.edu.ph\", \"max_results\": 1},\n    \"missing_fields\": [],\n    \"clarification_question\": \"\",\n    \"reasoning\": \"The user wants to find the most recent email from a specific email address.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": true,\n    \"execution_summary\": \"Search for the most recent email from juanrafael.evangelista.comm@ust.edu.ph\"\n}",
   "parsed": {
-    "intent": "needs_clarification",
-    "task_type": "forward_email",
-    "extracted_info": {},
-    "missing_fields": [
-      "query",
-      "to"
-    ],
-    "clarification_question": "Could you please specify the email you want to forward and to whom should I forward it?",
-    "reasoning": "The user didn't provide the necessary information to forward an email.",
+    "intent": "ready_to_execute",
+    "task_type": "search_emails",
+    "extracted_info": {
+      "query": "juanrafael.evangelista.comm@ust.edu.ph",
+      "max_results": 1
+    },
+    "missing_fields": [],
+    "clarification_question": "",
+    "reasoning": "The user wants to find the most recent email from a specific email address.",
     "suggested_alternatives": [],
-    "execution_ready": false,
-    "execution_summary": "Forward an email"
+    "execution_ready": true,
+    "execution_summary": "Search for the most recent email from juanrafael.evangelista.comm@ust.edu.ph"
   }
 }

@@ -4,23 +4,13 @@
       "agent": "gmail_agent",
       "tool": "search_emails",
       "inputs": {
-        "query": "subject:important email",
+        "query": "from:juanrafael.evangelista.comm@ust.edu.ph",
         "max_results": 1
       },
       "output_variables": {
-        "email_to_forward": "emails[0].message_id"
+        "recent_email": "emails[0]"
       },
-      "description": "Search for the email to be forwarded"
-    },
-    {
-      "agent": "gmail_agent",
-      "tool": "forward_email",
-      "inputs": {
-        "message_id": "{{ email_to_forward }}",
-        "to": "recipient@example.com",
-        "forward_message": "Please see the forwarded email below."
-      },
-      "description": "Forward the found email to the specified recipient"
+      "description": "Search for the most recent email from juanrafael.evangelista.comm@ust.edu.ph"
     }
   ]
 }

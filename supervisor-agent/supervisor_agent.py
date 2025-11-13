@@ -2177,7 +2177,6 @@ async def root():
 
 # Run the server
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", "8000"))
-    print(f"🚀 Starting Supervisor Agent on port {port}")
-    print(f"📚 API Documentation: http://localhost:{port}/docs")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    print(f"🚀 Starting Supervisor Agent on port {SERVER_PORT}")
+    print(f"📚 API Documentation: http://localhost:{SERVER_PORT}/docs")
+    uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)

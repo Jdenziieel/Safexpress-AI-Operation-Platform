@@ -206,6 +206,143 @@ def count_tokens(text: str, model: str = "gpt-4") -> int:
    - Each agent's LLM calls (if applicable)
    - Email body processing, doc content, etc.
 
+### Detailed Token Consumption Breakdown
+
+For accurate tracking and debugging, log token usage in this format:
+
+```python
+# Token breakdown structure
+{
+    "workflow_id": "wf_abc123",
+    "user_id": "user_123",
+    "timestamp": "2025-10-20T14:35:22Z",
+    
+    # Planning Phase
+    "planning": {
+        "system_prompt_tokens": 3200,     # Agent capabilities + instructions
+        "user_input_tokens": 45,          # User's request
+        "output_tokens": 380,             # Generated plan JSON
+        "total_tokens": 3625,             # Sum of above
+        "cost_estimate": 0.0363           # Based on model pricing
+    },
+    
+    # Agent Classification (if used)
+    "classification": {
+        "system_prompt_tokens": 150,
+        "user_input_tokens": 45,
+        "output_tokens": 25,
+        "total_tokens": 220,
+        "cost_estimate": 0.0022
+    },
+    
+    # Agent Execution (per agent)
+    "agents": [
+        {
+            "agent_name": "gmail-agent",
+            "tool_name": "search_emails",
+            "system_prompt_tokens": 0,     # Some agents don't use LLM
+            "user_input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0,
+            "cost_estimate": 0.0
+        },
+        {
+            "agent_name": "gmail-agent",
+            "tool_name": "send_email",
+            "system_prompt_tokens": 85,    # Email signature transformation
+            "user_input_tokens": 120,      # Email body + instructions
+            "output_tokens": 135,          # Transformed body
+            "total_tokens": 340,
+            "cost_estimate": 0.0034
+        }
+    ],
+    
+    # Workflow Totals
+    "totals": {
+        "total_system_prompt_tokens": 3435,   # Sum of all system prompts
+        "total_user_input_tokens": 210,       # Sum of all user inputs
+        "total_output_tokens": 540,           # Sum of all outputs
+        "total_tokens": 4185,                 # Grand total
+        "total_cost_estimate": 0.0419,        # Total cost in USD
+        "model_used": "gpt-4o"                # Primary model
+    },
+    
+    # Performance Metrics
+    "performance": {
+        "execution_time_seconds": 8.5,
+        "agent_calls": 2,
+        "workflow_steps": 3,
+        "status": "success"
+    }
+}
+```
+
+**Console Output Example:**
+
+```
+============================================================
+📊 TOKEN CONSUMPTION BREAKDOWN
+============================================================
+Workflow ID: wf_abc123
+User: user_123
+Model: gpt-4o
+
+PLANNING PHASE:
+  System Prompt:    3,200 tokens  ($0.0320)
+  User Input:          45 tokens  ($0.0005)
+  Output (Plan):      380 tokens  ($0.0114)
+  ─────────────────────────────────────────
+  Subtotal:         3,625 tokens  ($0.0439)
+
+AGENT CLASSIFICATION:
+  System Prompt:      150 tokens  ($0.0015)
+  User Input:          45 tokens  ($0.0005)
+  Output:              25 tokens  ($0.0008)
+  ─────────────────────────────────────────
+  Subtotal:           220 tokens  ($0.0028)
+
+AGENT EXECUTION:
+  gmail-agent (search_emails):
+    Tokens: 0 (direct API call)
+  
+  gmail-agent (send_email):
+    System Prompt:     85 tokens  ($0.0009)
+    User Input:       120 tokens  ($0.0012)
+    Output:           135 tokens  ($0.0041)
+    ─────────────────────────────────────────
+    Subtotal:         340 tokens  ($0.0062)
+
+============================================================
+TOTAL CONSUMPTION:
+  System Prompts:   3,435 tokens  ($0.0344)
+  User Inputs:        210 tokens  ($0.0022)
+  Outputs:            540 tokens  ($0.0163)
+  ═════════════════════════════════════════
+  GRAND TOTAL:      4,185 tokens  ($0.0529)
+============================================================
+Performance: 8.5s | 2 agents | 3 steps | ✅ Success
+============================================================
+```
+
+**CSV Logging Format:**
+
+```csv
+timestamp,workflow_id,user_id,phase,operation,system_tokens,input_tokens,output_tokens,total_tokens,cost_usd,model,status
+2025-10-20T14:35:22Z,wf_abc123,user_123,planning,supervisor_node,3200,45,380,3625,0.0439,gpt-4o,success
+2025-10-20T14:35:23Z,wf_abc123,user_123,classification,identify_agents,150,45,25,220,0.0028,gpt-4o,success
+2025-10-20T14:35:25Z,wf_abc123,user_123,execution,gmail-agent/search_emails,0,0,0,0,0.0,n/a,success
+2025-10-20T14:35:27Z,wf_abc123,user_123,execution,gmail-agent/send_email,85,120,135,340,0.0062,gpt-4o,success
+2025-10-20T14:35:30Z,wf_abc123,user_123,total,workflow_complete,3435,210,540,4185,0.0529,gpt-4o,success
+```
+
+**Benefits of Detailed Breakdown:**
+
+1. **Cost Attribution**: Know exactly which phase/agent costs the most
+2. **Optimization Opportunities**: Identify where to reduce prompt sizes
+3. **Debugging**: Spot unexpected token consumption spikes
+4. **User Transparency**: Show users what they're paying for
+5. **Billing**: Accurate per-user cost tracking for internal accounting
+
 ---
 
 ## 5. Data Storage
