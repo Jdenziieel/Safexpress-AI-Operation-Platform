@@ -1,0 +1,17 @@
+{
+  "response": "{\n    \"intent\": \"ready_to_execute\",\n    \"task_type\": \"search_emails\",\n    \"extracted_info\": {\"query\": \"juanrafael.evangelista.comm@ust.edu.ph\", \"max_results\": 1},\n    \"missing_fields\": [],\n    \"clarification_question\": \"\",\n    \"reasoning\": \"The user wants to find the most recent email from a specific email address.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": true,\n    \"execution_summary\": \"Search for the most recent email from juanrafael.evangelista.comm@ust.edu.ph\"\n}",
+  "parsed": {
+    "intent": "ready_to_execute",
+    "task_type": "search_emails",
+    "extracted_info": {
+      "query": "juanrafael.evangelista.comm@ust.edu.ph",
+      "max_results": 1
+    },
+    "missing_fields": [],
+    "clarification_question": "",
+    "reasoning": "The user wants to find the most recent email from a specific email address.",
+    "suggested_alternatives": [],
+    "execution_ready": true,
+    "execution_summary": "Search for the most recent email from juanrafael.evangelista.comm@ust.edu.ph"
+  }
+}

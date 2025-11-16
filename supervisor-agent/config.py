@@ -12,7 +12,7 @@ load_dotenv()
 
 # Microservice URLs for specialized agents
 AGENT_ENDPOINTS = {
-    "gmail_agent": os.getenv("GMAIL_AGENT_URL", "http://localhost:8001/execute_task"),
+    "gmail_agent": os.getenv("GMAIL_AGENT_URL", "http://localhost:8000/execute_task"),
     "docs_agent": os.getenv("DOCS_AGENT_URL", "http://localhost:8002/execute_task"),
     "sheets_agent": os.getenv(
         "SHEETS_AGENT_URL", "http://localhost:8003/execute_task"
@@ -67,5 +67,5 @@ LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0"))
 CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "gpt-3.5-turbo")
 
 # Server configuration
-SERVER_PORT = int(os.getenv("PORT", "8000"))
+SERVER_PORT = int(os.getenv("PORT", "8010"))
 SERVER_HOST = os.getenv("HOST", "0.0.0.0")

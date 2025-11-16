@@ -1,0 +1,102 @@
+{
+    "count": 10,
+    "responses": [
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Compound cancel with new task in same message",
+            "query_scope": "specific",
+            "has_compound_cancel": true,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Compound cancel with new task",
+            "query_scope": "specific",
+            "has_compound_cancel": true,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Compound cancel with new task",
+            "query_scope": "specific",
+            "has_compound_cancel": true,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Compound cancel with new task in same message",
+            "query_scope": "specific",
+            "has_compound_cancel": true,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Compound cancel with new task",
+            "has_compound_cancel": true,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Compound cancel with new task in the same message",
+            "query_scope": "specific",
+            "has_compound_cancel": true,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Compound cancel with new task in the same message",
+            "query_scope": "specific",
+            "has_compound_cancel": true,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Compound cancel with new task",
+            "query_scope": "specific",
+            "has_compound_cancel": true,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Compound cancel with new task",
+            "has_compound_cancel": true,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        },
+        {
+            "category": "cancellation",
+            "confidence": "high",
+            "reasoning": "Compound cancel with new task",
+            "has_compound_cancel": true,
+            "extracted_value": null,
+            "field_to_modify": null,
+            "new_value": null
+        }
+    ]
+}

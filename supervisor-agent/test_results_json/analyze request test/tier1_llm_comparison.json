@@ -1,0 +1,19 @@
+{
+  "response": "{\n    \"intent\": \"too_complex\",\n    \"task_type\": \"search_emails|forward_email\",\n    \"extracted_info\": {\n        \"query\": \"from:joshdenziel.joves.cics@ust.edu.ph on nov 1\",\n        \"to\": \"jdenziieel@gmail.com\"\n    },\n    \"missing_fields\": [],\n    \"clarification_question\": \"\",\n    \"reasoning\": \"The request involves multiple steps: searching for the email and then forwarding it. These steps need to be performed separately.\",\n    \"suggested_alternatives\": [\"First, let's find the email from joshdenziel.joves.cics@ust.edu.ph on Nov 1. After we have the email, we can forward it to jdenziieel@gmail.com.\"],\n    \"execution_ready\": false,\n    \"execution_summary\": \"\"\n}",
+  "parsed": {
+    "intent": "too_complex",
+    "task_type": "search_emails|forward_email",
+    "extracted_info": {
+      "query": "from:joshdenziel.joves.cics@ust.edu.ph on nov 1",
+      "to": "jdenziieel@gmail.com"
+    },
+    "missing_fields": [],
+    "clarification_question": "",
+    "reasoning": "The request involves multiple steps: searching for the email and then forwarding it. These steps need to be performed separately.",
+    "suggested_alternatives": [
+      "First, let's find the email from joshdenziel.joves.cics@ust.edu.ph on Nov 1. After we have the email, we can forward it to jdenziieel@gmail.com."
+    ],
+    "execution_ready": false,
+    "execution_summary": ""
+  }
+}

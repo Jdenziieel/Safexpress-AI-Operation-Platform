@@ -1,16 +1,16 @@
 {
   "plan": [
     {
-      "agent": "drive_agent",
-      "tool": "create_folder",
+      "agent": "gmail_agent",
+      "tool": "search_emails",
       "inputs": {
-        "folder_path": "sigmatest"
+        "query": "from:juanrafael.evangelista.comm@ust.edu.ph",
+        "max_results": 1
       },
       "output_variables": {
-        "new_folder_id": "folder_id",
-        "new_folder_url": "folder_url"
+        "recent_email": "emails[0]"
       },
-      "description": "Create a new folder named 'sigmatest' in Google Drive"
+      "description": "Search for the most recent email from juanrafael.evangelista.comm@ust.edu.ph"
     }
   ]
 }

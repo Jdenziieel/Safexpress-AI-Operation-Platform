@@ -1,0 +1,23 @@
+{
+  "response": "{\n    \"intent\": \"too_complex\",\n    \"task_type\": \"search_emails|forward_email|list_events|create_event|create_doc|create_sheet\",\n    \"extracted_info\": {\n        \"search_query\": \"joshdenziel.joves.cics@ust.edu.ph\",\n        \"recipient\": \"jdenziieel@gmail.com\",\n        \"time_min\": \"5pm\",\n        \"time_max\": \"6pm\",\n        \"attendees\": [\"joshdenziel.joves.cics@ust.edu.ph\", \"jdenziieel@gmail.com\"]\n    },\n    \"missing_fields\": [],\n    \"clarification_question\": \"This request involves multiple steps. Let's break it down. First, I'll find the latest email from joshdenziel.joves.cics@ust.edu.ph and forward it to jdenziieel@gmail.com. Then, I'll check your schedule for 5-6pm. If you're available, do you want me to schedule a meeting with a specific title and description? Lastly, what should be the title of the document and sheet file where I'll write the meeting details?\",\n    \"reasoning\": \"The user's request involves multiple tasks that need to be executed in a specific order. Some tasks also require additional information.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": false,\n    \"execution_summary\": \"The user wants to search for the latest email from a specific sender, forward it, check their schedule, possibly create a meeting, and write the meeting details in a document and a sheet file.\"\n}",
+  "parsed": {
+    "intent": "too_complex",
+    "task_type": "search_emails|forward_email|list_events|create_event|create_doc|create_sheet",
+    "extracted_info": {
+      "search_query": "joshdenziel.joves.cics@ust.edu.ph",
+      "recipient": "jdenziieel@gmail.com",
+      "time_min": "5pm",
+      "time_max": "6pm",
+      "attendees": [
+        "joshdenziel.joves.cics@ust.edu.ph",
+        "jdenziieel@gmail.com"
+      ]
+    },
+    "missing_fields": [],
+    "clarification_question": "This request involves multiple steps. Let's break it down. First, I'll find the latest email from joshdenziel.joves.cics@ust.edu.ph and forward it to jdenziieel@gmail.com. Then, I'll check your schedule for 5-6pm. If you're available, do you want me to schedule a meeting with a specific title and description? Lastly, what should be the title of the document and sheet file where I'll write the meeting details?",
+    "reasoning": "The user's request involves multiple tasks that need to be executed in a specific order. Some tasks also require additional information.",
+    "suggested_alternatives": [], 
+    "execution_ready": false,
+    "execution_summary": "The user wants to search for the latest email from a specific sender, forward it, check their schedule, possibly create a meeting, and write the meeting details in a document and a sheet file."
+  }
+}

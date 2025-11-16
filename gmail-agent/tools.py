@@ -20,8 +20,8 @@ def get_google_service(service_name: str, version: str, credentials_dict: Dict):
         token=credentials_dict["access_token"],
         refresh_token=credentials_dict.get("refresh_token"),
         token_uri="https://oauth2.googleapis.com/token",
-        client_id=os.getenv("GOOGLE_CLIENT_ID"),
-        client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+        client_id=credentials_dict.get("client_id", ""),
+        client_secret=credentials_dict.get("client_secret", ""),
         scopes=[
             "https://www.googleapis.com/auth/gmail.send",
             "https://www.googleapis.com/auth/gmail.modify",

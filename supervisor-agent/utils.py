@@ -13,7 +13,7 @@ import time
 import httpx
 from typing import List, Dict, Optional
 from langchain_openai import ChatOpenAI
-from agent_capabilities import agent_capabilities
+from agent_capabilities_v2 import agent_capabilities
 from config import (
     CLASSIFIER_MODEL,
     DEFAULT_MAX_RETRIES,
@@ -29,22 +29,20 @@ def identify_relevant_agents(user_input: str) -> List[str]:
     This is a simple classification task, much cheaper than full planning.
     """
     classifier_prompt = f"""
-    Based on this user request, which agents are needed? 
-    
-    Available agents:
-    - gmail_agent: Read, search, draft, send, reply to emails, manage labels, download attachments
-    - docs_agent: Create, edit, and read Google Docs documents
-    - mapping_agent: Parse CSV/Excel/JSON files, smart column mapping, data transformation
-    - sheets_agent: Google Sheets CRUD operations, upload data to sheets
-    - drive_agent: Manage Google Drive files and folders, upload/download files
-    - calendar_agent: Create, update, delete, and read calendar events
-    
-    Note: calendar_agent, and drive_agent are defined but may not be implemented yet.
-    
-    User request: {user_input}
-    
-    Return ONLY a JSON array of agent names needed. Example: ["gmail_agent", "docs_agent"]
-    """
+Based on this user request, which agents are needed? 
+
+Available agents:
+- gmail_agent: Search emails, read threads, reply, forward, create/send drafts, manage labels, download attachments
+- docs_agent: Create/edit/read Google Docs, extract template formats, create from templates
+- mapping_agent: Parse CSV/Excel/JSON files, extract dates, smart column mapping, transform data
+- sheets_agent: Update sheets by date match, upload mapped data, create new sheets
+- calendar_agent: List/create/update/delete calendar events, manage calendars, resolve conflicts
+- drive_agent: Upload/download files, create folders, list files/folders, search files
+
+User request: {user_input}
+
+Return ONLY a JSON array of agent names needed. Example: ["gmail_agent", "docs_agent"]
+"""
 
     # Use cheaper model (gpt-3.5-turbo) or lower temperature
     classifier_llm = ChatOpenAI(

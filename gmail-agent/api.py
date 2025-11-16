@@ -138,6 +138,10 @@ Return ONLY the modified body text, nothing else."""
         result = tool_impl(**transformed_inputs, credentials_dict=request.credentials_dict)
         print(f"✅ Tool executed in {time.time() - tool_start:.2f}s")
         
+        # Print complete result before returning
+        print(f"\n📤 Complete Result:")
+        print(json.dumps(result, indent=2, default=str))
+        
         print(f"\n{'='*60}")
         print(f"✅ Success! Total time: {time.time() - start_time:.2f}s")
         print(f"{'='*60}\n")
@@ -196,11 +200,11 @@ if __name__ == "__main__":
     print("=" * 60)
     print("🚀 Starting Gmail Agent API Server")
     print("=" * 60)
-    print("📡 Endpoint: http://localhost:8001")
-    print("📚 Docs: http://localhost:8001/docs")
+    print("📡 Endpoint: http://localhost:8000")
+    print("📚 Docs: http://localhost:8000/docs")
     print("=" * 60)
     
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
 # import os
