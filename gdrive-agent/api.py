@@ -409,7 +409,65 @@ def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "error": str(e),
             "message": f"❌ Search failed: {str(e)}"
         }
-
+def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Upload a template file to Google Drive in Templates folder
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+        
+        file_path = inputs.get("file_path")
+        template_name = inputs.get("template_name")
+        file_type = inputs.get("file_type")
+        
+        if not file_path:
+            return {"success": False, "error": "file_path is required"}
+        if not template_name:
+            return {"success": False, "error": "template_name is required"}
+        
+        if not os.path.exists(file_path):
+            return {"success": False, "error": f"File not found: {file_path}"}
+        
+        # Auto-detect file type
+        if not file_type:
+            ext = os.path.splitext(file_path)[1].lower()
+            if ext == '.docx':
+                file_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            elif ext == '.doc':
+                file_type = 'application/msword'
+            elif ext == '.txt':
+                file_type = 'text/plain'
+            else:
+                file_type = 'application/octet-stream'
+        
+        # ✅ DEFAULT: Upload to Templates folder (auto-created if doesn't exist)
+        folder_path = "Templates"
+        
+        with open(file_path, 'rb') as f:
+            result = upload_stream_to_folder_impl(
+                service, f, template_name, file_type, folder_path
+            )
+        
+        if not result.get("success"):
+            return result
+        
+        return {
+            "success": True,
+            "file_id": result.get("file_id"),
+            "file_url": result.get("file_url"),
+            "template_name": template_name,
+            "folder_path": "SafeExpress/Templates",
+            "message": f"✅ Template '{template_name}' uploaded to SafeExpress/Templates and converted to Google Docs",
+            "error": None
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "file_id": None,
+            "error": str(e),
+            "message": f"❌ Upload failed: {str(e)}"
+        }
 
 def get_folder_info_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
@@ -485,6 +543,7 @@ DRIVE_TOOLS = {
     "list_files": list_files_tool,
     "search_files": search_files_tool,
     "get_folder_info": get_folder_info_tool,
+    "upload_template": upload_template_tool, 
 }
 
 

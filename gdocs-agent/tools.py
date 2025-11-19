@@ -1,28 +1,77 @@
+#GOOGLE DOCS TOOLS
 import os
+import json
 from typing import Dict, Any
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from document_format_extractor import DocumentFormatExtractor
+from typing import Dict, Any, Optional
 
 
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
-
-    # credentials for google services
+    """Get Google service with proper credential handling"""
+    
+    # Extract client_id and client_secret FIRST
+    client_id = credentials_dict.get("client_id")
+    client_secret = credentials_dict.get("client_secret")
+    
+    # If not provided in request, load from credentials.json
+    if not client_id or not client_secret:
+        try:
+            # Look in multiple locations
+            creds_paths = [
+                os.path.join(os.path.dirname(__file__), 'key', 'credentials.json'),
+                'key/credentials.json',
+                'credentials.json'
+            ]
+            
+            creds_file = None
+            for path in creds_paths:
+                if os.path.exists(path):
+                    print(f"🔑 Loading credentials from: {path}")
+                    with open(path, 'r') as f:
+                        creds_file = json.load(f)
+                    break
+            
+            if creds_file:
+                if 'installed' in creds_file:
+                    client_id = creds_file['installed']['client_id']
+                    client_secret = creds_file['installed']['client_secret']
+                elif 'web' in creds_file:
+                    client_id = creds_file['web']['client_id']
+                    client_secret = creds_file['web']['client_secret']
+                
+                print(f"✅ Loaded client_id: {client_id[:20]}...")
+            else:
+                raise FileNotFoundError("credentials.json not found in any expected location")
+                
+        except Exception as e:
+            print(f"❌ Failed to load credentials.json: {e}")
+            raise Exception(f"Missing GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET. Add them to .env or credentials.json")
+    
+    # Build credentials with all required fields
     creds = Credentials(
-        token=credentials_dict["access_token"],
+        token=credentials_dict.get("access_token"),
         refresh_token=credentials_dict.get("refresh_token"),
         token_uri="https://oauth2.googleapis.com/token",
-        client_id=os.getenv("GOOGLE_CLIENT_ID"),
-        client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+        client_id=client_id,  # Now guaranteed to be set
+        client_secret=client_secret,  # Now guaranteed to be set
         scopes=[
             "https://www.googleapis.com/auth/documents",
             "https://www.googleapis.com/auth/drive",
         ],
     )
-    # this uses the credentials for the google services
+    
+    print(f"🔧 Building {service_name} service with:")
+    print(f"  - token: {'present' if creds.token else 'MISSING'}")
+    print(f"  - refresh_token: {'present' if creds.refresh_token else 'MISSING'}")
+    print(f"  - client_id: {'present' if client_id else 'MISSING'}")
+    print(f"  - client_secret: {'present' if client_secret else 'MISSING'}")
+    
+    # Build the service
     service = build(service_name, version, credentials=creds)
-
+    
     return service
 
 
@@ -409,3 +458,131 @@ def _create_from_reference_impl(
 
     except Exception as error:
         return f"Error creating document: {error}"
+
+def _create_from_uploaded_template_impl(
+    template_file_id: str,
+    new_title: str,
+    placeholder_values: Optional[Dict[str, str]],
+    credentials_dict: Dict
+) -> str:
+    """
+    Create document from uploaded template file in Drive
+    
+    Args:
+        template_file_id: Google Drive file ID of template
+        new_title: Title for new document
+        placeholder_values: Dict of placeholder replacements
+        credentials_dict: Google OAuth credentials
+    
+    Returns:
+        Success message with document details
+    """
+    try: 
+        print(f"\n{'='*60}")
+        print(f"📊 CREDENTIALS RECEIVED IN DOCS AGENT:")
+        print(f"{'='*60}")
+        print(f"access_token: {'present' if credentials_dict.get('access_token') else 'MISSING'}")
+        print(f"refresh_token: {'present' if credentials_dict.get('refresh_token') else 'MISSING'}")
+        print(f"client_id: {'present' if credentials_dict.get('client_id') else 'MISSING'}")
+        print(f"client_secret: {'present' if credentials_dict.get('client_secret') else 'MISSING'}")
+        print(f"{'='*60}\n")
+        # Use existing document format extractor
+        extractor = DocumentFormatExtractor(credentials_dict)
+        
+        # Convert placeholder_values from JSON string if needed
+        if isinstance(placeholder_values, str):
+            import json
+            placeholder_values = json.loads(placeholder_values)
+        
+        result = extractor.create_from_template(
+            template_document_id=template_file_id,
+            new_title=new_title,
+            placeholder_values=placeholder_values or {}
+        )
+        
+        if result.get("success"):
+            response = f"✅ Document created from uploaded template!\n\n"
+            response += f"📄 Title: {result['title']}\n"
+            response += f"🆔 Document ID: {result['document_id']}\n"
+            response += f"🔗 URL: {result['url']}\n"
+            
+            if placeholder_values:
+                response += f"\n✏️ Placeholders filled:\n"
+                for key, value in placeholder_values.items():
+                    response += f"   • [{key}] → {value}\n"
+            
+            return response
+        else:
+            return f"❌ Error: {result.get('error')}"
+    
+    except Exception as error:
+        import traceback
+        traceback.print_exc()
+        return f"Error creating document from template: {error}"
+    
+def _analyze_uploaded_template_impl(
+    template_file_id: str,
+    credentials_dict: Dict
+) -> str:
+    """
+    Analyze uploaded template to extract structure, placeholders, and formatting
+    
+    Args:
+        template_file_id: Google Drive file ID of uploaded template
+        credentials_dict: Google OAuth credentials
+    
+    Returns:
+        JSON string with template analysis
+    """
+    try:
+
+
+        print(f"\n{'='*60}")
+        print(f"📊 CREDENTIALS RECEIVED IN DOCS AGENT:")
+        print(f"{'='*60}")
+        print(f"access_token: {'present' if credentials_dict.get('access_token') else 'MISSING'}")
+        print(f"refresh_token: {'present' if credentials_dict.get('refresh_token') else 'MISSING'}")
+        print(f"client_id: {'present' if credentials_dict.get('client_id') else 'MISSING'}")
+        print(f"client_secret: {'present' if credentials_dict.get('client_secret') else 'MISSING'}")
+        print(f"{'='*60}\n")
+        extractor = DocumentFormatExtractor(credentials_dict)
+        
+        # Extract structure
+        structure = extractor.extract_document_structure(template_file_id)
+        
+        if "error" in structure:
+            return json.dumps({
+                "success": False,
+                "error": structure["error"]
+            })
+        
+        # Identify placeholders
+        placeholders = extractor.identify_placeholders(structure)
+        
+        # Build analysis result
+        analysis = {
+            "success": True,
+            "template_id": template_file_id,
+            "title": structure.get("title", "Untitled"),
+            "content_blocks": len(structure.get("content_blocks", [])),
+            "placeholders": placeholders,
+            "has_placeholders": len(placeholders) > 0,
+            "structure_type": "structured" if placeholders else "unstructured",
+            "ready_for_use": True
+        }
+        
+        print(f"\n📊 Template Analysis:")
+        print(f"  Title: {analysis['title']}")
+        print(f"  Blocks: {analysis['content_blocks']}")
+        print(f"  Placeholders: {placeholders}")
+        print(f"  Type: {analysis['structure_type']}")
+        
+        return json.dumps(analysis, indent=2)
+        
+    except Exception as error:
+        import traceback
+        traceback.print_exc()
+        return json.dumps({
+            "success": False,
+            "error": str(error)
+        })

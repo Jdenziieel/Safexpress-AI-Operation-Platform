@@ -1,16 +1,41 @@
 {
   "plan": [
     {
-      "agent": "gmail_agent",
-      "tool": "search_emails",
+      "agent": "drive_agent",
+      "tool": "upload_template",
       "inputs": {
-        "query": "from:juanrafael.evangelista.comm@ust.edu.ph",
-        "max_results": 1
+        "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\tmpbg2z_qg0.docx",
+        "template_name": "MOM_Template"
       },
       "output_variables": {
-        "recent_email": "emails[0]"
+        "file_id": "file_id"
       },
-      "description": "Search for the most recent email from juanrafael.evangelista.comm@ust.edu.ph"
+      "description": "Upload the template file to Google Drive"
+    },
+    {
+      "agent": "docs_agent",
+      "tool": "analyze_uploaded_template",
+      "inputs": {
+        "template_file_id": "{{file_id}}"
+      },
+      "output_variables": {
+        "placeholders": "placeholders"
+      },
+      "description": "Analyze the uploaded template to extract placeholders"
+    },
+    {
+      "agent": "docs_agent",
+      "tool": "create_from_uploaded_template",
+      "inputs": {
+        "template_file_id": "{{file_id}}",
+        "new_title": "Board Meeting - Bees Discussion",
+        "placeholders": "{\"NAME\": \"Paul\", \"CONTENT\": \"Bees play a crucial role in pollinating many of the plants that make up the world's food supply. They have a complex colony structure with a queen, workers, and drones, each with specific roles. Bees are vital to ecosystems due to their role in the reproduction of flowers and other plants.\"}"
+      },
+      "output_variables": {
+        "new_doc_id": "document_id",
+        "new_doc_url": "document_url"
+      },
+      "description": "Create a new document from the uploaded template, replacing placeholders with specified values"
     }
   ]
 }

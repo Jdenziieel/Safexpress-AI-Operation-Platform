@@ -251,6 +251,53 @@ agent_capabilities = {
                     }
                 }
             },
+"analyze_uploaded_template": {
+            "description": "Analyze uploaded template structure, placeholders, and formatting",
+            "args": {
+                "template_file_id": "str (required) — Google Drive file ID of uploaded template"
+            },
+            "returns": {
+                "success": "bool",
+                "template_id": "str — Template file ID",
+                "title": "str — Template title",
+                "content_blocks": "int — Number of content blocks",
+                "placeholders": "list — Array of placeholder names found (e.g., ['DATE', 'COMPANY_NAME'])",
+                "has_placeholders": "bool — Whether template has placeholders",
+                "structure_type": "str — 'structured' or 'unstructured'",
+                "ready_for_use": "bool — Whether template is ready",
+                "error": "str"
+            },
+            "can_be_derived_from": {
+                "template_file_id": {
+                    "source_tool": "upload_template",
+                    "field": "file_id"
+                }
+            },
+            "example": "analyze_uploaded_template(template_file_id='{{file_id}}')"
+        },
+        "create_from_uploaded_template": {
+            "description": "Create document from analyzed template",
+            "args": {
+                "template_file_id": "str (required) — Google Drive file ID",
+                "new_title": "str (required) — Title for new document",
+                "placeholders": "str (optional) — JSON string with values"
+            },
+            "returns": {
+                "success": "bool",
+                "document_id": "str",
+                "document_url": "str",
+                "title": "str",
+                "template_used": "str",
+                "error": "str"
+            },
+            "can_be_derived_from": {
+                "template_file_id": {
+                    "source_tool": "analyze_uploaded_template",
+                    "field": "template_id"
+                }
+            },
+            "example": "create_from_uploaded_template(template_file_id='{{template_id}}', new_title='Board Meeting Jan 2025')"
+        },
             "create_from_my_template": {
                 "description": "Create from template with placeholder replacement",
                 "args": {
@@ -656,6 +703,24 @@ agent_capabilities = {
                     },
                     "example": "upload_file(file_path='/tmp/report.pdf', filename='Q4_Report.pdf', folder_path='Operations/2024')"
                 },
+                "upload_template": {
+            "description": "Upload a template file to Google Drive Templates folder",
+            "args": {
+                "file_path": "str (required) — Local file path to upload",
+                "template_name": "str (required) — Name for the template",
+                "file_type": "str (optional) — MIME type (default: application/vnd.google-apps.document)"
+            },
+            "returns": {
+                "success": "bool",
+                "file_id": "str — Google Drive file ID",
+                "file_url": "str — Direct link to template",
+                "template_name": "str — Template name",
+                "folder_path": "str — Always 'SafeExpress/Templates'",
+                "message": "str",
+                "error": "str"
+            },
+            "example": "upload_template(file_path='/tmp/template.docx', template_name='MOM_Template')"
+        },
                 "create_folder": {
                     "description": "Create a folder or nested folder structure in SafeExpress",
                     "args": {
