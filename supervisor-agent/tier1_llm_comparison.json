@@ -1,18 +1,23 @@
 {
-  "response": "{\n    \"intent\": \"ready_to_execute\",\n    \"task_type\": \"upload_file\",\n    \"extracted_info\": {\"file_path\": \"SafeExpress\", \"filename\": \"Wowzers\", \"folder_path\": \"my google drive\"},\n    \"missing_fields\": [],\n    \"clarification_question\": \"\",\n    \"reasoning\": \"The user has provided all the necessary information for the task.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": true,\n    \"execution_summary\": \"Upload the file named 'Wowzers' from the 'SafeExpress' folder to 'my google drive'\"\n}",
+  "response": "{\n    \"intent\": \"ready_to_execute\",\n    \"task_type\": \"create_event\",\n    \"extracted_info\": {\n        \"summary\": \"poteto\",\n        \"start_time\": \"tomorrow at 8am\",\n        \"end_time\": \"tomorrow at 9am\",\n        \"calendar_name\": \"kasane_teto\",\n        \"attendees\": [\"pchua5644@gmail.com\"],\n        \"add_meet_link\": true\n    },\n    \"missing_fields\": [],\n    \"clarification_question\": \"\",\n    \"reasoning\": \"The user has provided all the necessary information to schedule a meeting in the specified calendar with the given attendees, time, and Google Meet link.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": true,\n    \"execution_summary\": \"Schedule a meeting titled 'poteto' tomorrow from 8am to 9am in the 'kasane_teto' calendar, invite pchua5644@gmail.com, and provide a Google Meet link.\"\n}",
   "parsed": {
     "intent": "ready_to_execute",
-    "task_type": "upload_file",
+    "task_type": "create_event",
     "extracted_info": {
-      "file_path": "SafeExpress",
-      "filename": "Wowzers",
-      "folder_path": "my google drive"
+      "summary": "poteto",
+      "start_time": "tomorrow at 8am",
+      "end_time": "tomorrow at 9am",
+      "calendar_name": "kasane_teto",
+      "attendees": [
+        "pchua5644@gmail.com"
+      ],
+      "add_meet_link": true
     },
     "missing_fields": [],
     "clarification_question": "",
-    "reasoning": "The user has provided all the necessary information for the task.",
+    "reasoning": "The user has provided all the necessary information to schedule a meeting in the specified calendar with the given attendees, time, and Google Meet link.",
     "suggested_alternatives": [],
     "execution_ready": true,
-    "execution_summary": "Upload the file named 'Wowzers' from the 'SafeExpress' folder to 'my google drive'"
+    "execution_summary": "Schedule a meeting titled 'poteto' tomorrow from 8am to 9am in the 'kasane_teto' calendar, invite pchua5644@gmail.com, and provide a Google Meet link."
   }
 }

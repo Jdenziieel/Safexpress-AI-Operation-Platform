@@ -11,6 +11,7 @@ import os
 import json
 import uvicorn
 from google.oauth2.credentials import Credentials
+from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 
 # Import your existing tools (supervisor-compatible versions)
 from tools import (
@@ -411,7 +412,8 @@ def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
         }
 def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
-    Upload a template file to Google Drive in Templates folder
+    Upload a template file (PDF, DOCX, DOC) to Google Drive Templates folder
+    with automatic conversion to Google Docs format for editing
     """
     try:
         service = get_service_from_creds(credentials_dict)
@@ -419,6 +421,7 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
         file_path = inputs.get("file_path")
         template_name = inputs.get("template_name")
         file_type = inputs.get("file_type")
+        preserve_format = inputs.get("preserve_format", False)  # New parameter
         
         if not file_path:
             return {"success": False, "error": "file_path is required"}
@@ -428,40 +431,91 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
         if not os.path.exists(file_path):
             return {"success": False, "error": f"File not found: {file_path}"}
         
-        # Auto-detect file type
+        # Auto-detect file type and format
+        detected_format = "Unknown"
         if not file_type:
             ext = os.path.splitext(file_path)[1].lower()
-            if ext == '.docx':
+            if ext == '.pdf':
+                file_type = 'application/pdf'
+                detected_format = 'PDF'
+            elif ext == '.docx':
                 file_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                detected_format = 'DOCX'
             elif ext == '.doc':
                 file_type = 'application/msword'
+                detected_format = 'DOC'
             elif ext == '.txt':
                 file_type = 'text/plain'
+                detected_format = 'TXT'
             else:
                 file_type = 'application/octet-stream'
+                detected_format = 'Unknown'
         
-        # ✅ DEFAULT: Upload to Templates folder (auto-created if doesn't exist)
+        print(f"📄 Detected format: {detected_format}")
+        
+        # ✅ FIX 1: Use correct function names from your tools.py
+        # Get or create Templates folder using create_nested_folder_impl
         folder_path = "Templates"
+        folder_result = create_nested_folder_impl(service, folder_path)
         
-        with open(file_path, 'rb') as f:
-            result = upload_stream_to_folder_impl(
-                service, f, template_name, file_type, folder_path
-            )
+        if not folder_result.get("success"):
+            return {
+                "success": False,
+                "file_id": None,
+                "error": folder_result.get("error"),
+                "message": f"❌ Failed to create Templates folder: {folder_result.get('error')}"
+            }
         
-        if not result.get("success"):
-            return result
+        templates_folder_id = folder_result.get("folder_id")
+        
+        # Determine if we should convert to Google Docs
+        should_convert = not preserve_format and detected_format in ['PDF', 'DOCX', 'DOC']
+        
+        if should_convert:
+            print(f"🔄 Converting {detected_format} to Google Docs format for editing...")
+            target_mime = 'application/vnd.google-apps.document'
+            conversion_note = f"Converted from {detected_format} to Google Docs (editable)"
+        else:
+            print(f"📌 Preserving original {detected_format} format...")
+            target_mime = file_type
+            conversion_note = f"Preserved original {detected_format} format"
+        
+        # Upload with conversion
+        file_metadata = {
+            'name': template_name,
+            'parents': [templates_folder_id],
+            'mimeType': target_mime,
+            'description': f"Original format: {detected_format}"
+        }
+        
+        # ✅ FIX 2: MediaFileUpload is already imported in your tools.py
+        media = MediaFileUpload(file_path, mimetype=file_type, resumable=True)
+        
+        uploaded_file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id, name, webViewLink, mimeType'
+        ).execute()
+        
+        file_id = uploaded_file.get('id')
+        file_url = uploaded_file.get('webViewLink')
         
         return {
             "success": True,
-            "file_id": result.get("file_id"),
-            "file_url": result.get("file_url"),
+            "file_id": file_id,
+            "file_url": file_url,
             "template_name": template_name,
+            "original_format": detected_format,
+            "current_format": "Google Docs" if should_convert else detected_format,
+            "is_editable": should_convert,
             "folder_path": "SafeExpress/Templates",
-            "message": f"✅ Template '{template_name}' uploaded to SafeExpress/Templates and converted to Google Docs",
+            "message": f"✅ Template '{template_name}' uploaded to SafeExpress/Templates. {conversion_note}",
             "error": None
         }
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {
             "success": False,
             "file_id": None,

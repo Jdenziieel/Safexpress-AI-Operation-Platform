@@ -463,7 +463,8 @@ def _create_from_uploaded_template_impl(
     template_file_id: str,
     new_title: str,
     placeholder_values: Optional[Dict[str, str]],
-    credentials_dict: Dict
+    credentials_dict: Dict,
+    output_format: str = "google_docs"  # NEW: "google_docs" or "pdf"
 ) -> str:
     """
     Create document from uploaded template file in Drive
@@ -473,6 +474,7 @@ def _create_from_uploaded_template_impl(
         new_title: Title for new document
         placeholder_values: Dict of placeholder replacements
         credentials_dict: Google OAuth credentials
+        output_format: "google_docs" (default, editable) or "pdf" (final output)
     
     Returns:
         Success message with document details
@@ -486,6 +488,7 @@ def _create_from_uploaded_template_impl(
         print(f"client_id: {'present' if credentials_dict.get('client_id') else 'MISSING'}")
         print(f"client_secret: {'present' if credentials_dict.get('client_secret') else 'MISSING'}")
         print(f"{'='*60}\n")
+        
         # Use existing document format extractor
         extractor = DocumentFormatExtractor(credentials_dict)
         
@@ -494,26 +497,102 @@ def _create_from_uploaded_template_impl(
             import json
             placeholder_values = json.loads(placeholder_values)
         
+        # Create document from template (always creates Google Doc first)
         result = extractor.create_from_template(
             template_document_id=template_file_id,
             new_title=new_title,
             placeholder_values=placeholder_values or {}
         )
         
-        if result.get("success"):
-            response = f"✅ Document created from uploaded template!\n\n"
-            response += f"📄 Title: {result['title']}\n"
-            response += f"🆔 Document ID: {result['document_id']}\n"
-            response += f"🔗 URL: {result['url']}\n"
-            
-            if placeholder_values:
-                response += f"\n✏️ Placeholders filled:\n"
-                for key, value in placeholder_values.items():
-                    response += f"   • [{key}] → {value}\n"
-            
-            return response
-        else:
+        if not result.get("success"):
             return f"❌ Error: {result.get('error')}"
+        
+        # If user wants PDF output, export it
+        if output_format == "pdf":
+            print("📄 Exporting document as PDF...")
+            try:
+                from googleapiclient.discovery import build
+                from googleapiclient.http import MediaInMemoryUpload
+                from google.oauth2.credentials import Credentials
+                
+                # Build credentials
+                creds = Credentials(
+                    token=credentials_dict.get("access_token"),
+                    refresh_token=credentials_dict.get("refresh_token"),
+                    token_uri=credentials_dict.get("token_uri", "https://oauth2.googleapis.com/token"),
+                    client_id=credentials_dict.get("client_id"),
+                    client_secret=credentials_dict.get("client_secret")
+                )
+                
+                drive_service = build('drive', 'v3', credentials=creds)
+                
+                # Export Google Doc as PDF
+                pdf_content = drive_service.files().export(
+                    fileId=result['document_id'],
+                    mimeType='application/pdf'
+                ).execute()
+                
+                # Get parent folder of the Google Doc
+                doc_metadata = drive_service.files().get(
+                    fileId=result['document_id'],
+                    fields='parents'
+                ).execute()
+                
+                parents = doc_metadata.get('parents', [])
+                
+                # Upload PDF version to same folder
+                pdf_metadata = {
+                    'name': f"{new_title}.pdf",
+                    'mimeType': 'application/pdf',
+                    'parents': parents
+                }
+                
+                pdf_file = drive_service.files().create(
+                    body=pdf_metadata,
+                    media_body=MediaInMemoryUpload(pdf_content, mimetype='application/pdf'),
+                    fields='id, webViewLink'
+                ).execute()
+                
+                # Build response for PDF output
+                response = f"✅ Document created from template and exported as PDF!\n\n"
+                response += f"📄 Title: {new_title}.pdf\n"
+                response += f"🆔 PDF ID: {pdf_file['id']}\n"
+                response += f"🔗 PDF URL: {pdf_file['webViewLink']}\n"
+                response += f"📝 Original Google Doc ID: {result['document_id']}\n"
+                response += f"🔗 Google Doc URL: {result['url']}\n"
+                
+                if placeholder_values:
+                    response += f"\n✏️ Placeholders filled:\n"
+                    for key, value in placeholder_values.items():
+                        response += f"   • [{key}] → {value}\n"
+                
+                response += f"\n💡 Format: PDF (non-editable, final output)"
+                
+                return response
+                
+            except Exception as pdf_error:
+                print(f"⚠️ PDF export failed: {pdf_error}")
+                # Fall back to Google Doc response
+                response = f"⚠️ Created Google Doc but PDF export failed: {str(pdf_error)}\n\n"
+                response += f"📄 Google Doc Title: {result['title']}\n"
+                response += f"🆔 Document ID: {result['document_id']}\n"
+                response += f"🔗 URL: {result['url']}\n"
+                return response
+        
+        # Default: Return Google Doc response
+        response = f"✅ Document created from uploaded template!\n\n"
+        response += f"📄 Title: {result['title']}\n"
+        response += f"🆔 Document ID: {result['document_id']}\n"
+        response += f"🔗 URL: {result['url']}\n"
+        
+        if placeholder_values:
+            response += f"\n✏️ Placeholders filled:\n"
+            for key, value in placeholder_values.items():
+                response += f"   • [{key}] → {value}\n"
+        
+        response += f"\n💡 Format: Google Docs (editable)"
+        
+        return response
     
     except Exception as error:
         import traceback

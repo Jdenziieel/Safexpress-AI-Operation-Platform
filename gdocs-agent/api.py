@@ -32,6 +32,8 @@ class AgentTaskResponse(BaseModel):
     error: str = None
 
 
+# In your docs agent main.py
+
 @app.post("/execute_task", response_model=AgentTaskResponse)
 async def execute_task(request: AgentTaskRequest):
     """
@@ -67,6 +69,7 @@ async def execute_task(request: AgentTaskRequest):
             template_file_id = request.inputs.get("template_file_id")
             new_title = request.inputs.get("new_title")
             placeholders = request.inputs.get("placeholders", {})
+            output_format = request.inputs.get("output_format", "google_docs")  # ✅ NEW: Extract output_format
             
             if not template_file_id:
                 return AgentTaskResponse(
@@ -82,32 +85,67 @@ async def execute_task(request: AgentTaskRequest):
                     error="new_title is required"
                 )
             
-            # Execute directly
+            # Validate output_format
+            if output_format not in ["google_docs", "pdf"]:
+                print(f"⚠️ Invalid output_format '{output_format}', defaulting to 'google_docs'")
+                output_format = "google_docs"
+            
+            print(f"📄 Output format requested: {output_format}")
+            
+            # Execute directly with output_format parameter
             try:
                 result_text = _create_from_uploaded_template_impl(
                     template_file_id=template_file_id,
                     new_title=new_title,
                     placeholder_values=placeholders,
-                    credentials_dict=request.credentials_dict
+                    credentials_dict=request.credentials_dict,
+                    output_format=output_format  # ✅ NEW: Pass output_format
                 )
                 
                 print(f"📄 Direct execution result:\n{result_text}")
                 
                 # Parse result (it returns a formatted string)
-                if "✅" in result_text and "Document ID:" in result_text:
+                if "✅" in result_text:
                     # Extract document ID and URL from success message
                     import re
-                    doc_id_match = re.search(r"Document ID: ([a-zA-Z0-9_-]+)", result_text)
-                    url_match = re.search(r"URL: (https://[^\s]+)", result_text)
-                    title_match = re.search(r"Title: ([^\n]+)", result_text)
                     
-                    parsed_result = {
-                        "success": True,
-                        "document_id": doc_id_match.group(1) if doc_id_match else None,
-                        "document_url": url_match.group(1) if url_match else None,
-                        "title": title_match.group(1).strip() if title_match else new_title,
-                        "template_used": template_file_id
-                    }
+                    # Check if PDF output
+                    is_pdf = "PDF ID:" in result_text or output_format == "pdf"
+                    
+                    if is_pdf:
+                        # Parse PDF response
+                        pdf_id_match = re.search(r"PDF ID: ([a-zA-Z0-9_-]+)", result_text)
+                        pdf_url_match = re.search(r"PDF URL: (https://[^\s]+)", result_text)
+                        doc_id_match = re.search(r"Google Doc ID: ([a-zA-Z0-9_-]+)", result_text)
+                        doc_url_match = re.search(r"Google Doc URL: (https://[^\s]+)", result_text)
+                        title_match = re.search(r"Title: ([^\n]+)", result_text)
+                        
+                        parsed_result = {
+                            "success": True,
+                            "document_id": pdf_id_match.group(1) if pdf_id_match else None,
+                            "document_url": pdf_url_match.group(1) if pdf_url_match else None,
+                            "title": title_match.group(1).strip() if title_match else f"{new_title}.pdf",
+                            "template_used": template_file_id,
+                            "format": "PDF",
+                            "editable": False,
+                            "google_docs_version_id": doc_id_match.group(1) if doc_id_match else None,
+                            "google_docs_version_url": doc_url_match.group(1) if doc_url_match else None
+                        }
+                    else:
+                        # Parse Google Docs response
+                        doc_id_match = re.search(r"Document ID: ([a-zA-Z0-9_-]+)", result_text)
+                        url_match = re.search(r"URL: (https://[^\s]+)", result_text)
+                        title_match = re.search(r"Title: ([^\n]+)", result_text)
+                        
+                        parsed_result = {
+                            "success": True,
+                            "document_id": doc_id_match.group(1) if doc_id_match else None,
+                            "document_url": url_match.group(1) if url_match else None,
+                            "title": title_match.group(1).strip() if title_match else new_title,
+                            "template_used": template_file_id,
+                            "format": "Google Docs",
+                            "editable": True
+                        }
                     
                     print(f"\n📤 Complete Result:")
                     print(json.dumps(parsed_result, indent=2, default=str))
@@ -135,8 +173,8 @@ async def execute_task(request: AgentTaskRequest):
                     result={},
                     error=str(direct_exec_error)
                 )
-        # In execute_task, add another special case after create_from_uploaded_template
-
+        
+        # ✅ SPECIAL HANDLING: Direct execution for analyze_uploaded_template
         if request.tool == "analyze_uploaded_template":
             print(f"🔬 Analyzing uploaded template: {request.tool}")
     
@@ -149,7 +187,7 @@ async def execute_task(request: AgentTaskRequest):
                     success=False,
                     result={},
                     error="template_file_id is required"
-            )
+                )
             
             try:
                 analysis_json = _analyze_uploaded_template_impl(
@@ -194,32 +232,32 @@ async def execute_task(request: AgentTaskRequest):
             tool_specific_instructions = ""
             if request.tool == "create_doc":
                 tool_specific_instructions = """
-    RETURN FORMAT: Return JSON with document creation details:
-    {
-        "success": true,
-        "document_id": "<Google Docs ID>",
-        "document_url": "<URL to access document>",
-        "title": "<document title>"
-    }"""
+RETURN FORMAT: Return JSON with document creation details:
+{
+    "success": true,
+    "document_id": "<Google Docs ID>",
+    "document_url": "<URL to access document>",
+    "title": "<document title>"
+}"""
             elif request.tool == "add_text":
                 tool_specific_instructions = """
-    RETURN FORMAT: Return JSON with text addition confirmation:
-    {
-        "success": true,
-        "document_id": "<the document ID>",
-        "document_url": "<URL to access document>",
-        "text_length": <number of characters added>
-    }"""
+RETURN FORMAT: Return JSON with text addition confirmation:
+{
+    "success": true,
+    "document_id": "<the document ID>",
+    "document_url": "<URL to access document>",
+    "text_length": <number of characters added>
+}"""
             elif request.tool == "read_doc":
                 tool_specific_instructions = """
-    RETURN FORMAT: Return JSON with document content:
-    {
-        "success": true,
-        "document_id": "<the document ID>",
-        "document_url": "<URL to access document>",
-        "content": "<full document text>",
-        "title": "<document title>"
-    }"""
+RETURN FORMAT: Return JSON with document content:
+{
+    "success": true,
+    "document_id": "<the document ID>",
+    "document_url": "<URL to access document>",
+    "content": "<full document text>",
+    "title": "<document title>"
+}"""
             
             agent_prompt = f"""You are a Google Docs API assistant. Your job is to execute Google Docs operations using available tools.
 

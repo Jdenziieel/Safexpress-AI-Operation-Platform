@@ -4,38 +4,39 @@
       "agent": "drive_agent",
       "tool": "upload_template",
       "inputs": {
-        "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\tmpbg2z_qg0.docx",
-        "template_name": "MOM_Template"
+        "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\tmpfuzfiph2.pdf",
+        "template_name": "Template for the week432"
       },
       "output_variables": {
-        "file_id": "file_id"
+        "uploaded_template_id": "file_id"
       },
-      "description": "Upload the template file to Google Drive"
+      "description": "Upload the provided template to Google Drive and convert it to Google Docs format"
     },
     {
       "agent": "docs_agent",
       "tool": "analyze_uploaded_template",
       "inputs": {
-        "template_file_id": "{{file_id}}"
+        "template_file_id": "{{uploaded_template_id}}"
       },
       "output_variables": {
-        "placeholders": "placeholders"
+        "analyzed_template_id": "template_id"
       },
-      "description": "Analyze the uploaded template to extract placeholders"
+      "description": "Analyze the uploaded template to extract its structure and placeholders"
     },
     {
       "agent": "docs_agent",
       "tool": "create_from_uploaded_template",
       "inputs": {
-        "template_file_id": "{{file_id}}",
-        "new_title": "Board Meeting - Bees Discussion",
-        "placeholders": "{\"NAME\": \"Paul\", \"CONTENT\": \"Bees play a crucial role in pollinating many of the plants that make up the world's food supply. They have a complex colony structure with a queen, workers, and drones, each with specific roles. Bees are vital to ecosystems due to their role in the reproduction of flowers and other plants.\"}"
+        "template_file_id": "{{analyzed_template_id}}",
+        "new_title": "AI IS SO GOOD557",
+        "placeholders": "{\"USER_NAME\": \"John Smith Doe\", \"CONTENT\": \"UST is a global provider of digital technology and transformation, IT services and solutions. Founded in 1998, the company is headquartered in California and operates across Americas, EMEA, and Asia-Pacific regions.\"}",
+        "output_format": "google_docs"
       },
       "output_variables": {
-        "new_doc_id": "document_id",
-        "new_doc_url": "document_url"
+        "new_document_id": "document_id",
+        "new_document_url": "document_url"
       },
-      "description": "Create a new document from the uploaded template, replacing placeholders with specified values"
+      "description": "Create a new document from the analyzed template, replacing the placeholders with the provided values and generating a summary about UST for the CONTENT placeholder"
     }
   ]
 }
