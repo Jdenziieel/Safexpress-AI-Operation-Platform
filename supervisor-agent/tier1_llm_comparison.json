@@ -1,23 +1,18 @@
 {
-  "response": "{\n    \"intent\": \"ready_to_execute\",\n    \"task_type\": \"create_event\",\n    \"extracted_info\": {\n        \"summary\": \"poteto\",\n        \"start_time\": \"tomorrow at 8am\",\n        \"end_time\": \"tomorrow at 9am\",\n        \"calendar_name\": \"kasane_teto\",\n        \"attendees\": [\"pchua5644@gmail.com\"],\n        \"add_meet_link\": true\n    },\n    \"missing_fields\": [],\n    \"clarification_question\": \"\",\n    \"reasoning\": \"The user has provided all the necessary information to schedule a meeting in the specified calendar with the given attendees, time, and Google Meet link.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": true,\n    \"execution_summary\": \"Schedule a meeting titled 'poteto' tomorrow from 8am to 9am in the 'kasane_teto' calendar, invite pchua5644@gmail.com, and provide a Google Meet link.\"\n}",
+  "response": "{\n    \"intent\": \"ready_to_execute\",\n    \"task_type\": \"create_from_existing_data_and_template\",\n    \"extracted_info\": {\n        \"template_file_name\": \"MinutesOfMeetingTEMP\",\n        \"data_file_name\": \"TestData123\",\n        \"new_title\": \"Meeting Notes Jan 28\"\n    },\n    \"missing_fields\": [],\n    \"clarification_question\": \"\",\n    \"reasoning\": \"The user has provided all the necessary information to create a document using a specific template and data file, and has also specified the title for the new document.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": true,\n    \"execution_summary\": \"Create a document titled 'Meeting Notes Jan 28' using the template 'MinutesOfMeetingTEMP' and data 'TestData123' from Google Drive.\"\n}",
   "parsed": {
     "intent": "ready_to_execute",
-    "task_type": "create_event",
+    "task_type": "create_from_existing_data_and_template",
     "extracted_info": {
-      "summary": "poteto",
-      "start_time": "tomorrow at 8am",
-      "end_time": "tomorrow at 9am",
-      "calendar_name": "kasane_teto",
-      "attendees": [
-        "pchua5644@gmail.com"
-      ],
-      "add_meet_link": true
+      "template_file_name": "MinutesOfMeetingTEMP",
+      "data_file_name": "TestData123",
+      "new_title": "Meeting Notes Jan 28"
     },
     "missing_fields": [],
     "clarification_question": "",
-    "reasoning": "The user has provided all the necessary information to schedule a meeting in the specified calendar with the given attendees, time, and Google Meet link.",
+    "reasoning": "The user has provided all the necessary information to create a document using a specific template and data file, and has also specified the title for the new document.",
     "suggested_alternatives": [],
     "execution_ready": true,
-    "execution_summary": "Schedule a meeting titled 'poteto' tomorrow from 8am to 9am in the 'kasane_teto' calendar, invite pchua5644@gmail.com, and provide a Google Meet link."
+    "execution_summary": "Create a document titled 'Meeting Notes Jan 28' using the template 'MinutesOfMeetingTEMP' and data 'TestData123' from Google Drive."
   }
 }

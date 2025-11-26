@@ -585,6 +585,143 @@ def get_folder_info_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
             "message": f"❌ Failed to get folder info: {str(e)}"
         }
 
+def read_file_content_impl(service, file_id: str) -> Dict:
+    """
+    Read content from a file in Google Drive - RETURNS DICT
+    Supports text files, Google Docs, and CSVs
+    """
+    try:
+        # Get file metadata
+        file_metadata = service.files().get(fileId=file_id, fields='name, mimeType').execute()
+        mime_type = file_metadata.get('mimeType')
+        file_name = file_metadata.get('name')
+        
+        content = ""
+        
+        # Handle different file types
+        if mime_type == 'application/vnd.google-apps.document':
+            # Google Docs - export as plain text
+            content = service.files().export(fileId=file_id, mimeType='text/plain').execute().decode('utf-8')
+        elif mime_type == 'text/plain' or mime_type == 'text/csv':
+            # Plain text or CSV
+            content = service.files().get_media(fileId=file_id).execute().decode('utf-8')
+        elif mime_type == 'application/vnd.google-apps.spreadsheet':
+            # Google Sheets - export as CSV
+            content = service.files().export(fileId=file_id, mimeType='text/csv').execute().decode('utf-8')
+        else:
+            return {
+                "success": False,
+                "content": None,
+                "error": f"Unsupported file type: {mime_type}",
+                "message": f"Cannot read content from {mime_type} files"
+            }
+        
+        return {
+            "success": True,
+            "file_id": file_id,
+            "file_name": file_name,
+            "mime_type": mime_type,
+            "content": content,
+            "content_length": len(content),
+            "message": f"✅ Read {len(content)} characters from '{file_name}'",
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "content": None,
+            "error": str(e),
+            "message": f"Failed to read file content: {str(e)}"
+        }
+
+
+def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Read content from a file in Google Drive
+    
+    Inputs:
+        file_id: str (required) - Google Drive file ID
+        OR
+        file_path: str (required) - Path to file in SafeExpress (e.g., 'Data/customer_info.txt')
+    
+    Returns:
+        success: bool
+        file_id: str
+        file_name: str
+        mime_type: str
+        content: str - File content as text
+        content_length: int
+        message: str
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+        
+        file_id = inputs.get("file_id")
+        file_path = inputs.get("file_path")
+        
+        # If file_path provided, search for the file
+        if not file_id and file_path:
+            safeexpress_id = get_safeexpress_folder_id(service)
+            
+            # Split path to get folder and filename
+            path_parts = file_path.split('/')
+            filename = path_parts[-1]
+            folder_path = '/'.join(path_parts[:-1]) if len(path_parts) > 1 else None
+            
+            # Find the folder
+            if folder_path:
+                folder_id = find_folder(service, folder_path, safeexpress_id)
+                if not folder_id:
+                    # Try nested search
+                    folders = get_folder_structure(service)
+                    matching = [f for f in folders if folder_path.lower() in f['name'].lower()]
+                    if matching:
+                        folder_id = matching[0]['id']
+            else:
+                folder_id = safeexpress_id
+            
+            if not folder_id:
+                return {
+                    "success": False,
+                    "error": f"Folder not found: {folder_path}",
+                    "message": f"❌ Could not find folder '{folder_path}'"
+                }
+            
+            # Search for file in folder
+            query = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
+            results = service.files().list(q=query, fields="files(id)").execute()
+            files = results.get('files', [])
+            
+            if not files:
+                return {
+                    "success": False,
+                    "error": f"File not found: {filename}",
+                    "message": f"❌ Could not find file '{filename}' in {folder_path or 'SafeExpress'}"
+                }
+            
+            file_id = files[0]['id']
+        
+        if not file_id:
+            return {
+                "success": False,
+                "error": "file_id or file_path is required",
+                "message": "❌ Must provide either file_id or file_path"
+            }
+        
+        # Read file content
+        result = read_file_content_impl(service, file_id)
+        return result
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "content": None,
+            "error": str(e),
+            "message": f"❌ Failed to read file: {str(e)}"
+        }
+
 
 # ============================================================
 # TOOL REGISTRY (Maps tool names to functions)
@@ -598,6 +735,7 @@ DRIVE_TOOLS = {
     "search_files": search_files_tool,
     "get_folder_info": get_folder_info_tool,
     "upload_template": upload_template_tool, 
+    "read_file_content": read_file_content_tool
 }
 
 
@@ -661,6 +799,144 @@ async def execute_task(request: TaskRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+def read_file_content_impl(service, file_id: str) -> Dict:
+    """
+    Read content from a file in Google Drive - RETURNS DICT
+    Supports text files, Google Docs, and CSVs
+    """
+    try:
+        # Get file metadata
+        file_metadata = service.files().get(fileId=file_id, fields='name, mimeType').execute()
+        mime_type = file_metadata.get('mimeType')
+        file_name = file_metadata.get('name')
+        
+        content = ""
+        
+        # Handle different file types
+        if mime_type == 'application/vnd.google-apps.document':
+            # Google Docs - export as plain text
+            content = service.files().export(fileId=file_id, mimeType='text/plain').execute().decode('utf-8')
+        elif mime_type == 'text/plain' or mime_type == 'text/csv':
+            # Plain text or CSV
+            content = service.files().get_media(fileId=file_id).execute().decode('utf-8')
+        elif mime_type == 'application/vnd.google-apps.spreadsheet':
+            # Google Sheets - export as CSV
+            content = service.files().export(fileId=file_id, mimeType='text/csv').execute().decode('utf-8')
+        else:
+            return {
+                "success": False,
+                "content": None,
+                "error": f"Unsupported file type: {mime_type}",
+                "message": f"Cannot read content from {mime_type} files"
+            }
+        
+        return {
+            "success": True,
+            "file_id": file_id,
+            "file_name": file_name,
+            "mime_type": mime_type,
+            "content": content,
+            "content_length": len(content),
+            "message": f"✅ Read {len(content)} characters from '{file_name}'",
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "content": None,
+            "error": str(e),
+            "message": f"Failed to read file content: {str(e)}"
+        }
+
+
+def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Read content from a file in Google Drive
+    
+    Inputs:
+        file_id: str (required) - Google Drive file ID
+        OR
+        file_path: str (required) - Path to file in SafeExpress (e.g., 'Data/customer_info.txt')
+    
+    Returns:
+        success: bool
+        file_id: str
+        file_name: str
+        mime_type: str
+        content: str - File content as text
+        content_length: int
+        message: str
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+        
+        file_id = inputs.get("file_id")
+        file_path = inputs.get("file_path")
+        
+        # If file_path provided, search for the file
+        if not file_id and file_path:
+            safeexpress_id = get_safeexpress_folder_id(service)
+            
+            # Split path to get folder and filename
+            path_parts = file_path.split('/')
+            filename = path_parts[-1]
+            folder_path = '/'.join(path_parts[:-1]) if len(path_parts) > 1 else None
+            
+            # Find the folder
+            if folder_path:
+                folder_id = find_folder(service, folder_path, safeexpress_id)
+                if not folder_id:
+                    # Try nested search
+                    folders = get_folder_structure(service)
+                    matching = [f for f in folders if folder_path.lower() in f['name'].lower()]
+                    if matching:
+                        folder_id = matching[0]['id']
+            else:
+                folder_id = safeexpress_id
+            
+            if not folder_id:
+                return {
+                    "success": False,
+                    "error": f"Folder not found: {folder_path}",
+                    "message": f"❌ Could not find folder '{folder_path}'"
+                }
+            
+            # Search for file in folder
+            query = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
+            results = service.files().list(q=query, fields="files(id)").execute()
+            files = results.get('files', [])
+            
+            if not files:
+                return {
+                    "success": False,
+                    "error": f"File not found: {filename}",
+                    "message": f"❌ Could not find file '{filename}' in {folder_path or 'SafeExpress'}"
+                }
+            
+            file_id = files[0]['id']
+        
+        if not file_id:
+            return {
+                "success": False,
+                "error": "file_id or file_path is required",
+                "message": "❌ Must provide either file_id or file_path"
+            }
+        
+        # Read file content
+        result = read_file_content_impl(service, file_id)
+        return result
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "content": None,
+            "error": str(e),
+            "message": f"❌ Failed to read file: {str(e)}"
+        }
 
 
 @app.get("/health")

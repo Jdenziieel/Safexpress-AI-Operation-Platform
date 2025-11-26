@@ -146,32 +146,49 @@ class DocumentFormatExtractor:
 
         return block
 
-    def identify_placeholders(self, structure: Dict) -> List[str]:
-        """
-        Identify placeholder text in brackets like [DATE], [NAME], etc.
-
-        Args:
-            structure: Document structure from extract_document_structure
-
-        Returns:
-            List of unique placeholders found
-        """
-        placeholders = set()
-        import re
-
-        # Pattern to match [PLACEHOLDER] or {PLACEHOLDER}
-        pattern = r"\[(.*?)\]|\{(.*?)\}"
-
-        for block in structure.get("content_blocks", []):
-            text = block.get("text", "")
-            matches = re.findall(pattern, text)
-            for match in matches:
-                # match is tuple of (bracket_content, brace_content)
-                placeholder = match[0] if match[0] else match[1]
-                if placeholder:
-                    placeholders.add(placeholder)
-
-        return sorted(list(placeholders))
+def identify_placeholders(self, structure: Dict) -> List[str]:
+    """
+    Identify placeholder text in multiple formats:
+    1. Bracketed: [DATE], [NAME], {PLACEHOLDER}
+    2. Blank lines: date:____, attendees: ____, name:_____
+    
+    Args:
+        structure: Document structure from extract_document_structure
+    
+    Returns:
+        List of unique placeholders found
+    """
+    placeholders = set()
+    import re
+    
+    # Pattern 1: Match [PLACEHOLDER] or {PLACEHOLDER}
+    bracket_pattern = r"\[(.*?)\]|\{(.*?)\}"
+    
+    # Pattern 2: Match key:____ or key: ____ (blank line format)
+    blank_line_pattern = r'([a-zA-Z\s]+):\s*_{2,}'
+    
+    for block in structure.get("content_blocks", []):
+        text = block.get("text", "")
+        
+        # Find bracketed placeholders
+        bracket_matches = re.findall(bracket_pattern, text)
+        for match in bracket_matches:
+            # match is tuple of (bracket_content, brace_content)
+            placeholder = match[0] if match[0] else match[1]
+            if placeholder:
+                placeholders.add(placeholder.upper())  # Normalize to uppercase
+        
+        # Find blank line placeholders (NEW!)
+        blank_matches = re.findall(blank_line_pattern, text, re.IGNORECASE)
+        for match in blank_matches:
+            # Normalize: "date" → "DATE", "Company Name" → "COMPANY_NAME"
+            normalized = match.strip().upper().replace(' ', '_')
+            placeholders.add(normalized)
+            print(f"  🔍 Detected blank line placeholder: '{match}:____' → [{normalized}]")
+    
+    result = sorted(list(placeholders))
+    print(f"📋 Total placeholders found: {result}")
+    return result
 
     def create_from_template(
         self,

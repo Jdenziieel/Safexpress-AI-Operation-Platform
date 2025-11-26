@@ -15,6 +15,7 @@ import asyncio
 import uuid
 import time
 import hashlib
+import agent_capabilities_v2
 
 # Import models
 from models.models import *
@@ -34,7 +35,7 @@ from config import (
 )
 
 # Import agent capabilities
-from agent_capabilities import agent_capabilities
+from agent_capabilities_v2 import agent_capabilities
 
 # Import utility functions
 from utils import (

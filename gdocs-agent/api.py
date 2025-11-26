@@ -173,6 +173,101 @@ async def execute_task(request: AgentTaskRequest):
                     result={},
                     error=str(direct_exec_error)
                 )
+            
+        # ✅ SPECIAL HANDLING: Direct execution for create_from_existing_data_and_template
+        if request.tool == "create_from_existing_data_and_template":
+            print(f"🔧 Direct execution: {request.tool}")
+            
+            from tools import _create_from_existing_data_and_template_impl
+            
+            template_file_name = request.inputs.get("template_file_name")
+            data_file_name = request.inputs.get("data_file_name")
+            new_title = request.inputs.get("new_title")
+            output_format = request.inputs.get("output_format", "google_docs")
+            
+            if not template_file_name:
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error="template_file_name is required"
+                )
+            
+            if not data_file_name:
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error="data_file_name is required"
+                )
+            
+            if not new_title:
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error="new_title is required"
+                )
+            
+            try:
+                result_text = _create_from_existing_data_and_template_impl(
+                    template_file_name=template_file_name,
+                    data_file_name=data_file_name,
+                    new_title=new_title,
+                    credentials_dict=request.credentials_dict,
+                    output_format=output_format
+                )
+                
+                print(f"📄 Direct execution result:\n{result_text}")
+                
+                if "✅" in result_text:
+                    import re
+                    
+                    is_pdf = "PDF ID:" in result_text or output_format == "pdf"
+                    
+                    if is_pdf:
+                        pdf_id_match = re.search(r"PDF ID: ([a-zA-Z0-9_-]+)", result_text)
+                        pdf_url_match = re.search(r"PDF URL: (https://[^\s]+)", result_text)
+                        doc_id_match = re.search(r"Google Doc ID: ([a-zA-Z0-9_-]+)", result_text)
+                        
+                        parsed_result = {
+                            "success": True,
+                            "document_id": pdf_id_match.group(1) if pdf_id_match else None,
+                            "document_url": pdf_url_match.group(1) if pdf_url_match else None,
+                            "title": f"{new_title}.pdf",
+                            "format": "PDF",
+                            "google_docs_version_id": doc_id_match.group(1) if doc_id_match else None
+                        }
+                    else:
+                        doc_id_match = re.search(r"Document ID: ([a-zA-Z0-9_-]+)", result_text)
+                        url_match = re.search(r"URL: (https://[^\s]+)", result_text)
+                        
+                        parsed_result = {
+                            "success": True,
+                            "document_id": doc_id_match.group(1) if doc_id_match else None,
+                            "document_url": url_match.group(1) if url_match else None,
+                            "title": new_title,
+                            "format": "Google Docs"
+                        }
+                    
+                    return AgentTaskResponse(
+                        success=True,
+                        result=parsed_result,
+                        raw_response=result_text
+                    )
+                else:
+                    return AgentTaskResponse(
+                        success=False,
+                        result={},
+                        error=result_text,
+                        raw_response=result_text
+                    )
+            except Exception as e:
+                print(f"❌ Direct execution failed: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error=str(e)
+                )
         
         # ✅ SPECIAL HANDLING: Direct execution for analyze_uploaded_template
         if request.tool == "analyze_uploaded_template":

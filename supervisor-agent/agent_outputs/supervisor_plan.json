@@ -1,42 +1,18 @@
 {
   "plan": [
     {
-      "agent": "drive_agent",
-      "tool": "upload_template",
-      "inputs": {
-        "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\tmpfuzfiph2.pdf",
-        "template_name": "Template for the week432"
-      },
-      "output_variables": {
-        "uploaded_template_id": "file_id"
-      },
-      "description": "Upload the provided template to Google Drive and convert it to Google Docs format"
-    },
-    {
       "agent": "docs_agent",
-      "tool": "analyze_uploaded_template",
+      "tool": "create_from_existing_data_and_template",
       "inputs": {
-        "template_file_id": "{{uploaded_template_id}}"
+        "template_file_name": "MinutesOfMeetingTEMP",
+        "data_file_name": "TestData123",
+        "new_title": "Meeting Notes Jan 28"
       },
       "output_variables": {
-        "analyzed_template_id": "template_id"
+        "created_document_id": "document_id",
+        "created_document_url": "document_url"
       },
-      "description": "Analyze the uploaded template to extract its structure and placeholders"
-    },
-    {
-      "agent": "docs_agent",
-      "tool": "create_from_uploaded_template",
-      "inputs": {
-        "template_file_id": "{{analyzed_template_id}}",
-        "new_title": "AI IS SO GOOD557",
-        "placeholders": "{\"USER_NAME\": \"John Smith Doe\", \"CONTENT\": \"UST is a global provider of digital technology and transformation, IT services and solutions. Founded in 1998, the company is headquartered in California and operates across Americas, EMEA, and Asia-Pacific regions.\"}",
-        "output_format": "google_docs"
-      },
-      "output_variables": {
-        "new_document_id": "document_id",
-        "new_document_url": "document_url"
-      },
-      "description": "Create a new document from the analyzed template, replacing the placeholders with the provided values and generating a summary about UST for the CONTENT placeholder"
+      "description": "Create a document titled 'Meeting Notes Jan 28' using the template 'MinutesOfMeetingTEMP' and data 'TestData123' from Google Drive"
     }
   ]
 }
