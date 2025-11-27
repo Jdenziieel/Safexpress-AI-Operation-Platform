@@ -11,6 +11,7 @@ import os
 import json
 import uvicorn
 from google.oauth2.credentials import Credentials
+from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 
 # Import your existing tools (supervisor-compatible versions)
 from tools import (
@@ -409,7 +410,118 @@ def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "error": str(e),
             "message": f"❌ Search failed: {str(e)}"
         }
-
+def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Upload a template file (PDF, DOCX, DOC) to Google Drive Templates folder
+    with automatic conversion to Google Docs format for editing
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+        
+        file_path = inputs.get("file_path")
+        template_name = inputs.get("template_name")
+        file_type = inputs.get("file_type")
+        preserve_format = inputs.get("preserve_format", False)  # New parameter
+        
+        if not file_path:
+            return {"success": False, "error": "file_path is required"}
+        if not template_name:
+            return {"success": False, "error": "template_name is required"}
+        
+        if not os.path.exists(file_path):
+            return {"success": False, "error": f"File not found: {file_path}"}
+        
+        # Auto-detect file type and format
+        detected_format = "Unknown"
+        if not file_type:
+            ext = os.path.splitext(file_path)[1].lower()
+            if ext == '.pdf':
+                file_type = 'application/pdf'
+                detected_format = 'PDF'
+            elif ext == '.docx':
+                file_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                detected_format = 'DOCX'
+            elif ext == '.doc':
+                file_type = 'application/msword'
+                detected_format = 'DOC'
+            elif ext == '.txt':
+                file_type = 'text/plain'
+                detected_format = 'TXT'
+            else:
+                file_type = 'application/octet-stream'
+                detected_format = 'Unknown'
+        
+        print(f"📄 Detected format: {detected_format}")
+        
+        # ✅ FIX 1: Use correct function names from your tools.py
+        # Get or create Templates folder using create_nested_folder_impl
+        folder_path = "Templates"
+        folder_result = create_nested_folder_impl(service, folder_path)
+        
+        if not folder_result.get("success"):
+            return {
+                "success": False,
+                "file_id": None,
+                "error": folder_result.get("error"),
+                "message": f"❌ Failed to create Templates folder: {folder_result.get('error')}"
+            }
+        
+        templates_folder_id = folder_result.get("folder_id")
+        
+        # Determine if we should convert to Google Docs
+        should_convert = not preserve_format and detected_format in ['PDF', 'DOCX', 'DOC']
+        
+        if should_convert:
+            print(f"🔄 Converting {detected_format} to Google Docs format for editing...")
+            target_mime = 'application/vnd.google-apps.document'
+            conversion_note = f"Converted from {detected_format} to Google Docs (editable)"
+        else:
+            print(f"📌 Preserving original {detected_format} format...")
+            target_mime = file_type
+            conversion_note = f"Preserved original {detected_format} format"
+        
+        # Upload with conversion
+        file_metadata = {
+            'name': template_name,
+            'parents': [templates_folder_id],
+            'mimeType': target_mime,
+            'description': f"Original format: {detected_format}"
+        }
+        
+        # ✅ FIX 2: MediaFileUpload is already imported in your tools.py
+        media = MediaFileUpload(file_path, mimetype=file_type, resumable=True)
+        
+        uploaded_file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id, name, webViewLink, mimeType'
+        ).execute()
+        
+        file_id = uploaded_file.get('id')
+        file_url = uploaded_file.get('webViewLink')
+        
+        return {
+            "success": True,
+            "file_id": file_id,
+            "file_url": file_url,
+            "template_name": template_name,
+            "original_format": detected_format,
+            "current_format": "Google Docs" if should_convert else detected_format,
+            "is_editable": should_convert,
+            "folder_path": "SafeExpress/Templates",
+            "message": f"✅ Template '{template_name}' uploaded to SafeExpress/Templates. {conversion_note}",
+            "error": None
+        }
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "file_id": None,
+            "error": str(e),
+            "message": f"❌ Upload failed: {str(e)}"
+        }
 
 def get_folder_info_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
@@ -473,6 +585,143 @@ def get_folder_info_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
             "message": f"❌ Failed to get folder info: {str(e)}"
         }
 
+def read_file_content_impl(service, file_id: str) -> Dict:
+    """
+    Read content from a file in Google Drive - RETURNS DICT
+    Supports text files, Google Docs, and CSVs
+    """
+    try:
+        # Get file metadata
+        file_metadata = service.files().get(fileId=file_id, fields='name, mimeType').execute()
+        mime_type = file_metadata.get('mimeType')
+        file_name = file_metadata.get('name')
+        
+        content = ""
+        
+        # Handle different file types
+        if mime_type == 'application/vnd.google-apps.document':
+            # Google Docs - export as plain text
+            content = service.files().export(fileId=file_id, mimeType='text/plain').execute().decode('utf-8')
+        elif mime_type == 'text/plain' or mime_type == 'text/csv':
+            # Plain text or CSV
+            content = service.files().get_media(fileId=file_id).execute().decode('utf-8')
+        elif mime_type == 'application/vnd.google-apps.spreadsheet':
+            # Google Sheets - export as CSV
+            content = service.files().export(fileId=file_id, mimeType='text/csv').execute().decode('utf-8')
+        else:
+            return {
+                "success": False,
+                "content": None,
+                "error": f"Unsupported file type: {mime_type}",
+                "message": f"Cannot read content from {mime_type} files"
+            }
+        
+        return {
+            "success": True,
+            "file_id": file_id,
+            "file_name": file_name,
+            "mime_type": mime_type,
+            "content": content,
+            "content_length": len(content),
+            "message": f"✅ Read {len(content)} characters from '{file_name}'",
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "content": None,
+            "error": str(e),
+            "message": f"Failed to read file content: {str(e)}"
+        }
+
+
+def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Read content from a file in Google Drive
+    
+    Inputs:
+        file_id: str (required) - Google Drive file ID
+        OR
+        file_path: str (required) - Path to file in SafeExpress (e.g., 'Data/customer_info.txt')
+    
+    Returns:
+        success: bool
+        file_id: str
+        file_name: str
+        mime_type: str
+        content: str - File content as text
+        content_length: int
+        message: str
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+        
+        file_id = inputs.get("file_id")
+        file_path = inputs.get("file_path")
+        
+        # If file_path provided, search for the file
+        if not file_id and file_path:
+            safeexpress_id = get_safeexpress_folder_id(service)
+            
+            # Split path to get folder and filename
+            path_parts = file_path.split('/')
+            filename = path_parts[-1]
+            folder_path = '/'.join(path_parts[:-1]) if len(path_parts) > 1 else None
+            
+            # Find the folder
+            if folder_path:
+                folder_id = find_folder(service, folder_path, safeexpress_id)
+                if not folder_id:
+                    # Try nested search
+                    folders = get_folder_structure(service)
+                    matching = [f for f in folders if folder_path.lower() in f['name'].lower()]
+                    if matching:
+                        folder_id = matching[0]['id']
+            else:
+                folder_id = safeexpress_id
+            
+            if not folder_id:
+                return {
+                    "success": False,
+                    "error": f"Folder not found: {folder_path}",
+                    "message": f"❌ Could not find folder '{folder_path}'"
+                }
+            
+            # Search for file in folder
+            query = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
+            results = service.files().list(q=query, fields="files(id)").execute()
+            files = results.get('files', [])
+            
+            if not files:
+                return {
+                    "success": False,
+                    "error": f"File not found: {filename}",
+                    "message": f"❌ Could not find file '{filename}' in {folder_path or 'SafeExpress'}"
+                }
+            
+            file_id = files[0]['id']
+        
+        if not file_id:
+            return {
+                "success": False,
+                "error": "file_id or file_path is required",
+                "message": "❌ Must provide either file_id or file_path"
+            }
+        
+        # Read file content
+        result = read_file_content_impl(service, file_id)
+        return result
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "content": None,
+            "error": str(e),
+            "message": f"❌ Failed to read file: {str(e)}"
+        }
+
 
 # ============================================================
 # TOOL REGISTRY (Maps tool names to functions)
@@ -485,6 +734,8 @@ DRIVE_TOOLS = {
     "list_files": list_files_tool,
     "search_files": search_files_tool,
     "get_folder_info": get_folder_info_tool,
+    "upload_template": upload_template_tool, 
+    "read_file_content": read_file_content_tool
 }
 
 
@@ -548,6 +799,144 @@ async def execute_task(request: TaskRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+def read_file_content_impl(service, file_id: str) -> Dict:
+    """
+    Read content from a file in Google Drive - RETURNS DICT
+    Supports text files, Google Docs, and CSVs
+    """
+    try:
+        # Get file metadata
+        file_metadata = service.files().get(fileId=file_id, fields='name, mimeType').execute()
+        mime_type = file_metadata.get('mimeType')
+        file_name = file_metadata.get('name')
+        
+        content = ""
+        
+        # Handle different file types
+        if mime_type == 'application/vnd.google-apps.document':
+            # Google Docs - export as plain text
+            content = service.files().export(fileId=file_id, mimeType='text/plain').execute().decode('utf-8')
+        elif mime_type == 'text/plain' or mime_type == 'text/csv':
+            # Plain text or CSV
+            content = service.files().get_media(fileId=file_id).execute().decode('utf-8')
+        elif mime_type == 'application/vnd.google-apps.spreadsheet':
+            # Google Sheets - export as CSV
+            content = service.files().export(fileId=file_id, mimeType='text/csv').execute().decode('utf-8')
+        else:
+            return {
+                "success": False,
+                "content": None,
+                "error": f"Unsupported file type: {mime_type}",
+                "message": f"Cannot read content from {mime_type} files"
+            }
+        
+        return {
+            "success": True,
+            "file_id": file_id,
+            "file_name": file_name,
+            "mime_type": mime_type,
+            "content": content,
+            "content_length": len(content),
+            "message": f"✅ Read {len(content)} characters from '{file_name}'",
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "content": None,
+            "error": str(e),
+            "message": f"Failed to read file content: {str(e)}"
+        }
+
+
+def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Read content from a file in Google Drive
+    
+    Inputs:
+        file_id: str (required) - Google Drive file ID
+        OR
+        file_path: str (required) - Path to file in SafeExpress (e.g., 'Data/customer_info.txt')
+    
+    Returns:
+        success: bool
+        file_id: str
+        file_name: str
+        mime_type: str
+        content: str - File content as text
+        content_length: int
+        message: str
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+        
+        file_id = inputs.get("file_id")
+        file_path = inputs.get("file_path")
+        
+        # If file_path provided, search for the file
+        if not file_id and file_path:
+            safeexpress_id = get_safeexpress_folder_id(service)
+            
+            # Split path to get folder and filename
+            path_parts = file_path.split('/')
+            filename = path_parts[-1]
+            folder_path = '/'.join(path_parts[:-1]) if len(path_parts) > 1 else None
+            
+            # Find the folder
+            if folder_path:
+                folder_id = find_folder(service, folder_path, safeexpress_id)
+                if not folder_id:
+                    # Try nested search
+                    folders = get_folder_structure(service)
+                    matching = [f for f in folders if folder_path.lower() in f['name'].lower()]
+                    if matching:
+                        folder_id = matching[0]['id']
+            else:
+                folder_id = safeexpress_id
+            
+            if not folder_id:
+                return {
+                    "success": False,
+                    "error": f"Folder not found: {folder_path}",
+                    "message": f"❌ Could not find folder '{folder_path}'"
+                }
+            
+            # Search for file in folder
+            query = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
+            results = service.files().list(q=query, fields="files(id)").execute()
+            files = results.get('files', [])
+            
+            if not files:
+                return {
+                    "success": False,
+                    "error": f"File not found: {filename}",
+                    "message": f"❌ Could not find file '{filename}' in {folder_path or 'SafeExpress'}"
+                }
+            
+            file_id = files[0]['id']
+        
+        if not file_id:
+            return {
+                "success": False,
+                "error": "file_id or file_path is required",
+                "message": "❌ Must provide either file_id or file_path"
+            }
+        
+        # Read file content
+        result = read_file_content_impl(service, file_id)
+        return result
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "content": None,
+            "error": str(e),
+            "message": f"❌ Failed to read file: {str(e)}"
+        }
 
 
 @app.get("/health")

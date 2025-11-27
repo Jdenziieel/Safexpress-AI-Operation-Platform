@@ -379,22 +379,34 @@ def upload_file_to_folder_impl(service, filename: str, filepath: str, folder_pat
 def upload_stream_to_folder_impl(service, file_stream, filename: str, mimetype: str, folder_path: Optional[str] = None) -> Dict:
     """Upload a file stream to SafeExpress or a specific folder path - RETURNS DICT"""
     try:
-        # Get or create folder
-        if folder_path:
-            folder_result = create_nested_folder_impl(service, folder_path)
-            if not folder_result.get("success"):
-                return folder_result
-            folder_id = folder_result.get("folder_id")
-            location = f"SafeExpress/{folder_path}"
-        else:
-            folder_id = get_safeexpress_folder_id(service)
-            location = "SafeExpress"
+        # ✅ DEFAULT: Use "Templates" folder if no path specified
+        if folder_path is None:
+            folder_path = "Templates"
+            print(f"📁 No folder specified, using default: SafeExpress/{folder_path}")
         
+        # Get or create folder structure
+        folder_result = create_nested_folder_impl(service, folder_path)
+        if not folder_result.get("success"):
+            return folder_result
+        folder_id = folder_result.get("folder_id")
+        location = f"SafeExpress/{folder_path}"
+        
+        # Handle .docx files - convert to Google Docs
         metadata = {'name': filename, 'parents': [folder_id]}
-        media = MediaIoBaseUpload(file_stream, mimetype=mimetype)
+        
+        if mimetype in [
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',  # .docx
+            'application/msword'  # .doc
+        ]:
+            # Convert to Google Docs format
+            metadata['mimeType'] = 'application/vnd.google-apps.document'
+            media = MediaIoBaseUpload(file_stream, mimetype=mimetype, resumable=True)
+        else:
+            media = MediaIoBaseUpload(file_stream, mimetype=mimetype)
+        
         file = service.files().create(body=metadata, media_body=media, fields='id').execute()
         file_id = file.get('id')
-        file_url = f"https://drive.google.com/file/d/{file_id}/view"
+        file_url = f"https://docs.google.com/document/d/{file_id}/edit"
         
         return {
             "success": True,
@@ -413,7 +425,6 @@ def upload_stream_to_folder_impl(service, file_stream, filename: str, mimetype: 
             "message": f"Failed to upload file: {str(e)}",
             "error": str(e)
         }
-
 
 def search_files_in_safeexpress_impl(service, search_term: str) -> Dict:
     """Search for files within SafeExpress folder - RETURNS DICT"""

@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException
+#THIS IS THE SUPERVISOR.py
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
@@ -14,6 +15,7 @@ import asyncio
 import uuid
 import time
 import hashlib
+import agent_capabilities_v2
 
 # Import models
 from models.models import *
@@ -33,7 +35,7 @@ from config import (
 )
 
 # Import agent capabilities
-from agent_capabilities import agent_capabilities
+from agent_capabilities_v2 import agent_capabilities
 
 # Import utility functions
 from utils import (
@@ -91,6 +93,7 @@ class ConversationRequest(BaseModel):
     auto_execute: bool = False  # If true, auto-execute when ready
     user_id: Optional[str] = None  # Optional: auto-create persistent thread
     persist: bool = False  # If true with user_id, create persistent thread
+    file: Optional[UploadFile] = File(None)
 
 
 class ConversationResponse(BaseModel):
@@ -269,6 +272,7 @@ CURRENT DATE CONTEXT:
 - Today's date: {today_date}
 - Yesterday's date: {yesterday_date}
 
+
 PLANNING RULES:
 1. Reference previous outputs using {{{{ variable_name }}}} syntax
 2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from tool's "returns"
@@ -280,6 +284,9 @@ PLANNING RULES:
    - {{{{ emails[0].from }}}} for first email's sender
    - {{{{ emails[0].subject }}}} for first email's subject
    - Store array in variable: {{"recent_emails": "emails"}}, then use {{{{ recent_emails[0].from }}}}
+7. For template uploads: ALWAYS do upload → analyze → create (3 steps minimum)
+8. Follow tool-specific instructions in the capabilities (especially for templates and content generation)
+9. When file is uploaded: uploaded_file context contains temp_path, filename, size, mime_type
 
 Available agents and tools:
 {capability_summary}
@@ -581,9 +588,14 @@ def orchestrator_node(state: SharedState) -> SharedState:
         substituted_inputs = {}
         for key, value in inputs.items():
             if isinstance(value, str):
-                # Use Jinja2 to substitute {{ variables }}
+            # Use Jinja2 to substitute {{ variables }}
                 template = Template(value)
                 substituted_inputs[key] = template.render(**variable_context)
+    # ✅ FIX: Handle file uploads
+            elif key == "file_path" and "uploaded_file" in variable_context:
+        # Use the temp_path from uploaded_file
+                uploaded_file = variable_context["uploaded_file"]
+                substituted_inputs[key] = uploaded_file.get("temp_path")
             else:
                 substituted_inputs[key] = value
 
@@ -1127,7 +1139,177 @@ async def chat(request: ConversationRequest):
 
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Chat processing failed: {str(e)}")
+# Add after /chat endpoint (around line 800)
 
+@app.post("/chat/upload")
+async def chat_with_upload(
+    message: str = Form(...),
+    conversation_id: Optional[str] = Form(None),
+    auto_execute: bool = Form(False),
+    file: UploadFile = File(...)
+):
+    """
+    Chat endpoint with file upload support for template workflows.
+    """
+    import tempfile
+    import shutil
+    
+    try:
+        print(f"\n📎 File upload received: {file.filename}")
+        
+        # Save file to temp location
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp_file:
+            shutil.copyfileobj(file.file, tmp_file)
+            temp_path = tmp_file.name
+        
+        # Get file size
+        file_size = os.path.getsize(temp_path)
+        
+        # Build file metadata
+        uploaded_file = {
+            "filename": file.filename,
+            "temp_path": temp_path,
+            "size": file_size,
+            "mime_type": file.content_type or "application/octet-stream"
+        }
+        
+        print(f"  → Saved to: {temp_path}")
+        print(f"  → Size: {file_size} bytes")
+        
+        # Get or create conversation
+        conversation_id = conversation_id or f"conv_{uuid.uuid4().hex[:8]}"
+        conversation_state = CONVERSATIONS.get(conversation_id)
+        
+        # ✅ FIX: Initialize conversation_state if None
+        if conversation_state is None:
+            conversation_state = ConversationState()
+        
+        # Check if executing
+        if conversation_state.executing:
+            os.unlink(temp_path)  # Clean up
+            raise HTTPException(
+                status_code=409,
+                detail="Conversation is currently executing."
+            )
+        
+        # Process message with file
+        response_text, updated_state = conversational_agent.process_message(
+            user_message=message,
+            conversation_state=conversation_state,  # Now guaranteed to not be None
+            state_id=conversation_id,
+            uploaded_file=uploaded_file
+        )
+        
+        print(f"🤖 Bot response: {response_text}")
+        print(f"✅ Ready to execute: {updated_state.ready_for_execution}")
+        
+        # Auto-execute if ready
+        if updated_state.ready_for_execution and auto_execute:
+            print("🚀 Auto-executing template upload workflow...")
+            
+            updated_state.executing = True
+            CONVERSATIONS[conversation_id] = updated_state
+            
+            try:
+                supervisor_input = conversational_agent.build_supervisor_input(updated_state)
+                workflow_request = UserRequest(input=supervisor_input)
+                
+                now_iso = datetime.now(timezone.utc).isoformat()
+                
+                status = "unknown"
+                message_result = ""
+                final_context = {}
+                plan_dict = {}
+                
+                try:
+                    workflow_result = await execute_workflow(workflow_request)
+                    status = workflow_result.status
+                    message_result = workflow_result.message
+                    final_context = workflow_result.final_context or {}
+                    plan_dict = workflow_result.plan or {}
+                except HTTPException as he:
+                    status = "approval_required" if he.status_code == 202 else "error"
+                    message_result = str(he.detail) if hasattr(he, "detail") else str(he)
+                except Exception as e:
+                    status = "error"
+                    message_result = str(e)
+                    import traceback
+                    traceback.print_exc()
+                
+                # Compute plan hash
+                try:
+                    plan_json = json.dumps(plan_dict, sort_keys=True)
+                except Exception:
+                    plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
+                
+                plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
+                
+                # Build history
+                history_item = {
+                    "executed_at": now_iso,
+                    "plan_hash": plan_hash,
+                    "status": status,
+                    "message": message_result,
+                    "final_context_snapshot": final_context,
+                }
+                
+                updated_state.execution_history.append(history_item)
+                if len(updated_state.execution_history) > 50:
+                    updated_state.execution_history = updated_state.execution_history[-50:]
+                
+                updated_state.executed_count += 1
+                updated_state.last_plan_hash = plan_hash
+                updated_state.last_executed_at = now_iso
+                updated_state.execution_summary = message_result
+                updated_state.ready_for_execution = False
+                
+                # Generate summary
+                print("📝 Generating summary...")
+                friendly_summary = conversational_agent.summarize_execution(
+                    conversation_state=updated_state,
+                    final_context=final_context,
+                    execution_status=status,
+                    execution_message=message_result,
+                )
+                
+                response_text = friendly_summary
+                
+            finally:
+                updated_state.executing = False
+                CONVERSATIONS[conversation_id] = updated_state
+                
+                # Clean up temp file
+                try:
+                    os.unlink(temp_path)
+                    print(f"🗑️ Cleaned up temp file: {temp_path}")
+                except:
+                    pass
+        
+        # Store updated state
+        CONVERSATIONS[conversation_id] = updated_state
+        
+        return ConversationResponse(
+            response=response_text,
+            conversation_id=conversation_id,
+            ready_for_execution=updated_state.ready_for_execution,
+            intent=updated_state.intent.value if updated_state.intent else "unknown",
+            extracted_info=updated_state.extracted_info,
+            execution_summary=updated_state.execution_summary,
+        )
+        
+    except Exception as e:
+        print(f"\n❌ Error in chat with upload: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # Clean up temp file on error
+        try:
+            if 'temp_path' in locals():
+                os.unlink(temp_path)
+        except:
+            pass
+        
+        raise HTTPException(status_code=500, detail=f"Upload processing failed: {str(e)}")
 
 @app.post("/chat/{conversation_id}/execute")
 async def execute_conversation(conversation_id: str):
@@ -1783,6 +1965,179 @@ async def create_thread(request: dict):
     except Exception as e:
         print(f"❌ Error creating thread: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+@app.post("/threads/create-with-upload")
+async def create_thread_with_upload(
+    message: str = Form(...),
+    user_id: str = Form(...),
+    file: UploadFile = File(...),
+):
+    """
+    Create a new thread with initial message AND file upload in one request.
+    This prevents the "📎 Uploading file..." secondary message issue.
+    """
+    import tempfile
+    import shutil
+    
+    try:
+        print(f"\n📎 Creating thread with file upload for user {user_id}")
+        print(f"📎 File: {file.filename}")
+        print(f"💬 Message: {message}")
+        
+        # Save file to temp location
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp_file:
+            shutil.copyfileobj(file.file, tmp_file)
+            temp_path = tmp_file.name
+        
+        # Get file size
+        file_size = os.path.getsize(temp_path)
+        
+        # Build file metadata
+        uploaded_file = {
+            "filename": file.filename,
+            "temp_path": temp_path,
+            "size": file_size,
+            "mime_type": file.content_type or "application/octet-stream"
+        }
+        
+        print(f"  → Saved to: {temp_path}")
+        print(f"  → Size: {file_size} bytes")
+        
+        # Create thread with initial message AND file
+        thread_id, conversation_state, bot_response = conversational_agent.create_new_thread(
+            user_id=user_id,
+            initial_message=message,
+            title=None,  # Will auto-generate
+            tags=[]
+        )
+        
+        # Store in memory for compatibility
+        CONVERSATIONS[thread_id] = conversation_state
+        
+        print(f"✅ Created thread: {thread_id}")
+        
+        # Process message with file
+        response_text, updated_state = conversational_agent.process_message(
+            user_message=message,
+            conversation_state=conversation_state,
+            state_id=thread_id,
+            auto_save=True,
+            uploaded_file=uploaded_file
+        )
+        
+        print(f"🤖 Bot response: {response_text}")
+        print(f"✅ Ready to execute: {updated_state.ready_for_execution}")
+        
+        # If ready for execution, execute immediately
+        if updated_state.ready_for_execution:
+            print(f"🚀 Thread {thread_id} ready - executing workflow...")
+            
+            updated_state.executing = True
+            conversational_agent._save_thread_to_db(thread_id, updated_state)
+            
+            try:
+                supervisor_input = conversational_agent.build_supervisor_input(updated_state)
+                workflow_request = UserRequest(input=supervisor_input)
+                now_iso = datetime.now(timezone.utc).isoformat()
+                
+                status = "unknown"
+                message_text = ""
+                final_context = {}
+                plan_dict = {}
+                
+                try:
+                    workflow_result = await execute_workflow(workflow_request)
+                    status = workflow_result.status
+                    message_text = workflow_result.message
+                    final_context = workflow_result.final_context or {}
+                    plan_dict = workflow_result.plan or {}
+                except HTTPException as he:
+                    status = "approval_required" if he.status_code == 202 else "error"
+                    message_text = str(he.detail) if hasattr(he, "detail") else str(he)
+                except Exception as e:
+                    status = "error"
+                    message_text = str(e)
+                    import traceback
+                    traceback.print_exc()
+                
+                # Compute plan hash
+                try:
+                    plan_json = json.dumps(plan_dict, sort_keys=True)
+                except Exception:
+                    plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
+                plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
+                
+                # Build history entry
+                history_item = {
+                    "executed_at": now_iso,
+                    "plan_hash": plan_hash,
+                    "status": status,
+                    "message": message_text,
+                    "final_context_snapshot": final_context,
+                }
+                
+                updated_state.execution_history.append(history_item)
+                if len(updated_state.execution_history) > 50:
+                    updated_state.execution_history = updated_state.execution_history[-50:]
+                
+                updated_state.executed_count += 1
+                updated_state.last_plan_hash = plan_hash
+                updated_state.last_executed_at = now_iso
+                updated_state.execution_summary = message_text
+                updated_state.ready_for_execution = False
+                
+                # Generate user-friendly summary
+                print("📝 Generating user-friendly summary...")
+                friendly_summary = conversational_agent.summarize_execution(
+                    conversation_state=updated_state,
+                    final_context=final_context,
+                    execution_status=status,
+                    execution_message=message_text,
+                )
+                
+                response_text = friendly_summary
+                
+            finally:
+                updated_state.executing = False
+                conversational_agent._save_thread_to_db(thread_id, updated_state)
+                
+                # Clean up temp file
+                try:
+                    os.unlink(temp_path)
+                    print(f"🗑️ Cleaned up temp file: {temp_path}")
+                except:
+                    pass
+        else:
+            # Not ready yet, clean up temp file
+            try:
+                os.unlink(temp_path)
+                print(f"🗑️ Cleaned up temp file: {temp_path}")
+            except:
+                pass
+        
+        # Get thread metadata
+        metadata = conversational_agent.get_thread_metadata(thread_id)
+        
+        return {
+            "thread_id": thread_id,
+            "bot_response": response_text,
+            "ready_for_execution": updated_state.ready_for_execution,
+            "metadata": metadata
+        }
+        
+    except Exception as e:
+        print(f"\n❌ Error creating thread with upload: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # Clean up temp file on error
+        try:
+            if 'temp_path' in locals():
+                os.unlink(temp_path)
+                print(f"🗑️ Cleaned up temp file on error: {temp_path}")
+        except:
+            pass
+        
+        raise HTTPException(status_code=500, detail=f"Failed to create thread with file: {str(e)}")
 
 
 @app.get("/threads")
@@ -1821,6 +2176,7 @@ async def list_threads(user_id: str, status: str = "active", limit: int = 50, of
     except Exception as e:
         print(f"❌ Error listing threads: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.get("/threads/{thread_id}")
@@ -2031,6 +2387,194 @@ async def send_message_to_thread(thread_id: str, request: dict):
     except Exception as e:
         print(f"❌ Error sending message to thread: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+@app.post("/threads/{thread_id}/messages/upload")
+async def send_message_to_thread_with_upload(
+    thread_id: str,
+    message: str = Form(...),
+    file: UploadFile = File(...)
+):
+    """
+    Continue a thread by sending a new message with file upload.
+    
+    Args:
+        thread_id: Thread identifier
+        message: User's message (required)
+        file: File upload (required)
+    
+    Returns:
+        Bot response and updated thread metadata
+    """
+    import tempfile
+    import shutil
+    
+    try:
+        print(f"\n📎 File upload to thread {thread_id}: {file.filename}")
+        
+        # Save file to temp location
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp_file:
+            shutil.copyfileobj(file.file, tmp_file)
+            temp_path = tmp_file.name
+        
+        # Get file size
+        file_size = os.path.getsize(temp_path)
+        
+        # Build file metadata
+        uploaded_file = {
+            "filename": file.filename,
+            "temp_path": temp_path,
+            "size": file_size,
+            "mime_type": file.content_type or "application/octet-stream"
+        }
+        
+        print(f"  → Saved to: {temp_path}")
+        print(f"  → Size: {file_size} bytes")
+        
+        # Load current conversation state
+        conversation_state = conversational_agent._load_thread_from_db(thread_id)
+        
+        if conversation_state is None:
+            # Clean up temp file
+            os.unlink(temp_path)
+            raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
+        
+        # Check if conversation is currently executing
+        if conversation_state.executing:
+            print(f"⏳ Thread {thread_id} is executing — rejecting new input")
+            # Clean up temp file
+            os.unlink(temp_path)
+            raise HTTPException(
+                status_code=409,
+                detail="Thread is currently executing. Please wait until the operation completes.",
+            )
+        
+        # Process message with file
+        response_text, updated_state = conversational_agent.process_message(
+            user_message=message,
+            conversation_state=conversation_state,
+            state_id=thread_id,
+            auto_save=True,  # Always auto-save for threads
+            uploaded_file=uploaded_file
+        )
+        
+        print(f"🤖 Bot response: {response_text}")
+        print(f"✅ Ready to execute: {updated_state.ready_for_execution}")
+        
+        # If ready for execution, execute immediately
+        if updated_state.ready_for_execution:
+            print(f"🚀 Thread {thread_id} ready - executing workflow...")
+            
+            # Mark as executing to prevent conflicts
+            updated_state.executing = True
+            conversational_agent._save_thread_to_db(thread_id, updated_state)
+            
+            try:
+                supervisor_input = conversational_agent.build_supervisor_input(updated_state)
+                workflow_request = UserRequest(input=supervisor_input)
+                now_iso = datetime.now(timezone.utc).isoformat()
+                
+                status = "unknown"
+                message_text = ""
+                final_context = {}
+                plan_dict = {}
+                
+                try:
+                    workflow_result = await execute_workflow(workflow_request)
+                    status = workflow_result.status
+                    message_text = workflow_result.message
+                    final_context = workflow_result.final_context or {}
+                    plan_dict = workflow_result.plan or {}
+                except HTTPException as he:
+                    status = "approval_required" if he.status_code == 202 else "error"
+                    message_text = str(he.detail) if hasattr(he, "detail") else str(he)
+                except Exception as e:
+                    status = "error"
+                    message_text = str(e)
+                    import traceback
+                    traceback.print_exc()
+                
+                # Compute plan hash
+                try:
+                    plan_json = json.dumps(plan_dict, sort_keys=True)
+                except Exception:
+                    plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
+                plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
+                
+                # Build history entry
+                history_item = {
+                    "executed_at": now_iso,
+                    "plan_hash": plan_hash,
+                    "status": status,
+                    "message": message_text,
+                    "final_context_snapshot": final_context,
+                }
+                
+                # Update execution history
+                updated_state.execution_history.append(history_item)
+                if len(updated_state.execution_history) > 50:
+                    updated_state.execution_history = updated_state.execution_history[-50:]
+                
+                updated_state.executed_count += 1
+                updated_state.last_plan_hash = plan_hash
+                updated_state.last_executed_at = now_iso
+                updated_state.execution_summary = message_text
+                updated_state.ready_for_execution = False
+                
+                # Generate user-friendly summary
+                print("📝 Generating user-friendly summary...")
+                friendly_summary = conversational_agent.summarize_execution(
+                    conversation_state=updated_state,
+                    final_context=final_context,
+                    execution_status=status,
+                    execution_message=message_text,
+                )
+                
+                response_text = friendly_summary
+                
+            finally:
+                # Clear executing flag and save
+                updated_state.executing = False
+                conversational_agent._save_thread_to_db(thread_id, updated_state)
+                
+                # Clean up temp file
+                try:
+                    os.unlink(temp_path)
+                    print(f"🗑️ Cleaned up temp file: {temp_path}")
+                except:
+                    pass
+        else:
+            # Not ready for execution yet, just clean up temp file
+            try:
+                os.unlink(temp_path)
+                print(f"🗑️ Cleaned up temp file: {temp_path}")
+            except:
+                pass
+        
+        # Get updated metadata
+        metadata = conversational_agent.get_thread_metadata(thread_id)
+        
+        return {
+            "thread_id": thread_id,
+            "bot_response": response_text,
+            "ready_for_execution": updated_state.ready_for_execution,
+            "metadata": metadata
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"\n❌ Error sending message with upload to thread: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # Clean up temp file on error
+        try:
+            if 'temp_path' in locals():
+                os.unlink(temp_path)
+                print(f"🗑️ Cleaned up temp file on error: {temp_path}")
+        except:
+            pass
+        
+        raise HTTPException(status_code=500, detail=f"Upload processing failed: {str(e)}")
 
 
 @app.put("/threads/{thread_id}")

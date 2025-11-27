@@ -38,6 +38,7 @@ class ConversationIntent(str, Enum):
     READY_TO_EXECUTE = "ready_to_execute"  # All info present, proceed
     SMALL_TALK = "small_talk"  # Not a task request
     CANCELLED = "cancelled"  # User cancelled the request but data preserved
+    TEMPLATE_UPLOAD = "template_upload" 
 
 
 class ConversationState(BaseModel):
@@ -158,7 +159,7 @@ class ConversationalAgent:
         
         return "\n".join(capabilities)
     
-    def _get_memory_manager(self, state_id: str = "default", memory_state: Optional[Dict[str, Any]] = None) -> ConversationMemoryManager:
+    def _get_memory_manager(self, state_id: str = "default", memory_state: Optional[Dict[str, Any]] = None, ) -> ConversationMemoryManager:
         """
         Get or create a memory manager for the given conversation.
         
@@ -400,7 +401,7 @@ Try one of these or tell me what you'd like to do!"""
     # TIER 0.5: UNIFIED LIGHTWEIGHT LLM CHECK (~100-250 TOKENS)
     # =============================================================================
     
-    def _unified_quick_check(self, user_message: str, conversation_state: ConversationState, state_id: str = "default") -> Optional[ConversationAnalysis]:
+    def _unified_quick_check(self, user_message: str, conversation_state: ConversationState, state_id: str = "default", uploaded_file: Optional[Dict[str, Any]] = None ) -> Optional[ConversationAnalysis]:
         """
         UNIFIED Tier 0.5 LLM check - detects ALL non-task intents in ONE call.
         Handles: confirmation, cancellation, casual conversation, unintelligible input,
@@ -432,6 +433,16 @@ Try one of these or tell me what you'd like to do!"""
             assistant_turns = [t for t in recent_messages if t['role'] == 'assistant']
             if assistant_turns:
                 last_bot_message = assistant_turns[-1]['content']
+
+        file_context = ""
+        if uploaded_file:
+            file_context = f"\n\n📎 USER UPLOADED FILE:\n"
+            file_context += f"- Filename: {uploaded_file.get('filename', 'unknown')}\n"
+            file_context += f"- Size: {uploaded_file.get('size', 0)} bytes\n"
+            file_context += f"- Type: {uploaded_file.get('mime_type', 'unknown')}\n"
+            file_context += f"- Temp path: {uploaded_file.get('temp_path', 'unknown')}\n"
+            file_context += f"\n🔍 FILE CONTEXT: The user has uploaded a file. Any document/template name mentioned likely refers to what they want to CREATE, not the uploaded file itself.\n"
+    
         
         # Build state context
         is_awaiting_confirmation = (
@@ -481,18 +492,36 @@ Try one of these or tell me what you'd like to do!"""
 
 CATEGORIES (pick ONE):
 1. confirmation - Approval to proceed ("yes", "ok", "proceed")
-2. cancellation - Stop current task ("cancel", "no", "forget it") | Check for compound: cancel + new task in same message
-3. modification - Change single field ("change X to Y") | Multi-field → task_request
-4. followup_answer - Direct answer to question ("john@example.com") | Complex → task_request  
+2. cancellation - Stop current task ("cancel", "no", "forget it")
+3. modification - Change single field ("change X to Y")
+4. followup_answer - Direct answer to question ("john@example.com")
 5. casual_conversation - Chitchat ("how are you")
-6. unintelligible - Unclear input ("asdfkj3489")
-7. task_request - Action request or complex multi-step ("send email to...")
+6. unintelligible - Unclear input
+7. template_upload - User uploaded file + wants document/save ("use this template", "create MOM", "save to drive")
+8. task_request - Action request
 
 QUERY SCOPE (for task_request only):
 - general: User asking about capabilities/features ("what can you do?", "show me features")
 - specific: User wants to perform a task ("send email", "search for invoices")
 
 - Use exact field names from tool criteria and capabilities_to_show when extracting fields and naming them.
+
+TEMPLATE_UPLOAD EXTRACTION RULES (category=template_upload only):
+⚠️ CRITICAL NAMING LOGIC:
+- The UPLOADED FILE is the template (source)
+- Any document name mentioned is for the NEW document to CREATE
+- Example: "Upload this template, document name will be Sigma" → document_title="Sigma", template_name=<from filename or explicit>
+- Example: "Create Board Meeting from this" → document_title="Board Meeting", template_name=<from filename>
+- If user says "name the template X" → template_name="X"
+- If user says "document name is Y" or "create Y" → document_title="Y"
+- DEFAULT: template_name = filename without extension if not specified
+
+FIELDS TO EXTRACT:
+- save_to_drive: Did user ask to save/upload template? (default: true if file uploaded)
+- template_name: Explicit name for the template itself (e.g., "name the template X", "save as X_Template")
+  → If NOT specified, use uploaded filename without extension
+- document_title: Name for the NEW document to create (e.g., "create document Y", "document name is Y")
+  → This is what the user wants to call the NEW document, NOT the template
 
 {history_snippet}{context_note}{state_context}
 User: "{user_message}"
@@ -508,6 +537,15 @@ OUTPUT (JSON only):
     "field_to_modify": null,       // only for modification
     "new_value": null,             // only for modification
     "execution_summary": null      // only for followup_answer - human-readable task description
+    "save_to_drive": false,      // only for template_upload
+    "template_name": null,        // only for template_upload
+    "document_title": null,       // only for template_upload
+    "extracted_value": null,      // only for followup_answer
+    "field_to_modify": null,      // only for modification
+    "new_value": null,            // only for modification
+    "execution_summary": null     // for followup_answer/template_upload
+    "template_name": null,        // Name for template (or use filename if null)
+    "document_title": null,       // Name for NEW document to create
 }}
 
 """
@@ -718,6 +756,96 @@ OUTPUT (JSON only):
                     execution_summary=None
                 ), None  # No query_scope for non-task_request
             
+            if category == "template_upload":
+                if not uploaded_file:
+                    print(f"  → Template upload detected but no file provided")
+                    return ConversationAnalysis(
+                        intent=ConversationIntent.NEEDS_CLARIFICATION,
+                        task_type="template_upload",
+                        extracted_info={},
+                        missing_fields=["file_upload"],
+                        clarification_question="Please upload a template file to continue.",
+                        reasoning="Template upload requested but no file attached",
+                        execution_ready=False,
+                        execution_summary=None
+                ), None
+            
+            save_to_drive = result.get("save_to_drive", True)
+            template_name = result.get("template_name")
+            document_title = result.get("document_title")
+            execution_summary = result.get("execution_summary")
+            
+            print(f"  → File uploaded: {uploaded_file.get('filename')}")
+            print(f"  → Save to drive: {save_to_drive}")
+            print(f"  → Template name: {template_name}")
+            print(f"  → Document title: {document_title}")
+            
+            # Build extracted_info
+            extracted_info = {
+                "task_type": "template_upload",
+                "uploaded_file": uploaded_file,
+                "save_to_drive": save_to_drive,
+                "template_name": template_name
+            }
+            if document_title:
+                extracted_info["document_title"] = document_title
+            
+            missing_fields = []
+            if not document_title:
+                missing_fields.append("document_title")
+
+            if missing_fields:
+                clarification_q = f"Great! I'll save this as '{template_name}' template.\n\n"
+                clarification_q += f"What should I title the new document I create from it?"
+            else:
+                clarification_q = None
+            
+            if template_name:
+                extracted_info["template_name"] = template_name
+            if document_title:
+                extracted_info["document_title"] = document_title
+            
+            # Determine missing fields
+            missing_fields = []
+            if save_to_drive and not template_name:
+                missing_fields.append("template_name")
+            if not document_title:
+                missing_fields.append("document_title")
+            
+            # Build clarification question
+            if missing_fields:
+                if "template_name" in missing_fields and "document_title" in missing_fields:
+                    clarification_q = f"Great! I'll save this as a template and create a document from it.\n\n"
+                    clarification_q += f"What should I name:\n"
+                    clarification_q += f"1. The template (for future use)?\n"
+                    clarification_q += f"2. The new document?"
+                elif "template_name" in missing_fields:
+                    clarification_q = f"What should I name this template for future use?"
+                else:  # document_title missing
+                    clarification_q = f"What should I title the new document?"
+            else:
+                clarification_q = None
+            
+            # Generate execution summary if not provided
+            if not execution_summary:
+                if save_to_drive and document_title:
+                    execution_summary = f"Upload template '{template_name}' to Drive and create document '{document_title}'"
+                elif document_title:
+                    execution_summary = f"Create document '{document_title}' from uploaded template"
+                else:
+                    execution_summary = f"Process uploaded template '{template_name}'"
+            
+            return ConversationAnalysis(
+                intent=ConversationIntent.TEMPLATE_UPLOAD if not missing_fields else ConversationIntent.NEEDS_CLARIFICATION,
+                task_type="template_upload",
+                extracted_info=extracted_info,
+                missing_fields=missing_fields,
+                clarification_question=clarification_q,
+                reasoning=f"Template upload: template='{template_name}', document='{document_title}', missing={missing_fields}",
+                execution_ready=len(missing_fields) == 0,
+                execution_summary=execution_summary if not missing_fields else None
+            ), None
+            
         except Exception as e:
             print(f"⚠️ Unified quick check failed: {e}, falling back to full analysis")
             return None, "specific"  # Fallback: default to specific
@@ -842,7 +970,8 @@ What would you like to do?"""
         self, 
         user_message: str, 
         conversation_state: ConversationState,
-        state_id: str = "default"
+        state_id: str = "default",
+        uploaded_file: Optional[Dict[str, Any]] = None
     ) -> ConversationAnalysis:
         """
         Analyze user message to determine intent and completeness.
@@ -893,7 +1022,7 @@ What would you like to do?"""
         # Single unified LLM call handles: confirmation, cancellation, modification,
         # followup answers, casual conversation, unintelligible input
         # Also classifies query_scope for task_request (general vs specific)
-        unified_result, query_scope_hint = self._unified_quick_check(user_message, conversation_state, state_id)
+        unified_result, query_scope_hint = self._unified_quick_check(user_message, conversation_state, state_id, uploaded_file=uploaded_file)
         if unified_result is not None:
             return unified_result
         
@@ -1096,10 +1225,11 @@ When the user mentions multiple emails or entities, infer each role only from ex
         user_message: str, 
         conversation_state: Optional[ConversationState] = None,
         state_id: str = "default",
-        auto_save: bool = False
+        auto_save: bool = False,
+        uploaded_file: Optional[Dict[str, Any]] = None
     ) -> tuple[str, ConversationState]:
         """
-        Process a user message and return response + updated state.
+        Process a user message and return response + updated state + file upload.
         
         Args:
             user_message: User's input
@@ -1125,7 +1255,7 @@ When the user mentions multiple emails or entities, infer each role only from ex
             self.thread_manager.add_message(state_id, "user", user_message)
         
         # Analyze the request
-        analysis = self.analyze_request(user_message, conversation_state, state_id)
+        analysis = self.analyze_request(user_message, conversation_state, state_id, uploaded_file=uploaded_file)
         
         # Detect compound "cancel + new task" scenario
         # Check if user message has both cancel words AND task keywords
@@ -1178,7 +1308,17 @@ When the user mentions multiple emails or entities, infer each role only from ex
         print(f"Execution Summary: {conversation_state.execution_summary}")
         print(f"{'='*60}\n")
     # In case of compound cancel detected, we should proceed with the task and if cancel only just return response that cancelle just fine.
-
+        if analysis.intent == ConversationIntent.TEMPLATE_UPLOAD:
+            if analysis.execution_ready:
+                response = f"✅ **Ready to process template!**\n\n"
+                response += f"**File:** {analysis.extracted_info.get('uploaded_file', {}).get('filename')}\n"
+                if analysis.extracted_info.get('save_to_drive'):
+                    response += f"**Template name:** {analysis.extracted_info.get('template_name')}\n"
+                response += f"**Document title:** {analysis.extracted_info.get('document_title')}\n\n"
+                response += f"I'll upload the template to your Drive and create the document now."
+        else:
+            response = analysis.clarification_question or "Please provide more details."
+    
         # Generate response based on intent
         if analysis.intent == ConversationIntent.SMALL_TALK:
             # Check if this is a cancellation
@@ -1243,9 +1383,7 @@ When the user mentions multiple emails or entities, infer each role only from ex
             response += "**Details:**\n"
             for key, value in analysis.extracted_info.items():
                 response += f"- {key}: {value}\n"
-            # Note: With auto-execution, this will run immediately
-            # Remove "Should I proceed?" since it auto-executes
-        
+
         else:
             response = "I'm processing your request..."
         
@@ -1287,43 +1425,60 @@ When the user mentions multiple emails or entities, infer each role only from ex
         """
         Build a complete, well-formed input for the supervisor agent.
         Includes both execution_summary and extracted_info for comprehensive planning.
-        
+    
         Args:
             conversation_state: Current conversation state
-            
+        
         Returns:
             Clean input string for supervisor with task description and parameters
         """
-        # Get execution summary (with fallback)
+    # Get execution summary (with fallback)
         if not conversation_state.execution_summary:
-            # Fallback: reconstruct from extracted info
+        # Fallback: reconstruct from extracted info
             info = conversation_state.extracted_info
             task_type = info.get("task_type", "task")
+        
+        # Handle template upload
+            if task_type == "template_upload":
+                uploaded_file = info.get("uploaded_file", {})
+                filename = uploaded_file.get("filename", "template")
             
-            # Build sentence from extracted info
-            parts = []
-            for key, value in info.items():
-                if key != "task_type":
-                    parts.append(f"{key}: {value}")
+                if info.get("save_to_drive"):
+                    execution_summary = f"Upload template '{info.get('template_name', filename)}' to Google Drive Templates folder and create document '{info.get('document_title')}' from it"
+                else:
+                    execution_summary = f"Create document '{info.get('document_title')}' from uploaded template '{filename}'"
+            else:
+            # Build sentence from extracted info for other task types
+                parts = []
+                for key, value in info.items():
+                    if key != "task_type":
+                        parts.append(f"{key}: {value}")
             
-            execution_summary = f"{task_type} with " + ", ".join(parts)
+                execution_summary = f"{task_type} with " + ", ".join(parts)
         else:
+        # Use existing execution summary
             execution_summary = conversation_state.execution_summary
-        
-        # Build comprehensive input with both summary and detailed parameters
+    
+    # Build comprehensive input with both summary and detailed parameters
         supervisor_input = execution_summary
-        
-        # Add extracted_info as structured parameters if available
+    
+    # Add extracted_info as structured parameters if available
         if conversation_state.extracted_info:
             supervisor_input += "\n\nParameters:\n"
             for key, value in conversation_state.extracted_info.items():
-                # Format the value for better readability
-                if isinstance(value, (list, dict)):
+            # ✅ FIX: Special handling for uploaded_file
+                if key == "uploaded_file" and isinstance(value, dict):
+                    supervisor_input += f"- uploaded_file:\n"
+                    supervisor_input += f"  - filename: {value.get('filename')}\n"
+                    supervisor_input += f"  - temp_path: {value.get('temp_path')}\n"
+                    supervisor_input += f"  - size: {value.get('size')} bytes\n"
+                    supervisor_input += f"  - mime_type: {value.get('mime_type')}\n"
+                elif isinstance(value, (list, dict)):
                     value_str = json.dumps(value, indent=2)
+                    supervisor_input += f"- {key}: {value_str}\n"
                 else:
-                    value_str = str(value)
-                supervisor_input += f"- {key}: {value_str}\n"
-        
+                    supervisor_input += f"- {key}: {value}\n"
+                    
         return supervisor_input
     
     def _filter_context_for_user(self, final_context: Dict[str, Any]) -> Dict[str, Any]:

@@ -213,20 +213,20 @@ agent_capabilities = {
             },
         },
     },
-    "docs_agent": {
-        "description": "Create, edit, and read Google Docs documents.",
+ "docs_agent": {
+        "description": "Create, edit, and read Google Docs documents. Supports template workflows with placeholder replacement and PDF export.",
         "tools": {
             "create_doc": {
                 "description": "Creates a new Google Doc and returns its ID and URL",
                 "args": {
-                    "title": "str (required) — the name of the document (e.g., 'Project Notes')"
+                    "title": "str (required) — the name of the document"
                 },
                 "returns": {
-                    "success": "bool — whether document was created successfully",
-                    "document_id": "str — Google Doc ID (null if failed)",
-                    "document_url": "str — URL to access the document (null if failed)",
-                    "title": "str — document title",
-                    "error": "str — error message (null if successful)",
+                    "success": "bool",
+                    "document_id": "str",
+                    "document_url": "str",
+                    "title": "str",
+                    "error": "str",
                 },
             },
             "list_my_docs": {
@@ -235,18 +235,80 @@ agent_capabilities = {
                 "returns": {
                     "success": "bool",
                     "documents": "list",
-                    "documents[].id": "str",
-                    "documents[].name": "str",
                     "error": "str",
                 },
             },
             "extract_template_format": {
-                "description": "Analyze template to find placeholders",
+                "description": "Analyze existing Google Doc template to find placeholders",
                 "args": {"template_document_id": "str (required)"},
                 "returns": {"success": "bool", "placeholders": "list", "error": "str"},
             },
+            "analyze_uploaded_template": {
+                "description": "Analyze uploaded template file to extract structure and placeholders",
+                "instructions": """
+📋 STEP 2 of Template Workflow
+- Use file_id from upload_template (Step 1)
+- Extracts placeholders like [DATE], [USER_NAME], [CONTENT]
+- Determines if template is ready for use
+- Returns template_id for Step 3
+                """,
+                "args": {
+                    "template_file_id": "str (required) — Google Drive file ID from upload_template"
+                },
+                "returns": {
+                    "success": "bool",
+                    "template_id": "str — Use this in create_from_uploaded_template",
+                    "title": "str",
+                    "content_blocks": "int",
+                    "placeholders": "list — Array of placeholder names (e.g., ['DATE', 'USER_NAME', 'CONTENT'])",
+                    "has_placeholders": "bool",
+                    "structure_type": "str — 'structured' or 'unstructured'",
+                    "ready_for_use": "bool",
+                    "error": "str"
+                },
+                "example": "analyze_uploaded_template(template_file_id={{file_id}})"
+            },
+            "create_from_uploaded_template": {
+                "description": "Create document from analyzed template with placeholder replacement and optional PDF export",
+                "instructions": """
+📄 STEP 3 of Template Workflow
+- Use template_id from analyze_uploaded_template (Step 2)
+- Replaces placeholders with actual values
+- Default: Creates editable Google Doc
+- Optional: Export as PDF if user requests it
+
+OUTPUT FORMAT DETECTION:
+- If user says "create document" or "create doc" → output_format='google_docs' (default)
+- If user says "create PDF", "export as PDF", "save as PDF" → output_format='pdf'
+
+⚠️ CONTENT GENERATION RULE:
+When placeholder values need generated content (e.g., "write summary about X"):
+- Generate 2-3 sentences of ACTUAL content
+- NEVER just write literal phrases like "summary about X"
+- Example: For "CONTENT: write about UST" → Generate real content about UST company
+                """,
+                "args": {
+                    "template_file_id": "str (required) — From analyze_uploaded_template",
+                    "new_title": "str (required) — Title for new document",
+                    "placeholders": "str (optional) — JSON string with values (e.g., '{\"DATE\": \"2025-01-28\", \"USER_NAME\": \"John Doe\"}')",
+                    "output_format": "str (optional) — 'google_docs' (default, editable) or 'pdf' (final output)"
+                },
+                "returns": {
+                    "success": "bool",
+                    "document_id": "str — Primary output file ID",
+                    "document_url": "str — URL to primary output",
+                    "title": "str",
+                    "template_used": "str",
+                    "format": "str — 'Google Docs' or 'PDF'",
+                    "editable": "bool",
+                    "google_docs_version_id": "str (only if PDF output)",
+                    "google_docs_version_url": "str (only if PDF output)",
+                    "error": "str"
+                },
+                "example": "create_from_uploaded_template(template_file_id={{template_id}}, new_title='Meeting Notes Jan 28')"
+            },
             "create_from_my_template": {
-                "description": "Create from template with placeholder replacement",
+                "description": "Create from existing Google Doc template with placeholder replacement",
                 "args": {
                     "template_document_id": "str (required)",
                     "new_title": "str (required)",
@@ -261,16 +323,29 @@ agent_capabilities = {
             },
             "add_text": {
                 "description": "Adds text to an existing Google Doc",
+                "instructions": """
+⚠️ CONTENT GENERATION RULE:
+When user asks to "write about X" or "create content about Y":
+1. Generate 2-3 sentences of ACTUAL content
+2. NEVER just write literal phrases like "summary about X"
+
+Examples:
+❌ WRONG: text="summary about UST"
+✅ CORRECT: text="UST is a global provider of digital technology and transformation, IT services and solutions. Founded in 1998, the company is headquartered in California and operates across Americas, EMEA, and Asia-Pacific regions."
+
+❌ WRONG: text="write about AI benefits"
+✅ CORRECT: text="Artificial Intelligence offers numerous benefits including automation of repetitive tasks, enhanced decision-making through data analysis, and improved efficiency across various industries. AI systems can process vast amounts of information faster than humans, leading to better insights and predictions."
+                """,
                 "args": {
                     "document_id": "str (required) — the ID of the document",
-                    "text": "str (required) — the text content to add",
+                    "text": "str (required) — ACTUAL content to add (generate real content, not placeholders)",
                 },
                 "returns": {
-                    "success": "bool — whether text was added successfully",
-                    "document_id": "str — the document that was modified",
-                    "document_url": "str — URL to access the document",
-                    "text_length": "int — length of text added",
-                    "error": "str — error message (null if successful)",
+                    "success": "bool",
+                    "document_id": "str",
+                    "document_url": "str",
+                    "text_length": "int",
+                    "error": "str",
                 },
             },
             "read_doc": {
@@ -279,55 +354,165 @@ agent_capabilities = {
                     "document_id": "str (required) — the ID of the document to read"
                 },
                 "returns": {
-                    "success": "bool — whether read was successful",
-                    "document_id": "str — the document that was read",
-                    "document_url": "str — URL to access the document",
+                    "success": "bool",
+                    "document_id": "str",
+                    "document_url": "str",
                     "content": "str — full document text content",
-                    "title": "str — document title",
-                    "error": "str — error message (null if successful)",
+                    "title": "str",
+                    "error": "str",
                 },
             },
         },
-        "template_workflow": {
-            "when_to_use": "When user mentions 'template', 'my format', 'use my MOM', or wants to create a document with consistent structure",
-            "three_step_process": {
-                "step_1": {
-                    "tool": "list_my_docs",
-                    "purpose": "Find the template document",
-                    "example": "list_my_docs(search_query='MOM template')",
-                    "output": "template_id",
+        "template_workflows": {
+            "uploaded_template_workflow": {
+                "when_to_use": "When user uploads a file (PDF, DOCX) and wants to create a document from it",
+                "critical_instruction": "⚠️ MANDATORY 3-STEP WORKFLOW - Never skip any step!",
+                "required_steps": "ALWAYS use all 3 steps in order:",
+                "step_by_step": {
+                    "step_1": {
+                        "agent": "drive_agent",
+                        "tool": "upload_template",
+                        "purpose": "Upload and convert template to Google Docs format",
+                        "inputs": {
+                            "file_path": "{{uploaded_file.temp_path}}",
+                            "template_name": "User-provided name or auto-generate"
+                        },
+                        "output": "file_id (use in Step 2)"
+                    },
+                    "step_2": {
+                        "agent": "docs_agent",
+                        "tool": "analyze_uploaded_template",
+                        "purpose": "Extract placeholders and structure",
+                        "inputs": {
+                            "template_file_id": "{{file_id}}"
+                        },
+                        "output": "template_id, placeholders (use in Step 3)"
+                    },
+                    "step_3": {
+                        "agent": "docs_agent",
+                        "tool": "create_from_uploaded_template",
+                        "purpose": "Create final document with placeholder replacement",
+                        "inputs": {
+                            "template_file_id": "{{template_id}}",
+                            "new_title": "User-provided title",
+                            "placeholders": "JSON with values",
+                            "output_format": "'google_docs' or 'pdf' based on user request"
+                        },
+                        "output": "document_id, document_url"
+                    }
                 },
-                "step_2": {
-                    "tool": "extract_template_format",
-                    "purpose": "Get placeholders from template",
-                    "example": "extract_template_format(template_document_id='{{ template_id }}')",
-                    "output": "placeholders list",
+                "output_format_detection": {
+                    "default": "output_format='google_docs' (creates editable Google Doc)",
+                    "pdf_keywords": [
+                        "create PDF",
+                        "export as PDF",
+                        "save as PDF",
+                        "PDF format",
+                        "PDF report",
+                        "final PDF"
+                    ],
+                    "rule": "If user mentions any PDF keyword, use output_format='pdf', otherwise use 'google_docs'"
                 },
-                "step_3": {
-                    "tool": "create_from_my_template",
-                    "purpose": "Create document with replaced placeholders",
-                    "example": 'create_from_my_template(template_document_id=\'{{ template_id }}\', new_title=\'Board Meeting - Jan 28\', placeholders=\'{"COMPANY_NAME": "SafeExpressOps", "DATE": "January 28, 2025"}\')',
-                    "output": "new document ID and URL",
+                "example_scenarios": {
+                    "scenario_1": {
+                        "user_input": "Upload this template and create document 'Meeting Notes'",
+                        "plan": [
+                            "Step 1: upload_template(file_path={{uploaded_file.temp_path}}, template_name='Template') → file_id",
+                            "Step 2: analyze_uploaded_template(template_file_id={{file_id}}) → template_id, placeholders",
+                            "Step 3: create_from_uploaded_template(template_file_id={{template_id}}, new_title='Meeting Notes', output_format='google_docs')"
+                        ],
+                        "result": "Editable Google Doc"
+                    },
+                    "scenario_2": {
+                        "user_input": "Upload template and create PDF report called 'Q4 Report'",
+                        "plan": [
+                            "Step 1: upload_template(file_path={{uploaded_file.temp_path}}, template_name='Template') → file_id",
+                            "Step 2: analyze_uploaded_template(template_file_id={{file_id}}) → template_id, placeholders",
+                            "Step 3: create_from_uploaded_template(template_file_id={{template_id}}, new_title='Q4 Report', output_format='pdf')"
+                        ],
+                        "result": "PDF file (non-editable)"
+                    },
+                    "scenario_3": {
+                        "user_input": "Upload template, create doc 'Report' with USER_NAME='John Doe', CONTENT='write summary about UST'",
+                        "plan": [
+                            "Step 1: upload_template → file_id",
+                            "Step 2: analyze_uploaded_template(template_file_id={{file_id}}) → placeholders: ['USER_NAME', 'CONTENT']",
+                            "Step 3: create_from_uploaded_template(placeholders='{\"USER_NAME\": \"John Doe\", \"CONTENT\": \"UST is a global provider of digital technology and transformation...\"}')"
+                        ],
+                        "note": "Generate actual content for CONTENT placeholder, not literal 'write summary about UST'"
+                    }
                 },
+                "critical_rules": [
+                    "⚠️ MANDATORY WORKFLOW: ALWAYS execute all 3 steps in exact order for uploaded templates",
+                    "Step 1: drive_agent.upload_template(file_path={{uploaded_file.temp_path}}) → file_id",
+                    "Step 2: docs_agent.analyze_uploaded_template(template_file_id={{file_id}}) → template_id, placeholders",
+                    "Step 3: docs_agent.create_from_uploaded_template(template_file_id={{template_id}}, new_title='...', placeholders='...', output_format='...') → document_id",
+                    "NEVER skip analyze_uploaded_template (Step 2)",
+                    "OUTPUT FORMAT: Default is 'google_docs' (editable). Use 'pdf' if user says 'PDF', 'export PDF', 'save as PDF'",
+                    "CONTENT GENERATION: When placeholder needs generated content (e.g., 'CONTENT: write about UST'), generate actual 2-3 sentences, NEVER literal phrases like 'write about UST'"
+                ]
             },
-            "placeholder_key_mapping": {
-                "critical_rule": "Keys must EXACTLY match placeholder names (without brackets)",
+            "existing_template_workflow": {
+                "when_to_use": "When user mentions 'my template', 'my format', or wants to use an existing Google Doc as template",
+                "required_steps": [
+                    "STEP 1: list_my_docs (find template) → template_id",
+                    "STEP 2: extract_template_format (get placeholders) → placeholders",
+                    "STEP 3: create_from_my_template (create document) → document_id"
+                ],
+            },
+            "create_from_existing_data_and_template": {
+            "description": "Create document from existing data file and template file in Google Drive (using file names)",
+    "instructions": """
+📊 USER-FRIENDLY AUTOMATED DOCUMENT CREATION
+- User provides FILE NAMES, not IDs
+- Example: "Create a document using template 'Monthly Report Template' and data 'January Data', call it 'January Report'"
+- Both files must exist in Google Drive (searches automatically)
+- Template must be a Google Doc with placeholders like [NAME], [DATE], [CONTENT]
+- Data file can be: text file, CSV, Google Doc, or Google Sheets
+
+DATA FILE FORMAT (flexible):
+Lines with key-value pairs using : = or | separators
+Examples:
+  NAME: John Doe
+  DATE = 2025-01-28
+  CONTENT | This is the main content
+
+SMART FEATURES:
+- Fuzzy matching: "Company Name" matches [COMPANY_NAME]
+- Auto-date: [DATE] filled with current date if not provided
+- Content fallback: [CONTENT] gets full data if not matched
+- If multiple files with same name, prefers Google Docs
+    """,
+    "args": {
+        "template_file_name": "str (required) — Name of template file in Google Drive (e.g., 'Monthly Report Template')",
+        "data_file_name": "str (required) — Name of data file in Google Drive (e.g., 'January Data.txt')",
+        "new_title": "str (required) — Title for new document",
+        "output_format": "str (optional) — 'google_docs' (default) or 'pdf'"
+    },
+    "returns": {
+        "success": "bool",
+        "document_id": "str",
+        "document_url": "str",
+        "title": "str",
+        "format": "str — 'Google Docs' or 'PDF'",
+        "error": "str"
+    },
+    "example_prompts": [
+        "Create a document using template 'Monthly Report Template' and data 'January Data', call it 'January Report'",
+        "Use template 'Meeting Notes Template' with data 'Meeting Info.txt' to create 'Team Meeting Jan 28'",
+        "Make a PDF using template 'Invoice Template' and data 'Client Data', name it 'Invoice 2025-001'"
+    ]
+},
+            "placeholder_replacement_rules": {
+                "key_format": "Keys must EXACTLY match placeholder names (without brackets)",
                 "examples": {
                     "[COMPANY_NAME]": "Use key: COMPANY_NAME",
                     "[DATE]": "Use key: DATE",
-                    "[CHAIRMAN_NAME]": "Use key: CHAIRMAN_NAME",
-                    "[MEETING_NUMBER]": "Use key: MEETING_NUMBER",
-                    "[TIME]": "Use key: TIME",
-                    "[ADDRESS]": "Use key: ADDRESS",
-                    "[YEAR]": "Use key: YEAR",
+                    "[USER_NAME]": "Use key: USER_NAME",
+                    "[CONTENT]": "Use key: CONTENT"
                 },
-                "wrong_examples": {
-                    "Company Name": "❌ Has spaces and title case",
-                    "company_name": "❌ Lowercase",
-                    "CompanyName": "❌ Wrong casing",
-                    "[COMPANY_NAME]": "❌ Still has brackets",
-                },
-            },
+                "content_generation": "If placeholder value needs generated content (e.g., 'summary about X'), generate 2-3 sentences of actual content, not just 'summary about X'"
+            }
         },
     },
     "mapping_agent": {

@@ -33,12 +33,15 @@ ACTION_RISK_LEVELS = {
     "search_emails": ActionRiskLevel.SAFE,
     "get_thread_conversation": ActionRiskLevel.SAFE,
     "read_doc": ActionRiskLevel.SAFE,
+    "analyze_uploaded_template": ActionRiskLevel.SAFE,
     
     # MODERATE - Modifies internal state
     "create_draft_email": ActionRiskLevel.MODERATE,  # Draft only, not sent
     "add_label": ActionRiskLevel.MODERATE,           # Just labels
     "remove_label": ActionRiskLevel.MODERATE,
-    "create_doc": ActionRiskLevel.MODERATE,          # Creates but doesn't share
+    "create_doc": ActionRiskLevel.MODERATE,
+    "upload_template": ActionRiskLevel.MODERATE,
+    "create_from_uploaded_template": ActionRiskLevel.MODERATE,          # Creates but doesn't share
     
     # DANGEROUS - Sends data externally
     "send_draft_email": ActionRiskLevel.DANGEROUS,

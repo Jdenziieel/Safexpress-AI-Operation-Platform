@@ -1,16 +1,18 @@
 {
   "plan": [
     {
-      "agent": "gmail_agent",
-      "tool": "search_emails",
+      "agent": "docs_agent",
+      "tool": "create_from_existing_data_and_template",
       "inputs": {
-        "query": "from:juanrafael.evangelista.comm@ust.edu.ph",
-        "max_results": 1
+        "template_file_name": "MinutesOfMeetingTEMP",
+        "data_file_name": "TestData123",
+        "new_title": "Meeting Notes Jan 28"
       },
       "output_variables": {
-        "recent_email": "emails[0]"
+        "created_document_id": "document_id",
+        "created_document_url": "document_url"
       },
-      "description": "Search for the most recent email from juanrafael.evangelista.comm@ust.edu.ph"
+      "description": "Create a document titled 'Meeting Notes Jan 28' using the template 'MinutesOfMeetingTEMP' and data 'TestData123' from Google Drive"
     }
   ]
 }

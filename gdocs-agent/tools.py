@@ -1,28 +1,77 @@
+#GOOGLE DOCS TOOLS
 import os
+import json
 from typing import Dict, Any
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from document_format_extractor import DocumentFormatExtractor
+from typing import Dict, Any, Optional
 
 
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
-
-    # credentials for google services
+    """Get Google service with proper credential handling"""
+    
+    # Extract client_id and client_secret FIRST
+    client_id = credentials_dict.get("client_id")
+    client_secret = credentials_dict.get("client_secret")
+    
+    # If not provided in request, load from credentials.json
+    if not client_id or not client_secret:
+        try:
+            # Look in multiple locations
+            creds_paths = [
+                os.path.join(os.path.dirname(__file__), 'key', 'credentials.json'),
+                'key/credentials.json',
+                'credentials.json'
+            ]
+            
+            creds_file = None
+            for path in creds_paths:
+                if os.path.exists(path):
+                    print(f"🔑 Loading credentials from: {path}")
+                    with open(path, 'r') as f:
+                        creds_file = json.load(f)
+                    break
+            
+            if creds_file:
+                if 'installed' in creds_file:
+                    client_id = creds_file['installed']['client_id']
+                    client_secret = creds_file['installed']['client_secret']
+                elif 'web' in creds_file:
+                    client_id = creds_file['web']['client_id']
+                    client_secret = creds_file['web']['client_secret']
+                
+                print(f"✅ Loaded client_id: {client_id[:20]}...")
+            else:
+                raise FileNotFoundError("credentials.json not found in any expected location")
+                
+        except Exception as e:
+            print(f"❌ Failed to load credentials.json: {e}")
+            raise Exception(f"Missing GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET. Add them to .env or credentials.json")
+    
+    # Build credentials with all required fields
     creds = Credentials(
-        token=credentials_dict["access_token"],
+        token=credentials_dict.get("access_token"),
         refresh_token=credentials_dict.get("refresh_token"),
         token_uri="https://oauth2.googleapis.com/token",
-        client_id=os.getenv("GOOGLE_CLIENT_ID"),
-        client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+        client_id=client_id,  # Now guaranteed to be set
+        client_secret=client_secret,  # Now guaranteed to be set
         scopes=[
             "https://www.googleapis.com/auth/documents",
             "https://www.googleapis.com/auth/drive",
         ],
     )
-    # this uses the credentials for the google services
+    
+    print(f"🔧 Building {service_name} service with:")
+    print(f"  - token: {'present' if creds.token else 'MISSING'}")
+    print(f"  - refresh_token: {'present' if creds.refresh_token else 'MISSING'}")
+    print(f"  - client_id: {'present' if client_id else 'MISSING'}")
+    print(f"  - client_secret: {'present' if client_secret else 'MISSING'}")
+    
+    # Build the service
     service = build(service_name, version, credentials=creds)
-
+    
     return service
 
 
@@ -409,3 +458,576 @@ def _create_from_reference_impl(
 
     except Exception as error:
         return f"Error creating document: {error}"
+
+def _create_from_uploaded_template_impl(
+    template_file_id: str,
+    new_title: str,
+    placeholder_values: Optional[Dict[str, str]],
+    credentials_dict: Dict,
+    output_format: str = "google_docs"  # NEW: "google_docs" or "pdf"
+) -> str:
+    """
+    Create document from uploaded template file in Drive
+    
+    Args:
+        template_file_id: Google Drive file ID of template
+        new_title: Title for new document
+        placeholder_values: Dict of placeholder replacements
+        credentials_dict: Google OAuth credentials
+        output_format: "google_docs" (default, editable) or "pdf" (final output)
+    
+    Returns:
+        Success message with document details
+    """
+    try: 
+        print(f"\n{'='*60}")
+        print(f"📊 CREDENTIALS RECEIVED IN DOCS AGENT:")
+        print(f"{'='*60}")
+        print(f"access_token: {'present' if credentials_dict.get('access_token') else 'MISSING'}")
+        print(f"refresh_token: {'present' if credentials_dict.get('refresh_token') else 'MISSING'}")
+        print(f"client_id: {'present' if credentials_dict.get('client_id') else 'MISSING'}")
+        print(f"client_secret: {'present' if credentials_dict.get('client_secret') else 'MISSING'}")
+        print(f"{'='*60}\n")
+        
+        # Use existing document format extractor
+        extractor = DocumentFormatExtractor(credentials_dict)
+        
+        # Convert placeholder_values from JSON string if needed
+        if isinstance(placeholder_values, str):
+            import json
+            placeholder_values = json.loads(placeholder_values)
+        
+        # Create document from template (always creates Google Doc first)
+        result = extractor.create_from_template(
+            template_document_id=template_file_id,
+            new_title=new_title,
+            placeholder_values=placeholder_values or {}
+        )
+        
+        if not result.get("success"):
+            return f"❌ Error: {result.get('error')}"
+        
+        # If user wants PDF output, export it
+        if output_format == "pdf":
+            print("📄 Exporting document as PDF...")
+            try:
+                from googleapiclient.discovery import build
+                from googleapiclient.http import MediaInMemoryUpload
+                from google.oauth2.credentials import Credentials
+                
+                # Build credentials
+                creds = Credentials(
+                    token=credentials_dict.get("access_token"),
+                    refresh_token=credentials_dict.get("refresh_token"),
+                    token_uri=credentials_dict.get("token_uri", "https://oauth2.googleapis.com/token"),
+                    client_id=credentials_dict.get("client_id"),
+                    client_secret=credentials_dict.get("client_secret")
+                )
+                
+                drive_service = build('drive', 'v3', credentials=creds)
+                
+                # Export Google Doc as PDF
+                pdf_content = drive_service.files().export(
+                    fileId=result['document_id'],
+                    mimeType='application/pdf'
+                ).execute()
+                
+                # Get parent folder of the Google Doc
+                doc_metadata = drive_service.files().get(
+                    fileId=result['document_id'],
+                    fields='parents'
+                ).execute()
+                
+                parents = doc_metadata.get('parents', [])
+                
+                # Upload PDF version to same folder
+                pdf_metadata = {
+                    'name': f"{new_title}.pdf",
+                    'mimeType': 'application/pdf',
+                    'parents': parents
+                }
+                
+                pdf_file = drive_service.files().create(
+                    body=pdf_metadata,
+                    media_body=MediaInMemoryUpload(pdf_content, mimetype='application/pdf'),
+                    fields='id, webViewLink'
+                ).execute()
+                
+                # Build response for PDF output
+                response = f"✅ Document created from template and exported as PDF!\n\n"
+                response += f"📄 Title: {new_title}.pdf\n"
+                response += f"🆔 PDF ID: {pdf_file['id']}\n"
+                response += f"🔗 PDF URL: {pdf_file['webViewLink']}\n"
+                response += f"📝 Original Google Doc ID: {result['document_id']}\n"
+                response += f"🔗 Google Doc URL: {result['url']}\n"
+                
+                if placeholder_values:
+                    response += f"\n✏️ Placeholders filled:\n"
+                    for key, value in placeholder_values.items():
+                        response += f"   • [{key}] → {value}\n"
+                
+                response += f"\n💡 Format: PDF (non-editable, final output)"
+                
+                return response
+                
+            except Exception as pdf_error:
+                print(f"⚠️ PDF export failed: {pdf_error}")
+                # Fall back to Google Doc response
+                response = f"⚠️ Created Google Doc but PDF export failed: {str(pdf_error)}\n\n"
+                response += f"📄 Google Doc Title: {result['title']}\n"
+                response += f"🆔 Document ID: {result['document_id']}\n"
+                response += f"🔗 URL: {result['url']}\n"
+                return response
+        
+        # Default: Return Google Doc response
+        response = f"✅ Document created from uploaded template!\n\n"
+        response += f"📄 Title: {result['title']}\n"
+        response += f"🆔 Document ID: {result['document_id']}\n"
+        response += f"🔗 URL: {result['url']}\n"
+        
+        if placeholder_values:
+            response += f"\n✏️ Placeholders filled:\n"
+            for key, value in placeholder_values.items():
+                response += f"   • [{key}] → {value}\n"
+        
+        response += f"\n💡 Format: Google Docs (editable)"
+        
+        return response
+    
+    except Exception as error:
+        import traceback
+        traceback.print_exc()
+        return f"Error creating document from template: {error}"
+    
+def _analyze_uploaded_template_impl(
+    template_file_id: str,
+    credentials_dict: Dict
+) -> str:
+    """
+    Analyze uploaded template to extract structure, placeholders, and formatting
+    
+    Args:
+        template_file_id: Google Drive file ID of uploaded template
+        credentials_dict: Google OAuth credentials
+    
+    Returns:
+        JSON string with template analysis
+    """
+    try:
+
+
+        print(f"\n{'='*60}")
+        print(f"📊 CREDENTIALS RECEIVED IN DOCS AGENT:")
+        print(f"{'='*60}")
+        print(f"access_token: {'present' if credentials_dict.get('access_token') else 'MISSING'}")
+        print(f"refresh_token: {'present' if credentials_dict.get('refresh_token') else 'MISSING'}")
+        print(f"client_id: {'present' if credentials_dict.get('client_id') else 'MISSING'}")
+        print(f"client_secret: {'present' if credentials_dict.get('client_secret') else 'MISSING'}")
+        print(f"{'='*60}\n")
+        extractor = DocumentFormatExtractor(credentials_dict)
+        
+        # Extract structure
+        structure = extractor.extract_document_structure(template_file_id)
+        
+        if "error" in structure:
+            return json.dumps({
+                "success": False,
+                "error": structure["error"]
+            })
+        
+        # Identify placeholders
+        placeholders = extractor.identify_placeholders(structure)
+        
+        # Build analysis result
+        analysis = {
+            "success": True,
+            "template_id": template_file_id,
+            "title": structure.get("title", "Untitled"),
+            "content_blocks": len(structure.get("content_blocks", [])),
+            "placeholders": placeholders,
+            "has_placeholders": len(placeholders) > 0,
+            "structure_type": "structured" if placeholders else "unstructured",
+            "ready_for_use": True
+        }
+        
+        print(f"\n📊 Template Analysis:")
+        print(f"  Title: {analysis['title']}")
+        print(f"  Blocks: {analysis['content_blocks']}")
+        print(f"  Placeholders: {placeholders}")
+        print(f"  Type: {analysis['structure_type']}")
+        
+        return json.dumps(analysis, indent=2)
+        
+    except Exception as error:
+        import traceback
+        traceback.print_exc()
+        return json.dumps({
+            "success": False,
+            "error": str(error)
+        })
+def _create_from_existing_data_and_template_impl(
+    template_file_name: str,
+    data_file_name: str,
+    new_title: str,
+    credentials_dict: Dict,
+    output_format: str = "google_docs"
+) -> str:
+    """
+    Create document from existing template and data files in Google Drive (using file names)
+    
+    Args:
+        template_file_name: Name of template file in Google Drive (e.g., "Monthly Report Template")
+        data_file_name: Name of data file in Google Drive (e.g., "January Data.txt")
+        new_title: Title for new document
+        credentials_dict: Google OAuth credentials
+        output_format: "google_docs" (default) or "pdf"
+    
+    Returns:
+        Success message with document details
+    """
+    try:
+        print(f"\n{'='*60}")
+        print(f"📊 CREATE FROM EXISTING DATA & TEMPLATE")
+        print(f"{'='*60}")
+        print(f"Template Name: {template_file_name}")
+        print(f"Data Name: {data_file_name}")
+        print(f"New Title: {new_title}")
+        print(f"Output Format: {output_format}")
+        print(f"{'='*60}\n")
+        
+        from google.oauth2.credentials import Credentials
+        from googleapiclient.discovery import build
+        
+        # Build Drive service
+        creds = Credentials(
+            token=credentials_dict.get("access_token"),
+            refresh_token=credentials_dict.get("refresh_token"),
+            token_uri=credentials_dict.get("token_uri", "https://oauth2.googleapis.com/token"),
+            client_id=credentials_dict.get("client_id"),
+            client_secret=credentials_dict.get("client_secret")
+        )
+        
+        drive_service = build('drive', 'v3', credentials=creds)
+        
+        # Step 1: Search for template file by name
+        print(f"🔍 Searching for template: '{template_file_name}'...")
+        template_query = f"name='{template_file_name}' and trashed=false"
+        template_results = drive_service.files().list(
+            q=template_query,
+            fields="files(id, name, mimeType)",
+            pageSize=10
+        ).execute()
+        
+        template_files = template_results.get('files', [])
+        
+        if not template_files:
+            return f"❌ Error: Template file '{template_file_name}' not found in Google Drive"
+        
+        # If multiple files with same name, prefer Google Docs
+        template_file = None
+        for file in template_files:
+            if file['mimeType'] == 'application/vnd.google-apps.document':
+                template_file = file
+                break
+        
+        if not template_file:
+            template_file = template_files[0]  # Use first match
+        
+        template_file_id = template_file['id']
+        print(f"✅ Found template: {template_file['name']} (ID: {template_file_id})")
+        
+        # Step 2: Search for data file by name
+        print(f"🔍 Searching for data file: '{data_file_name}'...")
+        data_query = f"name='{data_file_name}' and trashed=false"
+        data_results = drive_service.files().list(
+            q=data_query,
+            fields="files(id, name, mimeType)",
+            pageSize=10
+        ).execute()
+        
+        data_files = data_results.get('files', [])
+        
+        if not data_files:
+            return f"❌ Error: Data file '{data_file_name}' not found in Google Drive"
+        
+        data_file = data_files[0]  # Use first match
+        data_file_id = data_file['id']
+        data_mime_type = data_file['mimeType']
+        print(f"✅ Found data file: {data_file['name']} (ID: {data_file_id}, Type: {data_mime_type})")
+        
+        # Step 3: Read data content based on type
+        print(f"📄 Reading data from '{data_file['name']}'...")
+        
+        if data_mime_type == 'application/vnd.google-apps.document':
+            data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/plain').execute().decode('utf-8')
+        elif data_mime_type in ['text/plain', 'text/csv']:
+            data_content = drive_service.files().get_media(fileId=data_file_id).execute().decode('utf-8')
+        elif data_mime_type == 'application/vnd.google-apps.spreadsheet':
+            data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/csv').execute().decode('utf-8')
+        else:
+            return f"❌ Error: Unsupported data file type: {data_mime_type}"
+        
+        print(f"✅ Read {len(data_content)} characters from data file")
+        
+        # Step 4: Analyze template for placeholders
+        extractor = DocumentFormatExtractor(credentials_dict)
+        structure = extractor.extract_document_structure(template_file_id)
+        
+        if "error" in structure:
+            return f"❌ Error analyzing template: {structure['error']}"
+        
+        placeholders = extractor.identify_placeholders(structure)
+        print(f"🔍 Found placeholders in template: {placeholders}")
+        
+        # Step 5: Parse data content into placeholder values
+        placeholder_values = {}
+        
+        if not placeholders:
+            # No placeholders, just use data as content
+            placeholder_values = {"CONTENT": data_content}
+            print("ℹ️ No placeholders found in template, using data as CONTENT")
+        else:
+            # Try to parse data as key-value pairs (flexible parsing)
+            lines = data_content.strip().split('\n')
+            
+            for line in lines:
+                # Support multiple separators: colon, equals, pipe
+                separator = None
+                if ':' in line:
+                    separator = ':'
+                elif '=' in line:
+                    separator = '='
+                elif '|' in line:
+                    separator = '|'
+                
+                if separator:
+                    parts = line.split(separator, 1)
+                    if len(parts) == 2:
+                        key = parts[0].strip().upper().replace(' ', '_').replace('-', '_')
+                        value = parts[1].strip()
+                        
+                        # Match to placeholders (fuzzy matching)
+                        matched = False
+                        for placeholder in placeholders:
+                            if key == placeholder or key in placeholder or placeholder in key:
+                                placeholder_values[placeholder] = value
+                                print(f"  ✓ Matched: [{placeholder}] = {value[:50]}{'...' if len(value) > 50 else ''}")
+                                matched = True
+                                break
+                        
+                        # If not matched but looks like a valid key, store it
+                        if not matched and key in placeholders:
+                            placeholder_values[key] = value
+            
+            # Fill missing placeholders
+            for placeholder in placeholders:
+                if placeholder not in placeholder_values:
+                    if placeholder == 'CONTENT' or placeholder == 'DATA' or placeholder == 'TEXT':
+                        # Use entire data content for content-type placeholders
+                        placeholder_values[placeholder] = data_content
+                        print(f"  ℹ️ Using full data for [{placeholder}]")
+                    elif placeholder == 'DATE':
+                        # Auto-fill date
+                        from datetime import datetime
+                        placeholder_values[placeholder] = datetime.now().strftime("%B %d, %Y")
+                        print(f"  ℹ️ Auto-filled [{placeholder}] with current date")
+                    else:
+                        # Leave empty
+                        placeholder_values[placeholder] = ""
+                        print(f"  ⚠️ No data for [{placeholder}], leaving empty")
+        
+        print(f"📝 Final placeholder mapping: {list(placeholder_values.keys())}")
+        
+        # Step 6: Create document from template
+        print(f"📄 Creating document '{new_title}' from template...")
+        result = extractor.create_from_template(
+            template_document_id=template_file_id,
+            new_title=new_title,
+            placeholder_values=placeholder_values
+        )
+        
+        if not result.get("success"):
+            return f"❌ Error creating document: {result.get('error')}"
+        
+        print(f"✅ Document created: {result['document_id']}")
+        
+        # ✨ NEW: Handle blank line replacements (date:____, attendees:____, etc.)
+        print(f"🔄 Checking for blank line placeholders...")
+        _replace_blank_lines_in_document(
+            document_id=result['document_id'],
+            placeholder_values=placeholder_values,
+            credentials_dict=credentials_dict
+        )
+        
+        # Step 7: Export as PDF if requested
+        if output_format == "pdf":
+            print("📄 Exporting as PDF...")
+            try:
+                pdf_content = drive_service.files().export(
+                    fileId=result['document_id'],
+                    mimeType='application/pdf'
+                ).execute()
+                
+                doc_metadata = drive_service.files().get(
+                    fileId=result['document_id'],
+                    fields='parents'
+                ).execute()
+                
+                parents = doc_metadata.get('parents', [])
+                
+                pdf_metadata = {
+                    'name': f"{new_title}.pdf",
+                    'mimeType': 'application/pdf',
+                    'parents': parents
+                }
+                
+                from googleapiclient.http import MediaInMemoryUpload
+                pdf_file = drive_service.files().create(
+                    body=pdf_metadata,
+                    media_body=MediaInMemoryUpload(pdf_content, mimetype='application/pdf'),
+                    fields='id, webViewLink'
+                ).execute()
+                
+                response = f"✅ Document created from existing files and exported as PDF!\n\n"
+                response += f"📄 Title: {new_title}.pdf\n"
+                response += f"🆔 PDF ID: {pdf_file['id']}\n"
+                response += f"🔗 PDF URL: {pdf_file['webViewLink']}\n"
+                response += f"📝 Google Doc ID: {result['document_id']}\n"
+                response += f"🔗 Google Doc URL: {result['url']}\n"
+                response += f"📊 Data Source: {data_file_name}\n"
+                response += f"📋 Template Used: {template_file_name}\n"
+                
+                if placeholder_values:
+                    response += f"\n✏️ Placeholders filled: {len(placeholder_values)}\n"
+                    for key in list(placeholder_values.keys())[:5]:  # Show first 5
+                        value = placeholder_values[key]
+                        preview = value[:50] + "..." if len(value) > 50 else value
+                        response += f"   • [{key}] → {preview}\n"
+                    if len(placeholder_values) > 5:
+                        response += f"   ... and {len(placeholder_values) - 5} more\n"
+                
+                return response
+                
+            except Exception as pdf_error:
+                print(f"⚠️ PDF export failed: {pdf_error}")
+                import traceback
+                traceback.print_exc()
+        
+        # Default: Return Google Doc response
+        response = f"✅ Document created from existing files!\n\n"
+        response += f"📄 Title: {result['title']}\n"
+        response += f"🆔 Document ID: {result['document_id']}\n"
+        response += f"🔗 URL: {result['url']}\n"
+        response += f"📊 Data Source: {data_file_name}\n"
+        response += f"📋 Template Used: {template_file_name}\n"
+        
+        if placeholder_values:
+            response += f"\n✏️ Placeholders filled: {len(placeholder_values)}\n"
+            for key in list(placeholder_values.keys())[:5]:
+                value = placeholder_values[key]
+                preview = value[:50] + "..." if len(value) > 50 else value
+                response += f"   • [{key}] → {preview}\n"
+            if len(placeholder_values) > 5:
+                response += f"   ... and {len(placeholder_values) - 5} more\n"
+        
+        return response
+    
+    except Exception as error:
+        import traceback
+        traceback.print_exc()
+        return f"❌ Error creating document from existing files: {error}"
+
+
+def _replace_blank_lines_in_document(
+    document_id: str,
+    placeholder_values: Dict[str, str],
+    credentials_dict: Dict
+) -> None:
+    """
+    Replace blank line placeholders (date:____) in a Google Doc
+    
+    Args:
+        document_id: Google Doc ID
+        placeholder_values: Dict of {PLACEHOLDER: value}
+        credentials_dict: OAuth credentials
+    """
+    try:
+        docs_service = get_google_service("docs", "v1", credentials_dict)
+        
+        # Get current document content
+        document = docs_service.documents().get(documentId=document_id).execute()
+        
+        # Extract full text
+        full_text = ""
+        content = document.get("body", {}).get("content", [])
+        for element in content:
+            if "paragraph" in element:
+                for para_element in element["paragraph"].get("elements", []):
+                    if "textRun" in para_element:
+                        full_text += para_element["textRun"].get("content", "")
+        
+        # Build replacement requests
+        requests = []
+        
+        for key, value in placeholder_values.items():
+            # Try multiple variations of the key
+            variations = [
+                f"{key.lower()}:____",           # date:____
+                f"{key.lower()}: ____",          # date: ____
+                f"{key.replace('_', ' ').lower()}:____",  # company_name → company name:____
+                f"{key.replace('_', ' ').title()}:____",  # company_name → Company Name:____
+            ]
+            
+            for pattern in variations:
+                if pattern in full_text.lower():
+                    # Find exact position (case-insensitive search)
+                    lower_text = full_text.lower()
+                    start_pos = lower_text.index(pattern)
+                    
+                    # Get actual text from original (preserves case)
+                    actual_pattern = full_text[start_pos:start_pos + len(pattern)]
+                    
+                    # Calculate indices (Google Docs API is 1-indexed)
+                    start_index = start_pos + 1
+                    end_index = start_index + len(actual_pattern)
+                    
+                    # Build replacement text (preserve original key format)
+                    key_part = actual_pattern.split(':')[0]
+                    replacement_text = f"{key_part}: {value}"
+                    
+                    # Add delete and insert requests
+                    requests.append({
+                        "deleteContentRange": {
+                            "range": {
+                                "startIndex": start_index,
+                                "endIndex": end_index
+                            }
+                        }
+                    })
+                    requests.append({
+                        "insertText": {
+                            "location": {"index": start_index},
+                            "text": replacement_text
+                        }
+                    })
+                    
+                    print(f"  ✏️ Replacing '{actual_pattern}' with '{replacement_text}'")
+                    
+                    # Update full_text for next iteration
+                    full_text = full_text[:start_pos] + replacement_text + full_text[start_pos + len(actual_pattern):]
+                    break  # Found match, move to next placeholder
+        
+        # Execute batch update if we have replacements
+        if requests:
+            print(f"📝 Executing {len(requests)} replacement operations...")
+            docs_service.documents().batchUpdate(
+                documentId=document_id,
+                body={"requests": requests}
+            ).execute()
+            print("✅ Blank line replacements completed")
+        else:
+            print("ℹ️ No blank line patterns found to replace")
+    
+    except Exception as e:
+        print(f"⚠️ Warning: Could not replace blank lines: {e}")
+        # Don't fail the entire operation, just log warning

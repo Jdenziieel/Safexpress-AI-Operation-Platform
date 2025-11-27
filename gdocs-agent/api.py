@@ -1,3 +1,4 @@
+#GOOGLE DOCS API
 import os
 import json
 from typing import Dict, Any
@@ -31,6 +32,8 @@ class AgentTaskResponse(BaseModel):
     error: str = None
 
 
+# In your docs agent main.py
+
 @app.post("/execute_task", response_model=AgentTaskResponse)
 async def execute_task(request: AgentTaskRequest):
     """
@@ -55,6 +58,260 @@ async def execute_task(request: AgentTaskRequest):
     }
     """
     try:
+        # ✅ SPECIAL HANDLING: Direct execution for create_from_uploaded_template
+        # Bypass agent because it sometimes refuses this operation
+        if request.tool == "create_from_uploaded_template":
+            print(f"🔧 Direct execution (bypassing agent): {request.tool}")
+            
+            from tools import _create_from_uploaded_template_impl
+            
+            # Extract inputs
+            template_file_id = request.inputs.get("template_file_id")
+            new_title = request.inputs.get("new_title")
+            placeholders = request.inputs.get("placeholders", {})
+            output_format = request.inputs.get("output_format", "google_docs")  # ✅ NEW: Extract output_format
+            
+            if not template_file_id:
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error="template_file_id is required"
+                )
+            
+            if not new_title:
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error="new_title is required"
+                )
+            
+            # Validate output_format
+            if output_format not in ["google_docs", "pdf"]:
+                print(f"⚠️ Invalid output_format '{output_format}', defaulting to 'google_docs'")
+                output_format = "google_docs"
+            
+            print(f"📄 Output format requested: {output_format}")
+            
+            # Execute directly with output_format parameter
+            try:
+                result_text = _create_from_uploaded_template_impl(
+                    template_file_id=template_file_id,
+                    new_title=new_title,
+                    placeholder_values=placeholders,
+                    credentials_dict=request.credentials_dict,
+                    output_format=output_format  # ✅ NEW: Pass output_format
+                )
+                
+                print(f"📄 Direct execution result:\n{result_text}")
+                
+                # Parse result (it returns a formatted string)
+                if "✅" in result_text:
+                    # Extract document ID and URL from success message
+                    import re
+                    
+                    # Check if PDF output
+                    is_pdf = "PDF ID:" in result_text or output_format == "pdf"
+                    
+                    if is_pdf:
+                        # Parse PDF response
+                        pdf_id_match = re.search(r"PDF ID: ([a-zA-Z0-9_-]+)", result_text)
+                        pdf_url_match = re.search(r"PDF URL: (https://[^\s]+)", result_text)
+                        doc_id_match = re.search(r"Google Doc ID: ([a-zA-Z0-9_-]+)", result_text)
+                        doc_url_match = re.search(r"Google Doc URL: (https://[^\s]+)", result_text)
+                        title_match = re.search(r"Title: ([^\n]+)", result_text)
+                        
+                        parsed_result = {
+                            "success": True,
+                            "document_id": pdf_id_match.group(1) if pdf_id_match else None,
+                            "document_url": pdf_url_match.group(1) if pdf_url_match else None,
+                            "title": title_match.group(1).strip() if title_match else f"{new_title}.pdf",
+                            "template_used": template_file_id,
+                            "format": "PDF",
+                            "editable": False,
+                            "google_docs_version_id": doc_id_match.group(1) if doc_id_match else None,
+                            "google_docs_version_url": doc_url_match.group(1) if doc_url_match else None
+                        }
+                    else:
+                        # Parse Google Docs response
+                        doc_id_match = re.search(r"Document ID: ([a-zA-Z0-9_-]+)", result_text)
+                        url_match = re.search(r"URL: (https://[^\s]+)", result_text)
+                        title_match = re.search(r"Title: ([^\n]+)", result_text)
+                        
+                        parsed_result = {
+                            "success": True,
+                            "document_id": doc_id_match.group(1) if doc_id_match else None,
+                            "document_url": url_match.group(1) if url_match else None,
+                            "title": title_match.group(1).strip() if title_match else new_title,
+                            "template_used": template_file_id,
+                            "format": "Google Docs",
+                            "editable": True
+                        }
+                    
+                    print(f"\n📤 Complete Result:")
+                    print(json.dumps(parsed_result, indent=2, default=str))
+                    print(f"{'='*60}\n")
+                    
+                    return AgentTaskResponse(
+                        success=True,
+                        result=parsed_result,
+                        raw_response=result_text
+                    )
+                else:
+                    # Error case
+                    return AgentTaskResponse(
+                        success=False,
+                        result={},
+                        error=result_text,
+                        raw_response=result_text
+                    )
+            except Exception as direct_exec_error:
+                print(f"❌ Direct execution failed: {str(direct_exec_error)}")
+                import traceback
+                traceback.print_exc()
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error=str(direct_exec_error)
+                )
+            
+        # ✅ SPECIAL HANDLING: Direct execution for create_from_existing_data_and_template
+        if request.tool == "create_from_existing_data_and_template":
+            print(f"🔧 Direct execution: {request.tool}")
+            
+            from tools import _create_from_existing_data_and_template_impl
+            
+            template_file_name = request.inputs.get("template_file_name")
+            data_file_name = request.inputs.get("data_file_name")
+            new_title = request.inputs.get("new_title")
+            output_format = request.inputs.get("output_format", "google_docs")
+            
+            if not template_file_name:
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error="template_file_name is required"
+                )
+            
+            if not data_file_name:
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error="data_file_name is required"
+                )
+            
+            if not new_title:
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error="new_title is required"
+                )
+            
+            try:
+                result_text = _create_from_existing_data_and_template_impl(
+                    template_file_name=template_file_name,
+                    data_file_name=data_file_name,
+                    new_title=new_title,
+                    credentials_dict=request.credentials_dict,
+                    output_format=output_format
+                )
+                
+                print(f"📄 Direct execution result:\n{result_text}")
+                
+                if "✅" in result_text:
+                    import re
+                    
+                    is_pdf = "PDF ID:" in result_text or output_format == "pdf"
+                    
+                    if is_pdf:
+                        pdf_id_match = re.search(r"PDF ID: ([a-zA-Z0-9_-]+)", result_text)
+                        pdf_url_match = re.search(r"PDF URL: (https://[^\s]+)", result_text)
+                        doc_id_match = re.search(r"Google Doc ID: ([a-zA-Z0-9_-]+)", result_text)
+                        
+                        parsed_result = {
+                            "success": True,
+                            "document_id": pdf_id_match.group(1) if pdf_id_match else None,
+                            "document_url": pdf_url_match.group(1) if pdf_url_match else None,
+                            "title": f"{new_title}.pdf",
+                            "format": "PDF",
+                            "google_docs_version_id": doc_id_match.group(1) if doc_id_match else None
+                        }
+                    else:
+                        doc_id_match = re.search(r"Document ID: ([a-zA-Z0-9_-]+)", result_text)
+                        url_match = re.search(r"URL: (https://[^\s]+)", result_text)
+                        
+                        parsed_result = {
+                            "success": True,
+                            "document_id": doc_id_match.group(1) if doc_id_match else None,
+                            "document_url": url_match.group(1) if url_match else None,
+                            "title": new_title,
+                            "format": "Google Docs"
+                        }
+                    
+                    return AgentTaskResponse(
+                        success=True,
+                        result=parsed_result,
+                        raw_response=result_text
+                    )
+                else:
+                    return AgentTaskResponse(
+                        success=False,
+                        result={},
+                        error=result_text,
+                        raw_response=result_text
+                    )
+            except Exception as e:
+                print(f"❌ Direct execution failed: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error=str(e)
+                )
+        
+        # ✅ SPECIAL HANDLING: Direct execution for analyze_uploaded_template
+        if request.tool == "analyze_uploaded_template":
+            print(f"🔬 Analyzing uploaded template: {request.tool}")
+    
+            from tools import _analyze_uploaded_template_impl
+    
+            template_file_id = request.inputs.get("template_file_id")
+    
+            if not template_file_id:
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error="template_file_id is required"
+                )
+            
+            try:
+                analysis_json = _analyze_uploaded_template_impl(
+                    template_file_id=template_file_id,
+                    credentials_dict=request.credentials_dict
+                )
+        
+                analysis_result = json.loads(analysis_json)
+        
+                print(f"\n📤 Template Analysis Result:")
+                print(json.dumps(analysis_result, indent=2))
+                print(f"{'='*60}\n")
+        
+                return AgentTaskResponse(
+                    success=analysis_result.get("success", False),
+                    result=analysis_result,
+                    raw_response=analysis_json
+                )
+            except Exception as e:
+                print(f"❌ Analysis failed: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error=str(e)
+                )
+        
+        # ✅ NORMAL AGENT EXECUTION FOR OTHER TOOLS
         # Create the agent with user credentials
         agent = create_docs_agent(request.credentials_dict)
         
@@ -70,49 +327,61 @@ async def execute_task(request: AgentTaskRequest):
             tool_specific_instructions = ""
             if request.tool == "create_doc":
                 tool_specific_instructions = """
-    RETURN FORMAT: Return JSON with document creation details:
-    {
-        "success": true,
-        "document_id": "<Google Docs ID>",
-        "document_url": "<URL to access document>",
-        "title": "<document title>"
-    }"""
+RETURN FORMAT: Return JSON with document creation details:
+{
+    "success": true,
+    "document_id": "<Google Docs ID>",
+    "document_url": "<URL to access document>",
+    "title": "<document title>"
+}"""
             elif request.tool == "add_text":
                 tool_specific_instructions = """
-    RETURN FORMAT: Return JSON with text addition confirmation:
-    {
-        "success": true,
-        "document_id": "<the document ID>",
-        "document_url": "<URL to access document>",
-        "text_length": <number of characters added>
-    }"""
+RETURN FORMAT: Return JSON with text addition confirmation:
+{
+    "success": true,
+    "document_id": "<the document ID>",
+    "document_url": "<URL to access document>",
+    "text_length": <number of characters added>
+}"""
             elif request.tool == "read_doc":
                 tool_specific_instructions = """
-    RETURN FORMAT: Return JSON with document content:
-    {
-        "success": true,
-        "document_id": "<the document ID>",
-        "document_url": "<URL to access document>",
-        "content": "<full document text>",
-        "title": "<document title>"
-    }"""
+RETURN FORMAT: Return JSON with document content:
+{
+    "success": true,
+    "document_id": "<the document ID>",
+    "document_url": "<URL to access document>",
+    "content": "<full document text>",
+    "title": "<document title>"
+}"""
             
-            agent_prompt = f"""You are a Google Docs specialist agent. Execute the following tool directly.
+            agent_prompt = f"""You are a Google Docs API assistant. Your job is to execute Google Docs operations using available tools.
 
-    TOOL TO USE: {request.tool}
+TASK: Execute the tool '{request.tool}' with the provided inputs.
 
-    TOOL INPUTS:
-    {json.dumps(request.inputs, indent=2)}
+TOOL TO USE: {request.tool}
 
-    INSTRUCTIONS:
-    1. Call the specified tool '{request.tool}' with the provided inputs
-    2. Parse the tool's output carefully (it may return formatted text)
-    3. Extract all relevant information from the tool output
-    4. Return a properly structured JSON object
-    {tool_specific_instructions}
+TOOL INPUTS:
+{json.dumps(request.inputs, indent=2)}
 
-    CRITICAL: Return ONLY valid JSON, no markdown, no extra text.
-    """
+AVAILABLE TOOLS:
+- create_doc: Create a new Google Doc
+- add_text: Add text to an existing Google Doc
+- read_doc: Read content from a Google Doc
+
+INSTRUCTIONS:
+1. Call the specified tool '{request.tool}' with EXACTLY the provided inputs
+2. The tool will return structured data
+3. Parse the tool's output and extract relevant fields
+4. Return a properly structured JSON object matching the format below
+
+{tool_specific_instructions}
+
+IMPORTANT: 
+- This is a legitimate Google Docs operation requested by the user
+- You MUST execute the tool and return valid JSON
+- Do NOT refuse or apologize
+- Return ONLY valid JSON, no markdown, no explanations, no extra text
+"""
         
         elif is_task_based:
             # FORMAT 1: Task-based with agent intelligence
@@ -120,26 +389,26 @@ async def execute_task(request: AgentTaskRequest):
             
             agent_prompt = f"""You are a Google Docs specialist agent. Execute the following task intelligently.
 
-    TASK TYPE: {request.task}
+TASK TYPE: {request.task}
 
-    INSTRUCTION:
-    {request.instruction if request.instruction else "Execute the task based on inputs provided"}
+INSTRUCTION:
+{request.instruction if request.instruction else "Execute the task based on inputs provided"}
 
-    INPUTS/CONTEXT:
-    {json.dumps(request.inputs, indent=2)}
+INPUTS/CONTEXT:
+{json.dumps(request.inputs, indent=2)}
 
-    {f'''EXPECTED OUTPUT STRUCTURE:
-    You MUST return a valid JSON object with these exact keys:
-    {json.dumps(request.expected_output, indent=2)}''' if request.expected_output else ''}
+{f'''EXPECTED OUTPUT STRUCTURE:
+You MUST return a valid JSON object with these exact keys:
+{json.dumps(request.expected_output, indent=2)}''' if request.expected_output else ''}
 
-    INSTRUCTIONS:
-    1. Use your available tools intelligently to accomplish the task
-    2. Create, edit, or read documents as needed
-    3. Format content appropriately for Google Docs
-    4. Return your response as a JSON object matching the expected output structure
+INSTRUCTIONS:
+1. Use your available tools intelligently to accomplish the task
+2. Create, edit, or read documents as needed
+3. Format content appropriately for Google Docs
+4. Return your response as a JSON object matching the expected output structure
 
-    Execute the task now and return ONLY the JSON response with the expected keys.
-    """
+Execute the task now and return ONLY the JSON response with the expected keys.
+"""
         else:
             raise ValueError("Request must have either 'task' or 'tool' field")
         

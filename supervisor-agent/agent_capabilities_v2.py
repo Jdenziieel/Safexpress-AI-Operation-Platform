@@ -213,147 +213,6 @@ agent_capabilities = {
             },
         },
     },
-    "docs_agent": {
-        "description": "Create, edit, and read Google Docs documents.",
-        "tools": {
-            "create_doc": {
-                "description": "Creates a new Google Doc and returns its ID and URL",
-                "args": {
-                    "title": "str (required) — the name of the document (e.g., 'Project Notes')"
-                },
-                "returns": {
-                    "success": "bool — whether document was created successfully",
-                    "document_id": "str — Google Doc ID (null if failed)",
-                    "document_url": "str — URL to access the document (null if failed)",
-                    "title": "str — document title",
-                    "error": "str — error message (null if successful)",
-                },
-            },
-            "list_my_docs": {
-                "description": "List user's Google Docs to find templates",
-                "args": {"search_query": "str (optional) — keyword"},
-                "returns": {
-                    "success": "bool",
-                    "documents": "list",
-                    "documents[].id": "str",
-                    "documents[].name": "str",
-                    "error": "str",
-                },
-            },
-            "extract_template_format": {
-                "description": "Analyze template to find placeholders",
-                "args": {"template_document_id": "str (required)"},
-                "returns": {"success": "bool", "placeholders": "list", "error": "str"},
-                "can_be_derived_from": {
-                    "template_document_id": {
-                        "source_tool": "list_my_docs",
-                        
-                    }
-                }
-            },
-            "create_from_my_template": {
-                "description": "Create from template with placeholder replacement",
-                "args": {
-                    "template_document_id": "str (required)",
-                    "new_title": "str (required)",
-                    "placeholders": "str (required) — JSON string",
-                },
-                "returns": {
-                    "success": "bool",
-                    "document_id": "str",
-                    "url": "str",
-                    "error": "str",
-                },
-                "can_be_derived_from": {
-                    "template_document_id": {
-                        "source_tool": "list_my_docs",
-                        
-                    }
-                }
-            },
-            "add_text": {
-                "description": "Adds text to an existing Google Doc",
-                "args": {
-                    "document_id": "str (required) — the ID of the document",
-                    "text": "str (required) — the text content to add",
-                },
-                "returns": {
-                    "success": "bool — whether text was added successfully",
-                    "document_id": "str — the document that was modified",
-                    "document_url": "str — URL to access the document",
-                    "text_length": "int — length of text added",
-                    "error": "str — error message (null if successful)",
-                },
-                "can_be_derived_from": {
-                    "document_id": {
-                        "source_tool": "list_my_docs",
-                        
-                    }
-                }
-            },
-            "read_doc": {
-                "description": "Reads text content from a Google Doc",
-                "args": {
-                    "document_id": "str (required) — the ID of the document to read"
-                },
-                "returns": {
-                    "success": "bool — whether read was successful",
-                    "document_id": "str — the document that was read",
-                    "document_url": "str — URL to access the document",
-                    "content": "str — full document text content",
-                    "title": "str — document title",
-                    "error": "str — error message (null if successful)",
-                },
-                "can_be_derived_from": {
-                    "document_id": {
-                        "source_tool": "list_my_docs",
-                        
-                    }
-                }
-            },
-        },
-        "template_workflow": {
-            "when_to_use": "When user mentions 'template', 'my format', 'use my MOM', or wants to create a document with consistent structure",
-            "three_step_process": {
-                "step_1": {
-                    "tool": "list_my_docs",
-                    "purpose": "Find the template document",
-                    "example": "list_my_docs(search_query='MOM template')",
-                    "output": "template_id",
-                },
-                "step_2": {
-                    "tool": "extract_template_format",
-                    "purpose": "Get placeholders from template",
-                    "example": "extract_template_format(template_document_id='{{ template_id }}')",
-                    "output": "placeholders list",
-                },
-                "step_3": {
-                    "tool": "create_from_my_template",
-                    "purpose": "Create document with replaced placeholders",
-                    "example": 'create_from_my_template(template_document_id=\'{{ template_id }}\', new_title=\'Board Meeting - Jan 28\', placeholders=\'{"COMPANY_NAME": "SafeExpressOps", "DATE": "January 28, 2025"}\')',
-                    "output": "new document ID and URL",
-                },
-            },
-            "placeholder_key_mapping": {
-                "critical_rule": "Keys must EXACTLY match placeholder names (without brackets)",
-                "examples": {
-                    "[COMPANY_NAME]": "Use key: COMPANY_NAME",
-                    "[DATE]": "Use key: DATE",
-                    "[CHAIRMAN_NAME]": "Use key: CHAIRMAN_NAME",
-                    "[MEETING_NUMBER]": "Use key: MEETING_NUMBER",
-                    "[TIME]": "Use key: TIME",
-                    "[ADDRESS]": "Use key: ADDRESS",
-                    "[YEAR]": "Use key: YEAR",
-                },
-                "wrong_examples": {
-                    "Company Name": "❌ Has spaces and title case",
-                    "company_name": "❌ Lowercase",
-                    "CompanyName": "❌ Wrong casing",
-                    "[COMPANY_NAME]": "❌ Still has brackets",
-                },
-            },
-        },
-    },
     "mapping_agent": {
         "description": "Parse files (CSV/Excel/JSON), intelligently map columns, validate mappings, transform data structure. NO Google Sheets operations.",
         "tools": {
@@ -634,137 +493,225 @@ agent_capabilities = {
             },
         },
     },
-    "drive_agent": {
-            "description": "Manages Google Drive operations: upload files, create folders, list files/folders, search files, and get folder information. All operations are within the SafeExpress root folder.",
-            "tools": {
-                "upload_file": {
-                    "description": "Upload a file to Google Drive (SafeExpress folder or specific path)",
-                    "args": {
-                        "file_path": "str (required) — Local file path to upload",
-                        "filename": "str (required) — Name for the uploaded file",
-                        "folder_path": "str (optional) — Target folder path (e.g., 'Operations/2024')",
-                        "mime_type": "str (optional) — MIME type of the file (default: application/octet-stream)"
-                    },
-                    "returns": {
-                        "success": "bool — whether upload was successful",
-                        "file_id": "str — Google Drive file ID",
-                        "file_url": "str — Direct link to file (https://drive.google.com/file/d/{file_id}/view)",
-                        "filename": "str — Name of uploaded file",
-                        "folder_path": "str — Full path where file was uploaded (e.g., 'SafeExpress/Operations/2024')",
-                        "message": "str — Human-readable success message",
-                        "error": "str — Error message (null if successful)"
-                    },
-                    "example": "upload_file(file_path='/tmp/report.pdf', filename='Q4_Report.pdf', folder_path='Operations/2024')"
+   "drive_agent": {
+        "description": "Manages Google Drive operations: upload files, create folders, list files/folders, search files, and get folder information. All operations are within the SafeExpress root folder.",
+        "tools": {
+            "upload_file": {
+                "description": "Upload a file to Google Drive (SafeExpress folder or specific path)",
+                "args": {
+                    "file_path": "str (required) — Local file path to upload",
+                    "filename": "str (required) — Name for the uploaded file",
+                    "folder_path": "str (optional) — Target folder path (e.g., 'Operations/2024')",
+                    "mime_type": "str (optional) — MIME type of the file (default: application/octet-stream)"
                 },
-                "create_folder": {
-                    "description": "Create a folder or nested folder structure in SafeExpress",
-                    "args": {
-                        "folder_path": "str (required) — Folder path to create (e.g., 'Operations/2024/Reports')"
-                    },
-                    "returns": {
-                        "success": "bool — whether folder was created successfully",
-                        "folder_id": "str — Google Drive folder ID",
-                        "folder_url": "str — Direct link to folder (https://drive.google.com/drive/folders/{folder_id})",
-                        "folder_path": "str — Full path created (e.g., 'SafeExpress/Operations/2024/Reports')",
-                        "message": "str — Human-readable success message",
-                        "error": "str — Error message (null if successful)"
-                    },
-                    "example": "create_folder(folder_path='Operations/2024/Reports')",
-                    "notes": "Automatically creates parent folders if they don't exist. For example, 'Operations/2024/Reports' will create 'Operations', then '2024', then 'Reports'."
+                "returns": {
+                    "success": "bool",
+                    "file_id": "str — Google Drive file ID",
+                    "file_url": "str — Direct link to file",
+                    "filename": "str",
+                    "folder_path": "str",
+                    "message": "str",
+                    "error": "str"
                 },
-                "list_folders": {
-                    "description": "List all folders in SafeExpress with tree structure",
-                    "args": {},
-                    "returns": {
-                        "success": "bool — whether listing was successful",
-                        "folders": "list — Array of folder objects with id, name, display, level",
-                        "folders[].id": "str — Folder ID",
-                        "folders[].name": "str — Folder name",
-                        "folders[].display": "str — Tree display format (e.g., '  📁 Reports')",
-                        "folders[].level": "int — Nesting level (0=root, 1=first level, etc.)",
-                        "count": "int — Total number of folders",
-                        "tree": "str — Full tree structure as formatted string",
-                        "message": "str — Human-readable message with count",
-                        "error": "str — Error message (null if successful)"
-                    },
-                    "example": "list_folders()"
-                },
-                "list_files": {
-                    "description": "List files in SafeExpress root or specific folder",
-                    "args": {
-                        "folder_path": "str (optional) — Folder path to list files from (e.g., 'Operations/2024'). If not provided, lists files in SafeExpress root."
-                    },
-                    "returns": {
-                        "success": "bool — whether listing was successful",
-                        "files": "list — Array of file objects with id, name, mimeType, size, createdTime",
-                        "files[].id": "str — File ID",
-                        "files[].name": "str — File name",
-                        "files[].mimeType": "str — MIME type",
-                        "files[].size": "str — File size in bytes",
-                        "files[].createdTime": "str — ISO timestamp",
-                        "count": "int — Number of files found",
-                        "folder_path": "str — Location where files were listed",
-                        "message": "str — Formatted file list or 'No files' message",
-                        "error": "str — Error message (null if successful)"
-                    },
-                    "example": "list_files(folder_path='Operations/2024')"
-                },
-                "search_files": {
-                    "description": "Search for files in SafeExpress by name or keywords",
-                    "args": {
-                        "search_term": "str (required) — Keywords to search for in file names"
-                    },
-                    "returns": {
-                        "success": "bool — whether search was successful",
-                        "results": "list — Array of matching file objects (same structure as list_files)",
-                        "results[].id": "str — File ID",
-                        "results[].name": "str — File name",
-                        "results[].mimeType": "str — MIME type",
-                        "count": "int — Number of results found",
-                        "search_term": "str — Search term that was used",
-                        "message": "str — Formatted results or 'No files found' message",
-                        "error": "str — Error message (null if successful)"
-                    },
-                    "example": "search_files(search_term='report')"
-                },
-                "get_folder_info": {
-                    "description": "Get detailed information about a specific folder (file count, subfolder count)",
-                    "args": {
-                        "folder_path": "str (required) — Folder path to get info for (e.g., 'Operations/2024')"
-                    },
-                    "returns": {
-                        "success": "bool — whether operation was successful",
-                        "folder_id": "str — Google Drive folder ID",
-                        "folder_name": "str — Folder name (last part of path)",
-                        "folder_path": "str — Full path (e.g., 'SafeExpress/Operations/2024')",
-                        "file_count": "int — Number of files in folder",
-                        "subfolder_count": "int — Number of subfolders",
-                        "message": "str — Summary (e.g., '📁 Operations/2024: 5 file(s), 3 subfolder(s)')",
-                        "error": "str — Error message (null if successful)"
-                    },
-                    "example": "get_folder_info(folder_path='Operations/2024')"
-                }
             },
-            "usage_patterns": {
-                "upload_workflow": {
-                    "description": "Common workflow for uploading files to organized folders",
-                    "steps": [
-                        "1. Create folder structure if needed: create_folder(folder_path='Operations/2024/Q4')",
-                        "2. Upload file to that location: upload_file(file_path='/tmp/report.pdf', filename='Q4_Report.pdf', folder_path='Operations/2024/Q4')"
-                    ]
+            "upload_template": {
+                "description": "Upload template file (PDF, DOCX, DOC) to SafeExpress/Templates with auto-conversion to Google Docs format",
+                "instructions": """
+🔄 AUTOMATIC CONVERSION:
+- PDF, DOCX, DOC files are automatically converted to Google Docs format
+- This makes them editable and allows placeholder replacement
+- Original format is preserved in metadata
+- This is STEP 1 of the template workflow
+
+IMPORTANT: Always follow with analyze_uploaded_template (Step 2)
+                """,
+                "args": {
+                    "file_path": "str (required) — Local file path to upload",
+                    "template_name": "str (required) — Name for the template",
+                    "file_type": "str (optional) — MIME type (auto-detected if not provided)",
+                    "preserve_format": "bool (optional, default: false) — Keep original format (not recommended for templates)"
                 },
-                "organization_best_practices": {
-                    "folder_structure": "Use hierarchical paths like 'Department/Year/Quarter' or 'Projects/ProjectName/Documents'",
-                    "naming_convention": "Use descriptive folder names without special characters",
-                    "search_vs_list": "Use search_files for quick lookups by name, list_files for browsing specific folders"
-                }
+                "returns": {
+                    "success": "bool",
+                    "file_id": "str — Use this for analyze_uploaded_template in Step 2",
+                    "file_url": "str",
+                    "template_name": "str",
+                    "original_format": "str — PDF, DOCX, or DOC",
+                    "current_format": "str — 'Google Docs' if converted",
+                    "is_editable": "bool — Whether placeholders can be replaced",
+                    "folder_path": "str — Always 'SafeExpress/Templates'",
+                    "message": "str",
+                    "error": "str"
+                },
+                "example": "upload_template(file_path={{uploaded_file.temp_path}}, template_name='Weekly Template')"
             },
-            "important_notes": [
-                "All operations are scoped to the 'SafeExpress' root folder",
-                "Folder paths are relative to SafeExpress (don't include 'SafeExpress/' prefix)",
-                "Nested folder creation is automatic (parent folders created if needed)",
-                "File uploads support any MIME type",
-                "Search is case-insensitive and matches partial file names"
-            ]
+            "create_folder": {
+                "description": "Create a folder or nested folder structure in SafeExpress",
+                "args": {
+                    "folder_path": "str (required) — Folder path to create (e.g., 'Operations/2024/Reports')"
+                },
+                "returns": {
+                    "success": "bool",
+                    "folder_id": "str",
+                    "folder_url": "str",
+                    "folder_path": "str",
+                    "message": "str",
+                    "error": "str"
+                },
+                "notes": "Automatically creates parent folders if they don't exist."
+            },
+            "list_folders": {
+                "description": "List all folders in SafeExpress with tree structure",
+                "args": {},
+                "returns": {
+                    "success": "bool",
+                    "folders": "list — Array of folder objects",
+                    "count": "int",
+                    "tree": "str",
+                    "message": "str",
+                    "error": "str"
+                },
+            },
+            "list_files": {
+                "description": "List files in SafeExpress root or specific folder",
+                "args": {
+                    "folder_path": "str (optional) — Folder path to list files from"
+                },
+                "returns": {
+                    "success": "bool",
+                    "files": "list",
+                    "count": "int",
+                    "folder_path": "str",
+                    "message": "str",
+                    "error": "str"
+                },
+            },
+            "search_files": {
+                "description": "Search for files in SafeExpress by name or keywords",
+                "args": {
+                    "search_term": "str (required) — Keywords to search for"
+                },
+                "returns": {
+                    "success": "bool",
+                    "results": "list",
+                    "count": "int",
+                    "search_term": "str",
+                    "message": "str",
+                    "error": "str"
+                },
+            },
+            "get_folder_info": {
+                "description": "Get detailed information about a specific folder",
+                "args": {
+                    "folder_path": "str (required) — Folder path"
+                },
+                "returns": {
+                    "success": "bool",
+                    "folder_id": "str",
+                    "folder_name": "str",
+                    "folder_path": "str",
+                    "file_count": "int",
+                    "subfolder_count": "int",
+                    "message": "str",
+                    "error": "str"
+                },
+            }
+        },
+        "important_notes": [
+            "All operations are scoped to the 'SafeExpress' root folder",
+            "Folder paths are relative to SafeExpress (don't include 'SafeExpress/' prefix)",
+            "Nested folder creation is automatic",
+            "File uploads support any MIME type",
+            "PDF/DOCX templates are auto-converted to Google Docs for editing"
+        ]
+    },
+    
+   "docs_agent": {
+    "description": "Create, edit, and read Google Docs documents. Supports template workflows with placeholder replacement and PDF export.",
+    "tools": {
+        "create_doc": {
+            "description": "Creates a new Google Doc and returns its ID and URL",
+            "args": {"title": "str (required) — the name of the document"},
+            "returns": {"success": "bool", "document_id": "str", "document_url": "str", "title": "str", "error": "str"}
+        },
+        "list_my_docs": {
+            "description": "List user's Google Docs to find templates",
+            "args": {"search_query": "str (optional) — keyword"},
+            "returns": {"success": "bool", "documents": "list", "error": "str"}
+        },
+        "extract_template_format": {
+            "description": "Analyze existing Google Doc template to find placeholders",
+            "args": {"template_document_id": "str (required)"},
+            "returns": {"success": "bool", "placeholders": "list", "error": "str"}
+        },
+        "analyze_uploaded_template": {
+            "description": "Analyze uploaded template file to extract structure and placeholders",
+            "args": {"template_file_id": "str (required) — Google Drive file ID from upload_template"},
+            "returns": {"success": "bool", "template_id": "str", "placeholders": "list", "error": "str"}
+        },
+        "create_from_uploaded_template": {
+            "description": "Create document from analyzed template with placeholder replacement and optional PDF export",
+            "args": {
+                "template_file_id": "str (required)",
+                "new_title": "str (required)",
+                "placeholders": "str (optional) — JSON string",
+                "output_format": "str (optional) — 'google_docs' or 'pdf'"
+            },
+            "returns": {"success": "bool", "document_id": "str", "document_url": "str", "title": "str", "error": "str"}
+        },
+        "create_from_my_template": {
+            "description": "Create from existing Google Doc template with placeholder replacement",
+            "args": {
+                "template_document_id": "str (required)",
+                "new_title": "str (required)",
+                "placeholders": "str (required) — JSON string"
+            },
+            "returns": {"success": "bool", "document_id": "str", "url": "str", "error": "str"}
+        },
+        "create_from_existing_data_and_template": {
+            "description": "Create document from existing data and template files in Google Drive (using file names, not IDs)",
+            "args": {
+                "template_file_name": "str (required) — Name of template file in Google Drive",
+                "data_file_name": "str (required) — Name of data file in Google Drive",
+                "new_title": "str (required) — Title for new document",
+                "output_format": "str (optional) — 'google_docs' (default) or 'pdf'"
+            },
+            "returns": {
+                "success": "bool",
+                "document_id": "str",
+                "document_url": "str",
+                "title": "str",
+                "format": "str",
+                "error": "str"
+            }
+        },
+        "add_text": {
+            "description": "Adds text to an existing Google Doc",
+            "args": {
+                "document_id": "str (required)",
+                "text": "str (required) — ACTUAL content to add"
+            },
+            "returns": {"success": "bool", "document_id": "str", "document_url": "str", "text_length": "int", "error": "str"}
+        },
+        "read_doc": {
+            "description": "Reads text content from a Google Doc",
+            "args": {"document_id": "str (required)"},
+            "returns": {"success": "bool", "document_id": "str", "document_url": "str", "content": "str", "title": "str", "error": "str"}
         }
+    },
+    
+    "template_workflows": {
+        "uploaded_template_workflow": {
+            "when_to_use": "When user uploads a file (PDF, DOCX) and wants to create a document from it"
+        },
+        "existing_template_workflow": {
+            "when_to_use": "When user mentions 'my template', 'my format', or wants to use an existing Google Doc as template"
+        },
+        "existing_data_and_template_workflow": {
+            "when_to_use": "When user mentions template AND data files that are BOTH already in Google Drive",
+            "tool": "create_from_existing_data_and_template",
+            "example": "Create document using template 'X' and data 'Y'"
+            }
+        }
+    }
 }
