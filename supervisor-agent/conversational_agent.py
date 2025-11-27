@@ -91,8 +91,7 @@ class ConversationalAgent:
         self.llm = ChatOpenAI(
             model=model,
             temperature=temperature,
-            openai_api_key=openai_api_key,
-            max_tokens=2000  # Set default max_tokens
+            openai_api_key=openai_api_key
         )
         self.openai_api_key = openai_api_key
         self.model = model
@@ -515,12 +514,8 @@ OUTPUT (JSON only):
 
         try:
             llm_response = self.llm.invoke(
-                [{
-                    "role": "user", 
-                    "content": unified_prompt
-                }],
-                max_tokens=1000,
-                timeout=30
+                [{"role": "user", "content": unified_prompt}],
+                config={"timeout": 30, "max_tokens": 1000}
             )
             
             response_text = llm_response.content.strip()
@@ -1010,8 +1005,7 @@ When the user mentions multiple emails or entities, infer each role only from ex
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                max_tokens=2000,
-                timeout=320
+                config={"timeout": 320, "max_tokens": 2000}  # 320 second timeout
             )
         except Exception as llm_error:
             # LLM call failed - return safe fallback
@@ -1538,8 +1532,7 @@ Summarize the results using specific data"""
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                max_tokens=500,
-                timeout=30
+                config={"timeout": 30}
             )
             
             summary = llm_response.content.strip()
