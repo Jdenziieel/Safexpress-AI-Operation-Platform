@@ -1,52 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, AlertTriangle, TrendingUp, ChevronDown, ChevronUp, Calendar, Clock, Activity, X } from 'lucide-react';
-import { getUserFromToken } from '../utils/tokenManager';
+import { getUserFromToken, getUserUUID } from '../utils/tokenManager';
+import { quotaApi } from '../api';
 import '../css/QuotaWidget.css';
-
-const QUOTA_API_URL = 'http://localhost:8011';
 
 function QuotaWidget({ compact = false }) {
   const [quotaData, setQuotaData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
 
-  // Get user info from JWT token
-  const getUserInfo = () => {
+  // Get user info from JWT token once on mount
+  useEffect(() => {
     const decoded = getUserFromToken();
-    // Use 'user_id' custom claim from JWT (the unique UUID field)
-    // Fallback to 'sub' for backward compatibility with older tokens
-    const userId = decoded?.user_id || decoded?.sub;
-    console.log('QuotaWidget - Token decoded:', { user_id: decoded?.user_id, sub: decoded?.sub, resolved: userId });
-    return {
-      userId: userId ? String(userId) : 'default_user',
+    const userId = getUserUUID();
+    const info = {
+      userId: userId || 'default_user',
       userName: decoded?.fullname || decoded?.name || null
     };
+    setUserInfo(info);
+  }, []);
+
+  // Calculate intelligent polling interval based on quota usage
+  const getPollingInterval = (percentageUsed) => {
+    if (!percentageUsed) return 300000; // 5 minutes for new/unknown users
+    if (percentageUsed >= 90) return 10000; // 10 seconds - critical
+    if (percentageUsed >= 75) return 30000; // 30 seconds - warning
+    return 120000; // 2 minutes - healthy
   };
 
   const fetchQuotaBalance = async () => {
+    if (!userInfo) return; // Wait until user info is loaded
+    
     try {
-      const { userId, userName } = getUserInfo();
       const params = new URLSearchParams();
-      if (userName) params.append('name', userName);
+      if (userInfo.userName) params.append('name', userInfo.userName);
       
-      const url = `${QUOTA_API_URL}/quota/balance/${userId}${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await fetch(url);
+      const url = `/quota/balance/${userInfo.userId}${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await quotaApi.get(url);
       
-      if (!response.ok) {
-        if (response.status === 404) {
-          // User not onboarded in quota system
-          setError('Quota not configured');
-          setLoading(false);
-          return;
-        }
-        throw new Error('Failed to fetch quota');
-      }
-      
-      const data = await response.json();
-      setQuotaData(data);
+      setQuotaData(response.data);
       setError(null);
     } catch (err) {
+      if (err.response?.status === 404) {
+        // User not onboarded in quota system
+        setError('Quota not configured');
+        setLoading(false);
+        return;
+      }
       console.error('Error fetching quota:', err);
       setError('Unable to load quota');
     } finally {
@@ -54,13 +56,22 @@ function QuotaWidget({ compact = false }) {
     }
   };
 
+  // Polling setup - runs on mount and when quota usage changes
   useEffect(() => {
+    if (!userInfo) return;
+    
     fetchQuotaBalance();
     
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchQuotaBalance, 30000);
+    // Smart polling: adjust interval based on quota usage
+    const percentageUsed = quotaData?.percentage_used || 0;
+    const pollingInterval = getPollingInterval(percentageUsed);
+    
+    const interval = setInterval(() => {
+      fetchQuotaBalance();
+    }, pollingInterval);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [userInfo, quotaData?.percentage_used]);
 
   // Close expanded view when clicking outside
   useEffect(() => {
@@ -133,7 +144,6 @@ function QuotaWidget({ compact = false }) {
   const { percentage_used, current_usage, monthly_limit, remaining_tokens, tier, resets_at } = quotaData;
   const status = getStatusColor(percentage_used || 0);
   const daysUntilReset = getDaysUntilReset(resets_at);
-  const { userName } = getUserInfo();
 
   if (compact) {
     return (
@@ -162,7 +172,7 @@ function QuotaWidget({ compact = false }) {
                 <Zap size={20} className="quota-icon" />
                 <div>
                   <h3>Your Token Quota</h3>
-                  {userName && <span className="quota-user-name">{userName}</span>}
+                  {userInfo?.userName && <span className="quota-user-name">{userInfo.userName}</span>}
                 </div>
               </div>
               <button className="quota-close-btn" onClick={(e) => { e.stopPropagation(); setIsExpanded(false); }}>

@@ -234,9 +234,9 @@ class QuotaDatabase:
         self.conn.commit()
         return cursor.rowcount > 0
     
-    def check_and_reset_quota(self, user_id: str) -> UserQuota:
+    def check_and_reset_quota(self, user_id: str, include_inactive: bool = False) -> UserQuota:
         """Check if quota needs reset and reset if necessary."""
-        user = self.get_user_quota(user_id)
+        user = self.get_user_quota(user_id, include_inactive=include_inactive)
         if not user:
             return None
         

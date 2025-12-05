@@ -1,0 +1,18 @@
+{
+  "response": "{\n    \"intent\": \"needs_clarification\",\n    \"task_type\": \"send_email\",\n    \"extracted_info\": {},\n    \"missing_fields\": [\"to\", \"subject\", \"body\"],\n    \"clarification_question\": \"Sure, I can help with that. Who should I send this email to? What should be the subject and the body of the email?\",\n    \"reasoning\": \"The user wants to send an email, but hasn't provided the recipient, subject, or body of the email.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": false,\n    \"execution_summary\": \"Send an email\"\n}",
+  "parsed": {
+    "intent": "needs_clarification",
+    "task_type": "send_email",
+    "extracted_info": {},
+    "missing_fields": [
+      "to",
+      "subject",
+      "body"
+    ],
+    "clarification_question": "Sure, I can help with that. Who should I send this email to? What should be the subject and the body of the email?",
+    "reasoning": "The user wants to send an email, but hasn't provided the recipient, subject, or body of the email.",
+    "suggested_alternatives": [],
+    "execution_ready": false,
+    "execution_summary": "Send an email"
+  }
+}

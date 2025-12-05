@@ -28,9 +28,8 @@ import {
   Settings
 } from 'lucide-react';
 import { isAdmin as checkIsAdmin, getUserFromToken, isAuthenticated } from '../utils/tokenManager';
+import { quotaApi } from '../api';
 import '../css/QuotaPage.css';
-
-const QUOTA_API_URL = 'http://localhost:8011';
 
 // Tier configuration
 const TIER_CONFIG = {
@@ -65,35 +64,21 @@ function QuotaPage() {
   const [savingLimit, setSavingLimit] = useState(false);
   const [savingResetDate, setSavingResetDate] = useState(false);
   const [isAdmin, setIsAdmin] = useState(null);
-  const [activeTab, setActiveTab] = useState('users'); // 'users', 'logs', or 'actions'
   const [logServiceFilter, setLogServiceFilter] = useState('');
   const [logSearchTerm, setLogSearchTerm] = useState('');
   const [logSortConfig, setLogSortConfig] = useState({ key: 'timestamp', direction: 'desc' });
   const [showInactive, setShowInactive] = useState(false);
   const [processingUser, setProcessingUser] = useState(null);
 
-  // Get auth token for API calls
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('access');
-    if (token) {
-      return { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      };
-    }
-    return { 'Content-Type': 'application/json' };
-  };
-
   // Fetch all users (admin only)
   const fetchAllUsers = async () => {
     try {
-      const params = new URLSearchParams();
+      const params = {};
       if (showInactive) {
-        params.append('include_inactive', 'true');
+        params.include_inactive = 'true';
       }
-      const response = await fetch(`${QUOTA_API_URL}/quota/admin/users?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch users');
-      const data = await response.json();
+      const response = await quotaApi.get('/quota/admin/users', { params });
+      const data = response.data;
       // Calculate percentage_used for each user
       const usersWithPercentage = (data.users || []).map(user => ({
         ...user,
@@ -110,10 +95,8 @@ function QuotaPage() {
   // Fetch usage summary (admin only)
   const fetchSummary = async () => {
     try {
-      const response = await fetch(`${QUOTA_API_URL}/quota/admin/summary?hours=720`);
-      if (!response.ok) throw new Error('Failed to fetch summary');
-      const data = await response.json();
-      setSummary(data);
+      const response = await quotaApi.get('/quota/admin/summary', { params: { hours: 720 } });
+      setSummary(response.data);
     } catch (err) {
       console.error('Error fetching summary:', err);
     }
@@ -123,18 +106,14 @@ function QuotaPage() {
   const fetchLogs = async (page = 1) => {
     console.log('Fetching logs, page:', page);
     try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        page_size: logsPageSize.toString()
-      });
+      const params = { page, page_size: logsPageSize };
       if (logServiceFilter) {
-        params.append('service', logServiceFilter);
+        params.service = logServiceFilter;
       }
       
-      const response = await fetch(`${QUOTA_API_URL}/quota/admin/logs?${params}`);
+      const response = await quotaApi.get('/quota/admin/logs', { params });
       console.log('Logs response status:', response.status);
-      if (!response.ok) throw new Error('Failed to fetch logs');
-      const data = await response.json();
+      const data = response.data;
       console.log('Logs data:', data);
       setLogs(data.logs || []);
       setLogsTotal(data.total || 0);
@@ -148,15 +127,11 @@ function QuotaPage() {
   const fetchAdminActions = async (page = 1) => {
     console.log('Fetching admin actions, page:', page);
     try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        page_size: '20'
-      });
+      const params = { page, page_size: 20 };
       
-      const response = await fetch(`${QUOTA_API_URL}/quota/admin/actions?${params}`);
+      const response = await quotaApi.get('/quota/admin/actions', { params });
       console.log('Admin actions response status:', response.status);
-      if (!response.ok) throw new Error('Failed to fetch admin actions');
-      const data = await response.json();
+      const data = response.data;
       console.log('Admin actions data:', data);
       setAdminActions(data.logs || []);
       setAdminActionsTotal(data.total || 0);
@@ -225,18 +200,7 @@ function QuotaPage() {
     
     setSavingTier(true);
     try {
-      const response = await fetch(`${QUOTA_API_URL}/quota/admin/user/${userId}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ tier: newTier })
-      });
-      
-      if (response.status === 403) {
-        setError('Admin access required to modify user tiers');
-        return;
-      }
-      
-      if (!response.ok) throw new Error('Failed to update tier');
+      const response = await quotaApi.put(`/quota/admin/user/${userId}`, { tier: newTier });
       
       // Update local state immediately
       setUsers(prevUsers => 
@@ -269,21 +233,18 @@ function QuotaPage() {
       setError('Please enter a valid positive number for monthly limit');
       return;
     }
+    if (limitValue > 100000000) {
+      setError('Monthly limit cannot exceed 100,000,000 tokens');
+      return;
+    }
+    if (limitValue < 1000) {
+      setError('Monthly limit must be at least 1,000 tokens');
+      return;
+    }
     
     setSavingLimit(true);
     try {
-      const response = await fetch(`${QUOTA_API_URL}/quota/admin/user/${userId}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ monthly_limit: limitValue })
-      });
-      
-      if (response.status === 403) {
-        setError('Admin access required to modify user limits');
-        return;
-      }
-      
-      if (!response.ok) throw new Error('Failed to update monthly limit');
+      const response = await quotaApi.put(`/quota/admin/user/${userId}`, { monthly_limit: limitValue });
       
       // Update local state immediately
       setUsers(prevUsers => 
@@ -316,20 +277,25 @@ function QuotaPage() {
       return;
     }
     
+    const selectedDate = new Date(newResetDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      setError('Reset date must be today or in the future');
+      return;
+    }
+    
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() + 1);
+    if (selectedDate > maxDate) {
+      setError('Reset date cannot be more than 1 year from now');
+      return;
+    }
+    
     setSavingResetDate(true);
     try {
-      const response = await fetch(`${QUOTA_API_URL}/quota/admin/user/${userId}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ reset_date: newResetDate })
-      });
-      
-      if (response.status === 403) {
-        setError('Admin access required to modify reset date');
-        return;
-      }
-      
-      if (!response.ok) throw new Error('Failed to update reset date');
+      const response = await quotaApi.put(`/quota/admin/user/${userId}`, { reset_date: newResetDate });
       
       // Update local state immediately
       setUsers(prevUsers => 
@@ -368,12 +334,7 @@ function QuotaPage() {
     
     setProcessingUser(userId);
     try {
-      const response = await fetch(`${QUOTA_API_URL}/quota/admin/user/${userId}/deactivate`, {
-        method: 'POST',
-        headers: getAuthHeaders()
-      });
-      
-      if (!response.ok) throw new Error('Failed to deactivate user');
+      await quotaApi.post(`/quota/admin/user/${userId}/deactivate`);
       
       // Update local state
       setUsers(prevUsers => 
@@ -395,12 +356,7 @@ function QuotaPage() {
   const handleRestoreUser = async (userId, userName) => {
     setProcessingUser(userId);
     try {
-      const response = await fetch(`${QUOTA_API_URL}/quota/admin/user/${userId}/restore`, {
-        method: 'POST',
-        headers: getAuthHeaders()
-      });
-      
-      if (!response.ok) throw new Error('Failed to restore user');
+      await quotaApi.post(`/quota/admin/user/${userId}/restore`);
       
       // Update local state
       setUsers(prevUsers => 
@@ -733,39 +689,10 @@ function QuotaPage() {
           </div>
         )}
 
-        {/* Tab Navigation */}
-        <div className="tab-navigation">
-          <button 
-            className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
-            onClick={() => setActiveTab('users')}
-          >
-            <Users size={18} />
-            User Quotas
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
-            onClick={() => {
-              setActiveTab('logs');
-              fetchLogs(1);
-            }}
-          >
-            <FileText size={18} />
-            Usage Logs
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'actions' ? 'active' : ''}`}
-            onClick={() => {
-              setActiveTab('actions');
-              fetchAdminActions(1);
-            }}
-          >
-            <Settings size={18} />
-            Admin Actions
-          </button>
-        </div>
+
 
         {/* Users Table */}
-        {activeTab === 'users' && users.length > 0 && (
+        {users.length > 0 && (
           <div className="users-section">
             <div className="users-header">
               <h2 className="section-title">
@@ -889,17 +816,26 @@ function QuotaPage() {
                               <input
                                 type="number"
                                 value={newLimit}
-                                onChange={(e) => setNewLimit(e.target.value)}
-                                className="limit-input"
-                                min="0"
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  // Only allow positive numbers
+                                  if (val === '' || (parseInt(val, 10) >= 0)) {
+                                    setNewLimit(val);
+                                  }
+                                }}
+                                className={`limit-input ${newLimit && (parseInt(newLimit, 10) < 1000 || parseInt(newLimit, 10) > 100000000) ? 'input-error' : ''}`}
+                                min="1000"
+                                max="100000000"
+                                step="1000"
+                                placeholder="Min: 1,000"
                                 autoFocus
                               />
                               <div className="inline-actions">
                                 <button 
                                   className="action-btn save"
                                   onClick={() => handleUpdateLimit(user.user_id)}
-                                  disabled={savingLimit}
-                                  title="Save"
+                                  disabled={savingLimit || !newLimit || parseInt(newLimit, 10) < 1000 || parseInt(newLimit, 10) > 100000000}
+                                  title={!newLimit ? 'Enter a value' : parseInt(newLimit, 10) < 1000 ? 'Min: 1,000 tokens' : parseInt(newLimit, 10) > 100000000 ? 'Max: 100M tokens' : 'Save'}
                                 >
                                   {savingLimit ? <RefreshCw size={12} className="spinning" /> : <Check size={12} />}
                                 </button>
@@ -942,15 +878,17 @@ function QuotaPage() {
                                 type="date"
                                 value={newResetDate}
                                 onChange={(e) => setNewResetDate(e.target.value)}
-                                className="date-input"
+                                className={`date-input ${newResetDate && new Date(newResetDate) < new Date().setHours(0,0,0,0) ? 'input-error' : ''}`}
+                                min={new Date().toISOString().split('T')[0]}
+                                max={new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]}
                                 autoFocus
                               />
                               <div className="inline-actions">
                                 <button 
                                   className="action-btn save"
                                   onClick={() => handleUpdateResetDate(user.user_id)}
-                                  disabled={savingResetDate}
-                                  title="Save"
+                                  disabled={savingResetDate || !newResetDate || new Date(newResetDate) < new Date().setHours(0,0,0,0)}
+                                  title={!newResetDate ? 'Select a date' : new Date(newResetDate) < new Date().setHours(0,0,0,0) ? 'Date must be today or later' : 'Save'}
                                 >
                                   {savingResetDate ? <RefreshCw size={12} className="spinning" /> : <Check size={12} />}
                                 </button>
@@ -1015,243 +953,239 @@ function QuotaPage() {
           </div>
         )}
 
-        {/* Usage Logs */}
-        {activeTab === 'logs' && (
-          <div className="logs-section">
-            <div className="logs-header">
-              <h2 className="section-title">
-                <FileText size={20} />
-                Usage Logs ({logsTotal} entries)
-              </h2>
-              <div className="logs-filters">
-                <div className="logs-search">
-                  <Search size={16} />
-                  <input
-                    type="text"
-                    placeholder="Search logs by user, service, operation..."
-                    value={logSearchTerm}
-                    onChange={(e) => setLogSearchTerm(e.target.value)}
-                  />
-                </div>
-                <select 
-                  value={logServiceFilter}
-                  onChange={(e) => setLogServiceFilter(e.target.value)}
-                  className="service-filter"
-                >
-                  <option value="">All Services</option>
-                  {uniqueServices.map(service => (
-                    <option key={service} value={service}>{service}</option>
-                  ))}
-                </select>
+        {/* Usage Logs Panel */}
+        <div className="quota-panel usage-logs-panel">
+          <div className="panel-header">
+            <h3 className="panel-title">
+              <FileText size={20} />
+              Usage Logs
+              <span className="panel-badge">{logsTotal} entries</span>
+            </h3>
+            <div className="panel-controls">
+              <div className="panel-search">
+                <Search size={16} />
+                <input
+                  type="text"
+                  placeholder="Search logs..."
+                  value={logSearchTerm}
+                  onChange={(e) => setLogSearchTerm(e.target.value)}
+                />
               </div>
+              <select 
+                value={logServiceFilter}
+                onChange={(e) => setLogServiceFilter(e.target.value)}
+                className="panel-filter"
+              >
+                <option value="">All Services</option>
+                {uniqueServices.map(service => (
+                  <option key={service} value={service}>{service}</option>
+                ))}
+              </select>
             </div>
-
-            <div className="logs-table-container">
-              <table className="logs-table">
-                <thead>
-                  <tr>
-                    <th onClick={() => handleLogSort('timestamp')} className="sortable-header">
-                      <Clock size={14} /> Time
-                      {logSortConfig.key === 'timestamp' && (
-                        logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                      )}
-                    </th>
-                    <th onClick={() => handleLogSort('fullname')} className="sortable-header">
-                      User
-                      {logSortConfig.key === 'fullname' && (
-                        logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                      )}
-                    </th>
-                    <th onClick={() => handleLogSort('service')} className="sortable-header">
-                      Service
-                      {logSortConfig.key === 'service' && (
-                        logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                      )}
-                    </th>
-                    <th onClick={() => handleLogSort('operation')} className="sortable-header">
-                      Operation
-                      {logSortConfig.key === 'operation' && (
-                        logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                      )}
-                    </th>
-                    <th>Model</th>
-                    <th onClick={() => handleLogSort('total_tokens')} className="sortable-header">
-                      Tokens
-                      {logSortConfig.key === 'total_tokens' && (
-                        logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                      )}
-                    </th>
-                    <th onClick={() => handleLogSort('cost_usd')} className="sortable-header">
-                      Cost
-                      {logSortConfig.key === 'cost_usd' && (
-                        logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                      )}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Debug info */}
-                  <tr><td colSpan="7" style={{background: '#fef3c7', color: '#92400e', fontWeight: 'bold'}}>
-                    DEBUG: logs={logs.length}, filtered={filteredAndSortedLogs.length}
-                  </td></tr>
-                  {filteredAndSortedLogs.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="no-logs">
-                        No usage logs found
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredAndSortedLogs.map((log) => (
-                      <tr key={log.id}>
-                        <td className="timestamp-cell">
-                          {formatTimestamp(log.timestamp)}
-                        </td>
-                        <td className="user-cell" title={log.user_id}>
-                          {log.fullname || (log.user_id && log.user_id.length > 12 ? `${log.user_id.slice(0, 8)}...` : log.user_id)}
-                        </td>
-                        <td>
-                          <span className="service-tag">{log.service}</span>
-                        </td>
-                        <td className="operation-cell">
-                          {log.operation}
-                        </td>
-                        <td>
-                          <span className="model-tag">{log.model}</span>
-                        </td>
-                        <td className="tokens-cell">
-                          <div className="tokens-breakdown">
-                            <span className="total-tokens">{formatNumber(log.total_tokens)}</span>
-                            <span className="token-detail">
-                              ({formatNumber(log.input_tokens)} in / {formatNumber(log.output_tokens)} out)
-                            </span>
-                          </div>
-                        </td>
-                        <td className="cost-cell">
-                          ${(log.cost_usd || 0).toFixed(4)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="logs-pagination">
-                <button 
-                  className="pagination-btn"
-                  onClick={() => fetchLogs(logsPage - 1)}
-                  disabled={logsPage <= 1}
-                >
-                  <ChevronLeft size={16} />
-                  Previous
-                </button>
-                <span className="pagination-info">
-                  Page {logsPage} of {totalPages}
-                </span>
-                <button 
-                  className="pagination-btn"
-                  onClick={() => fetchLogs(logsPage + 1)}
-                  disabled={logsPage >= totalPages}
-                >
-                  Next
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            )}
           </div>
-        )}
 
-        {/* Admin Actions Log */}
-        {activeTab === 'actions' && (
-          <div className="actions-section">
-            <div className="actions-header">
-              <h2 className="section-title">
-                <Settings size={20} />
-                Admin Actions ({adminActionsTotal} entries)
-              </h2>
-            </div>
-
-            <div className="actions-table-container">
-              <table className="actions-table">
-                <thead>
+          <div className="panel-table-container">
+            <table className="panel-table">
+              <thead>
+                <tr>
+                  <th onClick={() => handleLogSort('timestamp')} className="sortable-header">
+                    <Clock size={14} /> Time
+                    {logSortConfig.key === 'timestamp' && (
+                      logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </th>
+                  <th onClick={() => handleLogSort('fullname')} className="sortable-header">
+                    User
+                    {logSortConfig.key === 'fullname' && (
+                      logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </th>
+                  <th onClick={() => handleLogSort('service')} className="sortable-header">
+                    Service
+                    {logSortConfig.key === 'service' && (
+                      logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </th>
+                  <th onClick={() => handleLogSort('operation')} className="sortable-header">
+                    Operation
+                    {logSortConfig.key === 'operation' && (
+                      logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </th>
+                  <th>Model</th>
+                  <th onClick={() => handleLogSort('total_tokens')} className="sortable-header">
+                    Tokens
+                    {logSortConfig.key === 'total_tokens' && (
+                      logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </th>
+                  <th onClick={() => handleLogSort('cost_usd')} className="sortable-header">
+                    Cost
+                    {logSortConfig.key === 'cost_usd' && (
+                      logSortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAndSortedLogs.length === 0 ? (
                   <tr>
-                    <th><Clock size={14} /> Time</th>
-                    <th>Admin</th>
-                    <th>Action</th>
-                    <th>Target User</th>
-                    <th>Details</th>
+                    <td colSpan="7" className="no-data-cell">
+                      <FileText size={24} />
+                      <span>No usage logs found</span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {adminActions.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="no-logs">
-                        No admin actions recorded yet
+                ) : (
+                  filteredAndSortedLogs.map((log) => (
+                    <tr key={log.id}>
+                      <td className="timestamp-cell">
+                        {formatTimestamp(log.timestamp)}
                       </td>
-                    </tr>
-                  ) : (
-                    adminActions.map((action) => (
-                      <tr key={action.id}>
-                        <td className="timestamp-cell">
-                          {formatTimestamp(action.timestamp)}
-                        </td>
-                        <td className="admin-cell">
-                          {action.admin_name || action.admin_id || 'System'}
-                        </td>
-                        <td>
-                          <span className={`action-tag action-${action.action}`}>
-                            {action.action.replace(/_/g, ' ')}
+                      <td className="user-cell" title={log.user_id}>
+                        {log.fullname || (log.user_id && log.user_id.length > 12 ? `${log.user_id.slice(0, 8)}...` : log.user_id)}
+                      </td>
+                      <td>
+                        <span className="service-tag">{log.service}</span>
+                      </td>
+                      <td className="operation-cell">
+                        {log.operation}
+                      </td>
+                      <td>
+                        <span className="model-tag">{log.model}</span>
+                      </td>
+                      <td className="tokens-cell">
+                        <div className="tokens-breakdown">
+                          <span className="total-tokens">{formatNumber(log.total_tokens)}</span>
+                          <span className="token-detail">
+                            ({formatNumber(log.input_tokens)} in / {formatNumber(log.output_tokens)} out)
                           </span>
-                        </td>
-                        <td className="user-cell">
-                          {action.target_user_name || action.target_user_id || '-'}
-                        </td>
-                        <td className="details-cell">
-                          {action.details ? (
-                            <span className="details-preview" title={JSON.stringify(action.details, null, 2)}>
-                              {Object.entries(action.details).map(([key, val]) => (
-                                <span key={key} className="detail-item">
-                                  {key}: {typeof val === 'object' ? `${val.from} → ${val.to}` : val}
-                                </span>
-                              ))}
-                            </span>
-                          ) : '-'}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {Math.ceil(adminActionsTotal / 20) > 1 && (
-              <div className="logs-pagination">
-                <button 
-                  className="pagination-btn"
-                  onClick={() => fetchAdminActions(adminActionsPage - 1)}
-                  disabled={adminActionsPage <= 1}
-                >
-                  <ChevronLeft size={16} />
-                  Previous
-                </button>
-                <span className="pagination-info">
-                  Page {adminActionsPage} of {Math.ceil(adminActionsTotal / 20)}
-                </span>
-                <button 
-                  className="pagination-btn"
-                  onClick={() => fetchAdminActions(adminActionsPage + 1)}
-                  disabled={adminActionsPage >= Math.ceil(adminActionsTotal / 20)}
-                >
-                  Next
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            )}
+                        </div>
+                      </td>
+                      <td className="cost-cell">
+                        ${(log.cost_usd || 0).toFixed(4)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="panel-pagination">
+              <button 
+                className="pagination-btn"
+                onClick={() => fetchLogs(logsPage - 1)}
+                disabled={logsPage <= 1}
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </button>
+              <span className="pagination-info">
+                Page {logsPage} of {totalPages}
+              </span>
+              <button 
+                className="pagination-btn"
+                onClick={() => fetchLogs(logsPage + 1)}
+                disabled={logsPage >= totalPages}
+              >
+                Next
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Admin Actions Panel */}
+        <div className="quota-panel admin-actions-panel">
+          <div className="panel-header">
+            <h3 className="panel-title">
+              <Settings size={20} />
+              Admin Actions
+              <span className="panel-badge">{adminActionsTotal} entries</span>
+            </h3>
+          </div>
+
+          <div className="panel-table-container">
+            <table className="panel-table">
+              <thead>
+                <tr>
+                  <th><Clock size={14} /> Time</th>
+                  <th>Admin</th>
+                  <th>Action</th>
+                  <th>Target User</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminActions.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="no-data-cell">
+                      <Settings size={24} />
+                      <span>No admin actions recorded yet</span>
+                    </td>
+                  </tr>
+                ) : (
+                  adminActions.map((action) => (
+                    <tr key={action.id}>
+                      <td className="timestamp-cell">
+                        {formatTimestamp(action.timestamp)}
+                      </td>
+                      <td className="admin-cell">
+                        {action.admin_name || action.admin_id || 'System'}
+                      </td>
+                      <td>
+                        <span className={`action-tag action-${action.action}`}>
+                          {action.action.replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      <td className="user-cell">
+                        {action.target_user_name || action.target_user_id || '-'}
+                      </td>
+                      <td className="details-cell">
+                        {action.details ? (
+                          <span className="details-preview" title={JSON.stringify(action.details, null, 2)}>
+                            {Object.entries(action.details).map(([key, val]) => (
+                              <span key={key} className="detail-item">
+                                {key}: {typeof val === 'object' ? `${val.from} → ${val.to}` : val}
+                              </span>
+                            ))}
+                          </span>
+                        ) : '-'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {Math.ceil(adminActionsTotal / 20) > 1 && (
+            <div className="panel-pagination">
+              <button 
+                className="pagination-btn"
+                onClick={() => fetchAdminActions(adminActionsPage - 1)}
+                disabled={adminActionsPage <= 1}
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </button>
+              <span className="pagination-info">
+                Page {adminActionsPage} of {Math.ceil(adminActionsTotal / 20)}
+              </span>
+              <button 
+                className="pagination-btn"
+                onClick={() => fetchAdminActions(adminActionsPage + 1)}
+                disabled={adminActionsPage >= Math.ceil(adminActionsTotal / 20)}
+              >
+                Next
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

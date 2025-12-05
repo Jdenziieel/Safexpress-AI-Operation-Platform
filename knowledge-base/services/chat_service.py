@@ -457,3 +457,201 @@ Use all this information to provide comprehensive, well-cited answers that synth
                 return False
         
         return self.chat_db.delete_session(session_id)
+    
+    def stream_response(
+        self,
+        session_id: str,
+        user_message: str,
+        options: Optional[Dict] = None,
+        user_id: Optional[str] = None
+    ):
+        """
+        Stream response tokens one by one via generator.
+        This method performs all the same steps as process_message,
+        but yields tokens progressively instead of returning full response.
+        
+        Yields:
+            JSON string: {"type": "token", "content": "token text"}
+            JSON string: {"type": "done", "content": "full_response", "tokens": count}
+            JSON string: {"type": "error", "content": "error message"}
+        """
+        import json
+        
+        options = options or {}
+        max_sources = options.get('max_sources', 5)
+        include_context = options.get('include_context', True)
+        document_filter = options.get('document_filter', [])
+        
+        try:
+            # Validate session ownership
+            if user_id:
+                session = self.chat_db.get_session(session_id)
+                if not session:
+                    yield json.dumps({"type": "error", "content": "Session not found"})
+                    return
+                if session.get('user_id') != user_id:
+                    yield json.dumps({"type": "error", "content": "Access denied"})
+                    return
+            
+            # Save user message
+            user_msg = self.chat_db.save_message(
+                session_id=session_id,
+                role="user",
+                content=user_message
+            )
+            
+            # Get conversation context
+            context = []
+            if include_context:
+                all_messages = self.chat_db.get_session_messages(session_id)
+                context = self.context_manager.get_recent_context(
+                    messages=all_messages[:-1],
+                    max_messages=10,
+                    max_tokens=2000
+                )
+            
+            # Process query
+            processed_query = self.query_processor.enhance_query(
+                query=user_message,
+                context=context
+            )
+            
+            # Search Weaviate
+            search_filters = None
+            if document_filter:
+                search_filters = {'document_ids': document_filter}
+            
+            search_results = self.search_service.hybrid_search(
+                query=processed_query['search_query'],
+                limit=50,
+                filters=search_filters
+            )
+            
+            # Rerank results
+            top_chunks = self.query_processor.rerank_results(
+                query=user_message,
+                results=search_results,
+                top_k=15
+            )
+            
+            # Generate streaming response
+            start_time = time.time()
+            kb_context = self.context_manager.build_kb_context(top_chunks)
+            
+            # Build messages for OpenAI
+            messages = [
+                {
+                    "role": "system",
+                    "content": f"""You are a helpful assistant that answers questions based on uploaded documents in a knowledge base.
+
+IMPORTANT RULES:
+1. Base your answers ONLY on the provided document excerpts below
+2. Always cite sources using [Source: filename, Page X] format in your response
+3. If the information needed to answer the question is not in the provided excerpts, say "I don't have enough information in the uploaded documents to answer that question fully."
+4. Be conversational but accurate
+5. Use direct quotes when appropriate
+6. If asked about something not in the documents, politely say so and suggest what topics the documents do cover
+7. Pay attention to the Type field (heading, list, table, image, etc.) to understand the content structure
+8. Consider the Section, Context, and Tags provided with each source for better understanding
+
+Available Document Context:
+{kb_context}
+
+Note: Each source may include section, type, context, and tags information.
+Use all this information to provide comprehensive, well-cited answers."""
+                }
+            ]
+            
+            # Add conversation history
+            for msg in context:
+                messages.append({
+                    "role": msg['role'],
+                    "content": msg['content']
+                })
+            
+            # Add current user message
+            messages.append({
+                "role": "user",
+                "content": user_message
+            })
+            
+            # Stream from OpenAI with streaming=True
+            full_response = ""
+            total_tokens = 0
+            input_tokens = 0
+            output_tokens = 0
+            
+            with self.openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1000,
+                stream=True  # Enable streaming
+            ) as stream:
+                for chunk in stream:
+                    if chunk.choices[0].delta.content:
+                        token = chunk.choices[0].delta.content
+                        full_response += token
+                        # Yield token to client
+                        yield json.dumps({"type": "token", "content": token})
+                    
+                    # Check for usage info in final chunk
+                    if hasattr(chunk, 'usage') and chunk.usage:
+                        total_tokens = chunk.usage.total_tokens
+                        input_tokens = chunk.usage.prompt_tokens
+                        output_tokens = chunk.usage.completion_tokens
+            
+            # If we didn't get usage from streaming (OpenAI limitation), estimate
+            if not total_tokens:
+                total_tokens = len(full_response) // 4 + len("".join([m.get('content', '') for m in messages])) // 4
+                output_tokens = len(full_response) // 4
+                input_tokens = total_tokens - output_tokens
+            
+            # Save assistant message
+            assistant_msg = self.chat_db.save_message(
+                session_id=session_id,
+                role="assistant",
+                content=full_response,
+                sources=None,
+                metadata={
+                    'tokens_used': total_tokens,
+                    'chunks_retrieved': len(search_results),
+                    'chunks_used': len(top_chunks),
+                    'search_query': processed_query['search_query']
+                }
+            )
+            
+            # Report usage to Token Quota Service
+            if QUOTA_ENABLED and user_id:
+                try:
+                    quota_client.report(
+                        user_id=user_id,
+                        service="knowledge-base",
+                        model="gpt-4o",
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
+                        operation="chat_stream",
+                        session_id=session_id,
+                        metadata={
+                            "chunks_retrieved": len(search_results),
+                            "chunks_used": len(top_chunks),
+                            "duration_ms": (time.time() - start_time) * 1000
+                        }
+                    )
+                    print(f"[ChatService] 📊 Reported {total_tokens} tokens to quota service (streaming)")
+                except Exception as quota_error:
+                    print(f"[ChatService] ⚠️ Failed to report quota: {quota_error}")
+            
+            # Send completion signal with token count
+            yield json.dumps({"type": "done", "content": full_response, "tokens": total_tokens})
+            
+        except Exception as e:
+            print(f"[ChatService] Error streaming response: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            if is_llm_error(e):
+                llm_error = handle_llm_error(e, context="KB Chat - Stream Response")
+                yield json.dumps({"type": "error", "content": llm_error.get('message', str(e))})
+            else:
+                yield json.dumps({"type": "error", "content": "Failed to generate response. Please try again."})

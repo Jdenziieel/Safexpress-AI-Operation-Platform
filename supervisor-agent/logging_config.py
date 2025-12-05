@@ -29,8 +29,17 @@ from contextlib import contextmanager
 from functools import wraps
 from enum import Enum
 import threading
+from contextvars import ContextVar
 
-# Thread-local storage for request context
+# Use contextvars for async-safe context storage (instead of threading.local)
+_request_id_var: ContextVar[Optional[str]] = ContextVar('request_id', default=None)
+_conversation_id_var: ContextVar[Optional[str]] = ContextVar('conversation_id', default=None)
+_thread_id_var: ContextVar[Optional[str]] = ContextVar('thread_id', default=None)
+_user_id_var: ContextVar[Optional[str]] = ContextVar('user_id', default=None)
+_token_summary_var: ContextVar[Optional[Any]] = ContextVar('token_summary', default=None)
+_start_time_var: ContextVar[Optional[float]] = ContextVar('start_time', default=None)
+
+# Keep thread-local as fallback for non-async code
 _request_context = threading.local()
 
 # Lazy-loaded log storage (initialized on first use)
@@ -265,28 +274,28 @@ def generate_request_id() -> str:
 
 
 def get_current_request_id() -> Optional[str]:
-    """Get current request ID from thread-local storage"""
-    return getattr(_request_context, 'request_id', None)
+    """Get current request ID from context (async-safe)"""
+    return _request_id_var.get()
 
 
 def get_current_conversation_id() -> Optional[str]:
-    """Get current conversation ID from thread-local storage"""
-    return getattr(_request_context, 'conversation_id', None)
+    """Get current conversation ID from context (async-safe)"""
+    return _conversation_id_var.get()
 
 
 def get_current_thread_id() -> Optional[str]:
-    """Get current thread ID from thread-local storage"""
-    return getattr(_request_context, 'thread_id', None)
+    """Get current thread ID from context (async-safe)"""
+    return _thread_id_var.get()
 
 
 def get_current_user_id() -> Optional[str]:
-    """Get current user ID from thread-local storage"""
-    return getattr(_request_context, 'user_id', None)
+    """Get current user ID from context (async-safe)"""
+    return _user_id_var.get()
 
 
-def get_token_summary() -> Optional[RequestTokenSummary]:
-    """Get current request's token summary"""
-    return getattr(_request_context, 'token_summary', None)
+def get_token_summary() -> Optional['RequestTokenSummary']:
+    """Get current request's token summary (async-safe)"""
+    return _token_summary_var.get()
 
 
 @contextmanager
@@ -337,12 +346,21 @@ def set_request_context(
     user_id: Optional[str] = None
 ):
     """
-    Set request context without using context manager.
+    Set request context (async-safe using contextvars).
     Useful for HTTP requests where context spans multiple function calls.
     """
     if request_id is None:
         request_id = generate_request_id()
     
+    # Set context vars for async code
+    _request_id_var.set(request_id)
+    _conversation_id_var.set(conversation_id)
+    _thread_id_var.set(thread_id)
+    _user_id_var.set(user_id)
+    _token_summary_var.set(RequestTokenSummary())
+    _start_time_var.set(time.time())
+    
+    # Also set thread-local for compatibility
     _request_context.request_id = request_id
     _request_context.conversation_id = conversation_id
     _request_context.thread_id = thread_id
@@ -350,11 +368,22 @@ def set_request_context(
     _request_context.token_summary = RequestTokenSummary()
     _request_context.start_time = time.time()
     
+    print(f"[CONTEXT SET] request_id={request_id}, user_id={user_id}, thread_id={thread_id}")
+    
     return request_id
 
 
 def clear_request_context():
-    """Clear request context after request completes"""
+    """Clear request context after request completes (async-safe)"""
+    # Clear context vars
+    _request_id_var.set(None)
+    _conversation_id_var.set(None)
+    _thread_id_var.set(None)
+    _user_id_var.set(None)
+    _token_summary_var.set(None)
+    _start_time_var.set(None)
+    
+    # Clear thread-local for compatibility
     _request_context.request_id = None
     _request_context.conversation_id = None
     _request_context.thread_id = None
@@ -542,6 +571,12 @@ class StructuredLogger:
         
         # Report to Token Quota Service if user_id is available
         user_id = get_current_user_id()
+        request_id = get_current_request_id()
+        conversation_id = get_current_conversation_id()
+        
+        # DEBUG: Print token reporting context
+        print(f"[TOKEN REPORTING] user_id={user_id}, success={success}, operation={operation}, tokens={input_tokens + output_tokens}")
+        
         if user_id and success:
             try:
                 _report_quota_usage(
@@ -552,11 +587,16 @@ class StructuredLogger:
                     output_tokens=output_tokens,
                     operation=operation,
                     cost_usd=cost,
-                    request_id=get_current_request_id(),
-                    session_id=get_current_conversation_id()
+                    request_id=request_id,
+                    session_id=conversation_id
                 )
             except Exception as e:
                 print(f"⚠️ Failed to report quota usage: {e}")
+        else:
+            if not user_id:
+                print(f"⚠️ [TOKEN REPORTING SKIPPED] No user_id in context")
+            if not success:
+                print(f"⚠️ [TOKEN REPORTING SKIPPED] LLM call not successful")
         
         # Log the call
         extra = {

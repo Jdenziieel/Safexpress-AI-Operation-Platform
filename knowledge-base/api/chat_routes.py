@@ -454,3 +454,77 @@ async def get_user_quota(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+
+@chat_router.websocket('/ws/{session_id}/stream')
+async def websocket_stream_endpoint(
+    websocket,
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    WebSocket endpoint for streaming chat responses.
+    
+    Message should be passed as query parameter: ws://localhost:9009/chat/ws/session123/stream?message=hello
+    
+    Receives:
+        - Streaming tokens as JSON: {"type": "token", "content": "..."}
+        - Completion as JSON: {"type": "done", "content": "...", "tokens": 150}
+        - Errors as JSON: {"type": "error", "content": "..."}
+    """
+    from fastapi import WebSocketException
+    
+    try:
+        # Check JWT authentication
+        user_id = extract_user_id(current_user)
+        print(f"[WebSocket] Stream connection from user_id: {user_id}, session: {session_id}")
+        
+        # The message comes from the frontend via the query parameter
+        # We need to handle the connection first
+        await websocket.accept()
+        
+        # Get the message from the query parameter sent in the first message or from URL
+        # Actually, in WebSocket, we need to receive the message after connection
+        message_data = await websocket.receive_json()
+        user_message = message_data.get('message')
+        options = message_data.get('options', {})
+        
+        if not user_message:
+            await websocket.send_json({"type": "error", "content": "No message provided"})
+            await websocket.close(code=1000)
+            return
+        
+        print(f"[WebSocket] Streaming response for user_message: {user_message[:50]}...")
+        
+        # Stream response from chat service
+        for json_chunk in chat_service.stream_response(
+            session_id=session_id,
+            user_message=user_message,
+            options=options,
+            user_id=user_id
+        ):
+            try:
+                await websocket.send_text(json_chunk)
+            except Exception as send_error:
+                print(f"[WebSocket] Error sending chunk: {send_error}")
+                break
+        
+        print(f"[WebSocket] Streaming complete for session: {session_id}")
+        await websocket.close(code=1000)
+        
+    except HTTPException as http_ex:
+        print(f"[WebSocket] HTTP Exception: {http_ex}")
+        try:
+            await websocket.send_json({"type": "error", "content": http_ex.detail})
+            await websocket.close(code=1008)
+        except:
+            pass
+    except Exception as e:
+        print(f"[WebSocket] Error in stream endpoint: {e}")
+        import traceback
+        traceback.print_exc()
+        try:
+            await websocket.send_json({"type": "error", "content": str(e)})
+            await websocket.close(code=1011)
+        except:
+            pass

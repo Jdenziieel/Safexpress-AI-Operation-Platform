@@ -231,8 +231,9 @@ async def get_balance(
     Get current quota balance for a user.
     
     Used by frontend to display quota status.
+    Includes deactivated users so they can see their quota status.
     """
-    user_quota = db.get_user_quota(user_id)
+    user_quota = db.get_user_quota(user_id, include_inactive=True)
     
     if not user_quota:
         # User not found - must be onboarded first
@@ -242,7 +243,7 @@ async def get_balance(
         )
     
     # Check if quota needs monthly reset
-    user_quota = db.check_and_reset_quota(user_id)
+    user_quota = db.check_and_reset_quota(user_id, include_inactive=True)
     
     remaining = user_quota.monthly_limit - user_quota.current_usage
     warning = user_quota.current_usage >= (user_quota.monthly_limit * 0.8)

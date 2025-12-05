@@ -12,12 +12,10 @@ import {
 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ACCESS_TOKEN } from "../token";
+import { kbApi } from '../api';
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import LLMErrorModal from "./LLMErrorModal";
 import "../css/DynamicMappingChat.css";
-
-const API_BASE_URL = "http://localhost:8009";
 
 function SFXBot() {
   const navigate = useNavigate();
@@ -63,56 +61,34 @@ function SFXBot() {
     lastFetchRef.current = now;
     
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/sessions`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`
-        }
-      });
+      const response = await kbApi.get('/chat/sessions');
       
-      if (response.status === 429) {
+      if (response.data.success) {
+        setThreads(response.data.sessions || []);
+      }
+    } catch (error) {
+      if (error.response?.status === 429) {
         console.warn("Too many requests. Please wait before retrying.");
         return;
       }
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setThreads(data.sessions || []);
-        }
-      } else {
-        console.error("Failed to fetch sessions:", response.status);
-      }
-    } catch (error) {
       console.error("Error fetching sessions:", error);
     }
   };
 
   const createNewThread = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/session/new`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`
-        },
-        body: JSON.stringify({
-          // Don't pass title - let backend auto-generate from first message
-        })
-      });
+      const response = await kbApi.post('/chat/session/new', {});
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-    const newThread = {
-            session_id: data.session_id,
-            title: data.session?.title || `Chat ${threads.length + 1}`,
-            created_at: data.session?.created_at || new Date().toISOString(),
-            message_count: 0
-    };
-          setThreads(prev => [newThread, ...prev]);
-          setActiveThreadId(data.session_id);
-    setMessages([]);
-        }
+      if (response.data.success) {
+        const newThread = {
+          session_id: response.data.session_id,
+          title: response.data.session?.title || `Chat ${threads.length + 1}`,
+          created_at: response.data.session?.created_at || new Date().toISOString(),
+          message_count: 0
+        };
+        setThreads(prev => [newThread, ...prev]);
+        setActiveThreadId(response.data.session_id);
+        setMessages([]);
       }
     } catch (error) {
       console.error("Error creating thread:", error);
@@ -121,27 +97,17 @@ function SFXBot() {
 
   const switchThread = async (sessionId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}/history`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`
-        }
-      });
+      const response = await kbApi.get(`/chat/session/${sessionId}/history`);
 
-      if (response.status === 429) {
+      if (response.data.success) {
+        setActiveThreadId(sessionId);
+        setMessages(response.data.messages || []);
+      }
+    } catch (error) {
+      if (error.response?.status === 429) {
         console.warn("Too many requests when switching threads. Please wait a moment.");
         return;
       }
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setActiveThreadId(sessionId);
-          setMessages(data.messages || []);
-        }
-      } else {
-        console.error("Failed to switch thread:", response.status);
-      }
-    } catch (error) {
       console.error("Error switching thread:", error);
     }
   };
@@ -149,26 +115,16 @@ function SFXBot() {
   const deleteThread = async (sessionId) => {
     setIsDeleting(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`
-        }
-      });
+      const response = await kbApi.delete(`/chat/session/${sessionId}`);
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setThreads(prev => prev.filter(t => t.session_id !== sessionId));
-          if (activeThreadId === sessionId) {
-            setActiveThreadId(null);
-            setMessages([]);
-          }
-          setDeleteModalOpen(false);
-          setThreadToDelete(null);
+      if (response.data.success) {
+        setThreads(prev => prev.filter(t => t.session_id !== sessionId));
+        if (activeThreadId === sessionId) {
+          setActiveThreadId(null);
+          setMessages([]);
         }
-      } else {
-        console.error("Failed to delete thread:", response.status);
+        setDeleteModalOpen(false);
+        setThreadToDelete(null);
       }
     } catch (error) {
       console.error("Error deleting thread:", error);
@@ -204,28 +160,15 @@ function SFXBot() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}/title`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`
-        },
-        body: JSON.stringify({ title: editingTitle.trim() })
-      });
+      const response = await kbApi.patch(`/chat/session/${sessionId}/title`, { title: editingTitle.trim() });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          // Update thread in local state
-          setThreads(prev => prev.map(t => 
-            t.session_id === sessionId ? { ...t, title: data.title } : t
-          ));
-          setEditingThreadId(null);
-          setEditingTitle("");
-        }
-      } else {
-        console.error('Failed to update title');
-        handleCancelEdit();
+      if (response.data.success) {
+        // Update thread in local state
+        setThreads(prev => prev.map(t => 
+          t.session_id === sessionId ? { ...t, title: response.data.title } : t
+        ));
+        setEditingThreadId(null);
+        setEditingTitle("");
       }
     } catch (error) {
       console.error('Error updating title:', error);
@@ -308,63 +251,107 @@ function SFXBot() {
       // Store message for potential retry
       setLastUserMessage(userMessage.content);
       
-      const response = await fetch(`${API_BASE_URL}/chat/message`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
-        },
-        body: JSON.stringify({
-          session_id: activeThreadId,
+      // Connect to WebSocket for streaming
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const kbHost = import.meta.env.VITE_KB_HOST || 'localhost:9009';
+      const wsUrl = `${protocol}//${kbHost}/chat/ws/${activeThreadId}/stream`;
+      
+      console.log('🔌 Connecting to WebSocket:', wsUrl);
+      
+      const ws = new WebSocket(wsUrl);
+      let fullContent = "";
+      let tokenCount = 0;
+      
+      ws.onopen = () => {
+        console.log('✅ WebSocket connected');
+        // Send the message after connecting
+        ws.send(JSON.stringify({
           message: userMessage.content,
           options: {
             include_context: true
           }
-        }),
-      });
-
-      const data = await response.json();
+        }));
+      };
       
-      // Check if this is an LLM error response
-      if (data.is_llm_error) {
-        console.error("LLM Error:", data);
-        setLlmError(data);
-        setLlmErrorModalOpen(true);
-        // Remove the empty assistant message
-        setMessages((prev) => prev.filter(msg => msg.message_id !== assistantMessageId));
-        return;
-      }
-      
-      if (!response.ok) {
-        throw new Error(data.detail || `HTTP error! status: ${response.status}`);
-      }
-      
-      if (data.success) {
-        // Update with full response
-                setMessages((prev) =>
-                  prev.map((msg) =>
-            msg.message_id === assistantMessageId
-              ? { 
-                  ...msg, 
-                  content: data.content,
-                  sources: data.sources || [],
-                  metadata: data.metadata || {}
-                }
-                      : msg
-                  )
-                );
-
-        // Update thread list
-        // Use setTimeout to debounce and avoid rate limiting
-        if (fetchTimeoutRef.current) {
-          clearTimeout(fetchTimeoutRef.current);
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'token') {
+            // Stream token to UI
+            fullContent += data.content;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.message_id === assistantMessageId
+                  ? { ...msg, content: fullContent }
+                  : msg
+              )
+            );
+          } else if (data.type === 'done') {
+            // Complete response received
+            tokenCount = data.tokens || 0;
+            fullContent = data.content;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.message_id === assistantMessageId
+                  ? {
+                      ...msg,
+                      content: fullContent,
+                      metadata: { tokens_used: tokenCount }
+                    }
+                  : msg
+              )
+            );
+            console.log('✅ Streaming complete. Tokens:', tokenCount);
+            
+            // Update thread list
+            if (fetchTimeoutRef.current) {
+              clearTimeout(fetchTimeoutRef.current);
+            }
+            fetchTimeoutRef.current = setTimeout(() => {
+              fetchUserSessions().catch(err => {
+                console.error('Error reloading data:', err);
+              });
+            }, 1000);
+            
+            ws.close();
+          } else if (data.type === 'error') {
+            // Error during streaming
+            console.error('❌ Stream error:', data.content);
+            setLlmError({
+              is_llm_error: true,
+              message: data.content,
+              error_type: 'stream_error'
+            });
+            setLlmErrorModalOpen(true);
+            setMessages((prev) => prev.filter(msg => msg.message_id !== assistantMessageId));
+            ws.close();
+          }
+        } catch (parseError) {
+          console.error('Error parsing WebSocket message:', parseError);
         }
-        fetchTimeoutRef.current = setTimeout(() => {
-          fetchUserSessions().catch(err => {
-            console.error('Error reloading data:', err);
-          });
-        }, 1000);
-      }
+      };
+      
+      ws.onerror = (error) => {
+        console.error('❌ WebSocket error:', error);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.message_id === assistantMessageId
+              ? {
+                  ...msg,
+                  content: "Sorry, I encountered a connection error. Please try again.",
+                  error: true,
+                }
+              : msg
+          )
+        );
+      };
+      
+      ws.onclose = () => {
+        console.log('🔌 WebSocket disconnected');
+        setIsStreaming(false);
+      };
+      
     } catch (error) {
       console.error("Error sending message:", error);
       setMessages((prev) =>
@@ -378,7 +365,6 @@ function SFXBot() {
             : msg
         )
       );
-    } finally {
       setIsStreaming(false);
     }
   };

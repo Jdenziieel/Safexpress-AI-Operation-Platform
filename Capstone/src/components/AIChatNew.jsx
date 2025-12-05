@@ -24,14 +24,12 @@ import {
   ChevronUp,
   RefreshCw
 } from "lucide-react";
-import { ACCESS_TOKEN } from "../token";
+import { getUserFromToken, getUserUUID } from "../utils/tokenManager";
 import "../css/AIChatNew.css";
-import api from "../api";
+import { supervisorApi } from "../api";
 import QuotaWidget from "./QuotaWidget";
 import QuotaExceededModal from "./QuotaExceededModal";
 import LLMErrorModal from "./LLMErrorModal";
-
-const API_BASE_URL = "http://localhost:8010";
 
 // Helper function to parse email results from assistant response
 function parseEmailResults(content) {
@@ -239,19 +237,9 @@ function ExecutionProgress({ progress, isVisible, onToggle }) {
 }
 
 function AIChatNew() {
-  // Helper to get user ID from stored user data
+  // Helper to get user ID from JWT token (secure, not from localStorage)
   const getUserId = () => {
-    try {
-      const user = localStorage.getItem('user');
-      if (user) {
-        const userData = JSON.parse(user);
-        // Use user_id (UUID) field, fallback to id for backwards compatibility
-        return String(userData.user_id || userData.id || "default_user");
-      }
-    } catch (error) {
-      console.error("Error getting user ID:", error);
-    }
-    return "default_user";
+    return getUserUUID() || "default_user";
   };
 
   const [messages, setMessages] = useState([]);
@@ -285,8 +273,8 @@ function AIChatNew() {
   const progressWebSocketRef = useRef(null);
   const progressPollingRef = useRef(null);
 
-  // WebSocket URL (convert http to ws)
-  const WS_BASE_URL = API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+  // WebSocket URL (convert http to ws) - supervisor is on port 8010
+  const WS_BASE_URL = "ws://localhost:8010";
 
   // Connect to WebSocket for real-time progress updates
   const connectProgressWebSocket = (targetThreadId) => {
@@ -385,13 +373,8 @@ function AIChatNew() {
   // Fallback: Poll progress from backend during execution
   const pollProgress = async (targetThreadId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/threads/${targetThreadId}/progress`);
-      if (!response.ok) {
-        console.warn('Progress polling failed:', response.status);
-        return null;
-      }
-      const progressData = await response.json();
-      return progressData;
+      const response = await supervisorApi.get(`/threads/${targetThreadId}/progress`);
+      return response.data;
     } catch (error) {
       console.warn('Progress polling error:', error);
       return null;
@@ -497,13 +480,9 @@ function AIChatNew() {
     setIsLoadingThreads(true);
     try {
       const userId = getUserId();
-      const response = await fetch(`${API_BASE_URL}/threads?user_id=${userId}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch threads: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("Fetched threads:", data);
-      setThreads(data.threads || []);
+      const response = await supervisorApi.get(`/threads?user_id=${userId}`);
+      console.log("Fetched threads:", response.data);
+      setThreads(response.data.threads || []);
     } catch (error) {
       console.error("Error fetching threads:", error);
     } finally {
@@ -533,13 +512,7 @@ function AIChatNew() {
     }
     
     try {
-      const response = await fetch(`${API_BASE_URL}/threads/${thread_id}`, {
-        method: "DELETE",
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to delete thread: ${response.status}`);
-      }
+      await supervisorApi.delete(`/threads/${thread_id}`);
       
       await fetchThreads();
       
@@ -555,11 +528,8 @@ function AIChatNew() {
     setIsLoadingThread(true);
     try {
       const userId = getUserId();
-      const response = await fetch(`${API_BASE_URL}/threads?user_id=${userId}`);
-      if (!response.ok) {
-        throw new Error(`Failed to list conversations: ${response.status}`);
-      }
-      const threadsData = await response.json();
+      const response = await supervisorApi.get(`/threads?user_id=${userId}`);
+      const threadsData = response.data;
       console.log("Fetched conversations:", threadsData);
 
       if (threadsData.threads && threadsData.threads.length > 0) {
@@ -616,10 +586,8 @@ function AIChatNew() {
     if (!requestId) return;
     
     try {
-      const response = await fetch(`${API_BASE_URL}/logs/requests/${requestId}`);
-      if (!response.ok) return;
-      
-      const data = await response.json();
+      const response = await supervisorApi.get(`/logs/requests/${requestId}`);
+      const data = response.data;
       
       // Extract execution steps from logs
       const progressLogs = data.logs.filter(log => 
@@ -664,10 +632,8 @@ function AIChatNew() {
   // Fetch overall token stats
   const fetchTokenStats = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/logs/stats`);
-      if (!response.ok) return;
-      
-      const data = await response.json();
+      const response = await supervisorApi.get('/logs/stats');
+      const data = response.data;
       if (data.token_summary?.totals) {
         // Store for potential display in a stats panel
         console.log("Token stats:", data.token_summary.totals);
@@ -679,12 +645,8 @@ function AIChatNew() {
 
   const loadThreadMessages = async (thread_id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/threads/${thread_id}/messages`);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: `HTTP error! status: ${response.status}` }));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
+      const response = await supervisorApi.get(`/threads/${thread_id}/messages`);
+      const data = response.data;
       console.log("Loaded thread messages:", data);
 
       const formattedMessages = (data.messages || []).map((msg, idx) => ({
@@ -711,14 +673,9 @@ function AIChatNew() {
     if (isFetchingPending) return;
     setIsFetchingPending(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/actions/pending`);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: `HTTP error! status: ${response.status}` }));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("Fetched pending actions:", data);
-      setPendingActions(data.pending_actions || []);
+      const response = await supervisorApi.get('/actions/pending');
+      console.log("Fetched pending actions:", response.data);
+      setPendingActions(response.data.pending_actions || []);
     } catch (error) {
       console.error("Error fetching pending actions:", error);
     } finally {
@@ -728,13 +685,8 @@ function AIChatNew() {
 
   const cleanupExpiredActions = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/actions/cleanup`, {
-        method: "POST",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`🧹 Cleaned up ${data.cleaned_count} expired actions`);
-      }
+      const response = await supervisorApi.post('/actions/cleanup');
+      console.log(`🧹 Cleaned up ${response.data.cleaned_count} expired actions`);
     } catch (error) {
       console.error("Error cleaning up actions:", error);
     }
@@ -752,16 +704,8 @@ function AIChatNew() {
 
   const handleApproveAction = async (actionId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/action/approve/${actionId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ decision: 'approve' }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: `HTTP error! status: ${response.status}` }));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
+      const response = await supervisorApi.post(`/action/approve/${actionId}`, { decision: 'approve' });
+      const result = response.data;
       console.log("Action approved:", result);
       setPendingActions(prev => prev.filter(action => action.action_id !== actionId));
       setMessages(prev => [...prev, {
@@ -785,16 +729,8 @@ function AIChatNew() {
 
   const handleRejectAction = async (actionId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/action/approve/${actionId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ decision: 'reject' }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: `HTTP error! status: ${response.status}` }));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
+      const response = await supervisorApi.post(`/action/approve/${actionId}`, { decision: 'reject' });
+      const result = response.data;
       console.log("Action rejected:", result);
       setPendingActions(prev => prev.filter(action => action.action_id !== actionId));
       setMessages(prev => [...prev, {
@@ -890,115 +826,108 @@ function AIChatNew() {
       // If no thread exists, create one with initial message
       if (!currentThreadId) {
         const userId = getUserId();
-        const response = await fetch(`${API_BASE_URL}/threads`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        try {
+          const response = await supervisorApi.post('/threads', {
             user_id: userId,
             message: userMessage,
             tags: []
-          }),
-        });
-
-        const responseBody = await response.json().catch(() => ({
-          detail: `HTTP error! status: ${response.status}`,
-        }));
-        
-        // Check for LLM error in response
-        if (responseBody.is_llm_error) {
-          const error = new Error(responseBody.user_message || responseBody.message);
-          error.responseData = responseBody;
+          });
+          responseData = response.data;
+          
+          // Check for LLM error in response
+          if (responseData.is_llm_error) {
+            const error = new Error(responseData.user_message || responseData.message);
+            error.responseData = responseData;
+            throw error;
+          }
+          
+          console.log("📥 Created thread:", responseData);
+          
+          // Set the new thread ID
+          setThreadId(responseData.thread_id);
+          await fetchThreads(); // Refresh threads list
+        } catch (error) {
+          if (error.response?.data?.is_llm_error) {
+            const llmError = new Error(error.response.data.user_message || error.response.data.message);
+            llmError.responseData = error.response.data;
+            throw llmError;
+          }
           throw error;
         }
-        
-        if (!response.ok) {
-          throw new Error(responseBody.detail || `HTTP error! status: ${response.status}`);
-        }
-
-        responseData = responseBody;
-        console.log("📥 Created thread:", responseData);
-        
-        // Set the new thread ID
-        setThreadId(responseData.thread_id);
-        await fetchThreads(); // Refresh threads list
       } else {
         // Thread exists, send message to existing thread
-        const response = await fetch(`${API_BASE_URL}/threads/${currentThreadId}/messages`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        try {
+          const response = await supervisorApi.post(`/threads/${currentThreadId}/messages`, {
             message: userMessage,
-          }),
-        });
-
-        const responseBody = await response.json().catch(() => ({
-          detail: `HTTP error! status: ${response.status}`,
-        }));
-        
-        // Check for account deactivated error (403)
-        if (response.status === 403 || responseBody.detail?.error === 'account_deactivated') {
-          const error = new Error(responseBody.detail?.user_message || 'Your account has been deactivated. Please contact an administrator.');
-          error.isDeactivated = true;
-          throw error;
-        }
-        
-        // Check for quota exceeded error (429)
-        if (response.status === 429 || responseBody.detail?.error === 'quota_exceeded') {
-          const error = new Error(responseBody.detail?.user_message || 'Token quota exceeded. Please wait for your quota to reset.');
-          error.isQuotaExceeded = true;
-          throw error;
-        }
-        
-        // Check for LLM error in response
-        if (responseBody.is_llm_error) {
-          const error = new Error(responseBody.user_message || responseBody.message);
-          error.responseData = responseBody;
-          throw error;
-        }
-        
-        if (!response.ok) {
+          });
+          responseData = response.data;
+          
+          // Check for LLM error in response
+          if (responseData.is_llm_error) {
+            const error = new Error(responseData.user_message || responseData.message);
+            error.responseData = responseData;
+            throw error;
+          }
+          
+          console.log("📥 Received response:", responseData);
+        } catch (error) {
+          // Check for account deactivated error (403)
+          if (error.response?.status === 403 || error.response?.data?.detail?.error === 'account_deactivated') {
+            const deactivatedError = new Error(error.response?.data?.detail?.user_message || 'Your account has been deactivated. Please contact an administrator.');
+            deactivatedError.isDeactivated = true;
+            throw deactivatedError;
+          }
+          
+          // Check for quota exceeded error (429)
+          if (error.response?.status === 429 || error.response?.data?.detail?.error === 'quota_exceeded') {
+            const quotaError = new Error(error.response?.data?.detail?.user_message || 'Token quota exceeded. Please wait for your quota to reset.');
+            quotaError.isQuotaExceeded = true;
+            throw quotaError;
+          }
+          
+          // Check for LLM error in response
+          if (error.response?.data?.is_llm_error) {
+            const llmError = new Error(error.response.data.user_message || error.response.data.message);
+            llmError.responseData = error.response.data;
+            throw llmError;
+          }
+          
           // If thread not found, create a new one
-          if (response.status === 404 || responseBody.detail?.includes('not found')) {
+          if (error.response?.status === 404 || error.response?.data?.detail?.includes?.('not found')) {
             console.log("⚠️ Thread not found, creating new thread...");
             setThreadId(null); // Clear invalid thread ID
             
             // Create new thread with this message
             const userId = getUserId();
-            const newResponse = await fetch(`${API_BASE_URL}/threads`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
+            try {
+              const newResponse = await supervisorApi.post('/threads', {
                 user_id: userId,
                 message: userMessage,
                 tags: []
-              }),
-            });
-            
-            const newResponseBody = await newResponse.json().catch(() => ({
-              detail: `Failed to create new thread: ${newResponse.status}`,
-            }));
-            
-            // Check for LLM error
-            if (newResponseBody.is_llm_error) {
-              const error = new Error(newResponseBody.user_message || newResponseBody.message);
-              error.responseData = newResponseBody;
-              throw error;
+              });
+              responseData = newResponse.data;
+              
+              // Check for LLM error
+              if (responseData.is_llm_error) {
+                const llmError = new Error(responseData.user_message || responseData.message);
+                llmError.responseData = responseData;
+                throw llmError;
+              }
+              
+              setThreadId(responseData.thread_id);
+              await fetchThreads();
+              console.log("✅ Created new thread:", responseData.thread_id);
+            } catch (createError) {
+              if (createError.response?.data?.is_llm_error) {
+                const llmError = new Error(createError.response.data.user_message || createError.response.data.message);
+                llmError.responseData = createError.response.data;
+                throw llmError;
+              }
+              throw createError;
             }
-            
-            if (!newResponse.ok) {
-              throw new Error(newResponseBody.detail || `Failed to create new thread: ${newResponse.status}`);
-            }
-            
-            responseData = newResponseBody;
-            setThreadId(responseData.thread_id);
-            await fetchThreads();
-            console.log("✅ Created new thread:", responseData.thread_id);
           } else {
-            throw new Error(responseBody.detail || `HTTP error! status: ${response.status}`);
+            throw error;
           }
-        } else {
-          responseData = responseBody;
-          console.log("📥 Received response:", responseData);
         }
       }
 
@@ -1062,19 +991,11 @@ function AIChatNew() {
         });
         
         // Call the execute endpoint
-        const execResponse = await fetch(
-          `${API_BASE_URL}/chat/${responseData.conversation_id || currentThreadId}/execute`,
-          { method: "POST" }
+        const execResponse = await supervisorApi.post(
+          `/chat/${responseData.conversation_id || currentThreadId}/execute`
         );
 
-        if (!execResponse.ok) {
-          const execErrorData = await execResponse.json().catch(() => ({
-            detail: `HTTP error! status: ${execResponse.status}`,
-          }));
-          throw new Error(execErrorData.detail || `Execution failed: ${execResponse.status}`);
-        }
-
-        const execResult = await execResponse.json();
+        const execResult = execResponse.data;
         console.log("✅ Execution completed or paused for approval:", execResult);
 
         // Update progress with execution result
