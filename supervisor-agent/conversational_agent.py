@@ -16,6 +16,7 @@ from enum import Enum
 import json
 import os
 import re
+import time
 
 # Import agent capabilities for feasibility checking
 from agent_capabilities_v2 import agent_capabilities
@@ -23,11 +24,21 @@ from agent_capabilities_v2 import agent_capabilities
 # Import utility functions for agent filtering
 from utils import identify_relevant_agents, get_filtered_capabilities
 
+# Import LLM error handler for unified error handling
+from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_error
+
 # Import conversation memory manager
 from conversation_memory import ConversationMemoryManager
 
 # Import thread manager for persistent storage
 from thread_manager import ThreadManager
+
+# Import logging module
+from logging_config import (
+    conversational_logger as logger,
+    get_current_request_id,
+    get_token_summary
+)
 
 
 class ConversationIntent(str, Enum):
@@ -43,7 +54,7 @@ class ConversationIntent(str, Enum):
 
 class ConversationState(BaseModel):
     """Tracks conversation history and extracted information"""
-    conversation_history: List[Dict[str, str]] = Field(default_factory=list)  # DEPRECATED: Use memory_manager instead
+    # Note: conversation_history removed - use memory_manager instead
     extracted_info: Dict[str, Any] = Field(default_factory=dict)
     missing_fields: List[str] = Field(default_factory=list)
     intent: Optional[ConversationIntent] = None
@@ -496,7 +507,7 @@ CATEGORIES (pick ONE):
 3. modification - Change single field ("change X to Y")
 4. followup_answer - Direct answer to question ("john@example.com")
 5. casual_conversation - Chitchat ("how are you")
-6. unintelligible - Unclear input
+6. unintelligible - Unclear input   
 7. template_upload - User uploaded file + wants document/save ("use this template", "create MOM", "save to drive")
 8. task_request - Action request
 
@@ -551,9 +562,35 @@ OUTPUT (JSON only):
 """
 
         try:
+            # === TOKEN TRACKING: Tier 0.5 Unified Check ===
+            start_time = time.time()
             llm_response = self.llm.invoke(
                 [{"role": "user", "content": unified_prompt}],
                 config={"timeout": 30, "max_tokens": 1000}
+            )
+            duration_ms = (time.time() - start_time) * 1000
+            
+            # Extract token usage from response
+            input_tokens = 0
+            output_tokens = 0
+            if hasattr(llm_response, 'response_metadata'):
+                token_usage = llm_response.response_metadata.get('token_usage', {})
+                input_tokens = token_usage.get('prompt_tokens', len(unified_prompt) // 4)
+                output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
+            else:
+                input_tokens = len(unified_prompt) // 4
+                output_tokens = len(llm_response.content) // 4
+            
+            # Log the LLM call with token tracking
+            logger.llm_call(
+                model=self.llm.model_name if hasattr(self.llm, 'model_name') else "gpt-4o",
+                operation="tier_0.5_unified_check",
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                duration_ms=duration_ms,
+                tier="0.5",
+                prompt_summary=f"Classifying: {user_message[:50]}...",
+                success=True
             )
             
             response_text = llm_response.content.strip()
@@ -847,6 +884,11 @@ OUTPUT (JSON only):
             ), None
             
         except Exception as e:
+            # Check if this is an LLM service error (rate limit, quota, etc.)
+            if is_llm_error(e):
+                print(f"❌ LLM service error in unified quick check: {e}")
+                raise handle_llm_error(e)
+            
             print(f"⚠️ Unified quick check failed: {e}, falling back to full analysis")
             return None, "specific"  # Fallback: default to specific
         
@@ -1129,6 +1171,8 @@ When the user mentions multiple emails or entities, infer each role only from ex
 
         # Call LLM with timeout and retry
         try:
+            # === TOKEN TRACKING: Tier 1 Full Analysis ===
+            start_time = time.time()
             llm_response = self.llm.invoke(
                 [
                     {"role": "system", "content": system_prompt},
@@ -1136,7 +1180,60 @@ When the user mentions multiple emails or entities, infer each role only from ex
                 ],
                 config={"timeout": 320, "max_tokens": 2000}  # 320 second timeout
             )
+            duration_ms = (time.time() - start_time) * 1000
+            
+            # Extract token usage from response
+            input_tokens = 0
+            output_tokens = 0
+            if hasattr(llm_response, 'response_metadata'):
+                token_usage = llm_response.response_metadata.get('token_usage', {})
+                input_tokens = token_usage.get('prompt_tokens', (len(system_prompt) + len(user_prompt)) // 4)
+                output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
+            else:
+                input_tokens = (len(system_prompt) + len(user_prompt)) // 4
+                output_tokens = len(llm_response.content) // 4
+            
+            # Log the LLM call with token tracking
+            logger.llm_call(
+                model=self.llm.model_name if hasattr(self.llm, 'model_name') else "gpt-4o",
+                operation="tier_1_full_analysis",
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                duration_ms=duration_ms,
+                tier="1",
+                prompt_summary=f"Analyzing: {user_message[:50]}...",
+                success=True
+            )
         except Exception as llm_error:
+            # Check if this is an LLM service error (rate limit, quota, etc.)
+            if is_llm_error(llm_error):
+                print(f"❌ LLM service error in full analysis: {llm_error}")
+                # Log the failed LLM call
+                logger.llm_call(
+                    model=self.llm.model_name if hasattr(self.llm, 'model_name') else "gpt-4o",
+                    operation="tier_1_full_analysis",
+                    input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
+                    output_tokens=0,
+                    duration_ms=0,
+                    tier="1",
+                    prompt_summary=f"Analyzing: {user_message[:50]}...",
+                    success=False,
+                    error=str(llm_error)
+                )
+                raise handle_llm_error(llm_error)
+            
+            # Log the failed LLM call
+            logger.llm_call(
+                model=self.llm.model_name if hasattr(self.llm, 'model_name') else "gpt-4o",
+                operation="tier_1_full_analysis",
+                input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
+                output_tokens=0,
+                duration_ms=0,
+                tier="1",
+                prompt_summary=f"Analyzing: {user_message[:50]}...",
+                success=False,
+                error=str(llm_error)
+            )
             # LLM call failed - return safe fallback
             print(f"⚠️ LLM call failed: {llm_error}")
             return ConversationAnalysis(
@@ -1154,11 +1251,36 @@ When the user mentions multiple emails or entities, infer each role only from ex
         try:
             response_text = llm_response.content.strip()
             
-            # Handle code blocks
-            if response_text.startswith("```json"):
-                response_text = response_text[7:-3].strip()
-            elif response_text.startswith("```"):
-                response_text = response_text[3:-3].strip()
+            # Handle code blocks - LLM may include text before JSON
+            if "```json" in response_text:
+                # Extract content between ```json and ```
+                start = response_text.find("```json") + 7
+                end = response_text.find("```", start)
+                if end > start:
+                    response_text = response_text[start:end].strip()
+            elif "```" in response_text:
+                # Extract content between ``` and ```
+                start = response_text.find("```") + 3
+                end = response_text.find("```", start)
+                if end > start:
+                    response_text = response_text[start:end].strip()
+            
+            # If still not valid JSON, try to find JSON object directly
+            if not response_text.startswith("{"):
+                json_start = response_text.find("{")
+                if json_start != -1:
+                    # Find matching closing brace
+                    brace_count = 0
+                    json_end = json_start
+                    for i, char in enumerate(response_text[json_start:], json_start):
+                        if char == "{":
+                            brace_count += 1
+                        elif char == "}":
+                            brace_count -= 1
+                            if brace_count == 0:
+                                json_end = i + 1
+                                break
+                    response_text = response_text[json_start:json_end]
             
             # Parse JSON
             analysis_dict = json.loads(response_text)
@@ -1201,7 +1323,7 @@ When the user mentions multiple emails or entities, infer each role only from ex
                 task_type="unknown",
                 extracted_info={},
                 missing_fields=["all"],
-                clarification_question="I'm not sure I understood that. Could you please rephrase what you'd like me to do?",
+                clarification_question=llm_response.content,
                 reasoning=f"Failed to parse LLM response: {str(e)}",
                 execution_ready=False,
                 execution_summary=None
@@ -1599,18 +1721,64 @@ When the user mentions multiple emails or entities, infer each role only from ex
         """
         Generate a human-friendly summary of the execution results.
         
+        For SUCCESS: Uses LLM to generate natural summary with actual data.
+        For ERRORS: Uses structured templates (no LLM needed - saves tokens).
+        
         Args:
             conversation_state: Current conversation state
             final_context: The final_context from orchestrator (all variables)
-            execution_status: Status of execution (success, error, etc.)
+            execution_status: Status of execution (success, error, no_results, etc.)
             execution_message: Raw execution message
             
         Returns:
             Human-friendly summary for the user
         """
         
-        # Build context for LLM
-        original_request = conversation_state.execution_summary or "your request"
+        # Get original request for context
+        original_request = conversation_state.extracted_info.get("original_message", "your request")
+        if not original_request or original_request == "your request":
+            original_request = conversation_state.execution_summary or "your request"
+        
+        # =====================================================================
+        # FAST PATH: Handle errors WITHOUT LLM (saves tokens, faster response)
+        # =====================================================================
+        
+        # Check for error conditions in final_context
+        stopped_at_step = final_context.get("stopped_at_step")
+        error_in_context = final_context.get("error")
+        results = final_context.get("results", [])
+        
+        # Determine if this is an error case
+        is_error = (
+            execution_status == "error" or 
+            stopped_at_step is not None or 
+            error_in_context is not None
+        )
+        
+        # Check for no_results (valid operation but empty data)
+        has_no_results = any(
+            r.get("status") == "no_results" for r in results if isinstance(r, dict)
+        )
+        
+        if is_error:
+            return self._format_error_response(
+                original_request=original_request,
+                execution_message=execution_message,
+                final_context=final_context,
+                results=results,
+                stopped_at_step=stopped_at_step
+            )
+        
+        # Check if all steps were no_results (nothing found but not an error)
+        if has_no_results and not any(r.get("status") == "success" for r in results if isinstance(r, dict)):
+            return self._format_no_results_response(
+                original_request=original_request,
+                results=results
+            )
+        
+        # =====================================================================
+        # SUCCESS PATH: Use LLM for rich summary
+        # =====================================================================
         
         # FILTER: Remove technical fields user doesn't care about
         user_relevant_context = self._filter_context_for_user(final_context)
@@ -1619,7 +1787,105 @@ When the user mentions multiple emails or entities, infer each role only from ex
         print(f"   Before: {len(final_context)} fields, {len(json.dumps(final_context))} chars")
         print(f"   After: {len(user_relevant_context)} fields, {len(json.dumps(user_relevant_context))} chars")
         
-        # NEW: Build READABLE context with actual content (not just field names)
+        # Build READABLE context with actual content
+        context_text = self._build_readable_context(user_relevant_context)
+        
+        print(f"\n📝 Generating user-friendly summary...")
+        print(f"📊 Context for LLM ({len(context_text)} chars):\n{context_text[:500]}...\n")
+        
+        system_prompt = f"""You are a concise AI assistant summarizing task results.
+
+RULES:
+1. Start with outcome: ✅ success or ❌ failed
+2. Use ACTUAL DATA from context (names, subjects, dates - NOT "email data")
+3. NEVER say: "variables", "fields available", "data includes"
+4. Be SPECIFIC: "Found email from Mike about Rovo AI sent yesterday"
+
+Use the ACTUAL content below, not generic descriptions."""
+
+        user_prompt = f"""Task: {original_request}
+Status: {execution_status}
+Message: {execution_message}
+
+Context (use ACTUAL values below):
+{context_text}
+
+Summarize the results using specific data"""
+
+        try:
+            # === TOKEN TRACKING: Result Summarization ===
+            start_time = time.time()
+            llm_response = self.llm.invoke(
+                [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                config={"timeout": 30}
+            )
+            duration_ms = (time.time() - start_time) * 1000
+            
+            # Extract token usage from response
+            input_tokens = 0
+            output_tokens = 0
+            if hasattr(llm_response, 'response_metadata'):
+                token_usage = llm_response.response_metadata.get('token_usage', {})
+                input_tokens = token_usage.get('prompt_tokens', (len(system_prompt) + len(user_prompt)) // 4)
+                output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
+            else:
+                input_tokens = (len(system_prompt) + len(user_prompt)) // 4
+                output_tokens = len(llm_response.content) // 4
+            
+            # Log the LLM call with token tracking
+            logger.llm_call(
+                model=self.llm.model_name if hasattr(self.llm, 'model_name') else "gpt-4o",
+                operation="result_summarization",
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                duration_ms=duration_ms,
+                tier="post",
+                prompt_summary=f"Summarizing: {original_request[:50]}...",
+                success=True
+            )
+            
+            summary = llm_response.content.strip()
+            return summary
+            
+        except Exception as e:
+            # Check if this is an LLM service error (rate limit, quota, etc.)
+            if is_llm_error(e):
+                print(f"❌ LLM service error in result summarization: {e}")
+                # Log the failed LLM call
+                logger.llm_call(
+                    model=self.llm.model_name if hasattr(self.llm, 'model_name') else "gpt-4o",
+                    operation="result_summarization",
+                    input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
+                    output_tokens=0,
+                    duration_ms=0,
+                    tier="post",
+                    prompt_summary=f"Summarizing: {original_request[:50]}...",
+                    success=False,
+                    error=str(e)
+                )
+                raise handle_llm_error(e)
+            
+            # Log the failed LLM call
+            logger.llm_call(
+                model=self.llm.model_name if hasattr(self.llm, 'model_name') else "gpt-4o",
+                operation="result_summarization",
+                input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
+                output_tokens=0,
+                duration_ms=0,
+                tier="post",
+                prompt_summary=f"Summarizing: {original_request[:50]}...",
+                success=False,
+                error=str(e)
+            )
+            # Fallback to simple summary if LLM fails
+            print(f"⚠️ Failed to generate LLM summary: {e}")
+            return f"✅ Successfully completed: {original_request}\n\nResults:\n{context_text}"
+    
+    def _build_readable_context(self, user_relevant_context: Dict[str, Any]) -> str:
+        """Build readable context text from filtered context."""
         context_lines = []
         
         for key, value in user_relevant_context.items():
@@ -1656,51 +1922,142 @@ When the user mentions multiple emails or entities, infer each role only from ex
             else:
                 context_lines.append(f"{key}: {value}")
         
-        context_text = "\n".join(context_lines) if context_lines else "No data returned"
+        return "\n".join(context_lines) if context_lines else "No data returned"
+    
+    def _format_error_response(
+        self,
+        original_request: str,
+        execution_message: str,
+        final_context: Dict[str, Any],
+        results: List[Dict],
+        stopped_at_step: Optional[int]
+    ) -> str:
+        """
+        Format a user-friendly error response WITHOUT using LLM.
+        This saves tokens and provides faster, more consistent error messages.
+        """
+        lines = ["❌ **Unable to complete your request**\n"]
         
-        print(f"\n📝 Generating user-friendly summary...")
-        print(f"📊 Context for LLM ({len(context_text)} chars):\n{context_text[:500]}...\n")
+        # Identify the error type and provide specific message
+        error_msg = final_context.get("error", execution_message)
         
-        system_prompt = f"""You are a concise AI assistant summarizing task results.
-
-RULES:
-1. Start with outcome: ✅ success or ❌ failed
-2. Use ACTUAL DATA from context (names, subjects, dates - NOT "email data")
-3. NEVER say: "variables", "fields available", "data includes"
-4. Be SPECIFIC: "Found email from Mike about Rovo AI sent yesterday"
-
-
-Use the ACTUAL content below, not generic descriptions."""
-
-        user_prompt = f"""Task: {original_request}
-Status: {execution_status}
-Message: {execution_message}
-
-Context (use ACTUAL values below):
-{context_text}
-
-Summarize the results using specific data"""
-
-        try:
-            llm_response = self.llm.invoke(
-                [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                config={"timeout": 30}
-            )
-            
-            summary = llm_response.content.strip()
-            return summary
-            
-        except Exception as e:
-            # Fallback to simple summary if LLM fails
-            print(f"⚠️ Failed to generate LLM summary: {e}")
-            
-            if execution_status == "success":
-                return f"✅ Successfully completed: {original_request}\n\nResults:\n{context_text}"
-            else:
-                return f"❌ Failed to complete: {original_request}\n\nError: {execution_message}"
+        # Categorize the error for better user messaging
+        error_category = self._categorize_error(error_msg)
+        
+        # Add error explanation based on category
+        if error_category == "auth":
+            lines.append("**Issue:** Authentication failed with the service.")
+            lines.append("**Suggestion:** Your access may have expired. Please try reconnecting your account.\n")
+        elif error_category == "not_found":
+            lines.append("**Issue:** The requested resource could not be found.")
+            lines.append("**Suggestion:** Please verify the ID or name and try again.\n")
+        elif error_category == "timeout":
+            lines.append("**Issue:** The operation took too long to complete.")
+            lines.append("**Suggestion:** The service may be busy. Please try again in a moment.\n")
+        elif error_category == "connection":
+            lines.append("**Issue:** Could not connect to the required service.")
+            lines.append("**Suggestion:** Please check if all services are running and try again.\n")
+        elif error_category == "permission":
+            lines.append("**Issue:** You don't have permission to perform this action.")
+            lines.append("**Suggestion:** Please verify your access rights or contact your administrator.\n")
+        elif error_category == "rate_limit":
+            lines.append("**Issue:** Too many requests were made in a short time.")
+            lines.append("**Suggestion:** Please wait a moment and try again.\n")
+        else:
+            lines.append(f"**Issue:** {error_msg}\n")
+        
+        # Show what was completed (if any steps succeeded)
+        successful_steps = [r for r in results if isinstance(r, dict) and r.get("status") == "success"]
+        if successful_steps:
+            lines.append("---")
+            lines.append("**What was completed before the error:**")
+            for step in successful_steps:
+                desc = step.get("description", step.get("tool", "Unknown step"))
+                lines.append(f"  ✅ {desc}")
+            lines.append("")
+        
+        # Show where it failed
+        if stopped_at_step:
+            failed_step = next((r for r in results if isinstance(r, dict) and r.get("step") == stopped_at_step), None)
+            if failed_step:
+                lines.append(f"**Failed at step {stopped_at_step}:** {failed_step.get('description', failed_step.get('tool', 'Unknown'))}")
+        
+        # Add helpful context if available
+        lines.append("\n---")
+        lines.append(f"*Original request: \"{original_request[:100]}{'...' if len(original_request) > 100 else ''}\"*")
+        
+        return "\n".join(lines)
+    
+    def _format_no_results_response(
+        self,
+        original_request: str,
+        results: List[Dict]
+    ) -> str:
+        """
+        Format a user-friendly response when operations succeeded but found no data.
+        Does NOT use LLM - provides consistent, fast response.
+        """
+        lines = ["ℹ️ **Search completed - No results found**\n"]
+        
+        # Extract what was searched for from the results
+        for result in results:
+            if isinstance(result, dict) and result.get("status") == "no_results":
+                tool = result.get("tool", "")
+                inputs = result.get("inputs", {})
+                message = result.get("message", "")
+                
+                # Provide context-aware suggestions
+                if "email" in tool.lower() or "gmail" in tool.lower():
+                    query = inputs.get("query", inputs.get("search_query", ""))
+                    lines.append(f"No emails were found matching your search criteria.")
+                    if query:
+                        lines.append(f"  • Search query: `{query}`")
+                    lines.append("\n**Suggestions:**")
+                    lines.append("  • Try broadening your search terms")
+                    lines.append("  • Check the date range if specified")
+                    lines.append("  • Verify the sender's email address spelling")
+                
+                elif "calendar" in tool.lower() or "event" in tool.lower():
+                    lines.append(f"No calendar events were found matching your criteria.")
+                    lines.append("\n**Suggestions:**")
+                    lines.append("  • Try expanding the date range")
+                    lines.append("  • Check if the calendar is shared with you")
+                
+                elif "doc" in tool.lower() or "drive" in tool.lower():
+                    lines.append(f"No documents were found matching your search.")
+                    lines.append("\n**Suggestions:**")
+                    lines.append("  • Try different keywords")
+                    lines.append("  • Check the folder location")
+                    lines.append("  • Verify you have access to the files")
+                
+                else:
+                    lines.append(f"The operation completed but returned no data.")
+                    if message:
+                        lines.append(f"  • Details: {message}")
+        
+        lines.append("\n---")
+        lines.append(f"*Original request: \"{original_request[:100]}{'...' if len(original_request) > 100 else ''}\"*")
+        
+        return "\n".join(lines)
+    
+    def _categorize_error(self, error_msg: str) -> str:
+        """Categorize error message for appropriate user response."""
+        error_lower = error_msg.lower()
+        
+        if any(term in error_lower for term in ["auth", "token", "credential", "unauthorized", "401", "403"]):
+            return "auth"
+        elif any(term in error_lower for term in ["not found", "404", "does not exist", "invalid id"]):
+            return "not_found"
+        elif any(term in error_lower for term in ["timeout", "timed out", "too long"]):
+            return "timeout"
+        elif any(term in error_lower for term in ["connection", "refused", "unreachable", "network", "503"]):
+            return "connection"
+        elif any(term in error_lower for term in ["permission", "denied", "forbidden", "access"]):
+            return "permission"
+        elif any(term in error_lower for term in ["rate limit", "429", "too many requests", "quota"]):
+            return "rate_limit"
+        else:
+            return "unknown"
     
     # =============================================================================
     # THREAD MANAGEMENT METHODS

@@ -13,6 +13,13 @@ from langchain_openai import ChatOpenAI
 from typing import Dict, List, Any, Optional
 import json
 import tiktoken
+import time
+
+# Import logging module
+from logging_config import memory_logger as logger
+
+# Import LLM error handler for unified error handling
+from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_error
 
 
 class ConversationMemory(BaseModel):
@@ -211,9 +218,35 @@ Focus on:
 Be concise but preserve all critical information."""
 
         try:
+            # === TOKEN TRACKING: Memory Summarization ===
+            start_time = time.time()
             llm_response = self.llm.invoke(
                 [{"role": "user", "content": summarization_prompt}],
                 config={"timeout": 30}
+            )
+            duration_ms = (time.time() - start_time) * 1000
+            
+            # Extract token usage from response
+            input_tokens = 0
+            output_tokens = 0
+            if hasattr(llm_response, 'response_metadata'):
+                token_usage = llm_response.response_metadata.get('token_usage', {})
+                input_tokens = token_usage.get('prompt_tokens', len(summarization_prompt) // 4)
+                output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
+            else:
+                input_tokens = len(summarization_prompt) // 4
+                output_tokens = len(llm_response.content) // 4
+            
+            # Log the LLM call with token tracking
+            logger.llm_call(
+                model=self.llm.model_name if hasattr(self.llm, 'model_name') else "gpt-4o",
+                operation="memory_summarization",
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                duration_ms=duration_ms,
+                tier="memory",
+                prompt_summary=f"Summarizing {len(old_messages)} messages",
+                success=True
             )
             
             response_text = llm_response.content.strip()
@@ -252,6 +285,11 @@ Be concise but preserve all critical information."""
             print(f"   New context size: {self.memory.current_token_count} tokens")
             
         except Exception as e:
+            # Check if this is an LLM service error (rate limit, quota, etc.)
+            if is_llm_error(e):
+                print(f"❌ LLM service error during summarization: {e}")
+                raise handle_llm_error(e)
+            
             print(f"⚠️ Summarization failed: {e}")
             # Fallback: just drop oldest message
             if len(self.memory.working_context) > 0:

@@ -1,0 +1,546 @@
+{
+  "metadata": {
+    "timestamp": "2025-11-24T20:30:28.128489",
+    "query": "Can you tell me about the transportation and fleet safety section in HSE?",
+    "search_type": "hybrid",
+    "total_results": 26
+  },
+  "results": [
+    {
+      "chunk_id": "chunk-14-b77d8279",
+      "text": "SECTION 3: TRANSPORTATION & FLEET SAFETY",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 3.0,
+      "section": "3",
+      "section_title": "Transportation & Fleet Safety",
+      "parent_section": "",
+      "context": "Introduction to transportation and fleet safety requirements",
+      "tags": [
+        "transportation",
+        "fleet",
+        "safety",
+        "section"
+      ],
+      "score": 1.0
+    },
+    {
+      "chunk_id": "chunk-0-6c8ee3cf",
+      "text": "SECTION 1: HSE POLICY & COMMITMENT",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1",
+      "section_title": "HSE Policy & Commitment",
+      "parent_section": "",
+      "context": "Introduction to health, safety, and environmental policy commitments",
+      "tags": [
+        "HSE",
+        "policy",
+        "commitment",
+        "safety",
+        "environment"
+      ],
+      "score": 0.6372033357620239
+    },
+    {
+      "chunk_id": "chunk-1-d7536698",
+      "text": "1.1 HSE Mission Statement",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.1",
+      "section_title": "HSE Mission Statement",
+      "parent_section": "1",
+      "context": "Statement of commitment to safety and environmental responsibility",
+      "tags": [
+        "HSE",
+        "mission",
+        "statement",
+        "safety",
+        "environment"
+      ],
+      "score": 0.621080756187439
+    },
+    {
+      "chunk_id": "chunk-21-2214b3dc",
+      "text": "● All injuries, illnesses, accidents, property damage, and near-misses (events that could have caused harm) must be reported immediately to the supervisor and HSE Officer.\n\n● An investigation must be conducted for every incident to determine the root cause and implement preventative measures.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 4.0,
+      "section": "4.1",
+      "section_title": "Accident and Incident Reporting",
+      "parent_section": "4",
+      "context": "Reporting requirements for accidents and near-misses",
+      "tags": [
+        "accident",
+        "incident",
+        "reporting",
+        "safety",
+        "investigation",
+        "HSE"
+      ],
+      "score": 0.49458378553390503
+    },
+    {
+      "chunk_id": "chunk-7-8f413b5b",
+      "text": "SECTION 2: WAREHOUSE AND MATERIALS HANDLING SAFETY",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 2.0,
+      "section": "2",
+      "section_title": "Warehouse and Materials Handling Safety",
+      "parent_section": "",
+      "context": "Introduction to warehouse and materials handling safety protocols",
+      "tags": [
+        "warehouse",
+        "materials",
+        "handling",
+        "safety",
+        "section"
+      ],
+      "score": 0.45134660601615906
+    },
+    {
+      "chunk_id": "chunk-6-31133ead",
+      "text": "Every employee is responsible for:\n\n● Adhering strictly to all safety rules, procedures, and Work Instructions (WI).\n\n● Wearing the required PPE for their assigned tasks and work areas.\n\n● Identifying and reporting all potential hazards, near-misses, and unsafe conditions immediately to their direct supervisor or the HSE Officer.\n\n● Participating actively in all safety training and drills.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.3",
+      "section_title": "Employee Responsibilities",
+      "parent_section": "1",
+      "context": "Employee duties include following safety rules and reporting hazards",
+      "tags": [
+        "employee",
+        "responsibilities",
+        "safety",
+        "PPE",
+        "reporting",
+        "training"
+      ],
+      "score": 0.43531671166419983
+    },
+    {
+      "chunk_id": "chunk-2-b7e22235",
+      "text": "SAFEXPRESS LOGISTICS INC. is committed to providing a safe, healthy, and environmentally responsible workplace for all employees, contractors, and visitors. Our goal is Zero Accidents and Injuries. We integrate Safety as the primary KPI in every operational decision, ensuring compliance with all Philippine laws and international standards for logistics and warehousing.",
+      "chunk_type": "paragraph",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.1",
+      "section_title": "HSE Mission Statement",
+      "parent_section": "1",
+      "context": "Commitment to a safe and environmentally responsible workplace",
+      "tags": [
+        "HSE",
+        "mission",
+        "safety",
+        "environment",
+        "compliance",
+        "logistics"
+      ],
+      "score": 0.3873230218887329
+    },
+    {
+      "chunk_id": "chunk-4-3f9b7b0e",
+      "text": "Management is responsible for:\n\n● Providing necessary Personal Protective Equipment (PPE) and ensuring its proper use.\n\n● Conducting regular safety audits and risk assessments across all sites (warehouses, yards, and fleet operations).\n\n● Implementing corrective actions for all reported safety deficiencies and hazards.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.2",
+      "section_title": "Management Responsibilities",
+      "parent_section": "1",
+      "context": "Management duties include PPE provision and safety audits",
+      "tags": [
+        "management",
+        "responsibilities",
+        "safety",
+        "PPE",
+        "audits",
+        "risk"
+      ],
+      "score": 0.3704938590526581
+    },
+    {
+      "chunk_id": "chunk-10-b920f52e",
+      "text": "2.2 Forklift and Material Handling Equipment (MHE) Operation",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 2.0,
+      "section": "2.2",
+      "section_title": "Forklift and Material Handling Equipment (MHE) Operation",
+      "parent_section": "2",
+      "context": "Guidelines for operating forklifts and MHE safely",
+      "tags": [
+        "forklift",
+        "MHE",
+        "operation",
+        "safety",
+        "warehouse"
+      ],
+      "score": 0.3666168749332428
+    },
+    {
+      "chunk_id": "chunk-11-3c1b51bb",
+      "text": "● Only certified and authorized personnel are permitted to operate forklifts and other MHE.\n\n● Maximum speed limits within the warehouse must be strictly observed.\n\n● Pedestrian right-of-way must be maintained; pedestrians must use designated walkways.\n\n● Forklifts must be inspected prior to every shift (Pre-Operation Check).",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 2.0,
+      "section": "2.2",
+      "section_title": "Forklift and Material Handling Equipment (MHE) Operation",
+      "parent_section": "2",
+      "context": "Safety rules for forklift and MHE operation",
+      "tags": [
+        "forklift",
+        "MHE",
+        "operation",
+        "safety",
+        "warehouse",
+        "inspection"
+      ],
+      "score": 0.3192227780818939
+    },
+    {
+      "chunk_id": "chunk-19-4e6868d4",
+      "text": "SECTION 4: EMERGENCY RESPONSE & REPORTING",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 3.0,
+      "section": "4",
+      "section_title": "Emergency Response & Reporting",
+      "parent_section": "",
+      "context": "Introduction to emergency response and reporting procedures",
+      "tags": [
+        "emergency",
+        "response",
+        "reporting",
+        "safety",
+        "section"
+      ],
+      "score": 0.2397521287202835
+    },
+    {
+      "chunk_id": "chunk-15-55d90d7d",
+      "text": "3.1 Driver Fitness and Vehicle Condition",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 3.0,
+      "section": "3.1",
+      "section_title": "Driver Fitness and Vehicle Condition",
+      "parent_section": "3",
+      "context": "Requirements for driver licensing and vehicle inspections",
+      "tags": [
+        "driver",
+        "fitness",
+        "vehicle",
+        "condition",
+        "transportation",
+        "fleet"
+      ],
+      "score": 0.23468707501888275
+    },
+    {
+      "chunk_id": "chunk-12-e5fe8321",
+      "text": "2.3 Storage and Racking Safety",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 2.0,
+      "section": "2.3",
+      "section_title": "Storage and Racking Safety",
+      "parent_section": "2",
+      "context": "Safety guidelines for storage and racking systems",
+      "tags": [
+        "storage",
+        "racking",
+        "safety",
+        "warehouse",
+        "capacity"
+      ],
+      "score": 0.2332356721162796
+    },
+    {
+      "chunk_id": "chunk-16-62d6e3b1",
+      "text": "● All drivers must possess a valid professional driver's license and undergo mandatory refresher training every two years.\n\n● Drivers must perform a Daily Vehicle Inspection Report (DVIR) before operating any company vehicle. Any defects must be reported and corrected before departure.\n\n● No use of mobile phones or electronic devices while the vehicle is in motion.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 3.0,
+      "section": "3.1",
+      "section_title": "Driver Fitness and Vehicle Condition",
+      "parent_section": "3",
+      "context": "Driver requirements include licensing, DVIR, and no phone use",
+      "tags": [
+        "driver",
+        "fitness",
+        "vehicle",
+        "condition",
+        "transportation",
+        "fleet",
+        "DVIR",
+        "license"
+      ],
+      "score": 0.2329150140285492
+    },
+    {
+      "chunk_id": "chunk-9-57a1944a",
+      "text": "Mandatory PPE required in all warehouse and yard areas:\n\n● Safety Vests: High visibility vests required at all times.\n\n● Safety Footwear: Steel-toed boots required for all workers involved in cargo handling and near heavy machinery.\n\n● Gloves: Appropriate gloves for handling cargo (anti-slip, cut-resistant, thermal for cold storage areas).",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 2.0,
+      "section": "2.1",
+      "section_title": "Personal Protective Equipment (PPE)",
+      "parent_section": "2",
+      "context": "Details of required PPE for safety in warehouse areas",
+      "tags": [
+        "PPE",
+        "warehouse",
+        "safety",
+        "equipment",
+        "yard",
+        "gloves",
+        "footwear"
+      ],
+      "score": 0.2316843420267105
+    },
+    {
+      "chunk_id": "chunk-17-73cb774c",
+      "text": "3.2 Fatigue Management",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 3.0,
+      "section": "3.2",
+      "section_title": "Fatigue Management",
+      "parent_section": "3",
+      "context": "Guidelines for managing driver fatigue",
+      "tags": [
+        "fatigue",
+        "management",
+        "driver",
+        "safety",
+        "transportation",
+        "fleet"
+      ],
+      "score": 0.22112645208835602
+    },
+    {
+      "chunk_id": "chunk-20-7b5d3d1e",
+      "text": "4.1 Accident and Incident Reporting (Refer to Incident/Accident Report Forms)",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 3.0,
+      "section": "4.1",
+      "section_title": "Accident and Incident Reporting",
+      "parent_section": "4",
+      "context": "Procedures for reporting accidents and incidents",
+      "tags": [
+        "accident",
+        "incident",
+        "reporting",
+        "safety",
+        "forms"
+      ],
+      "score": 0.186625674366951
+    },
+    {
+      "chunk_id": "chunk-18-69e6b158",
+      "text": "● Drivers must adhere strictly to mandated driving hours and rest periods to prevent fatigue-related accidents.\n\n● Drivers must report any physical signs of excessive fatigue immediately and pull over safely.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 3.0,
+      "section": "3.2",
+      "section_title": "Fatigue Management",
+      "parent_section": "3",
+      "context": "Rules for preventing driver fatigue and related accidents",
+      "tags": [
+        "fatigue",
+        "management",
+        "driver",
+        "safety",
+        "transportation",
+        "fleet",
+        "rest"
+      ],
+      "score": 0.18107883632183075
+    },
+    {
+      "chunk_id": "chunk-25-4918fc6d",
+      "text": "● First aid kits are maintained in designated, easily accessible areas (e.g., Office, Dispatch Center, Warehouse Office).\n\n● A list of certified First Aiders for each shift must be posted publicly.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 4.0,
+      "section": "4.3",
+      "section_title": "First Aid",
+      "parent_section": "4",
+      "context": "Locations of first aid kits and certified aiders",
+      "tags": [
+        "first aid",
+        "safety",
+        "emergency",
+        "kits",
+        "aiders",
+        "accessibility"
+      ],
+      "score": 0.18049819767475128
+    },
+    {
+      "chunk_id": "chunk-22-d9c69aa4",
+      "text": "4.2 Fire and Emergency Evacuation",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 4.0,
+      "section": "4.2",
+      "section_title": "Fire and Emergency Evacuation",
+      "parent_section": "4",
+      "context": "Procedures for fire and emergency evacuation",
+      "tags": [
+        "fire",
+        "emergency",
+        "evacuation",
+        "safety",
+        "drills"
+      ],
+      "score": 0.15363092720508575
+    },
+    {
+      "chunk_id": "chunk-8-e06368b2",
+      "text": "2.1 Personal Protective Equipment (PPE)",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 2.0,
+      "section": "2.1",
+      "section_title": "Personal Protective Equipment (PPE)",
+      "parent_section": "2",
+      "context": "Mandatory PPE requirements for warehouse and yard areas",
+      "tags": [
+        "PPE",
+        "warehouse",
+        "safety",
+        "equipment",
+        "yard"
+      ],
+      "score": 0.15184925496578217
+    },
+    {
+      "chunk_id": "chunk-23-e3e51a50",
+      "text": "● All employees must be familiar with the Site Evacuation Plan, assembly points, and the location of fire extinguishers.\n\n● Fire Drills must be conducted at least annually.\n\n● In the event of a fire, the priority is to sound the alarm, evacuate, and only attempt to fight the fire if trained to do so and if the fire is small and contained.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 4.0,
+      "section": "4.2",
+      "section_title": "Fire and Emergency Evacuation",
+      "parent_section": "4",
+      "context": "Evacuation procedures and fire drill requirements",
+      "tags": [
+        "fire",
+        "emergency",
+        "evacuation",
+        "safety",
+        "drills",
+        "plan"
+      ],
+      "score": 0.1166868656873703
+    },
+    {
+      "chunk_id": "chunk-5-3ef6fe03",
+      "text": "1.3 Employee Responsibilities",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.3",
+      "section_title": "Employee Responsibilities",
+      "parent_section": "1",
+      "context": "Outline of employee safety responsibilities",
+      "tags": [
+        "employee",
+        "responsibilities",
+        "safety",
+        "PPE",
+        "reporting"
+      ],
+      "score": 0.03674174100160599
+    },
+    {
+      "chunk_id": "chunk-13-33e70f9a",
+      "text": "● Never exceed the documented maximum load capacity of the racking system.\n\n● Clearance must be maintained around fire exits, fire fighting equipment, and electrical panels.\n\n● Pallets must be stable, properly wrapped, and the load must not extend beyond the edges of the pallet.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 3.0,
+      "section": "2.3",
+      "section_title": "Storage and Racking Safety",
+      "parent_section": "2",
+      "context": "Guidelines for maintaining safe storage and racking practices",
+      "tags": [
+        "storage",
+        "racking",
+        "safety",
+        "warehouse",
+        "capacity",
+        "pallets"
+      ],
+      "score": 0.015378310345113277
+    },
+    {
+      "chunk_id": "chunk-3-51b47476",
+      "text": "1.2 Management Responsibilities",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.2",
+      "section_title": "Management Responsibilities",
+      "parent_section": "1",
+      "context": "Outline of management's safety responsibilities",
+      "tags": [
+        "management",
+        "responsibilities",
+        "safety",
+        "PPE",
+        "audits"
+      ],
+      "score": 0.010082287713885307
+    },
+    {
+      "chunk_id": "chunk-24-3c058935",
+      "text": "4.3 First Aid",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 4.0,
+      "section": "4.3",
+      "section_title": "First Aid",
+      "parent_section": "4",
+      "context": "Guidelines for first aid provisions and responsibilities",
+      "tags": [
+        "first aid",
+        "safety",
+        "emergency",
+        "kits",
+        "aiders"
+      ],
+      "score": 0.0020048979204148054
+    }
+  ]
+}

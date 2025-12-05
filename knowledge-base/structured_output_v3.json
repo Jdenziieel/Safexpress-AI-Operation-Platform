@@ -1,0 +1,1058 @@
+[
+  {
+    "id": "p1-ln-0",
+    "type": "text",
+    "text": "Josh Denziel S. Joves",
+    "box": {
+      "l": 72.0,
+      "t": 74.99804799934566,
+      "r": 250.25260987500002,
+      "b": 94.99804749934572
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 1,
+    "words": [
+      {
+        "text": "Josh Denziel S. Joves",
+        "box": {
+          "l": 72.0,
+          "t": 74.99804799934566,
+          "r": 250.25260987500002,
+          "b": 94.99804749934572
+        },
+        "font_size": 20.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 74.99804799934566,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-1",
+    "type": "text",
+    "text": "Denz.joves@gmail.com | https://www.linkedin.com/in/josh-denziel-joves-824769394/ | 09499973474 |",
+    "box": {
+      "l": 72.0,
+      "t": 100.24658208000005,
+      "r": 539.7446000625,
+      "b": 112.24658208000005
+    },
+    "indent": 72.0,
+    "line_breaks_before": 1,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "Denz.joves@gmail.com | https://www.linkedin.com/in/josh-denziel-joves-824769394/ | 09499973474 |",
+        "box": {
+          "l": 72.0,
+          "t": 100.24658208000005,
+          "r": 539.7446000625,
+          "b": 112.24658208000005
+        },
+        "font_size": 11.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 100.24658208000005,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-2",
+    "type": "text",
+    "text": "https://github.com/Jdenziieel/denz-portfolio",
+    "box": {
+      "l": 72.0,
+      "t": 115.96533130907721,
+      "r": 267.9881600625,
+      "b": 126.96533155907719
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 1,
+    "words": [
+      {
+        "text": "https://github.com/Jdenziieel/denz-portfolio",
+        "box": {
+          "l": 72.0,
+          "t": 115.96533130907721,
+          "r": 267.9881600625,
+          "b": 126.96533155907719
+        },
+        "font_size": 11.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 115.96533130907721,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-4",
+    "type": "text",
+    "text": "Career Objective:",
+    "box": {
+      "l": 72.0,
+      "t": 146.53015108,
+      "r": 167.0625,
+      "b": 158.53015108
+    },
+    "indent": 72.0,
+    "line_breaks_before": 1,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "Career Objective:",
+        "box": {
+          "l": 72.0,
+          "t": 146.53015108,
+          "r": 167.0625,
+          "b": 158.53015108
+        },
+        "font_size": 12.0,
+        "bold": true,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 146.53015108,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-5",
+    "type": "text",
+    "text": "A graduating student committed to learning industry best practices, including end-to-end",
+    "box": {
+      "l": 72.0,
+      "t": 162.39880408,
+      "r": 501.22851750000007,
+      "b": 174.39880408
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "A graduating student committed to learning industry best practices, including end-to-end",
+        "box": {
+          "l": 72.0,
+          "t": 162.39880408,
+          "r": 501.22851750000007,
+          "b": 174.39880408
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 162.39880408,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-6",
+    "type": "text",
+    "text": "development processes, client requirement analysis, and technology-driven problem solving.",
+    "box": {
+      "l": 72.0,
+      "t": 178.26745670499997,
+      "r": 519.87891,
+      "b": 190.26745670499997
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "development processes, client requirement analysis, and technology-driven problem solving.",
+        "box": {
+          "l": 72.0,
+          "t": 178.26745670499997,
+          "r": 519.87891,
+          "b": 190.26745670499997
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 178.26745670499997,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-7",
+    "type": "text",
+    "text": "Seeks a role that cultivates technical depth, leadership capability, and eager hands-on experience",
+    "box": {
+      "l": 72.0,
+      "t": 194.13610895499994,
+      "r": 538.0253925000001,
+      "b": 206.13610895499994
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "Seeks a role that cultivates technical depth, leadership capability, and eager hands-on experience",
+        "box": {
+          "l": 72.0,
+          "t": 194.13610895499994,
+          "r": 538.0253925000001,
+          "b": 206.13610895499994
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 194.13610895499994,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-8",
+    "type": "text",
+    "text": "while supporting initiatives involving artificial intelligence and modern application architectures.",
+    "box": {
+      "l": 72.0,
+      "t": 210.00476120500002,
+      "r": 541.5292949999999,
+      "b": 222.00476120500002
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "while supporting initiatives involving artificial intelligence and modern application architectures.",
+        "box": {
+          "l": 72.0,
+          "t": 210.00476120500002,
+          "r": 541.5292949999999,
+          "b": 222.00476120500002
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 210.00476120500002,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-9",
+    "type": "text",
+    "text": "Aims to build a strong foundation in solution design and system architecture as part of a",
+    "box": {
+      "l": 72.0,
+      "t": 225.873413455,
+      "r": 497.9179725,
+      "b": 237.873413455
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "Aims to build a strong foundation in solution design and system architecture as part of a",
+        "box": {
+          "l": 72.0,
+          "t": 225.873413455,
+          "r": 497.9179725,
+          "b": 237.873413455
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 225.873413455,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-10",
+    "type": "text",
+    "text": "long-term career in the technology field.",
+    "box": {
+      "l": 72.0,
+      "t": 241.74206570499996,
+      "r": 268.921875,
+      "b": 253.74206570499996
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 1,
+    "words": [
+      {
+        "text": "long-term career in the technology field.",
+        "box": {
+          "l": 72.0,
+          "t": 241.74206570499996,
+          "r": 268.921875,
+          "b": 253.74206570499996
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 241.74206570499996,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-12",
+    "type": "text",
+    "text": "Education:",
+    "box": {
+      "l": 72.0,
+      "t": 273.4793680800001,
+      "r": 131.67773475,
+      "b": 285.4793680800001
+    },
+    "indent": 72.0,
+    "line_breaks_before": 1,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "Education:",
+        "box": {
+          "l": 72.0,
+          "t": 273.4793680800001,
+          "r": 131.67773475,
+          "b": 285.4793680800001
+        },
+        "font_size": 12.0,
+        "bold": true,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 273.4793680800001,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-13",
+    "type": "text",
+    "text": "University of Santo Tomas - BS Information and Technology - August 2022 - June 2026",
+    "box": {
+      "l": 72.0,
+      "t": 289.34801808000003,
+      "r": 499.265625,
+      "b": 301.34801808000003
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "University of Santo Tomas - BS Information and Technology - August 2022 - June 2026",
+        "box": {
+          "l": 72.0,
+          "t": 289.34801808000003,
+          "r": 499.265625,
+          "b": 301.34801808000003
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 289.34801808000003,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-14",
+    "type": "text",
+    "text": "University of Santo Tomas - AB in Economics  - August 2018 - June 2022",
+    "box": {
+      "l": 72.0,
+      "t": 305.21667808,
+      "r": 432.7910175,
+      "b": 317.21667808
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 1,
+    "words": [
+      {
+        "text": "University of Santo Tomas - AB in Economics  - August 2018 - June 2022",
+        "box": {
+          "l": 72.0,
+          "t": 305.21667808,
+          "r": 432.7910175,
+          "b": 317.21667808
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 305.21667808,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-16",
+    "type": "text",
+    "text": "Certification",
+    "box": {
+      "l": 72.0,
+      "t": 336.95397808,
+      "r": 140.30859375,
+      "b": 348.95397808
+    },
+    "indent": 72.0,
+    "line_breaks_before": 1,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "Certification",
+        "box": {
+          "l": 72.0,
+          "t": 336.95397808,
+          "r": 140.30859375,
+          "b": 348.95397808
+        },
+        "font_size": 12.0,
+        "bold": true,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 336.95397808,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-17",
+    "type": "text",
+    "text": "CompTIA IT Fundamentals (ITF+) Certification",
+    "box": {
+      "l": 72.0,
+      "t": 352.82262808,
+      "r": 308.3847675,
+      "b": 364.82262808
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 1,
+    "words": [
+      {
+        "text": "CompTIA IT Fundamentals (ITF+) Certification",
+        "box": {
+          "l": 72.0,
+          "t": 352.82262808,
+          "r": 308.3847675,
+          "b": 364.82262808
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 352.82262808,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-19",
+    "type": "text",
+    "text": "Technical Skills:",
+    "box": {
+      "l": 72.0,
+      "t": 384.55993808,
+      "r": 158.91210975,
+      "b": 396.55993808
+    },
+    "indent": 72.0,
+    "line_breaks_before": 1,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "Technical Skills:",
+        "box": {
+          "l": 72.0,
+          "t": 384.55993808,
+          "r": 158.91210975,
+          "b": 396.55993808
+        },
+        "font_size": 12.0,
+        "bold": true,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 384.55993808,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-20",
+    "type": "text",
+    "text": "Java, C++, JavaScript, PHP, MySQL, Kotlin, Firebase, C#, ASP.NET,  AngularJs,  React,",
+    "box": {
+      "l": 72.0,
+      "t": 400.42858808,
+      "r": 504.2929725,
+      "b": 412.42858808
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "Java, C++, JavaScript, PHP, MySQL, Kotlin, Firebase, C#, ASP.NET,  AngularJs,  React,",
+        "box": {
+          "l": 72.0,
+          "t": 400.42858808,
+          "r": 504.2929725,
+          "b": 412.42858808
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 400.42858808,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-21",
+    "type": "text",
+    "text": "Express.js , Node.js, MongoDB, Python, Django, FastAPI, Laravel, HTML, CSS, Bootstrap,",
+    "box": {
+      "l": 72.0,
+      "t": 416.297240705,
+      "r": 519.65625,
+      "b": 428.297240705
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "Express.js , Node.js, MongoDB, Python, Django, FastAPI, Laravel, HTML, CSS, Bootstrap,",
+        "box": {
+          "l": 72.0,
+          "t": 416.297240705,
+          "r": 519.65625,
+          "b": 428.297240705
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 416.297240705,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-22",
+    "type": "text",
+    "text": "Tailwind CSS,",
+    "box": {
+      "l": 72.0,
+      "t": 432.165892955,
+      "r": 144.837891,
+      "b": 444.165892955
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 1,
+    "words": [
+      {
+        "text": "Tailwind CSS,",
+        "box": {
+          "l": 72.0,
+          "t": 432.165892955,
+          "r": 144.837891,
+          "b": 444.165892955
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 432.165892955,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-24",
+    "type": "text",
+    "text": "Achievements/Responsibilities",
+    "box": {
+      "l": 72.0,
+      "t": 463.90319808000004,
+      "r": 229.6640625,
+      "b": 475.90319808000004
+    },
+    "indent": 72.0,
+    "line_breaks_before": 1,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "Achievements/Responsibilities",
+        "box": {
+          "l": 72.0,
+          "t": 463.90319808000004,
+          "r": 229.6640625,
+          "b": 475.90319808000004
+        },
+        "font_size": 12.0,
+        "bold": true,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 463.90319808000004,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-25",
+    "type": "text",
+    "text": "- Served as Project Manager for a bakeshop attendance and salary computation web application",
+    "box": {
+      "l": 72.0,
+      "t": 479.77184808000004,
+      "r": 533.1621074999999,
+      "b": 491.77184808000004
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "- Served as Project Manager for a bakeshop attendance and salary computation web application",
+        "box": {
+          "l": 72.0,
+          "t": 479.77184808000004,
+          "r": 533.1621074999999,
+          "b": 491.77184808000004
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 479.77184808000004,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-26",
+    "type": "text",
+    "text": "(MERN stack), leading end-to-end project execution from client consultation to delivery,",
+    "box": {
+      "l": 72.0,
+      "t": 495.640500705,
+      "r": 502.0898475,
+      "b": 507.640500705
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "(MERN stack), leading end-to-end project execution from client consultation to delivery,",
+        "box": {
+          "l": 72.0,
+          "t": 495.640500705,
+          "r": 502.0898475,
+          "b": 507.640500705
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 495.640500705,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-27",
+    "type": "text",
+    "text": "gathering and validating requirements, contributing to system architecture and business logic,",
+    "box": {
+      "l": 72.0,
+      "t": 511.50915295500005,
+      "r": 524.2148475,
+      "b": 523.509152955
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "gathering and validating requirements, contributing to system architecture and business logic,",
+        "box": {
+          "l": 72.0,
+          "t": 511.50915295500005,
+          "r": 524.2148475,
+          "b": 523.509152955
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 511.50915295500005,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-28",
+    "type": "text",
+    "text": "evaluating technical approaches, resolving design issues, managing tasks via Trello, coordinating",
+    "box": {
+      "l": 72.0,
+      "t": 527.377805205,
+      "r": 541.4472675000001,
+      "b": 539.377805205
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "evaluating technical approaches, resolving design issues, managing tasks via Trello, coordinating",
+        "box": {
+          "l": 72.0,
+          "t": 527.377805205,
+          "r": 541.4472675000001,
+          "b": 539.377805205
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 527.377805205,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-29",
+    "type": "text",
+    "text": "stakeholder communication, preparing SPMP/SRS/SDD documentation, and performing",
+    "box": {
+      "l": 72.0,
+      "t": 543.246457455,
+      "r": 500.27929499999993,
+      "b": 555.246457455
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "stakeholder communication, preparing SPMP/SRS/SDD documentation, and performing",
+        "box": {
+          "l": 72.0,
+          "t": 543.246457455,
+          "r": 500.27929499999993,
+          "b": 555.246457455
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 543.246457455,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-30",
+    "type": "text",
+    "text": "comprehensive scenario-based manual testing to ensure system quality and alignment with",
+    "box": {
+      "l": 72.0,
+      "t": 559.115109705,
+      "r": 510.21679499999993,
+      "b": 571.115109705
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "comprehensive scenario-based manual testing to ensure system quality and alignment with",
+        "box": {
+          "l": 72.0,
+          "t": 559.115109705,
+          "r": 510.21679499999993,
+          "b": 571.115109705
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 559.115109705,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-31",
+    "type": "text",
+    "text": "project standards.",
+    "box": {
+      "l": 72.0,
+      "t": 574.983761955,
+      "r": 159.63867225,
+      "b": 586.983761955
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 1,
+    "words": [
+      {
+        "text": "project standards.",
+        "box": {
+          "l": 72.0,
+          "t": 574.983761955,
+          "r": 159.63867225,
+          "b": 586.983761955
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 574.983761955,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-33",
+    "type": "text",
+    "text": "- Led the design and development of an agentic AI system for a logistics company web",
+    "box": {
+      "l": 72.0,
+      "t": 606.72106808,
+      "r": 493.21289250000007,
+      "b": 618.72106808
+    },
+    "indent": 72.0,
+    "line_breaks_before": 1,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "- Led the design and development of an agentic AI system for a logistics company web",
+        "box": {
+          "l": 72.0,
+          "t": 606.72106808,
+          "r": 493.21289250000007,
+          "b": 618.72106808
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 606.72106808,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-34",
+    "type": "text",
+    "text": "application, integrating LLM-powered knowledge-base querying, an AI assistant capable of",
+    "box": {
+      "l": 72.0,
+      "t": 622.589720705,
+      "r": 515.8535175000001,
+      "b": 634.589720705
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "application, integrating LLM-powered knowledge-base querying, an AI assistant capable of",
+        "box": {
+          "l": 72.0,
+          "t": 622.589720705,
+          "r": 515.8535175000001,
+          "b": 634.589720705
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 622.589720705,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-35",
+    "type": "text",
+    "text": "emulating real assistant workflows, and intelligent data mapping with automated data entry. Built",
+    "box": {
+      "l": 72.0,
+      "t": 638.458372955,
+      "r": 542.109375,
+      "b": 650.458372955
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "emulating real assistant workflows, and intelligent data mapping with automated data entry. Built",
+        "box": {
+          "l": 72.0,
+          "t": 638.458372955,
+          "r": 542.109375,
+          "b": 650.458372955
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 638.458372955,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-36",
+    "type": "text",
+    "text": "core AI workflows using Python, React, LangChain, LangGraph, and OpenAI LLM/embedding",
+    "box": {
+      "l": 72.0,
+      "t": 654.3270252049999,
+      "r": 534.8964824999999,
+      "b": 666.327025205
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "core AI workflows using Python, React, LangChain, LangGraph, and OpenAI LLM/embedding",
+        "box": {
+          "l": 72.0,
+          "t": 654.3270252049999,
+          "r": 534.8964824999999,
+          "b": 666.327025205
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 654.3270252049999,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-37",
+    "type": "text",
+    "text": "models, with agent services deployed independently as microservices on AWS as part of an",
+    "box": {
+      "l": 72.0,
+      "t": 670.195677455,
+      "r": 513.9140625,
+      "b": 682.195677455
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "models, with agent services deployed independently as microservices on AWS as part of an",
+        "box": {
+          "l": 72.0,
+          "t": 670.195677455,
+          "r": 513.9140625,
+          "b": 682.195677455
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 670.195677455,
+    "page_width": 612,
+    "page_height": 792
+  },
+  {
+    "id": "p1-ln-38",
+    "type": "text",
+    "text": "ongoing Capstone Project.",
+    "box": {
+      "l": 72.0,
+      "t": 686.064329705,
+      "r": 201.984375,
+      "b": 698.064329705
+    },
+    "indent": 72.0,
+    "line_breaks_before": 0,
+    "line_breaks_after": 0,
+    "words": [
+      {
+        "text": "ongoing Capstone Project.",
+        "box": {
+          "l": 72.0,
+          "t": 686.064329705,
+          "r": 201.984375,
+          "b": 698.064329705
+        },
+        "font_size": 12.0,
+        "bold": false,
+        "italic": false
+      }
+    ],
+    "page": 1,
+    "top": 686.064329705,
+    "page_width": 612,
+    "page_height": 792
+  }
+]

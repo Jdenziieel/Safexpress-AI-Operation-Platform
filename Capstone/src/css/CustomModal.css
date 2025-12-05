@@ -1,0 +1,185 @@
+/* === Custom Modal Overlay === */
+.custom-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(17, 24, 39, 0.55);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+/* === Custom Modal === */
+/* Main modal base */
+.custom-modal {
+  background: #FFB800;
+  border-radius: 22px;
+  min-width: 520px;
+  min-height: 320px;
+  max-width: 98vw;
+  max-height: 96vh;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.22);
+  padding: 48px 48px 38px 48px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  animation: modalPop 0.18s cubic-bezier(.4,1.6,.6,1) 1;
+}
+
+/* Large modal for upload */
+.custom-modal-large {
+  min-width: 720px;
+  min-height: 420px;
+  padding: 64px 64px 48px 64px;
+  border-radius: 28px;
+}
+
+/* Files modal */
+.custom-modal-files-modal {
+  background: #fffbe6;
+  min-width: 420px;
+  min-height: 260px;
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 36px 36px 32px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: modalPop 0.18s cubic-bezier(.4,1.6,.6,1) 1;
+}
+@keyframes modalPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Modal header improvements */
+.custom-modal-header {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin-bottom: 36px;
+  position: relative;
+  gap: 0.5rem;
+}
+/* Modal title improvements */
+.custom-modal-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #232A5C;
+  letter-spacing: 1.5px;
+  flex: 1;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  text-shadow: 0 1px 0 #fffbe6;
+}
+/* Uploaded Files Button */
+.custom-modal-files {
+  background: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 6px 2px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 8px;
+  box-shadow: 0 1px 4px rgba(35,42,92,0.10);
+  transition: background 0.15s;
+}
+.custom-modal-files:hover {
+  background: #ffe082;
+}
+
+.custom-modal-close {
+  background: none;
+  border: none;
+  color: #232A5C;
+  font-size: 2rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+  margin-right: 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.custom-modal-close:hover {
+  color: #d32f2f;
+}
+.custom-modal-files-list {
+  width: 100%;
+  background: #fffbe6;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(35,42,92,0.08);
+  padding: 18px 22px 12px 22px;
+  margin-bottom: 18px;
+  margin-top: -12px;
+  animation: modalPop 0.18s cubic-bezier(.4,1.6,.6,1) 1;
+}
+.custom-modal-files-title {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #232A5C;
+  margin-bottom: 8px;
+  letter-spacing: 0.7px;
+}
+.custom-modal-files-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.custom-modal-file-item {
+  font-size: 0.98rem;
+  color: #232A5C;
+  padding: 3px 0 3px 0;
+  border-bottom: 1px solid #ffe082;
+}
+.custom-modal-file-item:last-child {
+  border-bottom: none;
+}
+
+/* Modal content improvements */
+.custom-modal-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  margin-top: 38px;
+}
+/* Modal buttons improvements */
+.custom-modal-choose {
+  background: #232A5C;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 16px 44px;
+  font-size: 1.13rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 12px;
+  box-shadow: 0 2px 8px rgba(35,42,92,0.10);
+  transition: background 0.2s, transform 0.15s;
+}
+.custom-modal-choose:hover {
+  background: #1a2047;
+  transform: translateY(-2px) scale(1.04);
+}
+.custom-modal-upload {
+  background: #e0e0e0;
+  color: #888;
+  border: none;
+  border-radius: 10px;
+  padding: 16px 44px;
+  font-size: 1.13rem;
+  font-weight: 700;
+  cursor: not-allowed;
+  margin-left: 12px;
+  box-shadow: 0 2px 8px rgba(35,42,92,0.10);
+}

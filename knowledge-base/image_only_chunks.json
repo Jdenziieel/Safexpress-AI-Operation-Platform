@@ -1,0 +1,54 @@
+{
+  "chunks": [
+    {
+      "text": "1. **Description**: The image is a solid green rectangle with no additional features, patterns, or text.\n\n2. **Purpose and Relationship to Surrounding Text**: Given its placement at the top of a resume, the image likely serves as a design element or header background to add visual appeal and structure to the document.\n\n3. **Extracted Text**: There is no text visible in the image.\n\n4. **Image Type**: This is a design element, specifically a colored background or header bar.",
+      "metadata": {
+        "type": "image",
+        "section": "Visual Content",
+        "context": "Image from page 1",
+        "tags": [
+          "image",
+          "visual"
+        ],
+        "page": 1,
+        "continues": false,
+        "is_page_break": false,
+        "siblings": [],
+        "row_index": "",
+        "image_id": "p1-img-0-0",
+        "box": {
+          "l": 73.5,
+          "t": 50.55999755859375,
+          "r": 541.5,
+          "b": 55.80999755859375
+        },
+        "anchored": true
+      }
+    },
+    {
+      "text": "1. **Description**: The image is a solid green rectangle with no additional features or details.\n\n2. **Purpose and Relationship to Surrounding Text**: The image appears to be a placeholder or a design element rather than containing specific content. It is located on page 2, near the section titled \"ACHIEVEMENTS/RESPONSIBILITY,\" but does not seem to directly relate to the text content.\n\n3. **Extracted Text**: There is no visible text within the image.\n\n4. **Image Type**: The image is a simple graphic element, likely used for design purposes, such as a background or separator.",
+      "metadata": {
+        "type": "image",
+        "section": "Visual Content",
+        "context": "Image from page 2",
+        "tags": [
+          "image",
+          "visual"
+        ],
+        "page": 2,
+        "continues": false,
+        "is_page_break": false,
+        "siblings": [],
+        "row_index": "",
+        "image_id": "p2-img-0-0",
+        "box": {
+          "l": 73.5,
+          "t": 50.55999755859375,
+          "r": 541.5,
+          "b": 55.80999755859375
+        },
+        "anchored": true
+      }
+    }
+  ]
+}

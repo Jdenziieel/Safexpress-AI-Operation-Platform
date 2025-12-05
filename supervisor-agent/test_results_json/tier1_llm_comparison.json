@@ -1,0 +1,17 @@
+{
+  "response": "{\n    \"intent\": \"needs_clarification\",\n    \"task_type\": \"search_emails\",\n    \"extracted_info\": {\"query\": \"jdenziieel@gmail.com\"},\n    \"missing_fields\": [\"max_results\"],\n    \"clarification_question\": \"How many of the most recent emails from jdenziieel@gmail.com would you like me to retrieve?\",\n    \"reasoning\": \"The user wants to retrieve emails from a specific sender, but did not specify the number of emails they want to see.\",\n    \"execution_ready\": false,\n    \"execution_summary\": \"Search emails from jdenziieel@gmail.com\"\n}",
+  "parsed": {
+    "intent": "needs_clarification",
+    "task_type": "search_emails",
+    "extracted_info": {
+      "query": "jdenziieel@gmail.com"
+    },
+    "missing_fields": [
+      "max_results"
+    ],
+    "clarification_question": "How many of the most recent emails from jdenziieel@gmail.com would you like me to retrieve?",
+    "reasoning": "The user wants to retrieve emails from a specific sender, but did not specify the number of emails they want to see.",
+    "execution_ready": false,
+    "execution_summary": "Search emails from jdenziieel@gmail.com"
+  }
+}

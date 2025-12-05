@@ -1,0 +1,1012 @@
+{
+  "metadata": {
+    "timestamp": "2025-11-24T23:43:03.348422",
+    "query": "Who are responsible for every step of the action?",
+    "search_type": "hybrid",
+    "total_results": 50
+  },
+  "results": [
+    {
+      "chunk_id": "chunk-5-39f9f224",
+      "text": "Step | Action | Responsibility | Quality/Safety Check\n2.1 | Vehicle/Cargo Check-in | Gate Guard / Receiving Clerk | Verify the transporter's details against the expected Delivery Order (DO) or Advanced Shipping Notice (ASN). Check the vehicle for signs of tampering or damage before docking.",
+      "chunk_type": "table",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 1.0,
+      "section": "2",
+      "section_title": "Procedure Steps",
+      "parent_section": "",
+      "context": "Details the vehicle and cargo check-in process",
+      "tags": [
+        "procedure",
+        "steps",
+        "vehicle",
+        "cargo",
+        "check-in",
+        "DO",
+        "ASN"
+      ],
+      "score": 0.9249827861785889
+    },
+    {
+      "chunk_id": "chunk-6-31133ead",
+      "text": "Every employee is responsible for:\n\n● Adhering strictly to all safety rules, procedures, and Work Instructions (WI).\n\n● Wearing the required PPE for their assigned tasks and work areas.\n\n● Identifying and reporting all potential hazards, near-misses, and unsafe conditions immediately to their direct supervisor or the HSE Officer.\n\n● Participating actively in all safety training and drills.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.3",
+      "section_title": "Employee Responsibilities",
+      "parent_section": "1",
+      "context": "Employee duties include following safety rules and reporting hazards",
+      "tags": [
+        "employee",
+        "responsibilities",
+        "safety",
+        "PPE",
+        "reporting",
+        "training"
+      ],
+      "score": 0.8208903670310974
+    },
+    {
+      "chunk_id": "chunk-27-f4edc8e5",
+      "text": "● Warehousing: Employees involved in storage must ensure goods are handled with precision and care, maintaining the specified environmental conditions (Cold, Temp-Controlled, Dry) and optimizing inventory control and order fulfillment.\n● Transportation: Vehicle operators are responsible for the safe operation and routine inspection of their assigned vehicles. They must use real-time tracking platforms to ensure visibility and timely updates for clients.\n● Distribution: Personnel must optimize routes and adhere to distribution schedules to ensure swift delivery to distribution points, empowering client supply chain efficiency.",
+      "chunk_type": "list",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 4.0,
+      "section": "3.4",
+      "section_title": "Operational Standards",
+      "parent_section": "3",
+      "context": "Operational standards for logistics processes",
+      "tags": [
+        "warehousing",
+        "transportation",
+        "distribution",
+        "standards"
+      ],
+      "score": 0.6696706414222717
+    },
+    {
+      "chunk_id": "chunk-3-51b47476",
+      "text": "1.2 Management Responsibilities",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.2",
+      "section_title": "Management Responsibilities",
+      "parent_section": "1",
+      "context": "Outline of management's safety responsibilities",
+      "tags": [
+        "management",
+        "responsibilities",
+        "safety",
+        "PPE",
+        "audits"
+      ],
+      "score": 0.5871819257736206
+    },
+    {
+      "chunk_id": "chunk-5-3ef6fe03",
+      "text": "1.3 Employee Responsibilities",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.3",
+      "section_title": "Employee Responsibilities",
+      "parent_section": "1",
+      "context": "Outline of employee safety responsibilities",
+      "tags": [
+        "employee",
+        "responsibilities",
+        "safety",
+        "PPE",
+        "reporting"
+      ],
+      "score": 0.5607290863990784
+    },
+    {
+      "chunk_id": "chunk-21-2214b3dc",
+      "text": "● All injuries, illnesses, accidents, property damage, and near-misses (events that could have caused harm) must be reported immediately to the supervisor and HSE Officer.\n\n● An investigation must be conducted for every incident to determine the root cause and implement preventative measures.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 4.0,
+      "section": "4.1",
+      "section_title": "Accident and Incident Reporting",
+      "parent_section": "4",
+      "context": "Reporting requirements for accidents and near-misses",
+      "tags": [
+        "accident",
+        "incident",
+        "reporting",
+        "safety",
+        "investigation",
+        "HSE"
+      ],
+      "score": 0.5344077348709106
+    },
+    {
+      "chunk_id": "chunk-4-3f9b7b0e",
+      "text": "Management is responsible for:\n\n● Providing necessary Personal Protective Equipment (PPE) and ensuring its proper use.\n\n● Conducting regular safety audits and risk assessments across all sites (warehouses, yards, and fleet operations).\n\n● Implementing corrective actions for all reported safety deficiencies and hazards.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.2",
+      "section_title": "Management Responsibilities",
+      "parent_section": "1",
+      "context": "Management duties include PPE provision and safety audits",
+      "tags": [
+        "management",
+        "responsibilities",
+        "safety",
+        "PPE",
+        "audits",
+        "risk"
+      ],
+      "score": 0.5182815194129944
+    },
+    {
+      "chunk_id": "chunk-16-ba96d2bc",
+      "text": "Every employee’s actions must align with our five core KPIs, which serve as our essential operational values:",
+      "chunk_type": "paragraph",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 2.0,
+      "section": "2.4",
+      "section_title": "Key Performance Indicators (KPIs) and Core Values",
+      "parent_section": "2",
+      "context": "Introduction to core KPIs and operational values",
+      "tags": [
+        "KPIs",
+        "core values",
+        "performance",
+        "employee actions"
+      ],
+      "score": 0.5162683129310608
+    },
+    {
+      "chunk_id": "chunk-2-b7e22235",
+      "text": "SAFEXPRESS LOGISTICS INC. is committed to providing a safe, healthy, and environmentally responsible workplace for all employees, contractors, and visitors. Our goal is Zero Accidents and Injuries. We integrate Safety as the primary KPI in every operational decision, ensuring compliance with all Philippine laws and international standards for logistics and warehousing.",
+      "chunk_type": "paragraph",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.1",
+      "section_title": "HSE Mission Statement",
+      "parent_section": "1",
+      "context": "Commitment to a safe and environmentally responsible workplace",
+      "tags": [
+        "HSE",
+        "mission",
+        "safety",
+        "environment",
+        "compliance",
+        "logistics"
+      ],
+      "score": 0.5143142938613892
+    },
+    {
+      "chunk_id": "chunk-4-9e54490c",
+      "text": "2.0 Procedure Steps",
+      "chunk_type": "heading",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 1.0,
+      "section": "2",
+      "section_title": "Procedure Steps",
+      "parent_section": "",
+      "context": "Lists the steps involved in the goods receiving procedure",
+      "tags": [
+        "procedure",
+        "steps",
+        "goods",
+        "receiving"
+      ],
+      "score": 0.4585520327091217
+    },
+    {
+      "chunk_id": "chunk-6-a98c89df",
+      "text": "2.2 | Unloading Preparation | Receiving Supervisor | Clear the staging area. Ensure all required Personal Protective Equipment (PPE) is worn by the unloading team (safety vest, hard hat, steel-toed boots).",
+      "chunk_type": "table",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 1.0,
+      "section": "2",
+      "section_title": "Procedure Steps",
+      "parent_section": "",
+      "context": "Preparation steps for unloading cargo",
+      "tags": [
+        "procedure",
+        "steps",
+        "unloading",
+        "PPE",
+        "safety"
+      ],
+      "score": 0.4522872865200043
+    },
+    {
+      "chunk_id": "chunk-21-ddb3d607",
+      "text": "All employees are expected to conduct themselves with the highest degree of professionalism, integrity, and respect.\n\n● Client-Centricity: We put our clients at the core of our day-to-day lives. All interactions with clients and partners must be professional, cooperative, and focused on solving their needs.\n● Confidentiality: All company information, client data, inventory details, pricing structures, and operational strategies are strictly confidential and must not be disclosed to unauthorized parties.",
+      "chunk_type": "list",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 3.0,
+      "section": "3.1",
+      "section_title": "Code of Conduct and Professionalism",
+      "parent_section": "3",
+      "context": "Professionalism and confidentiality expectations for employees",
+      "tags": [
+        "conduct",
+        "professionalism",
+        "confidentiality",
+        "client-centricity"
+      ],
+      "score": 0.43750303983688354
+    },
+    {
+      "chunk_id": "chunk-23-e3e51a50",
+      "text": "● All employees must be familiar with the Site Evacuation Plan, assembly points, and the location of fire extinguishers.\n\n● Fire Drills must be conducted at least annually.\n\n● In the event of a fire, the priority is to sound the alarm, evacuate, and only attempt to fight the fire if trained to do so and if the fire is small and contained.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 4.0,
+      "section": "4.2",
+      "section_title": "Fire and Emergency Evacuation",
+      "parent_section": "4",
+      "context": "Evacuation procedures and fire drill requirements",
+      "tags": [
+        "fire",
+        "emergency",
+        "evacuation",
+        "safety",
+        "drills",
+        "plan"
+      ],
+      "score": 0.41812339425086975
+    },
+    {
+      "chunk_id": "chunk-23-d8273632",
+      "text": "Due to the nature of logistics, strict adherence to HSE protocols is mandatory.\n\n● Zero-Accident Policy: All personnel are required to follow safety procedures, wear appropriate Personal Protective Equipment (PPE) in designated areas (e.g., warehouses, yards), and report all hazards, near-misses, and incidents immediately.\n● Compliance: All transport operations must strictly adhere to local and national traffic laws and regulations. All warehouse operations must comply with industry safety standards, particularly for Cold, Temperature-Controlled, and Ambient storage.",
+      "chunk_type": "list",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 3.0,
+      "section": "3.2",
+      "section_title": "Health, Safety, and Environment (HSE)",
+      "parent_section": "3",
+      "context": "HSE protocols and compliance requirements",
+      "tags": [
+        "HSE",
+        "safety",
+        "PPE",
+        "compliance",
+        "logistics"
+      ],
+      "score": 0.41293200850486755
+    },
+    {
+      "chunk_id": "chunk-14-e826802c",
+      "text": "At SAFEXPRESS LOGISTICS INC., we are committed to delivering reliable, compliant logistics solutions that meet the highest standards of customer, interested parties, and stakeholder satisfaction.\n\n● Commitment: Through operational excellence, sustainable practices, and a culture of accountability, we ensure the safe, efficient handling of diverse products in full compliance with all regulations.\n● Leadership: Our management leads by example, fostering continual improvement in our Quality Management System to achieve accuracy, customer-centricity, and getting it right the first time in every step of the supply chain.",
+      "chunk_type": "list",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 2.0,
+      "section": "2.3",
+      "section_title": "Quality Policy (QMS)",
+      "parent_section": "2",
+      "context": "Quality commitment and leadership in logistics operations",
+      "tags": [
+        "quality",
+        "commitment",
+        "leadership",
+        "QMS",
+        "compliance"
+      ],
+      "score": 0.4089537262916565
+    },
+    {
+      "chunk_id": "chunk-19-4e6868d4",
+      "text": "SECTION 4: EMERGENCY RESPONSE & REPORTING",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 3.0,
+      "section": "4",
+      "section_title": "Emergency Response & Reporting",
+      "parent_section": "",
+      "context": "Introduction to emergency response and reporting procedures",
+      "tags": [
+        "emergency",
+        "response",
+        "reporting",
+        "safety",
+        "section"
+      ],
+      "score": 0.3958911597728729
+    },
+    {
+      "chunk_id": "chunk-13-5bcbf77a",
+      "text": "3.0 Control Checklists (Receiving/Dispatch Checklist)",
+      "chunk_type": "heading",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 2.0,
+      "section": "3",
+      "section_title": "Control Checklists (Receiving/Dispatch Checklist)",
+      "parent_section": "",
+      "context": "Checklist for receiving and dispatch control",
+      "tags": [
+        "control",
+        "checklist",
+        "receiving",
+        "dispatch"
+      ],
+      "score": 0.3868100941181183
+    },
+    {
+      "chunk_id": "chunk-14-bf277fca",
+      "text": "● [ ] ASN/DO verified against physical shipment.\n● [ ] Total Piece Count verified (Tally vs. BOL).\n● [ ] Cargo inspected for damage (Pass/Fail).\n● [ ] WMS entry completed and System Receiving Report generated.\n● [ ] Discrepancy logged and resolution confirmed (if applicable).\n● [ ] Final put-away scan confirmed in WMS.",
+      "chunk_type": "list",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 2.0,
+      "section": "3",
+      "section_title": "Control Checklists (Receiving/Dispatch Checklist)",
+      "parent_section": "",
+      "context": "Checklist items for verifying receiving and dispatch processes",
+      "tags": [
+        "control",
+        "checklist",
+        "ASN",
+        "DO",
+        "BOL",
+        "WMS",
+        "discrepancy"
+      ],
+      "score": 0.38434794545173645
+    },
+    {
+      "chunk_id": "chunk-3-9fda0e72",
+      "text": "To establish a uniform and controlled process for the receipt, inspection, and recording of all incoming cargo and materials, ensuring compliance with client instructions and minimizing discrepancies.",
+      "chunk_type": "paragraph",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 1.0,
+      "section": "1",
+      "section_title": "Purpose",
+      "parent_section": "",
+      "context": "Establishes a controlled process for receiving goods",
+      "tags": [
+        "purpose",
+        "process",
+        "receipt",
+        "inspection",
+        "compliance",
+        "discrepancies"
+      ],
+      "score": 0.3660510182380676
+    },
+    {
+      "chunk_id": "chunk-30-06a62556",
+      "text": "All employees are expected to adhere to their scheduled work hours and locations (Head Office, Warehouse, Field, etc.). Punctuality and reliable attendance are essential to maintaining the efficiency of our 24/7 logistics operations. Absences and tardiness must be reported according to department-specific procedures.",
+      "chunk_type": "paragraph",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 4.0,
+      "section": "4.1",
+      "section_title": "Work Hours and Attendance",
+      "parent_section": "4",
+      "context": "Policy on work hours and attendance reporting",
+      "tags": [
+        "work hours",
+        "attendance",
+        "punctuality",
+        "reporting"
+      ],
+      "score": 0.36040806770324707
+    },
+    {
+      "chunk_id": "chunk-17-be59646f",
+      "text": "KPI | Core Value | Definition and Expectation\nSafety | Accountability | Measures the effectiveness of workplace safety protocols, aiming for zero accidents and injuries. Protect yourself, your colleagues, the cargo, and company assets.\nQuality | Excellence | Assesses the quality of services by tracking defect rates, customer complaints, and adherence to quality standards. This includes ensuring 100% inventory record accuracy.\nDelivery | Reliability | Evaluates the efficiency and reliability of the delivery process. Commit to timely and accurate deliveries that meet client deadlines.\nCost | Efficiency | Monitors cost efficiency in operations, focusing on reducing waste and optimizing resource usage (time, fuel, supplies, etc.).",
+      "chunk_type": "table",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 2.0,
+      "section": "2.4",
+      "section_title": "Key Performance Indicators (KPIs) and Core Values",
+      "parent_section": "2",
+      "context": "Table of KPIs, core values, and expectations",
+      "tags": [
+        "KPIs",
+        "core values",
+        "safety",
+        "quality",
+        "delivery",
+        "cost"
+      ],
+      "score": 0.34269219636917114
+    },
+    {
+      "chunk_id": "chunk-11-83f65de4",
+      "text": "2.7 | Put-Away & Location Assignment | Warehouse Operator | Move the verified and received stock to its assigned bin or storage area (Ambient, Cold, or Temperature-Controlled). Scan the item and the storage location to confirm placement in the WMS.",
+      "chunk_type": "table",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 2.0,
+      "section": "2",
+      "section_title": "Procedure Steps",
+      "parent_section": "",
+      "context": "Process for putting away and assigning location to goods",
+      "tags": [
+        "procedure",
+        "steps",
+        "put-away",
+        "location",
+        "WMS"
+      ],
+      "score": 0.3362288475036621
+    },
+    {
+      "chunk_id": "chunk-16-62d6e3b1",
+      "text": "● All drivers must possess a valid professional driver's license and undergo mandatory refresher training every two years.\n\n● Drivers must perform a Daily Vehicle Inspection Report (DVIR) before operating any company vehicle. Any defects must be reported and corrected before departure.\n\n● No use of mobile phones or electronic devices while the vehicle is in motion.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 3.0,
+      "section": "3.1",
+      "section_title": "Driver Fitness and Vehicle Condition",
+      "parent_section": "3",
+      "context": "Driver requirements include licensing, DVIR, and no phone use",
+      "tags": [
+        "driver",
+        "fitness",
+        "vehicle",
+        "condition",
+        "transportation",
+        "fleet",
+        "DVIR",
+        "license"
+      ],
+      "score": 0.33273857831954956
+    },
+    {
+      "chunk_id": "chunk-26-369f279f",
+      "text": "3.4 Operational Standards",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 4.0,
+      "section": "3.4",
+      "section_title": "Operational Standards",
+      "parent_section": "3",
+      "context": "Standards for warehousing, transportation, and distribution",
+      "tags": [
+        "operational",
+        "standards",
+        "warehousing",
+        "transportation",
+        "distribution"
+      ],
+      "score": 0.33120912313461304
+    },
+    {
+      "chunk_id": "chunk-11-3c1b51bb",
+      "text": "● Only certified and authorized personnel are permitted to operate forklifts and other MHE.\n\n● Maximum speed limits within the warehouse must be strictly observed.\n\n● Pedestrian right-of-way must be maintained; pedestrians must use designated walkways.\n\n● Forklifts must be inspected prior to every shift (Pre-Operation Check).",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 2.0,
+      "section": "2.2",
+      "section_title": "Forklift and Material Handling Equipment (MHE) Operation",
+      "parent_section": "2",
+      "context": "Safety rules for forklift and MHE operation",
+      "tags": [
+        "forklift",
+        "MHE",
+        "operation",
+        "safety",
+        "warehouse",
+        "inspection"
+      ],
+      "score": 0.32822805643081665
+    },
+    {
+      "chunk_id": "chunk-12-108b722d",
+      "text": "To be the driving force that optimizes, enhances, and empowers our clients' supply chains. We are not just moving goods; we are moving growth and success all over the country.",
+      "chunk_type": "paragraph",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 1.0,
+      "section": "2.2",
+      "section_title": "Core Purpose",
+      "parent_section": "2",
+      "context": "Mission to enhance and empower client supply chains",
+      "tags": [
+        "mission",
+        "supply chain",
+        "growth",
+        "success"
+      ],
+      "score": 0.32134348154067993
+    },
+    {
+      "chunk_id": "chunk-20-c9ed422e",
+      "text": "3.1 Code of Conduct and Professionalism",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 3.0,
+      "section": "3.1",
+      "section_title": "Code of Conduct and Professionalism",
+      "parent_section": "3",
+      "context": "Expectations for employee conduct and professionalism",
+      "tags": [
+        "conduct",
+        "professionalism",
+        "code",
+        "client-centricity"
+      ],
+      "score": 0.32111427187919617
+    },
+    {
+      "chunk_id": "chunk-0-6c8ee3cf",
+      "text": "SECTION 1: HSE POLICY & COMMITMENT",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1",
+      "section_title": "HSE Policy & Commitment",
+      "parent_section": "",
+      "context": "Introduction to health, safety, and environmental policy commitments",
+      "tags": [
+        "HSE",
+        "policy",
+        "commitment",
+        "safety",
+        "environment"
+      ],
+      "score": 0.3177533745765686
+    },
+    {
+      "chunk_id": "chunk-28-c6e97e99",
+      "text": "SECTION 4: HUMAN RESOURCES (HR) AND ADMINISTRATION",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 4.0,
+      "section": "4",
+      "section_title": "Human Resources (HR) and Administration",
+      "parent_section": "",
+      "context": "Overview of HR and administrative policies",
+      "tags": [
+        "HR",
+        "administration",
+        "policies",
+        "section"
+      ],
+      "score": 0.3099908232688904
+    },
+    {
+      "chunk_id": "chunk-8-8481f857",
+      "text": "SECTION 2: COMPANY OVERVIEW AND CORE COMMITMENTS",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 1.0,
+      "section": "2",
+      "section_title": "Company Overview and Core Commitments",
+      "parent_section": "",
+      "context": "Overview of company identity and commitments",
+      "tags": [
+        "company",
+        "overview",
+        "commitments",
+        "section"
+      ],
+      "score": 0.3035275936126709
+    },
+    {
+      "chunk_id": "chunk-33-7113731a",
+      "text": "4.3 Training and Development",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 4.0,
+      "section": "4.3",
+      "section_title": "Training and Development",
+      "parent_section": "4",
+      "context": "Commitment to employee training and development",
+      "tags": [
+        "training",
+        "development",
+        "learning",
+        "HR"
+      ],
+      "score": 0.27528420090675354
+    },
+    {
+      "chunk_id": "chunk-6-91c65925",
+      "text": "1.2 Purpose of the Manual",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 1.0,
+      "section": "1.2",
+      "section_title": "Purpose of the Manual",
+      "parent_section": "1",
+      "context": "Purpose and scope of the employee manual",
+      "tags": [
+        "purpose",
+        "manual",
+        "standards",
+        "policies"
+      ],
+      "score": 0.2747940719127655
+    },
+    {
+      "chunk_id": "chunk-25-01098614",
+      "text": "As an ISO 9001:2015 QMS Certified company, quality is non-negotiable.\n\n● Documentation and Accuracy: Utilize the Warehouse Management Systems (WMS) correctly to ensure real-time inventory tracking and accurate reporting. Errors in documentation directly impact our Quality KPI.\n● Continuous Improvement: Employees are encouraged to suggest improvements to processes that enhance efficiency, safety, and compliance.",
+      "chunk_type": "list",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 3.0,
+      "section": "3.3",
+      "section_title": "Quality Management and Compliance",
+      "parent_section": "3",
+      "context": "Quality management practices and continuous improvement",
+      "tags": [
+        "quality",
+        "management",
+        "WMS",
+        "continuous improvement"
+      ],
+      "score": 0.2732923924922943
+    },
+    {
+      "chunk_id": "chunk-25-4918fc6d",
+      "text": "● First aid kits are maintained in designated, easily accessible areas (e.g., Office, Dispatch Center, Warehouse Office).\n\n● A list of certified First Aiders for each shift must be posted publicly.",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 4.0,
+      "section": "4.3",
+      "section_title": "First Aid",
+      "parent_section": "4",
+      "context": "Locations of first aid kits and certified aiders",
+      "tags": [
+        "first aid",
+        "safety",
+        "emergency",
+        "kits",
+        "aiders",
+        "accessibility"
+      ],
+      "score": 0.2707054316997528
+    },
+    {
+      "chunk_id": "chunk-7-c39a15c2",
+      "text": "This manual serves as the definitive reference for all employees regarding the standards, policies, and procedures of SAFEXPRESS LOGISTICS INC. Its purpose is to ensure a unified, safe, and efficient working environment where every team member understands their role in meeting customer expectations and achieving business objectives.",
+      "chunk_type": "paragraph",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 1.0,
+      "section": "1.2",
+      "section_title": "Purpose of the Manual",
+      "parent_section": "1",
+      "context": "Manual as a reference for company standards and policies",
+      "tags": [
+        "manual",
+        "reference",
+        "standards",
+        "policies",
+        "procedures"
+      ],
+      "score": 0.26992693543434143
+    },
+    {
+      "chunk_id": "chunk-1-93b37b94",
+      "text": "EMPLOYEE COMPANY MANUAL",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 1.0,
+      "section": "Introduction",
+      "section_title": "Cover Page",
+      "parent_section": "",
+      "context": "Title of the employee company manual",
+      "tags": [
+        "cover",
+        "title",
+        "company",
+        "manual"
+      ],
+      "score": 0.26641908288002014
+    },
+    {
+      "chunk_id": "chunk-5-a8a7745a",
+      "text": "Welcome to the SAFEXPRESS LOGISTICS INC. team! You are now part of a dynamic and ISO 9001:2015 QMS Certified company committed to delivering reliable, compliant logistics solutions across the Philippines. Our success is driven by our people—a skilled and experienced team dedicated to operational excellence. This manual is your guide to our company's policies, culture, standards, and expectations. We trust that you will use it as a resource to uphold the high standards of Safety, Quality, Delivery, Cost, and Morale that define the Safexpress family.",
+      "chunk_type": "paragraph",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 1.0,
+      "section": "1.1",
+      "section_title": "Welcome Message",
+      "parent_section": "1",
+      "context": "Introduction to company values and manual purpose",
+      "tags": [
+        "welcome",
+        "ISO 9001:2015",
+        "standards",
+        "safety",
+        "quality"
+      ],
+      "score": 0.2654377818107605
+    },
+    {
+      "chunk_id": "chunk-24-6ab8e6b5",
+      "text": "3.3 Quality Management and Compliance",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 3.0,
+      "section": "3.3",
+      "section_title": "Quality Management and Compliance",
+      "parent_section": "3",
+      "context": "Quality management and compliance expectations",
+      "tags": [
+        "quality",
+        "management",
+        "compliance",
+        "ISO 9001:2015"
+      ],
+      "score": 0.2649955749511719
+    },
+    {
+      "chunk_id": "chunk-8-8d2c7fa0",
+      "text": "2.4 | Initial Quality Inspection | Receiving Clerk | Mandatory Check: Inspect every pallet/carton for visible damage (crushing, wetness, torn seals). If damage is found, document it immediately on the BOL and take photo evidence.",
+      "chunk_type": "table",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 1.0,
+      "section": "2",
+      "section_title": "Procedure Steps",
+      "parent_section": "",
+      "context": "Initial quality inspection process for received goods",
+      "tags": [
+        "procedure",
+        "steps",
+        "quality",
+        "inspection",
+        "damage",
+        "BOL"
+      ],
+      "score": 0.2621760368347168
+    },
+    {
+      "chunk_id": "chunk-11-8322c4ae",
+      "text": "2.2 Core Purpose",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 1.0,
+      "section": "2.2",
+      "section_title": "Core Purpose",
+      "parent_section": "2",
+      "context": "Company's mission to optimize client supply chains",
+      "tags": [
+        "core purpose",
+        "mission",
+        "supply chain",
+        "growth"
+      ],
+      "score": 0.2619946300983429
+    },
+    {
+      "chunk_id": "chunk-1-d7536698",
+      "text": "1.1 HSE Mission Statement",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 1.0,
+      "section": "1.1",
+      "section_title": "HSE Mission Statement",
+      "parent_section": "1",
+      "context": "Statement of commitment to safety and environmental responsibility",
+      "tags": [
+        "HSE",
+        "mission",
+        "statement",
+        "safety",
+        "environment"
+      ],
+      "score": 0.25625839829444885
+    },
+    {
+      "chunk_id": "chunk-7-71b906c9",
+      "text": "2.3 | Unloading and Tally | Warehouse Operator | Unload cargo carefully. Perform a preliminary count (tally) against the accompanying shipper's Bill of Lading (BOL).",
+      "chunk_type": "table",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 1.0,
+      "section": "2",
+      "section_title": "Procedure Steps",
+      "parent_section": "",
+      "context": "Describes the unloading and tallying process",
+      "tags": [
+        "procedure",
+        "steps",
+        "unloading",
+        "tally",
+        "BOL"
+      ],
+      "score": 0.2477317452430725
+    },
+    {
+      "chunk_id": "chunk-12-2a5a26de",
+      "text": "2.8 | Document Filing | Receiving Clerk | Attach the signed BOL, the System Receiving Report, and any Discrepancy Reports. File documents for record-keeping and reconciliation.",
+      "chunk_type": "table",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 2.0,
+      "section": "2",
+      "section_title": "Procedure Steps",
+      "parent_section": "",
+      "context": "Filing process for receiving documents",
+      "tags": [
+        "procedure",
+        "steps",
+        "document",
+        "filing",
+        "BOL"
+      ],
+      "score": 0.24591094255447388
+    },
+    {
+      "chunk_id": "chunk-22-6c6f8d0e",
+      "text": "3.2 Health, Safety, and Environment (HSE)",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 3.0,
+      "section": "3.2",
+      "section_title": "Health, Safety, and Environment (HSE)",
+      "parent_section": "3",
+      "context": "Mandatory adherence to HSE protocols",
+      "tags": [
+        "HSE",
+        "health",
+        "safety",
+        "environment",
+        "protocols"
+      ],
+      "score": 0.23949341475963593
+    },
+    {
+      "chunk_id": "chunk-10-3ffe2444",
+      "text": "2.6 | Discrepancy Resolution | Receiving Supervisor | If there is a quantity mismatch or damage, the clerk must immediately notify the client or relevant internal department. No stock is put away until the discrepancy is acknowledged.",
+      "chunk_type": "table",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 2.0,
+      "section": "2",
+      "section_title": "Procedure Steps",
+      "parent_section": "",
+      "context": "Steps for resolving discrepancies in received goods",
+      "tags": [
+        "procedure",
+        "steps",
+        "discrepancy",
+        "resolution",
+        "damage"
+      ],
+      "score": 0.23523111641407013
+    },
+    {
+      "chunk_id": "chunk-19-65940e3f",
+      "text": "SECTION 3: GENERAL EMPLOYMENT AND OPERATIONAL POLICIES",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 3.0,
+      "section": "3",
+      "section_title": "General Employment and Operational Policies",
+      "parent_section": "",
+      "context": "Overview of employment and operational policies",
+      "tags": [
+        "employment",
+        "operational",
+        "policies",
+        "section"
+      ],
+      "score": 0.23297341167926788
+    },
+    {
+      "chunk_id": "chunk-3-471f7a2a",
+      "text": "SECTION 1: INTRODUCTION AND WELCOME",
+      "chunk_type": "heading",
+      "document_id": "dfebdd0b-170b-4b7c-8800-06b2ce3f8786",
+      "document_name": "Company-Manual.pdf",
+      "page": 1.0,
+      "section": "1",
+      "section_title": "Introduction and Welcome",
+      "parent_section": "",
+      "context": "Introduction to the company and welcome message",
+      "tags": [
+        "introduction",
+        "welcome",
+        "section"
+      ],
+      "score": 0.2310926914215088
+    },
+    {
+      "chunk_id": "chunk-7-8f413b5b",
+      "text": "SECTION 2: WAREHOUSE AND MATERIALS HANDLING SAFETY",
+      "chunk_type": "heading",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 2.0,
+      "section": "2",
+      "section_title": "Warehouse and Materials Handling Safety",
+      "parent_section": "",
+      "context": "Introduction to warehouse and materials handling safety protocols",
+      "tags": [
+        "warehouse",
+        "materials",
+        "handling",
+        "safety",
+        "section"
+      ],
+      "score": 0.23076234757900238
+    },
+    {
+      "chunk_id": "chunk-1-fabb8be7",
+      "text": "This procedure ensures that all incoming goods are handled efficiently, accurately, and safely, adhering to the Quality Policy and preventing stock reconciliation errors.",
+      "chunk_type": "paragraph",
+      "document_id": "16b98ca4-ea00-4783-b54b-8945d4ab8131",
+      "document_name": "SOP.pdf",
+      "page": 1.0,
+      "section": "Introduction",
+      "section_title": "Standard Operating Procedure for Goods Receiving",
+      "parent_section": "",
+      "context": "Overview of the SOP's purpose and adherence to quality policy",
+      "tags": [
+        "SOP",
+        "goods",
+        "receiving",
+        "quality",
+        "policy",
+        "efficiency",
+        "accuracy"
+      ],
+      "score": 0.2187095433473587
+    },
+    {
+      "chunk_id": "chunk-9-57a1944a",
+      "text": "Mandatory PPE required in all warehouse and yard areas:\n\n● Safety Vests: High visibility vests required at all times.\n\n● Safety Footwear: Steel-toed boots required for all workers involved in cargo handling and near heavy machinery.\n\n● Gloves: Appropriate gloves for handling cargo (anti-slip, cut-resistant, thermal for cold storage areas).",
+      "chunk_type": "list",
+      "document_id": "3906d1e4-376d-46be-ae89-9e2b6d07631b",
+      "document_name": "HSE.pdf",
+      "page": 2.0,
+      "section": "2.1",
+      "section_title": "Personal Protective Equipment (PPE)",
+      "parent_section": "2",
+      "context": "Details of required PPE for safety in warehouse areas",
+      "tags": [
+        "PPE",
+        "warehouse",
+        "safety",
+        "equipment",
+        "yard",
+        "gloves",
+        "footwear"
+      ],
+      "score": 0.2178630381822586
+    }
+  ]
+}

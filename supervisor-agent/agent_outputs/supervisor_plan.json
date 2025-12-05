@@ -1,18 +1,16 @@
 {
   "plan": [
     {
-      "agent": "docs_agent",
-      "tool": "create_from_existing_data_and_template",
+      "agent": "gmail_agent",
+      "tool": "search_emails",
       "inputs": {
-        "template_file_name": "MinutesOfMeetingTEMP",
-        "data_file_name": "TestData123",
-        "new_title": "Meeting Notes Jan 28"
+        "query": "to:jdenziieel@gmail.com after:{{ today_date }}",
+        "max_results": 5
       },
       "output_variables": {
-        "created_document_id": "document_id",
-        "created_document_url": "document_url"
+        "recent_emails": "emails"
       },
-      "description": "Create a document titled 'Meeting Notes Jan 28' using the template 'MinutesOfMeetingTEMP' and data 'TestData123' from Google Drive"
+      "description": "Retrieve 5 most recent emails from jdenziieel@gmail.com"
     }
   ]
 }

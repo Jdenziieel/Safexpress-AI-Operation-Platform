@@ -1,0 +1,164 @@
+/* Workload Analysis Page */
+.analysis-report-page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  font-family: "Inter", sans-serif;
+  padding: 32px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.analysis-report-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-width: 0;
+  padding: 0 64px 48px 64px;
+  height: calc(100vh - 64px);
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.analysis-report-container::-webkit-scrollbar {
+  width: 0px;
+  display: none;
+}
+
+.analysis-report-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Header */
+.analysis-report-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-shrink: 0;
+}
+
+.analysis-back-button {
+  background-color: #26326E;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(38,50,110,0.08);
+  margin-bottom: 16px;
+}
+
+.analysis-back-button:hover {
+  background-color: #fcb117 !important;
+  color: #26326e !important;
+  box-shadow: 0 4px 12px rgba(252, 177, 23, 0.3);
+}
+
+.analysis-report-header-title {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: #26326e;
+  margin-bottom: 8px;
+  letter-spacing: -1px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.analysis-report-header-subtitle {
+  font-size: 1.2rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Content Area */
+.analysis-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.analysis-content-card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.analysis-content-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 40px;
+}
+
+.analysis-placeholder {
+  font-size: 1.1rem;
+  color: #6b7280;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-bottom: 32px;
+}
+
+.analysis-placeholder-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 600px;
+}
+
+@media (max-width: 768px) {
+  .analysis-placeholder-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feature-item {
+  background: #f9fafb;
+  padding: 16px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #26326e;
+  text-align: left;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.feature-item:hover {
+  background: #f3f4f6;
+  border-color: #26326e;
+  transform: translateX(4px);
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+  .analysis-report-container {
+    padding: 0 24px 48px 24px;
+  }
+
+  .analysis-report-header-title {
+    font-size: 2rem;
+  }
+
+  .analysis-content-card {
+    padding: 24px;
+  }
+}

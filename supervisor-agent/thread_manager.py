@@ -123,6 +123,16 @@ class ThreadManager:
             )
         """)
         
+        # Conversation states table - standalone (no FK to threads)
+        # Used for CONVERSATIONS dict persistence across restarts
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS conversation_states (
+                conversation_id TEXT PRIMARY KEY,
+                state_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+        
         # Indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_id ON threads(user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_status ON threads(status)")
@@ -334,6 +344,51 @@ class ThreadManager:
         cursor.execute("""
             SELECT conversation_state FROM thread_states WHERE thread_id = ?
         """, (thread_id,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if not row or not row[0]:
+            return None
+        
+        return json.loads(row[0])
+    
+    def save_conversation_state_standalone(self, conversation_id: str, state: Any):
+        """
+        Save conversation state to standalone table (no FK constraint).
+        Used for CONVERSATIONS dict persistence.
+        """
+        # Handle Pydantic v2 models
+        if hasattr(state, 'model_dump'):
+            state_dict = state.model_dump()
+        else:
+            state_dict = state  # Already a dict
+        
+        state_json = json.dumps(state_dict, default=str)
+        
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO conversation_states 
+            (conversation_id, state_json, updated_at)
+            VALUES (?, ?, ?)
+        """, (conversation_id, state_json, datetime.now().isoformat()))
+        
+        conn.commit()
+        conn.close()
+    
+    def load_conversation_state_standalone(self, conversation_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Load conversation state from standalone table.
+        Used for CONVERSATIONS dict recovery.
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT state_json FROM conversation_states WHERE conversation_id = ?
+        """, (conversation_id,))
         
         row = cursor.fetchone()
         conn.close()

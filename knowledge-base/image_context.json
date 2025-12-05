@@ -1,0 +1,20 @@
+[
+  {
+    "page": 1,
+    "left": 73.5,
+    "top": 50.6,
+    "right": 541.5,
+    "bottom": 55.8,
+    "context": "[PAGE=1]\n[IMAGE page=1 l=73.5 t=50.6 r=541.5 b=55.8]\n\n<s=30> Josh Denziel S. Joves\n</s> <s=11> 2309 Cisne St., Pandacan, Manila.\n+63 949 997 3474 | Denz.joves@gmail.com\n\n\n</s> <s=14> *CAREER OBJECTIVE*\n\n\n</s> ",
+    "marker_position": 9
+  },
+  {
+    "page": 2,
+    "left": 73.5,
+    "top": 50.6,
+    "right": 541.5,
+    "bottom": 55.8,
+    "context": "y of Santo Tomas - BS in Information Technology*\n\n\n</s> <s=10> August 2022 - June 2026\n\n\n</s> <s=12> *University of Santo Tomas - BA in Economics*\n\n\n</s> <s=10> August 2018 - June 2022\n</s>\n\n[PAGE=2]\n[IMAGE page=2 l=73.5 t=50.6 r=541.5 b=55.8]\n\n<s=14> *ACHIEVEMENTS/RESPONSIBILITY*\n\n\n</s> <s=11> \u25cf Led the development of a logistics company web application\nintegrating Agentic AI with LLM capabilitie",
+    "marker_position": 1477
+  }
+]

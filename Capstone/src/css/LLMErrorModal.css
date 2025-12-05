@@ -1,0 +1,290 @@
+/* LLM Error Modal Styles */
+.llm-error-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.llm-error-modal {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Color variants for different error types */
+.llm-error-modal.warning {
+  border: 2px solid #f59e0b;
+}
+
+.llm-error-modal.warning::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.llm-error-modal.critical {
+  border: 2px solid #ef4444;
+}
+
+.llm-error-modal.critical::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.llm-error-modal.error {
+  border: 2px solid #fcb117;
+}
+
+.llm-error-modal.error::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #fcb117, #fcd34d);
+}
+
+.llm-error-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #a0a0a0;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 1;
+}
+
+.llm-error-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.llm-error-modal-header {
+  padding: 32px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.llm-error-icon {
+  margin-bottom: 16px;
+}
+
+.llm-error-icon.rate-limit {
+  color: #f59e0b;
+}
+
+.llm-error-icon.quota {
+  color: #ef4444;
+}
+
+.llm-error-icon.unavailable {
+  color: #ef4444;
+}
+
+.llm-error-icon.auth {
+  color: #ef4444;
+}
+
+.llm-error-icon.context {
+  color: #f59e0b;
+}
+
+.llm-error-icon.unknown {
+  color: #fcb117;
+}
+
+.llm-error-modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.llm-error-modal-body {
+  padding: 0 24px 24px;
+}
+
+.llm-error-modal-message {
+  font-size: 1rem;
+  color: #e0e0e0;
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.llm-error-retry-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  color: #fbbf24;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+.llm-error-suggestions {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.llm-error-suggestions h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+}
+
+.llm-error-suggestions ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.llm-error-suggestions li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #a0a0a0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  padding: 4px 0;
+}
+
+.llm-error-suggestions li .suggestion-bullet {
+  color: #fcb117;
+  font-weight: bold;
+}
+
+.llm-error-code {
+  font-size: 0.75rem;
+  color: #666;
+  text-align: center;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+.llm-error-code strong {
+  color: #888;
+}
+
+.llm-error-modal-footer {
+  padding: 16px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.llm-error-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+}
+
+.llm-error-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+}
+
+.llm-error-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.llm-error-btn.primary {
+  background: linear-gradient(135deg, #fcb117, #f59e0b);
+  color: #1a1a2e;
+}
+
+.llm-error-btn.primary:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(252, 177, 23, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .llm-error-modal {
+    width: 95%;
+    margin: 0 10px;
+  }
+
+  .llm-error-modal-header {
+    padding: 24px 16px 12px;
+  }
+
+  .llm-error-modal-body {
+    padding: 0 16px 16px;
+  }
+
+  .llm-error-modal-footer {
+    padding: 12px 16px 20px;
+    flex-direction: column;
+  }
+
+  .llm-error-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

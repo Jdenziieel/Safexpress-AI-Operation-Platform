@@ -22,6 +22,12 @@ from config import (
     OPENAI_API_KEY,
 )
 
+# Import LLM error handler for unified error handling
+from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_error
+
+# Import logging module
+from logging_config import utils_logger as logger
+
 
 def identify_relevant_agents(user_input: str) -> List[str]:
     """
@@ -48,11 +54,47 @@ Return ONLY a JSON array of agent names needed. Example: ["gmail_agent", "docs_a
     classifier_llm = ChatOpenAI(
         model=CLASSIFIER_MODEL, temperature=0, openai_api_key=OPENAI_API_KEY
     )
-    response = classifier_llm.invoke([{"role": "user", "content": classifier_prompt}])
+    
+    try:
+        # === TOKEN TRACKING: Agent Classification ===
+        start_time = time.time()
+        response = classifier_llm.invoke([{"role": "user", "content": classifier_prompt}])
+        duration_ms = (time.time() - start_time) * 1000
+        
+        # Extract token usage from response
+        input_tokens = 0
+        output_tokens = 0
+        if hasattr(response, 'response_metadata'):
+            token_usage = response.response_metadata.get('token_usage', {})
+            input_tokens = token_usage.get('prompt_tokens', len(classifier_prompt) // 4)
+            output_tokens = token_usage.get('completion_tokens', len(response.content) // 4)
+        else:
+            input_tokens = len(classifier_prompt) // 4
+            output_tokens = len(response.content) // 4
+        
+        # Log the LLM call with token tracking
+        logger.llm_call(
+            model=CLASSIFIER_MODEL,
+            operation="agent_classification",
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            duration_ms=duration_ms,
+            tier="classifier",
+            prompt_summary=f"Classifying agents for: {user_input[:50]}...",
+            success=True
+        )
 
-    # Parse the agent list
-    agent_list = json.loads(response.content.strip())
-    return agent_list
+        # Parse the agent list
+        agent_list = json.loads(response.content.strip())
+        return agent_list
+    except Exception as e:
+        # Check if this is an LLM service error (rate limit, quota, etc.)
+        if is_llm_error(e):
+            logger.error(f"LLM service error during agent classification: {e}")
+            raise handle_llm_error(e)
+        # For other errors (like JSON parse), log and fall back to all agents
+        logger.warning(f"Error in agent classification, using all agents: {e}")
+        return list(agent_capabilities.keys())
 
 
 def get_filtered_capabilities(agent_names: List[str]) -> Dict:
