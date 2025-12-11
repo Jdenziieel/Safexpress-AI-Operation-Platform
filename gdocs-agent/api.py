@@ -32,8 +32,6 @@ class AgentTaskResponse(BaseModel):
     error: str = None
 
 
-# In your docs agent main.py
-
 @app.post("/execute_task", response_model=AgentTaskResponse)
 async def execute_task(request: AgentTaskRequest):
     """
@@ -69,7 +67,7 @@ async def execute_task(request: AgentTaskRequest):
             template_file_id = request.inputs.get("template_file_id")
             new_title = request.inputs.get("new_title")
             placeholders = request.inputs.get("placeholders", {})
-            output_format = request.inputs.get("output_format", "google_docs")  # ✅ NEW: Extract output_format
+            output_format = request.inputs.get("output_format", "google_docs")
             
             if not template_file_id:
                 return AgentTaskResponse(
@@ -99,7 +97,7 @@ async def execute_task(request: AgentTaskRequest):
                     new_title=new_title,
                     placeholder_values=placeholders,
                     credentials_dict=request.credentials_dict,
-                    output_format=output_format  # ✅ NEW: Pass output_format
+                    output_format=output_format
                 )
                 
                 print(f"📄 Direct execution result:\n{result_text}")
@@ -174,29 +172,29 @@ async def execute_task(request: AgentTaskRequest):
                     error=str(direct_exec_error)
                 )
             
-        # ✅ SPECIAL HANDLING: Direct execution for create_from_existing_data_and_template
-        if request.tool == "create_from_existing_data_and_template":
+        # ✅ SPECIAL HANDLING: Direct execution for create_from_template_and_data_ids
+        if request.tool == "create_from_template_and_data_ids":
             print(f"🔧 Direct execution: {request.tool}")
             
-            from tools import _create_from_existing_data_and_template_impl
+            from tools import _create_from_template_and_data_ids_impl
             
-            template_file_name = request.inputs.get("template_file_name")
-            data_file_name = request.inputs.get("data_file_name")
+            template_file_id = request.inputs.get("template_file_id")
+            data_file_id = request.inputs.get("data_file_id")
             new_title = request.inputs.get("new_title")
             output_format = request.inputs.get("output_format", "google_docs")
             
-            if not template_file_name:
+            if not template_file_id:
                 return AgentTaskResponse(
                     success=False,
                     result={},
-                    error="template_file_name is required"
+                    error="template_file_id is required"
                 )
             
-            if not data_file_name:
+            if not data_file_id:
                 return AgentTaskResponse(
                     success=False,
                     result={},
-                    error="data_file_name is required"
+                    error="data_file_id is required"
                 )
             
             if not new_title:
@@ -207,9 +205,9 @@ async def execute_task(request: AgentTaskRequest):
                 )
             
             try:
-                result_text = _create_from_existing_data_and_template_impl(
-                    template_file_name=template_file_name,
-                    data_file_name=data_file_name,
+                result_text = _create_from_template_and_data_ids_impl(
+                    template_file_id=template_file_id,
+                    data_file_id=data_file_id,
                     new_title=new_title,
                     credentials_dict=request.credentials_dict,
                     output_format=output_format

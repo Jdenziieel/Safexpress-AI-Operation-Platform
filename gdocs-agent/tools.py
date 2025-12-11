@@ -1031,3 +1031,331 @@ def _replace_blank_lines_in_document(
     except Exception as e:
         print(f"⚠️ Warning: Could not replace blank lines: {e}")
         # Don't fail the entire operation, just log warning
+
+def _create_from_template_and_data_ids_impl(
+    template_file_id: str,
+    data_file_id: str,
+    new_title: str,
+    credentials_dict: Dict,
+    output_format: str = "google_docs"
+) -> str:
+    """
+    Create document from template and data files using their IDs
+    (IDs already found by Drive Agent)
+    
+    Args:
+        template_file_id: Google Drive file ID of template
+        data_file_id: Google Drive file ID of data file
+        new_title: Title for new document
+        credentials_dict: Google OAuth credentials
+        output_format: "google_docs" (default) or "pdf"
+    
+    Returns:
+        Success message with document details
+    """
+    try:
+        print(f"\n{'='*60}")
+        print(f"📊 CREATE FROM TEMPLATE & DATA (USING IDs)")
+        print(f"{'='*60}")
+        print(f"Template ID: {template_file_id}")
+        print(f"Data ID: {data_file_id}")
+        print(f"New Title: {new_title}")
+        print(f"Output Format: {output_format}")
+        print(f"{'='*60}\n")
+        
+        from google.oauth2.credentials import Credentials
+        from googleapiclient.discovery import build
+        
+        # Build Drive service
+        creds = Credentials(
+            token=credentials_dict.get("access_token"),
+            refresh_token=credentials_dict.get("refresh_token"),
+            token_uri=credentials_dict.get("token_uri", "https://oauth2.googleapis.com/token"),
+            client_id=credentials_dict.get("client_id"),
+            client_secret=credentials_dict.get("client_secret")
+        )
+        
+        drive_service = build('drive', 'v3', credentials=creds)
+        
+        # Step 1: Read data file content
+        print(f"📄 Reading data file...")
+        data_file_metadata = drive_service.files().get(fileId=data_file_id, fields='name, mimeType').execute()
+        data_mime_type = data_file_metadata['mimeType']
+        data_file_name = data_file_metadata['name']
+        
+        print(f"✅ Data file: {data_file_name} (Type: {data_mime_type})")
+        
+        # ✅ EXPANDED SUPPORT: Handle multiple file types
+        if data_mime_type == 'application/vnd.google-apps.document':
+            print("   Format: Google Docs → Exporting as plain text")
+            data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/plain').execute().decode('utf-8')
+        
+        elif data_mime_type in ['text/plain', 'text/csv']:
+            print("   Format: Text/CSV → Reading directly")
+            data_content = drive_service.files().get_media(fileId=data_file_id).execute().decode('utf-8')
+        
+        elif data_mime_type == 'application/vnd.google-apps.spreadsheet':
+            print("   Format: Google Sheets → Exporting as CSV")
+            data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/csv').execute().decode('utf-8')
+        
+        elif data_mime_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+            # ✅ NEW: Word .docx support
+            print("   Format: Word .docx → Extracting text with python-docx")
+            data_content = _read_docx_from_drive(data_file_id, drive_service)
+        
+        elif data_mime_type == 'application/msword':
+            # Legacy .doc format
+            print("   Format: Legacy Word .doc → Converting via Google Drive")
+            # Google Drive can convert old .doc to text
+            try:
+                data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/plain').execute().decode('utf-8')
+            except:
+                return f"❌ Error: Cannot read legacy .doc format. Please convert to .docx or upload as Google Doc."
+        
+        elif data_mime_type == 'application/pdf':
+            # PDF support (requires additional library)
+            print("   Format: PDF → Not directly supported")
+            return f"❌ Error: PDF data files are not supported. Please convert PDF to text or Word format first."
+        
+        else:
+            return f"❌ Error: Unsupported data file type: {data_mime_type}\n\nSupported formats:\n- Google Docs\n- Word (.docx)\n- Text files (.txt)\n- CSV files\n- Google Sheets"
+        
+        print(f"✅ Read {len(data_content)} characters from data file")
+        
+        # Step 2: Analyze template for placeholders
+        extractor = DocumentFormatExtractor(credentials_dict)
+        structure = extractor.extract_document_structure(template_file_id)
+        
+        if "error" in structure:
+            return f"❌ Error analyzing template: {structure['error']}"
+        
+        placeholders = extractor.identify_placeholders(structure)
+        print(f"🔍 Found placeholders in template: {placeholders}")
+        
+        # Step 3: Parse data content into placeholder values
+        placeholder_values = {}
+        
+        if not placeholders:
+            placeholder_values = {"CONTENT": data_content}
+            print("ℹ️ No placeholders found in template, using data as CONTENT")
+        else:
+            # Parse data as key-value pairs
+            lines = data_content.strip().split('\n')
+            
+            for line in lines:
+                separator = None
+                if ':' in line:
+                    separator = ':'
+                elif '=' in line:
+                    separator = '='
+                elif '|' in line:
+                    separator = '|'
+                
+                if separator:
+                    parts = line.split(separator, 1)
+                    if len(parts) == 2:
+                        key = parts[0].strip().upper().replace(' ', '_').replace('-', '_')
+                        value = parts[1].strip()
+                        
+                        # Match to placeholders
+                        for placeholder in placeholders:
+                            if key == placeholder or key in placeholder or placeholder in key:
+                                placeholder_values[placeholder] = value
+                                print(f"  ✓ Matched: [{placeholder}] = {value[:50]}{'...' if len(value) > 50 else ''}")
+                                break
+            
+            # Fill missing placeholders
+            for placeholder in placeholders:
+                if placeholder not in placeholder_values:
+                    if placeholder in ['CONTENT', 'DATA', 'TEXT']:
+                        placeholder_values[placeholder] = data_content
+                        print(f"  ℹ️ Using full data for [{placeholder}]")
+                    elif placeholder == 'DATE':
+                        from datetime import datetime
+                        placeholder_values[placeholder] = datetime.now().strftime("%B %d, %Y")
+                        print(f"  ℹ️ Auto-filled [{placeholder}] with current date")
+                    else:
+                        placeholder_values[placeholder] = ""
+                        print(f"  ⚠️ No data for [{placeholder}], leaving empty")
+        
+        print(f"📝 Final placeholder mapping: {list(placeholder_values.keys())}")
+        
+        # Step 4: Create document from template
+        print(f"📄 Creating document '{new_title}' from template...")
+        result = extractor.create_from_template(
+            template_document_id=template_file_id,
+            new_title=new_title,
+            placeholder_values=placeholder_values
+        )
+        
+        if not result.get("success"):
+            return f"❌ Error creating document: {result.get('error')}"
+        
+        print(f"✅ Document created: {result['document_id']}")
+        
+        # Step 5: Replace blank lines
+        print(f"🔄 Checking for blank line placeholders...")
+        _replace_blank_lines_in_document(
+            document_id=result['document_id'],
+            placeholder_values=placeholder_values,
+            credentials_dict=credentials_dict
+        )
+        
+        # Step 6: Export as PDF if requested
+        if output_format == "pdf":
+            print("📄 Exporting as PDF...")
+            try:
+                pdf_content = drive_service.files().export(
+                    fileId=result['document_id'],
+                    mimeType='application/pdf'
+                ).execute()
+                
+                doc_metadata = drive_service.files().get(
+                    fileId=result['document_id'],
+                    fields='parents'
+                ).execute()
+                
+                parents = doc_metadata.get('parents', [])
+                
+                pdf_metadata = {
+                    'name': f"{new_title}.pdf",
+                    'mimeType': 'application/pdf',
+                    'parents': parents
+                }
+                
+                from googleapiclient.http import MediaInMemoryUpload
+                pdf_file = drive_service.files().create(
+                    body=pdf_metadata,
+                    media_body=MediaInMemoryUpload(pdf_content, mimetype='application/pdf'),
+                    fields='id, webViewLink'
+                ).execute()
+                
+                response = f"✅ Document created and exported as PDF!\n\n"
+                response += f"📄 Title: {new_title}.pdf\n"
+                response += f"🆔 PDF ID: {pdf_file['id']}\n"
+                response += f"🔗 PDF URL: {pdf_file['webViewLink']}\n"
+                response += f"📝 Google Doc ID: {result['document_id']}\n"
+                response += f"🔗 Google Doc URL: {result['url']}\n"
+                
+                return response
+                
+            except Exception as pdf_error:
+                print(f"⚠️ PDF export failed: {pdf_error}")
+        
+        # Default: Return Google Doc response
+        response = f"✅ Document created successfully!\n\n"
+        response += f"📄 Title: {result['title']}\n"
+        response += f"🆔 Document ID: {result['document_id']}\n"
+        response += f"🔗 URL: {result['url']}\n"
+        
+        return response
+    
+    except Exception as error:
+        import traceback
+        traceback.print_exc()
+        return f"❌ Error creating document: {error}"
+
+# Add this function at the TOP of your tools.py file (after imports)
+# This should go right after your imports and before get_google_service()
+
+def _read_docx_from_drive(file_id: str, drive_service) -> str:
+    """
+    Read text content from a .docx file stored in Google Drive
+    
+    Args:
+        file_id: Google Drive file ID
+        drive_service: Authenticated Google Drive service
+    
+    Returns:
+        Extracted text content from the Word document
+    """
+    try:
+        import io
+        from docx import Document
+        
+        # Download the file content
+        request = drive_service.files().get_media(fileId=file_id)
+        file_content = io.BytesIO()
+        
+        from googleapiclient.http import MediaIoBaseDownload
+        downloader = MediaIoBaseDownload(file_content, request)
+        
+        done = False
+        while not done:
+            status, done = downloader.next_chunk()
+        
+        # Reset file pointer to beginning
+        file_content.seek(0)
+        
+        # Parse with python-docx
+        doc = Document(file_content)
+        
+        # Extract all text from paragraphs
+        text_content = []
+        for paragraph in doc.paragraphs:
+            if paragraph.text.strip():  # Skip empty paragraphs
+                text_content.append(paragraph.text)
+        
+        # Also extract text from tables
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if cell.text.strip():
+                        text_content.append(cell.text)
+        
+        full_text = '\n'.join(text_content)
+        print(f"✅ Extracted {len(full_text)} characters from .docx file")
+        
+        return full_text
+        
+    except ImportError:
+        raise ImportError(
+            "python-docx library not installed. "
+            "Install with: pip install python-docx"
+        )
+    except Exception as e:
+        raise Exception(f"Error reading .docx file: {str(e)}")
+
+
+# THEN, in your _create_from_template_and_data_ids_impl function,
+# find the section that reads data files (around line 850-870)
+# and REPLACE this section:
+
+        # OLD CODE (around line 860):
+        # if data_mime_type == 'application/vnd.google-apps.document':
+        #     data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/plain').execute().decode('utf-8')
+        # elif data_mime_type in ['text/plain', 'text/csv']:
+        #     data_content = drive_service.files().get_media(fileId=data_file_id).execute().decode('utf-8')
+        # elif data_mime_type == 'application/vnd.google-apps.spreadsheet':
+        #     data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/csv').execute().decode('utf-8')
+        # else:
+        #     return f"❌ Error: Unsupported data file type: {data_mime_type}"
+
+        # NEW CODE (with DOCX support):
+        if data_mime_type == 'application/vnd.google-apps.document':
+            print("   Format: Google Docs → Exporting as plain text")
+            data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/plain').execute().decode('utf-8')
+        
+        elif data_mime_type in ['text/plain', 'text/csv']:
+            print("   Format: Text/CSV → Reading directly")
+            data_content = drive_service.files().get_media(fileId=data_file_id).execute().decode('utf-8')
+        
+        elif data_mime_type == 'application/vnd.google-apps.spreadsheet':
+            print("   Format: Google Sheets → Exporting as CSV")
+            data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/csv').execute().decode('utf-8')
+        
+        elif data_mime_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+            # ✅ NEW: Word .docx support
+            print("   Format: Word .docx → Extracting text with python-docx")
+            data_content = _read_docx_from_drive(data_file_id, drive_service)
+        
+        elif data_mime_type == 'application/msword':
+            # Legacy .doc format
+            print("   Format: Legacy Word .doc → Converting via Google Drive")
+            try:
+                data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/plain').execute().decode('utf-8')
+            except:
+                return f"❌ Error: Cannot read legacy .doc format. Please convert to .docx or upload as Google Doc."
+        
+        else:
+            return f"❌ Error: Unsupported data file type: {data_mime_type}\n\nSupported formats:\n- Google Docs\n- Word (.docx)\n- Text files (.txt)\n- CSV files\n- Google Sheets"

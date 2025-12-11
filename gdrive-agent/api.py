@@ -410,6 +410,98 @@ def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "error": str(e),
             "message": f"❌ Search failed: {str(e)}"
         }
+    
+def search_template_and_data_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Search for template and data files in Google Drive
+    
+    Inputs:
+        template_name: str (required) - Name of template file
+        data_name: str (required) - Name of data file
+    
+    Returns:
+        success: bool
+        template_file_id: str - Template file ID
+        template_file_name: str - Template file name
+        data_file_id: str - Data file ID
+        data_file_name: str - Data file name
+        message: str
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+        
+        template_name = inputs.get("template_name")
+        data_name = inputs.get("data_name")
+        
+        if not template_name:
+            return {"success": False, "error": "template_name is required"}
+        if not data_name:
+            return {"success": False, "error": "data_name is required"}
+        
+        print(f"🔍 Searching for template: '{template_name}'")
+        print(f"🔍 Searching for data: '{data_name}'")
+        
+        # Search for template file
+        template_query = f"name contains '{template_name}' and trashed=false"
+        template_results = service.files().list(
+            q=template_query,
+            fields="files(id, name, mimeType)",
+            pageSize=10
+        ).execute()
+        
+        template_files = template_results.get('files', [])
+        
+        # Search for data file
+        data_query = f"name contains '{data_name}' and trashed=false"
+        data_results = service.files().list(
+            q=data_query,
+            fields="files(id, name, mimeType)",
+            pageSize=10
+        ).execute()
+        
+        data_files = data_results.get('files', [])
+        
+        # Check if files were found
+        if not template_files:
+            return {
+                "success": False,
+                "error": f"Template file '{template_name}' not found in Google Drive",
+                "message": f"❌ Template file '{template_name}' not found"
+            }
+        
+        if not data_files:
+            return {
+                "success": False,
+                "error": f"Data file '{data_name}' not found in Google Drive",
+                "message": f"❌ Data file '{data_name}' not found"
+            }
+        
+        # Use first match for each
+        template_file = template_files[0]
+        data_file = data_files[0]
+        
+        print(f"✅ Found template: {template_file['name']} (ID: {template_file['id']})")
+        print(f"✅ Found data: {data_file['name']} (ID: {data_file['id']})")
+        
+        return {
+            "success": True,
+            "template_file_id": template_file['id'],
+            "template_file_name": template_file['name'],
+            "data_file_id": data_file['id'],
+            "data_file_name": data_file['name'],
+            "message": f"✅ Found template '{template_file['name']}' and data '{data_file['name']}'",
+            "error": None
+        }
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "error": str(e),
+            "message": f"❌ Search failed: {str(e)}"
+        }
+    
 def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
     Upload a template file (PDF, DOCX, DOC) to Google Drive Templates folder
@@ -735,7 +827,8 @@ DRIVE_TOOLS = {
     "search_files": search_files_tool,
     "get_folder_info": get_folder_info_tool,
     "upload_template": upload_template_tool, 
-    "read_file_content": read_file_content_tool
+    "read_file_content": read_file_content_tool,
+    "search_template_and_data": search_template_and_data_tool
 }
 
 
