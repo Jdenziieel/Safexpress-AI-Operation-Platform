@@ -1,18 +1,17 @@
 {
-  "response": "{\n    \"intent\": \"needs_clarification\",\n    \"task_type\": \"send_email\",\n    \"extracted_info\": {},\n    \"missing_fields\": [\"to\", \"subject\", \"body\"],\n    \"clarification_question\": \"Sure, I can help with that. Who should I send this email to? What should be the subject and the body of the email?\",\n    \"reasoning\": \"The user wants to send an email, but hasn't provided the recipient, subject, or body of the email.\",\n    \"suggested_alternatives\": [],\n    \"execution_ready\": false,\n    \"execution_summary\": \"Send an email\"\n}",
+  "response": "{\n    \"intent\": \"ready_to_execute\",\n    \"task_type\": \"create_from_template_and_data\",\n    \"extracted_info\": {\"template_name\": \"MinutesOfMeetingTEMP\", \"data_name\": \"TestData123\", \"new_title\": \"January Reports\"},\n    \"missing_fields\": [],\n    \"clarification_question\": null,\n    \"reasoning\": \"All fields extracted for template+data workflow\",\n    \"execution_ready\": true,\n    \"execution_summary\": \"Create 'January Reports' from template 'MinutesOfMeetingTEMP' using 'TestData123' data\"\n}",
   "parsed": {
-    "intent": "needs_clarification",
-    "task_type": "send_email",
-    "extracted_info": {},
-    "missing_fields": [
-      "to",
-      "subject",
-      "body"
-    ],
-    "clarification_question": "Sure, I can help with that. Who should I send this email to? What should be the subject and the body of the email?",
-    "reasoning": "The user wants to send an email, but hasn't provided the recipient, subject, or body of the email.",
-    "suggested_alternatives": [],
-    "execution_ready": false,
-    "execution_summary": "Send an email"
+    "intent": "ready_to_execute",
+    "task_type": "create_from_template_and_data",
+    "extracted_info": {
+      "template_name": "MinutesOfMeetingTEMP",
+      "data_name": "TestData123",
+      "new_title": "January Reports"
+    },
+    "missing_fields": [],
+    "clarification_question": null,
+    "reasoning": "All fields extracted for template+data workflow",
+    "execution_ready": true,
+    "execution_summary": "Create 'January Reports' from template 'MinutesOfMeetingTEMP' using 'TestData123' data"
   }
 }

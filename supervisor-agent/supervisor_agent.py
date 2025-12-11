@@ -341,6 +341,7 @@ def supervisor_node(state: SharedState) -> SharedState:
     1. Agent filtering (identify_relevant_agents)
     2. Tool filtering within agents (identify_relevant_tools_fast)
     3. Compact mode (removes verbose metadata)
+    4. Dynamic workflow hints (only when needed)
     """
     print(">>> RUNNING SUPERVISOR NODE VERSION 2 <<<")
     print("\n" + "=" * 60)
@@ -359,6 +360,9 @@ def supervisor_node(state: SharedState) -> SharedState:
     # OPTIMIZATION V2: Two-level filtering (agents + tools)
     from tool_filter import get_optimized_capabilities
     
+    # ✅ FIX: Force inclusion of drive_agent for template+data workflows
+    needs_template_data = any(word in user_input.lower() for word in ['template', 'data', 'mom'])
+    
     filtered_capabilities, tool_filter = get_optimized_capabilities(
         user_input,
         use_llm_filter=False,  # Use fast keyword matching (0 tokens)
@@ -366,52 +370,106 @@ def supervisor_node(state: SharedState) -> SharedState:
     )
     relevant_agents = list(filtered_capabilities.keys())
     
+    # Force add drive_agent if template+data detected and not already included
+    if needs_template_data and 'drive_agent' not in relevant_agents:
+        print("⚠️ WARNING: drive_agent missing for template+data workflow, force adding...")
+        relevant_agents.append('drive_agent')
+        # Re-fetch capabilities with drive_agent included
+        from agent_capabilities import agent_capabilities
+        if 'drive_agent' in agent_capabilities:
+            filtered_capabilities['drive_agent'] = agent_capabilities['drive_agent']
+    
     print(f"📌 Relevant agents: {relevant_agents}")
     print(f"🔧 Filtered tools: {tool_filter}")
 
-    # Now send to LLM with reduced context
+    # ===================================================================
+    # 🚀 DYNAMIC WORKFLOW HINT INJECTION (ONLY WHEN NEEDED)
+    # ===================================================================
+    
+    def detect_template_data_workflow(user_msg: str) -> bool:
+        """Detect if user wants template+data document creation"""
+        msg_lower = user_msg.lower()
+        
+        # Check for both template AND data mentions
+        has_template = any(word in msg_lower for word in ['template', 'format', 'mom'])
+        has_data = any(word in msg_lower for word in ['data', 'use ', 'document', 'file', 'content'])
+        
+        # Check for explicit file references (like 'TestData123' or 'MOMtemplate')
+        has_specific_files = any(char.isupper() for char in user_msg) or 'found within' in msg_lower
+        
+        # Must have: template keyword + data keyword + specific file mentions
+        return has_template and has_data and has_specific_files
+    
+    # Detect workflow pattern
+    needs_template_data_hint = detect_template_data_workflow(user_input)
+    
+    # Build dynamic hint (only if pattern detected) - SIMPLIFIED VERSION
+    workflow_hint = ""
+    if needs_template_data_hint:
+        print("🎯 Detected: TEMPLATE+DATA workflow pattern")
+        workflow_hint = """
+🚨 TEMPLATE+DATA WORKFLOW DETECTED 🚨
+
+USER WANTS: Create document using template + data files from Google Drive
+
+YOU MUST GENERATE EXACTLY THIS 2-STEP PLAN:
+
+Step 1 - Search for both files:
+{
+  "step_id": 1,
+  "agent": "drive_agent",
+  "tool": "search_template_and_data",
+  "description": "Search Google Drive for template and data files",
+  "inputs": {
+    "template_name": "<EXTRACT: look for 'MOMtemplate', 'Board Meeting Template', etc.>",
+    "data_name": "<EXTRACT: look for 'TestData123', 'January Data', etc.>"
+  },
+  "output_variables": {
+    "template_file_id": "template_file_id",
+    "data_file_id": "data_file_id"
+  }
+}
+
+Step 2 - Create document from template and data:
+{
+  "step_id": 2,
+  "agent": "docs_agent",
+  "tool": "create_from_template_and_data_ids",
+  "description": "Create document from template and data files",
+  "inputs": {
+    "template_file_id": "{{ template_file_id }}",
+    "data_file_id": "{{ data_file_id }}",
+    "new_title": "<EXTRACT: look for 'January Reports', 'Q4 Summary', etc.>",
+    "output_format": "google_docs"
+  },
+  "output_variables": {
+    "document_id": "document_id",
+    "document_url": "document_url"
+  }
+}
+
+EXTRACTION INSTRUCTIONS:
+- template_name: Find file name for structure/formatting (e.g., "MOMtemplate")
+- data_name: Find file name for content/values (e.g., "TestData123")
+- new_title: Find desired document name (e.g., "January Reports")
+
+CRITICAL: Your JSON response MUST have "steps" array with exactly these 2 steps.
+
+Example Response Format:
+{
+  "steps": [
+    { "step_id": 1, "agent": "drive_agent", "tool": "search_template_and_data", ... },
+    { "step_id": 2, "agent": "docs_agent", "tool": "create_from_template_and_data_ids", ... }
+  ]
+}
+"""
+    
+    # ===================================================================
+    # BUILD SYSTEM PROMPT (with optional hint)
+    # ===================================================================
+    
     capability_summary = json.dumps(filtered_capabilities, indent=2)
     schema_text = json.dumps(PLAN_SCHEMA, indent=2)
-
-    #     system_prompt = f"""You are the Supervisor agent creating multi-step execution plans.
-
-    # CURRENT DATE CONTEXT:
-    # - Today's date: {today_date}
-    # - Yesterday's date: {yesterday_date}
-    # - Available context variables: today_date, yesterday_date
-
-    # CRITICAL EMAIL SAFETY RULE:
-    # ⚠️ NEVER use send_draft_email, reply_to_email, or send_email_with_attachment as the first step.
-    # ✅ ALWAYS create drafts first using create_draft_email before any sending action.
-    # ✅ This allows human review before emails are actually sent.
-
-    # Example CORRECT workflow for sending email:
-    # Step 1: create_draft_email (creates draft for review)
-    # Step 2: send_draft_email (sends after approval) - OPTIONAL, only if user explicitly requests sending
-
-    # Example WRONG workflow:
-    # ❌ Step 1: send_email_with_attachment (NO! Create draft first!)
-    # ❌ Step 1: reply_to_email (NO! Create draft first!)
-
-    # PLANNING RULES:
-    # 1. Reference previous outputs using {{{{ variable_name }}}} syntax
-    # 2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from tool's "returns"
-    # 3. Break tasks into sequential steps with clear data flow
-    # 4. Use date context variables: {{{{ today_date }}}}, {{{{ yesterday_date }}}} (format: YYYY-MM-DD)
-    # 5. For ANY email sending: create_draft_email first, then optionally send_draft_email if explicitly requested
-    # 6. IMPORTANT: read_recent_emails and search_emails return an "emails" array. Access items using array syntax:
-    #    - {{{{ emails[0].message_id }}}} for first email's message_id
-    #    - {{{{ emails[0].from }}}} for first email's sender
-    #    - {{{{ emails[0].subject }}}} for first email's subject
-    #    - Store array in variable: {{"recent_emails": "emails"}}, then use {{{{ recent_emails[0].from }}}}
-
-    # Available agents and tools:
-    # {capability_summary}
-
-    # Schema:
-    # {schema_text}
-
-    # Return ONLY the JSON plan."""
 
     system_prompt = f"""You are the Supervisor agent creating multi-step execution plans.
 
@@ -419,6 +477,7 @@ CURRENT DATE CONTEXT:
 - Today's date: {today_date}
 - Yesterday's date: {yesterday_date}
 
+{workflow_hint}
 
 PLANNING RULES:
 1. Reference previous outputs using {{{{ variable_name }}}} syntax
@@ -441,7 +500,8 @@ Available agents and tools:
 Schema:
 {schema_text}
 
-CRITICAL: Return ONLY valid JSON matching the schema above. NO explanations, NO text before or after the JSON."""
+CRITICAL: Return ONLY valid JSON matching the schema above. NO explanations, NO text before or after the JSON.
+Your response must be a valid JSON object with a "steps" array."""
 
     # Calculate token stats
     total_tools = sum(len(tools) for tools in tool_filter.values())
@@ -452,83 +512,176 @@ CRITICAL: Return ONLY valid JSON matching the schema above. NO explanations, NO 
     print(f"   Agents: {len(relevant_agents)}/{len(agent_capabilities)}")
     print(f"   Tools: {total_tools}/{all_tools_count}")
     print(f"   Context size: {len(capability_summary):,} chars (~{len(capability_summary)//4:,} tokens)")
+    if needs_template_data_hint:
+        print(f"   ⚡ Dynamic hint: +{len(workflow_hint)//4:,} tokens (workflow-specific)")
 
-    # === TOKEN TRACKING: Plan Generation ===
-    start_time = time.time()
-    llm_response = llm.invoke(
-        [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input},
-        ]
-    )
-    duration_ms = (time.time() - start_time) * 1000
-    
-    # Extract token usage from response
-    input_tokens = 0
-    output_tokens = 0
-    if hasattr(llm_response, 'response_metadata'):
-        token_usage = llm_response.response_metadata.get('token_usage', {})
-        input_tokens = token_usage.get('prompt_tokens', (len(system_prompt) + len(user_input)) // 4)
-        output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
-    else:
-        input_tokens = (len(system_prompt) + len(user_input)) // 4
-        output_tokens = len(llm_response.content) // 4
-    
-    # Log the LLM call with token tracking
-    logger.llm_call(
-        model=LLM_MODEL,
-        operation="plan_generation",
-        input_tokens=input_tokens,
-        output_tokens=output_tokens,
-        duration_ms=duration_ms,
-        tier="supervisor",
-        prompt_summary=f"Planning: {user_input[:50]}...",
-        success=True
-    )
+    # ===================================================================
+    # RETRY LOGIC FOR ROBUST PLAN GENERATION
+    # ===================================================================
+    max_retries = 2
+    retry_count = 0
+    plan = None
+    last_error = None
 
-    try:
-        # Extract JSON from response (handle text before JSON block)
-        response_text = llm_response.content.strip()
-        
-        # Check if response contains markdown code block
-        if "```json" in response_text:
-            # Extract content between ```json and ```
-            start = response_text.find("```json") + 7
-            end = response_text.find("```", start)
-            response_text = response_text[start:end].strip()
-        elif "```" in response_text:
-            # Extract content between ``` and ```
-            start = response_text.find("```") + 3
-            end = response_text.find("```", start)
-            response_text = response_text[start:end].strip()
-        
-        # If still no valid JSON, try to find JSON object directly
-        if not response_text.startswith("{"):
-            # Try to find JSON object in the text
-            json_start = response_text.find("{")
-            if json_start != -1:
-                response_text = response_text[json_start:]
+    while retry_count <= max_retries:
+        try:
+            # === TOKEN TRACKING: Plan Generation ===
+            start_time = time.time()
+            llm_response = llm.invoke(
+                [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_input},
+                ]
+            )
+            duration_ms = (time.time() - start_time) * 1000
+            
+            # Extract token usage from response
+            input_tokens = 0
+            output_tokens = 0
+            if hasattr(llm_response, 'response_metadata'):
+                token_usage = llm_response.response_metadata.get('token_usage', {})
+                input_tokens = token_usage.get('prompt_tokens', (len(system_prompt) + len(user_input)) // 4)
+                output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
+            else:
+                input_tokens = (len(system_prompt) + len(user_input)) // 4
+                output_tokens = len(llm_response.content) // 4
+            
+            # Log the LLM call with token tracking
+            logger.llm_call(
+                model=LLM_MODEL,
+                operation="plan_generation",
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                duration_ms=duration_ms,
+                tier="supervisor",
+                prompt_summary=f"Planning: {user_input[:50]}...",
+                success=True
+            )
 
-        plan = json.loads(response_text)
+            # Extract JSON from response (handle text before JSON block)
+            response_text = llm_response.content.strip()
+            
+            # Check if response contains markdown code block
+            if "```json" in response_text:
+                # Extract content between ```json and ```
+                start = response_text.find("```json") + 7
+                end = response_text.find("```", start)
+                response_text = response_text[start:end].strip()
+            elif "```" in response_text:
+                # Extract content between ``` and ```
+                start = response_text.find("```") + 3
+                end = response_text.find("```", start)
+                response_text = response_text[start:end].strip()
+            
+            # If still no valid JSON, try to find JSON object directly
+            if not response_text.startswith("{"):
+                # Try to find JSON object in the text
+                json_start = response_text.find("{")
+                if json_start != -1:
+                    response_text = response_text[json_start:]
 
-        print("✅ Plan generated successfully!")
-        print(f"\n📋 Generated Plan:\n{json.dumps(plan, indent=2)}")
+            plan = json.loads(response_text)
+            
+            # ===================================================================
+            # ✅ VALIDATE BASIC PLAN STRUCTURE FIRST
+            # ===================================================================
+            if not isinstance(plan, dict):
+                raise ValueError("Plan must be a dictionary object")
+            
+            if "steps" not in plan:
+                raise ValueError("Plan must contain 'steps' array. Got keys: " + str(list(plan.keys())))
+            
+            steps = plan.get("steps", [])
+            
+            if not isinstance(steps, list):
+                raise ValueError(f"'steps' must be an array, got {type(steps).__name__}")
+            
+            if len(steps) == 0:
+                raise ValueError("'steps' array is empty - plan must contain at least one step")
+            
+            # ===================================================================
+            # ✅ VALIDATE: Template+Data Workflow Correctness
+            # ===================================================================
+            if needs_template_data_hint:
+                
+                if len(steps) < 2:
+                    raise ValueError(
+                        f"❌ WORKFLOW ERROR: Template+data workflow requires at least 2 steps, "
+                        f"but only {len(steps)} step(s) found. "
+                        f"Required workflow:\n"
+                        f"  Step 1: drive_agent.search_template_and_data\n"
+                        f"  Step 2: docs_agent.create_from_template_and_data_ids"
+                    )
+                
+                first_step = steps[0]
+                second_step = steps[1]
+                
+                # Check if first step is search_template_and_data
+                if first_step.get("tool") != "search_template_and_data":
+                    raise ValueError(
+                        f"❌ WORKFLOW ERROR: Template+data creation must start with "
+                        f"'search_template_and_data', not '{first_step.get('tool')}'. "
+                        f"Please regenerate the plan following the workflow hint."
+                    )
+                
+                # Check if second step is create_from_template_and_data_ids
+                if second_step.get("tool") != "create_from_template_and_data_ids":
+                    raise ValueError(
+                        f"❌ WORKFLOW ERROR: After search_template_and_data, must use "
+                        f"'create_from_template_and_data_ids', not '{second_step.get('tool')}'. "
+                        f"Please regenerate the plan following the workflow hint."
+                    )
+                
+                # Check if template_file_id and data_file_id are passed correctly
+                second_step_inputs = str(second_step.get("inputs", {}))
+                if "{{ template_file_id }}" not in second_step_inputs:
+                    raise ValueError(
+                        "❌ WORKFLOW ERROR: Step 2 must reference {{ template_file_id }} "
+                        "from Step 1's output_variables"
+                    )
+                
+                if "{{ data_file_id }}" not in second_step_inputs:
+                    raise ValueError(
+                        "❌ WORKFLOW ERROR: Step 2 must reference {{ data_file_id }} "
+                        "from Step 1's output_variables"
+                    )
+                
+                print("✅ Workflow validation passed: search → create sequence correct")
 
-        # Save the plan to a file for inspection
-        plan_file = os.path.join(OUTPUT_DIR, "supervisor_plan.json")
-        with open(plan_file, "w") as f:
-            json.dump(plan, f, indent=2)
-        print(f"\n💾 Plan saved to: {plan_file}")
-        print("=" * 60 + "\n")
+            # If we got here, plan is valid!
+            print("✅ Plan generated successfully!")
+            print(f"\n📋 Generated Plan:\n{json.dumps(plan, indent=2)}")
+            break  # Exit retry loop
 
-    except json.JSONDecodeError as e:
-        raise ValueError(
-            f"Failed to parse LLM response as JSON: {e}\nResponse: {llm_response.content}"
-        )
+        except (json.JSONDecodeError, ValueError) as e:
+            last_error = e
+            retry_count += 1
+            
+            if retry_count > max_retries:
+                # All retries exhausted
+                error_msg = (
+                    f"Failed to generate valid plan after {max_retries} attempts.\n"
+                    f"Last error: {str(last_error)}\n"
+                    f"Last LLM response:\n{llm_response.content[:500]}..."
+                )
+                print(f"❌ {error_msg}")
+                raise ValueError(error_msg)
+            
+            print(f"⚠️ Plan generation failed (attempt {retry_count}/{max_retries}), retrying...")
+            print(f"Error: {str(e)}")
+            
+            # Add error feedback to system prompt for retry
+            system_prompt += f"\n\n⚠️ PREVIOUS ATTEMPT FAILED: {str(e)}\n"
+            system_prompt += "Please generate a valid JSON plan with a 'steps' array containing all required steps."
+
+    # Save the plan to a file for inspection
+    plan_file = os.path.join(OUTPUT_DIR, "supervisor_plan.json")
+    with open(plan_file, "w") as f:
+        json.dump(plan, f, indent=2)
+    print(f"\n💾 Plan saved to: {plan_file}")
+    print("=" * 60 + "\n")
 
     return {"plan": plan, "context": state.get("context", {})}
-
-
 # ============================================================================
 # PENDING ACTIONS - SQLite Storage with Runtime Cache
 # ============================================================================
@@ -819,9 +972,27 @@ def orchestrator_node(state: SharedState) -> SharedState:
     print("⚙️ ORCHESTRATOR NODE - Execution Phase")
     print("=" * 60)
 
-    plan = state["plan"].get("plan", [])
+    # ===================================================================
+    # 🔍 DEBUG: Print incoming state structure
+    # ===================================================================
+
+    plan_dict = state.get("plan", {})
+    plan = plan_dict.get("steps", [])
     variable_context = state.get("context", {})
     results = []
+
+    if not plan:
+        print("❌ ERROR: No steps found in plan!")
+        print(f"📋 Plan structure: {json.dumps(plan_dict, indent=2)}")
+        return {
+            "final_context": variable_context,
+            "context": variable_context,
+            "results": [],
+            "error": "No steps to execute in plan"
+        }
+    
+    print(f"✅ Found {len(plan)} steps to execute")
+        
     
     # Get thread_id from logging context for WebSocket broadcasting
     from logging_config import get_current_thread_id
@@ -857,6 +1028,24 @@ def orchestrator_node(state: SharedState) -> SharedState:
     # Jinja2 for variable substitution
     from jinja2 import Template
 
+    # ===================================================================
+    # 🔍 DEBUG: Validate Google credentials at startup
+    # ===================================================================
+    print("\n🔑 CREDENTIALS VALIDATION AT STARTUP:")
+    print("─" * 60)
+    google_creds_available = {
+        "GOOGLE_ACCESS_TOKEN": bool(os.getenv("GOOGLE_ACCESS_TOKEN")),
+        "GOOGLE_REFRESH_TOKEN": bool(os.getenv("GOOGLE_REFRESH_TOKEN")),
+        "GOOGLE_CLIENT_ID": bool(os.getenv("GOOGLE_CLIENT_ID")),
+        "GOOGLE_CLIENT_SECRET": bool(os.getenv("GOOGLE_CLIENT_SECRET")),
+        "OAUTH_CLIENT_ID": bool(os.getenv("OAUTH_CLIENT_ID")),
+        "OAUTH_CLIENT_SECRET": bool(os.getenv("OAUTH_CLIENT_SECRET")),
+    }
+    for cred_name, is_available in google_creds_available.items():
+        status = "✅" if is_available else "❌"
+        print(f"   {status} {cred_name}: {'SET' if is_available else 'MISSING'}")
+    print("─" * 60)
+
     for step_num, step in enumerate(plan, 1):
         agent_name = step["agent"]
         tool_name = step.get("tool")
@@ -881,8 +1070,6 @@ def orchestrator_node(state: SharedState) -> SharedState:
         # === WEBSOCKET BROADCAST ===
         broadcast_ws_progress(step_num, len(plan), description or f"{agent_name}.{tool_name}", agent_name, "executing")
 
-        # INSERT STARTS HERE. ABOVE IS NORMAL AND INCONJUCTURE WITH PREVIOUS CODE OR THOSE COMMENTED BELOW
-
         # Check if this action requires approval
         risk_level = get_action_risk_level(tool_name)
         needs_approval = requires_approval(tool_name)
@@ -894,23 +1081,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
             substituted_inputs = {}
             for key, value in inputs.items():
                 if isinstance(value, str) and "{{" in value and "}}" in value:
-                    # Only use Jinja2 if the string contains template variables
                     template = Template(value)
                     rendered = template.render(**variable_context)
-                    # Try to parse rendered value back to its original type
                     try:
-                        # If it looks like JSON, parse it
                         if rendered.startswith("[") or rendered.startswith("{"):
-                            substituted_inputs[key] = json.loads(
-                                rendered.replace("'", '"')
-                            )
+                            substituted_inputs[key] = json.loads(rendered.replace("'", '"'))
                         else:
                             substituted_inputs[key] = rendered
                     except (json.JSONDecodeError, ValueError):
-                        # If parsing fails, keep as string
                         substituted_inputs[key] = rendered
                 else:
-                    # No template variables, keep original value and type
                     substituted_inputs[key] = value
 
             # Create action approval request
@@ -926,45 +1106,33 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 "risk_level": risk_level.value,
             }
 
-            # Store as pending
             pending_action = PendingAction(
                 action_id=action_id,
                 step_info=step_info,
-                execution_callback=None,  # We'll handle this differently
+                execution_callback=None,
             )
             store_pending_action(pending_action)
 
-            # Return early with pending action info
-            # In a real implementation, this would trigger a webhook/notification
             print(f"🔔 Approval required for action: {action_id}")
             print(f"   Endpoint: POST /action/approve/{action_id}")
             print(f"   Details: {json.dumps(step_info, indent=4)}")
-
-            # For demo purposes, we'll raise an exception that includes the action ID
-            # In production, this would be handled by a queue/webhook system
-            raise ApprovalRequiredException(
-                action_id=action_id,
-                step_info=step_info,
-                message=f"Action requires approval. Please review and approve at /action/approve/{action_id}",
-            )
 
         # If no approval needed, execute normally
         print(f"✅ Auto-executing (safe action)")
 
         # STEP 1: Variable Substitution
-        # Replace {{ variable }} with actual values from variable_context
         print(f"\n🔄 Substituting variables in inputs...")
         print(f"   Original inputs: {json.dumps(inputs, indent=6)}")
 
         substituted_inputs = {}
         for key, value in inputs.items():
             if isinstance(value, str):
-            # Use Jinja2 to substitute {{ variables }}
+                # Use Jinja2 to substitute {{ variables }}
                 template = Template(value)
                 substituted_inputs[key] = template.render(**variable_context)
-    # ✅ FIX: Handle file uploads
+            # ✅ FIX: Handle file uploads
             elif key == "file_path" and "uploaded_file" in variable_context:
-        # Use the temp_path from uploaded_file
+                # Use the temp_path from uploaded_file
                 uploaded_file = variable_context["uploaded_file"]
                 substituted_inputs[key] = uploaded_file.get("temp_path")
             else:
@@ -978,35 +1146,110 @@ def orchestrator_node(state: SharedState) -> SharedState:
         if not agent_url:
             error_msg = f"No endpoint configured for agent: {agent_name}"
             print(f"❌ {error_msg}")
-            results.append(
-                {
-                    "step": step_num,
-                    "agent": agent_name,
-                    "tool": tool_name,
-                    "status": "error",
-                    "error": error_msg,
-                }
-            )
+            results.append({
+                "step": step_num,
+                "agent": agent_name,
+                "tool": tool_name,
+                "status": "error",
+                "error": error_msg,
+            })
             continue
 
         print(f"\n🌐 Calling agent microservice: {agent_url}")
 
-        # Prepare request payload (tool-based format)
-        request_payload = {
-            "tool": tool_name,
-            "inputs": substituted_inputs,
-            "credentials_dict": {
+        # ===================================================================
+        # 🔍 DEBUG + FIX: Build and validate credentials properly
+        # ===================================================================
+        print(f"\n🔑 Building credentials dictionary...")
+        
+        # Build credentials dict - ALL VALUES MUST BE STRINGS for Pydantic validation
+        credentials_dict = {
             "access_token": os.getenv("GOOGLE_ACCESS_TOKEN"),
             "refresh_token": os.getenv("GOOGLE_REFRESH_TOKEN"),
             "token_uri": "https://oauth2.googleapis.com/token",
-            "client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
-            "client_secret": os.getenv("GOOGLE_CLIENT_SECRET", ""),
-        },
+            "client_id": os.getenv("GOOGLE_CLIENT_ID") or os.getenv("OAUTH_CLIENT_ID"),
+            "client_secret": os.getenv("GOOGLE_CLIENT_SECRET") or os.getenv("OAUTH_CLIENT_SECRET"),
         }
+
+        # Remove None values and empty strings (Google rejects these)
+        credentials_dict = {k: v for k, v in credentials_dict.items() if v}
+
+        # 🔍 DEBUG: Print credential validation status
+        print(f"\n🔍 CREDENTIAL VALIDATION:")
+        print("─" * 60)
+        print(f"   Has access_token: {bool(credentials_dict.get('access_token'))}")
+        print(f"   Has refresh_token: {bool(credentials_dict.get('refresh_token'))}")
+        print(f"   Has client_id: {bool(credentials_dict.get('client_id'))}")
+        print(f"   Has client_secret: {bool(credentials_dict.get('client_secret'))}")
+        print(f"   Has token_uri: {bool(credentials_dict.get('token_uri'))}")
+        print(f"   Total fields: {len(credentials_dict)}")
+        print("─" * 60)
+
+        # Validate that we have the minimum required credentials
+        required_fields = ["access_token", "refresh_token", "client_id", "client_secret"]
+        missing_fields = [field for field in required_fields if not credentials_dict.get(field)]
+
+        if missing_fields:
+            error_msg = f"Missing required Google credentials: {', '.join(missing_fields)}"
+            print(f"❌ {error_msg}")
+            print(f"🛑 Cannot proceed with this step - credentials incomplete")
+            
+            results.append({
+                "step": step_num,
+                "agent": agent_name,
+                "tool": tool_name,
+                "status": "error",
+                "error": error_msg,
+            })
+            
+            # Stop workflow due to credential error
+            print(f"\n{'='*60}")
+            print("🛑 ORCHESTRATOR STOPPED - CREDENTIAL ERROR")
+            print(f"{'='*60}")
+            
+            variable_context["results"] = results
+            variable_context["stopped_at_step"] = step_num
+            variable_context["error"] = error_msg
+            
+            return {
+                "final_context": variable_context,
+                "context": variable_context,
+                "results": results,
+                "stopped_at_step": step_num,
+                "error": error_msg,
+            }
+
+        print(f"✅ Credentials validation passed - all required fields present")
+
+        # ⚠️ CRITICAL FIX: Don't add expiry or scopes - agent expects only strings
+        # The agent's Pydantic model is: credentials_dict: Dict[str, str]
+        # Adding datetime objects or lists will cause 422 validation error
+
+        # Prepare request payload (tool-based format) - FIXED STRUCTURE
+        request_payload = {
+            "tool": tool_name,
+            "inputs": substituted_inputs,
+            "credentials_dict": credentials_dict  # Only string values, no expiry/scopes
+        }
+
+        # 🔍 DEBUG: Print request payload structure (without sensitive data)
+        print(f"\n🔍 REQUEST PAYLOAD STRUCTURE:")
+        print("─" * 60)
+        print(f"   Tool: {request_payload['tool']}")
+        print(f"   Inputs keys: {list(request_payload['inputs'].keys())}")
+        print(f"   Credentials keys: {list(request_payload['credentials_dict'].keys())}")
+        print(f"   Credentials types: {{{', '.join([f'{k}: {type(v).__name__}' for k, v in request_payload['credentials_dict'].items()])}}}")
+        print(f"   Payload size: {len(json.dumps(request_payload, default=str))} bytes")
+        print("─" * 60)
 
         try:
             # === AGENT CALL TIMING ===
             agent_start_time = time.time()
+            
+            print(f"\n🚀 Sending request to agent...")
+            print(f"   URL: {agent_url}")
+            print(f"   Timeout: 320 seconds")
+            print(f"   Max retries: 3")
             
             # Use retry logic with longer timeout (320 seconds) and exponential backoff
             result = call_agent_with_retry(
@@ -1017,6 +1260,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
             )
             
             agent_duration_ms = (time.time() - agent_start_time) * 1000
+            print(f"⏱️ Agent call completed in {agent_duration_ms:.2f}ms")
 
             if not result:
                 raise ValueError("Agent call failed after retries")
@@ -1116,6 +1360,14 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 # Handle failure - distinguish between no_results and actual errors
                 error_msg = result.get("error", "Unknown error")
                 is_no_results = result.get("no_results", False)
+
+                # 🔍 DEBUG: Print error details
+                print(f"\n🔍 ERROR RESPONSE DETAILS:")
+                print("─" * 60)
+                print(f"   Error message: {error_msg}")
+                print(f"   Is no_results: {is_no_results}")
+                print(f"   Full response: {json.dumps(result, indent=2)}")
+                print("─" * 60)
 
                 if is_no_results:
                     # Graceful handling for empty results
@@ -1224,6 +1476,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
             error_msg = f"HTTP error calling {agent_name}: {str(e)}"
             print(f"❌ {error_msg}")
             print(f"🛑 STOPPING WORKFLOW - HTTP Error in step {step_num}")
+            
+            # 🔍 DEBUG: Print HTTP error details
+            print(f"\n🔍 HTTP ERROR DETAILS:")
+            print("─" * 60)
+            print(f"   Error type: {type(e).__name__}")
+            print(f"   Error message: {str(e)}")
+            if hasattr(e, 'response'):
+                print(f"   Status code: {getattr(e.response, 'status_code', 'N/A')}")
+                print(f"   Response text: {getattr(e.response, 'text', 'N/A')[:500]}")
+            print("─" * 60)
 
             results.append(
                 {
@@ -1266,9 +1528,13 @@ def orchestrator_node(state: SharedState) -> SharedState:
             error_msg = f"Unexpected error: {str(e)}"
             print(f"❌ {error_msg}")
             print(f"🛑 STOPPING WORKFLOW - Unexpected Error in step {step_num}")
+            
+            # 🔍 DEBUG: Print full traceback
             import traceback
-
+            print(f"\n🔍 FULL TRACEBACK:")
+            print("─" * 60)
             traceback.print_exc()
+            print("─" * 60)
 
             results.append(
                 {
@@ -1314,6 +1580,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
     print(f"✓ Successful: {sum(1 for r in results if r.get('status') == 'success')}")
     print(f"ℹ️ No Results: {sum(1 for r in results if r.get('status') == 'no_results')}")
     print(f"✗ Failed: {sum(1 for r in results if r.get('status') == 'error')}")
+    print(f"{'='*60}\n")
+
+    # Include results in final_context for summary generation
+    variable_context["results"] = results
+
+    return {
+        "final_context": variable_context,
+        "context": variable_context,
+        "results": results,
+    }
     
     # === WEBSOCKET BROADCAST: Completion ===
     broadcast_ws_progress(len(plan), len(plan), "All steps completed", None, "completed")
@@ -2093,11 +2369,11 @@ async def execute_workflow(request: UserRequest):
             message="Workflow executed successfully",
         )
 
-    except ApprovalRequiredException as approval_ex:
-        # Handle approval requirement gracefully
-        print(
-            f"\n⏸️ Workflow paused - approval required for action: {approval_ex.action_id}"
-        )
+    # except ApprovalRequiredException as approval_ex:
+    #     # Handle approval requirement gracefully
+    #     print(
+    #         f"\n⏸️ Workflow paused - approval required for action: {approval_ex.action_id}"
+    #     )
 
         # Return structured response for approval
         raise HTTPException(

@@ -310,34 +310,36 @@ agent_capabilities = {
                     }
                 }
             },
-            "create_from_existing_data_and_template": {
-                "description": "Create document from existing template and data files in Google Drive (searches by file names)",
-                "args": {
-                    "template_file_name": "str (required) — Name of template file in Google Drive (e.g., 'Monthly Report Template')",
-                    "data_file_name": "str (required) — Name of data file in Google Drive (e.g., 'January Data.txt')",
-                    "new_title": "str (required) — Title for the new document to create",
-                    "output_format": "str (optional) — 'google_docs' (default, editable) or 'pdf' (final output)"
-                },
-                "returns": {
-                    "success": "bool — whether document was created successfully",
-                    "document_id": "str — Google Doc ID of created document",
-                    "url": "str — URL to access the document",
-                    "pdf_id": "str — PDF ID if output_format='pdf'",
-                    "pdf_url": "str — PDF URL if output_format='pdf'",
-                    "placeholders_filled": "dict — placeholder values that were used",
-                    "error": "str — error message (null if successful)",
-                },
-                "can_be_derived_from": {
-                    "template_file_name": {
-                        "source_tool": "drive_agent.search_files",
-                        
-                    },
-                    "data_file_name": {
-                        "source_tool": "drive_agent.search_files",
-                        
-                    }
-                }
-            },
+            "create_from_template_and_data_ids": {
+    "description": "⚠️ REQUIRES drive_agent.search_template_and_data first to get file IDs, Create document from template and data files using their Google Drive file IDs (IDs already found by drive_agent.search_template_and_data)",
+    "triggers": ["template and data", "using X template and Y data"],
+    "args": {
+        "template_file_id": "str (required) — Google Drive file ID of template",
+        "data_file_id": "str (required) — Google Drive file ID of data file",
+        "new_title": "str (required) — Title for the new document to create",
+        "output_format": "str (optional) — 'google_docs' (default, editable) or 'pdf' (final output)"
+    },
+    "returns": {
+        "success": "bool — whether document was created successfully",
+        "document_id": "str — Google Doc ID of created document",
+        "document_url": "str — URL to access the document",
+        "title": "str — Document title",
+        "format": "str — 'Google Docs' or 'PDF'",
+        "pdf_id": "str — PDF ID if output_format='pdf'",
+        "pdf_url": "str — PDF URL if output_format='pdf'",
+        "error": "str — error message (null if successful)",
+    },
+    "can_be_derived_from": {
+        "template_file_id": {
+            "source_tool": "drive_agent.search_template_and_data",
+            "output_field": "template_file_id"
+        },
+        "data_file_id": {
+            "source_tool": "drive_agent.search_template_and_data",
+            "output_field": "data_file_id"
+        }
+    }
+},
         },
         "template_workflow": {
             "when_to_use": "When user mentions 'template', 'my format', 'use my MOM', or wants to create a document with consistent structure",
@@ -381,49 +383,84 @@ agent_capabilities = {
             },
         },
         "template_with_data_workflow": {
-            "when_to_use": "When user mentions BOTH a template AND data/content files in Google Drive (e.g., 'Create document using template X and data Y')",
-            "one_step_process": {
-                "description": "Use create_from_existing_data_and_template - it handles template search, data extraction, and document creation in one call",
-                "tool": "create_from_existing_data_and_template",
-                "purpose": "Create document from existing template and data files (searches Drive by file names)",
-                "args": {
-                    "template_file_name": "Name of template file in Drive (extract from user message)",
-                    "data_file_name": "Name of data file in Drive (extract from user message)",
-                    "new_title": "Title for new document (extract from user message)",
-                    "output_format": "Optional: 'google_docs' or 'pdf'"
-                },
-                "example": "create_from_existing_data_and_template(template_file_name='MinutesOfMeetingTEMP', data_file_name='TestData123', new_title='Meeting Notes Jan 28')",
-                "what_it_does": [
-                    "1. Searches Google Drive for template file by name",
-                    "2. Searches Google Drive for data file by name", 
-                    "3. Extracts placeholders from template",
-                    "4. Parses data file into key-value pairs",
-                    "5. Matches data to placeholders intelligently",
-                    "6. Creates new document with filled placeholders",
-                    "7. Optionally exports as PDF"
-                ],
-                "supported_data_formats": [
-                    "Google Docs (exported as text)",
-                    "Plain text files (.txt)",
-                    "CSV files",
-                    "Google Sheets (exported as CSV)"
-                ]
+    "when_to_use": "When user mentions BOTH a template AND data/content files (e.g., 'Create document using template X and data Y', 'Make January Reports using TestData123 and MOMtemplate')",
+    "workflow_steps": {
+        "step_1": {
+            "agent": "drive_agent",
+            "tool": "search_template_and_data",
+            "purpose": "Search Google Drive for both template and data files",
+            "args": {
+                "template_name": "str (required) - Name or partial name of template file (e.g., 'MOMtemplate')",
+                "data_name": "str (required) - Name or partial name of data file (e.g., 'TestData123')"
             },
-            "extraction_rules": {
-                "template_file_name": "Look for keywords: 'template', 'format', 'use X' - this is the source template",
-                "data_file_name": "Look for keywords: 'data', 'content', 'information', 'with Y' - this is the content source",
-                "new_title": "Look for: 'call it X', 'name it X', 'title X', or infer from context"
+            "returns": {
+                "success": "bool",
+                "template_file_id": "str - Template file ID found in Drive",
+                "template_file_name": "str - Actual name of template file",
+                "data_file_id": "str - Data file ID found in Drive",
+                "data_file_name": "str - Actual name of data file",
+                "error": "str - Error if files not found"
             },
-            "user_message_patterns": [
-                "Create document using template X and data Y",
-                "Use template X with data from Y to create Z",
-                "Make a document called Z from template X and data Y",
-                "Create Z using my template X and the data in Y",
-                "Use template X, data Y, call it Z"
-            ],
-            "why_one_step": "This tool already handles Drive search internally. No need to use drive_agent.search_files separately - just pass the file NAMES.",
-            "intent_classification": "ready_to_execute (if all 3 fields present: template_file_name, data_file_name, new_title)"
+            "example": "drive_agent.search_template_and_data(template_name='MOMtemplate', data_name='TestData123')",
+            "error_handling": "If either file is not found, workflow stops and error is returned to user"
         },
+        "step_2": {
+            "agent": "docs_agent",
+            "tool": "create_from_template_and_data_ids",
+            "purpose": "Create document using the file IDs found by Drive Agent",
+            "args": {
+                "template_file_id": "str (required) - From step_1 output",
+                "data_file_id": "str (required) - From step_1 output",
+                "new_title": "str (required) - Title for new document (extract from user message)",
+                "output_format": "str (optional) - 'google_docs' (default, editable) or 'pdf' (final output)"
+            },
+            "returns": {
+                "success": "bool",
+                "document_id": "str - Google Doc ID of created document",
+                "document_url": "str - URL to access the document",
+                "title": "str - Document title",
+                "format": "str - 'Google Docs' or 'PDF'",
+                "error": "str"
+            },
+            "example": "docs_agent.create_from_template_and_data_ids(template_file_id='{{ template_file_id }}', data_file_id='{{ data_file_id }}', new_title='January Reports')",
+            "what_it_does": [
+                "1. Analyzes template to find placeholders ([DATE], [COMPANY_NAME], etc.)",
+                "2. Reads content from data file",
+                "3. Parses data into key-value pairs (supports 'key: value', 'key = value', 'key | value')",
+                "4. Intelligently matches data to placeholders",
+                "5. Auto-fills missing placeholders (DATE = current date, CONTENT = full data)",
+                "6. Creates new document with filled placeholders",
+                "7. Replaces blank line patterns (date:____, attendees:____)",
+                "8. Optionally exports as PDF"
+            ]
+        }
+    },
+    "supported_data_formats": [
+        "Google Docs (exported as text)",
+        "Plain text files (.txt)",
+        "CSV files",
+        "Google Sheets (exported as CSV)"
+    ],
+    "extraction_rules": {
+        "template_name": "Look for keywords: 'template', 'format', 'use X template' - extract the file name",
+        "data_name": "Look for keywords: 'data', 'content', 'use X document/file' - extract the file name",
+        "new_title": "Look for: 'titled X', 'call it X', 'name it X', or infer from context"
+    },
+    "user_message_patterns": [
+        "Create document titled X using template Y and data Z",
+        "Make X document using Y template and Z data",
+        "Use template Y with data Z to create X",
+        "Make me a document titled X and use Y for data and Z for template"
+    ],
+    "intent_classification": "needs_drive_search_first (requires drive_agent.search_template_and_data before docs_agent.create_from_template_and_data_ids)",
+    "error_scenarios": {
+        "template_not_found": "Drive Agent returns error if template file doesn't exist in Drive",
+        "data_not_found": "Drive Agent returns error if data file doesn't exist in Drive",
+        "both_not_found": "Drive Agent returns error listing which files are missing",
+        "no_placeholders": "Docs Agent uses entire data content as CONTENT placeholder",
+        "unsupported_data_format": "Docs Agent returns error if data file type is not supported"
+    }
+},
     },
     "mapping_agent": {
         "description": "Parse files (CSV/Excel/JSON), intelligently map columns, validate mappings, transform data structure. NO Google Sheets operations.",
@@ -814,7 +851,32 @@ agent_capabilities = {
                         "error": "str — Error message (null if successful)"
                     },
                     "example": "get_folder_info(folder_path='Operations/2024')"
-                }
+                },
+                "search_template_and_data": {
+    "description": "⚠️ USE THIS when user mentions BOTH template AND data files. Required before docs_agent.create_from_template_and_data_ids, Search Google Drive for both a template file and a data file by their names (used for template-based document creation workflow), ",
+    "args": {
+        "template_name": "str (required) — Name or partial name of template file to search for (e.g., 'MOMtemplate', 'invoice template')",
+        "data_name": "str (required) — Name or partial name of data file to search for (e.g., 'TestData123', 'customer_info')"
+    },
+    "returns": {
+        "success": "bool — whether both files were found",
+        "template_file_id": "str — Google Drive file ID of template (null if not found)",
+        "template_file_name": "str — Actual name of template file found",
+        "data_file_id": "str — Google Drive file ID of data file (null if not found)",
+        "data_file_name": "str — Actual name of data file found",
+        "message": "str — Success message with file names or error message",
+        "error": "str — Error message if either file not found (null if successful)"
+    },
+    "example": "search_template_and_data(template_name='MOMtemplate', data_name='TestData123')",
+    "notes": [
+        "Searches entire Google Drive (not limited to SafeExpress folder)",
+        "Uses partial name matching (searches for files containing the search term)",
+        "Returns first match if multiple files have similar names",
+        "Prefers Google Docs format for template files when multiple matches exist",
+        "Returns error if either file is not found"
+    ],
+    "use_case": "This is the FIRST step in creating documents from templates and data. After finding the files, pass the file IDs to docs_agent.create_from_template_and_data_ids"
+}
             },
             "usage_patterns": {
                 "upload_workflow": {
@@ -828,7 +890,16 @@ agent_capabilities = {
                     "folder_structure": "Use hierarchical paths like 'Department/Year/Quarter' or 'Projects/ProjectName/Documents'",
                     "naming_convention": "Use descriptive folder names without special characters",
                     "search_vs_list": "Use search_files for quick lookups by name, list_files for browsing specific folders"
-                }
+                },
+                "template_document_workflow": {
+    "description": "Workflow for creating documents from templates and data files",
+    "when_to_use": "When user wants to create a document using a template file and data file (e.g., 'Make document using X template and Y data')",
+    "steps": [
+        "1. Search for files: search_template_and_data(template_name='MOMtemplate', data_name='TestData123')",
+        "2. Pass file IDs to Docs Agent: docs_agent.create_from_template_and_data_ids(template_file_id=X, data_file_id=Y, new_title='January Reports')"
+    ],
+    "error_handling": "If search_template_and_data returns success=false, inform user which file(s) were not found and stop workflow"
+}
             },
             "important_notes": [
                 "All operations are scoped to the 'SafeExpress' root folder",

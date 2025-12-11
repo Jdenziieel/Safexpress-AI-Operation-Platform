@@ -1,16 +1,34 @@
 {
-  "plan": [
+  "steps": [
     {
-      "agent": "gmail_agent",
-      "tool": "search_emails",
+      "step_id": 1,
+      "agent": "drive_agent",
+      "tool": "search_template_and_data",
+      "description": "Search Google Drive for template and data files",
       "inputs": {
-        "query": "to:jdenziieel@gmail.com after:{{ today_date }}",
-        "max_results": 5
+        "template_name": "MinutesOfMeetingTEMP",
+        "data_name": "TestData123"
       },
       "output_variables": {
-        "recent_emails": "emails"
+        "template_file_id": "template_file_id",
+        "data_file_id": "data_file_id"
+      }
+    },
+    {
+      "step_id": 2,
+      "agent": "docs_agent",
+      "tool": "create_from_template_and_data_ids",
+      "description": "Create document from template and data files",
+      "inputs": {
+        "template_file_id": "{{ template_file_id }}",
+        "data_file_id": "{{ data_file_id }}",
+        "new_title": "January Reports",
+        "output_format": "google_docs"
       },
-      "description": "Retrieve 5 most recent emails from jdenziieel@gmail.com"
+      "output_variables": {
+        "document_id": "document_id",
+        "document_url": "document_url"
+      }
     }
   ]
 }

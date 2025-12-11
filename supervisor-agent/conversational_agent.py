@@ -123,51 +123,74 @@ class ConversationalAgent:
     def _build_capabilities_summary(self, agent_names: Optional[List[str]] = None) -> str:
         """
         Build comprehensive summary of available tools with their required arguments.
-        
+        NOW INCLUDES workflow documentation for multi-step operations.
+    
         Args:
             agent_names: Optional list of agent names to include. If None, includes all agents.
-        
+    
         Returns:
             Formatted string with capabilities
         """
-        # Use filtered agents if provided, otherwise use all
+    # Use filtered agents if provided, otherwise use all
         agents_to_include = agent_capabilities if agent_names is None else get_filtered_capabilities(agent_names)
-        
+    
         capabilities = []
         for agent_name, agent_info in agents_to_include.items():
             capabilities.append(f"\n**{agent_name.upper()}:**")
+        
+            # Add tools
             tools = agent_info.get("tools", {})
             for tool_name, tool_info in tools.items():
-                # Extract required and optional args
+            # Extract required and optional args
                 args = tool_info.get("args", {})
                 required_args = [k for k, v in args.items() if "(required)" in str(v)]
                 optional_args = [k for k, v in args.items() if "(optional)" in str(v)]
-                
-                # Check for can_be_derived_from metadata
+            
+            # Check for can_be_derived_from metadata
                 derivation_info = tool_info.get("can_be_derived_from", {})
-                
-                # Build compact format with derivation hints
+            
+            # Build compact format with derivation hints
                 arg_parts = []
                 for req_arg in required_args:
                     if req_arg in derivation_info:
-                        # Add derivation hint inline
+                    # Add derivation hint inline
                         deriv = derivation_info[req_arg]
                         source = deriv.get("source_tool", "")
                         criteria = ", ".join(deriv.get("search_criteria", []))
                         arg_parts.append(f'{req_arg} [via {source}: {criteria}]')
                     else:
                         arg_parts.append(req_arg)
-                
-                # Build final argument string
+            
+            # Build final argument string
                 arg_list = []
                 if arg_parts:
                     arg_list.append(', '.join(arg_parts))
                 if optional_args:
                     arg_list.append(f"[{', '.join(optional_args)}]")
-                
+            
                 args_str = f"({', '.join(arg_list)})" if arg_list else "()"
-                capabilities.append(f"  • {tool_name}{args_str}")
+            capabilities.append(f"  • {tool_name}{args_str}")
         
+        # ✅ FIX: Add workflow documentation ONCE per agent (not per tool)
+        if "template_with_data_workflow" in agent_info:
+            workflow = agent_info["template_with_data_workflow"]
+            capabilities.append(f"\n  📋 TEMPLATE+DATA WORKFLOW:")
+            capabilities.append(f"     When to use: {workflow.get('when_to_use', '')}")
+            
+            if "workflow_steps" in workflow:
+                capabilities.append(f"     Required steps:")
+                for step_name, step_info in workflow["workflow_steps"].items():
+                    step_agent = step_info.get("agent", "")
+                    step_tool = step_info.get("tool", "")
+                    step_purpose = step_info.get("purpose", "")
+                    capabilities.append(f"       {step_name}. {step_agent}.{step_tool} - {step_purpose}")
+            
+            if "extraction_rules" in workflow:
+                rules = workflow["extraction_rules"]
+                capabilities.append(f"     Extract from user:")
+                for field, rule in rules.items():
+                    capabilities.append(f"       - {field}: {rule}")
+    
         return "\n".join(capabilities)
     
     def _get_memory_manager(self, state_id: str = "default", memory_state: Optional[Dict[str, Any]] = None, ) -> ConversationMemoryManager:
@@ -1116,56 +1139,70 @@ What would you like to do?"""
             print(f"🔍 Capabilities are: {capabilities_to_show}")
             
         # Build system prompt with capabilities
-        system_prompt = f"""Validate and clarify user requests before execution. Check feasibility against available agents and tools, extract required fields, ask specific questions for missing info.
+        system_prompt = """Validate and clarify user requests before execution. Check feasibility against available agents and tools, extract required fields, ask specific questions for missing info.
 
 Available agents and tools:
-{capabilities_to_show}
+{capabilities}
+
+🚨 TEMPLATE+DATA WORKFLOW DETECTION:
+Pattern: User mentions creating document using BOTH a template file AND a data file
+Examples:
+  - "Create January Reports using MOMtemplate template and TestData123 data"
+  - "Make document X with template Y and data Z"
+  - "Use template ABC and data DEF to create document GHI"
+
+Required Fields (extract from user message):
+  1. template_name: Name of template file in Drive (e.g., "MOMtemplate")
+  2. data_name: Name of data file in Drive (e.g., "TestData123")
+  3. new_title: Title for new document to create (e.g., "January Reports")
+
+How it works:
+  Step 1: drive_agent searches Drive for both files → returns template_file_id, data_file_id
+  Step 2: docs_agent creates document using those IDs
+
+Classification:
+  - If ALL 3 fields present → intent: "ready_to_execute", task_type: "create_from_template_and_data"
+  - If missing fields → intent: "needs_clarification"
+  - execution_summary: "Create [new_title] from [template_name] using [data_name] data"
 
 CONTEXT RULES:
 - Post-execution: Conversation continues. Treat modification requests as NEW tasks
-- Compound cancel ("cancel X and do Y"): Extract ONLY new task (Y), ignore old context, set intent based on new task
+- Compound cancel ("cancel X and do Y"): Extract ONLY new task (Y), ignore old context
 
+DERIVABLE FIELDS [via tool: criteria]:
+Fields marked [via tool: criteria] are derived by calling that tool. Extract the tool criteria instead of asking for the field directly.
 
--DERIVABLE FIELDS [via tool: criteria]:
-Fields marked [via tool: criteria] are derived by calling that tool. Extract the tool criteria instead of asking for the field directly based on the capabilities_to_show already exposed and use exact field names for the args.
-
-Example: forward_email(message_id [via search_emails: query, max_results, label_ids], to)
+Example: forward_email(message_id [via search_emails: query], to)
 - User: "forward email from john@example.com to jane@example.com"
 - extracted_info: {{"query": "john@example.com", "to": "jane@example.com"}}
-- missing_fields: ["message_id"] (derived via search)
-- DON'T ask for message_id - it's derived from from_email
+- missing_fields: [] (message_id derived from query)
 
 INTENT CLASSIFICATION:
 - needs_clarification: Missing required fields
-- not_feasible: No matching capability (explain why, suggest alternatives)
-- too_complex: Multi-step/unclear (break down, suggest simpler approach)
+- not_feasible: No matching capability
+- too_complex: Multi-step/unclear
 - ready_to_execute: All fields present
 - small_talk: Non-task conversation
 
 JSON OUTPUT:
 {{
-    "intent": "needs_clarification|not_feasible|too_complex|ready_to_execute|small_talk",
-    "task_type": "send_email|search_emails|reply_to_email|etc",
-    "extracted_info": {{"to": "john@example.com", "subject": "Meeting"}},
-    "missing_fields": ["to", "subject"],
-    "clarification_question": "Who should I send this to?",
-    "reasoning": "1 sentence explanation",
-    "suggested_alternatives": ["Alternative 1", "Alternative 2"],
-    "execution_ready": false,
-    "execution_summary": "Send email to john@example.com about Meeting"
+    "intent": "ready_to_execute",
+    "task_type": "create_from_template_and_data",
+    "extracted_info": {{"template_name": "X", "data_name": "Y", "new_title": "Z"}},
+    "missing_fields": [],
+    "clarification_question": null,
+    "reasoning": "All fields extracted for template+data workflow",
+    "execution_ready": true,
+    "execution_summary": "Create Z from template X using data Y"
 }}
 
-IMPORTANT: Always provide execution_summary - a human-readable description of what the user wants to do.
-- For needs_clarification: Describe the task being clarified (e.g., "Send email to john@example.com")
-- For too_complex: High-level description of what user wants
-- This helps track conversation context across multiple turns and provides meaningful input to supervisor
+IMPORTANT: Always provide execution_summary - human-readable task description.
 
-CLARIFICATION QUESTIONS - Be specific
+CLARIFICATION QUESTIONS - Be specific and reference what's already known.
 
 ROLE DISAMBIGUATION RULE:
-When the user mentions multiple emails or entities, infer each role only from explicit linguistic cues (“from”, “to”, “search”, “forward”, “reply”, etc.). Never assume roles based on mere presence. If any role is unclear, ask for clarification.
-
-"""
+When user mentions multiple entities, infer roles from explicit cues ("from", "to", "template", "data"). If unclear, ask.
+""".format(capabilities=capabilities_to_show)
 
         user_prompt = f"""{history_text}{exec_context}CURRENT USER MESSAGE: {user_message}"""
 
