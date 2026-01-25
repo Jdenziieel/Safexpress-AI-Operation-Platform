@@ -1204,3 +1204,225 @@ def _download_attachment_impl(
             "file_size": 0,
             "error": f"Unexpected error: {str(error)}"
         }
+
+def _search_emails_with_delivery_order_attachments_impl(
+    query: str = "delivery order",
+    max_results: int = 10,
+    download_attachments: bool = True,
+    temp_dir: str = None,
+    credentials_dict: Dict = None
+) -> Dict[str, Any]:
+    """
+    Search Gmail for emails with PDF or Excel attachments containing delivery orders.
+    Extracts sender, subject, timestamp, and optionally downloads attachments.
+    
+    Args:
+        query: Search query to find delivery order emails (default: "delivery order")
+        max_results: Maximum number of emails to search (default: 10)
+        download_attachments: Whether to download attachments (default: True)
+        temp_dir: Temporary directory to save attachments. If None, creates a temp dir.
+        credentials_dict: Gmail OAuth credentials
+        
+    Returns:
+        Dictionary with success status, email metadata, attachment file paths, and errors
+    """
+    import tempfile
+    import shutil
+    from datetime import datetime
+    
+    try:
+        # get gmail service
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+        
+        # Create temp directory if not provided and downloads are enabled
+        created_temp_dir = False
+        if download_attachments and not temp_dir:
+            temp_dir = tempfile.mkdtemp(prefix="gmail_delivery_orders_")
+            created_temp_dir = True
+        
+        # Search for emails with the query
+        search_results = (
+            gmail_service.users()
+            .messages()
+            .list(
+                userId="me",
+                q=query,
+                maxResults=max_results
+            )
+            .execute()
+        )
+        
+        messages = search_results.get("messages", [])
+        
+        if not messages:
+            return {
+                "success": False,
+                "emails_with_attachments": [],
+                "total_emails_found": 0,
+                "total_attachments_downloaded": 0,
+                "temp_directory": temp_dir if created_temp_dir else None,
+                "query": query,
+                "error": f"No emails found matching query: '{query}'",
+                "no_results": True
+            }
+        
+        emails_with_attachments = []
+        total_attachments_downloaded = 0
+        
+        # Process each message
+        for msg in messages:
+            msg_id = msg["id"]
+            
+            # Get message details with full format
+            message = (
+                gmail_service.users()
+                .messages()
+                .get(userId="me", id=msg_id, format="full")
+                .execute()
+            )
+            
+            # Extract headers (From, Subject, Date)
+            headers = message["payload"]["headers"]
+            from_addr = ""
+            subject = ""
+            date = ""
+            
+            for header in headers:
+                if header["name"] == "From":
+                    from_addr = header["value"]
+                elif header["name"] == "Subject":
+                    subject = header["value"]
+                elif header["name"] == "Date":
+                    date = header["value"]
+            
+            # Get internal date
+            internal_date = message.get("internalDate", "")
+            
+            # Convert internal date to readable format
+            try:
+                timestamp_ms = int(internal_date)
+                readable_timestamp = datetime.fromtimestamp(timestamp_ms / 1000).isoformat()
+            except (ValueError, TypeError):
+                readable_timestamp = date if date else "Unknown"
+            
+            # Check for attachments
+            attachment_list = []
+            if "parts" in message["payload"]:
+                for part in message["payload"]["parts"]:
+                    filename = part.get("filename", "")
+                    mime_type = part.get("mimeType", "")
+                    attachment_id = part.get("body", {}).get("attachmentId")
+                    
+                    # Filter for PDF or Excel files
+                    is_pdf = mime_type == "application/pdf"
+                    is_excel = mime_type in [
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # .xlsx
+                        "application/vnd.ms-excel",  # .xls
+                        "application/vnd.google-apps.spreadsheet"  # Google Sheets
+                    ]
+                    
+                    if (filename and attachment_id and (is_pdf or is_excel)):
+                        attachment_info = {
+                            "filename": filename,
+                            "attachment_id": attachment_id,
+                            "mime_type": mime_type,
+                            "size": part.get("body", {}).get("size", 0),
+                            "file_path": None
+                        }
+                        
+                        # Download attachment if requested
+                        if download_attachments and temp_dir:
+                            try:
+                                # Create subdirectory for this email's attachments
+                                email_dir = os.path.join(temp_dir, msg_id)
+                                os.makedirs(email_dir, exist_ok=True)
+                                
+                                # Build full file path
+                                save_path = os.path.join(email_dir, filename)
+                                
+                                # Download the attachment
+                                attachment_data = (
+                                    gmail_service.users()
+                                    .messages()
+                                    .attachments()
+                                    .get(userId="me", messageId=msg_id, id=attachment_id)
+                                    .execute()
+                                )
+                                
+                                # Decode and save
+                                file_data = base64.urlsafe_b64decode(attachment_data.get("data", ""))
+                                with open(save_path, "wb") as f:
+                                    f.write(file_data)
+                                
+                                attachment_info["file_path"] = save_path
+                                total_attachments_downloaded += 1
+                                
+                            except Exception as download_error:
+                                attachment_info["download_error"] = str(download_error)
+                        
+                        attachment_list.append(attachment_info)
+            
+            # Only add to results if there are relevant attachments
+            if attachment_list:
+                email_obj = {
+                    "message_id": msg_id,
+                    "from": from_addr,
+                    "subject": subject,
+                    "date": date,
+                    "timestamp": readable_timestamp,
+                    "internal_date_ms": internal_date,
+                    "attachments": attachment_list,
+                    "attachment_count": len(attachment_list)
+                }
+                emails_with_attachments.append(email_obj)
+        
+        if not emails_with_attachments:
+            # Clean up temp dir if we created it and found no attachments
+            if created_temp_dir and os.path.exists(temp_dir):
+                try:
+                    shutil.rmtree(temp_dir)
+                except Exception:
+                    pass
+            
+            return {
+                "success": False,
+                "emails_with_attachments": [],
+                "total_emails_found": len(messages),
+                "total_attachments_downloaded": 0,
+                "temp_directory": None,
+                "query": query,
+                "error": f"No emails found with PDF or Excel attachments matching query: '{query}'",
+                "no_attachments": True
+            }
+        
+        return {
+            "success": True,
+            "emails_with_attachments": emails_with_attachments,
+            "total_emails_found": len(messages),
+            "total_attachments_downloaded": total_attachments_downloaded,
+            "temp_directory": temp_dir if created_temp_dir else None,
+            "query": query,
+            "download_attachments": download_attachments,
+            "error": None
+        }
+    
+    except HttpError as error:
+        return {
+            "success": False,
+            "emails_with_attachments": [],
+            "total_emails_found": 0,
+            "total_attachments_downloaded": 0,
+            "temp_directory": None,
+            "query": query,
+            "error": f"Gmail API error: {str(error)}"
+        }
+    except Exception as error:
+        return {
+            "success": False,
+            "emails_with_attachments": [],
+            "total_emails_found": 0,
+            "total_attachments_downloaded": 0,
+            "temp_directory": None,
+            "query": query,
+            "error": f"Unexpected error: {str(error)}"
+        }

@@ -68,6 +68,7 @@ async def execute_task(request: AgentTaskRequest):
             _add_label_impl,
             _remove_label_impl,
             _download_attachment_impl,
+            _search_emails_with_delivery_order_attachments_impl,
         )
         
         # Map tool names to implementations
@@ -84,6 +85,7 @@ async def execute_task(request: AgentTaskRequest):
             "add_label": _add_label_impl,
             "remove_label": _remove_label_impl,
             "download_attachment": _download_attachment_impl,
+            "search_emails_with_delivery_order_attachments": _search_emails_with_delivery_order_attachments_impl,
         }
         
         tool_impl = TOOL_MAP.get(request.tool)
