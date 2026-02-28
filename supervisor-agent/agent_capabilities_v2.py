@@ -247,7 +247,7 @@ agent_capabilities = {
                 },
             },
             "process_delivery_order_workflow": {
-                "description": "High-level end-to-end workflow: search emails for delivery orders → download attachments → parse/transform data using mapping_agent → upload to Google Sheets → save metadata to database. Orchestrates multiple agents into a single operation.",
+                "description": "High-level end-to-end workflow: search emails for delivery orders → download attachments → parse/transform data using mapping_agent → upload to Google Sheets → save metadata to database → create summary document in Google Docs. Orchestrates multiple agents into a single operation.",
                 "args": {
                     "query": "str (optional) — Gmail search query (default: 'delivery order')",
                     "max_results": "int (optional) — number of emails to search (default: 10)",
@@ -256,13 +256,17 @@ agent_capabilities = {
                     "save_to_db": "bool (optional) — whether to save metadata to local DB (default: True)",
                     "upload_to_sheets": "bool (optional) — whether to upload data to Google Sheets (default: True)",
                     "sheets_sheet_id": "str (optional) — Google Sheets ID to upload data to",
+                    "create_summary_doc": "bool (optional) — whether to create summary document in Google Docs (default: True)",
+                    "summary_doc_title": "str (optional) — custom title for summary document. If not provided, uses 'Delivery Orders Summary - {date}'",
                     "mapping_agent_url": "str (optional) — URL of mapping_agent /execute_task endpoint. If not provided, uses MAPPING_AGENT_URL env var.",
                     "sheets_agent_url": "str (optional) — URL of sheets_agent /execute_task endpoint. If not provided, uses SHEETS_AGENT_URL env var.",
+                    "docs_agent_url": "str (optional) — URL of docs_agent /execute_task endpoint. If not provided, uses DOCS_AGENT_URL env var.",
                 },
                 "returns": {
                     "success": "bool — whether entire workflow completed successfully",
                     "processed": "list — array of processed items, each containing: item metadata, parse_result, transformed data, sheets_result, db_result",
                     "search_summary": "dict — summary with total emails_found and attachments_processed count",
+                    "document_url": "str — URL or ID of created summary document (null if doc creation disabled or failed)",
                     "error": "str — error message (null if successful)",
                 },
                 "workflow_steps": {
@@ -270,6 +274,7 @@ agent_capabilities = {
                     "step_2": "Parse file: mapping_agent.parse_file + mapping_agent.transform_data",
                     "step_3": "Upload: sheets_agent.upload_mapped_data",
                     "step_4": "Save metadata: save_attachment_metadata",
+                    "step_5": "Create summary: docs_agent.create_document (optional)",
                 },
             },
         },

@@ -1531,8 +1531,11 @@ def _process_delivery_order_workflow_impl(
     save_to_db: bool = True,
     upload_to_sheets: bool = True,
     sheets_sheet_id: str = None,
+    create_summary_doc: bool = True,
+    summary_doc_title: str = None,
     mapping_agent_url: str = None,
     sheets_agent_url: str = None,
+    docs_agent_url: str = None,
     credentials_dict: Dict[str, Any] = None
 ) -> Dict[str, Any]:
     """
@@ -1542,6 +1545,7 @@ def _process_delivery_order_workflow_impl(
     3. Transform data using mapping agent
     4. Upload results to Google Sheets
     5. Save metadata to local database
+    6. Create summary document in Google Docs (optional)
     
     Args:
         query: Gmail search query (e.g., "delivery order from:sender@company.com")
@@ -1550,12 +1554,15 @@ def _process_delivery_order_workflow_impl(
         save_to_db: Whether to save metadata to database
         upload_to_sheets: Whether to upload results to Google Sheets
         sheets_sheet_id: Google Sheets ID (required if upload_to_sheets=True)
+        create_summary_doc: Whether to create summary document in Google Docs
+        summary_doc_title: Title for summary document (default: "Delivery Orders - {date}")
         mapping_agent_url: URL of mapping agent (default from env MAPPING_AGENT_URL)
         sheets_agent_url: URL of sheets agent (default from env SHEETS_AGENT_URL)
+        docs_agent_url: URL of docs agent (default from env DOCS_AGENT_URL)
         credentials_dict: OAuth credentials dict
     
     Returns:
-        Dictionary with success status, processed items, summary, and error (if any)
+        Dictionary with success status, processed items, summary, document_url, and error (if any)
     """
     try:
         # Get agent URLs from parameters or environment
@@ -1563,9 +1570,12 @@ def _process_delivery_order_workflow_impl(
             mapping_agent_url = os.getenv("MAPPING_AGENT_URL", "http://localhost:8002")
         if sheets_agent_url is None:
             sheets_agent_url = os.getenv("SHEETS_AGENT_URL", "http://localhost:8001")
+        if docs_agent_url is None:
+            docs_agent_url = os.getenv("DOCS_AGENT_URL", "http://localhost:8003")
         
         processed = []
         errors = []
+        document_url = None
         
         # Step 1: Search for delivery orders with attachments
         search_result = _search_emails_with_delivery_order_attachments_impl(
@@ -1718,6 +1728,68 @@ def _process_delivery_order_workflow_impl(
             except Exception:
                 pass
         
+        # Step 6: Create summary document in Google Docs (if enabled)
+        if create_summary_doc and len(processed) > 0:
+            try:
+                # Generate default title if not provided
+                if summary_doc_title is None:
+                    from datetime import datetime
+                    today = datetime.now().strftime("%Y-%m-%d")
+                    summary_doc_title = f"Delivery Orders Summary - {today}"
+                
+                # Build document content
+                doc_content = f"# {summary_doc_title}\n\n"
+                doc_content += f"**Processing Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                doc_content += f"**Total Orders Processed:** {len(processed)}\n\n"
+                doc_content += "---\n\n"
+                
+                # Add details for each processed order
+                for i, item in enumerate(processed, 1):
+                    doc_content += f"## Order {i}: {item.get('file_name', 'Unknown')}\n\n"
+                    doc_content += f"**From:** {item.get('email_from', 'Unknown')}\n\n"
+                    doc_content += f"**Subject:** {item.get('email_subject', 'N/A')}\n\n"
+                    doc_content += f"**Status:**\n"
+                    doc_content += f"- Parsed: {'✓' if item.get('parsed_successfully') else '✗'}\n"
+                    doc_content += f"- Transformed: {'✓' if item.get('transformed_successfully') else '✗'}\n"
+                    doc_content += f"- Uploaded to Sheets: {'✓' if item.get('uploaded') else '✗'}\n"
+                    doc_content += f"- Metadata Saved: {'✓' if item.get('metadata_saved') else '✗'}\n\n"
+                    doc_content += "---\n\n"
+                
+                # Add errors section if any
+                if errors:
+                    doc_content += "## Processing Errors\n\n"
+                    for error in errors:
+                        doc_content += f"- {error}\n\n"
+                
+                # Create document via Docs agent
+                doc_payload = {
+                    "tool": "create_document",
+                    "inputs": {
+                        "title": summary_doc_title,
+                        "content": doc_content,
+                        "folder_id": None  # Creates in root of My Drive
+                    },
+                    "credentials_dict": credentials_dict or {}
+                }
+                
+                doc_response = httpx.post(
+                    f"{docs_agent_url}/execute_task",
+                    json=doc_payload,
+                    timeout=30.0
+                )
+                
+                if doc_response.status_code == 200:
+                    doc_result = doc_response.json()
+                    if doc_result.get("success"):
+                        document_url = doc_result.get("document_url") or doc_result.get("document_id")
+                    else:
+                        errors.append(f"Failed to create document: {doc_result.get('error', 'Unknown error')}")
+                else:
+                    errors.append(f"Docs agent error: {doc_response.status_code}")
+            
+            except Exception as e:
+                errors.append(f"Document creation error: {str(e)}")
+        
         # Compile results
         result = {
             "success": len(errors) == 0 or len(processed) > 0,
@@ -1727,6 +1799,7 @@ def _process_delivery_order_workflow_impl(
                 "total_attachments_found": len(emails_with_attachments),
                 "errors_occurred": len(errors) > 0
             },
+            "document_url": document_url,
             "errors": errors if errors else None,
             "error": None if (len(errors) == 0 or len(processed) > 0) else "No items processed successfully"
         }
