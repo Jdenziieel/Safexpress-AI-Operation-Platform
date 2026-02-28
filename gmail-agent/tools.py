@@ -11,6 +11,12 @@ from email import encoders
 import mimetypes
 import base64
 from email_formatter import format_email_list
+import sqlite3
+import json
+import tempfile
+import shutil
+import httpx
+from datetime import datetime
 
 
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
@@ -1425,4 +1431,312 @@ def _search_emails_with_delivery_order_attachments_impl(
             "temp_directory": None,
             "query": query,
             "error": f"Unexpected error: {str(error)}"
+        }
+
+
+def _save_attachment_metadata_impl(
+    metadata: Dict[str, Any],
+    db_path: str = None,
+    credentials_dict: Dict[str, Any] = None
+) -> Dict[str, Any]:
+    """
+    Save attachment metadata to SQLite database.
+    
+    Args:
+        metadata: Dictionary with keys: message_id, filename, file_path, sender, subject, timestamp, mime_type, size
+        db_path: Path to SQLite database (default: gmail_agent_data.db in current directory)
+        credentials_dict: Credentials (not used but accepted for API consistency)
+    
+    Returns:
+        Dictionary with success status, inserted_id, db_path, and error (if any)
+    """
+    try:
+        if db_path is None:
+            db_path = os.path.join(os.path.dirname(__file__), "gmail_agent_data.db")
+        
+        # Ensure db directory exists
+        os.makedirs(os.path.dirname(db_path) if os.path.dirname(db_path) else ".", exist_ok=True)
+        
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Create attachments table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS attachments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                message_id TEXT NOT NULL,
+                filename TEXT NOT NULL,
+                file_path TEXT,
+                sender TEXT,
+                subject TEXT,
+                timestamp TEXT,
+                mime_type TEXT,
+                size INTEGER,
+                saved_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(message_id, filename)
+            )
+        """)
+        
+        # Insert the metadata
+        saved_at = datetime.utcnow().isoformat()
+        cursor.execute("""
+            INSERT OR REPLACE INTO attachments 
+            (message_id, filename, file_path, sender, subject, timestamp, mime_type, size, saved_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            metadata.get("message_id"),
+            metadata.get("filename"),
+            metadata.get("file_path"),
+            metadata.get("sender"),
+            metadata.get("subject"),
+            metadata.get("timestamp"),
+            metadata.get("mime_type"),
+            metadata.get("size"),
+            saved_at
+        ))
+        
+        conn.commit()
+        inserted_id = cursor.lastrowid
+        conn.close()
+        
+        return {
+            "success": True,
+            "inserted_id": inserted_id,
+            "db_path": db_path,
+            "saved_at": saved_at,
+            "error": None
+        }
+    
+    except sqlite3.IntegrityError as e:
+        return {
+            "success": False,
+            "inserted_id": None,
+            "db_path": db_path if db_path else "unknown",
+            "error": f"Duplicate entry: {str(e)}"
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "inserted_id": None,
+            "db_path": db_path if db_path else "unknown",
+            "error": f"Database error: {str(e)}"
+        }
+
+
+def _process_delivery_order_workflow_impl(
+    query: str,
+    max_results: int = 10,
+    download_attachments: bool = True,
+    save_to_db: bool = True,
+    upload_to_sheets: bool = True,
+    sheets_sheet_id: str = None,
+    mapping_agent_url: str = None,
+    sheets_agent_url: str = None,
+    credentials_dict: Dict[str, Any] = None
+) -> Dict[str, Any]:
+    """
+    End-to-end delivery order automation workflow:
+    1. Search Gmail for delivery order emails with attachments
+    2. Parse files using mapping agent
+    3. Transform data using mapping agent
+    4. Upload results to Google Sheets
+    5. Save metadata to local database
+    
+    Args:
+        query: Gmail search query (e.g., "delivery order from:sender@company.com")
+        max_results: Maximum emails to process
+        download_attachments: Whether to download files during search
+        save_to_db: Whether to save metadata to database
+        upload_to_sheets: Whether to upload results to Google Sheets
+        sheets_sheet_id: Google Sheets ID (required if upload_to_sheets=True)
+        mapping_agent_url: URL of mapping agent (default from env MAPPING_AGENT_URL)
+        sheets_agent_url: URL of sheets agent (default from env SHEETS_AGENT_URL)
+        credentials_dict: OAuth credentials dict
+    
+    Returns:
+        Dictionary with success status, processed items, summary, and error (if any)
+    """
+    try:
+        # Get agent URLs from parameters or environment
+        if mapping_agent_url is None:
+            mapping_agent_url = os.getenv("MAPPING_AGENT_URL", "http://localhost:8002")
+        if sheets_agent_url is None:
+            sheets_agent_url = os.getenv("SHEETS_AGENT_URL", "http://localhost:8001")
+        
+        processed = []
+        errors = []
+        
+        # Step 1: Search for delivery orders with attachments
+        search_result = _search_emails_with_delivery_order_attachments_impl(
+            query=query,
+            max_results=max_results,
+            download_attachments=download_attachments,
+            credentials_dict=credentials_dict
+        )
+        
+        if not search_result["success"]:
+            return {
+                "success": False,
+                "processed": [],
+                "search_summary": search_result,
+                "error": search_result.get("error", "Search failed")
+            }
+        
+        emails_with_attachments = search_result["emails_with_attachments"]
+        temp_dir = search_result["temp_directory"]
+        
+        # Process each attachment
+        for email_item in emails_with_attachments:
+            try:
+                email_id = email_item["id"]
+                attachments = email_item.get("attachments", [])
+                
+                for attachment in attachments:
+                    try:
+                        file_path = attachment.get("file_path")
+                        filename = attachment.get("filename")
+                        
+                        if not file_path or not os.path.exists(file_path):
+                            errors.append(f"File not found: {file_path}")
+                            continue
+                        
+                        # Step 2: Parse file using mapping agent
+                        with open(file_path, 'rb') as f:
+                            file_content = base64.b64encode(f.read()).decode('utf-8')
+                        
+                        parse_payload = {
+                            "tool": "parse_file",
+                            "inputs": {
+                                "file_path": file_path,
+                                "file_name": filename,
+                                "file_content": file_content
+                            },
+                            "credentials_dict": credentials_dict or {}
+                        }
+                        
+                        async_parse = httpx.post(
+                            f"{mapping_agent_url}/execute_task",
+                            json=parse_payload,
+                            timeout=30.0
+                        )
+                        parse_result = async_parse.json()
+                        
+                        if not parse_result.get("success"):
+                            errors.append(f"Parse failed for {filename}: {parse_result.get('error')}")
+                            continue
+                        
+                        parsed_data = parse_result.get("parsed_data", {})
+                        
+                        # Step 3: Transform data using mapping agent
+                        transform_payload = {
+                            "tool": "transform_data",
+                            "inputs": {
+                                "data": parsed_data,
+                                "target_schema": "delivery_order"
+                            },
+                            "credentials_dict": credentials_dict or {}
+                        }
+                        
+                        transform_response = httpx.post(
+                            f"{mapping_agent_url}/execute_task",
+                            json=transform_payload,
+                            timeout=30.0
+                        )
+                        transform_result = transform_response.json()
+                        
+                        if not transform_result.get("success"):
+                            errors.append(f"Transform failed for {filename}: {transform_result.get('error')}")
+                            continue
+                        
+                        transformed_data = transform_result.get("transformed_data", {})
+                        
+                        # Step 4: Upload to Google Sheets (if enabled)
+                        if upload_to_sheets and sheets_sheet_id:
+                            upload_payload = {
+                                "tool": "upload_mapped_data",
+                                "inputs": {
+                                    "sheet_id": sheets_sheet_id,
+                                    "data": transformed_data,
+                                    "append": True
+                                },
+                                "credentials_dict": credentials_dict or {}
+                            }
+                            
+                            upload_response = httpx.post(
+                                f"{sheets_agent_url}/execute_task",
+                                json=upload_payload,
+                                timeout=30.0
+                            )
+                            upload_result = upload_response.json()
+                            
+                            if not upload_result.get("success"):
+                                errors.append(f"Upload failed for {filename}: {upload_result.get('error')}")
+                                continue
+                        
+                        # Step 5: Save metadata to database (if enabled)
+                        if save_to_db:
+                            metadata = {
+                                "message_id": email_id,
+                                "filename": filename,
+                                "file_path": file_path,
+                                "sender": email_item.get("from"),
+                                "subject": email_item.get("subject"),
+                                "timestamp": email_item.get("date"),
+                                "mime_type": attachment.get("mime_type"),
+                                "size": attachment.get("size")
+                            }
+                            
+                            db_result = _save_attachment_metadata_impl(metadata, credentials_dict=credentials_dict)
+                            if not db_result["success"]:
+                                errors.append(f"Failed to save metadata for {filename}: {db_result.get('error')}")
+                        
+                        # Record successful processing
+                        processed.append({
+                            "file_name": filename,
+                            "email_id": email_id,
+                            "email_from": email_item.get("from"),
+                            "email_subject": email_item.get("subject"),
+                            "parsed_successfully": True,
+                            "transformed_successfully": True,
+                            "uploaded": upload_to_sheets and sheets_sheet_id,
+                            "metadata_saved": save_to_db
+                        })
+                    
+                    except Exception as e:
+                        errors.append(f"Error processing attachment {filename}: {str(e)}")
+                        continue
+            
+            except Exception as e:
+                errors.append(f"Error processing email {email_id}: {str(e)}")
+                continue
+        
+        # Clean up temp directory if needed
+        if temp_dir and os.path.exists(temp_dir):
+            try:
+                shutil.rmtree(temp_dir)
+            except Exception:
+                pass
+        
+        # Compile results
+        result = {
+            "success": len(errors) == 0 or len(processed) > 0,
+            "processed": processed,
+            "search_summary": {
+                "total_emails_found": search_result.get("total_emails_found", 0),
+                "total_attachments_found": len(emails_with_attachments),
+                "errors_occurred": len(errors) > 0
+            },
+            "errors": errors if errors else None,
+            "error": None if (len(errors) == 0 or len(processed) > 0) else "No items processed successfully"
+        }
+        
+        return result
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "processed": [],
+            "search_summary": {},
+            "error": f"Workflow error: {str(e)}"
         }

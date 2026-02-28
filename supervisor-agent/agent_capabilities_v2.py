@@ -210,6 +210,68 @@ agent_capabilities = {
                     }
                 },
             },
+            "search_emails_with_delivery_order_attachments": {
+                "description": "Search Gmail for emails with PDF or Excel attachments containing delivery orders. Extracts sender, subject, timestamp, and optionally downloads attachments to a temporary directory. Returns metadata and file paths for downstream processing.",
+                "args": {
+                    "query": "str (optional) — Gmail search query (default: 'delivery order')",
+                    "max_results": "int (optional) — Maximum number of emails to search (default: 10)",
+                    "download_attachments": "bool (optional) — Whether to download attachment files (default: True)",
+                    "temp_dir": "str (optional) — Custom directory to save attachments. If None, auto-creates temp dir.",
+                },
+                "returns": {
+                    "success": "bool — whether search was successful",
+                    "emails_with_attachments": "list — array of email objects containing:",
+                    "emails_with_attachments[].message_id": "str — Gmail message ID",
+                    "emails_with_attachments[].from": "str — sender email address",
+                    "emails_with_attachments[].subject": "str — email subject",
+                    "emails_with_attachments[].timestamp": "str — ISO 8601 formatted timestamp",
+                    "emails_with_attachments[].attachments": "list — array of attachment objects with filename, mime_type, size, file_path",
+                    "emails_with_attachments[].attachment_count": "int — number of attachments in email",
+                    "total_emails_found": "int — total emails matching query",
+                    "total_attachments_downloaded": "int — total files downloaded",
+                    "temp_directory": "str — temp directory path (if auto-created)",
+                    "error": "str — error message (null if successful)",
+                },
+            },
+            "save_attachment_metadata": {
+                "description": "Save attachment metadata (sender, subject, filename, file path, timestamp, size) to a local SQLite database for record-keeping and auditing.",
+                "args": {
+                    "metadata": "dict (required) — metadata dictionary with keys: message_id, filename, file_path, from, subject, timestamp, mime_type, size",
+                    "db_path": "str (optional) — path to SQLite DB file. If None, uses gmail_agent_data.db in agent folder.",
+                },
+                "returns": {
+                    "success": "bool — whether save was successful",
+                    "inserted_id": "int — database row ID (null if failed)",
+                    "db_path": "str — path to database file",
+                    "error": "str — error message (null if successful)",
+                },
+            },
+            "process_delivery_order_workflow": {
+                "description": "High-level end-to-end workflow: search emails for delivery orders → download attachments → parse/transform data using mapping_agent → upload to Google Sheets → save metadata to database. Orchestrates multiple agents into a single operation.",
+                "args": {
+                    "query": "str (optional) — Gmail search query (default: 'delivery order')",
+                    "max_results": "int (optional) — number of emails to search (default: 10)",
+                    "download_attachments": "bool (optional) — whether to download files (default: True)",
+                    "temp_dir": "str (optional) — custom temp directory for file storage",
+                    "save_to_db": "bool (optional) — whether to save metadata to local DB (default: True)",
+                    "upload_to_sheets": "bool (optional) — whether to upload data to Google Sheets (default: True)",
+                    "sheets_sheet_id": "str (optional) — Google Sheets ID to upload data to",
+                    "mapping_agent_url": "str (optional) — URL of mapping_agent /execute_task endpoint. If not provided, uses MAPPING_AGENT_URL env var.",
+                    "sheets_agent_url": "str (optional) — URL of sheets_agent /execute_task endpoint. If not provided, uses SHEETS_AGENT_URL env var.",
+                },
+                "returns": {
+                    "success": "bool — whether entire workflow completed successfully",
+                    "processed": "list — array of processed items, each containing: item metadata, parse_result, transformed data, sheets_result, db_result",
+                    "search_summary": "dict — summary with total emails_found and attachments_processed count",
+                    "error": "str — error message (null if successful)",
+                },
+                "workflow_steps": {
+                    "step_1": "Search & download: search_emails_with_delivery_order_attachments",
+                    "step_2": "Parse file: mapping_agent.parse_file + mapping_agent.transform_data",
+                    "step_3": "Upload: sheets_agent.upload_mapped_data",
+                    "step_4": "Save metadata: save_attachment_metadata",
+                },
+            },
         },
     },
     "docs_agent": {

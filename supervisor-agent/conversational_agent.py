@@ -17,6 +17,7 @@ import json
 import os
 import re
 import time
+import httpx
 
 # Import agent capabilities for feasibility checking
 from agent_capabilities_v2 import agent_capabilities
@@ -1379,6 +1380,297 @@ When user mentions multiple entities, infer roles from explicit cues ("from", "t
                 execution_summary=None
             )
     
+    def _is_delivery_order_request(self, user_message: str) -> bool:
+        """
+        Quick pattern check to detect if user is asking about delivery orders.
+        
+        Args:
+            user_message: User message to check
+            
+        Returns:
+            True if message appears to be a delivery order request
+        """
+        delivery_keywords = [
+            "delivery order", "delivery orders", "purchase order", "purchase orders",
+            "po ", "pos ", "orders from", "search for", "find orders", "find delivery",
+            "orders to", "batangas", "supplier", "vendor order"
+        ]
+        
+        user_lower = user_message.lower()
+        return any(keyword in user_lower for keyword in delivery_keywords)
+    
+    def _handle_delivery_order_preview(
+        self,
+        query: str,
+        credentials_dict: Dict[str, Any],
+        gmail_agent_url: str = None
+    ) -> Dict[str, Any]:
+        """
+        Stage 1: Search for delivery orders without downloading (preview only).
+        
+        Args:
+            query: Gmail search query (e.g., "from:supplier delivery")
+            credentials_dict: User OAuth credentials
+            gmail_agent_url: URL of Gmail agent (default from env)
+            
+        Returns:
+            Dictionary with preview results or error
+        """
+        
+        if gmail_agent_url is None:
+            gmail_agent_url = os.getenv("GMAIL_AGENT_URL", "http://localhost:8000")
+        
+        try:
+            payload = {
+                "tool": "search_emails_with_delivery_order_attachments",
+                "inputs": {
+                    "query": query,
+                    "max_results": 5,
+                    "download_attachments": False  # Preview only - don't download yet
+                },
+                "credentials_dict": credentials_dict or {}
+            }
+            
+            response = httpx.post(
+                f"{gmail_agent_url}/execute_task",
+                json=payload,
+                timeout=30.0
+            )
+            
+            if response.status_code != 200:
+                return {
+                    "success": False,
+                    "error": f"Gmail agent error: {response.status_code}",
+                    "preview": []
+                }
+            
+            result = response.json()
+            
+            if not result.get("success"):
+                return {
+                    "success": False,
+                    "error": result.get("error", "Search failed"),
+                    "preview": []
+                }
+            
+            # Extract preview information
+            emails = result.get("emails_with_attachments", [])
+            preview = []
+            
+            for email in emails:
+                email_preview = {
+                    "id": email.get("id"),
+                    "from": email.get("from"),
+                    "subject": email.get("subject"),
+                    "date": email.get("date"),
+                    "attachment_count": len(email.get("attachments", [])),
+                    "attachments": [
+                        {
+                            "filename": att.get("filename"),
+                            "size_kb": att.get("size", 0) // 1024,
+                            "mime_type": att.get("mime_type")
+                        }
+                        for att in email.get("attachments", [])
+                    ]
+                }
+                preview.append(email_preview)
+            
+            return {
+                "success": True,
+                "error": None,
+                "preview": preview,
+                "total_found": result.get("total_emails_found", 0),
+                "total_attachments": result.get("total_attachments_downloaded", 0)
+            }
+        
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Preview failed: {str(e)}",
+                "preview": []
+            }
+    
+    def _build_delivery_order_preview_response(
+        self,
+        preview_result: Dict[str, Any],
+        conversation_state: ConversationState
+    ) -> str:
+        """
+        Build a user-friendly preview response showing found orders.
+        
+        Args:
+            preview_result: Result from _handle_delivery_order_preview
+            conversation_state: Conversation state to update
+            
+        Returns:
+            Formatted response string
+        """
+        if not preview_result["success"]:
+            return f"❌ Search failed: {preview_result['error']}"
+        
+        preview = preview_result["preview"]
+        
+        if not preview:
+            return "📭 No delivery orders found matching your search. Try a different query."
+        
+        # Store preview results in conversation state for later execution
+        conversation_state.extracted_info["delivery_order_preview"] = preview
+        conversation_state.extracted_info["delivery_order_total_found"] = preview_result.get("total_found", 0)
+        
+        # Build formatted response
+        response = f"📦 **Found {len(preview)} delivery order(s):**\n\n"
+        
+        for i, email in enumerate(preview, 1):
+            response += f"**{i}. {email['subject']}**\n"
+            response += f"   From: {email['from']}\n"
+            response += f"   Date: {email['date']}\n"
+            response += f"   Attachments: {email['attachment_count']}\n"
+            
+            if email['attachments']:
+                for att in email['attachments']:
+                    response += f"     • {att['filename']} ({att['size_kb']} KB)\n"
+            
+            response += "\n"
+        
+        # Ask for confirmation
+        response += "**Ready to process?**\n\n"
+        response += "I can:\n"
+        response += "1. Parse and extract the order data\n"
+        response += "2. Upload results to a Google Sheet\n"
+        response += "3. Save metadata to database\n\n"
+        response += "**Which sheet should I upload to?** (Provide sheet ID or name)"
+        
+        # Mark that we're awaiting sheet confirmation
+        conversation_state.extracted_info["delivery_order_stage"] = "awaiting_sheet_confirmation"
+        conversation_state.clarification_question = response
+        conversation_state.missing_fields = ["sheets_sheet_id"]
+        conversation_state.ready_for_execution = False
+        
+        return response
+    
+    def _handle_delivery_order_execution(
+        self,
+        user_message: str,
+        conversation_state: ConversationState,
+        credentials_dict: Dict[str, Any],
+        gmail_agent_url: str = None
+    ) -> Dict[str, Any]:
+        """
+        Stage 2: Execute full workflow (download, parse, transform, upload).
+        
+        Args:
+            user_message: User's response with sheet ID/name
+            conversation_state: Conversation state with preview data
+            credentials_dict: User OAuth credentials
+            gmail_agent_url: URL of Gmail agent
+            
+        Returns:
+            Dictionary with execution result
+        """
+        
+        if gmail_agent_url is None:
+            gmail_agent_url = os.getenv("GMAIL_AGENT_URL", "http://localhost:8000")
+        
+        try:
+            # Extract sheet ID from user's message
+            # User might say "Order-2024" or "1a2b3c4d5e6f7g8h"
+            sheet_id = user_message.strip()
+            
+            # Get original query from conversation state
+            original_query = conversation_state.extracted_info.get("delivery_order_query")
+            if not original_query:
+                return {
+                    "success": False,
+                    "error": "Lost original search query. Please start over.",
+                    "processed": []
+                }
+            
+            # Call the full workflow tool
+            payload = {
+                "tool": "process_delivery_order_workflow",
+                "inputs": {
+                    "query": original_query,
+                    "max_results": 5,
+                    "download_attachments": True,  # Now download for processing
+                    "save_to_db": True,
+                    "upload_to_sheets": True,
+                    "sheets_sheet_id": sheet_id
+                },
+                "credentials_dict": credentials_dict or {}
+            }
+            
+            response = httpx.post(
+                f"{gmail_agent_url}/execute_task",
+                json=payload,
+                timeout=120.0  # Longer timeout for full processing
+            )
+            
+            if response.status_code != 200:
+                return {
+                    "success": False,
+                    "error": f"Workflow error: {response.status_code}",
+                    "processed": []
+                }
+            
+            result = response.json()
+            return result
+        
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Execution failed: {str(e)}",
+                "processed": []
+            }
+    
+    def _build_delivery_order_execution_response(
+        self,
+        execution_result: Dict[str, Any],
+        conversation_state: ConversationState
+    ) -> str:
+        """
+        Build a user-friendly response showing execution results.
+        
+        Args:
+            execution_result: Result from _handle_delivery_order_execution
+            conversation_state: Conversation state to update
+            
+        Returns:
+            Formatted response string
+        """
+        if not execution_result["success"]:
+            return f"❌ Processing failed: {execution_result.get('error', 'Unknown error')}"
+        
+        processed = execution_result.get("processed", [])
+        errors = execution_result.get("errors", [])
+        
+        response = "✅ **Delivery order processing complete!**\n\n"
+        
+        if processed:
+            response += f"**Successfully processed: {len(processed)} order(s)**\n\n"
+            for item in processed:
+                response += f"📄 {item.get('file_name', 'Unknown')}\n"
+                response += f"   From: {item.get('email_from', 'Unknown')}\n"
+                response += f"   Subject: {item.get('email_subject', 'N/A')}\n"
+                response += f"   ✓ Parsed ✓ Transformed ✓ Uploaded\n\n"
+        
+        if errors:
+            response += f"⚠️ **{len(errors)} error(s) occurred:**\n\n"
+            for error in errors[:3]:  # Show first 3 errors
+                response += f"   • {error}\n"
+            if len(errors) > 3:
+                response += f"   ... and {len(errors) - 3} more\n\n"
+        
+        summary = execution_result.get("search_summary", {})
+        response += f"**Summary:** {summary.get('total_emails_found', 0)} emails processed\n"
+        
+        # Clean up conversation state
+        conversation_state.extracted_info["delivery_order_stage"] = "completed"
+        conversation_state.ready_for_execution = False
+        conversation_state.clarification_question = None
+        conversation_state.missing_fields = []
+        
+        return response
+
     def process_message(
         self, 
         user_message: str, 
@@ -1413,7 +1705,95 @@ When user mentions multiple entities, infer roles from explicit cues ("from", "t
         if auto_save and state_id != "default":
             self.thread_manager.add_message(state_id, "user", user_message)
         
-        # Analyze the request
+        # Initialize conversation state if new
+        if conversation_state is None:
+            conversation_state = ConversationState()
+        
+        # === DELIVERY ORDER ADAPTER: Handle two-stage delivery order workflow ===
+        delivery_stage = conversation_state.extracted_info.get("delivery_order_stage")
+        
+        if self._is_delivery_order_request(user_message) and delivery_stage != "awaiting_sheet_confirmation":
+            # Stage 1: User initiates delivery order search
+            print(f"🚚 DELIVERY ORDER SEARCH: User is searching for delivery orders")
+            
+            # Extract query from the user message (or use whole message as query)
+            # Common patterns: "search for orders from...", "find delivery to...", "orders from..."
+            query = user_message
+            if "from:" not in query.lower():
+                # Add some intelligence to the query
+                if "batangas" in query.lower():
+                    query = f"from:supplier delivery has:attachment to:batangas"
+                elif "po" in query.lower() or "purchase order" in query.lower():
+                    query = f"subject:PO has:attachment"
+                else:
+                    # Default to looking for delivery-related emails with attachments
+                    query = f"{query} has:attachment"
+            
+            # Store the original query for later execution
+            conversation_state.extracted_info["delivery_order_query"] = query
+            
+            # Get credentials from request context (if available from session)
+            credentials_dict = {}  # TODO: Get from session/auth context
+            
+            # Perform preview search
+            preview_result = self._handle_delivery_order_preview(
+                query=query,
+                credentials_dict=credentials_dict
+            )
+            
+            response = self._build_delivery_order_preview_response(preview_result, conversation_state)
+            
+            # Add response to memory manager
+            memory_manager.add_message("assistant", response)
+            
+            # Also store in messages table if this is a persistent thread
+            if auto_save and state_id != "default":
+                self.thread_manager.add_message(state_id, "assistant", response)
+            
+            # Save memory state back to conversation_state for persistence
+            self._save_memory_to_state(conversation_state, state_id)
+            
+            # Auto-save to database if requested
+            if auto_save and state_id != "default":
+                self._save_thread_to_db(state_id, conversation_state)
+            
+            return response, conversation_state
+        
+        elif delivery_stage == "awaiting_sheet_confirmation":
+            # Stage 2: User provided sheet ID - execute full workflow
+            print(f"🚚 DELIVERY ORDER EXECUTION: User confirmed, executing full workflow")
+            
+            # Get credentials from request context (if available from session)
+            credentials_dict = {}  # TODO: Get from session/auth context
+            
+            # Execute the full workflow
+            execution_result = self._handle_delivery_order_execution(
+                user_message=user_message,
+                conversation_state=conversation_state,
+                credentials_dict=credentials_dict
+            )
+            
+            response = self._build_delivery_order_execution_response(execution_result, conversation_state)
+            
+            # Add response to memory manager
+            memory_manager.add_message("assistant", response)
+            
+            # Also store in messages table if this is a persistent thread
+            if auto_save and state_id != "default":
+                self.thread_manager.add_message(state_id, "assistant", response)
+            
+            # Save memory state back to conversation_state for persistence
+            self._save_memory_to_state(conversation_state, state_id)
+            
+            # Auto-save to database if requested
+            if auto_save and state_id != "default":
+                self._save_thread_to_db(state_id, conversation_state)
+            
+            return response, conversation_state
+        
+        # === END DELIVERY ORDER ADAPTER ===
+        
+        # Continue with standard message analysis for non-delivery-order requests
         analysis = self.analyze_request(user_message, conversation_state, state_id, uploaded_file=uploaded_file)
         
         # Detect compound "cancel + new task" scenario
