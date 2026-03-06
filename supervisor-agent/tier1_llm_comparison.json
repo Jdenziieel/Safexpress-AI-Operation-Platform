@@ -1,17 +1,13 @@
 {
-  "response": "{\n    \"intent\": \"ready_to_execute\",\n    \"task_type\": \"create_from_template_and_data\",\n    \"extracted_info\": {\"template_name\": \"MinutesOfMeetingTEMP\", \"data_name\": \"TestData123\", \"new_title\": \"January Reports\"},\n    \"missing_fields\": [],\n    \"clarification_question\": null,\n    \"reasoning\": \"All fields extracted for template+data workflow\",\n    \"execution_ready\": true,\n    \"execution_summary\": \"Create 'January Reports' from template 'MinutesOfMeetingTEMP' using 'TestData123' data\"\n}",
+  "response": "{\n    \"intent\": \"ready_to_execute\",\n    \"task_type\": \"search_upcoming_events\",\n    \"extracted_info\": {},\n    \"missing_fields\": [],\n    \"clarification_question\": null,\n    \"reasoning\": \"User has requested to search for upcoming events in their calendar. No additional information is required.\",\n    \"execution_ready\": true,\n    \"execution_summary\": \"Search for upcoming events in user's calendar\"\n}",
   "parsed": {
     "intent": "ready_to_execute",
-    "task_type": "create_from_template_and_data",
-    "extracted_info": {
-      "template_name": "MinutesOfMeetingTEMP",
-      "data_name": "TestData123",
-      "new_title": "January Reports"
-    },
+    "task_type": "search_upcoming_events",
+    "extracted_info": {},
     "missing_fields": [],
     "clarification_question": null,
-    "reasoning": "All fields extracted for template+data workflow",
+    "reasoning": "User has requested to search for upcoming events in their calendar. No additional information is required.",
     "execution_ready": true,
-    "execution_summary": "Create 'January Reports' from template 'MinutesOfMeetingTEMP' using 'TestData123' data"
+    "execution_summary": "Search for upcoming events in user's calendar"
   }
 }

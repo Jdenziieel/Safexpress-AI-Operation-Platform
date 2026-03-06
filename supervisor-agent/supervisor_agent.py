@@ -374,10 +374,9 @@ def supervisor_node(state: SharedState) -> SharedState:
     if needs_template_data and 'drive_agent' not in relevant_agents:
         print("⚠️ WARNING: drive_agent missing for template+data workflow, force adding...")
         relevant_agents.append('drive_agent')
-        # Re-fetch capabilities with drive_agent included
-        from agent_capabilities import agent_capabilities
-        if 'drive_agent' in agent_capabilities:
-            filtered_capabilities['drive_agent'] = agent_capabilities['drive_agent']
+        # Add drive_agent from the globally imported capabilities
+        import agent_capabilities_v2 as _ac_module
+        filtered_capabilities['drive_agent'] = _ac_module.agent_capabilities['drive_agent']
     
     print(f"📌 Relevant agents: {relevant_agents}")
     print(f"🔧 Filtered tools: {tool_filter}")
@@ -588,6 +587,10 @@ Your response must be a valid JSON object with a "steps" array."""
             if not isinstance(plan, dict):
                 raise ValueError("Plan must be a dictionary object")
             
+            if "steps" not in plan and "plan" in plan:
+                print("⚠️ LLM returned 'plan' key instead of 'steps' — normalizing...")
+                plan["steps"] = plan.pop("plan")
+                
             if "steps" not in plan:
                 raise ValueError("Plan must contain 'steps' array. Got keys: " + str(list(plan.keys())))
             

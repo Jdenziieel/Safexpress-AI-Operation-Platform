@@ -1,34 +1,16 @@
 {
   "steps": [
     {
-      "step_id": 1,
-      "agent": "drive_agent",
-      "tool": "search_template_and_data",
-      "description": "Search Google Drive for template and data files",
+      "agent": "calendar_agent",
+      "tool": "list_events",
       "inputs": {
-        "template_name": "MinutesOfMeetingTEMP",
-        "data_name": "TestData123"
+        "time_min": "{{ today_date }}",
+        "max_results": 10
       },
       "output_variables": {
-        "template_file_id": "template_file_id",
-        "data_file_id": "data_file_id"
-      }
-    },
-    {
-      "step_id": 2,
-      "agent": "docs_agent",
-      "tool": "create_from_template_and_data_ids",
-      "description": "Create document from template and data files",
-      "inputs": {
-        "template_file_id": "{{ template_file_id }}",
-        "data_file_id": "{{ data_file_id }}",
-        "new_title": "January Reports",
-        "output_format": "google_docs"
+        "upcoming_events": "events"
       },
-      "output_variables": {
-        "document_id": "document_id",
-        "document_url": "document_url"
-      }
+      "description": "List the upcoming events from the user's calendar"
     }
   ]
 }
