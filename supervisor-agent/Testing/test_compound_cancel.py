@@ -3,7 +3,8 @@ Test Compound "Cancel + New Task" Requests
 Tests that "cancel X and do Y" in one message works gracefully
 """
 
-from conversational_agent import ConversationalAgent, ConversationState, ConversationIntent
+from conversational_agent import ConversationalAgent
+from models import ConversationState, ConversationIntent
 import os
 from dotenv import load_dotenv
 

@@ -1181,6 +1181,40 @@ class LogStorage:
             print(f"🧹 Marked {count} expired pending actions")
         
         return count
+
+    def cleanup_expired_pending_actions(self, expire_minutes: int = 5) -> int:
+        """
+        Mark pending actions older than expire_minutes as 'expired'.
+        
+        Unlike cleanup_expired_actions which uses the stored expires_at column,
+        this method uses a dynamic age threshold.
+        
+        Args:
+            expire_minutes: Mark actions older than this many minutes as expired
+            
+        Returns:
+            Number of actions marked as expired
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        now = datetime.utcnow()
+        cutoff = (now - timedelta(minutes=expire_minutes)).isoformat()
+        
+        cursor.execute("""
+            UPDATE pending_actions 
+            SET status = 'expired', decided_at = ?
+            WHERE status = 'pending' AND created_at < ?
+        """, (now.isoformat(), cutoff))
+        
+        count = cursor.rowcount
+        conn.commit()
+        conn.close()
+        
+        if count > 0:
+            print(f"🧹 Marked {count} expired pending actions (older than {expire_minutes}m)")
+        
+        return count
     
     def _row_to_action_dict(self, row: sqlite3.Row) -> Dict[str, Any]:
         """Convert a database row to an action dictionary."""

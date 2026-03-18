@@ -3,7 +3,8 @@ Comprehensive test: Simple Cancellation for Multi-Task Scenarios
 Tests that cancellation empties everything for clean supervisor integration
 """
 
-from conversational_agent import ConversationalAgent, ConversationState, ConversationIntent
+from conversational_agent import ConversationalAgent
+from models import ConversationState, ConversationIntent
 import os
 from dotenv import load_dotenv
 

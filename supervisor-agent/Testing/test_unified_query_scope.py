@@ -3,7 +3,8 @@ Test unified quick check with query_scope classification
 """
 
 import os
-from conversational_agent import ConversationalAgent, ConversationState
+from conversational_agent import ConversationalAgent
+from models import ConversationState
 
 # Initialize agent
 agent = ConversationalAgent(

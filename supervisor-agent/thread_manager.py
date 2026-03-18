@@ -147,8 +147,7 @@ class ThreadManager:
         self, 
         user_id: str, 
         thread_id: Optional[str] = None,
-        title: Optional[str] = None,
-        tags: Optional[List[str]] = None
+        title: Optional[str] = None
     ) -> ThreadMetadata:
         """
         Create a new thread.
@@ -156,8 +155,7 @@ class ThreadManager:
         Args:
             user_id: User identifier
             thread_id: Optional custom thread ID (auto-generated if None)
-            title: Optional thread title
-            tags: Optional tags for categorization
+            title: Optional thread title (defaults to "New Conversation")
         
         Returns:
             ThreadMetadata of created thread
@@ -168,15 +166,14 @@ class ThreadManager:
             thread_id = f"{user_id}_{uuid.uuid4().hex[:8]}"
         
         now = datetime.utcnow().isoformat()
-        tags_json = json.dumps(tags or [])
         
         conn = self._get_connection()
         cursor = conn.cursor()
         
         cursor.execute("""
-            INSERT INTO threads (thread_id, user_id, created_at, updated_at, title, message_count, status, tags)
-            VALUES (?, ?, ?, ?, ?, 0, 'active', ?)
-        """, (thread_id, user_id, now, now, title or "New Conversation", tags_json))
+            INSERT INTO threads (thread_id, user_id, created_at, updated_at, title, message_count, status)
+            VALUES (?, ?, ?, ?, ?, 0, 'active')
+        """, (thread_id, user_id, now, now, title or "New Conversation"))
         
         conn.commit()
         conn.close()
@@ -190,8 +187,7 @@ class ThreadManager:
             updated_at=datetime.fromisoformat(now),
             title=title or "New Conversation",
             message_count=0,
-            status="active",
-            tags=tags or []
+            status="active"
         )
     
     def get_thread(self, thread_id: str) -> Optional[ThreadMetadata]:

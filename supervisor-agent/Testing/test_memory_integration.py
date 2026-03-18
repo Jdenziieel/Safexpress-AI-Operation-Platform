@@ -85,7 +85,7 @@ def test_memory_integration():
     )
     
     # Recreate state from dict
-    from conversational_agent import ConversationState
+    from models import ConversationState
     loaded_state = ConversationState(**exported_state)
     
     # Test that memory is properly loaded

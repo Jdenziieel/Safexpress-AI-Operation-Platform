@@ -222,7 +222,7 @@ Include ONLY tools that will actually be used. Less is better."""
     except Exception as e:
         # Check if this is an LLM service error (rate limit, quota, etc.)
         if is_llm_error(e):
-            raise handle_llm_error(e)
+            raise LLMServiceException(handle_llm_error(e))
         # For other errors, fall back to all tools for the agents
         return {
             agent: list(agent_capabilities[agent]["tools"].keys())

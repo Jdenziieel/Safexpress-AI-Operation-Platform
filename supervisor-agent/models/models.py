@@ -5,8 +5,8 @@ Contains enums, constants, and data models used across the supervisor agent.
 """
 
 from enum import Enum
-from typing import Dict, Optional, Any
-from pydantic import BaseModel
+from typing import Dict, List, Optional, Any
+from pydantic import BaseModel, Field
 
 
 class ActionRiskLevel(str, Enum):
@@ -71,3 +71,50 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     "delete_event": ActionRiskLevel.CRITICAL,
     "remove_label_TRASH": ActionRiskLevel.CRITICAL,  # Permanently delete
 }
+
+
+# =============================================================================
+# Conversational Agent Models
+# =============================================================================
+
+class ConversationIntent(str, Enum):
+    """Intent classification for conversation state"""
+    NEEDS_CLARIFICATION = "needs_clarification"  # Missing info, ask user
+    NOT_FEASIBLE = "not_feasible"  # Can't do with current tools
+    TOO_COMPLEX = "too_complex"  # Task needs breaking down
+    READY_TO_EXECUTE = "ready_to_execute"  # All info present, proceed
+    SMALL_TALK = "small_talk"  # Not a task request
+    CANCELLED = "cancelled"  # User cancelled the request but data preserved
+    TEMPLATE_UPLOAD = "template_upload" 
+
+
+class ConversationState(BaseModel):
+    """Tracks conversation history and extracted information"""
+    extracted_info: Dict[str, Any] = Field(default_factory=dict)
+    missing_fields: List[str] = Field(default_factory=list)
+    intent: Optional[ConversationIntent] = None
+    clarification_question: Optional[str] = None
+    ready_for_execution: bool = False
+    execution_summary: Optional[str] = None  # Human-readable summary
+    # Execution metadata (added to support supervisor execution history)
+    execution_history: List[Dict[str, Any]] = Field(default_factory=list)
+    executed_count: int = 0
+    last_plan_hash: Optional[str] = None
+    last_executed_at: Optional[str] = None
+    executing: bool = False
+    
+    # NEW: Memory manager state (for persistence)
+    memory_state: Optional[Dict[str, Any]] = None
+
+
+class ConversationAnalysis(BaseModel):
+    """LLM's analysis of the user request"""
+    intent: ConversationIntent
+    task_type: str  # e.g., "send_email", "search_emails", "manage_calendar"
+    extracted_info: Dict[str, Any]
+    missing_fields: List[str]
+    clarification_question: Optional[str] = None
+    reasoning: str
+    suggested_alternatives: Optional[List[str]] = None
+    execution_ready: bool
+    execution_summary: Optional[str] = None

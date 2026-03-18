@@ -21,6 +21,7 @@ Usage:
 from enum import Enum
 from typing import Optional, Dict, Any
 from dataclasses import dataclass
+import re
 
 
 class LLMErrorType(str, Enum):
@@ -204,8 +205,7 @@ def _extract_retry_after(exception: Exception) -> Optional[int]:
     error_str = str(exception)
     
     # Try to find retry time in the error message
-    import re
-    
+
     # Look for patterns like "try again in 20s" or "retry after 20 seconds"
     patterns = [
         r'try again in (\d+)\s*(?:s|sec|second)',

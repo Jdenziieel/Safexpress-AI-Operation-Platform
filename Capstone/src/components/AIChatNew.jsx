@@ -829,8 +829,7 @@ function AIChatNew() {
         try {
           const response = await supervisorApi.post('/threads', {
             user_id: userId,
-            message: userMessage,
-            tags: []
+            message: userMessage
           });
           responseData = response.data;
           
@@ -902,8 +901,7 @@ function AIChatNew() {
             try {
               const newResponse = await supervisorApi.post('/threads', {
                 user_id: userId,
-                message: userMessage,
-                tags: []
+                message: userMessage
               });
               responseData = newResponse.data;
               

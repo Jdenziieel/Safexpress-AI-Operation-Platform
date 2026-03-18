@@ -21,7 +21,7 @@ const Login = ({ onLogin }) => {
         console.log("Google code response:", codeResponse);
         console.log("Sending auth code to backend...");
         
-        const response = await api.post("/api/auth/dynamodb/google/", {
+        const response = await api.post("/api/auth/google/", {
           code: codeResponse.code  // ← This will now definitely be an authorization code
         });
         

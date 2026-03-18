@@ -102,6 +102,19 @@ export const hasAccess = (allowedRoles) => {
 };
 
 /**
+ * Get the current user's UUID (user_id) from the JWT token.
+ * Used to identify the user when calling backend services.
+ * 
+ * @returns {string|null} user UUID or null if not authenticated
+ */
+export const getUserUUID = () => {
+  const decoded = getUserFromToken();
+  if (!decoded) return null;
+  
+  return decoded.user_id || decoded.sub || decoded.id || null;
+};
+
+/**
  * Check if user is authenticated (has valid, non-expired token)
  * @returns {boolean} true if authenticated
  */

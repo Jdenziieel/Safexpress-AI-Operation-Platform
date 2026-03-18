@@ -91,7 +91,7 @@ Return ONLY a JSON array of agent names needed. Example: ["gmail_agent", "docs_a
         # Check if this is an LLM service error (rate limit, quota, etc.)
         if is_llm_error(e):
             logger.error(f"LLM service error during agent classification: {e}")
-            raise handle_llm_error(e)
+            raise LLMServiceException(handle_llm_error(e))
         # For other errors (like JSON parse), log and fall back to all agents
         logger.warning(f"Error in agent classification, using all agents: {e}")
         return list(agent_capabilities.keys())

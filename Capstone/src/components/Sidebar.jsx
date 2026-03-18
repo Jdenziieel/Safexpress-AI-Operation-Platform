@@ -15,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import { isAdmin as checkIsAdmin, getUserRole, hasAccess, getUserFromToken } from "../utils/tokenManager";
+import QuotaWidget from "./QuotaWidget";
 import safexpressLogo from "../assets/sfxLogo.png";
 import "../css/Sidebar.css";
 

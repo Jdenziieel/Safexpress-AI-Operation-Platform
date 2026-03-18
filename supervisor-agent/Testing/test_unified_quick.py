@@ -5,7 +5,8 @@ Modify the USER_MESSAGE variable and run to test.
 
 import os
 from dotenv import load_dotenv
-from conversational_agent import ConversationalAgent, ConversationState
+from conversational_agent import ConversationalAgent
+from models import ConversationState
 
 # Load environment
 load_dotenv()

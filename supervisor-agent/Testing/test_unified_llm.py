@@ -5,7 +5,8 @@ Only runs Tier 0.5 check and saves JSON output.
 
 import os
 from dotenv import load_dotenv
-from conversational_agent import ConversationalAgent, ConversationState
+from conversational_agent import ConversationalAgent
+from models import ConversationState
 
 # Load environment variables
 load_dotenv()

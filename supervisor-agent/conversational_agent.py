@@ -9,15 +9,16 @@ This agent sits BEFORE the supervisor and handles:
 5. Suggesting alternatives for complex tasks
 """
 
-from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from typing import Optional, List, Dict, Any
-from enum import Enum
 import json
 import os
 import re
 import time
 import httpx
+
+# Import shared data models
+from models import ConversationIntent, ConversationState, ConversationAnalysis
 
 # Import agent capabilities for feasibility checking
 from agent_capabilities_v2 import agent_capabilities
@@ -27,6 +28,9 @@ from utils import identify_relevant_agents, get_filtered_capabilities
 
 # Import LLM error handler for unified error handling
 from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_error
+
+# Import execution trace logger
+from execution_logger import trace
 
 # Import conversation memory manager
 from conversation_memory import ConversationMemoryManager
@@ -41,52 +45,11 @@ from logging_config import (
     get_token_summary
 )
 
-
-class ConversationIntent(str, Enum):
-    """Intent classification for conversation state"""
-    NEEDS_CLARIFICATION = "needs_clarification"  # Missing info, ask user
-    NOT_FEASIBLE = "not_feasible"  # Can't do with current tools
-    TOO_COMPLEX = "too_complex"  # Task needs breaking down
-    READY_TO_EXECUTE = "ready_to_execute"  # All info present, proceed
-    SMALL_TALK = "small_talk"  # Not a task request
-    CANCELLED = "cancelled"  # User cancelled the request but data preserved
-    TEMPLATE_UPLOAD = "template_upload" 
+# Import Tier 0 pattern-based checks mixin
+from checks import Tier0ChecksMixin
 
 
-class ConversationState(BaseModel):
-    """Tracks conversation history and extracted information"""
-    # Note: conversation_history removed - use memory_manager instead
-    extracted_info: Dict[str, Any] = Field(default_factory=dict)
-    missing_fields: List[str] = Field(default_factory=list)
-    intent: Optional[ConversationIntent] = None
-    clarification_question: Optional[str] = None
-    ready_for_execution: bool = False
-    execution_summary: Optional[str] = None  # Human-readable summary
-    # Execution metadata (added to support supervisor execution history)
-    execution_history: List[Dict[str, Any]] = Field(default_factory=list)
-    executed_count: int = 0
-    last_plan_hash: Optional[str] = None
-    last_executed_at: Optional[str] = None
-    executing: bool = False
-    
-    # NEW: Memory manager state (for persistence)
-    memory_state: Optional[Dict[str, Any]] = None
-
-
-class ConversationAnalysis(BaseModel):
-    """LLM's analysis of the user request"""
-    intent: ConversationIntent
-    task_type: str  # e.g., "send_email", "search_emails", "manage_calendar"
-    extracted_info: Dict[str, Any]
-    missing_fields: List[str]
-    clarification_question: Optional[str] = None
-    reasoning: str
-    suggested_alternatives: Optional[List[str]] = None
-    execution_ready: bool
-    execution_summary: Optional[str] = None
-
-
-class ConversationalAgent:
+class ConversationalAgent(Tier0ChecksMixin):
     """
     Manages conversation flow before passing to supervisor.
     Uses LLM to understand intent and gather complete information.
@@ -236,201 +199,11 @@ class ConversationalAgent:
             # conversation_state.conversation_history = self.memory_managers[state_id].get_full_history()
 
     # =============================================================================
-    # TIER 0: PATTERN-BASED QUICK CHECKS (NO LLM - INSTANT RESPONSE)
+    # TIER 0: Pattern-based checks moved to checks/tier0_checks.py (Tier0ChecksMixin)
+    # Methods: _quick_greeting_check, _quick_repeat_check, 
+    #          _quick_capability_list_check, _quick_examples_check,
+    #          _quick_help_check, _quick_status_check
     # =============================================================================
-    
-    def _quick_greeting_check(self, user_message: str) -> Optional[ConversationAnalysis]:
-        """
-        Instant response to greetings without LLM call.
-        Pattern-based recognition for common greetings.
-        
-        Args:
-            user_message: Current user input
-            
-        Returns:
-            ConversationAnalysis with greeting response, or None if not a greeting
-        """
-        greetings = [
-            "hello", "hi", "hey", "good morning", "good afternoon", 
-            "good evening", "greetings", "howdy", "what's up", "sup", "yo"
-        ]
-        
-        user_lower = user_message.lower().strip()
-        
-        # Check if it's JUST a greeting (no task request)
-        # Must start with greeting and be short
-        is_greeting = any(user_lower.startswith(g) for g in greetings) and len(user_message) < 30
-        
-        if is_greeting:
-            # Make sure it's not "hi, send email to..." (greeting + task)
-            task_indicators = ["send", "search", "create", "find", "schedule", "draft", "reply", "make", "write"]
-            if not any(task in user_lower for task in task_indicators):
-                print(f"⚡ Tier 0: Greeting detected - instant response (0 tokens)")
-                
-                greeting_response = """Hello! 👋 I'm here to help you with:
-
-📧 **Emails** - Send, search, reply, draft
-📄 **Documents** - Create and edit Google Docs
-📅 **Calendar** - Schedule meetings (coming soon)
-
-What would you like to do today?"""
-                
-                return ConversationAnalysis(
-                    intent=ConversationIntent.SMALL_TALK,
-                    task_type="greeting",
-                    extracted_info={},
-                    missing_fields=[],
-                    clarification_question=greeting_response,
-                    reasoning="Simple greeting - instant response",
-                    execution_ready=False,
-                    execution_summary=None
-                )
-        
-        return None
-    
-    def _quick_repeat_check(self, user_message: str, conversation_state: ConversationState, state_id: str = "default") -> Optional[ConversationAnalysis]:
-        """
-        Detect requests to repeat last response.
-        Uses memory manager to retrieve last assistant message.
-        
-        Args:
-            user_message: Current user input
-            conversation_state: Previous conversation context
-            state_id: Conversation identifier for memory manager
-            
-        Returns:
-            ConversationAnalysis with repeated message, or None if not a repeat request
-        """
-        repeat_keywords = [
-            "repeat", "say that again", "what did you say", 
-            "come again", "pardon", "didn't catch that", "what was that"
-        ]
-        
-        user_lower = user_message.lower().strip()
-        
-        if any(keyword in user_lower for keyword in repeat_keywords):
-            print(f"⚡ Tier 0: Repeat request - retrieving last response (0 tokens)")
-            
-            # Get memory manager to retrieve last assistant message
-            memory_manager = self._get_memory_manager(state_id, conversation_state.memory_state)
-            recent = memory_manager.get_recent_messages(n=5)
-            
-            last_assistant = None
-            for msg in reversed(recent):
-                if msg['role'] == 'assistant':
-                    last_assistant = msg['content']
-                    break
-            
-            if last_assistant:
-                return ConversationAnalysis(
-                    intent=ConversationIntent.SMALL_TALK,
-                    task_type="repeat_request",
-                    extracted_info={},
-                    missing_fields=[],
-                    clarification_question=f"Sure, here's what I said:\n\n{last_assistant}",
-                    reasoning="User requested repeat of last message",
-                    execution_ready=False,
-                    execution_summary=None
-                )
-        
-        return None
-    
-    def _quick_capability_list_check(self, user_message: str) -> Optional[ConversationAnalysis]:
-        """
-        Instant list of capabilities for specific questions.
-        Uses cached capabilities summary built in __init__.
-        
-        Args:
-            user_message: Current user input
-            
-        Returns:
-            ConversationAnalysis with capabilities list, or None if not a capability question
-        """
-        capability_questions = [
-            "what can you do", "what are you capable of", "capabilities",
-            "what do you do", "what tasks", "features", "functions",
-            "what can i ask", "what are your features"
-        ]
-        
-        user_lower = user_message.lower().strip()
-        
-        if any(q in user_lower for q in capability_questions):
-            print(f"⚡ Tier 0: Capabilities request - returning cached list (0 tokens)")
-            
-            # Use cached full_capabilities_summary (already built in __init__)
-            capabilities_response = f"""Here's what I can help you with:
-
-{self.full_capabilities_summary}
-
-**To get started, try saying:**
-- "Send an email to john@example.com"
-- "Search my emails for invoices from last week"
-- "Create a document about project planning"
-
-What would you like to try?"""
-            
-            return ConversationAnalysis(
-                intent=ConversationIntent.SMALL_TALK,
-                task_type="capabilities_inquiry",
-                extracted_info={},
-                missing_fields=[],
-                clarification_question=capabilities_response,
-                reasoning="User asking about capabilities - used cached summary",
-                execution_ready=False,
-                execution_summary=None
-            )
-        
-        return None
-    
-    def _quick_examples_check(self, user_message: str) -> Optional[ConversationAnalysis]:
-        """
-        Provide examples when requested.
-        Pattern-based detection for example requests.
-        
-        Args:
-            user_message: Current user input
-            
-        Returns:
-            ConversationAnalysis with examples, or None if not an example request
-        """
-        example_keywords = ["example", "show me", "demonstrate", "sample", "give me an example"]
-        
-        user_lower = user_message.lower().strip()
-        
-        if any(keyword in user_lower for keyword in example_keywords):
-            print(f"⚡ Tier 0: Examples request - returning samples (0 tokens)")
-            
-            examples = """Here are some examples of what you can ask me:
-
-📧 **Email Examples:**
-- "Send an email to john@example.com about the Q4 report"
-- "Search my emails from alice@company.com from last week"
-- "Draft an email to the team about project updates"
-- "Reply to the last email from bob@example.com"
-
-📄 **Document Examples:**
-- "Create a Google doc titled Meeting Notes"
-- "Add this text to my document: [your content]"
-- "Edit my document with id abc123"
-
-📅 **Calendar Examples (coming soon):**
-- "Schedule a meeting with Sarah tomorrow at 3pm"
-- "Check my availability for next week"
-
-Try one of these or tell me what you'd like to do!"""
-            
-            return ConversationAnalysis(
-                intent=ConversationIntent.SMALL_TALK,
-                task_type="examples_request",
-                extracted_info={},
-                missing_fields=[],
-                clarification_question=examples,
-                reasoning="User requested examples",
-                execution_ready=False,
-                execution_summary=None
-            )
-        
-        return None
 
     # =============================================================================
     # TIER 0.5: UNIFIED LIGHTWEIGHT LLM CHECK (~100-250 TOKENS)
@@ -911,126 +684,13 @@ OUTPUT (JSON only):
             # Check if this is an LLM service error (rate limit, quota, etc.)
             if is_llm_error(e):
                 print(f"❌ LLM service error in unified quick check: {e}")
-                raise handle_llm_error(e)
+                raise LLMServiceException(handle_llm_error(e))
             
             print(f"⚠️ Unified quick check failed: {e}, falling back to full analysis")
             return None, "specific"  # Fallback: default to specific
         
         # Default: proceed to full analysis
         return None, "specific"  # Fallback: default to specific
-    
-    
-    def _quick_help_check(self, user_message: str, conversation_state: ConversationState) -> Optional[ConversationAnalysis]:
-        """
-        Detect help/tutorial requests and provide structured guidance.
-        Uses pattern matching for instant response without LLM call.
-        
-        Args:
-            user_message: Current user input
-            conversation_state: Previous conversation context
-            
-        Returns:
-            ConversationAnalysis with help response, or None if not a help request
-        """
-        help_keywords = ["help", "how", "guide", "tutorial", "teach me", "explain", "instructions", "show me how"]
-        user_lower = user_message.lower().strip()
-        
-        # Check if this is a help request
-        if not any(keyword in user_lower for keyword in help_keywords):
-            return None
-        
-        # Check if it's a general help request (not task-specific like "how do I send email")
-        task_indicators = ["send", "search", "find", "create", "delete", "schedule", "reply"]
-        is_general_help = not any(task in user_lower for task in task_indicators)
-        
-        if is_general_help:
-            print(f"🔍 Quick help: General help request detected")
-            
-            help_response = """I can help you with several tasks:
-
-📧 **Email Management:**
-- Send emails to anyone
-- Search your inbox
-- Reply to emails
-- Draft emails for later
-
-📄 **Document Creation:**
-- Create Google Docs
-- Edit existing documents
-- Add content to documents
-
-📅 **Calendar (coming soon):**
-- Schedule meetings
-- Check availability
-
-**To get started, try saying:**
-- "Send an email to john@example.com"
-- "Search my emails for invoices from last week"
-- "Create a document about project planning"
-
-What would you like to do?"""
-            
-            return ConversationAnalysis(
-                intent=ConversationIntent.SMALL_TALK,
-                task_type="help_request",
-                extracted_info={},
-                missing_fields=[],
-                clarification_question=help_response,
-                reasoning="User requested general help",
-                execution_ready=False,
-                execution_summary=None
-            )
-        
-        # Task-specific help, let full analysis handle it
-        return None
-    
-    def _quick_status_check(self, user_message: str, conversation_state: ConversationState) -> Optional[ConversationAnalysis]:
-        """
-        Detect status check requests after execution and provide quick update.
-        Uses pattern matching + execution history lookup.
-        
-        Args:
-            user_message: Current user input
-            conversation_state: Previous conversation context
-            
-        Returns:
-            ConversationAnalysis with status response, or None if not a status check
-        """
-        status_keywords = ["status", "done", "finished", "complete", "did it work", "success", "result", "what happened"]
-        user_lower = user_message.lower().strip()
-        
-        # Check if this is a status request
-        if not any(keyword in user_lower for keyword in status_keywords):
-            return None
-        
-        # Only respond if we have execution history
-        if conversation_state.executed_count == 0:
-            return None
-        
-        print(f"🔍 Quick status: Status check request detected")
-        
-        last_exec = conversation_state.execution_history[-1] if conversation_state.execution_history else {}
-        status = last_exec.get('status', 'unknown')
-        message = last_exec.get('message', 'No details available')
-        task = last_exec.get('task', 'the task')
-        
-        if status == "success":
-            status_response = f"✅ **Last execution: Successful**\n\n{message}\n\nAnything else you'd like to do?"
-        elif status == "error":
-            status_response = f"❌ **Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again or do something else?"
-        else:
-            status_response = f"📊 **Last execution status:** {status}\n\n{message}"
-        
-        return ConversationAnalysis(
-            intent=ConversationIntent.SMALL_TALK,
-            task_type="status_check",
-            extracted_info={},
-            missing_fields=[],
-            clarification_question=status_response,
-            reasoning="User checking execution status",
-            execution_ready=False,
-            execution_summary=None
-        )
     
     def analyze_request(
         self, 
@@ -1258,7 +918,7 @@ When user mentions multiple entities, infer roles from explicit cues ("from", "t
                     success=False,
                     error=str(llm_error)
                 )
-                raise handle_llm_error(llm_error)
+                raise LLMServiceException(handle_llm_error(llm_error))
             
             # Log the failed LLM call
             logger.llm_call(
@@ -2137,7 +1797,13 @@ When user mentions multiple entities, infer roles from explicit cues ("from", "t
         
         # Continue with standard message analysis for non-delivery-order requests
         analysis = self.analyze_request(user_message, conversation_state, state_id, uploaded_file=uploaded_file)
-        
+
+        trace.analysis_result(
+            intent=str(analysis.intent) if hasattr(analysis, 'intent') else "unknown",
+            ready=analysis.execution_ready if hasattr(analysis, 'execution_ready') else False,
+            missing_fields=analysis.missing_fields if hasattr(analysis, 'missing_fields') else []
+        )
+
         # Detect compound "cancel + new task" scenario
         # Check if user message has both cancel words AND task keywords
         cancel_keywords = ["cancel", "nevermind", "forget", "stop"]
@@ -2205,9 +1871,11 @@ When user mentions multiple entities, infer roles from explicit cues ("from", "t
             # Check if this is a cancellation
             if analysis.task_type == "cancellation":
                 response = "👍 No problem! Request cancelled. Let me know if you need anything else."
+            elif analysis.clarification_question:
+                # Use the pre-built response from Tier 0 checks (greetings, help, capabilities, etc.)
+                response = analysis.clarification_question
             else:
-                response = "I'm here to help you manage your emails, calendar, and documents. What would you like me to do?"
-            # ------- Can improve small_talk response into not being static later -------
+                response = "I'm here to help you manage your emails, documents, spreadsheets, calendar, and Drive. What would you like me to do?"
 
         elif analysis.intent == ConversationIntent.CANCELLED:
             response = "👍 No problem! Request cancelled.\n\n"
@@ -2625,7 +2293,7 @@ Summarize the results using specific data"""
                     success=False,
                     error=str(e)
                 )
-                raise handle_llm_error(e)
+                raise LLMServiceException(handle_llm_error(e))
             
             # Log the failed LLM call
             logger.llm_call(
@@ -2825,9 +2493,7 @@ Summarize the results using specific data"""
     def create_new_thread(
         self, 
         user_id: str, 
-        initial_message: Optional[str] = None,
-        title: Optional[str] = None,
-        tags: Optional[List[str]] = None
+        initial_message: Optional[str] = None
     ) -> tuple[str, ConversationState, Optional[str]]:
         """
         Create a new conversation thread with persistent storage.
@@ -2835,8 +2501,6 @@ Summarize the results using specific data"""
         Args:
             user_id: Unique identifier for the user
             initial_message: Optional first message to process
-            title: Optional custom title (will be auto-generated if not provided)
-            tags: Optional tags for categorization
             
         Returns:
             Tuple of (thread_id, initial_conversation_state, bot_response)
@@ -2844,9 +2508,7 @@ Summarize the results using specific data"""
         """
         # Create thread in database
         thread_metadata = self.thread_manager.create_thread(
-            user_id=user_id,
-            title=title,  # Will be auto-generated if None
-            tags=tags or []
+            user_id=user_id
         )
         thread_id = thread_metadata.thread_id
         
@@ -2863,10 +2525,9 @@ Summarize the results using specific data"""
                 auto_save=True  # Auto-save to database
             )
             
-            # Auto-generate title from first message if not provided
-            if not title:
-                new_title = self.thread_manager.auto_generate_title(initial_message)
-                self.thread_manager.update_thread(thread_id, title=new_title)
+            # Auto-generate title from first message
+            new_title = self.thread_manager.auto_generate_title(initial_message)
+            self.thread_manager.update_thread(thread_id, title=new_title)
         else:
             # Save initial empty state
             self._save_thread_to_db(thread_id, conversation_state)

@@ -3,7 +3,8 @@ Simple Cancellation Test: Multi-Task Scenarios
 Tests that cancellation clears everything for supervisor planning layer
 """
 
-from conversational_agent import ConversationalAgent, ConversationState, ConversationIntent
+from conversational_agent import ConversationalAgent
+from models import ConversationState, ConversationIntent
 import os
 from dotenv import load_dotenv
 

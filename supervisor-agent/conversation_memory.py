@@ -288,7 +288,7 @@ Be concise but preserve all critical information."""
             # Check if this is an LLM service error (rate limit, quota, etc.)
             if is_llm_error(e):
                 print(f"❌ LLM service error during summarization: {e}")
-                raise handle_llm_error(e)
+                raise LLMServiceException(handle_llm_error(e))
             
             print(f"⚠️ Summarization failed: {e}")
             # Fallback: just drop oldest message

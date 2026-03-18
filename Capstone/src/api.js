@@ -110,4 +110,49 @@ api.interceptors.response.use(
     }
 );
 
+// Supervisor Agent API (port 8010)
+export const supervisorApi = axios.create({
+    baseURL: import.meta.env.VITE_SUPERVISOR_API_URL || 'http://localhost:8010',
+});
+supervisorApi.interceptors.request.use(
+    (config) => {
+        const accessToken = localStorage.getItem(ACCESS_TOKEN);
+        if (accessToken) {
+            config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// Token Quota Service API (port 8011)
+export const quotaApi = axios.create({
+    baseURL: import.meta.env.VITE_QUOTA_API_URL || 'http://localhost:8011',
+});
+quotaApi.interceptors.request.use(
+    (config) => {
+        const accessToken = localStorage.getItem(ACCESS_TOKEN);
+        if (accessToken) {
+            config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// Knowledge Base API (port 8009)
+export const kbApi = axios.create({
+    baseURL: import.meta.env.VITE_KB_API_URL || 'http://localhost:8009',
+});
+kbApi.interceptors.request.use(
+    (config) => {
+        const accessToken = localStorage.getItem(ACCESS_TOKEN);
+        if (accessToken) {
+            config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
 export default api;

@@ -1,0 +1,22 @@
+[2026-03-17 18:49:28.758] [INFO] [-] → REQUEST: OPTIONS /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_8341ddde/messages  | {"query": null}
+[2026-03-17 18:49:28.759] [INFO] [-] ← RESPONSE: 200 (1ms)
+[2026-03-17 18:49:28.760] [INFO] [-] ─────────: ──────────────────────────────────────────────────
+[2026-03-17 18:49:28.769] [INFO] [-] → REQUEST: GET /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_8341ddde/messages  | {"query": null}
+[2026-03-17 18:49:28.769] [INFO] [-] ← RESPONSE: 200 (0ms)
+[2026-03-17 18:49:28.769] [INFO] [-] ─────────: ──────────────────────────────────────────────────
+[2026-03-17 18:49:35.789] [INFO] [-] → REQUEST: OPTIONS /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_8341ddde/messages  | {"query": null}
+[2026-03-17 18:49:35.790] [INFO] [-] ← RESPONSE: 200 (1ms)
+[2026-03-17 18:49:35.791] [INFO] [-] ─────────: ──────────────────────────────────────────────────
+[2026-03-17 18:49:35.792] [INFO] [-] → REQUEST: POST /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_8341ddde/messages  | {"query": null}
+[2026-03-17 18:49:38.267] [INFO] [req_20260317104938_b357faa6] [T:8341ddde]   USER MSG: "Hello"
+[2026-03-17 18:49:38.565] [INFO] [req_20260317104938_b357faa6] [T:8341ddde]   ANALYSIS: intent=ConversationIntent.SMALL_TALK, ready=False  | {"missing_fields": []}
+[2026-03-17 18:49:38.605] [INFO] [req_20260317104938_b357faa6] [T:8341ddde]   BOT RESP: "Hello! 👋 I'm your workspace assistant. Here's what I can help you with:
+
+📧 **Email (Gmail)**
+- Send,..."
+[2026-03-17 18:49:38.615] [INFO] [req_20260317104938_b357faa6] [T:8341ddde] ← RESPONSE: 200 (2823ms)
+[2026-03-17 18:49:38.615] [INFO] [req_20260317104938_b357faa6] [T:8341ddde] ─────────: ──────────────────────────────────────────────────
+[2026-03-17 18:50:25.947] [INFO] [req_20260317104938_b357faa6] [T:8341ddde] → REQUEST: POST /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_8341ddde/messages  | {"query": null}
+[2026-03-17 18:50:28.284] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde]   USER MSG: "Can you send"
+[2026-03-17 18:50:31.284] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ← RESPONSE: 500 (5337ms)
+[2026-03-17 18:50:31.285] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ─────────: ──────────────────────────────────────────────────

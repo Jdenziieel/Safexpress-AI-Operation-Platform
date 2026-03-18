@@ -2,7 +2,8 @@
 Test cancellation + task switching - what happens when user cancels and switches to a different task?
 """
 
-from conversational_agent import ConversationalAgent, ConversationState, ConversationIntent
+from conversational_agent import ConversationalAgent
+from models import ConversationState, ConversationIntent
 import os
 from dotenv import load_dotenv
 
