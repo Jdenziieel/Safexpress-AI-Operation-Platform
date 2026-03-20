@@ -31,6 +31,9 @@ from enum import Enum
 import threading
 from contextvars import ContextVar
 
+# Models centralized in models/models.py
+from models.models import LogLevel, QuotaCheckResult, TokenUsage, RequestTokenSummary
+
 # Use contextvars for async-safe context storage (instead of threading.local)
 _request_id_var: ContextVar[Optional[str]] = ContextVar('request_id', default=None)
 _conversation_id_var: ContextVar[Optional[str]] = ContextVar('conversation_id', default=None)
@@ -49,20 +52,6 @@ _log_storage_lock = threading.Lock()
 # Token Quota Service configuration
 QUOTA_SERVICE_URL = os.getenv("QUOTA_SERVICE_URL", "http://localhost:8011")
 QUOTA_ENABLED = os.getenv("QUOTA_ENABLED", "true").lower() in ("true", "1", "yes")
-
-
-# ============================================================================
-# LOG LEVELS
-# ============================================================================
-
-class LogLevel(str, Enum):
-    """Custom log levels for the system"""
-    DEBUG = "DEBUG"
-    INFO = "INFO"
-    PROGRESS = "PROGRESS"  # Special level for step tracking
-    WARNING = "WARNING"
-    ERROR = "ERROR"
-    CRITICAL = "CRITICAL"
 
 
 # ============================================================================
@@ -96,14 +85,6 @@ def get_log_storage():
                     print(f"Warning: Could not initialize log storage: {e}")
                     _log_storage = False
     return _log_storage if _log_storage else None
-
-
-class QuotaCheckResult:
-    """Result of a quota check"""
-    def __init__(self, allowed: bool, error: str = None, user_deactivated: bool = False):
-        self.allowed = allowed
-        self.error = error
-        self.user_deactivated = user_deactivated
 
 
 def check_user_quota(user_id: str, estimated_tokens: int = 1000) -> QuotaCheckResult:
@@ -206,61 +187,6 @@ def _report_quota_usage(
                 print(f"⚠️ Quota report failed with status {response.status_code}")
     except Exception as e:
         print(f"⚠️ Failed to report quota usage: {e}")
-
-
-# ============================================================================
-# DATA CLASSES
-# ============================================================================
-
-@dataclass
-class TokenUsage:
-    """Token usage for a single LLM call"""
-    input_tokens: int = 0
-    output_tokens: int = 0
-    total_tokens: int = 0
-    model: str = ""
-    estimated_cost: float = 0.0
-    call_duration_ms: float = 0.0
-
-
-@dataclass
-class RequestTokenSummary:
-    """Cumulative token usage for entire request cycle"""
-    total_input_tokens: int = 0
-    total_output_tokens: int = 0
-    total_tokens: int = 0
-    total_estimated_cost: float = 0.0
-    llm_calls: List[TokenUsage] = field(default_factory=list)
-    
-    def add_call(self, usage: TokenUsage):
-        """Add a single LLM call's usage to the summary"""
-        self.total_input_tokens += usage.input_tokens
-        self.total_output_tokens += usage.output_tokens
-        self.total_tokens += usage.total_tokens
-        self.total_estimated_cost += usage.estimated_cost
-        self.llm_calls.append(usage)
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for logging"""
-        return {
-            "total_input_tokens": self.total_input_tokens,
-            "total_output_tokens": self.total_output_tokens,
-            "total_tokens": self.total_tokens,
-            "total_estimated_cost_usd": round(self.total_estimated_cost, 6),
-            "llm_call_count": len(self.llm_calls),
-            "calls": [
-                {
-                    "model": call.model,
-                    "input_tokens": call.input_tokens,
-                    "output_tokens": call.output_tokens,
-                    "total_tokens": call.total_tokens,
-                    "cost_usd": round(call.estimated_cost, 6),
-                    "duration_ms": round(call.call_duration_ms, 2)
-                }
-                for call in self.llm_calls
-            ]
-        }
-
 
 # ============================================================================
 # REQUEST CONTEXT MANAGER

@@ -16,24 +16,8 @@ import json
 import sqlite3
 from pathlib import Path
 
-
-class ThreadMetadata(BaseModel):
-    """Metadata for a conversation thread"""
-    model_config = ConfigDict(
-        json_encoders={
-            datetime: lambda v: v.isoformat()
-        }
-    )
-    
-    thread_id: str
-    user_id: str
-    created_at: datetime
-    updated_at: datetime
-    title: Optional[str] = None  # Auto-generated from first message
-    message_count: int = 0
-    status: str = "active"  # active, archived, deleted
-    last_message_preview: Optional[str] = None
-    tags: List[str] = Field(default_factory=list)
+# Model centralized in models/models.py
+from models.models import ThreadMetadata
 
 
 class ThreadManager:

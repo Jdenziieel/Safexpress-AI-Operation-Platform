@@ -27,10 +27,9 @@ from logging_config import (
 # (no circular dependency — supervisor_agent does NOT import from routes/)
 from supervisor_agent import (
     conversational_agent,
-    UserRequest,
-    CreateThreadRequest,
     save_conversation_state,
 )
+from models.models import UserRequest, CreateThreadRequest
 from routes.workflow import execute_workflow
 from execution_logger import trace
 
@@ -97,7 +96,7 @@ async def _run_workflow_and_update_state(conversation_state, thread_id):
     conversation_state.ready_for_execution = False
 
     # Generate user-friendly summary
-    friendly_summary = conversational_agent.summarize_execution(
+    friendly_summary = conversational_agent.summarization_service.summarize_execution(
         conversation_state=conversation_state,
         final_context=final_context,
         execution_status=status,
@@ -151,7 +150,7 @@ async def create_thread(request: CreateThreadRequest):
                 }
             )
 
-    # === REQUEST CONTEXT: Initialize logging context ===
+    # === REQUEST CONTEXT: Initialize logging context. This is just for logging ===
     request_id = set_request_context(
         request_id=generate_request_id(),
         conversation_id=None,
@@ -170,8 +169,8 @@ async def create_thread(request: CreateThreadRequest):
     )
 
     try:
-        # Create thread using conversational agent
-        thread_id, conversation_state, bot_response = conversational_agent.create_new_thread(
+        # 1. Create thread using conversational agent in thread_service.py
+        thread_id, conversation_state, bot_response = conversational_agent.thread_service.create_new_thread(
             user_id=user_id,
             initial_message=initial_message
         )
@@ -194,7 +193,7 @@ async def create_thread(request: CreateThreadRequest):
 
             # Mark as executing to prevent conflicts
             conversation_state.executing = True
-            conversational_agent._save_thread_to_db(thread_id, conversation_state)
+            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
 
             try:
                 bot_response, conversation_state = await _run_workflow_and_update_state(
@@ -204,10 +203,10 @@ async def create_thread(request: CreateThreadRequest):
             finally:
                 # Clear executing flag and save
                 conversation_state.executing = False
-                conversational_agent._save_thread_to_db(thread_id, conversation_state)
+                conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
 
         # Get thread metadata
-        thread_metadata = conversational_agent.get_thread_metadata(thread_id)
+        thread_metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
         response = {
             "thread_id": thread_id,
@@ -320,7 +319,7 @@ async def create_thread_with_upload(
         print(f"  → Size: {file_size} bytes")
 
         # Create thread with initial message AND file
-        thread_id, conversation_state, bot_response = conversational_agent.create_new_thread(
+        thread_id, conversation_state, bot_response = conversational_agent.thread_service.create_new_thread(
             user_id=user_id,
             initial_message=message
         )
@@ -353,7 +352,7 @@ async def create_thread_with_upload(
             print(f"🚀 Thread {thread_id} ready - executing workflow...")
 
             updated_state.executing = True
-            conversational_agent._save_thread_to_db(thread_id, updated_state)
+            conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
 
             try:
                 response_text, updated_state = await _run_workflow_and_update_state(
@@ -361,7 +360,7 @@ async def create_thread_with_upload(
                 )
             finally:
                 updated_state.executing = False
-                conversational_agent._save_thread_to_db(thread_id, updated_state)
+                conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
 
                 # Clean up temp file
                 try:
@@ -378,7 +377,7 @@ async def create_thread_with_upload(
                 pass
 
         # Get thread metadata
-        metadata = conversational_agent.get_thread_metadata(thread_id)
+        metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
         # Log request summary before returning
         logger.request_summary()
@@ -429,7 +428,7 @@ async def search_threads(user_id: str, q: str, limit: int = 20):
         if not q:
             raise HTTPException(status_code=400, detail="search query (q) is required")
 
-        threads = conversational_agent.search_threads(
+        threads = conversational_agent.thread_service.search_threads(
             user_id=user_id,
             query=q,
             limit=limit
@@ -468,7 +467,7 @@ async def list_threads(user_id: str, status: str = "active", limit: int = 50, of
         if not user_id:
             raise HTTPException(status_code=400, detail="user_id is required")
 
-        threads = conversational_agent.list_user_threads(
+        threads = conversational_agent.thread_service.list_user_threads(
             user_id=user_id,
             status=status,
             limit=limit,
@@ -501,7 +500,7 @@ async def get_thread(thread_id: str):
     """
 
     try:
-        metadata = conversational_agent.get_thread_metadata(thread_id)
+        metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
         if not metadata:
             raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
@@ -533,7 +532,7 @@ async def get_thread_messages(thread_id: str, limit: int = 50, offset: int = 0):
     """
 
     try:
-        messages = conversational_agent.get_thread_messages(
+        messages = conversational_agent.thread_service.get_thread_messages(
             thread_id=thread_id,
             limit=limit,
             offset=offset
@@ -623,7 +622,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
         trace.user_message(message, thread_id)
 
         # Load current conversation state
-        conversation_state = conversational_agent._load_thread_from_db(thread_id)
+        conversation_state = conversational_agent.thread_service.load_thread_from_db(thread_id)
 
         if conversation_state is None:
             raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
@@ -637,7 +636,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
             )
 
         # Continue the thread
-        response_text, conversation_state = conversational_agent.continue_thread(
+        response_text, conversation_state = conversational_agent.thread_service.continue_thread(
             thread_id=thread_id,
             new_message=message
         )
@@ -651,7 +650,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
 
             # Mark as executing to prevent conflicts
             conversation_state.executing = True
-            conversational_agent._save_thread_to_db(thread_id, conversation_state)
+            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
 
             try:
                 response_text, conversation_state = await _run_workflow_and_update_state(
@@ -660,10 +659,10 @@ async def send_message_to_thread(thread_id: str, request: dict):
             finally:
                 # Clear executing flag and save
                 conversation_state.executing = False
-                conversational_agent._save_thread_to_db(thread_id, conversation_state)
+                conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
 
         # Get updated metadata
-        metadata = conversational_agent.get_thread_metadata(thread_id)
+        metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
         # Log request summary before returning
         logger.request_summary()
@@ -750,7 +749,7 @@ async def send_message_to_thread_with_upload(
         print(f"  → Size: {file_size} bytes")
 
         # Load current conversation state
-        conversation_state = conversational_agent._load_thread_from_db(thread_id)
+        conversation_state = conversational_agent.thread_service.load_thread_from_db(thread_id)
 
         if conversation_state is None:
             # Clean up temp file
@@ -785,7 +784,7 @@ async def send_message_to_thread_with_upload(
 
             # Mark as executing to prevent conflicts
             updated_state.executing = True
-            conversational_agent._save_thread_to_db(thread_id, updated_state)
+            conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
 
             try:
                 response_text, updated_state = await _run_workflow_and_update_state(
@@ -794,7 +793,7 @@ async def send_message_to_thread_with_upload(
             finally:
                 # Clear executing flag and save
                 updated_state.executing = False
-                conversational_agent._save_thread_to_db(thread_id, updated_state)
+                conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
 
                 # Clean up temp file
                 try:
@@ -811,7 +810,7 @@ async def send_message_to_thread_with_upload(
                 pass
 
         # Get updated metadata
-        metadata = conversational_agent.get_thread_metadata(thread_id)
+        metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
         # Log request summary before returning
         logger.request_summary()
@@ -865,7 +864,7 @@ async def update_thread(thread_id: str, request: dict):
         tags = request.get("tags")
         status = request.get("status")
 
-        success = conversational_agent.update_thread_metadata(
+        success = conversational_agent.thread_service.update_thread_metadata(
             thread_id=thread_id,
             title=title,
             tags=tags,
@@ -876,7 +875,7 @@ async def update_thread(thread_id: str, request: dict):
             raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
 
         # Get updated metadata
-        metadata = conversational_agent.get_thread_metadata(thread_id)
+        metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
         return {
             "thread_id": thread_id,
@@ -905,7 +904,7 @@ async def delete_thread(thread_id: str, hard_delete: bool = False):
     """
 
     try:
-        success = conversational_agent.delete_thread(
+        success = conversational_agent.thread_service.delete_thread(
             thread_id=thread_id,
             hard_delete=hard_delete
         )

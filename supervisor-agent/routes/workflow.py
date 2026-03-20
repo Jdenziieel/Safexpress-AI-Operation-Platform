@@ -11,7 +11,8 @@ from datetime import datetime, timedelta
 import json
 import traceback
 
-from supervisor_agent import workflow, UserRequest, WorkflowResponse, SharedState
+from supervisor_agent import workflow
+from models.models import UserRequest, WorkflowResponse, SharedState
 from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_error
 from execution_logger import trace
 

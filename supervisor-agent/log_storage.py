@@ -17,8 +17,8 @@ from pathlib import Path
 from enum import Enum
 from dataclasses import asdict
 
-# Import from log_schema (single source of truth)
-from log_schema import LogLevel
+# Import from models (single source of truth)
+from models.models import LogLevel
 
 
 class LogStorage:

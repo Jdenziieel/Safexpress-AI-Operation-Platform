@@ -21,39 +21,8 @@ from logging_config import memory_logger as logger
 # Import LLM error handler for unified error handling
 from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_error
 
-
-class ConversationMemory(BaseModel):
-    """
-    Manages conversation history with automatic summarization and entity extraction.
-    
-    Components:
-    - raw_history: Complete message history (never truncated, for record-keeping)
-    - working_context: Recent messages that fit within token budget
-    - entity_memory: Extracted entities (people, dates, tasks, etc.)
-    - summary: Condensed summary of old conversations
-    - MAX_TOKENS_BEFORE_SUMMARY: Threshold to trigger summarization
-    """
-    
-    # Complete history (never truncated)
-    raw_history: List[Dict[str, str]] = Field(default_factory=list)
-    
-    # Recent messages that fit in context window
-    working_context: List[Dict[str, str]] = Field(default_factory=list)
-    
-    # Extracted entities from conversation
-    entity_memory: Dict[str, Any] = Field(default_factory=dict)
-    
-    # Summary of old conversation turns
-    summary: Optional[str] = None
-    
-    # Token threshold for triggering summarization
-    MAX_TOKENS_BEFORE_SUMMARY: int = Field(default=2000)
-    
-    # Token count of current working context
-    current_token_count: int = Field(default=0)
-    
-    class Config:
-        arbitrary_types_allowed = True
+# Model centralized in models/models.py
+from models.models import ConversationMemory
 
 
 class ConversationMemoryManager:

@@ -276,34 +276,8 @@ def remove_conversation_state(conversation_id: str):
     # Note: SQLite cleanup handled by thread deletion
 
 
-# Pydantic models for API
-class UserRequest(BaseModel):
-    input: str
-    memory: Optional[Dict[str, Any]] = {}
-    policies: Optional[List[Dict[str, Any]]] = [{"rule": "allow all for demo"}]
-
-
-class CreateThreadRequest(BaseModel):
-    """Request to create a new conversation thread"""
-    user_id: str
-    message: Optional[str] = None
-
-
-class WorkflowResponse(BaseModel):
-    status: str
-    final_context: Dict[str, Any]
-    plan: Dict[str, Any]
-    message: str
-
-
-# SharedState TypedDict for workflow
-class SharedState(TypedDict):
-    input: str
-    plan: dict
-    context: dict
-    memory: dict
-    policy: list
-    final_context: dict
+# Pydantic models for API (defined in models/models.py, available via `from models.models import *`)
+# UserRequest, CreateThreadRequest, WorkflowResponse, SharedState
 
 
 # NOTE: PENDING_ACTIONS_CACHE is defined below (around line 450) and is used with SQLite integration.
@@ -1652,15 +1626,3 @@ print("   Flow: supervisor → orchestrator → END")
 print(f"   Plans saved to: {OUTPUT_DIR}/supervisor_plan.json")
 print(f"   Agent endpoints: {list(AGENT_ENDPOINTS.keys())}")
 
-
-
-# =============================================================================
-# ALL ROUTE ENDPOINTS -> Moved to routes/ package
-#   routes/workflow.py  - POST /workflow
-#   routes/actions.py   - /actions/pending, /action/{id}, /action/approve/{id}, /actions/cleanup
-#   routes/logs.py      - /logs, /logs/search, /logs/stats, /logs/requests/{id}, /agents/metrics
-#   routes/realtime.py  - WebSocket /ws/threads/{id}/progress, GET /threads/{id}/progress
-#   routes/health.py    - /health, /
-#   routes/threads.py   - /threads (all CRUD)
-#   routes/admin.py     - /admin/* (dashboard)
-# =============================================================================

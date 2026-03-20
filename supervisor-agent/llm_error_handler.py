@@ -23,42 +23,8 @@ from typing import Optional, Dict, Any
 from dataclasses import dataclass
 import re
 
-
-class LLMErrorType(str, Enum):
-    """Types of LLM errors for frontend display"""
-    RATE_LIMIT = "rate_limit"
-    QUOTA_EXCEEDED = "quota_exceeded"
-    SERVICE_UNAVAILABLE = "service_unavailable"
-    AUTHENTICATION = "authentication"
-    INVALID_REQUEST = "invalid_request"
-    CONTEXT_LENGTH = "context_length"
-    UNKNOWN = "unknown"
-
-
-@dataclass
-class LLMError:
-    """Structured LLM error for consistent API responses"""
-    error_type: LLMErrorType
-    title: str
-    message: str
-    user_message: str
-    status_code: int
-    retry_after: Optional[int] = None
-    details: Optional[str] = None
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for API response"""
-        return {
-            "error": True,
-            "error_type": self.error_type.value,
-            "title": self.title,
-            "message": self.message,
-            "user_message": self.user_message,
-            "status_code": self.status_code,
-            "retry_after": self.retry_after,
-            "details": self.details,
-            "is_llm_error": True  # Flag for frontend to show LLM error modal
-        }
+# Models centralized in models/models.py
+from models.models import LLMErrorType, LLMError
 
 
 # Error messages for each type

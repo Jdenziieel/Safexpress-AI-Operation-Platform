@@ -20,3 +20,34 @@
 [2026-03-17 18:50:28.284] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde]   USER MSG: "Can you send"
 [2026-03-17 18:50:31.284] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ← RESPONSE: 500 (5337ms)
 [2026-03-17 18:50:31.285] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ─────────: ──────────────────────────────────────────────────
+[2026-03-18 09:23:22.351] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] → REQUEST: OPTIONS /threads  | {"query": "user_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03"}
+[2026-03-18 09:23:22.351] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ← RESPONSE: 200 (0ms)
+[2026-03-18 09:23:22.351] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ─────────: ──────────────────────────────────────────────────
+[2026-03-18 09:23:22.351] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] → REQUEST: GET /threads  | {"query": "user_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03"}
+[2026-03-18 09:23:22.351] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ← RESPONSE: 200 (0ms)
+[2026-03-18 09:23:22.351] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ─────────: ──────────────────────────────────────────────────
+[2026-03-18 09:23:22.372] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] → REQUEST: OPTIONS /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_8341ddde/messages  | {"query": null}
+[2026-03-18 09:23:22.372] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ← RESPONSE: 200 (0ms)
+[2026-03-18 09:23:22.372] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ─────────: ──────────────────────────────────────────────────
+[2026-03-18 09:23:22.372] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] → REQUEST: GET /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_8341ddde/messages  | {"query": null}
+[2026-03-18 09:23:22.386] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ← RESPONSE: 200 (14ms)
+[2026-03-18 09:23:22.386] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ─────────: ──────────────────────────────────────────────────
+[2026-03-18 09:23:22.391] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] → REQUEST: GET /threads  | {"query": "user_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03"}
+[2026-03-18 09:23:22.391] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ← RESPONSE: 200 (0ms)
+[2026-03-18 09:23:22.391] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ─────────: ──────────────────────────────────────────────────
+[2026-03-18 09:23:32.107] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] → REQUEST: OPTIONS /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_8341ddde/messages  | {"query": null}
+[2026-03-18 09:23:32.110] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ← RESPONSE: 200 (3ms)
+[2026-03-18 09:23:32.112] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] ─────────: ──────────────────────────────────────────────────
+[2026-03-18 09:23:32.122] [INFO] [req_20260317105028_1fe6f84a] [T:8341ddde] → REQUEST: POST /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_8341ddde/messages  | {"query": null}
+[2026-03-18 09:23:35.386] [INFO] [req_20260318012335_0c38e7c9] [T:8341ddde]   USER MSG: "Can you"
+[2026-03-18 09:23:38.701] [INFO] [req_20260318012335_0c38e7c9] [T:8341ddde] ← RESPONSE: 500 (6579ms)
+[2026-03-18 09:23:38.703] [INFO] [req_20260318012335_0c38e7c9] [T:8341ddde] ─────────: ──────────────────────────────────────────────────
+[2026-03-18 10:18:14.205] [PRINT] Wrappers still on ConversationalAgent:
+[2026-03-18 10:18:14.206] [PRINT]  
+[2026-03-18 10:18:14.207] [PRINT] ['create_new_thread', 'continue_thread', 'list_user_threads', 'get_thread_metadata', 'get_thread_messages', 'update_thread_metadata', 'archive_thread', 'delete_thread', 'search_threads', '_save_thread_to_db', '_load_thread_from_db']
+[2026-03-18 10:18:14.208] [PRINT] Has thread_service attr in __init__:
+[2026-03-18 10:18:14.209] [PRINT]  
+[2026-03-18 10:18:14.209] [PRINT] True
+[2026-03-18 10:22:01.996] [PRINT] Found on class:
+[2026-03-18 10:22:01.997] [PRINT]  
+[2026-03-18 10:22:01.998] [PRINT] NONE - all removed

@@ -1,0 +1,27 @@
+# Virtual environment
+venv/
+
+# Directories to ignore (will revise once working outside supervisor-agent)
+authserver/
+backup/
+# Capstone/
+calendar-agent/
+gdocs-agent/
+gdrive-agent/
+gmail-agent/
+knowledge-base/
+Mapping-agent/
+Sheets-agent/
+testing/
+token-quota-service/
+zDocs/
+
+# All markdown files at root
+*.md
+
+# Misc
+__pycache__/
+*.pyc
+*.db
+*.sqlite3
+package-lock.json
