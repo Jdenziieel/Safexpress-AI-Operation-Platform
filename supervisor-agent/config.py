@@ -36,23 +36,17 @@ DEFAULT_TIMEOUT = 320.0  # seconds
 DEFAULT_BACKOFF_FACTOR = 2.0
 
 # Plan schema for LLM
-PLAN_SCHEMA = """
-{
-  "plan": [
-    {
-      "agent": "string - name of the agent to use (e.g., 'gmail_agent', 'docs_agent')",
-      "tool": "string - exact tool name from agent's tools list (e.g., 'create_draft_email', 'search_emails', 'create_doc')",
-      "inputs": {
-        "param_name": "value or {{ variable_from_previous_step }}"
-      },
-      "output_variables": {
-        "new_variable_name": "source_field_name - create 'new_variable_name' by copying value from 'source_field_name' in the tool's result"
-      },
-      "description": "string - summary of what this step does"
-    }
-  ]
+PLAN_SCHEMA = {
+    "steps": [
+        {
+            "agent": "agent_name",
+            "tool": "tool_name",
+            "inputs": {"param": "value or {{ variable }}"},
+            "output_variables": {"new_name": "source_field"},
+            "description": "what this step does"
+        }
+    ]
 }
-"""
 
 # Google OAuth credentials
 GOOGLE_ACCESS_TOKEN = os.getenv("GOOGLE_ACCESS_TOKEN")
@@ -65,6 +59,9 @@ LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0"))
 
 # Classifier LLM for agent identification (cheaper model)
 CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "gpt-3.5-turbo")
+
+# Lightweight model for quick checks, memory summarization, result summarization
+QUICK_MODEL = os.getenv("QUICK_MODEL", "gpt-4o-mini")
 
 # Server configuration
 SERVER_PORT = int(os.getenv("PORT", "8010"))

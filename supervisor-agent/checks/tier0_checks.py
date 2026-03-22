@@ -10,6 +10,7 @@ These methods are mixed into ConversationalAgent via inheritance.
 
 from typing import Optional, Dict, Any
 from models import ConversationAnalysis, ConversationIntent, ConversationState
+from execution_logger import trace
 
 
 class Tier0ChecksMixin:
@@ -54,7 +55,7 @@ class Tier0ChecksMixin:
             task_indicators = ["send", "search", "create", "find", "schedule", "draft", "reply", "make", "write",
                                "forward", "delete", "update", "upload", "download", "list", "check", "add"]
             if not any(task in user_lower for task in task_indicators):
-                print(f"⚡ Tier 0: Greeting detected - instant response (0 tokens)")
+                trace.step("tier0", "greeting detected — instant response (0 tokens)")
                 
                 greeting_response = """Hello! 👋 I'm your workspace assistant. Here's what I can help you with:
 
@@ -99,7 +100,7 @@ What would you like to do?"""
                     task_type="greeting",
                     extracted_info={},
                     missing_fields=[],
-                    clarification_question=greeting_response,
+                    response_text=greeting_response,
                     reasoning="Simple greeting - instant response",
                     execution_ready=False,
                     execution_summary=None
@@ -132,7 +133,7 @@ What would you like to do?"""
         user_lower = user_message.lower().strip()
         
         if any(keyword in user_lower for keyword in repeat_keywords):
-            print(f"⚡ Tier 0: Repeat request - retrieving last response (0 tokens)")
+            trace.step("tier0", "repeat request — retrieving last response (0 tokens)")
             
             # Get memory manager to retrieve last assistant message
             memory_manager = self._get_memory_manager(state_id, conversation_state.memory_state)
@@ -150,7 +151,7 @@ What would you like to do?"""
                     task_type="repeat_request",
                     extracted_info={},
                     missing_fields=[],
-                    clarification_question=f"Sure, here's what I said:\n\n{last_assistant}",
+                    response_text=f"Sure, here's what I said:\n\n{last_assistant}",
                     reasoning="User requested repeat of last message",
                     execution_ready=False,
                     execution_summary=None
@@ -185,7 +186,7 @@ What would you like to do?"""
         user_lower = user_message.lower().strip()
         
         if any(q in user_lower for q in capability_questions):
-            print(f"⚡ Tier 0: Capabilities request - returning cached list (0 tokens)")
+            trace.step("tier0", "capabilities request — returning cached list (0 tokens)")
             
             # Use cached full_capabilities_summary (already built in __init__)
             capabilities_response = f"""Here's everything I can help you with:
@@ -209,7 +210,7 @@ What would you like to do?"""
                 task_type="capabilities_inquiry",
                 extracted_info={},
                 missing_fields=[],
-                clarification_question=capabilities_response,
+                response_text=capabilities_response,
                 reasoning="User asking about capabilities - used cached summary",
                 execution_ready=False,
                 execution_summary=None
@@ -239,7 +240,7 @@ What would you like to do?"""
         user_lower = user_message.lower().strip()
         
         if any(keyword in user_lower for keyword in example_keywords):
-            print(f"⚡ Tier 0: Examples request - returning samples (0 tokens)")
+            trace.step("tier0", "examples request — returning samples (0 tokens)")
             
             examples = """Here are some examples of what you can ask me:
 
@@ -285,7 +286,7 @@ Try one of these or tell me what you'd like to do!"""
                 task_type="examples_request",
                 extracted_info={},
                 missing_fields=[],
-                clarification_question=examples,
+                response_text=examples,
                 reasoning="User requested examples",
                 execution_ready=False,
                 execution_summary=None
@@ -306,7 +307,7 @@ Try one of these or tell me what you'd like to do!"""
             ConversationAnalysis with help response, or None if not a help request
         """
         help_keywords = [
-            "help", "how", "guide", "tutorial", "teach me", "explain",
+            "help", "guide", "tutorial", "teach me", "explain",
             "instructions", "show me how", "get started", "getting started",
             "how to start", "how do i begin", "how do i use", "how does this work",
             "i need help", "i'm new", "i am new", "first time", "beginner",
@@ -329,7 +330,7 @@ Try one of these or tell me what you'd like to do!"""
         is_general_help = not any(task in user_lower for task in task_indicators)
         
         if is_general_help:
-            print(f"🔍 Quick help: General help request detected")
+            trace.step("tier0", "general help request detected (0 tokens)")
             
             help_response = """I can help you manage your workspace across several Google services. Here's a quick guide:
 
@@ -376,7 +377,7 @@ What would you like to do?"""
                 task_type="help_request",
                 extracted_info={},
                 missing_fields=[],
-                clarification_question=help_response,
+                response_text=help_response,
                 reasoning="User requested general help",
                 execution_ready=False,
                 execution_summary=None
@@ -416,7 +417,7 @@ What would you like to do?"""
         if conversation_state.executed_count == 0:
             return None
         
-        print(f"🔍 Quick status: Status check request detected")
+        trace.step("tier0", "status check request detected (0 tokens)")
         
         last_exec = conversation_state.execution_history[-1] if conversation_state.execution_history else {}
         status = last_exec.get('status', 'unknown')
@@ -435,7 +436,7 @@ What would you like to do?"""
             task_type="status_check",
             extracted_info={},
             missing_fields=[],
-            clarification_question=status_response,
+            response_text=status_response,
             reasoning="User checking execution status",
             execution_ready=False,
             execution_summary=None

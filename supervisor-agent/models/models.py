@@ -104,6 +104,7 @@ class ConversationState(BaseModel):
     clarification_question: Optional[str] = None
     ready_for_execution: bool = False
     execution_summary: Optional[str] = None  # Human-readable summary
+    execution_mode: str = "standard"  # "standard" or "react"
     # Execution metadata (added to support supervisor execution history)
     execution_history: List[Dict[str, Any]] = Field(default_factory=list)
     executed_count: int = 0
@@ -122,10 +123,12 @@ class ConversationAnalysis(BaseModel):
     extracted_info: Dict[str, Any]
     missing_fields: List[str]
     clarification_question: Optional[str] = None
+    response_text: Optional[str] = None  # Pre-built response for non-task intents (greetings, help, capabilities)
     reasoning: str
     suggested_alternatives: Optional[List[str]] = None
     execution_ready: bool
     execution_summary: Optional[str] = None
+    execution_mode: str = "standard"  # "standard" or "react"
 
 
 # =============================================================================
@@ -135,8 +138,6 @@ class ConversationAnalysis(BaseModel):
 class UserRequest(BaseModel):
     """Pydantic model for API user request"""
     input: str
-    memory: Optional[Dict[str, Any]] = {}
-    policies: Optional[List[Dict[str, Any]]] = [{"rule": "allow all for demo"}]
 
 
 class CreateThreadRequest(BaseModel):
@@ -158,9 +159,16 @@ class SharedState(TypedDict):
     input: str
     plan: dict
     context: dict
-    memory: dict
-    policy: list
     final_context: dict
+    execution_mode: str  # "standard" or "react"
+    # Orchestrator output fields
+    results: list
+    error: str
+    stopped_at_step: int
+    # ReAct-specific fields (only used when execution_mode == "react")
+    react_history: list       # accumulated observations from previous react steps
+    react_iteration: int      # current iteration counter
+    react_done: bool          # True when react planner declares task complete
 
 
 # =============================================================================

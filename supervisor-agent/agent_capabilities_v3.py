@@ -1,0 +1,458 @@
+"""
+Agent Capabilities Configuration V3
+
+Slimmed-down capabilities definition optimized for token efficiency.
+Changes from V2:
+- returns: flat list of key field names (not verbose descriptions)
+- Removed nested array field descriptions (emails[].X, files[].X, etc.)
+- Removed draft_structure, usage_note, usage_patterns, important_notes, example, notes
+- Removed redundant template_workflow (kept template_with_data_workflow)
+- Simplified can_be_derived_from to {"arg": "source_tool"}
+- Removed {{ yesterday_date }} references (LLM computes relative dates from today_date)
+"""
+
+agent_capabilities = {
+    "gmail_agent": {
+        "description": "Gmail operations: search, read threads, draft, send, reply, forward, manage labels, download attachments.",
+        "tools": {
+            "search_emails": {
+                "description": "Search emails with Gmail query syntax (from:, after:YYYY/MM/DD, before:YYYY/MM/DD, subject:, has:attachment, is:unread).",
+                "args": {
+                    "query": "str (required) — Gmail search query",
+                    "max_results": "int (required) — number of emails to fetch",
+                    "label_ids": "List[str] (optional) — filter by label IDs",
+                },
+                "returns": ["success", "emails", "count", "query", "error"],
+                "returns_detail": "emails is an array; each email has: message_id, thread_id, from, subject, date, body, has_attachments, attachments",
+                "array_access": "Use {{ emails[0].message_id }}, {{ emails[0].from }}, {{ emails[0].subject }}. Store via output_variables: {\"recent_emails\": \"emails\"}, then use {{ recent_emails[0].from }}",
+            },
+            "get_thread_conversation": {
+                "description": "Retrieve all messages in an email thread with full bodies.",
+                "args": {
+                    "thread_id": "str (required) — thread ID from search_emails",
+                },
+                "returns": ["success", "thread_id", "message_count", "messages", "all_message_ids", "error"],
+                "returns_detail": "messages is an array; each message has: message_id, from, to, subject, date, body",
+                "can_be_derived_from": {"thread_id": "search_emails"},
+            },
+            "reply_to_email": {
+                "description": "Reply to an email in its thread (maintains conversation).",
+                "args": {
+                    "message_id": "str (required) — message ID to reply to",
+                    "reply_body": "str (required) — reply content",
+                },
+                "returns": ["success", "reply_message_id", "thread_id", "to", "subject", "error"],
+                "can_be_derived_from": {"message_id": "search_emails"},
+            },
+            "forward_email": {
+                "description": "Forward an email to another recipient.",
+                "args": {
+                    "message_id": "str (required) — message ID to forward",
+                    "to": "str (required) — recipient email",
+                    "forward_message": "str (optional) — additional message",
+                },
+                "returns": ["success", "forwarded_message_id", "thread_id", "to", "subject", "error"],
+                "can_be_derived_from": {"message_id": "search_emails"},
+            },
+            "create_draft_email": {
+                "description": "Create a draft email without sending (safer than direct send).",
+                "args": {
+                    "to": "str (required) — recipient email",
+                    "subject": "str (required) — subject line",
+                    "body": "str (required) — email body",
+                },
+                "returns": ["success", "draft_id", "message_id", "to", "subject", "error"],
+            },
+            "send_draft_email": {
+                "description": "Send a previously created draft by its draft_id.",
+                "args": {
+                    "draft_id": "str (required) — draft_id from create_draft_email or search_drafts",
+                },
+                "returns": ["success", "draft_id", "message_id", "thread_id", "to", "subject", "error"],
+                "can_be_derived_from": {"draft_id": "search_drafts"},
+            },
+            "search_drafts": {
+                "description": "Search draft emails. Returns drafts with {draft_id, message: {id, to, subject, body, date}}.",
+                "args": {
+                    "query": "str (optional) — Gmail search query",
+                    "max_results": "int (optional) — max drafts to return",
+                },
+                "returns": ["success", "count", "drafts", "query", "error"],
+                "returns_detail": "drafts is an array; each draft has: draft_id, message {id, to, subject, body, date}",
+            },
+            "send_email_with_attachment": {
+                "description": "Send email with a file attachment.",
+                "args": {
+                    "to": "str (required) — recipient email",
+                    "subject": "str (required) — subject line",
+                    "body": "str (required) — email body",
+                    "file_path": "str (required) — absolute path to file",
+                },
+                "returns": ["success", "message_id", "thread_id", "to", "subject", "attachment_name", "error"],
+            },
+            "download_attachment": {
+                "description": "Download an email attachment to local storage.",
+                "args": {
+                    "message_id": "str (required) — message ID containing attachment",
+                    "attachment_id": "str (required) — attachment ID from email details",
+                    "save_path": "str (required) — path to save file",
+                },
+                "returns": ["success", "filename", "save_path", "file_size", "error"],
+                "can_be_derived_from": {"message_id": "search_emails"},
+            },
+            "search_emails_with_delivery_order_attachments": {
+                "description": "Search Gmail for emails with PDF/Excel delivery order attachments. Downloads files to temp directory.",
+                "args": {
+                    "query": "str (optional) — Gmail search query (default: 'delivery order')",
+                    "max_results": "int (optional) — max emails to search",
+                    "download_attachments": "bool (optional) — download files (default: True)",
+                    "temp_dir": "str (optional) — custom save directory",
+                },
+                "returns": ["success", "emails_with_attachments", "total_emails_found", "total_attachments_downloaded", "temp_directory", "error"],
+            },
+            "save_attachment_metadata": {
+                "description": "Save attachment metadata to local SQLite database.",
+                "args": {
+                    "metadata": "dict (required) — {message_id, filename, file_path, from, subject, timestamp, mime_type, size}",
+                    "db_path": "str (optional) — path to SQLite DB",
+                },
+                "returns": ["success", "inserted_id", "db_path", "error"],
+            },
+            "process_delivery_order_workflow": {
+                "description": "End-to-end: search emails → download attachments → parse/transform → upload to Sheets → save metadata → create summary doc.",
+                "args": {
+                    "query": "str (optional) — Gmail search query",
+                    "max_results": "int (optional) — emails to search",
+                    "download_attachments": "bool (optional)",
+                    "temp_dir": "str (optional)",
+                    "save_to_db": "bool (optional)",
+                    "upload_to_sheets": "bool (optional)",
+                    "sheets_sheet_id": "str (optional) — Google Sheets ID",
+                    "create_summary_doc": "bool (optional)",
+                    "summary_doc_title": "str (optional)",
+                },
+                "returns": ["success", "processed", "search_summary", "document_url", "error"],
+            },
+        },
+    },
+    "docs_agent": {
+        "description": "Create, edit, and read Google Docs documents. Supports template-based document creation.",
+        "tools": {
+            "create_doc": {
+                "description": "Create a new Google Doc.",
+                "args": {
+                    "title": "str (required) — document name",
+                },
+                "returns": ["success", "document_id", "document_url", "title", "error"],
+            },
+            "list_my_docs": {
+                "description": "List user's Google Docs to find templates.",
+                "args": {
+                    "search_query": "str (optional) — keyword to search",
+                },
+                "returns": ["success", "documents", "error"],
+                "returns_detail": "documents is array of {id, name}",
+            },
+            "extract_template_format": {
+                "description": "Analyze a template document to find placeholders.",
+                "args": {
+                    "template_document_id": "str (required)",
+                },
+                "returns": ["success", "placeholders", "error"],
+                "can_be_derived_from": {"template_document_id": "list_my_docs"},
+            },
+            "create_from_my_template": {
+                "description": "Create document from template with placeholder replacement. Keys must EXACTLY match placeholder names without brackets.",
+                "args": {
+                    "template_document_id": "str (required)",
+                    "new_title": "str (required)",
+                    "placeholders": "str (required) — JSON string of {PLACEHOLDER_NAME: value}",
+                },
+                "returns": ["success", "document_id", "url", "error"],
+                "can_be_derived_from": {"template_document_id": "list_my_docs"},
+            },
+            "add_text": {
+                "description": "Add text to an existing Google Doc.",
+                "args": {
+                    "document_id": "str (required) — document ID",
+                    "text": "str (required) — text content to add",
+                },
+                "returns": ["success", "document_id", "document_url", "text_length", "error"],
+                "can_be_derived_from": {"document_id": "list_my_docs"},
+            },
+            "read_doc": {
+                "description": "Read text content from a Google Doc.",
+                "args": {
+                    "document_id": "str (required) — document ID to read",
+                },
+                "returns": ["success", "document_id", "content", "title", "error"],
+                "can_be_derived_from": {"document_id": "list_my_docs"},
+            },
+            "create_from_template_and_data_ids": {
+                "description": "Create document from template and data files using Google Drive file IDs. Requires drive_agent.search_template_and_data first.",
+                "triggers": ["template and data", "using X template and Y data"],
+                "args": {
+                    "template_file_id": "str (required) — Drive file ID of template",
+                    "data_file_id": "str (required) — Drive file ID of data file",
+                    "new_title": "str (required) — title for new document",
+                    "output_format": "str (optional) — 'google_docs' (default) or 'pdf'",
+                },
+                "returns": ["success", "document_id", "document_url", "title", "format", "pdf_id", "pdf_url", "error"],
+                "can_be_derived_from": {
+                    "template_file_id": "drive_agent.search_template_and_data",
+                    "data_file_id": "drive_agent.search_template_and_data",
+                },
+            },
+        },
+        "template_with_data_workflow": {
+            "when_to_use": "When user mentions BOTH a template AND data/content files. ALWAYS use this 2-step workflow.",
+            "workflow_steps": {
+                "step_1": {
+                    "agent": "drive_agent",
+                    "tool": "search_template_and_data",
+                    "purpose": "Search Google Drive for both template and data files",
+                },
+                "step_2": {
+                    "agent": "docs_agent",
+                    "tool": "create_from_template_and_data_ids",
+                    "purpose": "Create document using the file IDs found by Drive Agent",
+                },
+            },
+            "extraction_rules": {
+                "template_name": "Look for keywords: 'template', 'format', 'use X template' - extract the file name",
+                "data_name": "Look for keywords: 'data', 'content', 'use X document/file' - extract the file name",
+                "new_title": "Look for: 'titled X', 'call it X', 'name it X', or infer from context",
+            },
+        },
+    },
+    "mapping_agent": {
+        "description": "Parse files (CSV/Excel/JSON), intelligently map columns, transform data structure. No Google Sheets operations.",
+        "tools": {
+            "parse_file": {
+                "description": "Parse CSV/Excel/JSON files into structured data.",
+                "args": {
+                    "file_content": "str (required) — file path or content",
+                    "file_type": "str (required) — csv, xlsx, xls, excel, or json",
+                },
+                "returns": ["success", "columns", "row_count", "full_data", "sample_data"],
+            },
+            "extract_dates_from_all_rows": {
+                "description": "Extract dates from ALL rows for date-based sheet matching.",
+                "args": {
+                    "data": "str (required) — JSON string from parse_file full_data",
+                    "date_column_name": "str (optional) — default 'Date'",
+                },
+                "returns": ["success", "rows_with_dates", "total_rows", "date_column"],
+                "returns_detail": "rows_with_dates is an array; each row has: row_index, date, date_formatted, row_data",
+            },
+            "smart_column_mapping": {
+                "description": "AI-powered column mapping (skips temporal columns like Week/Date/Day).",
+                "args": {
+                    "source_columns": "List[str] (required)",
+                    "sample_data": "list (optional)",
+                    "skip_temporal": "bool (optional) — default true",
+                },
+                "returns": ["success", "mappings", "confidence_scores"],
+            },
+            "transform_data": {
+                "description": "Transform data using column mappings.",
+                "args": {
+                    "source_data": "str (required) — JSON from parse_file",
+                    "mappings": "dict (required) — column mappings",
+                    "target_columns": "List[str] (optional)",
+                },
+                "returns": ["success", "transformed_data"],
+            },
+            "extract_date_from_data": {
+                "description": "Extract date from parsed data (first row).",
+                "args": {
+                    "data": "str (required) — JSON from parse_file full_data",
+                    "date_column_hints": "List[str] (optional) — candidate column names",
+                },
+                "returns": ["success", "date", "formatted_display"],
+            },
+        },
+    },
+    "sheets_agent": {
+        "description": "Google Sheets CRUD. Upload pre-transformed data from mapping_agent.",
+        "tools": {
+            "update_by_date_match": {
+                "description": "Update Sheets rows by matching dates (update existing rows only, no append).",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID",
+                    "transformed_data": "str (required) — JSON from mapping_agent.transform_data",
+                    "rows_with_dates": "list (required) — from mapping_agent.extract_dates_from_all_rows",
+                    "sheet_name": "str (optional) — default 'DATA ENTRY'",
+                    "date_column": "str (optional) — default 'Date'",
+                },
+                "returns": ["success", "rows_updated", "rows_not_found"],
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
+            },
+            "upload_mapped_data": {
+                "description": "Upload/append pre-transformed data. Use update_by_date_match for date matching instead.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID",
+                    "transformed_data": "str (required) — JSON from mapping_agent.transform_data",
+                    "sheet_name": "str (optional) — default 'Sheet1'",
+                    "append_mode": "bool (optional) — true to append",
+                },
+                "returns": ["success", "rows_added"],
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
+            },
+            "create_sheet": {
+                "description": "Create new Google Spreadsheet.",
+                "args": {
+                    "title": "str (required)",
+                },
+                "returns": ["success", "sheet_id", "sheet_url"],
+            },
+        },
+    },
+    "calendar_agent": {
+        "description": "Manage Google Calendar: list, create, update, delete events. Supports Google Meet and multi-calendar.",
+        "tools": {
+            "list_events": {
+                "description": "List upcoming calendar events.",
+                "args": {
+                    "time_min": "str (optional) — start time (YYYY-MM-DD or ISO)",
+                    "time_max": "str (optional) — end time (YYYY-MM-DD or ISO)",
+                    "max_results": "int (optional) — default 10",
+                    "calendar_name": "str (optional) — default 'primary'",
+                },
+                "returns": ["success", "events", "count", "message"],
+                "returns_detail": "events is array of {event_id, summary, start, end, location, attendees}",
+            },
+            "create_event": {
+                "description": "Create calendar event. Auto-sends invitations to attendees.",
+                "args": {
+                    "summary": "str (required) — event title",
+                    "start_time": "str (required) — supports natural language ('tomorrow 2pm', '12 AM')",
+                    "end_time": "str (optional) — auto +1 hour if omitted",
+                    "description": "str (optional)",
+                    "location": "str (optional)",
+                    "attendees": "list (optional) — email addresses",
+                    "calendar_name": "str (optional)",
+                    "add_meet_link": "bool (optional) — add Google Meet",
+                },
+                "returns": ["success", "event_id", "event_url", "meet_link", "message", "status", "conflict_id"],
+            },
+            "update_event": {
+                "description": "Update existing event (title, time, location, attendees). Notifies attendees.",
+                "args": {
+                    "event_id": "str (required) — from list_events or create_event",
+                    "new_summary": "str (optional)",
+                    "new_start": "str (optional)",
+                    "new_end": "str (optional)",
+                    "new_description": "str (optional)",
+                    "new_location": "str (optional)",
+                    "new_attendees": "list (optional)",
+                    "calendar_name": "str (optional)",
+                },
+                "returns": ["success", "event_id", "event_url", "changes", "message"],
+                "can_be_derived_from": {"event_id": "list_events"},
+            },
+            "delete_event": {
+                "description": "Delete calendar event. Sends cancellation to attendees.",
+                "args": {
+                    "event_id": "str (required)",
+                    "calendar_name": "str (optional)",
+                    "confirmed": "bool (optional) — true to skip confirmation",
+                },
+                "returns": ["success", "deleted", "requires_confirmation", "event_title", "confirmation_prompt", "message"],
+                "can_be_derived_from": {"event_id": "list_events"},
+            },
+            "confirm_delete_event": {
+                "description": "Confirm deletion after delete_event returns requires_confirmation=true.",
+                "args": {
+                    "event_id": "str (required)",
+                    "calendar_name": "str (optional)",
+                },
+                "returns": ["success", "deleted", "message"],
+                "can_be_derived_from": {"event_id": "list_events"},
+            },
+            "list_calendars": {
+                "description": "List all user's calendars.",
+                "args": {},
+                "returns": ["success", "calendars", "message"],
+                "returns_detail": "calendars is an array; each calendar has: id, name, primary",
+            },
+            "create_calendar": {
+                "description": "Create a new Google Calendar.",
+                "args": {
+                    "calendar_name": "str (required)",
+                    "description": "str (optional)",
+                },
+                "returns": ["success", "calendar_id", "message"],
+            },
+            "resolve_conflict": {
+                "description": "Resolve scheduling conflict: moves conflicting event 1h later, then creates new event.",
+                "args": {
+                    "conflict_id": "str (required) — from create_event conflict_id",
+                    "new_event": "dict (required) — {summary, start_time, end_time, attendees, description, location}",
+                    "calendar_name": "str (optional)",
+                },
+                "returns": ["success", "event_id", "message"],
+                "can_be_derived_from": {"conflict_id": "create_event"},
+            },
+        },
+    },
+    "drive_agent": {
+        "description": "Google Drive: upload files, create folders, list/search files. All operations scoped to SafeExpress root folder.",
+        "tools": {
+            "upload_file": {
+                "description": "Upload file to Google Drive.",
+                "args": {
+                    "file_path": "str (required) — local file path",
+                    "filename": "str (required) — name for uploaded file",
+                    "folder_path": "str (optional) — target folder (e.g., 'Operations/2024')",
+                    "mime_type": "str (optional)",
+                },
+                "returns": ["success", "file_id", "file_url", "filename", "folder_path", "message", "error"],
+            },
+            "create_folder": {
+                "description": "Create folder or nested folder structure. Auto-creates parent folders.",
+                "args": {
+                    "folder_path": "str (required) — path to create (e.g., 'Operations/2024/Reports')",
+                },
+                "returns": ["success", "folder_id", "folder_url", "folder_path", "message", "error"],
+            },
+            "list_folders": {
+                "description": "List all folders with tree structure.",
+                "args": {},
+                "returns": ["success", "folders", "count", "tree", "message", "error"],
+                "returns_detail": "folders is an array; each folder has: id, name, createdTime",
+            },
+            "list_files": {
+                "description": "List files in a folder.",
+                "args": {
+                    "folder_path": "str (optional) — folder to list (default: root)",
+                },
+                "returns": ["success", "files", "count", "folder_path", "message", "error"],
+                "returns_detail": "files is array of {id, name, mimeType, size, createdTime}",
+            },
+            "search_files": {
+                "description": "Search files by name/keywords.",
+                "args": {
+                    "search_term": "str (required) — keywords to search",
+                },
+                "returns": ["success", "results", "count", "search_term", "message", "error"],
+                "returns_detail": "results is an array; each result has: id, name, mimeType, size, createdTime",
+            },
+            "get_folder_info": {
+                "description": "Get folder details (file count, subfolder count).",
+                "args": {
+                    "folder_path": "str (required)",
+                },
+                "returns": ["success", "folder_id", "folder_name", "file_count", "subfolder_count", "message", "error"],
+            },
+            "search_template_and_data": {
+                "description": "Search Drive for BOTH a template file and a data file by name. Required before docs_agent.create_from_template_and_data_ids.",
+                "args": {
+                    "template_name": "str (required) — name/partial name of template file",
+                    "data_name": "str (required) — name/partial name of data file",
+                },
+                "returns": ["success", "template_file_id", "template_file_name", "data_file_id", "data_file_name", "message", "error"],
+            },
+        },
+    },
+}

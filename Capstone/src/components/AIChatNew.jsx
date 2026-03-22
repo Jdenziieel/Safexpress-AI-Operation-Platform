@@ -793,6 +793,8 @@ function AIChatNew() {
 
     setMessages((prev) => [...prev, userMessageObj]);
     setInput("");
+    const filesToSend = [...attachedFiles];
+    setAttachedFiles([]);
     setIsStreaming(true);
 
     // Add empty assistant message for streaming effect
@@ -827,10 +829,19 @@ function AIChatNew() {
       if (!currentThreadId) {
         const userId = getUserId();
         try {
-          const response = await supervisorApi.post('/threads', {
-            user_id: userId,
-            message: userMessage
-          });
+          let response;
+          if (filesToSend.length > 0) {
+            const formData = new FormData();
+            formData.append('file', filesToSend[0]);
+            formData.append('message', userMessage);
+            formData.append('user_id', userId);
+            response = await supervisorApi.post('/threads/create-with-upload', formData);
+          } else {
+            response = await supervisorApi.post('/threads', {
+              user_id: userId,
+              message: userMessage
+            });
+          }
           responseData = response.data;
           
           // Check for LLM error in response
@@ -856,9 +867,17 @@ function AIChatNew() {
       } else {
         // Thread exists, send message to existing thread
         try {
-          const response = await supervisorApi.post(`/threads/${currentThreadId}/messages`, {
-            message: userMessage,
-          });
+          let response;
+          if (filesToSend.length > 0) {
+            const formData = new FormData();
+            formData.append('file', filesToSend[0]);
+            formData.append('message', userMessage);
+            response = await supervisorApi.post(`/threads/${currentThreadId}/messages/upload`, formData);
+          } else {
+            response = await supervisorApi.post(`/threads/${currentThreadId}/messages`, {
+              message: userMessage,
+            });
+          }
           responseData = response.data;
           
           // Check for LLM error in response
@@ -899,10 +918,19 @@ function AIChatNew() {
             // Create new thread with this message
             const userId = getUserId();
             try {
-              const newResponse = await supervisorApi.post('/threads', {
-                user_id: userId,
-                message: userMessage
-              });
+              let newResponse;
+              if (filesToSend.length > 0) {
+                const formData = new FormData();
+                formData.append('file', filesToSend[0]);
+                formData.append('message', userMessage);
+                formData.append('user_id', userId);
+                newResponse = await supervisorApi.post('/threads/create-with-upload', formData);
+              } else {
+                newResponse = await supervisorApi.post('/threads', {
+                  user_id: userId,
+                  message: userMessage
+                });
+              }
               responseData = newResponse.data;
               
               // Check for LLM error

@@ -1,4 +1,4 @@
-from agent_capabilities_v2 import agent_capabilities
+from agent_capabilities_v3 import agent_capabilities
 
 # Check if docs_agent has the right tools
 print("DOCS_AGENT tools:")

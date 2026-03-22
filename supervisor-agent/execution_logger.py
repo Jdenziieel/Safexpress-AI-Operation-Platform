@@ -205,11 +205,13 @@ class ExecutionTracer:
 trace = ExecutionTracer()
 
 
-# ── TeeWriter: Capture all print() output into the trace log ───────────
+# ── TeeWriter: Capture all print() output into trace log + SQLite ──────
 class TeeWriter:
     """
-    Wraps sys.stdout so every print() also gets written to the trace log.
-    Terminal output is unchanged — the log file gets an extra copy with timestamps.
+    Wraps sys.stdout so every print() also gets written to the trace log
+    AND to SQLite LogStorage for full observability via the /logs API.
+
+    Terminal output is unchanged — the log file and database get copies.
     """
 
     def __init__(self, original_stdout, log_path: str, lock: threading.Lock):
@@ -217,6 +219,29 @@ class TeeWriter:
         self.log_path = log_path
         self._lock = lock
         self._max_size_bytes = 10 * 1024 * 1024  # 10 MB
+        self._in_write = False  # Recursion guard (prevents infinite loops)
+        self._storage_fn = None  # Lazy-loaded reference to get_log_storage
+        self._context_fns = None  # Lazy-loaded references to context getters
+
+    def _ensure_imports(self):
+        """Lazy-load logging_config references to avoid circular imports."""
+        if self._storage_fn is not None:
+            return
+        try:
+            from logging_config import (
+                get_log_storage,
+                get_current_request_id,
+                get_current_thread_id,
+                get_current_conversation_id,
+            )
+            self._storage_fn = get_log_storage
+            self._context_fns = {
+                "request_id": get_current_request_id,
+                "thread_id": get_current_thread_id,
+                "conversation_id": get_current_conversation_id,
+            }
+        except Exception:
+            self._storage_fn = False  # Mark as failed, don't retry
 
     def write(self, text):
         # Always write to original terminal
@@ -227,8 +252,12 @@ class TeeWriter:
         if not stripped:
             return
 
-        # Write each non-empty line to the log file with timestamp
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+
+        # Get request context from execution_logger's thread-local
+        req_id = getattr(_local, "request_id", None)
+        thread_id = getattr(_local, "thread_id", None)
+
         with self._lock:
             try:
                 # Simple size-based rotation
@@ -244,6 +273,58 @@ class TeeWriter:
             except Exception:
                 pass  # Never break the app because of logging
 
+        # Write to SQLite LogStorage (with recursion guard)
+        if not self._in_write:
+            self._in_write = True
+            try:
+                self._write_to_storage(stripped, ts, req_id, thread_id)
+            except Exception:
+                pass  # Never break the app
+            finally:
+                self._in_write = False
+
+    def _write_to_storage(self, text: str, timestamp: str, local_req_id, local_thread_id):
+        """Write print output to SQLite LogStorage for full observability."""
+        self._ensure_imports()
+        if not self._storage_fn or self._storage_fn is False:
+            return
+
+        storage = self._storage_fn()
+        if not storage:
+            return
+
+        # Prefer contextvars (async-safe) over thread-local
+        req_id = None
+        thread_id = None
+        conv_id = None
+        if self._context_fns:
+            try:
+                req_id = self._context_fns["request_id"]() or local_req_id
+                thread_id = self._context_fns["thread_id"]() or local_thread_id
+                conv_id = self._context_fns["conversation_id"]()
+            except Exception:
+                req_id = local_req_id
+                thread_id = local_thread_id
+
+        # Infer log level from emoji/content
+        level = "INFO"
+        if any(marker in text for marker in ("❌", "ERROR", "CRITICAL", "🔴")):
+            level = "ERROR"
+        elif any(marker in text for marker in ("⚠️", "WARN", "⚠")):
+            level = "WARNING"
+
+        storage.insert_log({
+            "timestamp": timestamp,
+            "level": level,
+            "logger": "print",
+            "message": text[:2000],  # Cap message length
+            "request_id": req_id if req_id and req_id != "-" else None,
+            "conversation_id": conv_id,
+            "thread_id": thread_id if thread_id and thread_id != "-" else None,
+            "component": "system",
+            "operation": "print_capture",
+        })
+
     def flush(self):
         self.original.flush()
 
@@ -253,7 +334,7 @@ class TeeWriter:
 
 
 def enable_print_capture():
-    """Redirect print() to also write to the trace log file."""
+    """Redirect print() to also write to the trace log file and SQLite."""
     if not isinstance(sys.stdout, TeeWriter):
         sys.stdout = TeeWriter(sys.stdout, LOG_FILE, trace._lock)
 

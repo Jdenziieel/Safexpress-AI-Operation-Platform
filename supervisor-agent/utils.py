@@ -10,10 +10,11 @@ This module contains helper functions for:
 
 import json
 import time
+import asyncio
 import httpx
 from typing import List, Dict, Optional
 from langchain_openai import ChatOpenAI
-from agent_capabilities_v2 import agent_capabilities
+from agent_capabilities_v3 import agent_capabilities
 from config import (
     CLASSIFIER_MODEL,
     DEFAULT_MAX_RETRIES,
@@ -200,6 +201,78 @@ def call_agent_with_retry(
                 time.sleep(wait_time)
 
     # All retries exhausted
+    print(f"💀 All {max_retries} attempts failed. Last error: {last_exception}")
+    return None
+
+
+async def async_call_agent_with_retry(
+    agent_url: str,
+    request_payload: dict,
+    max_retries: int = DEFAULT_MAX_RETRIES,
+    timeout: float = DEFAULT_TIMEOUT,
+    backoff_factor: float = DEFAULT_BACKOFF_FACTOR,
+) -> Optional[dict]:
+    """
+    Async version of call_agent_with_retry using httpx.AsyncClient.
+    Does not block the event loop during HTTP calls or backoff sleeps.
+    """
+    last_exception = None
+
+    for attempt in range(max_retries):
+        try:
+            print(f"🔄 Attempt {attempt + 1}/{max_retries} calling {agent_url}")
+
+            timeout_config = httpx.Timeout(
+                timeout=timeout, connect=10.0, read=timeout, write=30.0, pool=10.0,
+            )
+
+            async with httpx.AsyncClient(timeout=timeout_config) as client:
+                response = await client.post(agent_url, json=request_payload)
+                response.raise_for_status()
+                result = response.json()
+
+                if result.get("success"):
+                    print(f"✅ Agent call succeeded on attempt {attempt + 1}")
+                    return result
+                else:
+                    print(f"⚠️ Agent reported error: {result.get('error')}")
+                    if attempt < max_retries - 1:
+                        wait_time = backoff_factor ** attempt
+                        print(f"   Retrying in {wait_time}s...")
+                        await asyncio.sleep(wait_time)
+                        continue
+                    return result
+
+        except httpx.TimeoutException as e:
+            last_exception = e
+            print(f"⏱️ Timeout on attempt {attempt + 1}: {str(e)}")
+            if attempt < max_retries - 1:
+                wait_time = backoff_factor ** attempt
+                await asyncio.sleep(wait_time)
+
+        except httpx.HTTPStatusError as e:
+            last_exception = e
+            print(f"❌ HTTP {e.response.status_code} on attempt {attempt + 1}")
+            if 400 <= e.response.status_code < 500 and e.response.status_code != 429:
+                return None
+            if attempt < max_retries - 1:
+                wait_time = backoff_factor ** attempt
+                await asyncio.sleep(wait_time)
+
+        except httpx.HTTPError as e:
+            last_exception = e
+            print(f"❌ HTTP error on attempt {attempt + 1}: {str(e)}")
+            if attempt < max_retries - 1:
+                wait_time = backoff_factor ** attempt
+                await asyncio.sleep(wait_time)
+
+        except Exception as e:
+            last_exception = e
+            print(f"❌ Unexpected error on attempt {attempt + 1}: {str(e)}")
+            if attempt < max_retries - 1:
+                wait_time = backoff_factor ** attempt
+                await asyncio.sleep(wait_time)
+
     print(f"💀 All {max_retries} attempts failed. Last error: {last_exception}")
     return None
 

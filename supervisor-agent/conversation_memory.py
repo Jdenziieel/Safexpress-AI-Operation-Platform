@@ -18,6 +18,9 @@ import time
 # Import logging module
 from logging_config import memory_logger as logger
 
+# Import execution trace logger for direct trace.log writes
+from execution_logger import trace
+
 # Import LLM error handler for unified error handling
 from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_error
 
@@ -94,10 +97,14 @@ class ConversationMemoryManager:
             total += 4  # Overhead per message (formatting tokens)
         return total
     
+    # Maximum raw history size to prevent unbounded memory growth
+    MAX_RAW_HISTORY = 200
+
     def add_message(self, role: str, content: str) -> None:
         """
-        Add a new message to conversation history.
-        Automatically triggers summarization if token threshold exceeded.
+        Add a new message to conversation history (pure append, no LLM calls).
+        Summarization is deferred to get_context_for_llm() so it only fires
+        once per turn, right before the context is actually needed.
         
         Args:
             role: Message role ("user" or "assistant")
@@ -105,8 +112,10 @@ class ConversationMemoryManager:
         """
         message = {"role": role, "content": content}
         
-        # Always add to raw history (complete record)
+        # Add to raw history (capped to prevent unbounded growth)
         self.memory.raw_history.append(message)
+        if len(self.memory.raw_history) > self.MAX_RAW_HISTORY:
+            self.memory.raw_history = self.memory.raw_history[-self.MAX_RAW_HISTORY:]
         
         # Add to working context
         self.memory.working_context.append(message)
@@ -115,37 +124,62 @@ class ConversationMemoryManager:
         message_tokens = self._count_tokens(role) + self._count_tokens(content) + 4
         self.memory.current_token_count += message_tokens
         
-        print(f"📝 Added message: {role} ({message_tokens} tokens)")
-        print(f"📊 Current context: {self.memory.current_token_count} / {self.memory.MAX_TOKENS_BEFORE_SUMMARY} tokens")
-        
-        # Check if summarization is needed
-        if self.memory.current_token_count > self.memory.MAX_TOKENS_BEFORE_SUMMARY:
-            print(f"⚠️ Token threshold exceeded! Triggering summarization...")
-            self._summarize_conversation()
+        trace.info(f"Memory: added {role} message", {"tokens": message_tokens, "total": self.memory.current_token_count, "max": self.memory.MAX_TOKENS_BEFORE_SUMMARY})
     
     def _summarize_conversation(self) -> None:
         """
         Summarize old conversation turns to free up context space.
         
         Process:
-        1. Take first half of working_context (old messages)
-        2. Generate summary using LLM
+        1. Keep recent messages that fit within half the token budget
+        2. Summarize everything older using LLM
         3. Extract entities from summarized portion
         4. Update summary and entity_memory
-        5. Keep only recent messages in working_context
         """
         if len(self.memory.working_context) <= 2:
             # Too few messages to summarize
-            print("⚠️ Not enough messages to summarize (need > 2)")
+            trace.warning("Memory: not enough messages to summarize (need > 2)")
             return
         
-        # Split working context: old messages to summarize, recent to keep
-        split_point = len(self.memory.working_context) // 2
+        # Split by token budget: keep recent messages up to half the budget,
+        # summarize everything older. This avoids the arbitrary midpoint split.
+        keep_budget = self.memory.MAX_TOKENS_BEFORE_SUMMARY // 2
+        kept_tokens = 0
+        split_point = len(self.memory.working_context)
+        for i in range(len(self.memory.working_context) - 1, -1, -1):
+            msg = self.memory.working_context[i]
+            msg_tokens = self._count_tokens(msg.get('role', '')) + self._count_tokens(msg.get('content', '')) + 4
+            if kept_tokens + msg_tokens > keep_budget:
+                break
+            kept_tokens += msg_tokens
+            split_point = i
+        
+        # Ensure we summarize at least something
+        if split_point == 0:
+            split_point = 1
+        
         old_messages = self.memory.working_context[:split_point]
         recent_messages = self.memory.working_context[split_point:]
         
-        print(f"📦 Summarizing {len(old_messages)} old messages, keeping {len(recent_messages)} recent")
-        
+        trace.step("memory_summarize", f"summarizing {len(old_messages)} old messages, keeping {len(recent_messages)} recent", {"split_point": split_point, "tokens_before": self.memory.current_token_count})
+
+        print(f"\n{'='*55}")
+        print(f"📚 MEMORY SUMMARIZATION")
+        print(f"{'='*55}")
+        utilization = self.memory.current_token_count * 100 // max(1, self.memory.MAX_TOKENS_BEFORE_SUMMARY)
+        print(f"   Token pressure: {self.memory.current_token_count}/{self.memory.MAX_TOKENS_BEFORE_SUMMARY} ({utilization}% full)")
+        print(f"   Compressing {len(old_messages)} old messages → keeping {len(recent_messages)} recent")
+        print(f"\n   📜 Messages being summarized:")
+        for i, msg in enumerate(old_messages):
+            role = msg.get('role', '?')
+            content = msg.get('content', '')
+            preview = content[:100] + '...' if len(content) > 100 else content
+            print(f"      [{i+1}] {role.upper()}: {preview}")
+        if self.memory.summary:
+            print(f"\n   📋 Previous summary: {self.memory.summary[:150]}{'...' if len(self.memory.summary) > 150 else ''}")
+        else:
+            print(f"\n   📋 Previous summary: (none — first summarization)")
+
         # Format old messages for summarization
         conversation_text = ""
         for msg in old_messages:
@@ -154,37 +188,15 @@ class ConversationMemoryManager:
         # Build summarization prompt
         previous_summary = self.memory.summary or "No previous summary."
         
-        summarization_prompt = f"""You are summarizing a conversation to preserve context while reducing tokens.
+        summarization_prompt = f"""Summarize this conversation, combining with any previous summary. Return JSON only.
 
-PREVIOUS SUMMARY:
-{previous_summary}
+Previous summary: {previous_summary}
 
-NEW CONVERSATION TURNS TO SUMMARIZE:
+New turns:
 {conversation_text}
 
-Please provide:
-1. A concise summary of the conversation (combine with previous summary if exists)
-2. Extract key entities mentioned (people, dates, tasks, tools, etc.)
-
-Return JSON with this structure:
-{{
-    "summary": "Concise summary preserving important context",
-    "entities": {{
-        "people": ["john@example.com", "Sarah"],
-        "tasks": ["send email", "search invoices"],
-        "dates": ["tomorrow at 3pm", "last week"],
-        "documents": ["Meeting Notes", "Q4 Report"],
-        "other": ["API key", "calendar event"]
-    }}
-}}
-
-Focus on:
-- User's goals and intent
-- Key information provided (emails, names, dates, etc.)
-- Action items or pending tasks
-- Important context for future turns
-
-Be concise but preserve all critical information."""
+Return: {{"summary": "<concise summary>", "entities": {{"people": [], "tasks": [], "dates": [], "documents": [], "other": []}}}}
+Preserve: user goals, key info (emails, names, dates), pending tasks."""
 
         try:
             # === TOKEN TRACKING: Memory Summarization ===
@@ -227,48 +239,83 @@ Be concise but preserve all critical information."""
                 response_text = response_text[3:-3].strip()
             
             summary_data = json.loads(response_text)
-            
-            # Update memory with new summary
-            self.memory.summary = summary_data.get("summary", "")
-            
-            # Merge entities with existing entity memory
+
+            new_summary = summary_data.get("summary", "")
             new_entities = summary_data.get("entities", {})
+            non_empty = {k: v for k, v in new_entities.items() if v}
+
+            print(f"\n   📝 Summary output:")
+            print(f"      {new_summary}")
+            if non_empty:
+                print(f"\n   📌 Entities extracted:")
+                for etype, elist in non_empty.items():
+                    print(f"      {etype.upper()}: {', '.join(str(e) for e in elist)}")
+            else:
+                print(f"\n   📌 Entities extracted: (none)")
+
+            # Update memory with new summary
+            self.memory.summary = new_summary
+
+            # Merge entities with existing entity memory
             for entity_type, entity_list in new_entities.items():
                 if entity_type not in self.memory.entity_memory:
                     self.memory.entity_memory[entity_type] = []
-                
+
                 # Add new entities (avoid duplicates)
                 for entity in entity_list:
                     if entity not in self.memory.entity_memory[entity_type]:
                         self.memory.entity_memory[entity_type].append(entity)
-            
+
             # Update working context (keep only recent messages)
             self.memory.working_context = recent_messages
-            
+
             # Recalculate token count
+            tokens_before = self.memory.current_token_count
             self.memory.current_token_count = self._count_message_tokens(recent_messages)
-            
-            print(f"✅ Summarization complete!")
-            print(f"   Summary: {self.memory.summary[:100]}...")
-            print(f"   Entities: {len(self.memory.entity_memory)} types")
-            print(f"   New context size: {self.memory.current_token_count} tokens")
+            token_reduction = tokens_before - self.memory.current_token_count
+
+            print(f"\n   ✅ Token reduction: {tokens_before} → {self.memory.current_token_count} (saved {token_reduction} tokens, {len(old_messages)} messages compressed)")
+            print(f"{'='*55}\n")
+
+            logger.info(
+                f"Memory summarized: {len(old_messages)} messages → {len(new_summary)} char summary, saved {token_reduction} tokens",
+                component="memory",
+                operation="summarization",
+                extra={
+                    "summary_preview": new_summary[:200],
+                    "entity_types": list(non_empty.keys()),
+                    "tokens_before": tokens_before,
+                    "tokens_after": self.memory.current_token_count,
+                    "token_reduction": token_reduction,
+                }
+            )
+            trace.step("memory_summarize_done", f"summarization complete", {
+                "summary_preview": self.memory.summary[:100],
+                "entity_types": len(self.memory.entity_memory),
+                "tokens_before": tokens_before,
+                "tokens_after": self.memory.current_token_count,
+                "token_reduction": token_reduction,
+                "new_token_count": self.memory.current_token_count,
+            })
             
         except Exception as e:
             # Check if this is an LLM service error (rate limit, quota, etc.)
             if is_llm_error(e):
-                print(f"❌ LLM service error during summarization: {e}")
+                trace.error(f"Memory: LLM service error during summarization", e)
                 raise LLMServiceException(handle_llm_error(e))
-            
-            print(f"⚠️ Summarization failed: {e}")
+
+            trace.warning(f"Memory: summarization failed", {"error": str(e)})
             # Fallback: just drop oldest message
             if len(self.memory.working_context) > 0:
-                dropped = self.memory.working_context.pop(0)
-                print(f"⚠️ Fallback: Dropped oldest message")
+                self.memory.working_context.pop(0)
+                trace.warning("Memory: fallback — dropped oldest message")
                 self.memory.current_token_count = self._count_message_tokens(self.memory.working_context)
     
     def get_context_for_llm(self) -> str:
         """
         Build complete context string for downstream LLM.
+        Triggers summarization lazily if token threshold is exceeded,
+        ensuring it happens at most once per turn.
         
         Combines:
         1. Conversation summary (if exists)
@@ -278,29 +325,69 @@ Be concise but preserve all critical information."""
         Returns:
             Formatted context string ready for LLM consumption
         """
-        context_parts = []
+        # Lazy summarization: only when context is actually needed
+        if self.memory.current_token_count > self.memory.MAX_TOKENS_BEFORE_SUMMARY:
+            trace.warning(f"Memory: token threshold exceeded, summarizing before context build", {"current": self.memory.current_token_count, "max": self.memory.MAX_TOKENS_BEFORE_SUMMARY})
+            self._summarize_conversation()
         
+        context_parts = []
+
+        print(f"\n{'─'*55}")
+        print(f"🧠 BUILDING LLM CONTEXT")
+        print(f"{'─'*55}")
+
         # Add summary if exists
         if self.memory.summary:
             context_parts.append("CONVERSATION SUMMARY:")
             context_parts.append(self.memory.summary)
             context_parts.append("")
-        
+            print(f"   ✓ Summary ({len(self.memory.summary)} chars): {self.memory.summary[:120]}{'...' if len(self.memory.summary) > 120 else ''}")
+        else:
+            print(f"   ✗ Summary: none")
+
         # Add entity memory if exists
         if self.memory.entity_memory:
             context_parts.append("KNOWN ENTITIES:")
+            active_types = 0
             for entity_type, entities in self.memory.entity_memory.items():
                 if entities:
                     context_parts.append(f"  {entity_type.upper()}: {', '.join(entities)}")
+                    active_types += 1
             context_parts.append("")
-        
+            total_entities = sum(len(v) for v in self.memory.entity_memory.values() if v)
+            print(f"   ✓ Entities: {total_entities} entities across {active_types} types")
+            for etype, elist in self.memory.entity_memory.items():
+                if elist:
+                    print(f"      {etype.upper()}: {', '.join(str(e) for e in elist)}")
+        else:
+            print(f"   ✗ Entities: none")
+
         # Add recent message history
         if self.memory.working_context:
             context_parts.append("RECENT CONVERSATION:")
             for msg in self.memory.working_context:
                 context_parts.append(f"{msg['role'].upper()}: {msg['content']}")
-        
-        return "\n".join(context_parts)
+            print(f"   ✓ Recent messages: {len(self.memory.working_context)}")
+            for msg in self.memory.working_context:
+                preview = msg.get('content', '')[:80]
+                print(f"      {msg.get('role','?').upper()}: {preview}{'...' if len(msg.get('content','')) > 80 else ''}")
+        else:
+            print(f"   ✗ Recent messages: none")
+
+        final_context = "\n".join(context_parts)
+        context_tokens_est = len(final_context) // 4
+        print(f"\n   📏 Final context: {len(final_context)} chars (~{context_tokens_est} tokens)")
+        print(f"{'─'*55}\n")
+
+        trace.step("context_built", f"context assembled: summary={'yes' if self.memory.summary else 'no'}, entities={sum(len(v) for v in self.memory.entity_memory.values())}, msgs={len(self.memory.working_context)}, ~{context_tokens_est} tokens", {
+            "has_summary": bool(self.memory.summary),
+            "total_entities": sum(len(v) for v in self.memory.entity_memory.values()),
+            "recent_messages": len(self.memory.working_context),
+            "context_chars": len(final_context),
+            "context_tokens_est": context_tokens_est,
+        })
+
+        return final_context
     
     def get_recent_messages(self, n: int = 5) -> List[Dict[str, str]]:
         """
@@ -349,7 +436,7 @@ Be concise but preserve all critical information."""
         self.memory = ConversationMemory(
             MAX_TOKENS_BEFORE_SUMMARY=self.memory.MAX_TOKENS_BEFORE_SUMMARY
         )
-        print("🗑️ Memory cleared")
+        trace.info("Memory: cleared")
     
     def export_memory(self) -> Dict[str, Any]:
         """
@@ -382,7 +469,7 @@ Be concise but preserve all critical information."""
             current_token_count=memory_dict.get("current_token_count", 0),
             MAX_TOKENS_BEFORE_SUMMARY=memory_dict.get("MAX_TOKENS_BEFORE_SUMMARY", 2000)
         )
-        print(f"📥 Memory loaded: {len(self.memory.raw_history)} total messages")
+        trace.info(f"Memory: loaded from state", {"total_messages": len(self.memory.raw_history), "working_context": len(self.memory.working_context), "has_summary": bool(self.memory.summary)})
     
     def get_stats(self) -> Dict[str, Any]:
         """

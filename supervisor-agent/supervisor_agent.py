@@ -1,7 +1,7 @@
 #THIS IS THE SUPERVISOR.py
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 import json
@@ -19,7 +19,6 @@ import asyncio
 import uuid
 import time
 import hashlib
-import agent_capabilities_v2
 
 # Import models
 from models.models import *
@@ -28,23 +27,21 @@ from models.models import *
 from config import (
     AGENT_ENDPOINTS,
     OUTPUT_DIR,
-    PLAN_SCHEMA,
     GOOGLE_ACCESS_TOKEN,
     GOOGLE_REFRESH_TOKEN,
     OPENAI_API_KEY,
     LLM_MODEL,
     LLM_TEMPERATURE,
+    QUICK_MODEL,
     SERVER_PORT,
     SERVER_HOST,
 )
 
 # Import agent capabilities
-from agent_capabilities_v2 import agent_capabilities
+from agent_capabilities_v3 import agent_capabilities
 
 # Import utility functions
 from utils import (
-    identify_relevant_agents,
-    get_filtered_capabilities,
     call_agent_with_retry,
     generate_action_summary,
 )
@@ -208,6 +205,7 @@ llm = ChatOpenAI(
 conversational_agent = ConversationalAgent(
     openai_api_key=OPENAI_API_KEY,
     model=LLM_MODEL,
+    quick_model=QUICK_MODEL,
     temperature=0.2,  # Lower temperature for more consistent clarifications
 )
 
@@ -280,43 +278,23 @@ def remove_conversation_state(conversation_id: str):
 # UserRequest, CreateThreadRequest, WorkflowResponse, SharedState
 
 
-# NOTE: PENDING_ACTIONS_CACHE is defined below (around line 450) and is used with SQLite integration.
-# The in-memory cache stores execution callbacks while SQLite persists action metadata.
+# NOTE: The main get_action_risk_level, requires_approval, generate_action_id,
+# PendingAction class, and store/get/remove_pending_action functions are defined
+# below (around line 700+) with SQLite integration support.
 
 
-def get_action_risk_level(tool_name: str) -> ActionRiskLevel:
-    """Get risk level for a tool"""
-    return ACTION_RISK_LEVELS.get(tool_name, ActionRiskLevel.MODERATE)
+# ===================================================================
+# STRUCTURED OUTPUT MODELS for Plan Generation
+# ===================================================================
+class PlanStep(BaseModel):
+    agent: str = Field(description="Agent name, e.g. gmail_agent, docs_agent")
+    tool: str = Field(description="Tool name from the agent's available tools")
+    inputs: Dict[str, Any] = Field(description="Input parameters; use {{ variable }} for references to previous step outputs")
+    output_variables: Dict[str, str] = Field(default_factory=dict, description='Map of new_var_name to source_field from tool response, e.g. {"email_id": "emails[0].message_id"}')
+    description: str = Field(description="Human-readable description of what this step does")
 
-
-def requires_approval(tool_name: str, auto_approve_moderate: bool = True) -> bool:
-    """Check if action requires approval based on risk level"""
-    risk = get_action_risk_level(tool_name)
-
-    if risk == ActionRiskLevel.SAFE:
-        return False
-    elif risk == ActionRiskLevel.MODERATE:
-        return not auto_approve_moderate  # Configurable
-    elif risk in [ActionRiskLevel.DANGEROUS, ActionRiskLevel.CRITICAL]:
-        return True
-
-    return True  # Default to requiring approval
-
-
-# NOTE: The main PendingAction class is defined below (around line 484) with SQLite integration support.
-# It includes thread_id, conversation_id, and request_id fields.
-
-
-def generate_action_id() -> str:
-    """Generate unique action ID"""
-    return f"action_{uuid.uuid4().hex[:8]}"
-
-
-# NOTE: The main store_pending_action, get_pending_action, and remove_pending_action
-# functions are defined below (lines ~570-680) with SQLite integration.
-# The PENDING_ACTIONS_CACHE is used for in-memory caching of execution callbacks.
-
-
+class ExecutionPlan(BaseModel):
+    steps: List[PlanStep] = Field(description="Ordered list of execution steps")
 
 
 def supervisor_node(state: SharedState) -> SharedState:
@@ -324,11 +302,8 @@ def supervisor_node(state: SharedState) -> SharedState:
     STEP 1: Supervisor generates a plan based on user input
     Enhanced to support multi-step workflows with data dependencies
     
-    TOKEN OPTIMIZATION: Uses two-level filtering:
-    1. Agent filtering (identify_relevant_agents)
-    2. Tool filtering within agents (identify_relevant_tools_fast)
-    3. Compact mode (removes verbose metadata)
-    4. Dynamic workflow hints (only when needed)
+    TOKEN OPTIMIZATION: Single LLM call identifies agents + tools together.
+    Dynamic workflow hints injected only when template+data pattern detected.
     """
     print(">>> RUNNING SUPERVISOR NODE VERSION 2 <<<")
     print("\n" + "=" * 60)
@@ -342,150 +317,69 @@ def supervisor_node(state: SharedState) -> SharedState:
 
     # Extract date info from context
     today_date = context.get("today_date", "")
-    yesterday_date = context.get("yesterday_date", "")
-    print(f"📅 Context dates: today={today_date}, yesterday={yesterday_date}")
+    print(f"📅 Context dates: today={today_date}")
 
-    # OPTIMIZATION V2: Two-level filtering (agents + tools)
-    # ✅ FIX: Force inclusion of drive_agent for template+data workflows
-    needs_template_data = any(word in user_input.lower() for word in ['template', 'data', 'mom'])
-    
-    filtered_capabilities, tool_filter = get_optimized_capabilities(
-        user_input,
-        use_llm_filter=False,  # Use fast keyword matching (0 tokens)
-        compact_mode=True       # Remove verbose metadata
-    )
+    # Single LLM call for agent+tool identification
+    filtered_capabilities, tool_filter = get_optimized_capabilities(user_input)
     relevant_agents = list(filtered_capabilities.keys())
-    
-    # Force add drive_agent if template+data detected and not already included
-    if needs_template_data and 'drive_agent' not in relevant_agents:
-        print("⚠️ WARNING: drive_agent missing for template+data workflow, force adding...")
-        relevant_agents.append('drive_agent')
-        # Add drive_agent from the globally imported capabilities
-        filtered_capabilities['drive_agent'] = agent_capabilities_v2.agent_capabilities['drive_agent']
     
     print(f"📌 Relevant agents: {relevant_agents}")
     print(f"🔧 Filtered tools: {tool_filter}")
-
-    # ===================================================================
-    # 🚀 DYNAMIC WORKFLOW HINT INJECTION (ONLY WHEN NEEDED)
-    # ===================================================================
-    
-    def detect_template_data_workflow(user_msg: str) -> bool:
-        """Detect if user wants template+data document creation"""
-        msg_lower = user_msg.lower()
-        
-        # Check for both template AND data mentions
-        has_template = any(word in msg_lower for word in ['template', 'format', 'mom'])
-        has_data = any(word in msg_lower for word in ['data', 'use ', 'document', 'file', 'content'])
-        
-        # Check for explicit file references (like 'TestData123' or 'MOMtemplate')
-        has_specific_files = any(char.isupper() for char in user_msg) or 'found within' in msg_lower
-        
-        # Must have: template keyword + data keyword + specific file mentions
-        return has_template and has_data and has_specific_files
-    
-    # Detect workflow pattern
-    needs_template_data_hint = detect_template_data_workflow(user_input)
-    
-    # Build dynamic hint (only if pattern detected) - SIMPLIFIED VERSION
-    workflow_hint = ""
-    if needs_template_data_hint:
-        print("🎯 Detected: TEMPLATE+DATA workflow pattern")
-        workflow_hint = """
-🚨 TEMPLATE+DATA WORKFLOW DETECTED 🚨
-
-USER WANTS: Create document using template + data files from Google Drive
-
-YOU MUST GENERATE EXACTLY THIS 2-STEP PLAN:
-
-Step 1 - Search for both files:
-{
-  "step_id": 1,
-  "agent": "drive_agent",
-  "tool": "search_template_and_data",
-  "description": "Search Google Drive for template and data files",
-  "inputs": {
-    "template_name": "<EXTRACT: look for 'MOMtemplate', 'Board Meeting Template', etc.>",
-    "data_name": "<EXTRACT: look for 'TestData123', 'January Data', etc.>"
-  },
-  "output_variables": {
-    "template_file_id": "template_file_id",
-    "data_file_id": "data_file_id"
-  }
-}
-
-Step 2 - Create document from template and data:
-{
-  "step_id": 2,
-  "agent": "docs_agent",
-  "tool": "create_from_template_and_data_ids",
-  "description": "Create document from template and data files",
-  "inputs": {
-    "template_file_id": "{{ template_file_id }}",
-    "data_file_id": "{{ data_file_id }}",
-    "new_title": "<EXTRACT: look for 'January Reports', 'Q4 Summary', etc.>",
-    "output_format": "google_docs"
-  },
-  "output_variables": {
-    "document_id": "document_id",
-    "document_url": "document_url"
-  }
-}
-
-EXTRACTION INSTRUCTIONS:
-- template_name: Find file name for structure/formatting (e.g., "MOMtemplate")
-- data_name: Find file name for content/values (e.g., "TestData123")
-- new_title: Find desired document name (e.g., "January Reports")
-
-CRITICAL: Your JSON response MUST have "steps" array with exactly these 2 steps.
-
-Example Response Format:
-{
-  "steps": [
-    { "step_id": 1, "agent": "drive_agent", "tool": "search_template_and_data", ... },
-    { "step_id": 2, "agent": "docs_agent", "tool": "create_from_template_and_data_ids", ... }
-  ]
-}
-"""
+    trace.step("agent_filtering", f"agents={relevant_agents}, tools={tool_filter}")
     
     # ===================================================================
-    # BUILD SYSTEM PROMPT (with optional hint)
+    # BUILD SYSTEM PROMPT
     # ===================================================================
     
     capability_summary = json.dumps(filtered_capabilities, indent=2)
-    schema_text = json.dumps(PLAN_SCHEMA, indent=2)
+
+    # Build dynamic context variables list
+    context_keys = [k for k in context.keys() if k != "today_date"]
+    context_vars_note = ""
+    if context_keys:
+        context_vars_note = f"\n\nAVAILABLE CONTEXT VARIABLES: {', '.join(context_keys)}"
+        if "uploaded_file" in context:
+            uf = context["uploaded_file"]
+            context_vars_note += f"\n- uploaded_file: {{{{ uploaded_file.temp_path }}}} (file: {uf.get('filename', 'unknown')})"
 
     system_prompt = f"""You are the Supervisor agent creating multi-step execution plans.
 
 CURRENT DATE CONTEXT:
 - Today's date: {today_date}
-- Yesterday's date: {yesterday_date}
-
-{workflow_hint}
 
 PLANNING RULES:
 1. Reference previous outputs using {{{{ variable_name }}}} syntax
 2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from tool's "returns"
 3. Break tasks into sequential steps with clear data flow
-4. Use date context variables: {{{{ today_date }}}}, {{{{ yesterday_date }}}} (format: YYYY-MM-DD)
+4. Use {{{{ today_date }}}} for date references (format: YYYY-MM-DD). For relative dates (yesterday, last week, etc.), compute from today_date.
 5. For ANY email sending: create_draft_email first, then optionally send_draft_email if explicitly requested
-6. IMPORTANT: read_recent_emails and search_emails return an "emails" array. Access items using array syntax:
-   - {{{{ emails[0].message_id }}}} for first email's message_id
-   - {{{{ emails[0].from }}}} for first email's sender
-   - {{{{ emails[0].subject }}}} for first email's subject
-   - Store array in variable: {{"recent_emails": "emails"}}, then use {{{{ recent_emails[0].from }}}}
-7. For template uploads: ALWAYS do upload → analyze → create (3 steps minimum)
-8. Follow tool-specific instructions in the capabilities (especially for templates and content generation)
-9. When file is uploaded: uploaded_file context contains temp_path, filename, size, mime_type
+6. Follow tool-specific instructions in the capabilities (array_access hints, workflow definitions, can_be_derived_from)
+7. When uploaded_file is present in context: use {{{{ uploaded_file.temp_path }}}} for file_path inputs and {{{{ uploaded_file.filename }}}} for filename inputs.
+{context_vars_note}
+
+EXAMPLE:
+User: "Find the latest email from john@example.com and reply saying thanks"
+{{{{
+  "steps": [
+    {{{{
+      "agent": "gmail_agent",
+      "tool": "search_emails",
+      "inputs": {{"query": "from:john@example.com", "max_results": 1}},
+      "output_variables": {{"latest_email_id": "emails[0].message_id"}},
+      "description": "Search for latest email from john@example.com"
+    }}}},
+    {{{{
+      "agent": "gmail_agent",
+      "tool": "reply_to_email",
+      "inputs": {{"message_id": "{{{{{{ latest_email_id }}}}}}", "reply_body": "Thanks!"}},
+      "output_variables": {{}},
+      "description": "Reply to the email saying thanks"
+    }}}}
+  ]
+}}}}
 
 Available agents and tools:
-{capability_summary}
-
-Schema:
-{schema_text}
-
-CRITICAL: Return ONLY valid JSON matching the schema above. NO explanations, NO text before or after the JSON.
-Your response must be a valid JSON object with a "steps" array."""
+{capability_summary}"""
 
     # Calculate token stats
     total_tools = sum(len(tools) for tools in tool_filter.values())
@@ -496,171 +390,73 @@ Your response must be a valid JSON object with a "steps" array."""
     print(f"   Agents: {len(relevant_agents)}/{len(agent_capabilities)}")
     print(f"   Tools: {total_tools}/{all_tools_count}")
     print(f"   Context size: {len(capability_summary):,} chars (~{len(capability_summary)//4:,} tokens)")
-    if needs_template_data_hint:
-        print(f"   ⚡ Dynamic hint: +{len(workflow_hint)//4:,} tokens (workflow-specific)")
+    trace.step("plan_generation_start", f"agents={len(relevant_agents)}/{len(agent_capabilities)}, tools={total_tools}/{all_tools_count}, context_tokens~{len(capability_summary)//4}")
 
     # ===================================================================
-    # RETRY LOGIC FOR ROBUST PLAN GENERATION
+    # STRUCTURED OUTPUT: Plan generation via function calling
+    # Eliminates JSON parsing, code-fence extraction, and retry-for-format
     # ===================================================================
-    max_retries = 2
-    retry_count = 0
-    plan = None
-    last_error = None
+    try:
+        structured_llm = llm.with_structured_output(
+            ExecutionPlan, method="function_calling", include_raw=True
+        )
 
-    while retry_count <= max_retries:
-        try:
-            # === TOKEN TRACKING: Plan Generation ===
-            start_time = time.time()
-            llm_response = llm.invoke(
-                [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_input},
-                ]
-            )
-            duration_ms = (time.time() - start_time) * 1000
-            
-            # Extract token usage from response
-            input_tokens = 0
-            output_tokens = 0
-            if hasattr(llm_response, 'response_metadata'):
-                token_usage = llm_response.response_metadata.get('token_usage', {})
-                input_tokens = token_usage.get('prompt_tokens', (len(system_prompt) + len(user_input)) // 4)
-                output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
-            else:
-                input_tokens = (len(system_prompt) + len(user_input)) // 4
-                output_tokens = len(llm_response.content) // 4
-            
-            # Log the LLM call with token tracking
-            logger.llm_call(
-                model=LLM_MODEL,
-                operation="plan_generation",
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                duration_ms=duration_ms,
-                tier="supervisor",
-                prompt_summary=f"Planning: {user_input[:50]}...",
-                success=True
-            )
+        start_time = time.time()
+        result = structured_llm.invoke(
+            [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_input},
+            ]
+        )
+        duration_ms = (time.time() - start_time) * 1000
 
-            # Extract JSON from response (handle text before JSON block)
-            response_text = llm_response.content.strip()
-            
-            # Check if response contains markdown code block
-            if "```json" in response_text:
-                # Extract content between ```json and ```
-                start = response_text.find("```json") + 7
-                end = response_text.find("```", start)
-                response_text = response_text[start:end].strip()
-            elif "```" in response_text:
-                # Extract content between ``` and ```
-                start = response_text.find("```") + 3
-                end = response_text.find("```", start)
-                response_text = response_text[start:end].strip()
-            
-            # If still no valid JSON, try to find JSON object directly
-            if not response_text.startswith("{"):
-                # Try to find JSON object in the text
-                json_start = response_text.find("{")
-                if json_start != -1:
-                    response_text = response_text[json_start:]
+        # include_raw=True returns {"raw": AIMessage, "parsed": ExecutionPlan, "parsing_error": ...}
+        raw_message = result["raw"]
+        execution_plan = result["parsed"]
+        parsing_error = result.get("parsing_error")
 
-            plan = json.loads(response_text)
-            
-            # ===================================================================
-            # ✅ VALIDATE BASIC PLAN STRUCTURE FIRST
-            # ===================================================================
-            if not isinstance(plan, dict):
-                raise ValueError("Plan must be a dictionary object")
-            
-            if "steps" not in plan and "plan" in plan:
-                print("⚠️ LLM returned 'plan' key instead of 'steps' — normalizing...")
-                plan["steps"] = plan.pop("plan")
-                
-            if "steps" not in plan:
-                raise ValueError("Plan must contain 'steps' array. Got keys: " + str(list(plan.keys())))
-            
-            steps = plan.get("steps", [])
-            
-            if not isinstance(steps, list):
-                raise ValueError(f"'steps' must be an array, got {type(steps).__name__}")
-            
-            if len(steps) == 0:
-                raise ValueError("'steps' array is empty - plan must contain at least one step")
-            
-            # ===================================================================
-            # ✅ VALIDATE: Template+Data Workflow Correctness
-            # ===================================================================
-            if needs_template_data_hint:
-                
-                if len(steps) < 2:
-                    raise ValueError(
-                        f"❌ WORKFLOW ERROR: Template+data workflow requires at least 2 steps, "
-                        f"but only {len(steps)} step(s) found. "
-                        f"Required workflow:\n"
-                        f"  Step 1: drive_agent.search_template_and_data\n"
-                        f"  Step 2: docs_agent.create_from_template_and_data_ids"
-                    )
-                
-                first_step = steps[0]
-                second_step = steps[1]
-                
-                # Check if first step is search_template_and_data
-                if first_step.get("tool") != "search_template_and_data":
-                    raise ValueError(
-                        f"❌ WORKFLOW ERROR: Template+data creation must start with "
-                        f"'search_template_and_data', not '{first_step.get('tool')}'. "
-                        f"Please regenerate the plan following the workflow hint."
-                    )
-                
-                # Check if second step is create_from_template_and_data_ids
-                if second_step.get("tool") != "create_from_template_and_data_ids":
-                    raise ValueError(
-                        f"❌ WORKFLOW ERROR: After search_template_and_data, must use "
-                        f"'create_from_template_and_data_ids', not '{second_step.get('tool')}'. "
-                        f"Please regenerate the plan following the workflow hint."
-                    )
-                
-                # Check if template_file_id and data_file_id are passed correctly
-                second_step_inputs = str(second_step.get("inputs", {}))
-                if "{{ template_file_id }}" not in second_step_inputs:
-                    raise ValueError(
-                        "❌ WORKFLOW ERROR: Step 2 must reference {{ template_file_id }} "
-                        "from Step 1's output_variables"
-                    )
-                
-                if "{{ data_file_id }}" not in second_step_inputs:
-                    raise ValueError(
-                        "❌ WORKFLOW ERROR: Step 2 must reference {{ data_file_id }} "
-                        "from Step 1's output_variables"
-                    )
-                
-                print("✅ Workflow validation passed: search → create sequence correct")
+        if parsing_error:
+            raise ValueError(f"Plan parsing failed: {parsing_error}")
+        if execution_plan is None:
+            raise ValueError("Structured output returned None — LLM did not produce a valid plan")
 
-            # If we got here, plan is valid!
-            print("✅ Plan generated successfully!")
-            print(f"\n📋 Generated Plan:\n{json.dumps(plan, indent=2)}")
-            break  # Exit retry loop
+        # Real token tracking from the raw AIMessage
+        input_tokens = 0
+        output_tokens = 0
+        if hasattr(raw_message, 'response_metadata'):
+            token_usage = raw_message.response_metadata.get('token_usage', {})
+            input_tokens = token_usage.get('prompt_tokens', 0)
+            output_tokens = token_usage.get('completion_tokens', 0)
 
-        except (json.JSONDecodeError, ValueError) as e:
-            last_error = e
-            retry_count += 1
-            
-            if retry_count > max_retries:
-                # All retries exhausted
-                error_msg = (
-                    f"Failed to generate valid plan after {max_retries} attempts.\n"
-                    f"Last error: {str(last_error)}\n"
-                    f"Last LLM response:\n{llm_response.content[:500]}..."
-                )
-                print(f"❌ {error_msg}")
-                raise ValueError(error_msg)
-            
-            print(f"⚠️ Plan generation failed (attempt {retry_count}/{max_retries}), retrying...")
-            print(f"Error: {str(e)}")
-            
-            # Add error feedback to system prompt for retry
-            system_prompt += f"\n\n⚠️ PREVIOUS ATTEMPT FAILED: {str(e)}\n"
-            system_prompt += "Please generate a valid JSON plan with a 'steps' array containing all required steps."
+        logger.llm_call(
+            model=LLM_MODEL,
+            operation="plan_generation",
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            duration_ms=duration_ms,
+            tier="supervisor",
+            prompt_summary=f"Planning: {user_input[:50]}...",
+            success=True
+        )
+
+        # Convert Pydantic model → dict for downstream compatibility
+        plan = execution_plan.model_dump()
+
+        if not plan.get("steps"):
+            raise ValueError("Plan has no steps")
+
+        steps = plan["steps"]
+        print("✅ Plan generated successfully!")
+        print(f"\n📋 Generated Plan:\n{json.dumps(plan, indent=2)}")
+        trace.step("plan_generated", f"{len(steps)} steps: {', '.join(s.get('agent','?')+'.'+s.get('tool','?') for s in steps)}")
+
+    except Exception as e:
+        if is_llm_error(e):
+            raise LLMServiceException(handle_llm_error(e))
+        error_msg = f"Failed to generate plan: {str(e)}"
+        print(f"❌ {error_msg}")
+        trace.error(f"Plan generation failed: {e}")
+        raise ValueError(error_msg)
 
     # Save the plan to a file for inspection
     plan_file = os.path.join(OUTPUT_DIR, "supervisor_plan.json")
@@ -965,6 +761,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
     if not plan:
         print("❌ ERROR: No steps found in plan!")
         print(f"📋 Plan structure: {json.dumps(plan_dict, indent=2)}")
+        trace.error("No steps found in plan", data={"plan_keys": list(plan_dict.keys())})
         return {
             "final_context": variable_context,
             "context": variable_context,
@@ -1009,22 +806,35 @@ def orchestrator_node(state: SharedState) -> SharedState:
     # Jinja2 for variable substitution
 
     # ===================================================================
-    # 🔍 DEBUG: Validate Google credentials at startup
+    # PRE-FLIGHT: Build and validate Google credentials ONCE before loop
     # ===================================================================
-    print("\n🔑 CREDENTIALS VALIDATION AT STARTUP:")
-    print("─" * 60)
-    google_creds_available = {
-        "GOOGLE_ACCESS_TOKEN": bool(os.getenv("GOOGLE_ACCESS_TOKEN")),
-        "GOOGLE_REFRESH_TOKEN": bool(os.getenv("GOOGLE_REFRESH_TOKEN")),
-        "GOOGLE_CLIENT_ID": bool(os.getenv("GOOGLE_CLIENT_ID")),
-        "GOOGLE_CLIENT_SECRET": bool(os.getenv("GOOGLE_CLIENT_SECRET")),
-        "OAUTH_CLIENT_ID": bool(os.getenv("OAUTH_CLIENT_ID")),
-        "OAUTH_CLIENT_SECRET": bool(os.getenv("OAUTH_CLIENT_SECRET")),
+    credentials_dict = {
+        "access_token": os.getenv("GOOGLE_ACCESS_TOKEN"),
+        "refresh_token": os.getenv("GOOGLE_REFRESH_TOKEN"),
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "client_id": os.getenv("GOOGLE_CLIENT_ID") or os.getenv("OAUTH_CLIENT_ID"),
+        "client_secret": os.getenv("GOOGLE_CLIENT_SECRET") or os.getenv("OAUTH_CLIENT_SECRET"),
     }
-    for cred_name, is_available in google_creds_available.items():
-        status = "✅" if is_available else "❌"
-        print(f"   {status} {cred_name}: {'SET' if is_available else 'MISSING'}")
-    print("─" * 60)
+    # Remove None/empty values (Google rejects these)
+    credentials_dict = {k: v for k, v in credentials_dict.items() if v}
+
+    required_cred_fields = ["access_token", "refresh_token", "client_id", "client_secret"]
+    missing_cred_fields = [f for f in required_cred_fields if not credentials_dict.get(f)]
+
+    if missing_cred_fields:
+        error_msg = f"Missing required Google credentials: {', '.join(missing_cred_fields)}. Cannot execute plan."
+        print(f"❌ {error_msg}")
+        trace.error(error_msg, data={"missing": missing_cred_fields})
+        variable_context["error"] = error_msg
+        return {
+            "final_context": variable_context,
+            "context": variable_context,
+            "results": [],
+            "stopped_at_step": 0,
+            "error": error_msg,
+        }
+
+    print(f"✅ Pre-flight credential check passed ({len(credentials_dict)} fields)")
 
     for step_num, step in enumerate(plan, 1):
         agent_name = step["agent"]
@@ -1097,8 +907,18 @@ def orchestrator_node(state: SharedState) -> SharedState:
             print(f"   Endpoint: POST /action/approve/{action_id}")
             print(f"   Details: {json.dumps(step_info, indent=4)}")
 
-        # If no approval needed, execute normally
-        print(f"✅ Auto-executing (safe action)")
+            # Paused — skip execution, move to next step
+            results.append({
+                "step": step_num,
+                "agent": agent_name,
+                "tool": tool_name,
+                "status": "pending_approval",
+                "action_id": action_id,
+                "description": description,
+            })
+            continue
+
+        # No approval needed — execute normally
 
         # STEP 1: Variable Substitution
         print(f"\n🔄 Substituting variables in inputs...")
@@ -1109,23 +929,30 @@ def orchestrator_node(state: SharedState) -> SharedState:
             if isinstance(value, str):
                 # Use Jinja2 to substitute {{ variables }}
                 template = Template(value)
-                substituted_inputs[key] = template.render(**variable_context)
-            # ✅ FIX: Handle file uploads
+                rendered = template.render(**variable_context)
+                # If the rendered value is a file_path and it came from uploaded_file,
+                # ensure the file is available locally (downloads from S3 if needed)
+                if key == "file_path" and rendered and "uploaded_file" in variable_context:
+                    from s3_temp_storage import resolve_file_to_local_path
+                    rendered = resolve_file_to_local_path(variable_context["uploaded_file"])
+                substituted_inputs[key] = rendered
             elif key == "file_path" and "uploaded_file" in variable_context:
-                # Use the temp_path from uploaded_file
-                uploaded_file = variable_context["uploaded_file"]
-                substituted_inputs[key] = uploaded_file.get("temp_path")
+                # Non-string file_path — resolve from uploaded_file context
+                from s3_temp_storage import resolve_file_to_local_path
+                substituted_inputs[key] = resolve_file_to_local_path(variable_context["uploaded_file"])
             else:
                 substituted_inputs[key] = value
 
         print(f"   Substituted inputs: {json.dumps(substituted_inputs, indent=6)}")
         print(f"   Available context variables: {list(variable_context.keys())}")
+        trace.step("variable_substitution", f"step {step_num}: {agent_name}.{tool_name}", data={"inputs": substituted_inputs, "context_keys": list(variable_context.keys())})
 
         # STEP 2: Call Agent Microservice
         agent_url = AGENT_ENDPOINTS.get(agent_name)
         if not agent_url:
             error_msg = f"No endpoint configured for agent: {agent_name}"
             print(f"❌ {error_msg}")
+            trace.error(f"No endpoint for {agent_name}", data={"step": step_num})
             results.append({
                 "step": step_num,
                 "agent": agent_name,
@@ -1137,75 +964,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
         print(f"\n🌐 Calling agent microservice: {agent_url}")
 
-        # ===================================================================
-        # 🔍 DEBUG + FIX: Build and validate credentials properly
-        # ===================================================================
-        print(f"\n🔑 Building credentials dictionary...")
-        
-        # Build credentials dict - ALL VALUES MUST BE STRINGS for Pydantic validation
-        credentials_dict = {
-            "access_token": os.getenv("GOOGLE_ACCESS_TOKEN"),
-            "refresh_token": os.getenv("GOOGLE_REFRESH_TOKEN"),
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "client_id": os.getenv("GOOGLE_CLIENT_ID") or os.getenv("OAUTH_CLIENT_ID"),
-            "client_secret": os.getenv("GOOGLE_CLIENT_SECRET") or os.getenv("OAUTH_CLIENT_SECRET"),
-        }
-
-        # Remove None values and empty strings (Google rejects these)
-        credentials_dict = {k: v for k, v in credentials_dict.items() if v}
-
-        # 🔍 DEBUG: Print credential validation status
-        print(f"\n🔍 CREDENTIAL VALIDATION:")
-        print("─" * 60)
-        print(f"   Has access_token: {bool(credentials_dict.get('access_token'))}")
-        print(f"   Has refresh_token: {bool(credentials_dict.get('refresh_token'))}")
-        print(f"   Has client_id: {bool(credentials_dict.get('client_id'))}")
-        print(f"   Has client_secret: {bool(credentials_dict.get('client_secret'))}")
-        print(f"   Has token_uri: {bool(credentials_dict.get('token_uri'))}")
-        print(f"   Total fields: {len(credentials_dict)}")
-        print("─" * 60)
-
-        # Validate that we have the minimum required credentials
-        required_fields = ["access_token", "refresh_token", "client_id", "client_secret"]
-        missing_fields = [field for field in required_fields if not credentials_dict.get(field)]
-
-        if missing_fields:
-            error_msg = f"Missing required Google credentials: {', '.join(missing_fields)}"
-            print(f"❌ {error_msg}")
-            print(f"🛑 Cannot proceed with this step - credentials incomplete")
-            
-            results.append({
-                "step": step_num,
-                "agent": agent_name,
-                "tool": tool_name,
-                "status": "error",
-                "error": error_msg,
-            })
-            
-            # Stop workflow due to credential error
-            print(f"\n{'='*60}")
-            print("🛑 ORCHESTRATOR STOPPED - CREDENTIAL ERROR")
-            print(f"{'='*60}")
-            
-            variable_context["results"] = results
-            variable_context["stopped_at_step"] = step_num
-            variable_context["error"] = error_msg
-            
-            return {
-                "final_context": variable_context,
-                "context": variable_context,
-                "results": results,
-                "stopped_at_step": step_num,
-                "error": error_msg,
-            }
-
-        print(f"✅ Credentials validation passed - all required fields present")
-
-        # ⚠️ CRITICAL FIX: Don't add expiry or scopes - agent expects only strings
-        # The agent's Pydantic model is: credentials_dict: Dict[str, str]
-        # Adding datetime objects or lists will cause 422 validation error
-
-        # Prepare request payload (tool-based format) - FIXED STRUCTURE
+        # Prepare request payload (tool-based format)
         request_payload = {
             "tool": tool_name,
             "inputs": substituted_inputs,
@@ -1270,6 +1029,10 @@ def orchestrator_node(state: SharedState) -> SharedState:
                     if k not in ["success", "error"]
                 }
                 variable_context.update(fields_to_add)
+
+                # Namespace the full result under step_{N}_{agent} to prevent collisions
+                namespace_key = f"step_{step_num}_{agent_name}"
+                variable_context[namespace_key] = fields_to_add
 
                 # Then, create renamed variables based on output_variables mapping
                 # Format: "new_variable_name": "source_field_name" or "nested.path[0].field"
@@ -1458,6 +1221,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
             error_msg = f"HTTP error calling {agent_name}: {str(e)}"
             print(f"❌ {error_msg}")
             print(f"🛑 STOPPING WORKFLOW - HTTP Error in step {step_num}")
+            trace.error(f"HTTP error step {step_num}: {agent_name}.{tool_name}", data={"error": str(e), "type": type(e).__name__})
             
             # 🔍 DEBUG: Print HTTP error details
             print(f"\n🔍 HTTP ERROR DETAILS:")
@@ -1510,6 +1274,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
             error_msg = f"Unexpected error: {str(e)}"
             print(f"❌ {error_msg}")
             print(f"🛑 STOPPING WORKFLOW - Unexpected Error in step {step_num}")
+            trace.error(f"Unexpected error step {step_num}: {agent_name}.{tool_name}", exception=e)
             
             # 🔍 DEBUG: Print full traceback
             print(f"\n🔍 FULL TRACEBACK:")
@@ -1554,58 +1319,29 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 "error": error_msg,
             }
 
+    success_count = sum(1 for r in results if r.get('status') == 'success')
+    no_results_count = sum(1 for r in results if r.get('status') == 'no_results')
+    error_count = sum(1 for r in results if r.get('status') == 'error')
+
     print(f"\n{'='*60}")
     print("✅ ORCHESTRATOR COMPLETED")
     print(f"{'='*60}")
     print(f"📊 Total steps: {len(plan)}")
-    print(f"✓ Successful: {sum(1 for r in results if r.get('status') == 'success')}")
-    print(f"ℹ️ No Results: {sum(1 for r in results if r.get('status') == 'no_results')}")
-    print(f"✗ Failed: {sum(1 for r in results if r.get('status') == 'error')}")
+    print(f"✓ Successful: {success_count}")
+    print(f"ℹ️ No Results: {no_results_count}")
+    print(f"✗ Failed: {error_count}")
     print(f"{'='*60}\n")
+    trace.step("orchestrator_complete", f"steps={len(plan)}, success={success_count}, no_results={no_results_count}, errors={error_count}")
 
     # Include results in final_context for summary generation
     variable_context["results"] = results
+
+    # === WEBSOCKET BROADCAST: Completion ===
+    broadcast_ws_progress(len(plan), len(plan), "All steps completed", None, "completed")
 
     return {
         "final_context": variable_context,
         "context": variable_context,
-        "results": results,
-    }
-    
-    # === WEBSOCKET BROADCAST: Completion ===
-    broadcast_ws_progress(len(plan), len(plan), "All steps completed", None, "completed")
-
-    print(f"\n📦 FINAL CONTEXT (All Available Variables):")
-    print("─" * 60)
-    for key, value in variable_context.items():
-        if isinstance(value, list):
-            if len(value) > 0 and isinstance(value[0], dict):
-                # Array of objects (like emails)
-                print(f"   {key}: Array[{len(value)} items]")
-                if len(value) > 0:
-                    print(f"      └─ Sample keys: {list(value[0].keys())}")
-                    # Show first item's key values for reference
-                    if "message_id" in value[0]:
-                        print(f"      └─ [0].message_id: {value[0].get('message_id')}")
-                    if "from" in value[0]:
-                        print(f"      └─ [0].from: {value[0].get('from')}")
-                    if "subject" in value[0]:
-                        print(f"      └─ [0].subject: {value[0].get('subject')}")
-            else:
-                print(f"   {key}: {value}")
-        elif isinstance(value, dict):
-            print(f"   {key}: Dict with keys: {list(value.keys())}")
-        else:
-            print(f"   {key}: {value}")
-    print("─" * 60)
-    print(f"{'='*60}\n")
-
-    # Include results in final_context for summary generation
-    variable_context["results"] = results
-
-    return {
-        "final_context": variable_context,
-        # Note: "context" key removed - use final_context instead (they were identical)
         "results": results,
     }
 
@@ -1625,4 +1361,289 @@ print("✅ Workflow graph compiled (FULL WORKFLOW)")
 print("   Flow: supervisor → orchestrator → END")
 print(f"   Plans saved to: {OUTPUT_DIR}/supervisor_plan.json")
 print(f"   Agent endpoints: {list(AGENT_ENDPOINTS.keys())}")
+
+
+# ============================================================================
+# REACT WORKFLOW — Iterative Reason-Act-Observe Loop
+# ============================================================================
+# Instead of planning all steps upfront (standard), the ReAct workflow:
+#   1. react_planner: observes previous results → thinks → generates ONE next step
+#   2. orchestrator: executes that single step (reuses existing orchestrator_node)
+#   3. route_react_plan: checks if planner said done → END, else → orchestrator
+#   4. After execution, loops back to planner with new observations
+#
+# Graph: react_planner → [route_react_plan] → orchestrator → react_planner → ...
+# ============================================================================
+
+MAX_REACT_ITERATIONS = 10
+
+
+class ReactStep(BaseModel):
+    """Structured output for a single ReAct iteration."""
+    thought: str = Field(description="Reasoning about what to do next based on observations so far")
+    next_step: Optional[PlanStep] = Field(default=None, description="Next step to execute, or null if task is done")
+    done: bool = Field(description="True if the task is fully complete, False if more steps are needed")
+    summary: Optional[str] = Field(default=None, description="Final summary of what was accomplished (set when done=True)")
+
+
+def _summarize_react_observation(output: dict) -> str:
+    """Create a compact summary of a step's output for the react history prompt."""
+    if not output:
+        return "No output"
+    summary_parts = []
+    for key, value in output.items():
+        if key in ("success", "error"):
+            continue
+        if isinstance(value, list):
+            summary_parts.append(f"{key}: [{len(value)} items]")
+        elif isinstance(value, dict):
+            summary_parts.append(f"{key}: {{{', '.join(list(value.keys())[:5])}}}")
+        elif isinstance(value, str) and len(value) > 100:
+            summary_parts.append(f"{key}: {value[:100]}...")
+        else:
+            summary_parts.append(f"{key}: {value}")
+    return "; ".join(summary_parts) if summary_parts else "Empty result"
+
+
+def react_planner_node(state: SharedState) -> SharedState:
+    """
+    ReAct planner node: observe → think → plan ONE next step (or declare done).
+
+    On first call react_history is empty — generates the first step.
+    On subsequent calls it sees accumulated observations and decides the next
+    action or declares the task complete.
+    """
+    print("\n" + "=" * 60)
+    print("🧠 REACT PLANNER — Reason + Act")
+    print("=" * 60)
+
+    user_input = state["input"]
+    context = state.get("context", {})
+    react_history = list(state.get("react_history", []))  # copy to avoid mutation
+    react_iteration = state.get("react_iteration", 0)
+
+    trace.step("react_planner", f"Iteration {react_iteration + 1}, prior observations: {len(react_history)}")
+
+    # ------------------------------------------------------------------
+    # Capture results from the previous orchestrator run (if any)
+    # ------------------------------------------------------------------
+    prev_results = state.get("results", [])
+    for r in prev_results:
+        react_history.append({
+            "agent": r.get("agent", "unknown"),
+            "tool": r.get("tool", "unknown"),
+            "description": r.get("description", ""),
+            "status": r.get("status", "unknown"),
+            "output_summary": _summarize_react_observation(r.get("output", {})),
+            "error": r.get("error"),
+        })
+
+    # ------------------------------------------------------------------
+    # Safety: max iterations
+    # ------------------------------------------------------------------
+    if react_iteration >= MAX_REACT_ITERATIONS:
+        print(f"⚠️ Max iterations reached ({MAX_REACT_ITERATIONS}) — forcing completion")
+        trace.warning(f"React loop hit max iterations ({MAX_REACT_ITERATIONS})")
+        return {
+            "plan": {"steps": []},
+            "react_done": True,
+            "react_iteration": react_iteration,
+            "react_history": react_history,
+        }
+
+    # ------------------------------------------------------------------
+    # Build observation context for the LLM
+    # ------------------------------------------------------------------
+    observation_text = ""
+    if react_history:
+        observation_text = "\n\nPREVIOUS STEPS AND OBSERVATIONS:"
+        for i, obs in enumerate(react_history, 1):
+            observation_text += f"\n\nStep {i}: {obs['agent']}.{obs['tool']} — {obs['description']}"
+            observation_text += f"\n  Status: {obs['status']}"
+            if obs.get("output_summary"):
+                observation_text += f"\n  Result: {obs['output_summary']}"
+            if obs.get("error"):
+                observation_text += f"\n  Error: {obs['error']}"
+
+    # ------------------------------------------------------------------
+    # Capabilities & context
+    # ------------------------------------------------------------------
+    filtered_capabilities, tool_filter = get_optimized_capabilities(user_input)
+    capability_summary = json.dumps(filtered_capabilities, indent=2)
+    today_date = context.get("today_date", "")
+
+    context_keys = [k for k in context.keys() if k != "today_date"]
+    context_vars_note = ""
+    if context_keys:
+        context_vars_note = f"\n\nAVAILABLE CONTEXT VARIABLES: {', '.join(context_keys)}"
+        if "uploaded_file" in context:
+            uf = context["uploaded_file"]
+            context_vars_note += f"\n- uploaded_file: {{{{ uploaded_file.temp_path }}}} (file: {uf.get('filename', 'unknown')})"
+
+    total_tools = sum(len(tools) for tools in tool_filter.values())
+    print(f"📌 Relevant agents: {list(filtered_capabilities.keys())}")
+    print(f"🔧 Tools: {total_tools}")
+
+    # ------------------------------------------------------------------
+    # System prompt (ReAct-specific)
+    # ------------------------------------------------------------------
+    system_prompt = f"""You are a ReAct (Reason + Act) agent that solves tasks step-by-step.
+
+CURRENT DATE: {today_date}
+
+APPROACH:
+1. THINK: Analyse what you have observed so far and what needs to happen next.
+2. DECIDE: Either plan exactly ONE next step, or declare the task done.
+
+PLANNING RULES:
+1. Reference previous step outputs using {{{{ variable_name }}}} syntax.
+2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from the tool response.
+3. Use {{{{ today_date }}}} for date references (format: YYYY-MM-DD). Compute relative dates from today_date.
+4. For ANY email sending: create_draft_email first, then optionally send_draft_email.
+5. Follow tool-specific instructions in the capabilities (array_access hints, workflow definitions, can_be_derived_from).
+6. When uploaded_file is present in context: use {{{{ uploaded_file.temp_path }}}} for file_path inputs.
+{context_vars_note}
+{observation_text}
+
+Available agents and tools:
+{capability_summary}
+
+Generate your thought process and EXACTLY ONE next step to execute,
+OR set done=true with a summary if the task is fully complete."""
+
+    # ------------------------------------------------------------------
+    # LLM call (structured output — ReactStep)
+    # ------------------------------------------------------------------
+    print("🤖 Calling LLM for next ReAct step...")
+    try:
+        structured_llm = llm.with_structured_output(
+            ReactStep, method="function_calling", include_raw=True
+        )
+
+        start_time = time.time()
+        result = structured_llm.invoke([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_input},
+        ])
+        duration_ms = (time.time() - start_time) * 1000
+
+        raw_message = result["raw"]
+        react_step = result["parsed"]
+        parsing_error = result.get("parsing_error")
+
+        if parsing_error:
+            raise ValueError(f"ReactStep parsing failed: {parsing_error}")
+        if react_step is None:
+            raise ValueError("Structured output returned None")
+
+        # Token tracking
+        input_tokens = 0
+        output_tokens = 0
+        if hasattr(raw_message, "response_metadata"):
+            token_usage = raw_message.response_metadata.get("token_usage", {})
+            input_tokens = token_usage.get("prompt_tokens", 0)
+            output_tokens = token_usage.get("completion_tokens", 0)
+
+        logger.llm_call(
+            model=LLM_MODEL,
+            operation=f"react_plan_iter_{react_iteration + 1}",
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            duration_ms=duration_ms,
+            tier="react_planner",
+            prompt_summary=f"React iteration {react_iteration + 1}: {user_input[:50]}...",
+            success=True,
+        )
+
+        print(f"💭 Thought: {react_step.thought}")
+        trace.step("react_thought", react_step.thought[:200])
+
+        # ------------------------------------------------------------------
+        # Done? Return empty plan so route_react_plan sends us to END
+        # ------------------------------------------------------------------
+        if react_step.done or react_step.next_step is None:
+            summary = react_step.summary or "Task completed."
+            print(f"✅ React planner declares DONE: {summary}")
+            trace.step(
+                "react_done",
+                f"Complete after {react_iteration} iterations: {summary}",
+            )
+            # Build final_context from accumulated context so downstream summary works
+            # Clean stale error markers from earlier iterations that may have recovered
+            context.pop("stopped_at_step", None)
+            context.pop("error", None)
+            context["react_summary"] = summary
+            context["results"] = [
+                {"step": i + 1, "agent": h["agent"], "tool": h["tool"],
+                 "description": h["description"], "status": h["status"]}
+                for i, h in enumerate(react_history)
+            ]
+            return {
+                "plan": {"steps": []},
+                "react_done": True,
+                "react_iteration": react_iteration,
+                "react_history": react_history,
+                "final_context": context,
+                "context": context,
+            }
+
+        # ------------------------------------------------------------------
+        # Not done — wrap the single step as a 1-step plan for orchestrator
+        # ------------------------------------------------------------------
+        step_dict = react_step.next_step.model_dump()
+        plan = {"steps": [step_dict]}
+
+        print(f"📋 Next step: {step_dict['agent']}.{step_dict['tool']}: {step_dict['description']}")
+        trace.step(
+            "react_next_step",
+            f"iter {react_iteration + 1}: {step_dict['agent']}.{step_dict['tool']}",
+        )
+
+        return {
+            "plan": plan,
+            "react_done": False,
+            "react_iteration": react_iteration + 1,
+            "react_history": react_history,
+            "context": context,
+        }
+
+    except Exception as e:
+        if is_llm_error(e):
+            raise LLMServiceException(handle_llm_error(e))
+        trace.error(f"React planning failed: {e}")
+        raise ValueError(f"React planning failed: {str(e)}")
+
+
+def route_react_plan(state: SharedState) -> str:
+    """
+    Conditional routing after react_planner_node.
+    Returns "execute" to run the orchestrator, or "done" to finish.
+    """
+    if state.get("react_done", False):
+        return "done"
+    plan = state.get("plan", {})
+    if not plan.get("steps"):
+        return "done"
+    return "execute"
+
+
+# Build ReAct workflow graph
+react_graph = StateGraph(SharedState)
+react_graph.add_node("react_planner", react_planner_node)
+react_graph.add_node("orchestrator", orchestrator_node)
+
+react_graph.set_entry_point("react_planner")
+react_graph.add_conditional_edges(
+    "react_planner",
+    route_react_plan,
+    {"execute": "orchestrator", "done": END},
+)
+# After orchestrator executes, always loop back to planner for next decision
+react_graph.add_edge("orchestrator", "react_planner")
+
+react_workflow = react_graph.compile()
+
+print("✅ ReAct workflow graph compiled")
+print("   Flow: react_planner → [route] → orchestrator ↺ react_planner → END")
+print(f"   Max iterations: {MAX_REACT_ITERATIONS}")
 

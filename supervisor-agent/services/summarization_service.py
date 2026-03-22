@@ -13,6 +13,7 @@ from typing import Optional, Dict, Any, List
 from models.models import ConversationState
 from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_error
 from logging_config import conversational_logger as logger
+from execution_logger import trace
 
 
 class SummarizationService:
@@ -210,15 +211,17 @@ class SummarizationService:
         # FILTER: Remove technical fields user doesn't care about
         user_relevant_context = self.filter_context_for_user(final_context)
         
-        print(f"📊 Context filtering:")
-        print(f"   Before: {len(final_context)} fields, {len(json.dumps(final_context))} chars")
-        print(f"   After: {len(user_relevant_context)} fields, {len(json.dumps(user_relevant_context))} chars")
+        trace.step("summarization", "context filtering", {
+            "before_fields": len(final_context),
+            "before_chars": len(json.dumps(final_context)),
+            "after_fields": len(user_relevant_context),
+            "after_chars": len(json.dumps(user_relevant_context)),
+        })
         
         # Build READABLE context with actual content
         context_text = self._build_readable_context(user_relevant_context)
         
-        print(f"\n📝 Generating user-friendly summary...")
-        print(f"📊 Context for LLM ({len(context_text)} chars):\n{context_text[:500]}...\n")
+        trace.step("summarization", f"generating LLM summary ({len(context_text)} chars context)")
         
         system_prompt = f"""You are a concise AI assistant summarizing task results.
 
@@ -280,7 +283,7 @@ Summarize the results using specific data"""
         except Exception as e:
             # Check if this is an LLM service error (rate limit, quota, etc.)
             if is_llm_error(e):
-                print(f"❌ LLM service error in result summarization: {e}")
+                trace.error("LLM service error in result summarization", e)
                 # Log the failed LLM call
                 logger.llm_call(
                     model=self.llm.model_name if hasattr(self.llm, 'model_name') else "gpt-4o",
@@ -308,7 +311,7 @@ Summarize the results using specific data"""
                 error=str(e)
             )
             # Fallback to simple summary if LLM fails
-            print(f"⚠️ Failed to generate LLM summary: {e}")
+            trace.warning("Failed to generate LLM summary, using fallback", {"error": str(e)})
             return f"✅ Successfully completed: {original_request}\n\nResults:\n{context_text}"
     
     def _build_readable_context(self, user_relevant_context: Dict[str, Any]) -> str:

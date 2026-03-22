@@ -6,6 +6,7 @@ Run this file to start the server:
 """
 
 import uvicorn
+from fastapi import Request
 
 # Import the FastAPI app and shared objects from supervisor_agent
 # (this triggers LangGraph compilation, LLM init, etc.)
@@ -28,6 +29,14 @@ app.include_router(actions_router)
 app.include_router(logs_router)
 app.include_router(realtime_router)
 app.include_router(health_router)
+
+
+@app.middleware("http")
+async def ensure_print_capture(request: Request, call_next):
+    """Re-apply print capture before every request in case uvicorn replaced sys.stdout."""
+    from execution_logger import enable_print_capture
+    enable_print_capture()
+    return await call_next(request)
 
 
 @app.on_event("startup")

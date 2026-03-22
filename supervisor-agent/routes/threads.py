@@ -7,6 +7,7 @@ messaging, file uploads, and workflow execution triggering.
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from datetime import datetime, timedelta, timezone
+import asyncio
 import json
 import hashlib
 import os
@@ -29,23 +30,36 @@ from supervisor_agent import (
     conversational_agent,
     save_conversation_state,
 )
-from models.models import UserRequest, CreateThreadRequest
-from routes.workflow import execute_workflow
+from models.models import CreateThreadRequest
+from routes.workflow import run_workflow
 from execution_logger import trace
+from llm_error_handler import LLMServiceException
+from s3_temp_storage import store_temp_file, delete_temp_file
 
 router = APIRouter()
 
 
-async def _run_workflow_and_update_state(conversation_state, thread_id):
+async def _run_workflow_and_update_state(conversation_state):
     """
     Shared helper: execute workflow, update execution history, generate summary.
     Returns (response_text, updated_conversation_state).
     """
+    # Preserve the task-specific summary before workflow overwrites it
+    original_execution_summary = conversation_state.execution_summary
+
     supervisor_input = conversational_agent.build_supervisor_input(conversation_state)
-    workflow_request = UserRequest(input=supervisor_input)
     now_iso = datetime.now(timezone.utc).isoformat()
 
     trace.workflow_start(supervisor_input)
+
+    # Build context overrides — inject uploaded_file so orchestrator can access it
+    context_overrides = {}
+    uploaded_file = conversation_state.extracted_info.get("uploaded_file")
+    if uploaded_file:
+        context_overrides["uploaded_file"] = uploaded_file
+
+    # Determine execution mode from conversation state
+    execution_mode = getattr(conversation_state, 'execution_mode', 'standard')
 
     status = "unknown"
     message_text = ""
@@ -53,11 +67,18 @@ async def _run_workflow_and_update_state(conversation_state, thread_id):
     plan_dict = {}
 
     try:
-        workflow_result = await execute_workflow(workflow_request)
+        workflow_result = await asyncio.to_thread(
+            run_workflow, supervisor_input,
+            context_overrides=context_overrides or None,
+            execution_mode=execution_mode,
+        )
         status = workflow_result.status
         message_text = workflow_result.message
         final_context = workflow_result.final_context or {}
         plan_dict = workflow_result.plan or {}
+    except LLMServiceException:
+        # Re-raise LLM errors so callers see the structured error
+        raise
     except HTTPException as he:
         status = "approval_required" if he.status_code == 202 else "error"
         message_text = str(he.detail) if hasattr(he, "detail") else str(he)
@@ -66,7 +87,6 @@ async def _run_workflow_and_update_state(conversation_state, thread_id):
         status = "error"
         message_text = str(e)
         trace.error("Workflow execution failed", exception=e)
-        traceback.print_exc()
 
     # Compute plan hash
     try:
@@ -75,13 +95,17 @@ async def _run_workflow_and_update_state(conversation_state, thread_id):
         plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
     plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
 
-    # Build history entry
+    # Build compact history entry — store only a summary of final_context, not the full blob
+    context_summary = {
+        k: (str(v)[:200] if isinstance(v, (str, list, dict)) else v)
+        for k, v in list(final_context.items())[:10]
+    }
     history_item = {
         "executed_at": now_iso,
         "plan_hash": plan_hash,
         "status": status,
         "message": message_text,
-        "final_context_snapshot": final_context,
+        "final_context_snapshot": context_summary,
     }
 
     # Update execution history
@@ -92,7 +116,9 @@ async def _run_workflow_and_update_state(conversation_state, thread_id):
     conversation_state.executed_count += 1
     conversation_state.last_plan_hash = plan_hash
     conversation_state.last_executed_at = now_iso
-    conversation_state.execution_summary = message_text
+    # Keep the task-specific summary (e.g. "Send email to john@example.com"),
+    # don't overwrite with the generic "Workflow executed successfully"
+    conversation_state.execution_summary = original_execution_summary or message_text
     conversation_state.ready_for_execution = False
 
     # Generate user-friendly summary
@@ -157,6 +183,7 @@ async def create_thread(request: CreateThreadRequest):
         thread_id=None,
         user_id=user_id
     )
+    trace.set_context(request_id=request_id)
 
     logger.info(
         f"Create thread request",
@@ -182,6 +209,7 @@ async def create_thread(request: CreateThreadRequest):
             thread_id=thread_id,
             user_id=user_id
         )
+        trace.set_context(request_id=request_id, thread_id=thread_id)
 
         # Track whether workflow execution happened
         execution_completed = False
@@ -197,7 +225,7 @@ async def create_thread(request: CreateThreadRequest):
 
             try:
                 bot_response, conversation_state = await _run_workflow_and_update_state(
-                    conversation_state, thread_id
+                    conversation_state
                 )
                 execution_completed = True
             finally:
@@ -286,6 +314,7 @@ async def create_thread_with_upload(
         thread_id=None,
         user_id=user_id
     )
+    trace.set_context(request_id=request_id)
 
     logger.info(
         f"Create thread with upload request",
@@ -299,24 +328,11 @@ async def create_thread_with_upload(
     )
 
     try:
-        # Save file to temp location
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp_file:
-            shutil.copyfileobj(file.file, tmp_file)
-            temp_path = tmp_file.name
+        # Store file via temp storage (local or S3 depending on TEMP_STORAGE_BACKEND)
+        uploaded_file = store_temp_file(file.file, file.filename, file.content_type or "application/octet-stream")
 
-        # Get file size
-        file_size = os.path.getsize(temp_path)
-
-        # Build file metadata
-        uploaded_file = {
-            "filename": file.filename,
-            "temp_path": temp_path,
-            "size": file_size,
-            "mime_type": file.content_type or "application/octet-stream"
-        }
-
-        print(f"  → Saved to: {temp_path}")
-        print(f"  → Size: {file_size} bytes")
+        print(f"  → Stored: {uploaded_file.get('temp_path') or uploaded_file.get('s3_key')}")
+        print(f"  → Size: {uploaded_file['size']} bytes")
 
         # Create thread with initial message AND file
         thread_id, conversation_state, bot_response = conversational_agent.thread_service.create_new_thread(
@@ -356,25 +372,17 @@ async def create_thread_with_upload(
 
             try:
                 response_text, updated_state = await _run_workflow_and_update_state(
-                    updated_state, thread_id
+                    updated_state
                 )
             finally:
                 updated_state.executing = False
                 conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
 
-                # Clean up temp file
-                try:
-                    os.unlink(temp_path)
-                    print(f"🗑️ Cleaned up temp file: {temp_path}")
-                except:
-                    pass
-        else:
-            # Not ready yet, clean up temp file
-            try:
-                os.unlink(temp_path)
-                print(f"🗑️ Cleaned up temp file: {temp_path}")
-            except:
-                pass
+                # Clean up temp file after workflow completes
+                delete_temp_file(uploaded_file)
+                print(f"🗑️ Cleaned up uploaded file")
+        # else: Do NOT delete — file persists (local or S3) until workflow
+        # eventually executes.  S3 lifecycle rule handles orphan cleanup.
 
         # Get thread metadata
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
@@ -395,12 +403,9 @@ async def create_thread_with_upload(
         traceback.print_exc()
 
         # Clean up temp file on error
-        try:
-            if 'temp_path' in locals():
-                os.unlink(temp_path)
-                print(f"🗑️ Cleaned up temp file on error: {temp_path}")
-        except:
-            pass
+        if 'uploaded_file' in locals():
+            delete_temp_file(uploaded_file)
+            print(f"🗑️ Cleaned up uploaded file on error")
 
         clear_request_context()
         raise HTTPException(status_code=500, detail=f"Failed to create thread with file: {str(e)}")
@@ -602,6 +607,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
         thread_id=thread_id,
         user_id=user_id
     )
+    trace.set_context(request_id=request_id, thread_id=thread_id)
 
     logger.info(
         f"Thread message received",
@@ -654,7 +660,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
 
             try:
                 response_text, conversation_state = await _run_workflow_and_update_state(
-                    conversation_state, thread_id
+                    conversation_state
                 )
             finally:
                 # Clear executing flag and save
@@ -714,6 +720,7 @@ async def send_message_to_thread_with_upload(
         thread_id=thread_id,
         user_id=user_id
     )
+    trace.set_context(request_id=request_id, thread_id=thread_id)
 
     logger.info(
         f"Thread message with upload received",
@@ -729,38 +736,23 @@ async def send_message_to_thread_with_upload(
     try:
         print(f"\n📎 File upload to thread {thread_id}: {file.filename}")
 
-        # Save file to temp location
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp_file:
-            shutil.copyfileobj(file.file, tmp_file)
-            temp_path = tmp_file.name
+        # Store file via temp storage (local or S3 depending on TEMP_STORAGE_BACKEND)
+        uploaded_file = store_temp_file(file.file, file.filename, file.content_type or "application/octet-stream")
 
-        # Get file size
-        file_size = os.path.getsize(temp_path)
-
-        # Build file metadata
-        uploaded_file = {
-            "filename": file.filename,
-            "temp_path": temp_path,
-            "size": file_size,
-            "mime_type": file.content_type or "application/octet-stream"
-        }
-
-        print(f"  → Saved to: {temp_path}")
-        print(f"  → Size: {file_size} bytes")
+        print(f"  → Stored: {uploaded_file.get('temp_path') or uploaded_file.get('s3_key')}")
+        print(f"  → Size: {uploaded_file['size']} bytes")
 
         # Load current conversation state
         conversation_state = conversational_agent.thread_service.load_thread_from_db(thread_id)
 
         if conversation_state is None:
-            # Clean up temp file
-            os.unlink(temp_path)
+            delete_temp_file(uploaded_file)
             raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
 
         # Check if conversation is currently executing
         if conversation_state.executing:
             print(f"⏳ Thread {thread_id} is executing — rejecting new input")
-            # Clean up temp file
-            os.unlink(temp_path)
+            delete_temp_file(uploaded_file)
             raise HTTPException(
                 status_code=409,
                 detail="Thread is currently executing. Please wait until the operation completes.",
@@ -788,26 +780,18 @@ async def send_message_to_thread_with_upload(
 
             try:
                 response_text, updated_state = await _run_workflow_and_update_state(
-                    updated_state, thread_id
+                    updated_state
                 )
             finally:
                 # Clear executing flag and save
                 updated_state.executing = False
                 conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
 
-                # Clean up temp file
-                try:
-                    os.unlink(temp_path)
-                    print(f"🗑️ Cleaned up temp file: {temp_path}")
-                except:
-                    pass
-        else:
-            # Not ready for execution yet, just clean up temp file
-            try:
-                os.unlink(temp_path)
-                print(f"🗑️ Cleaned up temp file: {temp_path}")
-            except:
-                pass
+                # Clean up temp file after workflow completes
+                delete_temp_file(uploaded_file)
+                print(f"🗑️ Cleaned up uploaded file")
+        # else: Do NOT delete — file persists until workflow eventually executes.
+        # S3 lifecycle rule handles orphan cleanup.
 
         # Get updated metadata
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
@@ -831,12 +815,9 @@ async def send_message_to_thread_with_upload(
         traceback.print_exc()
 
         # Clean up temp file on error
-        try:
-            if 'temp_path' in locals():
-                os.unlink(temp_path)
-                print(f"🗑️ Cleaned up temp file on error: {temp_path}")
-        except:
-            pass
+        if 'uploaded_file' in locals():
+            delete_temp_file(uploaded_file)
+            print(f"🗑️ Cleaned up uploaded file on error")
 
         clear_request_context()
         raise HTTPException(status_code=500, detail=f"Upload processing failed: {str(e)}")
