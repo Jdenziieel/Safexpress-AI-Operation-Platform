@@ -134,13 +134,33 @@ def check_user_quota(user_id: str, estimated_tokens: int = 1000) -> QuotaCheckRe
                 return QuotaCheckResult(allowed=True)
             
             # Other errors - fail open
-            print(f"⚠️ Quota check returned {response.status_code}, allowing operation")
             return QuotaCheckResult(allowed=True)
             
     except Exception as e:
         # Quota service unavailable - fail open
-        print(f"⚠️ Quota service unavailable for check: {e}. Allowing operation.")
         return QuotaCheckResult(allowed=True)
+
+
+# Shared thread-pool for quota reporting — reuses connections across calls,
+# and can be drained at request end via flush_pending_quota_reports().
+# Lambda-safe: the pool is bounded and we drain before returning the response.
+from concurrent.futures import ThreadPoolExecutor as _TPE
+_quota_report_pool = _TPE(max_workers=2)
+_quota_report_futures: list = []
+_quota_report_lock = threading.Lock()
+
+# Reusable httpx client for quota reports (avoids per-call TCP handshake)
+_quota_http_client: Optional[httpx.Client] = None
+_quota_http_lock = threading.Lock()
+
+
+def _get_quota_http_client() -> httpx.Client:
+    global _quota_http_client
+    if _quota_http_client is None:
+        with _quota_http_lock:
+            if _quota_http_client is None:
+                _quota_http_client = httpx.Client(timeout=5.0)
+    return _quota_http_client
 
 
 def _report_quota_usage(
@@ -156,37 +176,56 @@ def _report_quota_usage(
     metadata: Dict[str, Any] = None
 ):
     """
-    Report token usage to the Token Quota Service (synchronous).
-    Uses httpx sync client for simplicity in logging context.
+    Report token usage to the Token Quota Service (non-blocking).
+    Submits to a bounded thread pool so it doesn't block the request path.
+    Call flush_pending_quota_reports() before returning the HTTP response
+    to guarantee delivery (important for Lambda where the environment
+    freezes after response).
     """
     if not QUOTA_ENABLED:
         return
-    
-    try:
-        with httpx.Client(timeout=5.0) as client:
-            response = client.post(
-                f"{QUOTA_SERVICE_URL}/quota/report",
-                json={
-                    "user_id": user_id,
-                    "service": service,
-                    "model": model,
-                    "input_tokens": input_tokens,
-                    "output_tokens": output_tokens,
-                    "operation": operation,
-                    "cost_usd": cost_usd,
-                    "request_id": request_id,
-                    "session_id": session_id,
-                    "metadata": metadata
-                }
+
+    payload = {
+        "user_id": user_id,
+        "service": service,
+        "model": model,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "operation": operation,
+        "cost_usd": cost_usd,
+        "request_id": request_id,
+        "session_id": session_id,
+        "metadata": metadata
+    }
+
+    def _send():
+        try:
+            _get_quota_http_client().post(
+                f"{QUOTA_SERVICE_URL}/quota/report", json=payload
             )
-            if response.status_code == 200:
-                print(f"📊 Reported {input_tokens + output_tokens} tokens to quota service for user {user_id}")
-            elif response.status_code == 404:
-                print(f"⚠️ User {user_id} not found in quota service")
-            else:
-                print(f"⚠️ Quota report failed with status {response.status_code}")
-    except Exception as e:
-        print(f"⚠️ Failed to report quota usage: {e}")
+        except Exception:
+            pass
+
+    future = _quota_report_pool.submit(_send)
+    with _quota_report_lock:
+        _quota_report_futures.append(future)
+
+
+def flush_pending_quota_reports(timeout: float = 3.0):
+    """
+    Wait for all in-flight quota reports to finish (up to timeout seconds).
+    Call this once at the end of each request cycle (in request_summary or
+    clear_request_context) to ensure reports land before Lambda freezes.
+    """
+    with _quota_report_lock:
+        pending = list(_quota_report_futures)
+        _quota_report_futures.clear()
+
+    for f in pending:
+        try:
+            f.result(timeout=timeout)
+        except Exception:
+            pass
 
 # ============================================================================
 # REQUEST CONTEXT MANAGER
@@ -294,13 +333,14 @@ def set_request_context(
     _request_context.token_summary = RequestTokenSummary()
     _request_context.start_time = time.time()
     
-    print(f"[CONTEXT SET] request_id={request_id}, user_id={user_id}, thread_id={thread_id}")
-    
     return request_id
 
 
 def clear_request_context():
     """Clear request context after request completes (async-safe)"""
+    # Drain any pending quota reports before the context disappears
+    flush_pending_quota_reports(timeout=3.0)
+
     # Clear context vars
     _request_id_var.set(None)
     _conversation_id_var.set(None)
@@ -308,7 +348,7 @@ def clear_request_context():
     _user_id_var.set(None)
     _token_summary_var.set(None)
     _start_time_var.set(None)
-    
+
     # Clear thread-local for compatibility
     _request_context.request_id = None
     _request_context.conversation_id = None
@@ -460,7 +500,8 @@ class StructuredLogger:
         tier: Optional[str] = None,
         prompt_summary: Optional[str] = None,
         success: bool = True,
-        error: Optional[str] = None
+        error: Optional[str] = None,
+        cached_tokens: int = 0
     ):
         """
         Log LLM call with token usage.
@@ -475,16 +516,23 @@ class StructuredLogger:
             prompt_summary: Brief summary of prompt (truncated)
             success: Whether call succeeded
             error: Error message if failed
+            cached_tokens: Number of prompt tokens served from OpenAI cache (50% discount)
         """
-        # Calculate cost
+        # Calculate cost — cached prompt tokens get 50% discount from OpenAI
         pricing = MODEL_PRICING.get(model, MODEL_PRICING["default"])
-        cost = (input_tokens * pricing["input"] / 1000) + (output_tokens * pricing["output"] / 1000)
+        non_cached_input = input_tokens - cached_tokens
+        cost = (
+            (non_cached_input * pricing["input"] / 1000)
+            + (cached_tokens * pricing["input"] / 1000 * 0.5)
+            + (output_tokens * pricing["output"] / 1000)
+        )
         
         # Create token usage record
         usage = TokenUsage(
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             total_tokens=input_tokens + output_tokens,
+            cached_tokens=cached_tokens,
             model=model,
             estimated_cost=cost,
             call_duration_ms=duration_ms
@@ -500,9 +548,6 @@ class StructuredLogger:
         request_id = get_current_request_id()
         conversation_id = get_current_conversation_id()
         
-        # DEBUG: Print token reporting context
-        print(f"[TOKEN REPORTING] user_id={user_id}, success={success}, operation={operation}, tokens={input_tokens + output_tokens}")
-        
         if user_id and success:
             try:
                 _report_quota_usage(
@@ -514,7 +559,8 @@ class StructuredLogger:
                     operation=operation,
                     cost_usd=cost,
                     request_id=request_id,
-                    session_id=conversation_id
+                    session_id=conversation_id,
+                    metadata={"cached_tokens": cached_tokens} if cached_tokens > 0 else None
                 )
             except Exception as e:
                 print(f"⚠️ Failed to report quota usage: {e}")
@@ -530,6 +576,7 @@ class StructuredLogger:
             "tier": tier,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
+            "cached_tokens": cached_tokens,
             "total_tokens": input_tokens + output_tokens,
             "estimated_cost_usd": round(cost, 6),
             "duration_ms": round(duration_ms, 2),
@@ -660,6 +707,7 @@ class TokenTracker:
         error_msg = None
         input_tokens = 0
         output_tokens = 0
+        cached_tokens = 0
         
         try:
             # Make the actual LLM call
@@ -674,10 +722,13 @@ class TokenTracker:
                 token_usage = metadata.get('token_usage', {})
                 input_tokens = token_usage.get('prompt_tokens', 0)
                 output_tokens = token_usage.get('completion_tokens', 0)
+                # OpenAI returns cached_tokens inside prompt_tokens_details
+                prompt_details = token_usage.get('prompt_tokens_details', {})
+                if prompt_details:
+                    cached_tokens = prompt_details.get('cached_tokens', 0)
             
             # Fallback: estimate tokens if not provided
             if input_tokens == 0:
-                # Rough estimate: 4 chars per token
                 total_input = sum(len(str(m.get('content', ''))) for m in messages)
                 input_tokens = total_input // 4
             
@@ -711,7 +762,8 @@ class TokenTracker:
                 tier=tier,
                 prompt_summary=prompt_summary,
                 success=success,
-                error=error_msg
+                error=error_msg,
+                cached_tokens=cached_tokens
             )
 
 

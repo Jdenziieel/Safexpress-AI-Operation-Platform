@@ -5,6 +5,7 @@ venv/
 authserver/
 backup/
 # Capstone/
+CAPSTONEPROJECT/
 calendar-agent/
 gdocs-agent/
 gdrive-agent/

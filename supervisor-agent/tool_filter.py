@@ -18,6 +18,36 @@ from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_erro
 from logging_config import utils_logger as logger
 
 
+_cached_system_prompt: Optional[str] = None
+
+def _get_tool_filter_system_prompt() -> str:
+    """Build and cache the system prompt once — agent capabilities are static
+    within a deployment, so the system prompt is identical across calls."""
+    global _cached_system_prompt
+    if _cached_system_prompt is not None:
+        return _cached_system_prompt
+
+    from agent_capabilities_v3 import agent_capabilities
+    compact_tools = {
+        agent: {
+            tool_name: tool_data["description"][:80]
+            for tool_name, tool_data in agent_data["tools"].items()
+        }
+        for agent, agent_data in agent_capabilities.items()
+    }
+
+    _cached_system_prompt = f"""Identify which agents and tools are needed for a user request.
+
+Available tools by agent:
+{json.dumps(compact_tools, indent=2)}
+
+Return ONLY a JSON object mapping agent names to arrays of tool names.
+Include ONLY the agents and tools that will actually be used. Less is better.
+Example: {{"gmail_agent": ["search_emails", "reply_to_email"], "calendar_agent": ["create_event"]}}"""
+
+    return _cached_system_prompt
+
+
 def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
     """
     Single cheap LLM call to identify both relevant agents AND their tools.
@@ -31,24 +61,8 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
     """
     from agent_capabilities_v3 import agent_capabilities
 
-    # Build compact tool list: agent -> {tool: short description}
-    compact_tools = {}
-    for agent, agent_data in agent_capabilities.items():
-        compact_tools[agent] = {
-            tool_name: tool_data["description"][:80]
-            for tool_name, tool_data in agent_data["tools"].items()
-        }
-
-    prompt = f"""Given this user request, identify which agents and tools are needed.
-
-User: {user_input}
-
-Available tools by agent:
-{json.dumps(compact_tools, indent=2)}
-
-Return ONLY a JSON object mapping agent names to arrays of tool names.
-Include ONLY the agents and tools that will actually be used. Less is better.
-Example: {{"gmail_agent": ["search_emails", "reply_to_email"], "calendar_agent": ["create_event"]}}"""
+    system_prompt = _get_tool_filter_system_prompt()
+    user_prompt = user_input
 
     classifier_llm = ChatOpenAI(
         model=CLASSIFIER_MODEL, temperature=0, openai_api_key=OPENAI_API_KEY
@@ -56,24 +70,31 @@ Example: {{"gmail_agent": ["search_emails", "reply_to_email"], "calendar_agent":
 
     try:
         start_time = time.time()
-        response = classifier_llm.invoke([{"role": "user", "content": prompt}])
+        response = classifier_llm.invoke([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ])
         duration_ms = (time.time() - start_time) * 1000
 
         # Extract token usage
+        total_prompt_len = len(system_prompt) + len(user_prompt)
         input_tokens = 0
         output_tokens = 0
+        cached_tokens = 0
         if hasattr(response, 'response_metadata'):
             token_usage = response.response_metadata.get('token_usage', {})
-            input_tokens = token_usage.get('prompt_tokens', len(prompt) // 4)
+            input_tokens = token_usage.get('prompt_tokens', total_prompt_len // 4)
             output_tokens = token_usage.get('completion_tokens', len(response.content) // 4)
+            cached_tokens = token_usage.get('prompt_tokens_details', {}).get('cached_tokens', 0)
         else:
-            input_tokens = len(prompt) // 4
+            input_tokens = total_prompt_len // 4
             output_tokens = len(response.content) // 4
 
         logger.llm_call(
             model=CLASSIFIER_MODEL,
             operation="agent_tool_classification",
             input_tokens=input_tokens,
+            cached_tokens=cached_tokens,
             output_tokens=output_tokens,
             duration_ms=duration_ms,
             tier="classifier",

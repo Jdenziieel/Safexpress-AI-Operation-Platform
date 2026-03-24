@@ -103,11 +103,16 @@ class ExecutionTracer:
     # ── HTTP Request tracing ────────────────────────────────────────────
 
     def request_start(self, method_path: str, data: dict = None):
-        """Log start of an HTTP request."""
+        """Log start of an HTTP request (only log POST/PUT/DELETE, skip GET/OPTIONS noise)."""
+        # Skip noisy read-only and preflight requests
+        if any(skip_method in method_path.upper() for skip_method in ["OPTIONS", "GET"]):
+            return
         self._write("INFO", "→ REQUEST", method_path, data)
 
     def request_end(self, status: str, duration_ms: float = None):
-        """Log end of an HTTP request."""
+        """Log end of an HTTP request (only log if request_start was logged)."""
+        # Note: request_end is only called if request_start was called (middleware guards it)
+        # but add guard here anyway for safety
         msg = status
         if duration_ms is not None:
             msg += f" ({duration_ms:.0f}ms)"

@@ -9,7 +9,6 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from datetime import datetime, timedelta, timezone
 import asyncio
 import json
-import hashlib
 import os
 import tempfile
 import shutil
@@ -32,6 +31,8 @@ from supervisor_agent import (
 )
 from models.models import CreateThreadRequest
 from routes.workflow import run_workflow
+from routes.actions import execute_single_action
+from checks.tier0_checks import _build_rich_approval_message
 from execution_logger import trace
 from llm_error_handler import LLMServiceException
 from s3_temp_storage import store_temp_file, delete_temp_file
@@ -39,9 +40,221 @@ from s3_temp_storage import store_temp_file, delete_temp_file
 router = APIRouter()
 
 
+async def _resume_remaining_steps(conversation_state, previous_result, response_prefix, thread_id):
+    """
+    Resume execution of remaining steps after an approved action.
+    
+    Rebuilds the variable context from the previous result and the saved workflow_context,
+    then re-invokes the orchestrator for remaining steps.
+    
+    Returns (response_text, updated_conversation_state).
+    """
+    remaining = conversation_state.remaining_steps
+    if not remaining:
+        return response_prefix + "\nIs there anything else you'd like to do?", conversation_state
+    
+    # Rebuild context — merge saved workflow_context with the result from the approved action
+    variable_context = conversation_state.workflow_context or {}
+    
+    # Add the result from the just-executed action to context
+    if previous_result and isinstance(previous_result, dict):
+        agent_result = previous_result.get("result", previous_result)
+        fields_to_add = {k: v for k, v in agent_result.items() if k not in ("success", "error")}
+        variable_context.update(fields_to_add)
+    
+    # Build a mini plan from remaining steps and run workflow orchestrator directly
+    from supervisor_agent import orchestrator_node
+    from datetime import datetime as dt
+    
+    mini_plan = {"steps": remaining}
+    mini_state = {
+        "input": "",
+        "plan": mini_plan,
+        "context": variable_context,
+        "final_context": {},
+        "execution_mode": "standard",
+        "results": [],
+        "error": "",
+        "stopped_at_step": 0,
+        "react_history": [],
+        "react_iteration": 0,
+        "react_done": False,
+    }
+    
+    try:
+        result_state = await asyncio.to_thread(orchestrator_node, mini_state)
+        
+        final_context = result_state.get("final_context", {})
+        results = final_context.get("results", [])
+        
+        # Check if the resumed execution also paused for approval
+        if final_context.get("paused_for_approval"):
+            pending_action = final_context.get("pending_action", {})
+            pending_action_id = final_context.get("pending_action_id", "")
+            new_remaining = final_context.get("remaining_steps", [])
+            
+            conversation_state.workflow_paused = True
+            conversation_state.pending_actions = [{
+                "action_id": pending_action_id,
+                **pending_action,
+            }]
+            conversation_state.remaining_steps = new_remaining
+            # Update workflow context for next resumption
+            ctx = {k: v for k, v in final_context.items()
+                   if k not in ("paused_for_approval", "pending_action", "pending_action_id", "remaining_steps", "results")}
+            conversation_state.workflow_context = ctx
+            
+            # Build approval message for the next step
+            approval_msg = _build_rich_approval_message(conversation_state.pending_actions[0])
+            
+            # Add completed steps from this resumption
+            completed = [r for r in results if r.get("status") == "success"]
+            if completed:
+                steps_summary = "\n".join(f"  ✅ Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
+                response_prefix += f"\n{steps_summary}\n"
+            
+            return response_prefix + "\n\n" + approval_msg, conversation_state
+        
+        # All remaining steps completed
+        conversation_state.remaining_steps = []
+        conversation_state.workflow_context = None
+        
+        # Build rich summary from results with actual data
+        completed = [r for r in results if r.get("status") == "success"]
+        errors = [r for r in results if r.get("status") == "error"]
+        
+        if completed:
+            for r in completed:
+                desc = r.get("description", r.get("tool", ""))
+                response_prefix += f"\n  ✅ {desc}"
+        
+        if errors:
+            for r in errors:
+                desc = r.get("description", r.get("tool", ""))
+                err = r.get("error", "Unknown error")
+                response_prefix += f"\n  ❌ {desc}: {err}"
+        
+        response_prefix += "\n\nAll steps completed! Is there anything else you'd like to do?"
+        
+        return response_prefix, conversation_state
+        
+    except Exception as e:
+        print(f"❌ Error resuming remaining steps: {str(e)}")
+        conversation_state.remaining_steps = []
+        conversation_state.workflow_context = None
+        return response_prefix + f"\n\n❌ Error continuing workflow: {str(e)}", conversation_state
+
+
+# --- REACT FLOW DISABLED — uncomment to re-enable ---
+# async def _resume_react_workflow(conversation_state, previous_result, response_prefix, thread_id):
+#     """
+#     Resume a ReAct workflow after an approved action.
+#     
+#     Re-invokes the react_workflow with accumulated history so the planner can
+#     observe the approved action's result and decide the next step.
+#     
+#     Returns (response_text, updated_conversation_state).
+#     """
+#     saved_ctx = conversation_state.workflow_context or {}
+#     react_history = list(saved_ctx.get("_react_history", []))
+#     react_iteration = saved_ctx.get("_react_iteration", 0)
+#     supervisor_input = saved_ctx.get("_supervisor_input", "")
+#     
+#     # Build observation for the just-approved action
+#     pending = conversation_state.pending_actions[0] if conversation_state.pending_actions else {}
+#     approved_obs = {
+#         "agent": pending.get("agent", "unknown"),
+#         "tool": pending.get("tool", "unknown"),
+#         "description": pending.get("description", ""),
+#         "status": "success" if previous_result.get("success") else "error",
+#         "output_summary": str(previous_result)[:300],
+#         "error": previous_result.get("error"),
+#     }
+#     react_history.append(approved_obs)
+#     
+#     # Rebuild context (strip internal keys)
+#     variable_context = {k: v for k, v in saved_ctx.items() if not k.startswith("_")}
+#     
+#     # Add result from the approved action to context
+#     if previous_result and isinstance(previous_result, dict):
+#         agent_result = previous_result.get("result", previous_result)
+#         fields_to_add = {k: v for k, v in agent_result.items() if k not in ("success", "error")}
+#         variable_context.update(fields_to_add)
+#     
+#     # Clear pending state before re-invoking
+#     conversation_state.pending_actions = []
+#     conversation_state.workflow_paused = False
+#     
+#     from supervisor_agent import react_workflow as react_wf
+#     from datetime import datetime as dt
+#     from models.models import SharedState
+#     
+#     initial_state = {
+#         "input": supervisor_input,
+#         "plan": {"steps": []},  # Empty — planner will generate next step
+#         "context": variable_context,
+#         "final_context": {},
+#         "execution_mode": "react",
+#         "results": [],  # Results from prev iteration already in react_history
+#         "error": "",
+#         "stopped_at_step": 0,
+#         "react_history": react_history,
+#         "react_iteration": react_iteration,
+#         "react_done": False,
+#     }
+#     
+#     try:
+#         result_state = await asyncio.to_thread(react_wf.invoke, initial_state)
+#         
+#         final_context = result_state.get("final_context", {})
+#         
+#         # Check if the resumed react workflow also paused for approval
+#         if final_context.get("paused_for_approval"):
+#             new_pending = final_context.get("pending_action", {})
+#             new_pending_id = final_context.get("pending_action_id", "")
+#             
+#             conversation_state.workflow_paused = True
+#             conversation_state.pending_actions = [{"action_id": new_pending_id, **new_pending}]
+#             conversation_state.remaining_steps = []
+#             
+#             # Save updated react state for next resumption
+#             ctx = {k: v for k, v in final_context.items()
+#                    if k not in ("paused_for_approval", "pending_action", "pending_action_id", "results")}
+#             ctx["_execution_mode"] = "react"
+#             ctx["_react_history"] = result_state.get("react_history", react_history)
+#             ctx["_react_iteration"] = result_state.get("react_iteration", react_iteration + 1)
+#             ctx["_supervisor_input"] = supervisor_input
+#             conversation_state.workflow_context = ctx
+#             
+#             approval_msg = _build_rich_approval_message(conversation_state.pending_actions[0])
+#             return response_prefix + "\n\n" + approval_msg, conversation_state
+#         
+#         # React workflow completed
+#         conversation_state.remaining_steps = []
+#         conversation_state.workflow_context = None
+#         
+#         react_summary = final_context.get("react_summary", "Task completed.")
+#         response_prefix += f"\n\n{react_summary}"
+#         response_prefix += "\n\nIs there anything else you'd like to do?"
+#         
+#         return response_prefix, conversation_state
+#         
+#     except Exception as e:
+#         print(f"❌ Error resuming ReAct workflow: {str(e)}")
+#         conversation_state.remaining_steps = []
+#         conversation_state.workflow_context = None
+#         return response_prefix + f"\n\n❌ Error continuing workflow: {str(e)}", conversation_state
+# --- END REACT FLOW DISABLED ---
+
+
 async def _run_workflow_and_update_state(conversation_state):
     """
     Shared helper: execute workflow, update execution history, generate summary.
+    
+    Handles two outcomes:
+    1. Workflow completes fully → generate summary, update history
+    2. Workflow pauses for approval → save pending state, return approval message
+    
     Returns (response_text, updated_conversation_state).
     """
     # Preserve the task-specific summary before workflow overwrites it
@@ -52,11 +265,16 @@ async def _run_workflow_and_update_state(conversation_state):
 
     trace.workflow_start(supervisor_input)
 
-    # Build context overrides — inject uploaded_file so orchestrator can access it
+    # Build context overrides — inject uploaded_file and cached tool filter
     context_overrides = {}
     uploaded_file = conversation_state.extracted_info.get("uploaded_file")
     if uploaded_file:
         context_overrides["uploaded_file"] = uploaded_file
+
+    # Pass cached tool filter from Tier 1 so supervisor skips the redundant LLM call
+    cached_tool_filter = conversation_state.extracted_info.get("_cached_tool_filter")
+    if cached_tool_filter:
+        context_overrides["_cached_tool_filter"] = cached_tool_filter
 
     # Determine execution mode from conversation state
     execution_mode = getattr(conversation_state, 'execution_mode', 'standard')
@@ -88,37 +306,63 @@ async def _run_workflow_and_update_state(conversation_state):
         message_text = str(e)
         trace.error("Workflow execution failed", exception=e)
 
-    # Compute plan hash
-    try:
-        plan_json = json.dumps(plan_dict, sort_keys=True)
-    except Exception:
-        plan_json = json.dumps({"input": supervisor_input}, sort_keys=True)
-    plan_hash = hashlib.sha256(plan_json.encode("utf-8")).hexdigest()
+    # === CHECK: Did workflow pause for approval? ===
+    if status == "paused_for_approval" and final_context.get("paused_for_approval"):
+        trace.step("workflow_paused", "Workflow paused — action requires chat approval")
+        
+        pending_action = final_context.get("pending_action", {})
+        pending_action_id = final_context.get("pending_action_id", "")
+        remaining_steps = final_context.get("remaining_steps", [])
+        
+        # Save pending state on ConversationState
+        conversation_state.workflow_paused = True
+        conversation_state.pending_actions = [{
+            "action_id": pending_action_id,
+            **pending_action,
+        }]
+        conversation_state.remaining_steps = remaining_steps
+        # Save variable_context for resumption (strip large blobs)
+        workflow_ctx = {k: v for k, v in final_context.items() 
+                       if k not in ("paused_for_approval", "pending_action", "pending_action_id", "remaining_steps", "results")}
+        workflow_ctx["_execution_mode"] = execution_mode
+        # ReAct state preservation disabled — uncomment to re-enable
+        # if execution_mode == "react":
+        #     workflow_ctx["_react_history"] = final_context.get("react_history", [])
+        #     workflow_ctx["_react_iteration"] = final_context.get("react_iteration", 0)
+        #     workflow_ctx["_supervisor_input"] = supervisor_input
+        conversation_state.workflow_context = workflow_ctx
+        conversation_state.ready_for_execution = False
+        
+        # Build rich approval message
+        approval_message = _build_rich_approval_message(conversation_state.pending_actions[0])
+        
+        # Add completed steps summary if any
+        results = final_context.get("results", [])
+        completed = [r for r in results if r.get("status") == "success"]
+        if completed:
+            steps_summary = "\n".join(f"  ✅ Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
+            approval_message = f"**Completed so far:**\n{steps_summary}\n\n{approval_message}"
+        
+        return approval_message, conversation_state
 
-    # Build compact history entry — store only a summary of final_context, not the full blob
-    context_summary = {
-        k: (str(v)[:200] if isinstance(v, (str, list, dict)) else v)
-        for k, v in list(final_context.items())[:10]
-    }
-    history_item = {
+    # === Normal completion path ===
+
+    # Append lean history entry (for future DB observability)
+    conversation_state.execution_history.append({
         "executed_at": now_iso,
-        "plan_hash": plan_hash,
         "status": status,
         "message": message_text,
-        "final_context_snapshot": context_summary,
-    }
-
-    # Update execution history
-    conversation_state.execution_history.append(history_item)
+    })
     if len(conversation_state.execution_history) > 50:
         conversation_state.execution_history = conversation_state.execution_history[-50:]
 
-    conversation_state.executed_count += 1
-    conversation_state.last_plan_hash = plan_hash
+    conversation_state.has_executed = True
     conversation_state.last_executed_at = now_iso
-    # Keep the task-specific summary (e.g. "Send email to john@example.com"),
-    # don't overwrite with the generic "Workflow executed successfully"
-    conversation_state.execution_summary = original_execution_summary or message_text
+    conversation_state.last_execution_status = status
+    conversation_state.last_execution_message = message_text
+    # Preserve the task-specific summary; never overwrite with generic workflow message
+    if original_execution_summary:
+        conversation_state.execution_summary = original_execution_summary
     conversation_state.ready_for_execution = False
 
     # Generate user-friendly summary
@@ -131,12 +375,9 @@ async def _run_workflow_and_update_state(conversation_state):
 
     return friendly_summary, conversation_state
 
-
 # ============================================================
 # THREAD MANAGEMENT ENDPOINTS
 # ============================================================
-
-
 @router.post("/threads")
 async def create_thread(request: CreateThreadRequest):
     """
@@ -209,7 +450,7 @@ async def create_thread(request: CreateThreadRequest):
             thread_id=thread_id,
             user_id=user_id
         )
-        trace.set_context(request_id=request_id, thread_id=thread_id)
+        # trace.set_context(request_id=request_id, thread_id=thread_id)
 
         # Track whether workflow execution happened
         execution_completed = False
@@ -409,7 +650,6 @@ async def create_thread_with_upload(
 
         clear_request_context()
         raise HTTPException(status_code=500, detail=f"Failed to create thread with file: {str(e)}")
-
 
 # NOTE: /threads/search MUST be defined BEFORE /threads/{thread_id}
 # otherwise FastAPI matches "search" as a thread_id path parameter.
@@ -641,16 +881,173 @@ async def send_message_to_thread(thread_id: str, request: dict):
                 detail="Thread is currently executing. Please wait until the operation completes.",
             )
 
-        # Continue the thread
-        response_text, conversation_state = conversational_agent.thread_service.continue_thread(
-            thread_id=thread_id,
-            new_message=message
+        # Process the message using the already-loaded state (avoids a redundant DB load)
+        response_text, conversation_state = conversational_agent.process_message(
+            user_message=message,
+            conversation_state=conversation_state,
+            state_id=thread_id,
+            auto_save=True
         )
 
         trace.bot_response(response_text, conversation_state.ready_for_execution)
 
+        # === HANDLE PENDING ACTION APPROVAL/REJECTION (chat-based) ===
+        # Check by looking at the conversation analysis result in extracted_info
+        pending_decision = conversation_state.extracted_info.get("decision")
+        pending_action_id = conversation_state.extracted_info.get("action_id")
+        
+        if pending_decision == "approve" and pending_action_id and conversation_state.workflow_paused:
+            # User approved the pending action — execute it
+            print(f"✅ Chat-based approval for action {pending_action_id}")
+            trace.step("chat_approval", f"Executing approved action: {pending_action_id}")
+            
+            pending = conversation_state.pending_actions[0] if conversation_state.pending_actions else {}
+            
+            try:
+                # Mark as executing
+                conversation_state.executing = True
+                conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+                
+                # Execute the approved action
+                step_info = {
+                    "agent": pending.get("agent"),
+                    "tool": pending.get("tool"),
+                    "inputs": pending.get("inputs", {}),
+                }
+                result = await asyncio.to_thread(execute_single_action, step_info)
+                
+                print(f"✅ Action executed: {result.get('success', False)}")
+                
+                # Clear pending state
+                conversation_state.pending_actions = []
+                conversation_state.workflow_paused = False
+                
+                # Remove from cache/DB so it doesn't linger after successful execution
+                from supervisor_agent import remove_pending_action
+                try:
+                    remove_pending_action(pending_action_id)
+                except Exception:
+                    pass
+                
+                # Clean up extracted_info decision fields
+                conversation_state.extracted_info.pop("action_id", None)
+                conversation_state.extracted_info.pop("decision", None)
+                
+                if result.get("success"):
+                    description = pending.get("description", "Action")
+                    tool_name = pending.get("tool", "unknown")
+                    inputs = pending.get("inputs", {})
+                    response_text = f"✅ **Done — {description}**\n\n"
+
+                    # Build a concise summary from actual inputs/results
+                    detail_parts = []
+                    action_result = result.get("result", {}) if isinstance(result.get("result"), dict) else {}
+                    if tool_name in ("send_draft_email", "send_email_with_attachment"):
+                        if inputs.get("to"):
+                            detail_parts.append(f"📧 Sent to **{inputs['to']}**")
+                        if inputs.get("subject"):
+                            detail_parts.append(f"Subject: **{inputs['subject']}**")
+                    elif tool_name == "reply_to_email":
+                        detail_parts.append("↩️ Reply sent")
+                    elif tool_name == "create_draft_email":
+                        if inputs.get("to"):
+                            detail_parts.append(f"📝 Draft created for **{inputs['to']}**")
+                    elif tool_name in ("create_doc", "add_text"):
+                        title = inputs.get("title") or action_result.get("title", "")
+                        if title:
+                            detail_parts.append(f"📄 Document: **{title}**")
+                    elif tool_name == "create_event":
+                        summary = inputs.get("summary") or inputs.get("title", "")
+                        if summary:
+                            detail_parts.append(f"📅 Event: **{summary}**")
+                    elif tool_name == "share_file":
+                        if inputs.get("email"):
+                            detail_parts.append(f"🔗 Shared with **{inputs['email']}**")
+                    elif tool_name in ("delete_email", "delete_file", "delete_event"):
+                        detail_parts.append("🗑️ Deleted successfully")
+                    elif tool_name == "upload_file":
+                        fname = inputs.get("filename") or inputs.get("file_name", "")
+                        if fname:
+                            detail_parts.append(f"📤 Uploaded **{fname}**")
+
+                    if detail_parts:
+                        response_text += "\n".join(f"- {p}" for p in detail_parts) + "\n"
+                    
+                    # Check remaining steps
+                    # NOTE: ReAct continuation disabled — uncomment to re-enable
+                    # saved_ctx = conversation_state.workflow_context or {}
+                    # is_react = saved_ctx.get("_execution_mode") == "react"
+                    # if is_react:
+                    #     response_text += f"\n⏳ Continuing ReAct workflow...\n"
+                    #     response_text, conversation_state = await _resume_react_workflow(
+                    #         conversation_state, result, response_text, thread_id
+                    #     )
+                    # elif remaining:
+                    remaining = conversation_state.remaining_steps
+                    
+                    if remaining:
+                        response_text += f"\n⏳ Continuing with {len(remaining)} remaining step(s)...\n"
+                        # Resume remaining steps (standard mode)
+                        response_text, conversation_state = await _resume_remaining_steps(
+                            conversation_state, result, response_text, thread_id
+                        )
+                    else:
+                        response_text += "\nIs there anything else you'd like to do?"
+                    
+                    # Update execution metadata
+                    now_iso = datetime.now(timezone.utc).isoformat()
+                    conversation_state.execution_history.append({
+                        "executed_at": now_iso,
+                        "status": "success",
+                        "message": f"Approved and executed: {description}",
+                    })
+                    conversation_state.has_executed = True
+                    conversation_state.last_executed_at = now_iso
+                    conversation_state.last_execution_status = "success"
+                    conversation_state.last_execution_message = f"Approved and executed: {description}"
+                    conversation_state.workflow_context = None
+                else:
+                    error_msg = result.get("error", "Unknown error")
+                    response_text = f"❌ **Action Failed**\n\n{error_msg}\n\nWould you like to try again?"
+                    conversation_state.remaining_steps = []
+                    conversation_state.workflow_context = None
+                
+            except Exception as e:
+                print(f"❌ Error executing approved action: {str(e)}")
+                response_text = f"❌ **Execution Error**\n\n{str(e)}\n\nWould you like to try again?"
+                conversation_state.pending_actions = []
+                conversation_state.workflow_paused = False
+                conversation_state.remaining_steps = []
+                conversation_state.workflow_context = None
+            finally:
+                conversation_state.executing = False
+                conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+        
+        elif pending_decision == "reject" and pending_action_id and conversation_state.workflow_paused:
+            # User rejected — response_text already set by Tier 0 check
+            print(f"🚫 Chat-based rejection for action {pending_action_id}")
+            
+            # Clear all pending state
+            conversation_state.pending_actions = []
+            conversation_state.workflow_paused = False
+            conversation_state.remaining_steps = []
+            conversation_state.workflow_context = None
+            
+            # Clean up extracted_info decision fields
+            conversation_state.extracted_info.pop("action_id", None)
+            conversation_state.extracted_info.pop("decision", None)
+            
+            # Remove from pending actions cache
+            from supervisor_agent import remove_pending_action
+            try:
+                remove_pending_action(pending_action_id)
+            except Exception:
+                pass
+            
+            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+
         # If ready for execution, execute immediately
-        if conversation_state.ready_for_execution:
+        elif conversation_state.ready_for_execution:
             print(f"🚀 Thread {thread_id} ready - executing workflow...")
             trace.decision("ready_for_execution", "YES — executing workflow")
 
@@ -711,9 +1108,33 @@ async def send_message_to_thread_with_upload(
         Bot response and updated thread metadata
     """
 
+    # === QUOTA CHECK: Verify user has quota before processing ===
+    user_id = thread_id.split('_')[0] if '_' in thread_id else None
+    if user_id:
+        quota_result = check_user_quota(user_id, estimated_tokens=2000)
+        if not quota_result.allowed:
+            error_message = quota_result.error or "Quota check failed"
+            if quota_result.user_deactivated:
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "error": "account_deactivated",
+                        "message": error_message,
+                        "user_message": "Your account has been deactivated. Please contact an administrator."
+                    }
+                )
+            else:
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error": "quota_exceeded",
+                        "message": error_message,
+                        "user_message": error_message
+                    }
+                )
+
     # === REQUEST CONTEXT: Initialize logging context for this thread ===
     conversation_id = thread_id.split('_')[-1] if '_' in thread_id else thread_id
-    user_id = thread_id.split('_')[0] if '_' in thread_id else None
     request_id = set_request_context(
         request_id=generate_request_id(),
         conversation_id=conversation_id,
@@ -872,33 +1293,28 @@ async def update_thread(thread_id: str, request: dict):
 
 
 @router.delete("/threads/{thread_id}")
-async def delete_thread(thread_id: str, hard_delete: bool = False):
+async def delete_thread(thread_id: str):
     """
-    Delete a thread (archive by default, hard delete if specified).
+    Soft-delete (archive) a thread.
 
     Args:
         thread_id: Thread identifier
-        hard_delete: If true, permanently delete. Otherwise, archive.
 
     Returns:
         Success message
     """
-
     try:
         success = conversational_agent.thread_service.delete_thread(
             thread_id=thread_id,
-            hard_delete=hard_delete
+            hard_delete=False
         )
 
         if not success:
             raise HTTPException(status_code=404, detail=f"Thread {thread_id} not found")
 
-        action = "deleted permanently" if hard_delete else "archived"
-
         return {
             "thread_id": thread_id,
-            "message": f"Thread {action} successfully",
-            "hard_delete": hard_delete
+            "message": "Thread archived successfully",
         }
 
     except HTTPException:

@@ -105,12 +105,19 @@ class ConversationState(BaseModel):
     ready_for_execution: bool = False
     execution_summary: Optional[str] = None  # Human-readable summary
     execution_mode: str = "standard"  # "standard" or "react"
-    # Execution metadata (added to support supervisor execution history)
-    execution_history: List[Dict[str, Any]] = Field(default_factory=list)
-    executed_count: int = 0
-    last_plan_hash: Optional[str] = None
+    # Execution metadata
+    execution_history: List[Dict[str, Any]] = Field(default_factory=list)  # For future DB observability
+    has_executed: bool = False
     last_executed_at: Optional[str] = None
+    last_execution_status: Optional[str] = None   # "success" | "error" | etc.
+    last_execution_message: Optional[str] = None   # Human-readable result/error
     executing: bool = False
+    
+    # Pending action approval state (chat-based approval flow)
+    pending_actions: List[Dict[str, Any]] = Field(default_factory=list)
+    workflow_paused: bool = False
+    remaining_steps: List[Dict[str, Any]] = Field(default_factory=list)
+    workflow_context: Optional[Dict[str, Any]] = None  # Saved variable_context for resumption
     
     # NEW: Memory manager state (for persistence)
     memory_state: Optional[Dict[str, Any]] = None
@@ -301,6 +308,7 @@ class TokenUsage:
     input_tokens: int = 0
     output_tokens: int = 0
     total_tokens: int = 0
+    cached_tokens: int = 0
     model: str = ""
     estimated_cost: float = 0.0
     call_duration_ms: float = 0.0
@@ -312,30 +320,35 @@ class RequestTokenSummary:
     total_input_tokens: int = 0
     total_output_tokens: int = 0
     total_tokens: int = 0
+    total_cached_tokens: int = 0
     total_estimated_cost: float = 0.0
     llm_calls: List[TokenUsage] = field(default_factory=list)
-    
+
     def add_call(self, usage: TokenUsage):
         """Add a single LLM call's usage to the summary"""
         self.total_input_tokens += usage.input_tokens
         self.total_output_tokens += usage.output_tokens
         self.total_tokens += usage.total_tokens
+        self.total_cached_tokens += usage.cached_tokens
         self.total_estimated_cost += usage.estimated_cost
         self.llm_calls.append(usage)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for logging"""
         return {
             "total_input_tokens": self.total_input_tokens,
             "total_output_tokens": self.total_output_tokens,
             "total_tokens": self.total_tokens,
+            "total_cached_tokens": self.total_cached_tokens,
             "total_estimated_cost_usd": round(self.total_estimated_cost, 6),
+            "cache_hit_rate": round(self.total_cached_tokens / max(self.total_input_tokens, 1), 3),
             "llm_call_count": len(self.llm_calls),
             "calls": [
                 {
                     "model": call.model,
                     "input_tokens": call.input_tokens,
                     "output_tokens": call.output_tokens,
+                    "cached_tokens": call.cached_tokens,
                     "total_tokens": call.total_tokens,
                     "cost_usd": round(call.estimated_cost, 6),
                     "duration_ms": round(call.call_duration_ms, 2)

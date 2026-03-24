@@ -263,14 +263,14 @@ class ThreadManager:
         last_message_preview: Optional[str] = None,
         status: Optional[str] = None,
         tags: Optional[List[str]] = None
-    ):
-        """Update thread metadata"""
+    ) -> bool:
+        """Update thread metadata. Returns True if the thread existed."""
         conn = self._get_connection()
         cursor = conn.cursor()
-        
+
         updates = ["updated_at = ?"]
         params = [datetime.utcnow().isoformat()]
-        
+
         if title is not None:
             updates.append("title = ?")
             params.append(title)
@@ -286,14 +286,16 @@ class ThreadManager:
         if tags is not None:
             updates.append("tags = ?")
             params.append(json.dumps(tags))
-        
+
         params.append(thread_id)
-        
+
         sql = f"UPDATE threads SET {', '.join(updates)} WHERE thread_id = ?"
         cursor.execute(sql, params)
-        
+        affected = cursor.rowcount > 0
+
         conn.commit()
         conn.close()
+        return affected
     
     def save_thread_state(self, thread_id: str, state: Any):
         """Save ConversationState to database"""
@@ -410,27 +412,45 @@ class ThreadManager:
         
         return json.loads(row[0])
     
-    def archive_thread(self, thread_id: str):
-        """Archive a thread (soft delete)"""
-        self.update_thread(thread_id, status="archived")
-        print(f"📦 Archived thread: {thread_id}")
-    
-    def delete_thread(self, thread_id: str, hard_delete: bool = False):
-        """Delete a thread (soft or hard delete)"""
+    def archive_thread(self, thread_id: str) -> bool:
+        """Archive a thread (soft delete). Returns True if the thread existed."""
+        return self._set_thread_status(thread_id, "archived", "📦 Archived")
+
+    def delete_thread(self, thread_id: str, hard_delete: bool = False) -> bool:
+        """Delete a thread (soft or hard). Returns True if the thread existed."""
         if hard_delete:
             conn = self._get_connection()
             cursor = conn.cursor()
-            
+
             cursor.execute("DELETE FROM memory_states WHERE thread_id = ?", (thread_id,))
             cursor.execute("DELETE FROM thread_states WHERE thread_id = ?", (thread_id,))
             cursor.execute("DELETE FROM threads WHERE thread_id = ?", (thread_id,))
-            
+            deleted = cursor.rowcount > 0
+
             conn.commit()
             conn.close()
-            print(f"🗑️ Hard deleted thread: {thread_id}")
+            if deleted:
+                print(f"🗑️ Hard deleted thread: {thread_id}")
+            return deleted
         else:
-            self.update_thread(thread_id, status="deleted")
-            print(f"🗑️ Soft deleted thread: {thread_id}")
+            return self._set_thread_status(thread_id, "deleted", "🗑️ Soft deleted")
+
+    def _set_thread_status(self, thread_id: str, status: str, label: str) -> bool:
+        """Set thread status and return True if the thread existed."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "UPDATE threads SET status = ?, updated_at = ? WHERE thread_id = ?",
+            (status, datetime.utcnow().isoformat(), thread_id)
+        )
+        affected = cursor.rowcount > 0
+
+        conn.commit()
+        conn.close()
+        if affected:
+            print(f"{label} thread: {thread_id}")
+        return affected
     
     def search_threads(
         self,

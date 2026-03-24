@@ -124,7 +124,11 @@ class ConversationMemoryManager:
         message_tokens = self._count_tokens(role) + self._count_tokens(content) + 4
         self.memory.current_token_count += message_tokens
         
-        trace.info(f"Memory: added {role} message", {"tokens": message_tokens, "total": self.memory.current_token_count, "max": self.memory.MAX_TOKENS_BEFORE_SUMMARY})
+        if role == "assistant":
+            preview = content[:200] + ("..." if len(content) > 200 else "")
+            trace.info(f"Memory: added {role} message", {"tokens": message_tokens, "total": self.memory.current_token_count, "max": self.memory.MAX_TOKENS_BEFORE_SUMMARY, "response_preview": preview})
+        else:
+            trace.info(f"Memory: added {role} message", {"tokens": message_tokens, "total": self.memory.current_token_count, "max": self.memory.MAX_TOKENS_BEFORE_SUMMARY})
     
     def _summarize_conversation(self) -> None:
         """
@@ -185,37 +189,46 @@ class ConversationMemoryManager:
         for msg in old_messages:
             conversation_text += f"{msg['role'].upper()}: {msg['content']}\n"
         
-        # Build summarization prompt
+        # Build summarization prompt — fixed instructions in system (cacheable),
+        # dynamic conversation data in user message
         previous_summary = self.memory.summary or "No previous summary."
         
-        summarization_prompt = f"""Summarize this conversation, combining with any previous summary. Return JSON only.
+        system_prompt = """Summarize conversations by combining new turns with any previous summary. Return JSON only.
 
-Previous summary: {previous_summary}
+Output format:
+{"summary": "<concise summary>", "entities": {"people": [], "tasks": [], "dates": [], "documents": [], "other": []}}
+
+Preserve: user goals, key info (emails, names, dates), pending tasks."""
+
+        user_prompt = f"""Previous summary: {previous_summary}
 
 New turns:
-{conversation_text}
-
-Return: {{"summary": "<concise summary>", "entities": {{"people": [], "tasks": [], "dates": [], "documents": [], "other": []}}}}
-Preserve: user goals, key info (emails, names, dates), pending tasks."""
+{conversation_text}"""
 
         try:
             # === TOKEN TRACKING: Memory Summarization ===
             start_time = time.time()
             llm_response = self.llm.invoke(
-                [{"role": "user", "content": summarization_prompt}],
+                [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
                 config={"timeout": 30}
             )
             duration_ms = (time.time() - start_time) * 1000
             
             # Extract token usage from response
+            total_prompt_len = len(system_prompt) + len(user_prompt)
             input_tokens = 0
             output_tokens = 0
+            cached_tokens = 0
             if hasattr(llm_response, 'response_metadata'):
                 token_usage = llm_response.response_metadata.get('token_usage', {})
-                input_tokens = token_usage.get('prompt_tokens', len(summarization_prompt) // 4)
+                input_tokens = token_usage.get('prompt_tokens', total_prompt_len // 4)
                 output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
+                cached_tokens = token_usage.get('prompt_tokens_details', {}).get('cached_tokens', 0)
             else:
-                input_tokens = len(summarization_prompt) // 4
+                input_tokens = total_prompt_len // 4
                 output_tokens = len(llm_response.content) // 4
             
             # Log the LLM call with token tracking
@@ -227,7 +240,8 @@ Preserve: user goals, key info (emails, names, dates), pending tasks."""
                 duration_ms=duration_ms,
                 tier="memory",
                 prompt_summary=f"Summarizing {len(old_messages)} messages",
-                success=True
+                success=True,
+                cached_tokens=cached_tokens
             )
             
             response_text = llm_response.content.strip()

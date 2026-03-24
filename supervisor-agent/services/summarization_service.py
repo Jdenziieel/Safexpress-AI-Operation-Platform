@@ -223,7 +223,7 @@ class SummarizationService:
         
         trace.step("summarization", f"generating LLM summary ({len(context_text)} chars context)")
         
-        system_prompt = f"""You are a concise AI assistant summarizing task results.
+        system_prompt = """You are a concise AI assistant summarizing task results.
 
 RULES:
 1. Start with outcome: ✅ success or ❌ failed
@@ -257,10 +257,12 @@ Summarize the results using specific data"""
             # Extract token usage from response
             input_tokens = 0
             output_tokens = 0
+            cached_tokens = 0
             if hasattr(llm_response, 'response_metadata'):
                 token_usage = llm_response.response_metadata.get('token_usage', {})
                 input_tokens = token_usage.get('prompt_tokens', (len(system_prompt) + len(user_prompt)) // 4)
                 output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
+                cached_tokens = token_usage.get('prompt_tokens_details', {}).get('cached_tokens', 0)
             else:
                 input_tokens = (len(system_prompt) + len(user_prompt)) // 4
                 output_tokens = len(llm_response.content) // 4
@@ -274,7 +276,8 @@ Summarize the results using specific data"""
                 duration_ms=duration_ms,
                 tier="post",
                 prompt_summary=f"Summarizing: {original_request[:50]}...",
-                success=True
+                success=True,
+                cached_tokens=cached_tokens
             )
             
             summary = llm_response.content.strip()

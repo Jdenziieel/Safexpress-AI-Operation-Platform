@@ -102,7 +102,6 @@ class QuotaClient:
             
         except httpx.RequestError as e:
             # If quota service is unavailable, fail open (allow operation)
-            print(f"⚠️ Quota service unavailable: {e}. Allowing operation.")
             return True
     
     async def report(

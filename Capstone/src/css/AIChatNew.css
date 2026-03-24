@@ -282,24 +282,61 @@
   display: block;
 }
 
-.thread-delete-btn {
+.thread-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.thread-action-btn {
   background: transparent;
   border: none;
   color: var(--aui-text-muted);
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 8px;
+  padding: 0.35rem;
+  border-radius: 6px;
   transition: all 0.2s;
   opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.thread-card:hover .thread-delete-btn {
+.thread-card:hover .thread-action-btn {
   opacity: 1;
+}
+
+.thread-confirm-btn {
+  opacity: 1 !important;
+}
+
+.thread-edit-btn:hover {
+  background: var(--aui-primary);
+  color: white;
 }
 
 .thread-delete-btn:hover {
   background: var(--aui-error);
   color: white;
+}
+
+.thread-title-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--aui-primary);
+  border-radius: 4px;
+  background: var(--aui-background);
+  color: var(--aui-text);
+  outline: none;
+}
+
+.thread-title-input:focus {
+  box-shadow: 0 0 0 2px rgba(var(--aui-primary-rgb, 99, 102, 241), 0.2);
 }
 
 /* ============================================

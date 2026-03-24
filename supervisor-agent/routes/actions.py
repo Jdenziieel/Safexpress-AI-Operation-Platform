@@ -15,7 +15,6 @@ from log_storage import LogStorage
 from config import AGENT_ENDPOINTS
 from utils import call_agent_with_retry, generate_action_summary
 from supervisor_agent import (
-    PENDING_ACTIONS_CACHE,
     PendingAction,
     get_pending_action,
     remove_pending_action,
@@ -56,38 +55,8 @@ def execute_single_action(step_info: dict) -> dict:
 
 @router.get("/actions/pending")
 async def list_pending_actions(thread_id: str = None):
-    """List all actions waiting for approval (with automatic cleanup from SQLite)"""
-    storage = LogStorage()
-    
-    # First cleanup expired actions
-    cleaned_count = storage.cleanup_expired_pending_actions(expire_minutes=5)
-    if cleaned_count > 0:
-        print(f"🧹 Cleaned up {cleaned_count} expired actions from SQLite")
-    
-    # Get pending actions from SQLite
-    pending_records = storage.get_pending_actions(status="pending", thread_id=thread_id)
-    
-    # Also sync with in-memory cache (PENDING_ACTIONS_CACHE used for execution callbacks)
-    for record in pending_records:
-        if record["action_id"] not in PENDING_ACTIONS_CACHE:
-            # Reload into cache if missing (note: execution_callback will be None after restart)
-            action = PendingAction(
-                action_id=record["action_id"],
-                step_info={
-                    "agent": record["agent_name"],
-                    "tool": record["tool_name"],
-                    "description": record["description"],
-                    "inputs": record["inputs"] if record["inputs"] else {},
-                    "output_variables": record["output_variables"] if record["output_variables"] else [],
-                    "risk_level": record["risk_level"]
-                },
-                thread_id=record.get("thread_id"),
-                conversation_id=record.get("conversation_id"),
-                request_id=record.get("request_id")
-            )
-            PENDING_ACTIONS_CACHE[record["action_id"]] = action
-    
-    return {"pending_actions": pending_records, "count": len(pending_records)}
+    """[DEPRECATED] Pending actions are now handled via chat. This endpoint is kept for backward compatibility."""
+    return {"pending_actions": [], "count": 0, "deprecated": True, "message": "Pending actions are now handled via chat conversation."}
 
 
 @router.get("/action/{action_id}")
@@ -220,47 +189,13 @@ async def approve_action(action_id: str, approval: ActionApprovalRequest):
 
 @router.post("/actions/cleanup")
 async def cleanup_expired_actions(expire_minutes: int = 5):
-    """Clean up expired or completed pending actions from both cache and SQLite"""
+    """Clean up expired or completed pending actions from the database"""
     storage = LogStorage()
     
-    # Clean up from SQLite
     cleaned_from_db = storage.cleanup_expired_pending_actions(expire_minutes=expire_minutes)
-    
-    # Also clean up from in-memory cache (PENDING_ACTIONS_CACHE)
-    cleaned_from_cache = []
-    now = datetime.now()
-    
-    # Create a list of actions to remove (can't modify dict during iteration)
-    actions_to_remove = []
-    
-    for action_id, action in PENDING_ACTIONS_CACHE.items():
-        # Remove if expired (older than specified minutes)
-        if now - action.created_at > timedelta(minutes=expire_minutes):
-            actions_to_remove.append(action_id)
-            cleaned_from_cache.append({
-                "action_id": action_id,
-                "reason": "expired",
-                "age_seconds": (now - action.created_at).total_seconds()
-            })
-        # Remove if already processed (not pending)
-        elif action.status != "pending":
-            actions_to_remove.append(action_id)
-            cleaned_from_cache.append({
-                "action_id": action_id,
-                "reason": f"already_{action.status}",
-                "status": action.status
-            })
-    
-    # Remove from cache
-    for action_id in actions_to_remove:
-        PENDING_ACTIONS_CACHE.pop(action_id, None)
-    
-    # Get remaining pending count from SQLite
     remaining = storage.get_pending_actions(status="pending")
     
     return {
         "cleaned_from_db": cleaned_from_db,
-        "cleaned_from_cache": len(cleaned_from_cache),
-        "cleaned_cache_details": cleaned_from_cache,
         "remaining_pending": len(remaining)
     }

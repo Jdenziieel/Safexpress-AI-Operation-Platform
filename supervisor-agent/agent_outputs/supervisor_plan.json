@@ -1,16 +1,26 @@
 {
   "steps": [
     {
-      "agent": "calendar_agent",
-      "tool": "list_events",
+      "agent": "gmail_agent",
+      "tool": "create_draft_email",
       "inputs": {
-        "time_min": "{{ today_date }}",
-        "max_results": 10
+        "to": "jdenziieel@gmail.com",
+        "subject": "Pakyu",
+        "body": "testing lang tol"
       },
       "output_variables": {
-        "upcoming_events": "events"
+        "draft_id": "draft_id"
       },
-      "description": "List the upcoming events from the user's calendar"
+      "description": "Create a draft email to jdenziieel@gmail.com with the subject 'Pakyu' and the body 'testing lang tol'"
+    },
+    {
+      "agent": "gmail_agent",
+      "tool": "send_draft_email",
+      "inputs": {
+        "draft_id": "{{ draft_id }}"
+      },
+      "output_variables": {},
+      "description": "Send the created draft email"
     }
   ]
 }

@@ -14,7 +14,6 @@ from typing import Optional, List, Dict, Any
 import json
 import os
 import re
-import ast
 import time
 import httpx
 
@@ -25,7 +24,7 @@ from models import ConversationIntent, ConversationState, ConversationAnalysis
 from agent_capabilities_v3 import agent_capabilities
 
 # Import utility functions for agent filtering
-from utils import identify_relevant_agents, get_filtered_capabilities
+from utils import get_filtered_capabilities
 
 # Import LLM error handler for unified error handling
 from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_error
@@ -145,12 +144,12 @@ class ConversationalAgent(Tier0ChecksMixin):
         print("═" * 70)
         msg_preview = user_message[:120] + ("..." if len(user_message) > 120 else "")
         print(f"  User: {msg_preview}")
-        print(f"  State: intent={conversation_state.intent}, "
-              f"extracted={bool(conversation_state.extracted_info)}, "
-              f"missing={conversation_state.missing_fields}, "
-              f"exec_ready={conversation_state.ready_for_execution}")
         if uploaded_file:
             print(f"  📎 File: {uploaded_file.get('filename', '?')} ({uploaded_file.get('size', 0)} bytes)")
+        print("  ConversationState:")
+        state_dump = conversation_state.model_dump(exclude={"memory_state"})
+        for key, value in state_dump.items():
+            print(f"    {key}: {json.dumps(value, default=str)}")
         print("═" * 70)
         trace.step("new_message", f"thread={state_id}, msg={user_message[:80]}")
 
@@ -191,9 +190,12 @@ class ConversationalAgent(Tier0ChecksMixin):
             missing_fields=analysis.missing_fields if hasattr(analysis, 'missing_fields') else []
         )
 
+        # Capture before clearing — used by CANCELLED response to show what was cancelled
+        _prev_summary = conversation_state.execution_summary
+
         # Handle cancellation first - clear everything!
         if analysis.intent == ConversationIntent.CANCELLED:
-            conversation_state.extracted_info = {}  # ✅ Empty for multi-task scenarios
+            conversation_state.extracted_info = {}
             conversation_state.missing_fields = []
             conversation_state.clarification_question = None
             conversation_state.ready_for_execution = False
@@ -209,7 +211,8 @@ class ConversationalAgent(Tier0ChecksMixin):
             conversation_state.clarification_question = analysis.clarification_question
             conversation_state.ready_for_execution = analysis.execution_ready
             conversation_state.execution_summary = analysis.execution_summary
-            conversation_state.execution_mode = getattr(analysis, 'execution_mode', 'standard')
+            conversation_state.execution_mode = "standard"  # ReAct disabled — uncomment below to re-enable
+            # conversation_state.execution_mode = getattr(analysis, 'execution_mode', 'standard')
         
         # Update state with analysis intent
         conversation_state.intent = analysis.intent
@@ -237,40 +240,24 @@ class ConversationalAgent(Tier0ChecksMixin):
         else:
             response = analysis.clarification_question or "Please provide more details."
     
+        # Internal fields the user should never see in confirmations/summaries
+        _INTERNAL_FIELDS = {"task_type", "original_message", "uploaded_file", "query", "_cached_tool_filter"}
+
         # Generate response based on intent
         if analysis.intent == ConversationIntent.SMALL_TALK:
-            # Check if this is a cancellation
             if analysis.task_type == "cancellation":
                 response = "👍 No problem! Request cancelled. Let me know if you need anything else."
             elif analysis.response_text:
-                # Use the pre-built response from Tier 0/0.5 checks (greetings, help, capabilities, etc.)
                 response = analysis.response_text
             elif analysis.clarification_question:
                 response = analysis.clarification_question
             else:
-                response = "I'm here to help you manage your emails, documents, spreadsheets, calendar, and Drive. What would you like me to do?"
+                response = "I'm here to help! I can manage your emails, documents, spreadsheets, calendar, and Drive. What would you like me to do?"
 
         elif analysis.intent == ConversationIntent.CANCELLED:
             response = "👍 No problem! Request cancelled.\n\n"
-            
-            # Extract cancelled info from reasoning field for user feedback
-            # reasoning format: "User cancelled request. Previous data: {...}"
-            #  ----  CHECK THIS ONE AS WELL. I DON'T UNDERSTAND BUT I THINK THIS WILL CAUSE BUGS ----
-            if "Previous data:" in analysis.reasoning:
-                try:
-                    # Extract the dict from reasoning string
-                    match = re.search(r"Previous data: ({.*})", analysis.reasoning)
-                    if match:
-                        cancelled_info = ast.literal_eval(match.group(1))
-                        if cancelled_info:
-                            response += "**Cancelled request:**\n"
-                            for key, value in cancelled_info.items():
-                                if key != "task_type":  # Don't show internal task_type
-                                    response += f"- {key}: {value}\n"
-                            response += "\n"
-                except:
-                    pass  # If parsing fails, just show generic message
-            
+            if _prev_summary:
+                response += f"~~{_prev_summary}~~\n\n"
             response += "What would you like to do next?"
         
         elif analysis.intent == ConversationIntent.NOT_FEASIBLE:
@@ -280,7 +267,7 @@ class ConversationalAgent(Tier0ChecksMixin):
                 response += "**What I can do instead:**\n"
                 for alt in analysis.suggested_alternatives:
                     response += f"- {alt}\n"
-            response += f"\n**Available capabilities:**\n{self.full_capabilities_summary}"
+            response += "\nLet me know if there's something else I can help with."
         
         elif analysis.intent == ConversationIntent.TOO_COMPLEX:
             response = f"⚠️ This task seems quite complex.\n\n"
@@ -291,20 +278,24 @@ class ConversationalAgent(Tier0ChecksMixin):
                     response += f"{i}. {alt}\n"
             response += f"\nWould you like to proceed with one of these approaches?"
 
-        # IMPROVE CLARIFICATION RESPONSE  OR TO BE MORE DYNAMIC LATER
         elif analysis.intent == ConversationIntent.NEEDS_CLARIFICATION:
             response = f"📋 {analysis.clarification_question}\n\n"
-            if analysis.extracted_info:
-                response += "**So far I have:**\n"
-                for key, value in analysis.extracted_info.items():
-                    response += f"- {key}: {value}\n"
+            user_fields = {k: v for k, v in analysis.extracted_info.items()
+                          if k not in _INTERNAL_FIELDS and v}
+            if user_fields:
+                response += "**What I have so far:**\n"
+                for key, value in user_fields.items():
+                    response += f"- **{key.replace('_', ' ').title()}:** {value}\n"
         
         elif analysis.intent == ConversationIntent.READY_TO_EXECUTE:
             response = f"✅ **Ready to execute!**\n\n"
             response += f"**Task:** {analysis.execution_summary}\n\n"
-            response += "**Details:**\n"
-            for key, value in analysis.extracted_info.items():
-                response += f"- {key}: {value}\n"
+            user_fields = {k: v for k, v in analysis.extracted_info.items()
+                          if k not in _INTERNAL_FIELDS and v}
+            if user_fields:
+                response += "**Details:**\n"
+                for key, value in user_fields.items():
+                    response += f"- **{key.replace('_', ' ').title()}:** {value}\n"
 
         else:
             response = "I'm processing your request..."
@@ -373,6 +364,11 @@ class ConversationalAgent(Tier0ChecksMixin):
         
         # === TIER 0: PATTERN-BASED QUICK CHECKS (NO LLM - INSTANT) ===
         
+        # GATE CHECK: Pending action approval (must be FIRST — blocks all other input when paused)
+        pending_result = self._quick_pending_action_check(user_message, conversation_state)
+        if pending_result is not None:
+            return pending_result
+        
         # Check for greetings first (most common)
         greeting_result = self._quick_greeting_check(user_message)
         if greeting_result is not None:
@@ -403,7 +399,12 @@ class ConversationalAgent(Tier0ChecksMixin):
         if status_result is not None:
             return status_result
         
-        # === TIER 0.5: UNIFIED LIGHTWEIGHT LLM CHECK (~100-250 TOKENS) ===
+        # Bare confirm/cancel when state is unambiguous (saves LLM call)
+        confirm_cancel_result = self._quick_confirm_or_cancel_check(user_message, conversation_state)
+        if confirm_cancel_result is not None:
+            return confirm_cancel_result
+        
+        # === TIER 0.5: UNIFIED LIGHTWEIGHT LLM CHECK ===
         
         # Single unified LLM call handles: confirmation, cancellation, modification,
         # followup answers, casual conversation, unintelligible input
@@ -413,6 +414,9 @@ class ConversationalAgent(Tier0ChecksMixin):
             return unified_result
         
         # === TIER 1: FULL TASK ANALYSIS (~500-1500 TOKENS) ===
+        print(f"\n{'─'*50}")
+        print(f"🧠 TIER 1 — Full Task Analysis")
+        print(f"{'─'*50}")
         trace.step("tier1", "performing full task analysis with capabilities")
         
         # Get memory manager and build context using it
@@ -425,14 +429,12 @@ class ConversationalAgent(Tier0ChecksMixin):
         
         # Add execution context if available (helps LLM understand post-execution modifications)
         exec_context = ""
-        if conversation_state.executed_count > 0:
-            last_exec = conversation_state.execution_history[-1] if conversation_state.execution_history else {}
+        if conversation_state.has_executed:
             exec_context = (
                 f"\nEXECUTION CONTEXT:\n"
-                f"- Executed {conversation_state.executed_count} task(s) | "
-                f"Last: {conversation_state.last_executed_at or 'unknown'} | "
-                f"Status: {last_exec.get('status', 'unknown')} | "
-                f"Result: {last_exec.get('message', 'N/A')}\n"
+                f"- Last: {conversation_state.last_executed_at or 'unknown'} | "
+                f"Status: {conversation_state.last_execution_status or 'unknown'} | "
+                f"Result: {conversation_state.last_execution_message or 'N/A'}\n"
                 f"- User may be modifying/redoing previous execution\n\n"
             )
             
@@ -453,16 +455,24 @@ class ConversationalAgent(Tier0ChecksMixin):
             capabilities_to_show = self.full_capabilities_summary 
             trace.step("capabilities", "query is GENERAL — showing all capabilities")
         else:
-            # Filter capabilities to relevant agents for specific tasks
-            relevant_agents = identify_relevant_agents(user_message)
+            # Use the SAME tool-level filter that the supervisor will use later,
+            # so we skip the redundant identify_relevant_agents() LLM call.
+            from tool_filter import get_optimized_capabilities
+            filtered_caps, tool_filter_result = get_optimized_capabilities(user_message)
+            relevant_agents = list(filtered_caps.keys())
             capabilities_to_show = self._build_capabilities_summary(relevant_agents)
+            # Cache the tool filter so the supervisor node can reuse it
+            # instead of making a redundant classification LLM call
+            conversation_state.extracted_info["_cached_tool_filter"] = tool_filter_result
+            cap_top_level = [line.strip() for line in capabilities_to_show.split('\n') if line.strip().startswith('**')]
+            print(f"   relevant_agents: {relevant_agents}")
+            print(f"   capabilities (top-level): {cap_top_level}")
             trace.step("capabilities", f"query is SPECIFIC — filtered to agents", {"agents": relevant_agents})
             
-        # Build system prompt with capabilities
+        # Build system prompt — fixed rules first (cacheable prefix), dynamic
+        # capabilities appended at the end so the stable prefix maximizes
+        # OpenAI's automatic prompt caching (matches longest identical prefix)
         system_prompt = """Validate and clarify user requests before execution. Check feasibility against available agents/tools, extract required fields, ask for missing info.
-
-Available agents and tools:
-{capabilities}
 
 TEMPLATE+DATA WORKFLOW:
 When user mentions creating a document using BOTH a template AND a data file:
@@ -482,7 +492,6 @@ INTENT: needs_clarification | not_feasible | too_complex | ready_to_execute | sm
 
 EXECUTION MODE:
 - "standard": Default. Plan all steps upfront then execute. Use for straightforward tasks (send email, create doc, search+reply).
-- "react": Iterative. Plan one step at a time, observe the result, then plan the next. Use ONLY when the task involves: conditional logic ("if X then Y else Z") or error-recovery scenarios.
 
 JSON OUTPUT:
 {{
@@ -499,9 +508,18 @@ JSON OUTPUT:
 
 Be specific in clarification questions — reference what's already known.
 ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("from", "to", "template", "data"). If ambiguous, ask.
-""".format(capabilities=capabilities_to_show)
+
+Available agents and tools:
+{capabilities}""".format(capabilities=capabilities_to_show)
 
         user_prompt = f"""{history_text}{exec_context}CURRENT USER MESSAGE: {user_message}"""
+
+        # Print user_prompt for observability
+        user_prompt_preview = user_prompt[:500] + ("..." if len(user_prompt) > 500 else "")
+        print(f"   user_prompt ({len(user_prompt)} chars):")
+        for line in user_prompt_preview.split('\n'):
+            print(f"     {line}")
+        print(f"{'─'*50}")
 
 # ------------ SAVE THIS -----------
 # EXECUTION MODE:
@@ -524,10 +542,12 @@ ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("f
             # Extract token usage from response
             input_tokens = 0
             output_tokens = 0
+            cached_tokens = 0
             if hasattr(llm_response, 'response_metadata'):
                 token_usage = llm_response.response_metadata.get('token_usage', {})
                 input_tokens = token_usage.get('prompt_tokens', (len(system_prompt) + len(user_prompt)) // 4)
                 output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
+                cached_tokens = token_usage.get('prompt_tokens_details', {}).get('cached_tokens', 0)
             else:
                 input_tokens = (len(system_prompt) + len(user_prompt)) // 4
                 output_tokens = len(llm_response.content) // 4
@@ -541,7 +561,8 @@ ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("f
                 duration_ms=duration_ms,
                 tier="1",
                 prompt_summary=f"Analyzing: {user_message[:50]}...",
-                success=True
+                success=True,
+                cached_tokens=cached_tokens
             )
         except Exception as llm_error:
             # Check if this is an LLM service error (rate limit, quota, etc.)
@@ -630,6 +651,10 @@ ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("f
                 if field not in analysis_dict:
                     raise ValueError(f"Missing required field: {field}")
             
+            # Sanitize task_type: LLM sometimes returns null
+            if analysis_dict.get("task_type") is None:
+                analysis_dict["task_type"] = "unknown"
+            
             analysis_result = ConversationAnalysis(**analysis_dict)
             
             # Log analysis result
@@ -649,13 +674,13 @@ ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("f
             # JSON parsing or validation failed
             trace.warning("analyze_request: failed to parse LLM response", {"error": str(e), "response_preview": llm_response.content[:300]})
             
-            # Fallback: treat as needing clarification
+            # Fallback: treat as needing clarification with generic question, NOT raw JSON
             return ConversationAnalysis(
                 intent=ConversationIntent.NEEDS_CLARIFICATION,
                 task_type="unknown",
                 extracted_info={},
                 missing_fields=["all"],
-                clarification_question=llm_response.content,
+                clarification_question="I'm having trouble understanding that request. Could you rephrase it with more specific details?",
                 reasoning=f"Failed to parse LLM response: {str(e)}",
                 execution_ready=False,
                 execution_summary=None
@@ -764,17 +789,6 @@ ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("f
             conversation_state.memory_state = self.memory_managers[state_id].export_memory()
             # # Also update conversation_history for backward compatibility
             # conversation_state.conversation_history = self.memory_managers[state_id].get_full_history()
-
-    # =============================================================================
-    # TIER 0: Pattern-based checks moved to checks/tier0_checks.py (Tier0ChecksMixin)
-    # Methods: _quick_greeting_check, _quick_repeat_check, 
-    #          _quick_capability_list_check, _quick_examples_check,
-    #          _quick_help_check, _quick_status_check
-    # =============================================================================
-
-    # =============================================================================
-    # TIER 0.5: UNIFIED LIGHTWEIGHT LLM CHECK (~100-250 TOKENS)
-    # =============================================================================
     
     def _unified_quick_check(self, user_message: str, conversation_state: ConversationState, state_id: str = "default", uploaded_file: Optional[Dict[str, Any]] = None ) -> Optional[ConversationAnalysis]:
         """
@@ -795,34 +809,15 @@ ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("f
         memory_manager = self._get_memory_manager(state_id, conversation_state.memory_state)
 
         # ------------------------------------------------------------------
-        # Build LEAN context for Tier 0.5 (no redundant narrative)
-        # Two focused signals instead of 4 overlapping variables:
-        #   bot_signal  — what the bot last asked (confirmation / clarification)
-        #   state_block — structured extracted_info + missing_fields
+        # Build LEAN context for Tier 0.5
+        #   bot_signal  — conversation phase (confirm / clarify / open)
+        #   state_block — minimal structured context (field names only)
         # ------------------------------------------------------------------
 
-        last_bot_message = ""
-        recent_messages = memory_manager.get_recent_messages(n=2)
-        if recent_messages:
-            assistant_turns = [t for t in recent_messages if t['role'] == 'assistant']
-            if assistant_turns:
-                last_bot_message = assistant_turns[-1]['content']
-
-        # File context (only when a file is attached)
-        file_context = ""
-        if uploaded_file:
-            file_context = f"\n\n📎 USER UPLOADED FILE:\n"
-            file_context += f"- Filename: {uploaded_file.get('filename', 'unknown')}\n"
-            file_context += f"- Size: {uploaded_file.get('size', 0)} bytes\n"
-            file_context += f"- Type: {uploaded_file.get('mime_type', 'unknown')}\n"
-            file_context += f"\n🔍 FILE CONTEXT: The user has uploaded a file. Any document/template name mentioned likely refers to what they want to CREATE, not the uploaded file itself.\n"
-
-        # Determine conversation phase
+        # Determine conversation phase from authoritative state flags only
         is_awaiting_confirmation = (
             conversation_state.ready_for_execution or
-            conversation_state.intent == ConversationIntent.READY_TO_EXECUTE or
-            "ready to execute" in last_bot_message.lower() or
-            "should i proceed" in last_bot_message.lower()
+            conversation_state.intent == ConversationIntent.READY_TO_EXECUTE
         )
 
         is_awaiting_clarification = (
@@ -833,7 +828,6 @@ ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("f
         has_extracted_info = bool(conversation_state.extracted_info)
         missing_field = conversation_state.missing_fields[0] if conversation_state.missing_fields else None
 
-        # Display current state for debugging
         trace.step("tier0.5_state", "conversation state before unified check", {
             "extracted_info": conversation_state.extracted_info,
             "missing_fields": conversation_state.missing_fields,
@@ -842,93 +836,108 @@ ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("f
             "awaiting_clarification": is_awaiting_clarification,
         })
 
-        # --- Variable 1: bot_signal (concise one-liner — what are we waiting for?) ---
+        # --- bot_signal: one-liner phase indicator ---
         bot_signal = ""
         if is_awaiting_confirmation:
-            bot_signal = "\n⚠️ Bot asked user to CONFIRM execution."
+            bot_signal = "\nPHASE: Awaiting user CONFIRMATION to execute."
         elif is_awaiting_clarification and missing_field:
-            bot_signal = f"\n⚠️ Bot asked: '{conversation_state.clarification_question}'"
+            bot_signal = f"\nPHASE: Awaiting answer — bot asked: \"{conversation_state.clarification_question}\""
 
-        # --- Variable 2: state_block (structured JSON — what we know so far) ---
+        # --- state_block: lean context (field NAMES only, not values) ---
         state_block = ""
-        if has_extracted_info or conversation_state.missing_fields or conversation_state.execution_summary:
-            state_block = "\n\n📋 CURRENT STATE:\n"
-            if has_extracted_info:
-                state_block += f"- Extracted so far: {json.dumps(conversation_state.extracted_info)}\n"
-            if conversation_state.missing_fields:
-                state_block += f"- Still missing: {conversation_state.missing_fields}\n"
-                if missing_field:
-                    state_block += f"- Next to collect: {missing_field}\n"
-            if conversation_state.execution_summary:
-                state_block += f"- Current task: {conversation_state.execution_summary}\n"
+        if is_awaiting_confirmation and has_extracted_info:
+            field_names = list(conversation_state.extracted_info.keys())
+            state_block = f"\nTASK FIELDS: [{', '.join(field_names)}]"
+        elif is_awaiting_clarification and has_extracted_info:
+            field_names = list(conversation_state.extracted_info.keys())
+            state_block = f"\nTASK FIELDS: [{', '.join(field_names)}] — missing: [{missing_field}]"
+        elif has_extracted_info and conversation_state.missing_fields:
+            field_names = list(conversation_state.extracted_info.keys())
+            state_block = f"\nTASK FIELDS: [{', '.join(field_names)}] — missing: {conversation_state.missing_fields}"
+
+        # For modification/followup, the LLM needs field names AND values
+        context_block = ""
+        if has_extracted_info and (is_awaiting_confirmation or is_awaiting_clarification):
+            context_block = f"\nEXTRACTED: {json.dumps(conversation_state.extracted_info)}"
+
+        # File context (only when a file is attached)
+        file_context = ""
+        if uploaded_file:
+            file_context = f"\nFILE: {uploaded_file.get('filename', 'unknown')} ({uploaded_file.get('mime_type', 'unknown')}, {uploaded_file.get('size', 0)} bytes)"
+            file_context += f"\nNOTE: Uploaded file is source data. Any document name mentioned = what to CREATE."
 
         # Log what we're feeding the LLM
         print(f"\n{'─'*50}")
         print(f"🔍 TIER 0.5 — Building prompt")
         print(f"{'─'*50}")
         print(f"   bot_signal : {bot_signal.strip() if bot_signal else '(none)'}")
-        print(f"   state_block: {'yes' if state_block else '(none)'}")
-        if state_block:
-            for line in state_block.strip().split('\n'):
-                print(f"     {line}")
+        print(f"   state_block: {state_block.strip() if state_block else '(none)'}")
         print(f"   file_context: {'yes — ' + uploaded_file.get('filename', '?') if uploaded_file else '(none)'}")
         print(f"{'─'*50}")
 
-        # UNIFIED prompt that handles ALL Tier 0.5 categories
-        unified_prompt = f"""Classify user intent and extract data. Return JSON only.
+        # --- SYSTEM message: fixed classification template (cached by OpenAI) ---
+        system_prompt = """Classify user intent. Return JSON only.
 
 CATEGORIES (pick ONE):
-1. confirmation - Approval to proceed ("yes", "ok", "proceed")
-2. cancellation - Stop current task ("cancel", "no", "forget it")
-3. modification - Change single field ("change X to Y")
-4. followup_answer - Direct answer to question ("john@example.com")
-5. casual_conversation - Chitchat ("how are you")
-6. unintelligible - Unclear input
-7. template_upload - User uploaded file + wants document/save
-8. task_request - Action request
+1. confirmation — Approve/proceed ("yes", "ok", "go ahead")
+2. cancellation — Reject ONLY ("cancel", "forget it"). NOT when user suggests alternative.
+3. modification — Change field or approach ("change recipient", "send as regular email instead")
+4. followup_answer — Direct answer to bot's question ("john@example.com")
+5. casual_conversation — Chitchat, greetings
+6. unintelligible — Cannot understand
+7. template_upload — User uploaded file + wants document/save
+8. task_request — New action request or redo
+9. status_update — Asking about previous result ("did it work?")
 
-QUERY SCOPE (for task_request only):
-- general: Asking about capabilities/features ("what can you do?")
-- specific: Wants to perform a task ("send email")
-{bot_signal}{state_block}{file_context}
-User: "{user_message}"
+RULES:
+- "No, do X instead" or "just do X" = modification (NOT cancellation)
+- "cancel" with no alternative = cancellation
+- query_scope only matters for task_request: "general" = asking capabilities, "specific" = wants action
 
-OUTPUT (JSON only):
-{{
-    "category": "<one of the 8 above>",
+JSON OUTPUT — include ONLY relevant fields:
+{
+    "category": "...",
     "confidence": "high|medium|low",
-    "reasoning": "1 sentence",
-    "query_scope": "general|specific",
-    "has_compound_cancel": false,
-    "extracted_value": null,
-    "field_to_modify": null,
-    "new_value": null,
-    "execution_summary": null,
-    "save_to_drive": false,
-    "template_name": null,
-    "document_title": null
-}}
+    "reasoning": "1 sentence"
+}
 
+Extra fields per category (include ONLY when applicable):
+- task_request: add "query_scope": "general|specific"
+- cancellation: add "has_compound_cancel": true/false
+- modification: add "field_to_modify": "...", "new_value": "..."
+- followup_answer: add "extracted_value": ...
+- template_upload: add "save_to_drive": bool, "template_name": "...", "document_title": "..."
+- casual_conversation: add "response": "short friendly reply (1-2 sentences)"
 """
+
+        # --- USER message: dynamic context only ---
+        user_prompt = f"""{bot_signal}{state_block}{context_block}{file_context}
+User: "{user_message}" """
 
         try:
             # === TOKEN TRACKING: Tier 0.5 Unified Check ===
             start_time = time.time()
             llm_response = self.quick_llm.invoke(
-                [{"role": "user", "content": unified_prompt}],
-                config={"timeout": 30, "max_tokens": 1000}
+                [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                config={"timeout": 30, "max_tokens": 300}
             )
             duration_ms = (time.time() - start_time) * 1000
             
             # Extract token usage from response
+            total_prompt_len = len(system_prompt) + len(user_prompt)
             input_tokens = 0
             output_tokens = 0
+            cached_tokens = 0
             if hasattr(llm_response, 'response_metadata'):
                 token_usage = llm_response.response_metadata.get('token_usage', {})
-                input_tokens = token_usage.get('prompt_tokens', len(unified_prompt) // 4)
+                input_tokens = token_usage.get('prompt_tokens', total_prompt_len // 4)
                 output_tokens = token_usage.get('completion_tokens', len(llm_response.content) // 4)
+                cached_tokens = token_usage.get('prompt_tokens_details', {}).get('cached_tokens', 0)
             else:
-                input_tokens = len(unified_prompt) // 4
+                input_tokens = total_prompt_len // 4
                 output_tokens = len(llm_response.content) // 4
             
             # Log the LLM call with token tracking
@@ -940,7 +949,8 @@ OUTPUT (JSON only):
                 duration_ms=duration_ms,
                 tier="0.5",
                 prompt_summary=f"Classifying: {user_message[:50]}...",
-                success=True
+                success=True,
+                cached_tokens=cached_tokens
             )
             
             response_text = llm_response.content.strip()
@@ -965,15 +975,56 @@ OUTPUT (JSON only):
 
             category = result.get("category")
             confidence = result.get("confidence", "high")
+            reasoning = result.get("reasoning", "")
             
-            trace.step("tier0.5", f"category: {category.upper()}, confidence: {confidence}")
+            trace.step("tier0.5", f"category: {category.upper()}, confidence: {confidence}", {
+                "reasoning": reasoning,
+                "raw_response": response_text[:300],
+            })
             
             # Low confidence → fall through to Tier 1 for reliable analysis
             if confidence == "low":
-                trace.step("tier0.5", "low confidence — falling through to Tier 1")
+                print(f"  ⚠️  TIER 0.5 LOW CONFIDENCE — category={category}, reasoning={reasoning}")
+                print(f"  ⚠️  Falling through to Tier 1 for full analysis")
+                trace.step("tier0.5", "low confidence — falling through to Tier 1", {"category": category, "reasoning": reasoning})
                 return None, "specific"
             
             # === HANDLE EACH CATEGORY ===
+            
+            # 0. STATUS UPDATE - user asking about execution status
+            if category == "status_update":
+                if conversation_state.has_executed:
+                    status = conversation_state.last_execution_status or "unknown"
+                    message = conversation_state.last_execution_message or "No details available"
+                    if status == "success":
+                        status_response = f"✅ **Last execution: Successful**\n\n{message}\n\nAnything else you'd like to do?"
+                    elif status == "error":
+                        status_response = f"❌ **Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again or do something else?"
+                    else:
+                        status_response = f"📊 **Last execution status:** {status}\n\n{message}"
+                    trace.step("tier0.5", "status_update — returning execution status")
+                    return ConversationAnalysis(
+                        intent=ConversationIntent.SMALL_TALK,
+                        task_type="status_check",
+                        extracted_info={},
+                        missing_fields=[],
+                        response_text=status_response,
+                        reasoning="User checking execution status (Tier 0.5)",
+                        execution_ready=False,
+                        execution_summary=None
+                    ), None
+                else:
+                    trace.step("tier0.5", "status_update — no execution history, informing user")
+                    return ConversationAnalysis(
+                        intent=ConversationIntent.SMALL_TALK,
+                        task_type="status_check",
+                        extracted_info={},
+                        missing_fields=[],
+                        response_text="I haven't executed any tasks yet in this conversation. What would you like me to do?",
+                        reasoning="User asked for status but no execution history exists",
+                        execution_ready=False,
+                        execution_summary=None
+                    ), None
             
             # 1. TASK REQUEST - needs full analysis
             if category == "task_request":
@@ -1010,6 +1061,7 @@ OUTPUT (JSON only):
             if category == "cancellation":
                 has_compound = result.get("has_compound_cancel", False)
                 if has_compound:
+                    print(f"  ⚠️  COMPOUND CANCEL detected — new task extracted, proceeding to Tier 1")
                     trace.step("tier0.5", "compound cancel+task — proceeding to full analysis")
                     return None, "specific"  # Compound cancel → default to specific
                 else:
@@ -1130,19 +1182,21 @@ OUTPUT (JSON only):
                     trace.step("tier0.5", "complex followup answer — proceeding to full analysis")
                     return None, "specific"  # Complex answer → default to specific
             
-            # 6. CASUAL CONVERSATION
+            # 6. CASUAL CONVERSATION — use LLM-generated response (piggybacked on this call)
             if category == "casual_conversation":
-                trace.step("tier0.5", "casual conversation")
+                llm_response_text = result.get("response")
+                trace.step("tier0.5", "casual conversation", {"has_response": bool(llm_response_text)})
                 return ConversationAnalysis(
                     intent=ConversationIntent.SMALL_TALK,
                     task_type="conversation",
                     extracted_info={},
                     missing_fields=[],
                     clarification_question=None,
+                    response_text=llm_response_text,
                     reasoning="User is engaging in casual conversation",
                     execution_ready=False,
                     execution_summary=None
-                ), None  # No query_scope for non-task_request
+                ), None
             
             # 7. UNINTELLIGIBLE
             if category == "unintelligible":
@@ -1312,6 +1366,8 @@ OUTPUT (JSON only):
         if conversation_state.extracted_info:
             supervisor_input += "\n\nParameters:\n"
             for key, value in conversation_state.extracted_info.items():
+                if key.startswith("_"):
+                    continue
                 if key == "uploaded_file" and isinstance(value, dict):
                     supervisor_input += f"- uploaded_file:\n"
                     supervisor_input += f"  - filename: {value.get('filename')}\n"

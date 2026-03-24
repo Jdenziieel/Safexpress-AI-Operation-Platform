@@ -64,6 +64,7 @@ class ThreadService:
         bot_response = None
 
         # 3. Process initial message if provided go to conversational_agent.py process_message method.
+        new_title = None
         if initial_message:
             bot_response, conversation_state = self.process_message_fn(
                 user_message=initial_message,
@@ -79,7 +80,7 @@ class ThreadService:
             # Save initial empty state
             self.save_thread_to_db(thread_id, conversation_state)
 
-        print(f"✅ Created new thread: {thread_id} for user: {user_id}")
+        print(f"✅ Created new thread: {thread_id} for user: {user_id} with title: {new_title}")
 
         return thread_id, conversation_state, bot_response
 

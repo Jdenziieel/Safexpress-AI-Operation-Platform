@@ -42,7 +42,6 @@ class LogStorage:
         """
         self.db_path = Path(db_path)
         self._init_database()
-        print(f"✅ SQLite log storage initialized: {self.db_path}")
     
     def _get_connection(self):
         """Get a database connection"""

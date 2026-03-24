@@ -16,7 +16,10 @@ from datetime import datetime
 import json
 import traceback
 
-from supervisor_agent import workflow, react_workflow
+from supervisor_agent import workflow
+# ReAct disabled — uncomment to re-enable
+# from supervisor_agent import react_workflow
+react_workflow = None
 from models.models import UserRequest, WorkflowResponse, SharedState
 from llm_error_handler import handle_llm_error, LLMServiceException, is_llm_error
 from execution_logger import trace
@@ -66,13 +69,16 @@ def run_workflow(user_input: str, context_overrides: dict = None, execution_mode
         "results": [],
         "error": "",
         "stopped_at_step": 0,
-        # ReAct fields (only meaningful when execution_mode == "react")
-        "react_history": [],
-        "react_iteration": 0,
-        "react_done": False,
+        # ReAct fields disabled — uncomment to re-enable
+    #     "react_history": [],
+    #     "react_iteration": 0,
+    #     "react_done": False,
     }
 
-    selected_workflow = react_workflow if execution_mode == "react" else workflow
+    # ReAct disabled — always use standard workflow
+    # selected_workflow = react_workflow if execution_mode == "react" else workflow
+    selected_workflow = workflow
+    execution_mode = "standard"  # Force standard until ReAct is re-enabled
 
     print(f"📅 Date context: today={today}")
     print(f"🚀 Starting workflow execution (mode={execution_mode})...")
@@ -95,8 +101,17 @@ def run_workflow(user_input: str, context_overrides: dict = None, execution_mode
     # Determine real status from result state
     final_context = result_state.get("final_context", {})
     has_error = result_state.get("error") or final_context.get("error")
-    status = "error" if has_error else "success"
-    message = result_state.get("error") or "Workflow executed successfully"
+    is_paused = final_context.get("paused_for_approval", False)
+    
+    if is_paused:
+        status = "paused_for_approval"
+        message = "Workflow paused — action requires approval"
+    elif has_error:
+        status = "error"
+        message = result_state.get("error") or "Workflow execution error"
+    else:
+        status = "success"
+        message = "Workflow executed successfully"
 
     return WorkflowResponse(
         status=status,

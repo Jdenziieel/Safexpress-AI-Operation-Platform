@@ -1,67 +1,26 @@
-[2026-03-22 15:22:24.344] [INFO] [req_20260322072103_c1595d50] [T:fb49eefe] → REQUEST: POST /actions/cleanup  | {"query": null}
-[2026-03-22 15:22:24.349] [PRINT] ✅ SQLite log storage initialized: logs.db
-[2026-03-22 15:22:24.363] [INFO] [req_20260322072103_c1595d50] [T:fb49eefe] ← RESPONSE: 200 (19ms)
-[2026-03-22 15:22:24.363] [INFO] [req_20260322072103_c1595d50] [T:fb49eefe] ─────────: ──────────────────────────────────────────────────
-[2026-03-22 15:22:24.363] [PRINT] [32mINFO[0m:     127.0.0.1:3218 - "[1mPOST /actions/cleanup HTTP/1.1[0m" [32m200 OK[0m
-[2026-03-22 15:22:24.379] [INFO] [req_20260322072103_c1595d50] [T:fb49eefe] → REQUEST: GET /threads  | {"query": "user_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03"}
-[2026-03-22 15:22:24.379] [INFO] [req_20260322072103_c1595d50] [T:fb49eefe] ← RESPONSE: 200 (0ms)
-[2026-03-22 15:22:24.379] [INFO] [req_20260322072103_c1595d50] [T:fb49eefe] ─────────: ──────────────────────────────────────────────────
-[2026-03-22 15:22:24.386] [PRINT] [32mINFO[0m:     127.0.0.1:3218 - "[1mGET /threads?user_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03 HTTP/1.1[0m" [32m200 OK[0m
-[2026-03-22 15:22:30.191] [INFO] [req_20260322072103_c1595d50] [T:fb49eefe] → REQUEST: POST /threads  | {"query": null}
-[2026-03-22 15:22:30.194] [INFO] [req_20260322072103_c1595d50] [T:new]   STEP [create_thread]: user=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03, has_message=True
-[2026-03-22 15:22:35.147] [PRINT] ⚠️ Quota service unavailable for check: [WinError 10061] No connection could be made because the target machine actively refused it. Allowing operation.
-[2026-03-22 15:22:35.169] [PRINT] [CONTEXT SET] request_id=req_20260322072235_ea72463c, user_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03, thread_id=None
-[2026-03-22 15:22:35.217] [PRINT] ✅ Created thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e for user: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03
-[2026-03-22 15:22:35.227] [PRINT] ══════════════════════════════════════════════════════════════════════
-[2026-03-22 15:22:35.247] [PRINT]   📨  NEW MESSAGE  │  thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e
-[2026-03-22 15:22:35.262] [PRINT] ══════════════════════════════════════════════════════════════════════
-[2026-03-22 15:22:35.275] [PRINT]   User: Hello, what can you do?
-[2026-03-22 15:22:35.294] [PRINT]   State: intent=None, extracted=False, missing=[], exec_ready=False
-[2026-03-22 15:22:35.309] [PRINT] ══════════════════════════════════════════════════════════════════════
-[2026-03-22 15:22:35.322] [INFO] [req_20260322072235_ea72463c] [T:new]   STEP [new_message]: thread=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e, msg=Hello, what can you do?
-[2026-03-22 15:22:35.327] [INFO] [req_20260322072235_ea72463c] [T:new]   INFO: Memory: added user message  | {"tokens": 12, "total": 12, "max": 2000}
-[2026-03-22 15:22:35.343] [INFO] [req_20260322072235_ea72463c] [T:new]   STEP [tier0]: greeting detected — instant response (0 tokens)
-[2026-03-22 15:22:35.343] [INFO] [req_20260322072235_ea72463c] [T:new]   ANALYSIS: intent=ConversationIntent.SMALL_TALK, ready=False  | {"missing_fields": []}
-[2026-03-22 15:22:35.343] [INFO] [req_20260322072235_ea72463c] [T:new]   STEP [conversation_state]: intent=ConversationIntent.SMALL_TALK
-    ↳ {"intent": "ConversationIntent.SMALL_TALK", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": null, "execution_mode": "standard", "extracted_info": {}}
-[2026-03-22 15:22:35.346] [INFO] [req_20260322072235_ea72463c] [T:new]   INFO: Memory: added assistant message  | {"tokens": 302, "total": 314, "max": 2000}
-[2026-03-22 15:22:35.403] [PRINT] ✅ Created new thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e for user: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03
-[2026-03-22 15:22:35.417] [PRINT] [CONTEXT SET] request_id=req_20260322072235_ea72463c, user_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03, thread_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e
-[2026-03-22 15:22:35.444] [INFO] [req_20260322072235_ea72463c] [T:1b72619e] ← RESPONSE: 200 (5253ms)
-[2026-03-22 15:22:35.444] [INFO] [req_20260322072235_ea72463c] [T:1b72619e] ─────────: ──────────────────────────────────────────────────
-[2026-03-22 15:22:35.461] [PRINT] [32mINFO[0m:     127.0.0.1:1551 - "[1mPOST /threads HTTP/1.1[0m" [32m200 OK[0m
-[2026-03-22 15:22:35.479] [INFO] [req_20260322072235_ea72463c] [T:1b72619e] → REQUEST: GET /threads  | {"query": "user_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03"}
-[2026-03-22 15:22:35.479] [INFO] [req_20260322072235_ea72463c] [T:1b72619e] ← RESPONSE: 200 (0ms)
-[2026-03-22 15:22:35.491] [INFO] [req_20260322072235_ea72463c] [T:1b72619e] ─────────: ──────────────────────────────────────────────────
-[2026-03-22 15:22:35.493] [PRINT] [32mINFO[0m:     127.0.0.1:1551 - "[1mGET /threads?user_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03 HTTP/1.1[0m" [32m200 OK[0m
-[2026-03-22 15:24:44.843] [INFO] [req_20260322072235_ea72463c] [T:1b72619e] → REQUEST: OPTIONS /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e/messages  | {"query": null}
-[2026-03-22 15:24:44.843] [INFO] [req_20260322072235_ea72463c] [T:1b72619e] ← RESPONSE: 200 (0ms)
-[2026-03-22 15:24:44.843] [INFO] [req_20260322072235_ea72463c] [T:1b72619e] ─────────: ──────────────────────────────────────────────────
-[2026-03-22 15:24:44.843] [PRINT] [32mINFO[0m:     127.0.0.1:3171 - "[1mOPTIONS /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e/messages HTTP/1.1[0m" [32m200 OK[0m
-[2026-03-22 15:24:44.876] [INFO] [req_20260322072235_ea72463c] [T:1b72619e] → REQUEST: POST /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e/messages  | {"query": null}
-[2026-03-22 15:24:49.930] [PRINT] ⚠️ Quota service unavailable for check: [WinError 10061] No connection could be made because the target machine actively refused it. Allowing operation.
-[2026-03-22 15:24:49.947] [PRINT] [CONTEXT SET] request_id=req_20260322072449_973703ec, user_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03, thread_id=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e
-[2026-03-22 15:24:49.974] [INFO] [req_20260322072449_973703ec] [T:1b72619e]   USER MSG: "Can you send an email for me please?"
-[2026-03-22 15:24:49.982] [PRINT] ══════════════════════════════════════════════════════════════════════
-[2026-03-22 15:24:49.998] [PRINT]   📨  NEW MESSAGE  │  thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e
-[2026-03-22 15:24:50.007] [PRINT] ══════════════════════════════════════════════════════════════════════
-[2026-03-22 15:24:50.027] [PRINT]   User: Can you send an email for me please?
-[2026-03-22 15:24:50.043] [PRINT]   State: intent=ConversationIntent.SMALL_TALK, extracted=False, missing=[], exec_ready=False
-[2026-03-22 15:24:50.058] [PRINT] ══════════════════════════════════════════════════════════════════════
-[2026-03-22 15:24:50.076] [INFO] [req_20260322072449_973703ec] [T:1b72619e]   STEP [new_message]: thread=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e, msg=Can you send an email for me please?
-[2026-03-22 15:24:50.076] [INFO] [req_20260322072449_973703ec] [T:1b72619e]   INFO: Memory: added user message  | {"tokens": 14, "total": 328, "max": 2000}
-[2026-03-22 15:24:50.093] [INFO] [req_20260322072449_973703ec] [T:1b72619e]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
-[2026-03-22 15:24:50.093] [PRINT] 
-[2026-03-22 15:24:50.093] [PRINT] ──────────────────────────────────────────────────
-[2026-03-22 15:24:50.109] [PRINT] 🔍 TIER 0.5 — Building prompt
-[2026-03-22 15:24:50.126] [PRINT] ──────────────────────────────────────────────────
-[2026-03-22 15:24:50.137] [PRINT]    bot_signal : (none)
-[2026-03-22 15:24:50.142] [PRINT]    state_block: (none)
-[2026-03-22 15:24:50.147] [PRINT]    file_context: (none)
-[2026-03-22 15:24:50.156] [PRINT] ──────────────────────────────────────────────────
-[2026-03-22 15:24:52.069] [ERROR] [req_20260322072449_973703ec] [T:1b72619e]   ✗ ERROR: Tier 0.5: LLM service error in unified quick check | APIConnectionError: Connection error.
-[2026-03-22 15:24:52.072] [PRINT] 🔴 LLM Error: APIConnectionError: Connection error.
-[2026-03-22 15:24:52.084] [PRINT] ❌ Error sending message to thread: The AI service is temporarily unavailable. Please try again in a few minutes. If the issue persists, contact support.
-[2026-03-22 15:24:52.094] [INFO] [req_20260322072449_973703ec] [T:1b72619e] ← RESPONSE: 500 (7218ms)
-[2026-03-22 15:24:52.094] [INFO] [req_20260322072449_973703ec] [T:1b72619e] ─────────: ──────────────────────────────────────────────────
-[2026-03-22 15:24:52.098] [PRINT] [32mINFO[0m:     127.0.0.1:3171 - "[1mPOST /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_1b72619e/messages HTTP/1.1[0m" [91m500 Internal Server Error[0m
+[2026-03-24 18:12:22.618] [INFO] [req_20260323085736_cd02640a] [T:5c4079de] → REQUEST: DELETE /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_f21b2557  | {"query": null}
+[2026-03-24 18:12:22.722] [PRINT] 📦 Archived thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_f21b2557
+[2026-03-24 18:12:22.870] [INFO] [req_20260323085736_cd02640a] [T:5c4079de] ← RESPONSE: 404 (254ms)
+[2026-03-24 18:12:22.871] [INFO] [req_20260323085736_cd02640a] [T:5c4079de] ─────────: ──────────────────────────────────────────────────
+[2026-03-24 18:15:54.952] [INFO] [req_20260323085736_cd02640a] [T:5c4079de] → REQUEST: DELETE /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_f21b2557  | {"query": null}
+[2026-03-24 18:15:54.972] [PRINT] 📦 Archived thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_f21b2557
+[2026-03-24 18:15:55.004] [INFO] [req_20260323085736_cd02640a] [T:5c4079de] ← RESPONSE: 404 (52ms)
+[2026-03-24 18:15:55.006] [INFO] [req_20260323085736_cd02640a] [T:5c4079de] ─────────: ──────────────────────────────────────────────────
+[2026-03-24 18:16:23.047] [INFO] [req_20260323085736_cd02640a] [T:5c4079de] → REQUEST: DELETE /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_f21b2557  | {"query": null}
+[2026-03-24 18:16:23.061] [PRINT] 📦 Archived thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_f21b2557
+[2026-03-24 18:16:23.085] [INFO] [req_20260323085736_cd02640a] [T:5c4079de] ← RESPONSE: 404 (38ms)
+[2026-03-24 18:16:23.088] [INFO] [req_20260323085736_cd02640a] [T:5c4079de] ─────────: ──────────────────────────────────────────────────
+[2026-03-24 18:27:39.125] [PRINT] ✅ SQLite thread manager initialized: threads.db
+[2026-03-24 18:27:39.175] [PRINT] ✅ Workflow graph compiled (FULL WORKFLOW)
+[2026-03-24 18:27:39.182] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-03-24 18:27:39.188] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-03-24 18:27:39.193] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-03-24 18:27:39.286] [PRINT] 🚀 Starting Supervisor Agent on port 8010
+[2026-03-24 18:27:39.295] [PRINT] 📚 API Documentation: http://localhost:8010/docs
+[2026-03-24 18:28:22.074] [INFO] [-] → REQUEST: PUT /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_5c4079de  | {"query": null}
+[2026-03-24 18:28:22.092] [INFO] [-] ← RESPONSE: 200 (18ms)
+[2026-03-24 18:28:22.093] [INFO] [-] ─────────: ──────────────────────────────────────────────────
+[2026-03-24 18:28:26.593] [INFO] [-] → REQUEST: DELETE /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_4cc44954  | {"query": null}
+[2026-03-24 18:28:26.603] [PRINT] 📦 Archived thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_4cc44954
+[2026-03-24 18:28:26.620] [INFO] [-] ← RESPONSE: 200 (27ms)
+[2026-03-24 18:28:26.622] [INFO] [-] ─────────: ──────────────────────────────────────────────────

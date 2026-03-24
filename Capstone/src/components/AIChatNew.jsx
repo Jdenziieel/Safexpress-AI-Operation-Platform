@@ -5,7 +5,9 @@ import {
   Send, 
   Sparkles, 
   MessageSquare, 
-  Trash2, 
+  Trash2,
+  Pencil,
+  Check,
   Loader2,
   Clock,
   CheckCircle,
@@ -267,6 +269,8 @@ function AIChatNew() {
   const [llmError, setLlmError] = useState(null);
   const [showLlmErrorModal, setShowLlmErrorModal] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState("");
+  const [editingThreadId, setEditingThreadId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState("");
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -521,6 +525,29 @@ function AIChatNew() {
       }
     } catch (error) {
       console.error("Error deleting thread:", error);
+    }
+  };
+
+  const startEditingTitle = (thread_id, currentTitle, e) => {
+    e.stopPropagation();
+    setEditingThreadId(thread_id);
+    setEditingTitle(currentTitle || "");
+  };
+
+  const handleRenameThread = async (thread_id) => {
+    const trimmed = editingTitle.trim();
+    if (!trimmed) {
+      setEditingThreadId(null);
+      return;
+    }
+
+    try {
+      await supervisorApi.put(`/threads/${thread_id}`, { title: trimmed });
+      await fetchThreads();
+    } catch (error) {
+      console.error("Error renaming thread:", error);
+    } finally {
+      setEditingThreadId(null);
     }
   };
 
@@ -1064,14 +1091,11 @@ function AIChatNew() {
 
         // Check if execution was paused for approval
         if (execResult.status === "approval_required") {
-          console.log("🔄 Execution paused, awaiting approval. Action ID:", execResult.action_id);
+          console.log("🔄 Execution paused, awaiting approval — handled via chat");
           
-          // Disconnect WebSocket and clear inline progress - approval UI will take over
+          // Disconnect WebSocket and clear inline progress - approval is handled in chat
           disconnectProgressWebSocket();
           setInlineProgress(null);
-          
-          // Fetch pending actions to update UI
-          await fetchPendingActions();
           
           // Add message indicating approval is needed
           setMessages((prev) => [
@@ -1351,24 +1375,55 @@ function AIChatNew() {
                   <div className="thread-card-content">
                     <div className="thread-card-header">
                       <MessageSquare size={16} />
-                      <span className="thread-id">
-                        {thread.title || thread.thread_id.substring(0, 12) + '...'}
-                      </span>
+                      {editingThreadId === thread.thread_id ? (
+                        <input
+                          className="thread-title-input"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleRenameThread(thread.thread_id);
+                            if (e.key === "Escape") setEditingThreadId(null);
+                          }}
+                          onBlur={() => handleRenameThread(thread.thread_id)}
+                          onClick={(e) => e.stopPropagation()}
+                          autoFocus
+                        />
+                      ) : (
+                        <span className="thread-id">
+                          {thread.title || thread.thread_id.substring(0, 12) + '...'}
+                        </span>
+                      )}
                     </div>
-                    {thread.status && (
-                      <span className="thread-intent">{thread.status}</span>
-                    )}
                     <span className="thread-messages-count">
                       {thread.message_count || 0} messages
                     </span>
                   </div>
-                  <button
-                    className="thread-delete-btn"
-                    onClick={(e) => handleDeleteThread(thread.thread_id, e)}
-                    title="Delete conversation"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="thread-card-actions">
+                    {editingThreadId === thread.thread_id ? (
+                      <button
+                        className="thread-action-btn thread-confirm-btn"
+                        onClick={(e) => { e.stopPropagation(); handleRenameThread(thread.thread_id); }}
+                        title="Save title"
+                      >
+                        <Check size={14} />
+                      </button>
+                    ) : (
+                      <button
+                        className="thread-action-btn thread-edit-btn"
+                        onClick={(e) => startEditingTitle(thread.thread_id, thread.title || thread.thread_id.substring(0, 12), e)}
+                        title="Rename conversation"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
+                    <button
+                      className="thread-action-btn thread-delete-btn"
+                      onClick={(e) => handleDeleteThread(thread.thread_id, e)}
+                      title="Delete conversation"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -1395,16 +1450,6 @@ function AIChatNew() {
             </div>
             
             <div className="chat-header-right">
-              <button
-                onClick={() => setShowActions(!showActions)}
-                className="toggle-panel-btn"
-                title={showActions ? "Hide Actions" : "Show Actions"}
-              >
-                <ListTodo size={20} />
-                {pendingActions.length > 0 && (
-                  <span className="action-badge">{pendingActions.length}</span>
-                )}
-              </button>
             </div>
           </header>
 
@@ -1565,61 +1610,7 @@ function AIChatNew() {
           </div>
         </main>
 
-        {/* Pending Actions Sidebar */}
-        <aside className={`actions-panel ${showActions ? 'visible' : ''}`}>
-          <div className="actions-panel-header">
-            <h3>
-              <Clock size={18} />
-              Pending Actions
-            </h3>
-          </div>
-          
-          {pendingActions.length > 0 ? (
-            <div className="actions-panel-list">
-              {pendingActions.map((action) => (
-                <div key={action.action_id} className="action-card">
-                  <div className="action-card-content">
-                    <p className="action-description">{action.description || "Action description unavailable"}</p>
-                    <p className="action-agent">Agent: <strong>{action.agent || "Unknown Agent"}</strong></p>
-                    <p className="action-tool">Tool: <strong>{action.tool || "Unknown Tool"}</strong></p>
-                    {action.inputs && Object.keys(action.inputs).length > 0 && (
-                      <details className="action-inputs">
-                        <summary>Inputs</summary>
-                        <pre>{JSON.stringify(action.inputs, null, 2)}</pre>
-                      </details>
-                    )}
-                  </div>
-                  <div className="action-card-buttons">
-                    <button
-                      onClick={() => handleApproveAction(action.action_id)}
-                      className="action-approve-btn"
-                      disabled={isFetchingPending}
-                    >
-                      <CheckCircle size={16} /> Approve
-                    </button>
-                    <button
-                      onClick={() => handleRejectAction(action.action_id)}
-                      className="action-reject-btn"
-                      disabled={isFetchingPending}
-                    >
-                      <XCircle size={16} /> Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : isFetchingPending ? (
-            <div className="actions-panel-empty">
-              <Loader2 size={20} className="spinner" />
-              <span>Checking...</span>
-            </div>
-          ) : (
-            <div className="actions-panel-empty">
-              <Clock size={32} opacity={0.3} />
-              <p>No pending actions</p>
-            </div>
-          )}
-        </aside>
+        {/* Pending Actions now handled via chat — sidebar removed */}
       </div>
       </div>
       

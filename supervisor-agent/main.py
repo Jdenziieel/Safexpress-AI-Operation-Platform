@@ -10,7 +10,7 @@ from fastapi import Request
 
 # Import the FastAPI app and shared objects from supervisor_agent
 # (this triggers LangGraph compilation, LLM init, etc.)
-from supervisor_agent import app, recover_pending_actions_from_sqlite
+from supervisor_agent import app
 from config import SERVER_PORT, SERVER_HOST
 
 # Register route modules
@@ -39,19 +39,8 @@ async def ensure_print_capture(request: Request, call_next):
     return await call_next(request)
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Run on application startup - recover state from SQLite."""
-    print("🔄 Running startup recovery...")
-    recover_pending_actions_from_sqlite()
-    print("✅ Startup recovery complete")
-
-
 if __name__ == "__main__":
     print(f"🚀 Starting Supervisor Agent on port {SERVER_PORT}")
     print(f"📚 API Documentation: http://localhost:{SERVER_PORT}/docs")
 
-    # Recover pending actions from SQLite on startup
-    recover_pending_actions_from_sqlite()
-
-    uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)
+    uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT, access_log=False)

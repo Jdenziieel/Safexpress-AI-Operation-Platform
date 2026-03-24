@@ -18,7 +18,6 @@ import uvicorn
 import asyncio
 import uuid
 import time
-import hashlib
 
 # Import models
 from models.models import *
@@ -35,7 +34,7 @@ from config import (
     QUICK_MODEL,
     SERVER_PORT,
     SERVER_HOST,
-)
+)  
 
 # Import agent capabilities
 from agent_capabilities_v3 import agent_capabilities
@@ -110,8 +109,10 @@ class TraceMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         start = time.time()
         method_path = f"{request.method} {request.url.path}"
-        # Skip noisy health/docs endpoints
+        # Skip noisy/read-only endpoints: health, docs, OPTIONS preflight, GET polling
         if request.url.path in ("/health", "/docs", "/openapi.json", "/favicon.ico"):
+            return await call_next(request)
+        if request.method in ("OPTIONS", "GET"):
             return await call_next(request)
         trace.request_start(method_path, {"query": str(request.query_params) or None})
         try:
@@ -319,13 +320,21 @@ def supervisor_node(state: SharedState) -> SharedState:
     today_date = context.get("today_date", "")
     print(f"📅 Context dates: today={today_date}")
 
-    # Single LLM call for agent+tool identification
-    filtered_capabilities, tool_filter = get_optimized_capabilities(user_input)
+    # Reuse the tool filter from Tier 1 if available (avoids a redundant LLM call)
+    cached_tool_filter = context.get("_cached_tool_filter")
+    if cached_tool_filter:
+        from tool_filter import get_filtered_capabilities_v2
+        filtered_capabilities = get_filtered_capabilities_v2(cached_tool_filter)
+        tool_filter = cached_tool_filter
+        print(f"📌 Reusing cached tool filter from Tier 1 (saved 1 LLM call)")
+        trace.step("agent_filtering", f"reused cached filter, agents={list(filtered_capabilities.keys())}")
+    else:
+        filtered_capabilities, tool_filter = get_optimized_capabilities(user_input)
+        trace.step("agent_filtering", f"fresh classification")
     relevant_agents = list(filtered_capabilities.keys())
     
     print(f"📌 Relevant agents: {relevant_agents}")
     print(f"🔧 Filtered tools: {tool_filter}")
-    trace.step("agent_filtering", f"agents={relevant_agents}, tools={tool_filter}")
     
     # ===================================================================
     # BUILD SYSTEM PROMPT
@@ -342,10 +351,9 @@ def supervisor_node(state: SharedState) -> SharedState:
             uf = context["uploaded_file"]
             context_vars_note += f"\n- uploaded_file: {{{{ uploaded_file.temp_path }}}} (file: {uf.get('filename', 'unknown')})"
 
+    # System prompt: fixed rules + example first (cacheable prefix),
+    # dynamic date/context/capabilities appended at the end
     system_prompt = f"""You are the Supervisor agent creating multi-step execution plans.
-
-CURRENT DATE CONTEXT:
-- Today's date: {today_date}
 
 PLANNING RULES:
 1. Reference previous outputs using {{{{ variable_name }}}} syntax
@@ -355,7 +363,6 @@ PLANNING RULES:
 5. For ANY email sending: create_draft_email first, then optionally send_draft_email if explicitly requested
 6. Follow tool-specific instructions in the capabilities (array_access hints, workflow definitions, can_be_derived_from)
 7. When uploaded_file is present in context: use {{{{ uploaded_file.temp_path }}}} for file_path inputs and {{{{ uploaded_file.filename }}}} for filename inputs.
-{context_vars_note}
 
 EXAMPLE:
 User: "Find the latest email from john@example.com and reply saying thanks"
@@ -377,6 +384,10 @@ User: "Find the latest email from john@example.com and reply saying thanks"
     }}}}
   ]
 }}}}
+
+CURRENT DATE CONTEXT:
+- Today's date: {today_date}
+{context_vars_note}
 
 Available agents and tools:
 {capability_summary}"""
@@ -423,10 +434,12 @@ Available agents and tools:
         # Real token tracking from the raw AIMessage
         input_tokens = 0
         output_tokens = 0
+        cached_tokens = 0
         if hasattr(raw_message, 'response_metadata'):
             token_usage = raw_message.response_metadata.get('token_usage', {})
             input_tokens = token_usage.get('prompt_tokens', 0)
             output_tokens = token_usage.get('completion_tokens', 0)
+            cached_tokens = token_usage.get('prompt_tokens_details', {}).get('cached_tokens', 0)
 
         logger.llm_call(
             model=LLM_MODEL,
@@ -436,7 +449,8 @@ Available agents and tools:
             duration_ms=duration_ms,
             tier="supervisor",
             prompt_summary=f"Planning: {user_input[:50]}...",
-            success=True
+            success=True,
+            cached_tokens=cached_tokens
         )
 
         # Convert Pydantic model → dict for downstream compatibility
@@ -467,60 +481,8 @@ Available agents and tools:
 
     return {"plan": plan, "context": state.get("context", {})}
 # ============================================================================
-# PENDING ACTIONS - SQLite Storage with Runtime Cache
+# PENDING ACTIONS - SQLite Storage (stateless, Lambda-ready)
 # ============================================================================
-# Runtime cache for execution callbacks (callbacks can't be stored in DB)
-PENDING_ACTIONS_CACHE = {}
-
-
-def recover_pending_actions_from_sqlite():
-    """
-    Recover pending actions from SQLite on startup.
-    Callbacks will be None but step_info is preserved for execution.
-    """
-    try:
-        storage = LogStorage()
-        
-        pending_records = storage.get_pending_actions(status="pending")
-        recovered_count = 0
-        
-        for record in pending_records:
-            action_id = record.get("action_id")
-            if action_id and action_id not in PENDING_ACTIONS_CACHE:
-                # Rebuild PendingAction from SQLite data
-                step_info = {
-                    "step_number": record.get("step_number"),
-                    "agent": record.get("agent_name"),
-                    "tool": record.get("tool_name"),
-                    "description": record.get("description"),
-                    "inputs": record.get("inputs"),
-                    "output_variables": record.get("output_variables"),
-                    "risk_level": record.get("risk_level"),
-                }
-                
-                action = PendingAction(
-                    action_id=action_id,
-                    step_info=step_info,
-                    execution_callback=None,  # Callback lost - use execute_single_action instead
-                    thread_id=record.get("thread_id"),
-                    conversation_id=record.get("conversation_id"),
-                    request_id=record.get("request_id")
-                )
-                
-                # Restore metadata
-                if record.get("created_at"):
-                    try:
-                        action.created_at = datetime.fromisoformat(record["created_at"])
-                    except:
-                        pass
-                
-                PENDING_ACTIONS_CACHE[action_id] = action
-                recovered_count += 1
-        
-        if recovered_count > 0:
-            print(f"🔄 Recovered {recovered_count} pending actions from SQLite")
-    except Exception as e:
-        print(f"⚠️ Error recovering pending actions: {e}")
 
 
 def get_action_risk_level(tool_name: str) -> ActionRiskLevel:
@@ -631,17 +593,15 @@ def extract_nested_value(data: dict, path: str):
 
 
 def store_pending_action(action: PendingAction):
-    """Store action waiting for approval in SQLite and cache callback"""
+    """Store action waiting for approval in SQLite"""
     storage = LogStorage()
     
-    # Get context IDs
     thread_id = action.thread_id or get_current_thread_id()
     conversation_id = action.conversation_id or get_current_conversation_id()
     request_id = action.request_id or get_current_request_id()
     
     risk_level = get_action_risk_level(action.step_info.get("tool"))
     
-    # Store in SQLite
     storage.insert_pending_action(
         action_id=action.action_id,
         agent_name=action.step_info.get("agent", "unknown"),
@@ -657,10 +617,6 @@ def store_pending_action(action: PendingAction):
         expires_in_minutes=30
     )
     
-    # Cache the callback for later execution
-    PENDING_ACTIONS_CACHE[action.action_id] = action
-    
-    # Log the pending action
     logger.info(
         f"Pending action stored: {action.action_id}",
         component="approval",
@@ -676,19 +632,13 @@ def store_pending_action(action: PendingAction):
 
 
 def get_pending_action(action_id: str) -> Optional[PendingAction]:
-    """Retrieve pending action from cache or rebuild from SQLite"""
-    # Check cache first
-    if action_id in PENDING_ACTIONS_CACHE:
-        return PENDING_ACTIONS_CACHE[action_id]
-    
-    # Fallback to SQLite (won't have callback, but will have step_info)
+    """Retrieve pending action from the database"""
     storage = LogStorage()
     
     action_data = storage.get_pending_action(action_id)
     if not action_data:
         return None
     
-    # Rebuild PendingAction from SQLite data
     step_info = {
         "step_number": action_data.get("step_number"),
         "agent": action_data.get("agent_name"),
@@ -702,7 +652,7 @@ def get_pending_action(action_id: str) -> Optional[PendingAction]:
     action = PendingAction(
         action_id=action_id,
         step_info=step_info,
-        execution_callback=None,  # Callback lost after restart
+        execution_callback=None,
         thread_id=action_data.get("thread_id"),
         conversation_id=action_data.get("conversation_id"),
         request_id=action_data.get("request_id")
@@ -714,15 +664,9 @@ def get_pending_action(action_id: str) -> Optional[PendingAction]:
 
 
 def remove_pending_action(action_id: str):
-    """Remove completed action from SQLite and cache"""
+    """Remove completed action from the database"""
     storage = LogStorage()
-    
-    # Remove from SQLite
     storage.delete_pending_action(action_id)
-    
-    # Remove from cache
-    if action_id in PENDING_ACTIONS_CACHE:
-        del PENDING_ACTIONS_CACHE[action_id]
     
     logger.info(
         f"Pending action removed: {action_id}",
@@ -888,6 +832,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
             step_info = {
                 "step_number": step_num,
+                "total_steps": len(plan),
                 "agent": agent_name,
                 "tool": tool_name,
                 "description": description,
@@ -904,10 +849,21 @@ def orchestrator_node(state: SharedState) -> SharedState:
             store_pending_action(pending_action)
 
             print(f"🔔 Approval required for action: {action_id}")
-            print(f"   Endpoint: POST /action/approve/{action_id}")
             print(f"   Details: {json.dumps(step_info, indent=4)}")
 
-            # Paused — skip execution, move to next step
+            # Collect remaining steps (after the current one)
+            remaining_steps = []
+            for future_step_num, future_step in enumerate(plan[step_num:], step_num + 1):
+                remaining_steps.append({
+                    "step_number": future_step_num,
+                    "agent": future_step.get("agent"),
+                    "tool": future_step.get("tool"),
+                    "description": future_step.get("description", ""),
+                    "inputs": future_step.get("inputs", {}),
+                    "output_variables": future_step.get("output_variables", {}),
+                })
+
+            # Record this step as pending
             results.append({
                 "step": step_num,
                 "agent": agent_name,
@@ -916,7 +872,30 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 "action_id": action_id,
                 "description": description,
             })
-            continue
+
+            # STOP the loop — return with pending info so threads.py can pause workflow
+            print(f"⏸️ WORKFLOW PAUSED — waiting for chat-based approval")
+            variable_context["results"] = results
+            
+            # Include approval metadata in final_context so it flows to WorkflowResponse
+            variable_context["paused_for_approval"] = True
+            variable_context["pending_action"] = step_info
+            variable_context["pending_action_id"] = action_id
+            variable_context["remaining_steps"] = remaining_steps
+            
+            # Preserve ReAct state for resumption (if in react mode) — DISABLED
+            # if state.get("react_history") is not None:
+            #     variable_context["react_history"] = state.get("react_history", [])
+            #     variable_context["react_iteration"] = state.get("react_iteration", 0)
+
+            # === WEBSOCKET BROADCAST: Paused for approval ===
+            broadcast_ws_progress(step_num, len(plan), f"Awaiting approval: {description}", agent_name, "paused")
+
+            return {
+                "final_context": variable_context,
+                "context": variable_context,
+                "results": results,
+            }
 
         # No approval needed — execute normally
 
@@ -1364,8 +1343,10 @@ print(f"   Agent endpoints: {list(AGENT_ENDPOINTS.keys())}")
 
 
 # ============================================================================
-# REACT WORKFLOW — Iterative Reason-Act-Observe Loop
+# REACT WORKFLOW — Iterative Reason-Act-Observe Loop (COMMENTED OUT)
 # ============================================================================
+# To re-enable ReAct: uncomment the block below and set react_workflow = react_graph.compile()
+#
 # Instead of planning all steps upfront (standard), the ReAct workflow:
 #   1. react_planner: observes previous results → thinks → generates ONE next step
 #   2. orchestrator: executes that single step (reuses existing orchestrator_node)
@@ -1375,275 +1356,296 @@ print(f"   Agent endpoints: {list(AGENT_ENDPOINTS.keys())}")
 # Graph: react_planner → [route_react_plan] → orchestrator → react_planner → ...
 # ============================================================================
 
-MAX_REACT_ITERATIONS = 10
+# --- REACT FLOW DISABLED — uncomment to re-enable ---
+react_workflow = None  # Stub so imports don't break
 
-
-class ReactStep(BaseModel):
-    """Structured output for a single ReAct iteration."""
-    thought: str = Field(description="Reasoning about what to do next based on observations so far")
-    next_step: Optional[PlanStep] = Field(default=None, description="Next step to execute, or null if task is done")
-    done: bool = Field(description="True if the task is fully complete, False if more steps are needed")
-    summary: Optional[str] = Field(default=None, description="Final summary of what was accomplished (set when done=True)")
-
-
-def _summarize_react_observation(output: dict) -> str:
-    """Create a compact summary of a step's output for the react history prompt."""
-    if not output:
-        return "No output"
-    summary_parts = []
-    for key, value in output.items():
-        if key in ("success", "error"):
-            continue
-        if isinstance(value, list):
-            summary_parts.append(f"{key}: [{len(value)} items]")
-        elif isinstance(value, dict):
-            summary_parts.append(f"{key}: {{{', '.join(list(value.keys())[:5])}}}")
-        elif isinstance(value, str) and len(value) > 100:
-            summary_parts.append(f"{key}: {value[:100]}...")
-        else:
-            summary_parts.append(f"{key}: {value}")
-    return "; ".join(summary_parts) if summary_parts else "Empty result"
-
-
-def react_planner_node(state: SharedState) -> SharedState:
-    """
-    ReAct planner node: observe → think → plan ONE next step (or declare done).
-
-    On first call react_history is empty — generates the first step.
-    On subsequent calls it sees accumulated observations and decides the next
-    action or declares the task complete.
-    """
-    print("\n" + "=" * 60)
-    print("🧠 REACT PLANNER — Reason + Act")
-    print("=" * 60)
-
-    user_input = state["input"]
-    context = state.get("context", {})
-    react_history = list(state.get("react_history", []))  # copy to avoid mutation
-    react_iteration = state.get("react_iteration", 0)
-
-    trace.step("react_planner", f"Iteration {react_iteration + 1}, prior observations: {len(react_history)}")
-
-    # ------------------------------------------------------------------
-    # Capture results from the previous orchestrator run (if any)
-    # ------------------------------------------------------------------
-    prev_results = state.get("results", [])
-    for r in prev_results:
-        react_history.append({
-            "agent": r.get("agent", "unknown"),
-            "tool": r.get("tool", "unknown"),
-            "description": r.get("description", ""),
-            "status": r.get("status", "unknown"),
-            "output_summary": _summarize_react_observation(r.get("output", {})),
-            "error": r.get("error"),
-        })
-
-    # ------------------------------------------------------------------
-    # Safety: max iterations
-    # ------------------------------------------------------------------
-    if react_iteration >= MAX_REACT_ITERATIONS:
-        print(f"⚠️ Max iterations reached ({MAX_REACT_ITERATIONS}) — forcing completion")
-        trace.warning(f"React loop hit max iterations ({MAX_REACT_ITERATIONS})")
-        return {
-            "plan": {"steps": []},
-            "react_done": True,
-            "react_iteration": react_iteration,
-            "react_history": react_history,
-        }
-
-    # ------------------------------------------------------------------
-    # Build observation context for the LLM
-    # ------------------------------------------------------------------
-    observation_text = ""
-    if react_history:
-        observation_text = "\n\nPREVIOUS STEPS AND OBSERVATIONS:"
-        for i, obs in enumerate(react_history, 1):
-            observation_text += f"\n\nStep {i}: {obs['agent']}.{obs['tool']} — {obs['description']}"
-            observation_text += f"\n  Status: {obs['status']}"
-            if obs.get("output_summary"):
-                observation_text += f"\n  Result: {obs['output_summary']}"
-            if obs.get("error"):
-                observation_text += f"\n  Error: {obs['error']}"
-
-    # ------------------------------------------------------------------
-    # Capabilities & context
-    # ------------------------------------------------------------------
-    filtered_capabilities, tool_filter = get_optimized_capabilities(user_input)
-    capability_summary = json.dumps(filtered_capabilities, indent=2)
-    today_date = context.get("today_date", "")
-
-    context_keys = [k for k in context.keys() if k != "today_date"]
-    context_vars_note = ""
-    if context_keys:
-        context_vars_note = f"\n\nAVAILABLE CONTEXT VARIABLES: {', '.join(context_keys)}"
-        if "uploaded_file" in context:
-            uf = context["uploaded_file"]
-            context_vars_note += f"\n- uploaded_file: {{{{ uploaded_file.temp_path }}}} (file: {uf.get('filename', 'unknown')})"
-
-    total_tools = sum(len(tools) for tools in tool_filter.values())
-    print(f"📌 Relevant agents: {list(filtered_capabilities.keys())}")
-    print(f"🔧 Tools: {total_tools}")
-
-    # ------------------------------------------------------------------
-    # System prompt (ReAct-specific)
-    # ------------------------------------------------------------------
-    system_prompt = f"""You are a ReAct (Reason + Act) agent that solves tasks step-by-step.
-
-CURRENT DATE: {today_date}
-
-APPROACH:
-1. THINK: Analyse what you have observed so far and what needs to happen next.
-2. DECIDE: Either plan exactly ONE next step, or declare the task done.
-
-PLANNING RULES:
-1. Reference previous step outputs using {{{{ variable_name }}}} syntax.
-2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from the tool response.
-3. Use {{{{ today_date }}}} for date references (format: YYYY-MM-DD). Compute relative dates from today_date.
-4. For ANY email sending: create_draft_email first, then optionally send_draft_email.
-5. Follow tool-specific instructions in the capabilities (array_access hints, workflow definitions, can_be_derived_from).
-6. When uploaded_file is present in context: use {{{{ uploaded_file.temp_path }}}} for file_path inputs.
-{context_vars_note}
-{observation_text}
-
-Available agents and tools:
-{capability_summary}
-
-Generate your thought process and EXACTLY ONE next step to execute,
-OR set done=true with a summary if the task is fully complete."""
-
-    # ------------------------------------------------------------------
-    # LLM call (structured output — ReactStep)
-    # ------------------------------------------------------------------
-    print("🤖 Calling LLM for next ReAct step...")
-    try:
-        structured_llm = llm.with_structured_output(
-            ReactStep, method="function_calling", include_raw=True
-        )
-
-        start_time = time.time()
-        result = structured_llm.invoke([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input},
-        ])
-        duration_ms = (time.time() - start_time) * 1000
-
-        raw_message = result["raw"]
-        react_step = result["parsed"]
-        parsing_error = result.get("parsing_error")
-
-        if parsing_error:
-            raise ValueError(f"ReactStep parsing failed: {parsing_error}")
-        if react_step is None:
-            raise ValueError("Structured output returned None")
-
-        # Token tracking
-        input_tokens = 0
-        output_tokens = 0
-        if hasattr(raw_message, "response_metadata"):
-            token_usage = raw_message.response_metadata.get("token_usage", {})
-            input_tokens = token_usage.get("prompt_tokens", 0)
-            output_tokens = token_usage.get("completion_tokens", 0)
-
-        logger.llm_call(
-            model=LLM_MODEL,
-            operation=f"react_plan_iter_{react_iteration + 1}",
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            duration_ms=duration_ms,
-            tier="react_planner",
-            prompt_summary=f"React iteration {react_iteration + 1}: {user_input[:50]}...",
-            success=True,
-        )
-
-        print(f"💭 Thought: {react_step.thought}")
-        trace.step("react_thought", react_step.thought[:200])
-
-        # ------------------------------------------------------------------
-        # Done? Return empty plan so route_react_plan sends us to END
-        # ------------------------------------------------------------------
-        if react_step.done or react_step.next_step is None:
-            summary = react_step.summary or "Task completed."
-            print(f"✅ React planner declares DONE: {summary}")
-            trace.step(
-                "react_done",
-                f"Complete after {react_iteration} iterations: {summary}",
-            )
-            # Build final_context from accumulated context so downstream summary works
-            # Clean stale error markers from earlier iterations that may have recovered
-            context.pop("stopped_at_step", None)
-            context.pop("error", None)
-            context["react_summary"] = summary
-            context["results"] = [
-                {"step": i + 1, "agent": h["agent"], "tool": h["tool"],
-                 "description": h["description"], "status": h["status"]}
-                for i, h in enumerate(react_history)
-            ]
-            return {
-                "plan": {"steps": []},
-                "react_done": True,
-                "react_iteration": react_iteration,
-                "react_history": react_history,
-                "final_context": context,
-                "context": context,
-            }
-
-        # ------------------------------------------------------------------
-        # Not done — wrap the single step as a 1-step plan for orchestrator
-        # ------------------------------------------------------------------
-        step_dict = react_step.next_step.model_dump()
-        plan = {"steps": [step_dict]}
-
-        print(f"📋 Next step: {step_dict['agent']}.{step_dict['tool']}: {step_dict['description']}")
-        trace.step(
-            "react_next_step",
-            f"iter {react_iteration + 1}: {step_dict['agent']}.{step_dict['tool']}",
-        )
-
-        return {
-            "plan": plan,
-            "react_done": False,
-            "react_iteration": react_iteration + 1,
-            "react_history": react_history,
-            "context": context,
-        }
-
-    except Exception as e:
-        if is_llm_error(e):
-            raise LLMServiceException(handle_llm_error(e))
-        trace.error(f"React planning failed: {e}")
-        raise ValueError(f"React planning failed: {str(e)}")
-
-
-def route_react_plan(state: SharedState) -> str:
-    """
-    Conditional routing after react_planner_node.
-    Returns "execute" to run the orchestrator, or "done" to finish.
-    """
-    if state.get("react_done", False):
-        return "done"
-    plan = state.get("plan", {})
-    if not plan.get("steps"):
-        return "done"
-    return "execute"
-
-
-# Build ReAct workflow graph
-react_graph = StateGraph(SharedState)
-react_graph.add_node("react_planner", react_planner_node)
-react_graph.add_node("orchestrator", orchestrator_node)
-
-react_graph.set_entry_point("react_planner")
-react_graph.add_conditional_edges(
-    "react_planner",
-    route_react_plan,
-    {"execute": "orchestrator", "done": END},
-)
-# After orchestrator executes, always loop back to planner for next decision
-react_graph.add_edge("orchestrator", "react_planner")
-
-react_workflow = react_graph.compile()
-
-print("✅ ReAct workflow graph compiled")
-print("   Flow: react_planner → [route] → orchestrator ↺ react_planner → END")
-print(f"   Max iterations: {MAX_REACT_ITERATIONS}")
+# MAX_REACT_ITERATIONS = 10
+#
+#
+# class ReactStep(BaseModel):
+#     """Structured output for a single ReAct iteration."""
+#     thought: str = Field(description="Reasoning about what to do next based on observations so far")
+#     next_step: Optional[PlanStep] = Field(default=None, description="Next step to execute, or null if task is done")
+#     done: bool = Field(description="True if the task is fully complete, False if more steps are needed")
+#     summary: Optional[str] = Field(default=None, description="Final summary of what was accomplished (set when done=True)")
+#
+#
+# def _summarize_react_observation(output: dict) -> str:
+#     """Create a compact summary of a step's output for the react history prompt."""
+#     if not output:
+#         return "No output"
+#     summary_parts = []
+#     for key, value in output.items():
+#         if key in ("success", "error"):
+#             continue
+#         if isinstance(value, list):
+#             summary_parts.append(f"{key}: [{len(value)} items]")
+#         elif isinstance(value, dict):
+#             summary_parts.append(f"{key}: {{{', '.join(list(value.keys())[:5])}}}")
+#         elif isinstance(value, str) and len(value) > 100:
+#             summary_parts.append(f"{key}: {value[:100]}...")
+#         else:
+#             summary_parts.append(f"{key}: {value}")
+#     return "; ".join(summary_parts) if summary_parts else "Empty result"
+#
+#
+# def react_planner_node(state: SharedState) -> SharedState:
+#     """
+#     ReAct planner node: observe → think → plan ONE next step (or declare done).
+#
+#     On first call react_history is empty — generates the first step.
+#     On subsequent calls it sees accumulated observations and decides the next
+#     action or declares the task complete.
+#     """
+#     print("\n" + "=" * 60)
+#     print("🧠 REACT PLANNER — Reason + Act")
+#     print("=" * 60)
+#
+#     user_input = state["input"]
+#     context = state.get("context", {})
+#     react_history = list(state.get("react_history", []))  # copy to avoid mutation
+#     react_iteration = state.get("react_iteration", 0)
+#
+#     trace.step("react_planner", f"Iteration {react_iteration + 1}, prior observations: {len(react_history)}")
+#
+#     # ------------------------------------------------------------------
+#     # Capture results from the previous orchestrator run (if any)
+#     # ------------------------------------------------------------------
+#     prev_results = state.get("results", [])
+#     for r in prev_results:
+#         react_history.append({
+#             "agent": r.get("agent", "unknown"),
+#             "tool": r.get("tool", "unknown"),
+#             "description": r.get("description", ""),
+#             "status": r.get("status", "unknown"),
+#             "output_summary": _summarize_react_observation(r.get("output", {})),
+#             "error": r.get("error"),
+#         })
+#
+#     # ------------------------------------------------------------------
+#     # Safety: max iterations
+#     # ------------------------------------------------------------------
+#     if react_iteration >= MAX_REACT_ITERATIONS:
+#         print(f"⚠️ Max iterations reached ({MAX_REACT_ITERATIONS}) — forcing completion")
+#         trace.warning(f"React loop hit max iterations ({MAX_REACT_ITERATIONS})")
+#         return {
+#             "plan": {"steps": []},
+#             "react_done": True,
+#             "react_iteration": react_iteration,
+#             "react_history": react_history,
+#         }
+#
+#     # ------------------------------------------------------------------
+#     # Build observation context for the LLM
+#     # ------------------------------------------------------------------
+#     observation_text = ""
+#     if react_history:
+#         observation_text = "\n\nPREVIOUS STEPS AND OBSERVATIONS:"
+#         for i, obs in enumerate(react_history, 1):
+#             observation_text += f"\n\nStep {i}: {obs['agent']}.{obs['tool']} — {obs['description']}"
+#             observation_text += f"\n  Status: {obs['status']}"
+#             if obs.get("output_summary"):
+#                 observation_text += f"\n  Result: {obs['output_summary']}"
+#             if obs.get("error"):
+#                 observation_text += f"\n  Error: {obs['error']}"
+#
+#     # ------------------------------------------------------------------
+#     # Capabilities & context
+#     # ------------------------------------------------------------------
+#     filtered_capabilities, tool_filter = get_optimized_capabilities(user_input)
+#     capability_summary = json.dumps(filtered_capabilities, indent=2)
+#     today_date = context.get("today_date", "")
+#
+#     context_keys = [k for k in context.keys() if k != "today_date"]
+#     context_vars_note = ""
+#     if context_keys:
+#         context_vars_note = f"\n\nAVAILABLE CONTEXT VARIABLES: {', '.join(context_keys)}"
+#         if "uploaded_file" in context:
+#             uf = context["uploaded_file"]
+#             context_vars_note += f"\n- uploaded_file: {{{{ uploaded_file.temp_path }}}} (file: {uf.get('filename', 'unknown')})"
+#
+#     total_tools = sum(len(tools) for tools in tool_filter.values())
+#     print(f"📌 Relevant agents: {list(filtered_capabilities.keys())}")
+#     print(f"🔧 Tools: {total_tools}")
+#
+#     # ------------------------------------------------------------------
+#     # System prompt (ReAct-specific)
+#     # ------------------------------------------------------------------
+#     system_prompt = f"""You are a ReAct (Reason + Act) agent that solves tasks step-by-step.
+#
+# CURRENT DATE: {today_date}
+#
+# APPROACH:
+# 1. THINK: Analyse what you have observed so far and what needs to happen next.
+# 2. DECIDE: Either plan exactly ONE next step, or declare the task done.
+#
+# PLANNING RULES:
+# 1. Reference previous step outputs using {{{{ variable_name }}}} syntax.
+# 2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from the tool response.
+# 3. Use {{{{ today_date }}}} for date references (format: YYYY-MM-DD). Compute relative dates from today_date.
+# 4. For ANY email sending: create_draft_email first, then optionally send_draft_email.
+# 5. Follow tool-specific instructions in the capabilities (array_access hints, workflow definitions, can_be_derived_from).
+# 6. When uploaded_file is present in context: use {{{{ uploaded_file.temp_path }}}} for file_path inputs.
+# {context_vars_note}
+# {observation_text}
+#
+# Available agents and tools:
+# {capability_summary}
+#
+# Generate your thought process and EXACTLY ONE next step to execute,
+# OR set done=true with a summary if the task is fully complete."""
+#
+#     # ------------------------------------------------------------------
+#     # LLM call (structured output — ReactStep)
+#     # ------------------------------------------------------------------
+#     print("🤖 Calling LLM for next ReAct step...")
+#     try:
+#         structured_llm = llm.with_structured_output(
+#             ReactStep, method="function_calling", include_raw=True
+#         )
+#
+#         start_time = time.time()
+#         result = structured_llm.invoke([
+#             {"role": "system", "content": system_prompt},
+#             {"role": "user", "content": user_input},
+#         ])
+#         duration_ms = (time.time() - start_time) * 1000
+#
+#         raw_message = result["raw"]
+#         react_step = result["parsed"]
+#         parsing_error = result.get("parsing_error")
+#
+#         if parsing_error:
+#             raise ValueError(f"ReactStep parsing failed: {parsing_error}")
+#         if react_step is None:
+#             raise ValueError("Structured output returned None")
+#
+#         # Token tracking
+#         input_tokens = 0
+#         output_tokens = 0
+#         if hasattr(raw_message, "response_metadata"):
+#             token_usage = raw_message.response_metadata.get("token_usage", {})
+#             input_tokens = token_usage.get("prompt_tokens", 0)
+#             output_tokens = token_usage.get("completion_tokens", 0)
+#
+#         logger.llm_call(
+#             model=LLM_MODEL,
+#             operation=f"react_plan_iter_{react_iteration + 1}",
+#             input_tokens=input_tokens,
+#             output_tokens=output_tokens,
+#             duration_ms=duration_ms,
+#             tier="react_planner",
+#             prompt_summary=f"React iteration {react_iteration + 1}: {user_input[:50]}...",
+#             success=True,
+#         )
+#
+#         print(f"💭 Thought: {react_step.thought}")
+#         trace.step("react_thought", react_step.thought[:200])
+#
+#         # ------------------------------------------------------------------
+#         # Done? Return empty plan so route_react_plan sends us to END
+#         # ------------------------------------------------------------------
+#         if react_step.done or react_step.next_step is None:
+#             summary = react_step.summary or "Task completed."
+#             print(f"✅ React planner declares DONE: {summary}")
+#             trace.step(
+#                 "react_done",
+#                 f"Complete after {react_iteration} iterations: {summary}",
+#             )
+#             # Build final_context from accumulated context so downstream summary works
+#             # Clean stale error markers from earlier iterations that may have recovered
+#             context.pop("stopped_at_step", None)
+#             context.pop("error", None)
+#             context["react_summary"] = summary
+#             context["results"] = [
+#                 {"step": i + 1, "agent": h["agent"], "tool": h["tool"],
+#                  "description": h["description"], "status": h["status"]}
+#                 for i, h in enumerate(react_history)
+#             ]
+#             return {
+#                 "plan": {"steps": []},
+#                 "react_done": True,
+#                 "react_iteration": react_iteration,
+#                 "react_history": react_history,
+#                 "final_context": context,
+#                 "context": context,
+#             }
+#
+#         # ------------------------------------------------------------------
+#         # Not done — wrap the single step as a 1-step plan for orchestrator
+#         # ------------------------------------------------------------------
+#         step_dict = react_step.next_step.model_dump()
+#         plan = {"steps": [step_dict]}
+#
+#         print(f"📋 Next step: {step_dict['agent']}.{step_dict['tool']}: {step_dict['description']}")
+#         trace.step(
+#             "react_next_step",
+#             f"iter {react_iteration + 1}: {step_dict['agent']}.{step_dict['tool']}",
+#         )
+#
+#         return {
+#             "plan": plan,
+#             "react_done": False,
+#             "react_iteration": react_iteration + 1,
+#             "react_history": react_history,
+#             "context": context,
+#         }
+#
+#     except Exception as e:
+#         if is_llm_error(e):
+#             raise LLMServiceException(handle_llm_error(e))
+#         trace.error(f"React planning failed: {e}")
+#         raise ValueError(f"React planning failed: {str(e)}")
+#
+#
+# def route_react_plan(state: SharedState) -> str:
+#     """
+#     Conditional routing after react_planner_node.
+#     Returns "execute" to run the orchestrator, or "done" to finish.
+#     """
+#     if state.get("react_done", False):
+#         return "done"
+#     plan = state.get("plan", {})
+#     if not plan.get("steps"):
+#         return "done"
+#     return "execute"
+#
+#
+# def route_after_orchestrator(state: SharedState) -> str:
+#     """
+#     Conditional routing after orchestrator_node in ReAct mode.
+#     If orchestrator paused for approval, stop the loop (→ END).
+#     Otherwise, loop back to react_planner for next step.
+#     """
+#     final_context = state.get("final_context", {})
+#     if final_context.get("paused_for_approval"):
+#         print("⏸️ ReAct orchestrator paused for approval — exiting loop")
+#         return "paused"
+#     return "continue"
+#
+#
+# # Build ReAct workflow graph
+# react_graph = StateGraph(SharedState)
+# react_graph.add_node("react_planner", react_planner_node)
+# react_graph.add_node("orchestrator", orchestrator_node)
+#
+# react_graph.set_entry_point("react_planner")
+# react_graph.add_conditional_edges(
+#     "react_planner",
+#     route_react_plan,
+#     {"execute": "orchestrator", "done": END},
+# )
+# # After orchestrator: check if paused for approval → END, otherwise → react_planner
+# react_graph.add_conditional_edges(
+#     "orchestrator",
+#     route_after_orchestrator,
+#     {"continue": "react_planner", "paused": END},
+# )
+#
+# react_workflow = react_graph.compile()
+#
+# print("✅ ReAct workflow graph compiled")
+# print("   Flow: react_planner → [route] → orchestrator → [paused?] → END or ↺ react_planner")
+# print(f"   Max iterations: {MAX_REACT_ITERATIONS}")
+# --- END REACT FLOW DISABLED ---
 

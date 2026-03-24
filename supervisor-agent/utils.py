@@ -35,8 +35,8 @@ def identify_relevant_agents(user_input: str) -> List[str]:
     Use a cheap/fast LLM call to identify which agents are relevant.
     This is a simple classification task, much cheaper than full planning.
     """
-    classifier_prompt = f"""
-Based on this user request, which agents are needed? 
+    # Fixed instructions in system message (cacheable across calls)
+    system_prompt = """Identify which agents are needed for a user request. Return ONLY a JSON array of agent names.
 
 Available agents:
 - gmail_agent: Search emails, read threads, reply, forward, create/send drafts, manage labels, download attachments
@@ -46,12 +46,10 @@ Available agents:
 - calendar_agent: List/create/update/delete calendar events, manage calendars, resolve conflicts
 - drive_agent: Upload/download files, create folders, list files/folders, search files
 
-User request: {user_input}
+Example: ["gmail_agent", "docs_agent"]"""
 
-Return ONLY a JSON array of agent names needed. Example: ["gmail_agent", "docs_agent"]
-"""
+    user_prompt = user_input
 
-    # Use cheaper model (gpt-3.5-turbo) or lower temperature
     classifier_llm = ChatOpenAI(
         model=CLASSIFIER_MODEL, temperature=0, openai_api_key=OPENAI_API_KEY
     )
@@ -59,18 +57,24 @@ Return ONLY a JSON array of agent names needed. Example: ["gmail_agent", "docs_a
     try:
         # === TOKEN TRACKING: Agent Classification ===
         start_time = time.time()
-        response = classifier_llm.invoke([{"role": "user", "content": classifier_prompt}])
+        response = classifier_llm.invoke([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ])
         duration_ms = (time.time() - start_time) * 1000
         
         # Extract token usage from response
+        total_prompt_len = len(system_prompt) + len(user_prompt)
         input_tokens = 0
         output_tokens = 0
+        cached_tokens = 0
         if hasattr(response, 'response_metadata'):
             token_usage = response.response_metadata.get('token_usage', {})
-            input_tokens = token_usage.get('prompt_tokens', len(classifier_prompt) // 4)
+            input_tokens = token_usage.get('prompt_tokens', total_prompt_len // 4)
             output_tokens = token_usage.get('completion_tokens', len(response.content) // 4)
+            cached_tokens = token_usage.get('prompt_tokens_details', {}).get('cached_tokens', 0)
         else:
-            input_tokens = len(classifier_prompt) // 4
+            input_tokens = total_prompt_len // 4
             output_tokens = len(response.content) // 4
         
         # Log the LLM call with token tracking
@@ -82,7 +86,8 @@ Return ONLY a JSON array of agent names needed. Example: ["gmail_agent", "docs_a
             duration_ms=duration_ms,
             tier="classifier",
             prompt_summary=f"Classifying agents for: {user_input[:50]}...",
-            success=True
+            success=True,
+            cached_tokens=cached_tokens
         )
 
         # Parse the agent list

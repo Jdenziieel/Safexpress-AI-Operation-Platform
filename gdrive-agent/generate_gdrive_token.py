@@ -111,40 +111,19 @@ def generate_token():
         print(f"\n💾 Token saved to {TOKEN_PATH}")
         print(f"📋 Token scopes: {creds.scopes}")
         
-        # Update .env file automatically
-        print(f"\n📝 Updating .env file...")
-        env_path = Path('.env')
-        
-        if env_path.exists():
-            with open(env_path, 'r') as f:
-                lines = f.readlines()
-            
-            # Remove old token lines
-            new_lines = []
-            for line in lines:
-                if not line.startswith('GOOGLE_ACCESS_TOKEN=') and \
-                   not line.startswith('GOOGLE_REFRESH_TOKEN='):
-                    new_lines.append(line)
-            
-            # Ensure newline at end
-            if new_lines and not new_lines[-1].endswith('\n'):
-                new_lines[-1] += '\n'
-            
-            # Add new tokens
-            new_lines.append(f'\n# Google OAuth Tokens (auto-generated)\n')
-            new_lines.append(f'GOOGLE_ACCESS_TOKEN={creds.token}\n')
-            
-            if creds.refresh_token:
-                new_lines.append(f'GOOGLE_REFRESH_TOKEN={creds.refresh_token}\n')
-            else:
-                new_lines.append(f'# GOOGLE_REFRESH_TOKEN=NOT_RECEIVED_SEE_WARNINGS_ABOVE\n')
-            
-            with open(env_path, 'w') as f:
-                f.writelines(new_lines)
-            
-            print(f"✅ .env file updated with tokens!")
-        else:
-            print("⚠️ .env file not found in current directory")
+        # Update .env files automatically (both local and supervisor-agent)
+        script_dir = Path(__file__).resolve().parent
+        supervisor_env_path = script_dir.parent / 'supervisor-agent' / '.env'
+        local_env_path = Path('.env')
+
+        env_paths_to_update = []
+        if supervisor_env_path.exists():
+            env_paths_to_update.append(('supervisor-agent', supervisor_env_path))
+        if local_env_path.resolve() != supervisor_env_path.resolve() and local_env_path.exists():
+            env_paths_to_update.append(('local', local_env_path))
+
+        if not env_paths_to_update:
+            print("⚠️ No .env files found to update")
             print("\n🔑 Add these to your .env file manually:")
             print("=" * 60)
             print(f"GOOGLE_ACCESS_TOKEN={creds.token}")
@@ -153,6 +132,37 @@ def generate_token():
             else:
                 print(f"# GOOGLE_REFRESH_TOKEN=NOT_RECEIVED")
             print("=" * 60)
+        
+        for label, env_path in env_paths_to_update:
+            print(f"\n📝 Updating {label} .env file ({env_path})...")
+            with open(env_path, 'r') as f:
+                lines = f.readlines()
+
+            new_lines = []
+            for line in lines:
+                stripped = line.strip()
+                if stripped.startswith('GOOGLE_ACCESS_TOKEN=') or \
+                   stripped.startswith('GOOGLE_REFRESH_TOKEN=') or \
+                   stripped.startswith("# Google OAuth Tokens (auto-generated)"):
+                    continue
+                new_lines.append(line)
+
+            while new_lines and new_lines[-1].strip() == '':
+                new_lines.pop()
+            new_lines.append('\n')
+
+            new_lines.append(f'\n# Google OAuth Tokens (auto-generated)\n')
+            new_lines.append(f'GOOGLE_ACCESS_TOKEN={creds.token}\n')
+
+            if creds.refresh_token:
+                new_lines.append(f'GOOGLE_REFRESH_TOKEN={creds.refresh_token}\n')
+            else:
+                new_lines.append(f'# GOOGLE_REFRESH_TOKEN=NOT_RECEIVED_SEE_WARNINGS_ABOVE\n')
+
+            with open(env_path, 'w') as f:
+                f.writelines(new_lines)
+
+            print(f"✅ {label} .env updated with tokens!")
         
         # Test Drive access
         print(f"\n🧪 Testing Drive access...")
