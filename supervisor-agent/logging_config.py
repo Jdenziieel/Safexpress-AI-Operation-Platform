@@ -594,6 +594,18 @@ class StructuredLogger:
         level = LogLevel.INFO if success else LogLevel.ERROR
         self._log(level, f"LLM call: {operation}", component="llm", operation=operation, extra=extra)
         
+        # Visible print so token usage appears in execution logs / console
+        status_icon = "✅" if success else "❌"
+        cached_note = f", cached={cached_tokens}" if cached_tokens > 0 else ""
+        cumulative_note = ""
+        if token_summary:
+            cumulative_note = f" | cumulative: in={token_summary.total_input_tokens} out={token_summary.total_output_tokens} total={token_summary.total_tokens} ${token_summary.total_estimated_cost:.4f}"
+        print(
+            f"  💰 {status_icon} [{tier or '-'}] {model} | {operation} "
+            f"| in={input_tokens} out={output_tokens}{cached_note} "
+            f"| ${cost:.4f} | {duration_ms:.0f}ms{cumulative_note}"
+        )
+        
         return usage
     
     def agent_call(
@@ -637,13 +649,39 @@ class StructuredLogger:
             "request_complete": True
         }
         
+        total_duration_ms = 0.0
         if start_time:
-            extra["total_duration_ms"] = round((time.time() - start_time) * 1000, 2)
+            total_duration_ms = round((time.time() - start_time) * 1000, 2)
+            extra["total_duration_ms"] = total_duration_ms
         
         if token_summary:
             extra["token_summary"] = token_summary.to_dict()
         
         self._log(LogLevel.INFO, "Request completed", component="system", operation="request_complete", extra=extra)
+        
+        # Visible total token summary printed to console / execution logs
+        print(f"\n{'='*60}")
+        print(f"📊 REQUEST TOKEN SUMMARY")
+        print(f"{'='*60}")
+        if token_summary and token_summary.llm_calls:
+            print(f"  LLM calls:        {len(token_summary.llm_calls)}")
+            print(f"  Total input:      {token_summary.total_input_tokens:,} tokens")
+            print(f"  Total output:     {token_summary.total_output_tokens:,} tokens")
+            print(f"  Total tokens:     {token_summary.total_tokens:,} tokens")
+            if token_summary.total_cached_tokens > 0:
+                cache_rate = token_summary.total_cached_tokens / max(token_summary.total_input_tokens, 1) * 100
+                print(f"  Cached tokens:    {token_summary.total_cached_tokens:,} ({cache_rate:.1f}% of input)")
+            print(f"  Estimated cost:   ${token_summary.total_estimated_cost:.4f}")
+            if total_duration_ms:
+                print(f"  Total duration:   {total_duration_ms:.0f}ms ({total_duration_ms/1000:.1f}s)")
+            print(f"  {'─'*56}")
+            print(f"  Breakdown by call:")
+            for i, call in enumerate(token_summary.llm_calls, 1):
+                cached_note = f" (cached={call.cached_tokens})" if call.cached_tokens > 0 else ""
+                print(f"    {i}. {call.model:<16} in={call.input_tokens:<6} out={call.output_tokens:<5}{cached_note} ${call.estimated_cost:.4f} {call.call_duration_ms:.0f}ms")
+        else:
+            print(f"  No LLM calls made in this request.")
+        print(f"{'='*60}\n")
 
 
 # ============================================================================
