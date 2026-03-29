@@ -58,7 +58,7 @@ class SummarizationService:
             "today_date", "yesterday_date", "current_year", "current_month", "current_day",
             
             # HTML/technical content
-            "body_html", "body_clean", "raw_content", "encoded_data", "body",  # Full body is too verbose
+            "body_html", "body_clean", "body_full", "raw_content", "encoded_data", "body",  # Full body is too verbose
             
             # Internal flags
             "is_draft", "is_sent", "is_read", "has_attachments", "body_has_tables",
@@ -242,6 +242,17 @@ Context (use ACTUAL values below):
 
 Summarize the results using specific data"""
 
+        # === DEBUG: Show exactly what the summarization LLM receives ===
+        print(f"\n{'='*60}")
+        print(f"SUMMARIZATION LLM INPUT")
+        print(f"{'='*60}")
+        print(f"System prompt ({len(system_prompt)} chars):")
+        print(system_prompt)
+        print(f"{'─'*60}")
+        print(f"User prompt ({len(user_prompt)} chars):")
+        print(user_prompt)
+        print(f"{'='*60}\n")
+
         try:
             # === TOKEN TRACKING: Result Summarization ===
             start_time = time.time()
@@ -281,6 +292,15 @@ Summarize the results using specific data"""
             )
             
             summary = llm_response.content.strip()
+
+            # === DEBUG: Show what the summarization LLM returned ===
+            print(f"\n{'='*60}")
+            print(f"SUMMARIZATION LLM OUTPUT ({len(summary)} chars, {duration_ms:.0f}ms)")
+            print(f"  input_tokens={input_tokens}, output_tokens={output_tokens}, cached={cached_tokens}")
+            print(f"{'='*60}")
+            print(summary)
+            print(f"{'='*60}\n")
+
             return summary
             
         except Exception as e:

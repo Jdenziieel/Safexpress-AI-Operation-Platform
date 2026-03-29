@@ -4,7 +4,7 @@ venv/
 # Directories to ignore (will revise once working outside supervisor-agent)
 authserver/
 backup/
-# Capstone/
+# Capstone/j
 CAPSTONEPROJECT/
 calendar-agent/
 gdocs-agent/
