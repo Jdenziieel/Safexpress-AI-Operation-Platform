@@ -107,6 +107,7 @@ class ConversationState(BaseModel):
     execution_mode: str = "standard"  # "standard" or "react"
     # Execution metadata
     execution_history: List[Dict[str, Any]] = Field(default_factory=list)  # For future DB observability
+    completed_tasks: List[Dict[str, Any]] = Field(default_factory=list)  # Compact task records for LLM context (capped at 10)
     has_executed: bool = False
     last_executed_at: Optional[str] = None
     last_execution_status: Optional[str] = None   # "success" | "error" | etc.

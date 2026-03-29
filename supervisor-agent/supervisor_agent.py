@@ -342,14 +342,16 @@ def supervisor_node(state: SharedState) -> SharedState:
     
     capability_summary = json.dumps(filtered_capabilities, indent=2)
 
-    # Build dynamic context variables list
-    context_keys = [k for k in context.keys() if k != "today_date"]
+    # Build dynamic context variables list (exclude internal keys starting with _)
+    context_keys = [k for k in context.keys() if k != "today_date" and not k.startswith("_")]
     context_vars_note = ""
     if context_keys:
         context_vars_note = f"\n\nAVAILABLE CONTEXT VARIABLES: {', '.join(context_keys)}"
         if "uploaded_file" in context:
             uf = context["uploaded_file"]
             context_vars_note += f"\n- uploaded_file: {{{{ uploaded_file.temp_path }}}} (file: {uf.get('filename', 'unknown')})"
+        if "extracted_file_text" in context:
+            context_vars_note += f"\n- extracted_file_text: {{{{ extracted_file_text }}}} (text content extracted from uploaded file)"
 
     # System prompt: fixed rules + example first (cacheable prefix),
     # dynamic date/context/capabilities appended at the end

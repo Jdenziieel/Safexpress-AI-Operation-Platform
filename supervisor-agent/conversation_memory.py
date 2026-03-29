@@ -196,9 +196,9 @@ class ConversationMemoryManager:
         system_prompt = """Summarize conversations by combining new turns with any previous summary. Return JSON only.
 
 Output format:
-{"summary": "<concise summary>", "entities": {"people": [], "tasks": [], "dates": [], "documents": [], "other": []}}
+{"summary": "<concise summary covering user goals, key info like emails/names/dates, and pending or completed tasks>"}
 
-Preserve: user goals, key info (emails, names, dates), pending tasks."""
+Preserve: user goals, key info (emails, names, dates), completed tasks, pending tasks."""
 
         user_prompt = f"""Previous summary: {previous_summary}
 
@@ -255,30 +255,11 @@ New turns:
             summary_data = json.loads(response_text)
 
             new_summary = summary_data.get("summary", "")
-            new_entities = summary_data.get("entities", {})
-            non_empty = {k: v for k, v in new_entities.items() if v}
 
             print(f"\n   📝 Summary output:")
             print(f"      {new_summary}")
-            if non_empty:
-                print(f"\n   📌 Entities extracted:")
-                for etype, elist in non_empty.items():
-                    print(f"      {etype.upper()}: {', '.join(str(e) for e in elist)}")
-            else:
-                print(f"\n   📌 Entities extracted: (none)")
 
-            # Update memory with new summary
             self.memory.summary = new_summary
-
-            # Merge entities with existing entity memory
-            for entity_type, entity_list in new_entities.items():
-                if entity_type not in self.memory.entity_memory:
-                    self.memory.entity_memory[entity_type] = []
-
-                # Add new entities (avoid duplicates)
-                for entity in entity_list:
-                    if entity not in self.memory.entity_memory[entity_type]:
-                        self.memory.entity_memory[entity_type].append(entity)
 
             # Update working context (keep only recent messages)
             self.memory.working_context = recent_messages
@@ -297,7 +278,6 @@ New turns:
                 operation="summarization",
                 extra={
                     "summary_preview": new_summary[:200],
-                    "entity_types": list(non_empty.keys()),
                     "tokens_before": tokens_before,
                     "tokens_after": self.memory.current_token_count,
                     "token_reduction": token_reduction,
@@ -305,7 +285,6 @@ New turns:
             )
             trace.step("memory_summarize_done", f"summarization complete", {
                 "summary_preview": self.memory.summary[:100],
-                "entity_types": len(self.memory.entity_memory),
                 "tokens_before": tokens_before,
                 "tokens_after": self.memory.current_token_count,
                 "token_reduction": token_reduction,
@@ -359,23 +338,6 @@ New turns:
         else:
             print(f"   ✗ Summary: none")
 
-        # Add entity memory if exists
-        if self.memory.entity_memory:
-            context_parts.append("KNOWN ENTITIES:")
-            active_types = 0
-            for entity_type, entities in self.memory.entity_memory.items():
-                if entities:
-                    context_parts.append(f"  {entity_type.upper()}: {', '.join(entities)}")
-                    active_types += 1
-            context_parts.append("")
-            total_entities = sum(len(v) for v in self.memory.entity_memory.values() if v)
-            print(f"   ✓ Entities: {total_entities} entities across {active_types} types")
-            for etype, elist in self.memory.entity_memory.items():
-                if elist:
-                    print(f"      {etype.upper()}: {', '.join(str(e) for e in elist)}")
-        else:
-            print(f"   ✗ Entities: none")
-
         # Add recent message history
         if self.memory.working_context:
             context_parts.append("RECENT CONVERSATION:")
@@ -393,9 +355,8 @@ New turns:
         print(f"\n   📏 Final context: {len(final_context)} chars (~{context_tokens_est} tokens)")
         print(f"{'─'*55}\n")
 
-        trace.step("context_built", f"context assembled: summary={'yes' if self.memory.summary else 'no'}, entities={sum(len(v) for v in self.memory.entity_memory.values())}, msgs={len(self.memory.working_context)}, ~{context_tokens_est} tokens", {
+        trace.step("context_built", f"context assembled: summary={'yes' if self.memory.summary else 'no'}, msgs={len(self.memory.working_context)}, ~{context_tokens_est} tokens", {
             "has_summary": bool(self.memory.summary),
-            "total_entities": sum(len(v) for v in self.memory.entity_memory.values()),
             "recent_messages": len(self.memory.working_context),
             "context_chars": len(final_context),
             "context_tokens_est": context_tokens_est,

@@ -1317,6 +1317,144 @@ def _read_docx_from_drive(file_id: str, drive_service) -> str:
         raise Exception(f"Error reading .docx file: {str(e)}")
 
 
+def _read_file_content(file_path: str) -> str:
+    """
+    Read text content from a local file. Supports PDF (via pdfplumber) and
+    plain-text formats (.txt, .html, .md, .json, .xml, .csv).
+
+    No character cap — returns full content for direct Google Docs API insertion.
+    Raises ValueError for unsupported file types.
+    """
+    import os
+
+    if not file_path or not os.path.exists(file_path):
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    ext = os.path.splitext(file_path)[1].lower()
+
+    if ext == ".pdf":
+        try:
+            import pdfplumber
+        except ImportError:
+            raise ImportError("pdfplumber is required for PDF reading. Install with: pip install pdfplumber")
+
+        text_parts = []
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                page_text = page.extract_text() or ""
+                text_parts.append(page_text)
+        content = "\n".join(text_parts)
+        if not content.strip():
+            raise ValueError(f"PDF file is empty or could not be parsed: {file_path}")
+        return content
+
+    if ext in (".txt", ".html", ".md", ".json", ".xml", ".csv", ".log"):
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+        if not content.strip():
+            raise ValueError(f"File is empty: {file_path}")
+        return content
+
+    raise ValueError(
+        f"Unsupported file type '{ext}' for direct reading. "
+        f"Supported: .pdf, .txt, .html, .md, .json, .xml, .csv"
+    )
+
+
+def _create_doc_with_content_impl(
+    title: str,
+    credentials_dict: Dict,
+    text: str = None,
+    file_path: str = None,
+) -> Dict[str, Any]:
+    """
+    Create a new Google Doc and populate it with content in a single operation.
+
+    Accepts either `text` (inline string) or `file_path` (local file to read).
+    If both are provided, `file_path` takes precedence.
+
+    Returns a structured dict (not a string) for direct-dispatch consumption.
+    """
+    import re
+
+    if not text and not file_path:
+        return {
+            "success": False,
+            "error": "Either 'text' or 'file_path' must be provided",
+        }
+
+    # Resolve content from file if file_path is given
+    content = text or ""
+    if file_path:
+        try:
+            content = _read_file_content(file_path)
+            print(f"Read {len(content)} characters from {file_path}")
+        except Exception as e:
+            return {"success": False, "error": f"Failed to read file: {e}"}
+
+    # Step 1: Create the document
+    create_result = _create_google_doc_impl(title, credentials_dict)
+
+    if "error" in create_result.lower() and "successfully" not in create_result.lower():
+        return {"success": False, "error": create_result}
+
+    doc_id_match = re.search(r"ID: ([a-zA-Z0-9_-]+)", create_result)
+    if not doc_id_match:
+        return {"success": False, "error": f"Could not parse document ID from: {create_result}"}
+
+    doc_id = doc_id_match.group(1)
+    doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
+
+    # Step 2: Add content to the document
+    add_result = _add_text_to_doc_impl(doc_id, content, credentials_dict)
+
+    if "error" in add_result.lower() and "successfully" not in add_result.lower():
+        return {
+            "success": False,
+            "error": f"Document created (ID: {doc_id}) but failed to add content: {add_result}",
+            "document_id": doc_id,
+            "document_url": doc_url,
+        }
+
+    return {
+        "success": True,
+        "document_id": doc_id,
+        "document_url": doc_url,
+        "title": title,
+        "text_length": len(content),
+    }
+
+
+def _add_text_from_file_impl(
+    document_id: str,
+    file_path: str,
+    credentials_dict: Dict,
+) -> Dict[str, Any]:
+    """
+    Read a local file and add its text content to an existing Google Doc.
+
+    Returns a structured dict (not a string) for direct-dispatch consumption.
+    """
+    try:
+        content = _read_file_content(file_path)
+        print(f"Read {len(content)} characters from {file_path}")
+    except Exception as e:
+        return {"success": False, "error": f"Failed to read file: {e}"}
+
+    add_result = _add_text_to_doc_impl(document_id, content, credentials_dict)
+
+    if "error" in add_result.lower() and "successfully" not in add_result.lower():
+        return {"success": False, "error": add_result}
+
+    doc_url = f"https://docs.google.com/document/d/{document_id}/edit"
+    return {
+        "success": True,
+        "document_id": document_id,
+        "document_url": doc_url,
+        "text_length": len(content),
+    }
+
+
 # THEN, in your _create_from_template_and_data_ids_impl function,
 # find the section that reads data files (around line 850-870)
 # and REPLACE this section:

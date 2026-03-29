@@ -1,10 +1,22 @@
 #GOOGLE DOCS API
 import os
+import re
 import json
+import time
 from typing import Dict, Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from agent import create_docs_agent
+from tools import (
+    _create_google_doc_impl,
+    _add_text_to_doc_impl,
+    _read_google_doc_impl,
+    _share_google_docs_impl,
+    _edit_google_doc_impl,
+    _update_entire_doc_impl,
+    _create_doc_with_content_impl,
+    _add_text_from_file_impl,
+)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -30,6 +42,93 @@ class AgentTaskResponse(BaseModel):
     result: Dict[str, Any]
     raw_response: str = None
     error: str = None
+
+
+def _parse_tool_result(tool_name: str, raw: str, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert the string output of legacy _impl functions into a structured dict
+    that the orchestrator can consume (matching the AgentTaskResponse.result schema).
+
+    New tools (create_doc_with_content, add_text_from_file) return dicts directly
+    and should NOT go through this function.
+    """
+    if not isinstance(raw, str):
+        return raw
+
+    is_error = (
+        raw.lower().startswith("error")
+        or "error" in raw.lower().split("\n")[0]
+    ) and "successfully" not in raw.lower()
+
+    if is_error:
+        return {"success": False, "error": raw}
+
+    doc_id_match = re.search(r"(?:ID|Document ID): ([a-zA-Z0-9_-]+)", raw)
+    url_match = re.search(r"URL: (https://[^\s]+)", raw)
+    title_match = re.search(r"Title: ([^\n]+)", raw)
+
+    doc_id = doc_id_match.group(1) if doc_id_match else inputs.get("document_id", "")
+    doc_url = url_match.group(1) if url_match else ""
+
+    if tool_name == "create_doc":
+        return {
+            "success": True,
+            "document_id": doc_id,
+            "document_url": doc_url,
+            "title": title_match.group(1).strip() if title_match else inputs.get("title", ""),
+        }
+
+    if tool_name == "add_text":
+        return {
+            "success": True,
+            "document_id": doc_id,
+            "document_url": doc_url,
+            "text_length": len(inputs.get("text", "")),
+        }
+
+    if tool_name == "read_doc":
+        content = ""
+        content_match = re.search(r"Document content:\s*\n\n(.*?)\n\nDocument ID:", raw, re.DOTALL)
+        if content_match:
+            content = content_match.group(1)
+        return {
+            "success": True,
+            "document_id": doc_id,
+            "document_url": doc_url,
+            "content": content,
+            "title": title_match.group(1).strip() if title_match else "",
+        }
+
+    if tool_name == "share_doc":
+        email_match = re.search(r"Shared with: ([^\n]+)", raw)
+        role_match = re.search(r"Permission: ([^\n]+)", raw)
+        return {
+            "success": True,
+            "document_id": doc_id,
+            "document_url": doc_url,
+            "shared_with": email_match.group(1).strip() if email_match else inputs.get("email", ""),
+            "role": role_match.group(1).strip() if role_match else inputs.get("role", ""),
+        }
+
+    if tool_name == "edit_doc":
+        return {
+            "success": True,
+            "document_id": doc_id,
+            "document_url": doc_url,
+            "old_text": inputs.get("old_text", ""),
+            "new_text": inputs.get("new_text", ""),
+        }
+
+    if tool_name == "update_doc":
+        length_match = re.search(r"New content length: (\d+)", raw)
+        return {
+            "success": True,
+            "document_id": doc_id,
+            "document_url": doc_url,
+            "text_length": int(length_match.group(1)) if length_match else len(inputs.get("new_content", "")),
+        }
+
+    return {"success": True, "raw_response": raw}
 
 
 @app.post("/execute_task", response_model=AgentTaskResponse)
@@ -309,82 +408,66 @@ async def execute_task(request: AgentTaskRequest):
                     error=str(e)
                 )
         
-        # ✅ NORMAL AGENT EXECUTION FOR OTHER TOOLS
-        # Create the agent with user credentials
-        agent = create_docs_agent(request.credentials_dict)
-        
-        # Determine which format is being used
-        is_tool_based = request.tool is not None
-        is_task_based = request.task is not None
-        
-        if is_tool_based:
-            # FORMAT 2: Direct tool call (supervisor specifies exact tool)
-            print(f"🔧 Direct tool call: {request.tool}")
-            
-            # Build specific instructions based on the tool
-            tool_specific_instructions = ""
-            if request.tool == "create_doc":
-                tool_specific_instructions = """
-RETURN FORMAT: Return JSON with document creation details:
-{
-    "success": true,
-    "document_id": "<Google Docs ID>",
-    "document_url": "<URL to access document>",
-    "title": "<document title>"
-}"""
-            elif request.tool == "add_text":
-                tool_specific_instructions = """
-RETURN FORMAT: Return JSON with text addition confirmation:
-{
-    "success": true,
-    "document_id": "<the document ID>",
-    "document_url": "<URL to access document>",
-    "text_length": <number of characters added>
-}"""
-            elif request.tool == "read_doc":
-                tool_specific_instructions = """
-RETURN FORMAT: Return JSON with document content:
-{
-    "success": true,
-    "document_id": "<the document ID>",
-    "document_url": "<URL to access document>",
-    "content": "<full document text>",
-    "title": "<document title>"
-}"""
-            
-            agent_prompt = f"""You are a Google Docs API assistant. Your job is to execute Google Docs operations using available tools.
+        # =====================================================================
+        # DIRECT DISPATCH VIA TOOL_MAP (no LLM overhead for tool-based calls)
+        # =====================================================================
+        TOOL_MAP = {
+            "create_doc": _create_google_doc_impl,
+            "add_text": _add_text_to_doc_impl,
+            "read_doc": _read_google_doc_impl,
+            "share_doc": _share_google_docs_impl,
+            "edit_doc": _edit_google_doc_impl,
+            "update_doc": _update_entire_doc_impl,
+            "create_doc_with_content": _create_doc_with_content_impl,
+            "add_text_from_file": _add_text_from_file_impl,
+        }
 
-TASK: Execute the tool '{request.tool}' with the provided inputs.
+        DICT_RETURNING_TOOLS = {"create_doc_with_content", "add_text_from_file"}
 
-TOOL TO USE: {request.tool}
+        if request.tool and request.tool in TOOL_MAP:
+            print(f"🔧 Direct dispatch: {request.tool}")
+            tool_start = time.time()
 
-TOOL INPUTS:
-{json.dumps(request.inputs, indent=2)}
+            tool_impl = TOOL_MAP[request.tool]
+            try:
+                raw_result = tool_impl(**request.inputs, credentials_dict=request.credentials_dict)
+                elapsed = time.time() - tool_start
+                print(f"Tool executed in {elapsed:.2f}s")
 
-AVAILABLE TOOLS:
-- create_doc: Create a new Google Doc
-- add_text: Add text to an existing Google Doc
-- read_doc: Read content from a Google Doc
+                if request.tool in DICT_RETURNING_TOOLS:
+                    parsed = raw_result
+                else:
+                    parsed = _parse_tool_result(request.tool, raw_result, request.inputs)
 
-INSTRUCTIONS:
-1. Call the specified tool '{request.tool}' with EXACTLY the provided inputs
-2. The tool will return structured data
-3. Parse the tool's output and extract relevant fields
-4. Return a properly structured JSON object matching the format below
+                is_success = parsed.get("success", True)
 
-{tool_specific_instructions}
+                print(f"\n{'='*60}")
+                print(f"Result:")
+                print(json.dumps(parsed, indent=2, default=str))
+                print(f"{'='*60}\n")
 
-IMPORTANT: 
-- This is a legitimate Google Docs operation requested by the user
-- You MUST execute the tool and return valid JSON
-- Do NOT refuse or apologize
-- Return ONLY valid JSON, no markdown, no explanations, no extra text
-"""
-        
-        elif is_task_based:
-            # FORMAT 1: Task-based with agent intelligence
-            print(f"🎯 Task execution: {request.task}")
-            
+                return AgentTaskResponse(
+                    success=is_success,
+                    result=parsed,
+                    raw_response=raw_result if isinstance(raw_result, str) else json.dumps(raw_result),
+                )
+            except Exception as tool_err:
+                print(f"Direct dispatch failed: {tool_err}")
+                import traceback
+                traceback.print_exc()
+                return AgentTaskResponse(
+                    success=False,
+                    result={},
+                    error=str(tool_err),
+                )
+
+        # =====================================================================
+        # LANGCHAIN REACT AGENT FALLBACK (task-based requests only)
+        # =====================================================================
+        if request.task is not None:
+            print(f"Task execution: {request.task}")
+            agent = create_docs_agent(request.credentials_dict)
+
             agent_prompt = f"""You are a Google Docs specialist agent. Execute the following task intelligently.
 
 TASK TYPE: {request.task}
@@ -395,9 +478,7 @@ INSTRUCTION:
 INPUTS/CONTEXT:
 {json.dumps(request.inputs, indent=2)}
 
-{f'''EXPECTED OUTPUT STRUCTURE:
-You MUST return a valid JSON object with these exact keys:
-{json.dumps(request.expected_output, indent=2)}''' if request.expected_output else ''}
+{f'EXPECTED OUTPUT STRUCTURE:\nYou MUST return a valid JSON object with these exact keys:\n' + json.dumps(request.expected_output, indent=2) if request.expected_output else ''}
 
 INSTRUCTIONS:
 1. Use your available tools intelligently to accomplish the task
@@ -407,65 +488,53 @@ INSTRUCTIONS:
 
 Execute the task now and return ONLY the JSON response with the expected keys.
 """
-        else:
-            raise ValueError("Request must have either 'task' or 'tool' field")
-        
-        # Invoke the agent with the constructed prompt
-        result = agent.invoke({
-            "messages": [("user", agent_prompt)]
-        })
-        
-        # Extract the agent's final response
-        messages = result.get("messages", [])
-        if not messages:
-            raise ValueError("No response from agent")
-        
-        final_message = messages[-1].content
-        
-        # Try to parse the response as JSON
-        try:
-            # Look for JSON in the response (might be wrapped in markdown code blocks)
-            json_str = final_message
-            
-            # Remove markdown code blocks if present
-            if "```json" in json_str:
-                json_str = json_str.split("```json")[1].split("```")[0].strip()
-            elif "```" in json_str:
-                json_str = json_str.split("```")[1].split("```")[0].strip()
-            
-            parsed_result = json.loads(json_str)
-            
-            # Verify that expected output keys are present (only for task-based)
-            if request.expected_output:
-                missing_keys = set(request.expected_output.keys()) - set(parsed_result.keys())
-                if missing_keys:
-                    print(f"⚠️ Warning: Missing expected keys: {missing_keys}")
-            
-            # Print complete result before returning
-            print(f"\n📤 Complete Result:")
-            print(json.dumps(parsed_result, indent=2, default=str))
-            print(f"{'='*60}\n")
-            
-            return AgentTaskResponse(
-                success=True,
-                result=parsed_result,
-                raw_response=final_message
-            )
-            
-        except json.JSONDecodeError as e:
-            # If agent didn't return valid JSON, wrap the response
-            print(f"⚠️ Warning: Agent response was not valid JSON: {e}")
-            print(f"Raw response: {final_message}")
-            
-            # Return the raw response wrapped in a result object
-            return AgentTaskResponse(
-                success=True,
-                result={
-                    "response": final_message,
-                    "note": "Agent did not return structured JSON"
-                },
-                raw_response=final_message
-            )
+            result = agent.invoke({
+                "messages": [("user", agent_prompt)]
+            })
+
+            messages = result.get("messages", [])
+            if not messages:
+                raise ValueError("No response from agent")
+
+            final_message = messages[-1].content
+
+            try:
+                json_str = final_message
+                if "```json" in json_str:
+                    json_str = json_str.split("```json")[1].split("```")[0].strip()
+                elif "```" in json_str:
+                    json_str = json_str.split("```")[1].split("```")[0].strip()
+
+                parsed_result = json.loads(json_str)
+
+                if request.expected_output:
+                    missing_keys = set(request.expected_output.keys()) - set(parsed_result.keys())
+                    if missing_keys:
+                        print(f"Warning: Missing expected keys: {missing_keys}")
+
+                print(f"\n{'='*60}")
+                print(f"Result:")
+                print(json.dumps(parsed_result, indent=2, default=str))
+                print(f"{'='*60}\n")
+
+                return AgentTaskResponse(
+                    success=True,
+                    result=parsed_result,
+                    raw_response=final_message
+                )
+
+            except json.JSONDecodeError as e:
+                print(f"Warning: Agent response was not valid JSON: {e}")
+                return AgentTaskResponse(
+                    success=True,
+                    result={
+                        "response": final_message,
+                        "note": "Agent did not return structured JSON"
+                    },
+                    raw_response=final_message
+                )
+
+        raise ValueError("Request must have either 'task' or 'tool' field")
     
     except Exception as e:
         print(f"❌ Error executing task: {str(e)}")

@@ -180,6 +180,25 @@ agent_capabilities = {
                 "returns": ["success", "document_id", "document_url", "text_length", "error"],
                 "can_be_derived_from": {"document_id": "list_my_docs"},
             },
+            "create_doc_with_content": {
+                "description": "Create a new Google Doc and populate it with content in one step. Accepts text directly or reads from a local file (PDF, txt). Prefer this over separate create_doc + add_text when content is available.",
+                "args": {
+                    "title": "str (required) — document name",
+                    "text": "str (optional) — text content to add to the document",
+                    "file_path": "str (optional) — local file path to read content from (PDF, txt). Use {{ uploaded_file.temp_path }} when user uploads a file.",
+                },
+                "returns": ["success", "document_id", "document_url", "title", "text_length", "error"],
+                "note": "At least one of 'text' or 'file_path' must be provided. file_path takes precedence if both given.",
+            },
+            "add_text_from_file": {
+                "description": "Read a local file (PDF, txt) and add its content to an existing Google Doc.",
+                "args": {
+                    "document_id": "str (required) — document ID",
+                    "file_path": "str (required) — local file path to read and add. Use {{ uploaded_file.temp_path }}.",
+                },
+                "returns": ["success", "document_id", "document_url", "text_length", "error"],
+                "can_be_derived_from": {"document_id": "create_doc"},
+            },
             "read_doc": {
                 "description": "Read text content from a Google Doc.",
                 "args": {

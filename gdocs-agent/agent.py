@@ -1,4 +1,5 @@
 import os
+import json
 from typing import Dict, Any
 from functools import partial
 from langchain_openai import ChatOpenAI
@@ -12,8 +13,10 @@ from tools import (
     _add_text_to_doc_impl,
     _read_google_doc_impl,
     _share_google_docs_impl,
-    _edit_google_doc_impl,  # NEW: Import edit function
-    _update_entire_doc_impl,  # NEW: Import update function
+    _edit_google_doc_impl,
+    _update_entire_doc_impl,
+    _create_doc_with_content_impl,
+    _add_text_from_file_impl,
 )
 from dotenv import load_dotenv
 
@@ -185,7 +188,38 @@ def create_docs_agent(credentials_dict: Dict):
         result = _update_entire_doc_impl(document_id, new_content, credentials_dict)
         return result
 
-    # define the available tools for the agent
+    @tool
+    def create_doc_with_content(title: str, text: str = "", file_path: str = "") -> str:
+        """Creates a new Google Doc and populates it with content in one step.
+
+        Args:
+            title: The name of the document
+            text: Text content to add (optional if file_path given)
+            file_path: Local file path to read content from (optional if text given)
+        """
+        result = _create_doc_with_content_impl(
+            title=title,
+            credentials_dict=credentials_dict,
+            text=text or None,
+            file_path=file_path or None,
+        )
+        return json.dumps(result)
+
+    @tool
+    def add_text_from_file(document_id: str, file_path: str) -> str:
+        """Reads a local file and adds its content to an existing Google Doc.
+
+        Args:
+            document_id: The ID of the document
+            file_path: Local file path to read (PDF, txt, etc.)
+        """
+        result = _add_text_from_file_impl(
+            document_id=document_id,
+            file_path=file_path,
+            credentials_dict=credentials_dict,
+        )
+        return json.dumps(result)
+
     tools = [
         list_my_docs,
         extract_template_format,
@@ -194,8 +228,10 @@ def create_docs_agent(credentials_dict: Dict):
         add_text,
         read_doc,
         share_doc,
-        edit_doc,  # NEW
-        update_doc,  # NEW
+        edit_doc,
+        update_doc,
+        create_doc_with_content,
+        add_text_from_file,
     ]
 
     # create the agent using langgraph's react pattern

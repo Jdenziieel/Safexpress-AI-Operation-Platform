@@ -241,7 +241,7 @@ class ConversationalAgent(Tier0ChecksMixin):
             response = analysis.clarification_question or "Please provide more details."
     
         # Internal fields the user should never see in confirmations/summaries
-        _INTERNAL_FIELDS = {"task_type", "original_message", "uploaded_file", "query", "_cached_tool_filter"}
+        _INTERNAL_FIELDS = {"task_type", "original_message", "uploaded_file", "query", "_cached_tool_filter", "_enrichment_context"}
 
         # Generate response based on intent
         if analysis.intent == ConversationIntent.SMALL_TALK:
@@ -408,11 +408,42 @@ class ConversationalAgent(Tier0ChecksMixin):
         
         # Single unified LLM call handles: confirmation, cancellation, modification,
         # followup answers, casual conversation, unintelligible input
-        # Also classifies query_scope for task_request (general vs specific)
-        unified_result, query_scope_hint = self._unified_quick_check(user_message, conversation_state, state_id, uploaded_file=uploaded_file)
+        # Also classifies query_scope for task_request and detects enrichment needs
+        unified_result, query_scope_hint, enrichment_hints = self._unified_quick_check(user_message, conversation_state, state_id, uploaded_file=uploaded_file)
         if unified_result is not None:
             return unified_result
         
+        # === ENRICHMENT PHASE (between Tier 0.5 and Tier 1) ===
+        enriched_message = user_message
+        enrichment_context_vars = {}
+        if enrichment_hints and enrichment_hints.get("needs_enrichment"):
+            from services.content_enrichment import enrich_message as _enrich, extract_file_context
+            print(f"\n{'─'*50}")
+            print(f"✨ ENRICHMENT PHASE — Generating/transforming content")
+            print(f"   Tasks: {enrichment_hints.get('tasks', [])}")
+            print(f"   File context needed: {enrichment_hints.get('file_context_needed', False)}")
+            print(f"{'─'*50}")
+            trace.step("enrichment", "starting enrichment phase", {"tasks": enrichment_hints.get("tasks", [])})
+
+            file_context = None
+            if uploaded_file and enrichment_hints.get("file_context_needed"):
+                file_context = extract_file_context(uploaded_file)
+                if file_context:
+                    print(f"   📄 Extracted {len(file_context)} chars from {uploaded_file.get('filename', '?')}")
+
+            result = _enrich(
+                user_message=user_message,
+                enrichment_tasks=enrichment_hints.get("tasks", []),
+                file_context=file_context,
+            )
+            enriched_message = result.enriched_message
+            enrichment_context_vars = result.context_variables
+
+            if enriched_message != user_message:
+                print(f"   ✨ Enriched: {enriched_message[:200]}{'...' if len(enriched_message) > 200 else ''}")
+            if enrichment_context_vars:
+                print(f"   📦 Context vars stored: {list(enrichment_context_vars.keys())}")
+
         # === TIER 1: FULL TASK ANALYSIS (~500-1500 TOKENS) ===
         print(f"\n{'─'*50}")
         print(f"🧠 TIER 1 — Full Task Analysis")
@@ -427,14 +458,18 @@ class ConversationalAgent(Tier0ChecksMixin):
         if history_text:
             history_text = f"{history_text}\n\n"
         
-        # Add execution context if available (helps LLM understand post-execution modifications)
+        # Add completed tasks context (structured records of what was done)
         exec_context = ""
-        if conversation_state.has_executed:
+        if conversation_state.completed_tasks:
+            exec_context = "\nCOMPLETED TASKS (most recent):\n"
+            for t in conversation_state.completed_tasks[-5:]:
+                exec_context += f"- [{t.get('timestamp', '?')}] {t.get('task_type', '?')}: {t.get('params_summary', '')} -> {t.get('status', '?')}: {t.get('result_summary', '')}\n"
+            exec_context += "User may be referencing or modifying a previous task.\n\n"
+        elif conversation_state.has_executed:
             exec_context = (
                 f"\nEXECUTION CONTEXT:\n"
                 f"- Last: {conversation_state.last_executed_at or 'unknown'} | "
-                f"Status: {conversation_state.last_execution_status or 'unknown'} | "
-                f"Result: {conversation_state.last_execution_message or 'N/A'}\n"
+                f"Status: {conversation_state.last_execution_status or 'unknown'}\n"
                 f"- User may be modifying/redoing previous execution\n\n"
             )
             
@@ -512,7 +547,7 @@ ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("f
 Available agents and tools:
 {capabilities}""".format(capabilities=capabilities_to_show)
 
-        user_prompt = f"""{history_text}{exec_context}CURRENT USER MESSAGE: {user_message}"""
+        user_prompt = f"""{history_text}{exec_context}CURRENT USER MESSAGE: {enriched_message}"""
 
         # Print user_prompt for observability
         user_prompt_preview = user_prompt[:500] + ("..." if len(user_prompt) > 500 else "")
@@ -656,6 +691,10 @@ Available agents and tools:
                 analysis_dict["task_type"] = "unknown"
             
             analysis_result = ConversationAnalysis(**analysis_dict)
+
+            # Attach enrichment context variables so they flow to the orchestrator
+            if enrichment_context_vars:
+                analysis_result.extracted_info["_enrichment_context"] = enrichment_context_vars
             
             # Log analysis result
             trace.step("analysis_result", f"intent={analysis_result.intent}, ready={analysis_result.execution_ready}", {
@@ -790,7 +829,7 @@ Available agents and tools:
             # # Also update conversation_history for backward compatibility
             # conversation_state.conversation_history = self.memory_managers[state_id].get_full_history()
     
-    def _unified_quick_check(self, user_message: str, conversation_state: ConversationState, state_id: str = "default", uploaded_file: Optional[Dict[str, Any]] = None ) -> Optional[ConversationAnalysis]:
+    def _unified_quick_check(self, user_message: str, conversation_state: ConversationState, state_id: str = "default", uploaded_file: Optional[Dict[str, Any]] = None):
         """
         UNIFIED Tier 0.5 LLM check - detects ALL non-task intents in ONE call.
         Handles: confirmation, cancellation, casual conversation, unintelligible input,
@@ -800,9 +839,13 @@ Available agents and tools:
             user_message: Current user input
             conversation_state: Previous conversation context
             state_id: Conversation identifier for memory manager
+            uploaded_file: Optional uploaded file metadata
             
         Returns:
-            ConversationAnalysis if handled by quick check, None if needs full analysis
+            Tuple of (ConversationAnalysis | None, query_scope | None, enrichment_hints | None)
+            - First: ConversationAnalysis if handled, None if needs Tier 1
+            - Second: query_scope hint for Tier 1 ("general" | "specific") or None
+            - Third: enrichment hints dict or None
         """
         
         # Get memory manager
@@ -902,12 +945,20 @@ JSON OUTPUT — include ONLY relevant fields:
 }
 
 Extra fields per category (include ONLY when applicable):
-- task_request: add "query_scope": "general|specific"
+- task_request: add "query_scope": "general|specific", and optionally "enrichment": {"needs_enrichment": true, "tasks": [...], "file_context_needed": bool}
 - cancellation: add "has_compound_cancel": true/false
 - modification: add "field_to_modify": "...", "new_value": "..."
 - followup_answer: add "extracted_value": ...
 - template_upload: add "save_to_drive": bool, "template_name": "...", "document_title": "..."
 - casual_conversation: add "response": "short friendly reply (1-2 sentences)"
+
+ENRICHMENT DETECTION (only for task_request):
+Set needs_enrichment=true when user:
+- Delegates content creation: "create a subject for me", "write a summary", "draft a title"
+- Requests text transformation: "fix grammar", "make it formal", "translate to Spanish"
+- Has an attached file AND implies using its content to generate fields: "email John about this PDF", "summarize the attached report"
+Task types: "generate_subject", "generate_title", "generate_summary", "fix_grammar", "formalize_text", "use_file_content"
+Set file_context_needed=true only when a FILE is attached AND the task requires reading the file content.
 """
 
         # --- USER message: dynamic context only ---
@@ -964,14 +1015,14 @@ User: "{user_message}" """
             # Validate response_text is not empty
             if not response_text:
                 trace.warning("Tier 0.5: empty LLM response, falling back to full analysis")
-                return None, "specific"
+                return None, "specific", None
             
             # Parse JSON with better error handling
             try:
                 result = json.loads(response_text)
             except json.JSONDecodeError as json_err:
                 trace.warning("Tier 0.5: JSON parse error", {"error": str(json_err), "response_preview": response_text[:200]})
-                return None, "specific"
+                return None, "specific", None
 
             category = result.get("category")
             confidence = result.get("confidence", "high")
@@ -987,7 +1038,7 @@ User: "{user_message}" """
                 print(f"  ⚠️  TIER 0.5 LOW CONFIDENCE — category={category}, reasoning={reasoning}")
                 print(f"  ⚠️  Falling through to Tier 1 for full analysis")
                 trace.step("tier0.5", "low confidence — falling through to Tier 1", {"category": category, "reasoning": reasoning})
-                return None, "specific"
+                return None, "specific", None
             
             # === HANDLE EACH CATEGORY ===
             
@@ -1012,7 +1063,7 @@ User: "{user_message}" """
                         reasoning="User checking execution status (Tier 0.5)",
                         execution_ready=False,
                         execution_summary=None
-                    ), None
+                    ), None, None
                 else:
                     trace.step("tier0.5", "status_update — no execution history, informing user")
                     return ConversationAnalysis(
@@ -1024,7 +1075,7 @@ User: "{user_message}" """
                         reasoning="User asked for status but no execution history exists",
                         execution_ready=False,
                         execution_summary=None
-                    ), None
+                    ), None, None
             
             # 1. TASK REQUEST - needs full analysis
             if category == "task_request":
@@ -1041,9 +1092,13 @@ User: "{user_message}" """
                         reasoning="General capability question handled at Tier 0.5",
                         execution_ready=False,
                         execution_summary=None
-                    ), None
-                trace.step("tier0.5", "task_request — proceeding to full analysis", {"query_scope": query_scope})
-                return None, query_scope  # Pass query_scope to Tier 1
+                    ), None, None
+                # Extract enrichment hints if present
+                enrichment_hints = result.get("enrichment")
+                if enrichment_hints:
+                    trace.step("tier0.5", "enrichment detected", {"tasks": enrichment_hints.get("tasks", []), "file_context_needed": enrichment_hints.get("file_context_needed", False)})
+                trace.step("tier0.5", "task_request — proceeding to full analysis", {"query_scope": query_scope, "has_enrichment": bool(enrichment_hints)})
+                return None, query_scope, enrichment_hints  # Pass query_scope + enrichment to Tier 1
             
             # 2. CONFIRMATION
             if category == "confirmation":
@@ -1057,13 +1112,14 @@ User: "{user_message}" """
                         reasoning="User confirmed execution",
                         execution_ready=True,
                         execution_summary=conversation_state.execution_summary
-                    ), None  # No query_scope for non-task_request            # 3. CANCELLATION
+                    ), None, None
+            # 3. CANCELLATION
             if category == "cancellation":
                 has_compound = result.get("has_compound_cancel", False)
                 if has_compound:
                     print(f"  ⚠️  COMPOUND CANCEL detected — new task extracted, proceeding to Tier 1")
                     trace.step("tier0.5", "compound cancel+task — proceeding to full analysis")
-                    return None, "specific"  # Compound cancel → default to specific
+                    return None, "specific", None
                 else:
                     trace.step("tier0.5", "pure cancellation")
                     cancelled_task_info = conversation_state.extracted_info.copy()
@@ -1076,7 +1132,7 @@ User: "{user_message}" """
                         reasoning=f"User cancelled request. Previous data: {cancelled_task_info}",
                         execution_ready=False,
                         execution_summary=None
-                    ), None  # No query_scope for non-task_request
+                    ), None, None
             
             # 4. MODIFICATION
             if category == "modification":
@@ -1098,7 +1154,7 @@ User: "{user_message}" """
                             reasoning=f"Modified {field} to {new_value}",
                             execution_ready=True,
                             execution_summary=conversation_state.execution_summary
-                        ), None  # No query_scope for non-task_request
+                        ), None, None
                     else:
                         return ConversationAnalysis(
                             intent=ConversationIntent.NEEDS_CLARIFICATION,
@@ -1109,11 +1165,11 @@ User: "{user_message}" """
                             reasoning=f"Modified {field}, still need clarification",
                             execution_ready=False,
                             execution_summary=None
-                        ), None  # No query_scope for non-task_request
+                        ), None, None
                 else:
                     # Complex modification, needs full analysis
                     trace.step("tier0.5", "complex modification — proceeding to full analysis")
-                    return None, "specific"  # Complex modification → default to specific
+                    return None, "specific", None
             
             # 5. FOLLOWUP ANSWER
             if category == "followup_answer":
@@ -1163,8 +1219,8 @@ User: "{user_message}" """
                             clarification_question=None,
                             reasoning="All required fields collected",
                             execution_ready=True,
-                            execution_summary=final_execution_summary  # ✅ Use generated summary
-                        ), None  # No query_scope for non-task_request
+                            execution_summary=final_execution_summary
+                        ), None, None
                     else:
                         next_field = remaining_missing[0]
                         return ConversationAnalysis(
@@ -1176,11 +1232,11 @@ User: "{user_message}" """
                             reasoning=f"Extracted {list(extracted_value.keys()) if isinstance(extracted_value, dict) else missing_field}, still need {next_field}",
                             execution_ready=False,
                             execution_summary=None
-                        ), None  # No query_scope for non-task_request
+                        ), None, None
                 else:
                     # Complex answer, needs full analysis
                     trace.step("tier0.5", "complex followup answer — proceeding to full analysis")
-                    return None, "specific"  # Complex answer → default to specific
+                    return None, "specific", None
             
             # 6. CASUAL CONVERSATION — use LLM-generated response (piggybacked on this call)
             if category == "casual_conversation":
@@ -1196,7 +1252,7 @@ User: "{user_message}" """
                     reasoning="User is engaging in casual conversation",
                     execution_ready=False,
                     execution_summary=None
-                ), None
+                ), None, None
             
             # 7. UNINTELLIGIBLE
             if category == "unintelligible":
@@ -1210,7 +1266,7 @@ User: "{user_message}" """
                     reasoning="User input is not intelligible",
                     execution_ready=False,
                     execution_summary=None
-                ), None  # No query_scope for non-task_request
+                ), None, None
             
             if category == "template_upload":
                 if not uploaded_file:
@@ -1224,7 +1280,7 @@ User: "{user_message}" """
                         reasoning="Template upload requested but no file attached",
                         execution_ready=False,
                         execution_summary=None
-                ), None
+                ), None, None
             
             save_to_drive = result.get("save_to_drive", True)
             template_name = result.get("template_name")
@@ -1297,7 +1353,7 @@ User: "{user_message}" """
                 reasoning=f"Template upload: template='{template_name}', document='{document_title}', missing={missing_fields}",
                 execution_ready=len(missing_fields) == 0,
                 execution_summary=execution_summary if not missing_fields else None
-            ), None
+            ), None, None
             
         except Exception as e:
             # Check if this is an LLM service error (rate limit, quota, etc.)
@@ -1306,10 +1362,10 @@ User: "{user_message}" """
                 raise LLMServiceException(handle_llm_error(e))
             
             trace.warning("Tier 0.5: unified quick check failed, falling back to full analysis", {"error": str(e)})
-            return None, "specific"  # Fallback: default to specific
+            return None, "specific", None
         
         # Default: proceed to full analysis
-        return None, "specific"  # Fallback: default to specific
+        return None, "specific", None
     
     def should_execute(self, conversation_state: ConversationState) -> bool:
         """Check if conversation is ready for execution"""

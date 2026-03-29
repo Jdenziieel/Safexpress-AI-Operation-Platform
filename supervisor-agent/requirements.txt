@@ -28,6 +28,7 @@ openai==2.9.0
 orjson==3.11.4
 ormsgpack==1.12.0
 packaging==25.0
+pdfplumber>=0.10.0
 pydantic==2.12.5
 pydantic_core==2.41.5
 python-dotenv==1.2.1

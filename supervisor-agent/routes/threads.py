@@ -247,12 +247,50 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
 # --- END REACT FLOW DISABLED ---
 
 
-async def _run_workflow_and_update_state(conversation_state):
+def _summarize_params(inputs: dict, max_len: int = 100) -> str:
+    """Extract the most important 2-3 params from step inputs, truncated."""
+    priority_keys = ["to", "query", "title", "subject", "document_id", "file_path", "event_id", "message_id"]
+    parts = []
+    for key in priority_keys:
+        if key in inputs and inputs[key]:
+            val = str(inputs[key])[:40]
+            parts.append(f"{key}: {val}")
+            if len(", ".join(parts)) > max_len:
+                break
+    if not parts:
+        for key, val in list(inputs.items())[:2]:
+            parts.append(f"{key}: {str(val)[:40]}")
+    result = ", ".join(parts)
+    return result[:max_len]
+
+
+def _summarize_result(output: dict, max_len: int = 100) -> str:
+    """Extract key result fields (IDs, URLs, counts), truncated."""
+    if not output or not isinstance(output, dict):
+        return "no output"
+    priority_keys = ["draft_id", "document_id", "document_url", "message_id", "event_id",
+                     "url", "file_id", "thread_id", "count", "row_count", "title", "subject"]
+    parts = []
+    for key in priority_keys:
+        if key in output and output[key]:
+            val = str(output[key])[:40]
+            parts.append(f"{key}: {val}")
+            if len(", ".join(parts)) > max_len:
+                break
+    if not parts:
+        for key, val in list(output.items())[:2]:
+            if key not in ("success", "error"):
+                parts.append(f"{key}: {str(val)[:40]}")
+    result = ", ".join(parts)
+    return result[:max_len] if result else "ok"
+
+
+async def _run_workflow_and_update_state(conversation_state, thread_id: str = None):
     """
     Shared helper: execute workflow, update execution history, generate summary.
     
     Handles two outcomes:
-    1. Workflow completes fully → generate summary, update history
+    1. Workflow completes fully → generate summary, update history, store in memory
     2. Workflow pauses for approval → save pending state, return approval message
     
     Returns (response_text, updated_conversation_state).
@@ -275,6 +313,11 @@ async def _run_workflow_and_update_state(conversation_state):
     cached_tool_filter = conversation_state.extracted_info.get("_cached_tool_filter")
     if cached_tool_filter:
         context_overrides["_cached_tool_filter"] = cached_tool_filter
+
+    # Inject enrichment context variables (e.g., extracted_file_text) for orchestrator Jinja2 resolution
+    enrichment_ctx = conversation_state.extracted_info.get("_enrichment_context", {})
+    if enrichment_ctx:
+        context_overrides.update(enrichment_ctx)
 
     # Determine execution mode from conversation state
     execution_mode = getattr(conversation_state, 'execution_mode', 'standard')
@@ -365,6 +408,23 @@ async def _run_workflow_and_update_state(conversation_state):
         conversation_state.execution_summary = original_execution_summary
     conversation_state.ready_for_execution = False
 
+    # Populate completed_tasks from orchestrator step results
+    for step_result in final_context.get("results", []):
+        step_status = step_result.get("status", "unknown")
+        if step_status not in ("success", "no_results"):
+            continue
+        task_entry = {
+            "task_type": step_result.get("agent", "unknown") + "." + step_result.get("tool", "unknown"),
+            "params_summary": _summarize_params(step_result.get("inputs", {})),
+            "status": step_status,
+            "result_summary": _summarize_result(step_result.get("output", {})),
+            "timestamp": now_iso,
+        }
+        conversation_state.completed_tasks.append(task_entry)
+    # Cap completed_tasks at 10 entries (FIFO)
+    if len(conversation_state.completed_tasks) > 10:
+        conversation_state.completed_tasks = conversation_state.completed_tasks[-10:]
+
     # Generate user-friendly summary
     friendly_summary = conversational_agent.summarization_service.summarize_execution(
         conversation_state=conversation_state,
@@ -372,6 +432,14 @@ async def _run_workflow_and_update_state(conversation_state):
         execution_status=status,
         execution_message=message_text,
     )
+
+    # Fix memory gap: store the execution result in conversation memory
+    # so it appears in working_context for subsequent turns
+    if thread_id:
+        memory_mgr = conversational_agent._get_memory_manager(thread_id, conversation_state.memory_state)
+        memory_mgr.add_message("assistant", friendly_summary)
+        conversational_agent._save_memory_to_state(conversation_state, thread_id)
+        conversational_agent.thread_manager.add_message(thread_id, "assistant", friendly_summary)
 
     return friendly_summary, conversation_state
 
@@ -466,7 +534,7 @@ async def create_thread(request: CreateThreadRequest):
 
             try:
                 bot_response, conversation_state = await _run_workflow_and_update_state(
-                    conversation_state
+                    conversation_state, thread_id=thread_id
                 )
                 execution_completed = True
             finally:
@@ -613,7 +681,7 @@ async def create_thread_with_upload(
 
             try:
                 response_text, updated_state = await _run_workflow_and_update_state(
-                    updated_state
+                    updated_state, thread_id=thread_id
                 )
             finally:
                 updated_state.executing = False
@@ -1057,7 +1125,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
 
             try:
                 response_text, conversation_state = await _run_workflow_and_update_state(
-                    conversation_state
+                    conversation_state, thread_id=thread_id
                 )
             finally:
                 # Clear executing flag and save
@@ -1201,7 +1269,7 @@ async def send_message_to_thread_with_upload(
 
             try:
                 response_text, updated_state = await _run_workflow_and_update_state(
-                    updated_state
+                    updated_state, thread_id=thread_id
                 )
             finally:
                 # Clear executing flag and save
