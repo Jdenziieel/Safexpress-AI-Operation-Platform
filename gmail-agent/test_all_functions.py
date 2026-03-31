@@ -50,7 +50,7 @@ search_email = {
 }
 
 formatted_search = format_email_object(search_email)
-print(f"✅ Body formatted: {bool('body_clean' in formatted_search)}")
+print(f"✅ Body formatted: {bool('body_links' in formatted_search)}")
 print(f"✅ Links extracted: {len(formatted_search.get('body_links', []))} links")
 print(f"✅ Original HTML preserved: {bool(formatted_search.get('body_html'))}")
 print(f"\nClean body preview:")
@@ -82,8 +82,8 @@ thread_messages = [
 ]
 
 formatted_thread = format_email_list(thread_messages)
-print(f"✅ Message 1 formatted: {bool('body_clean' in formatted_thread[0])}")
-print(f"✅ Message 2 formatted: {bool('body_clean' in formatted_thread[1])}")
+print(f"✅ Message 1 formatted: {bool('body_links' in formatted_thread[0])}")
+print(f"✅ Message 2 formatted: {bool('body_links' in formatted_thread[1])}")
 print(f"✅ Thread has {len(formatted_thread)} messages")
 print(f"\nMessage 1 clean body preview:")
 print(formatted_thread[0]['body'][:100])
@@ -109,7 +109,7 @@ draft_message = {
 formatted_draft_messages = format_email_list([draft_message])
 formatted_draft_message = formatted_draft_messages[0]
 
-print(f"✅ Draft body formatted: {bool('body_clean' in formatted_draft_message)}")
+print(f"✅ Draft body formatted: {bool('body_links' in formatted_draft_message)}")
 print(f"✅ Links extracted: {len(formatted_draft_message.get('body_links', []))} links")
 print(f"✅ Original HTML preserved: {bool(formatted_draft_message.get('body_html'))}")
 print(f"\nDraft clean body preview:")

@@ -593,7 +593,7 @@ What would you like to do?"""
             return None
 
         is_awaiting_confirmation = (
-            conversation_state.ready_for_execution or
+            conversation_state.ready_for_execution and
             conversation_state.intent == ConversationIntent.READY_TO_EXECUTE
         )
 

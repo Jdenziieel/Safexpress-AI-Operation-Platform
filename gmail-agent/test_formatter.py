@@ -110,6 +110,24 @@ else:
     print("None detected")
 
 print("\n" + "-"*80)
+print("⚡ ACTION ITEMS:")
+print("-"*80)
+if formatted_email['action_items']:
+    for i, item in enumerate(formatted_email['action_items'], 1):
+        print(f"{i}. {item}")
+else:
+    print("None detected")
+
+print("\n" + "-"*80)
+print("⚡ ACTION ITEMS:")
+print("-"*80)
+if formatted_email['action_items']:
+    for i, item in enumerate(formatted_email['action_items'], 1):
+        print(f"{i}. {item}")
+else:
+    print("None detected")
+
+print("\n" + "-"*80)
 print("📊 METADATA:")
 print("-"*80)
 print(f"Has tables: {formatted_email['body_has_tables']}")
@@ -127,7 +145,6 @@ for key in formatted_email.keys():
 
 print("\n💡 Usage in supervisor plans:")
 print("  {{ emails[0].body }}        ← Clean text (no HTML!)")
-print("  {{ emails[0].body_clean }}  ← Also clean text")
 print("  {{ emails[0].body_html }}   ← Original HTML")
 print("  {{ emails[0].body_links }}  ← List of URLs")
 print("  {{ emails[0].action_items }} ← Extracted actions")

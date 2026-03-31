@@ -55,12 +55,8 @@ def get_google_service(service_name: str, version: str, credentials_dict: Dict):
         token=credentials_dict.get("access_token"),
         refresh_token=credentials_dict.get("refresh_token"),
         token_uri="https://oauth2.googleapis.com/token",
-        client_id=client_id,  # Now guaranteed to be set
-        client_secret=client_secret,  # Now guaranteed to be set
-        scopes=[
-            "https://www.googleapis.com/auth/documents",
-            "https://www.googleapis.com/auth/drive",
-        ],
+        client_id=client_id,
+        client_secret=client_secret,
     )
     
     print(f"🔧 Building {service_name} service with:")
@@ -1453,47 +1449,3 @@ def _add_text_from_file_impl(
         "document_url": doc_url,
         "text_length": len(content),
     }
-
-
-# THEN, in your _create_from_template_and_data_ids_impl function,
-# find the section that reads data files (around line 850-870)
-# and REPLACE this section:
-
-        # OLD CODE (around line 860):
-        # if data_mime_type == 'application/vnd.google-apps.document':
-        #     data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/plain').execute().decode('utf-8')
-        # elif data_mime_type in ['text/plain', 'text/csv']:
-        #     data_content = drive_service.files().get_media(fileId=data_file_id).execute().decode('utf-8')
-        # elif data_mime_type == 'application/vnd.google-apps.spreadsheet':
-        #     data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/csv').execute().decode('utf-8')
-        # else:
-        #     return f"❌ Error: Unsupported data file type: {data_mime_type}"
-
-        # NEW CODE (with DOCX support):
-        if data_mime_type == 'application/vnd.google-apps.document':
-            print("   Format: Google Docs → Exporting as plain text")
-            data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/plain').execute().decode('utf-8')
-        
-        elif data_mime_type in ['text/plain', 'text/csv']:
-            print("   Format: Text/CSV → Reading directly")
-            data_content = drive_service.files().get_media(fileId=data_file_id).execute().decode('utf-8')
-        
-        elif data_mime_type == 'application/vnd.google-apps.spreadsheet':
-            print("   Format: Google Sheets → Exporting as CSV")
-            data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/csv').execute().decode('utf-8')
-        
-        elif data_mime_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-            # ✅ NEW: Word .docx support
-            print("   Format: Word .docx → Extracting text with python-docx")
-            data_content = _read_docx_from_drive(data_file_id, drive_service)
-        
-        elif data_mime_type == 'application/msword':
-            # Legacy .doc format
-            print("   Format: Legacy Word .doc → Converting via Google Drive")
-            try:
-                data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/plain').execute().decode('utf-8')
-            except:
-                return f"❌ Error: Cannot read legacy .doc format. Please convert to .docx or upload as Google Doc."
-        
-        else:
-            return f"❌ Error: Unsupported data file type: {data_mime_type}\n\nSupported formats:\n- Google Docs\n- Word (.docx)\n- Text files (.txt)\n- CSV files\n- Google Sheets"

@@ -19,10 +19,6 @@ def get_google_service(service_name: str, version: str, credentials_dict: Dict):
         token_uri="https://oauth2.googleapis.com/token",
         client_id=os.getenv("GOOGLE_CLIENT_ID"),
         client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-        scopes=[
-            "https://www.googleapis.com/auth/documents",
-            "https://www.googleapis.com/auth/drive",
-        ],
     )
     service = build(service_name, version, credentials=creds)
     return service

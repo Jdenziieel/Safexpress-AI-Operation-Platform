@@ -19,6 +19,37 @@ import httpx
 from datetime import datetime
 
 
+def _extract_body_from_payload(payload: dict) -> str:
+    """Recursively traverse MIME parts to find the email body.
+
+    Prefers text/plain over text/html. Handles arbitrarily nested
+    multipart/* structures (e.g. multipart/mixed > multipart/alternative).
+    """
+    plain = ""
+    html = ""
+
+    def _walk(part):
+        nonlocal plain, html
+        mime = part.get("mimeType", "")
+
+        if mime == "text/plain" and not plain:
+            data = part.get("body", {}).get("data")
+            if data:
+                plain = base64.urlsafe_b64decode(data).decode("utf-8")
+        elif mime == "text/html" and not html:
+            data = part.get("body", {}).get("data")
+            if data:
+                html = base64.urlsafe_b64decode(data).decode("utf-8")
+        elif mime.startswith("multipart/"):
+            for sub in part.get("parts", []):
+                _walk(sub)
+                if plain:
+                    return
+
+    _walk(payload)
+    return plain or html
+
+
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
 
     # credentials for google services
@@ -28,11 +59,6 @@ def get_google_service(service_name: str, version: str, credentials_dict: Dict):
         token_uri="https://oauth2.googleapis.com/token",
         client_id=credentials_dict.get("client_id", ""),
         client_secret=credentials_dict.get("client_secret", ""),
-        scopes=[
-            "https://www.googleapis.com/auth/gmail.send",
-            "https://www.googleapis.com/auth/gmail.modify",
-            "https://www.googleapis.com/auth/gmail.readonly",
-        ],
     )
 
     service = build(service_name, version, credentials=creds)
@@ -176,22 +202,7 @@ def _search_emails_impl(
                 elif header["name"] == "Date":
                     date = header["value"]
 
-            # get full message body
-            body = ""
-            if "parts" in message["payload"]:
-                # multipart message
-                for part in message["payload"]["parts"]:
-                    if part["mimeType"] == "text/plain" and "data" in part.get("body", {}):
-                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
-                        break
-                    elif part["mimeType"] == "text/html" and not body and "data" in part.get("body", {}):
-                        # fallback to HTML if no plain text
-                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
-            elif "body" in message["payload"] and "data" in message["payload"]["body"]:
-                # simple message
-                body = base64.urlsafe_b64decode(message["payload"]["body"]["data"]).decode("utf-8")
-
-            # if body is still empty, use snippet
+            body = _extract_body_from_payload(message["payload"])
             if not body:
                 body = message.get("snippet", "")
 
@@ -482,21 +493,7 @@ def _forward_email_impl(
             elif header["name"] == "Date":
                 original_date = header["value"]
 
-        # Get original body
-        original_body = ""
-        if "parts" in original_message["payload"]:
-            for part in original_message["payload"]["parts"]:
-                if part["mimeType"] == "text/plain":
-                    if "data" in part["body"]:
-                        original_body = base64.urlsafe_b64decode(
-                            part["body"]["data"]
-                        ).decode("utf-8")
-                    break
-        else:
-            if "body" in original_message["payload"] and "data" in original_message["payload"]["body"]:
-                original_body = base64.urlsafe_b64decode(
-                    original_message["payload"]["body"]["data"]
-                ).decode("utf-8")
+        original_body = _extract_body_from_payload(original_message["payload"])
 
         # Build forwarded message
         forward_subject = f"Fwd: {original_subject}" if not original_subject.startswith("Fwd:") else original_subject
@@ -618,19 +615,7 @@ def _get_thread_conversation_impl(thread_id: str, credentials_dict: Dict) -> Dic
                 elif header["name"] == "Date":
                     date = header["value"]
 
-            # get message body
-            body = ""
-            if "parts" in message["payload"]:
-                # multipart message
-                for part in message["payload"]["parts"]:
-                    if part["mimeType"] == "text/plain" and "data" in part["body"]:
-                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
-                        break
-            elif "body" in message["payload"] and "data" in message["payload"]["body"]:
-                # simple message
-                body = base64.urlsafe_b64decode(message["payload"]["body"]["data"]).decode("utf-8")
-
-            # get snippet if body is empty
+            body = _extract_body_from_payload(message["payload"])
             if not body:
                 body = message.get("snippet", "")
 
@@ -882,17 +867,7 @@ def _search_drafts_impl(
                 elif header["name"] == "Date":
                     date = header["value"]
             
-            # get message body
-            body = ""
-            if "parts" in message["payload"]:
-                # multipart message
-                for part in message["payload"]["parts"]:
-                    if part["mimeType"] == "text/plain" and "data" in part["body"]:
-                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
-                        break
-            elif "body" in message["payload"] and "data" in message["payload"]["body"]:
-                # simple message
-                body = base64.urlsafe_b64decode(message["payload"]["body"]["data"]).decode("utf-8")
+            body = _extract_body_from_payload(message["payload"])
             
             # Structure to match Gmail API format with nested message object
             draft_details.append({

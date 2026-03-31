@@ -1,0 +1,604 @@
+[2026-03-30 21:32:41.768] [INFO] [-] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-03-30 21:32:41.791] [INFO] [-] ← RESPONSE: 200 (23ms)
+[2026-03-30 21:32:41.793] [INFO] [-] ─────────: ──────────────────────────────────────────────────
+[2026-03-30 21:32:53.727] [INFO] [-] → REQUEST: POST /threads  | {"query": null}
+[2026-03-30 21:32:53.731] [INFO] [-] [T:new]   STEP [create_thread]: user=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03, has_message=True
+[2026-03-30 21:32:59.098] [PRINT] ✅ Created thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_6eedad6d for user: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03
+[2026-03-30 21:32:59.124] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-03-30 21:32:59.145] [PRINT]   📨  NEW MESSAGE  │  thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_6eedad6d
+[2026-03-30 21:32:59.165] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-03-30 21:32:59.185] [PRINT]   User: Can you check the last 2 email I receive in my mail box?
+[2026-03-30 21:32:59.202] [PRINT]   ConversationState:
+[2026-03-30 21:32:59.217] [PRINT]     extracted_info: {}
+[2026-03-30 21:32:59.231] [PRINT]     missing_fields: []
+[2026-03-30 21:32:59.250] [PRINT]     intent: null
+[2026-03-30 21:32:59.266] [PRINT]     clarification_question: null
+[2026-03-30 21:32:59.287] [PRINT]     ready_for_execution: false
+[2026-03-30 21:32:59.311] [PRINT]     execution_summary: null
+[2026-03-30 21:32:59.332] [PRINT]     execution_mode: "standard"
+[2026-03-30 21:32:59.352] [PRINT]     execution_history: []
+[2026-03-30 21:32:59.367] [PRINT]     completed_tasks: []
+[2026-03-30 21:32:59.384] [PRINT]     has_executed: false
+[2026-03-30 21:32:59.400] [PRINT]     last_executed_at: null
+[2026-03-30 21:32:59.421] [PRINT]     last_execution_status: null
+[2026-03-30 21:32:59.444] [PRINT]     last_execution_message: null
+[2026-03-30 21:32:59.461] [PRINT]     executing: false
+[2026-03-30 21:32:59.482] [PRINT]     pending_actions: []
+[2026-03-30 21:32:59.510] [PRINT]     workflow_paused: false
+[2026-03-30 21:32:59.524] [PRINT]     remaining_steps: []
+[2026-03-30 21:32:59.540] [PRINT]     workflow_context: null
+[2026-03-30 21:32:59.554] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-03-30 21:32:59.568] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [new_message]: thread=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_6eedad6d, msg=Can you check the last 2 email I receive in my mail box?
+[2026-03-30 21:33:00.006] [INFO] [req_20260330133259_6bcbf95e] [T:new]   INFO: Memory: added user message  | {"tokens": 20, "total": 20, "max": 2000}
+[2026-03-30 21:33:00.024] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-03-30 21:33:00.031] [PRINT] 
+[2026-03-30 21:33:00.031] [PRINT] ──────────────────────────────────────────────────
+[2026-03-30 21:33:00.059] [PRINT] 🔍 TIER 0.5 — Building prompt
+[2026-03-30 21:33:00.101] [PRINT] ──────────────────────────────────────────────────
+[2026-03-30 21:33:00.119] [PRINT]    bot_signal : (none)
+[2026-03-30 21:33:00.138] [PRINT]    state_block: (none)
+[2026-03-30 21:33:00.155] [PRINT]    file_context: (none)
+[2026-03-30 21:33:00.177] [PRINT] ──────────────────────────────────────────────────
+[2026-03-30 21:33:02.255] [PRINT]   💰 ✅ [0.5] gpt-4o-mini | tier_0.5_unified_check | in=548 out=36 | $0.0001 | 2030ms | cumulative: in=548 out=36 total=584 $0.0001
+[2026-03-30 21:33:02.281] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [tier0.5]: category: TASK_REQUEST, confidence: medium
+    ↳ {"reasoning": "The user is asking for a specific action to check their emails.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"medium\",\n    \"reasoning\": \"The user is asking for a specific action to check their emails.\"\n}"}
+[2026-03-30 21:33:02.283] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-03-30 21:33:02.284] [PRINT] 
+[2026-03-30 21:33:02.284] [PRINT] ──────────────────────────────────────────────────
+[2026-03-30 21:33:02.302] [PRINT] 🧠 TIER 1 — Full Task Analysis
+[2026-03-30 21:33:02.326] [PRINT] ──────────────────────────────────────────────────
+[2026-03-30 21:33:02.348] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [tier1]: performing full task analysis with capabilities
+[2026-03-30 21:33:02.351] [PRINT] 
+[2026-03-30 21:33:02.351] [PRINT] ───────────────────────────────────────────────────────
+[2026-03-30 21:33:02.368] [PRINT] 🧠 BUILDING LLM CONTEXT
+[2026-03-30 21:33:02.384] [PRINT] ───────────────────────────────────────────────────────
+[2026-03-30 21:33:02.399] [PRINT]    ✗ Summary: none
+[2026-03-30 21:33:02.417] [PRINT]    ✓ Recent messages: 1
+[2026-03-30 21:33:02.437] [PRINT]       USER: Can you check the last 2 email I receive in my mail box?
+[2026-03-30 21:33:02.471] [PRINT] 
+[2026-03-30 21:33:02.471] [PRINT]    📏 Final context: 83 chars (~20 tokens)
+[2026-03-30 21:33:02.499] [PRINT] ───────────────────────────────────────────────────────
+[2026-03-30 21:33:02.519] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [context_built]: context assembled: summary=no, msgs=1, ~20 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 83, "context_tokens_est": 20}
+[2026-03-30 21:33:02.520] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-03-30 21:33:04.212] [PRINT]   💰 ✅ [classifier] gpt-3.5-turbo | agent_tool_classification | in=967 out=11 | $0.0005 | 1671ms | cumulative: in=1515 out=47 total=1562 $0.0006
+[2026-03-30 21:33:04.231] [PRINT]    relevant_agents: ['gmail_agent']
+[2026-03-30 21:33:04.250] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**']
+[2026-03-30 21:33:04.269] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent"]}
+[2026-03-30 21:33:04.270] [PRINT]    user_prompt (163 chars):
+[2026-03-30 21:33:04.294] [PRINT]      RECENT CONVERSATION:
+[2026-03-30 21:33:04.312] [PRINT]      USER: Can you check the last 2 email I receive in my mail box?
+[2026-03-30 21:33:04.327] [PRINT]      
+[2026-03-30 21:33:04.339] [PRINT]      CURRENT USER MESSAGE: Can you check the last 2 email I receive in my mail box?
+[2026-03-30 21:33:04.358] [PRINT] ──────────────────────────────────────────────────
+[2026-03-30 21:33:09.805] [PRINT]   💰 ✅ [1] gpt-4 | tier_1_full_analysis | in=636 out=123 | $0.0265 | 5410ms | cumulative: in=2151 out=170 total=2321 $0.0271
+[2026-03-30 21:33:09.829] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "search_emails", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user wants to check the last 2 emails received. This can be achieved by searching emails with no specific query and limiting the results to 2.", "extracted_info": {"query": "", "max_results": 2}}
+[2026-03-30 21:33:09.830] [INFO] [req_20260330133259_6bcbf95e] [T:new]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-03-30 21:33:09.831] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Search for the last 2 emails received", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails"]}, "max_results": 2}}
+[2026-03-30 21:33:09.834] [INFO] [req_20260330133259_6bcbf95e] [T:new]   INFO: Memory: added assistant message  | {"tokens": 37, "total": 57, "max": 2000, "response_preview": "✅ **Ready to execute!**\n\n**Task:** Search for the last 2 emails received\n\n**Details:**\n- **Max Results:** 2\n"}
+[2026-03-30 21:33:09.891] [PRINT] ✅ Created new thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_6eedad6d for user: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03 with title: Can you check the last 2 email I receive in my mai...
+[2026-03-30 21:33:09.908] [PRINT] 🚀 Thread 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_6eedad6d ready - executing workflow...
+[2026-03-30 21:33:09.923] [INFO] [req_20260330133259_6bcbf95e] [T:new]   DECISION [ready_for_execution]: YES — executing immediately
+[2026-03-30 21:33:09.954] [INFO] [req_20260330133259_6bcbf95e] [T:new]   WORKFLOW START: "Search for the last 2 emails received
+
+Parameters:
+- max_results: 2
+" (0 steps)
+[2026-03-30 21:33:09.957] [PRINT] 📅 Date context: today=2026-03-30
+[2026-03-30 21:33:09.973] [PRINT] 🚀 Starting workflow execution (mode=standard)...
+[2026-03-30 21:33:09.990] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-03-30 21:33:09.997] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-03-30 21:33:10.026] [PRINT] 
+[2026-03-30 21:33:10.026] [PRINT] ============================================================
+[2026-03-30 21:33:10.048] [PRINT] 🧠 SUPERVISOR NODE - Planning Phase
+[2026-03-30 21:33:10.070] [PRINT] ============================================================
+[2026-03-30 21:33:10.098] [PRINT] 📥 User Input: Search for the last 2 emails received
+[2026-03-30 21:33:10.098] [PRINT] 
+[2026-03-30 21:33:10.098] [PRINT] Parameters:
+[2026-03-30 21:33:10.098] [PRINT] - max_results: 2
+[2026-03-30 21:33:10.121] [INFO] [-]   STEP [supervisor_node]: Planning for: Search for the last 2 emails received
+
+Parameters:
+- max_results: 2
+
+[2026-03-30 21:33:10.127] [PRINT] 📅 Context dates: today=2026-03-30
+[2026-03-30 21:33:10.147] [PRINT] 📌 Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-03-30 21:33:10.178] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['gmail_agent']
+[2026-03-30 21:33:10.182] [PRINT] 📌 Relevant agents: ['gmail_agent']
+[2026-03-30 21:33:10.207] [PRINT] 🔧 Filtered tools: {'gmail_agent': ['search_emails']}
+[2026-03-30 21:33:10.239] [PRINT] 🤖 Calling LLM to generate multi-step plan...
+[2026-03-30 21:33:10.266] [PRINT] 💰 Token optimization:
+[2026-03-30 21:33:10.282] [PRINT]    Agents: 1/6
+[2026-03-30 21:33:10.298] [PRINT]    Tools: 1/44
+[2026-03-30 21:33:10.320] [PRINT]    Context size: 1,072 chars (~268 tokens)
+[2026-03-30 21:33:10.336] [INFO] [-]   STEP [plan_generation_start]: agents=1/6, tools=1/44, context_tokens~268
+[2026-03-30 21:33:14.698] [PRINT]   💰 ✅ [supervisor] gpt-4 | plan_generation | in=715 out=79 | $0.0262 | 4317ms | cumulative: in=715 out=79 total=794 $0.0262
+[2026-03-30 21:33:14.726] [PRINT] ✅ Plan generated successfully!
+[2026-03-30 21:33:14.742] [PRINT] 
+[2026-03-30 21:33:14.742] [PRINT] 📋 Generated Plan:
+[2026-03-30 21:33:14.742] [PRINT] {
+[2026-03-30 21:33:14.742] [PRINT]   "steps": [
+[2026-03-30 21:33:14.742] [PRINT]     {
+[2026-03-30 21:33:14.742] [PRINT]       "agent": "gmail_agent",
+[2026-03-30 21:33:14.742] [PRINT]       "tool": "search_emails",
+[2026-03-30 21:33:14.742] [PRINT]       "inputs": {
+[2026-03-30 21:33:14.742] [PRINT]         "query": "",
+[2026-03-30 21:33:14.742] [PRINT]         "max_results": 2
+[2026-03-30 21:33:14.742] [PRINT]       },
+[2026-03-30 21:33:14.742] [PRINT]       "output_variables": {
+[2026-03-30 21:33:14.742] [PRINT]         "recent_emails": "emails"
+[2026-03-30 21:33:14.742] [PRINT]       },
+[2026-03-30 21:33:14.742] [PRINT]       "description": "Search for the last 2 emails received"
+[2026-03-30 21:33:14.742] [PRINT]     }
+[2026-03-30 21:33:14.742] [PRINT]   ]
+[2026-03-30 21:33:14.742] [PRINT] }
+[2026-03-30 21:33:14.758] [INFO] [-]   STEP [plan_generated]: 1 steps: gmail_agent.search_emails
+[2026-03-30 21:33:14.761] [PRINT] 
+[2026-03-30 21:33:14.761] [PRINT] 💾 Plan saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-03-30 21:33:14.775] [PRINT] ============================================================
+[2026-03-30 21:33:14.790] [PRINT] 
+[2026-03-30 21:33:14.790] [PRINT] ============================================================
+[2026-03-30 21:33:14.804] [PRINT] ⚙️ ORCHESTRATOR NODE - Execution Phase
+[2026-03-30 21:33:14.821] [PRINT] ============================================================
+[2026-03-30 21:33:14.834] [PRINT] ✅ Found 1 steps to execute
+[2026-03-30 21:33:14.851] [INFO] [-]   STEP [orchestrator_node]: 1 steps to execute
+[2026-03-30 21:33:14.854] [PRINT] 
+[2026-03-30 21:33:14.854] [PRINT] 📦 INITIAL CONTEXT:
+[2026-03-30 21:33:14.869] [PRINT] ────────────────────────────────────────────────────────────
+[2026-03-30 21:33:14.883] [PRINT]    today_date: 2026-03-30
+[2026-03-30 21:33:14.901] [PRINT]    _cached_tool_filter: dict (length: 1)
+[2026-03-30 21:33:14.919] [PRINT] ────────────────────────────────────────────────────────────
+[2026-03-30 21:33:14.934] [PRINT] ✅ Pre-flight credential check passed (5 fields)
+[2026-03-30 21:33:14.960] [PRINT] 
+[2026-03-30 21:33:14.960] [PRINT] ============================================================
+[2026-03-30 21:33:14.978] [PRINT] 📍 Step 1/1: gmail_agent.search_emails
+[2026-03-30 21:33:14.992] [PRINT] 📝 Description: Search for the last 2 emails received
+[2026-03-30 21:33:15.006] [PRINT] ============================================================
+[2026-03-30 21:33:15.040] [PRINT] ⚠️ Risk Level: safe
+[2026-03-30 21:33:15.056] [PRINT] 
+[2026-03-30 21:33:15.056] [PRINT] 🔄 Substituting variables in inputs...
+[2026-03-30 21:33:15.072] [PRINT]    Original inputs: {
+[2026-03-30 21:33:15.072] [PRINT]       "query": "",
+[2026-03-30 21:33:15.072] [PRINT]       "max_results": 2
+[2026-03-30 21:33:15.072] [PRINT] }
+[2026-03-30 21:33:15.093] [PRINT]    Substituted inputs: {
+[2026-03-30 21:33:15.093] [PRINT]       "query": "",
+[2026-03-30 21:33:15.093] [PRINT]       "max_results": 2
+[2026-03-30 21:33:15.093] [PRINT] }
+[2026-03-30 21:33:15.121] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-03-30 21:33:15.139] [INFO] [-]   STEP [variable_substitution]: step 1: gmail_agent.search_emails  | {"inputs": {"query": "", "max_results": 2}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-03-30 21:33:15.145] [PRINT] 
+[2026-03-30 21:33:15.145] [PRINT] 🌐 Calling agent microservice: http://localhost:8000/execute_task
+[2026-03-30 21:33:15.164] [PRINT] 
+[2026-03-30 21:33:15.164] [PRINT] 🔍 REQUEST PAYLOAD STRUCTURE:
+[2026-03-30 21:33:15.180] [PRINT] ────────────────────────────────────────────────────────────
+[2026-03-30 21:33:15.195] [PRINT]    Tool: search_emails
+[2026-03-30 21:33:15.209] [PRINT]    Inputs keys: ['query', 'max_results']
+[2026-03-30 21:33:15.224] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-03-30 21:33:15.238] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-03-30 21:33:15.253] [PRINT]    Payload size: 684 bytes
+[2026-03-30 21:33:15.275] [PRINT] ────────────────────────────────────────────────────────────
+[2026-03-30 21:33:15.301] [PRINT] 
+[2026-03-30 21:33:15.301] [PRINT] 🚀 Sending request to agent...
+[2026-03-30 21:33:15.321] [PRINT]    URL: http://localhost:8000/execute_task
+[2026-03-30 21:33:15.344] [PRINT]    Timeout: 320 seconds
+[2026-03-30 21:33:15.383] [PRINT]    Max retries: 3
+[2026-03-30 21:33:15.401] [PRINT] 🔄 Attempt 1/3 calling http://localhost:8000/execute_task
+[2026-03-30 21:33:15.435] [PRINT]    ⏱️ Timeout set to: 320.0 seconds
+[2026-03-30 21:33:22.547] [PRINT] ✅ Agent call succeeded on attempt 1
+[2026-03-30 21:33:22.562] [PRINT] ⏱️ Agent call completed in 7263.63ms
+[2026-03-30 21:33:22.584] [PRINT] ✅ Agent response received
+[2026-03-30 21:33:22.601] [AGENT] [-]   AGENT: ✓ gmail_agent.search_emails (7264ms)  | {"query": "", "max_results": "2"}
+[2026-03-30 21:33:22.606] [PRINT] 
+[2026-03-30 21:33:22.606] [PRINT] ────────────────────────────────────────────────────────────
+[2026-03-30 21:33:22.632] [PRINT] 📦 FULL AGENT RESPONSE DATA:
+[2026-03-30 21:33:22.654] [PRINT] ────────────────────────────────────────────────────────────
+[2026-03-30 21:33:22.675] [PRINT] {
+[2026-03-30 21:33:22.675] [PRINT]   "success": true,
+[2026-03-30 21:33:22.675] [PRINT]   "emails": [
+[2026-03-30 21:33:22.675] [PRINT]     {
+[2026-03-30 21:33:22.675] [PRINT]       "message_id": "19d3e9e3d0a4e17d",
+[2026-03-30 21:33:22.675] [PRINT]       "thread_id": "19d3e9e3d0a4e17d",
+[2026-03-30 21:33:22.675] [PRINT]       "from": "GitHub <marketing@github.com>",
+[2026-03-30 21:33:22.675] [PRINT]       "subject": "Get Copilot started on your todo list",
+[2026-03-30 21:33:22.675] [PRINT]       "date": "Mon, 30 Mar 2026 08:00:47 -0400",
+[2026-03-30 21:33:22.675] [PRINT]       "internal_date": "1774872047000",
+[2026-03-30 21:33:22.675] [PRINT]       "label_ids": [
+[2026-03-30 21:33:22.675] [PRINT]         "CATEGORY_UPDATES",
+[2026-03-30 21:33:22.675] [PRINT]         "INBOX"
+[2026-03-30 21:33:22.675] [PRINT]       ],
+[2026-03-30 21:33:22.675] [PRINT]       "body": "Get your todo list done faster with coding agent and agent mode \n\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \n\n\"GitHub\" \"GitHub\" <[link] \n\nCopilot IRL \n-------------------------------------------------\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action. \n\n\u26a1 Lightning fast foundations \n----------------------------------------------------------------------------------\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR. \n\nKick things off fast with Copilot <[link] \n\n\ud83d\udd0d Review and refactor \n----------------------------------------------------------------------------\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \n\nReview and refactor with Copilot <[link] \n\n\ud83e\udd16 Dig deeper into agent mode \n-------------------------------------------------------------------------------\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \n\nLearn more about agent mode <[link] \n\n\"X\" <[link] \u200a \"Instagram\" <[link] \u200a \"YouTube\" <[link] \u200a \"LinkedIn\" <[link] \u200a \"GitHub\" <[link]\nPrivacy policy <[link] \u2022 Terms of use <[link] \u2022 Contact us <[link] \u2022 Unsubscribe <[link]\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San \n...[truncated]",
+[2026-03-30 21:33:22.675] [PRINT]       "has_attachments": false,
+[2026-03-30 21:33:22.675] [PRINT]       "attachments": [],
+[2026-03-30 21:33:22.675] [PRINT]       "body_full": "Get your todo list done faster with coding agent and agent mode     \r\n\r\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c     \r\n\r\n\"GitHub\"                                  \"GitHub\"                                            <https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>                            \r\n\r\nCopilot IRL                   \r\n-------------------------------------------------\r\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action.  \r\n\r\n\u26a1 Lightning fast foundations                           \r\n----------------------------------------------------------------------------------\r\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR.                         \r\n\r\nKick things off fast with Copilot <https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\ud83d\udd0d Review and refactor                           \r\n----------------------------------------------------------------------------\r\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \r\n\r\nReview and refactor with Copilot <https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\ud83e\udd16 Dig deeper into agent mode \r\n-------------------------------------------------------------------------------\r\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \r\n\r\nLearn more about agent mode <https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\r\n\r\n\r\n\"X\" <https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"Instagram\" <https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"YouTube\" <https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"LinkedIn\" <https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"GitHub\" <https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>\r\nPrivacy policy <https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Terms of use <https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Contact us <https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Unsubscribe <https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>\r\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San Francisco, CA 94107\r\n\r\n",
+[2026-03-30 21:33:22.675] [PRINT]       "body_clean": "Get your todo list done faster with coding agent and agent mode \n\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \n\n\"GitHub\" \"GitHub\" <[link] \n\nCopilot IRL \n-------------------------------------------------\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action. \n\n\u26a1 Lightning fast foundations \n----------------------------------------------------------------------------------\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR. \n\nKick things off fast with Copilot <[link] \n\n\ud83d\udd0d Review and refactor \n----------------------------------------------------------------------------\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \n\nReview and refactor with Copilot <[link] \n\n\ud83e\udd16 Dig deeper into agent mode \n-------------------------------------------------------------------------------\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \n\nLearn more about agent mode <[link] \n\n\"X\" <[link] \u200a \"Instagram\" <[link] \u200a \"YouTube\" <[link] \u200a \"LinkedIn\" <[link] \u200a \"GitHub\" <[link]\nPrivacy policy <[link] \u2022 Terms of use <[link] \u2022 Contact us <[link] \u2022 Unsubscribe <[link]\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San \n...[truncated]",
+[2026-03-30 21:33:22.675] [PRINT]       "body_links": [
+[2026-03-30 21:33:22.675] [PRINT]         "https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:22.675] [PRINT]         "https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>"
+[2026-03-30 21:33:22.675] [PRINT]       ]
+[2026-03-30 21:33:22.675] [PRINT]     },
+[2026-03-30 21:33:22.675] [PRINT]     {
+[2026-03-30 21:33:22.675] [PRINT]       "message_id": "19d3d5fceb0f530c",
+[2026-03-30 21:33:22.675] [PRINT]       "thread_id": "19d3d5fceb0f530c",
+[2026-03-30 21:33:22.675] [PRINT]       "from": "Weaviate <support@weaviate.io>",
+[2026-03-30 21:33:22.675] [PRINT]       "subject": "\ud83d\udd34 Your Weaviate Sandbox cluster (knowledge-base) has expired",
+[2026-03-30 21:33:22.675] [PRINT]       "date": "Mon, 30 Mar 2026 06:13:01 +0000 (UTC)",
+[2026-03-30 21:33:22.675] [PRINT]       "internal_date": "1774851181000",
+[2026-03-30 21:33:22.675] [PRINT]       "label_ids": [
+[2026-03-30 21:33:22.675] [PRINT]         "CATEGORY_UPDATES",
+[2026-03-30 21:33:22.675] [PRINT]         "INBOX"
+[2026-03-30 21:33:22.675] [PRINT]       ],
+[2026-03-30 21:33:22.675] [PRINT]       "body": "Hi \ud83d\udc4b,\n\nYour free Weaviate Sandbox cluster has expired.\n\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\n\n*Thank you for using Weaviate!*\nThe Weaviate Team\n\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:22.675] [PRINT]       "has_attachments": false,
+[2026-03-30 21:33:22.675] [PRINT]       "attachments": [],
+[2026-03-30 21:33:22.675] [PRINT]       "body_full": "Hi \ud83d\udc4b,\r\n\r\nYour free Weaviate Sandbox cluster has expired.\r\n\r\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\r\n\r\n*Thank you for using Weaviate!*\r\nThe Weaviate Team\r\n\r\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:22.675] [PRINT]       "body_clean": "Hi \ud83d\udc4b,\n\nYour free Weaviate Sandbox cluster has expired.\n\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\n\n*Thank you for using Weaviate!*\nThe Weaviate Team\n\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:22.675] [PRINT]       "body_links": [
+[2026-03-30 21:33:22.675] [PRINT]         "https://weaviate.io/pricing",
+[2026-03-30 21:33:22.675] [PRINT]         "https://www.linkedin.com/company/weaviate-io/",
+[2026-03-30 21:33:22.675] [PRINT]         "https://twitter.com/weaviate_io/",
+[2026-03-30 21:33:22.675] [PRINT]         "https://weaviate.io/",
+[2026-03-30 21:33:22.675] [PRINT]         "https://weaviate.io/slack"
+[2026-03-30 21:33:22.675] [PRINT]       ]
+[2026-03-30 21:33:22.675] [PRINT]     }
+[2026-03-30 21:33:22.675] [PRINT]   ],
+[2026-03-30 21:33:22.675] [PRINT]   "count": 2,
+[2026-03-30 21:33:22.675] [PRINT]   "query": "",
+[2026-03-30 21:33:22.675] [PRINT]   "error": null
+[2026-03-30 21:33:22.675] [PRINT] }
+[2026-03-30 21:33:22.696] [PRINT] ────────────────────────────────────────────────────────────
+[2026-03-30 21:33:22.714] [PRINT] 
+[2026-03-30 21:33:22.714] [PRINT] 📦 Variables added to context:
+[2026-03-30 21:33:22.733] [PRINT]    ✓ recent_emails = [{'message_id': '19d3e9e3d0a4e17d', 'thread_id': '19d3e9e3d0a4e17d', 'from': 'GitHub <marketing@github.com>', 'subject': 'Get Copilot started on your todo list', 'date': 'Mon, 30 Mar 2026 08:00:47 -0400', 'internal_date': '1774872047000', 'label_ids': ['CATEGORY_UPDATES', 'INBOX'], 'body': 'Get your todo list done faster with coding agent and agent mode \n\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \n\n"GitHub" "GitHub" <[link] \n\nCopilot IRL \n-------------------------------------------------\nSo far we’ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it’s time to really dig into what Copilot can accomplish in your workflow — and see it in action. \n\n⚡ Lightning fast foundations \n----------------------------------------------------------------------------------\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR. \n\nKick things off fast with Copilot <[link] \n\n🔍 Review and refactor \n----------------------------------------------------------------------------\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That’s where Copilot can be useful. It doesn’t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here’s how. \n\nReview and refactor with Copilot <[link] \n\n🤖 Dig deeper into agent mode \n-------------------------------------------------------------------------------\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it’s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \n\nLearn more about agent mode <[link] \n\n"X" <[link] \u200a "Instagram" <[link] \u200a "YouTube" <[link] \u200a "LinkedIn" <[link] \u200a "GitHub" <[link]\nPrivacy policy <[link] • Terms of use <[link] • Contact us <[link] • Unsubscribe <[link]\nGitHub, Inc. • 88 Colin P Kelly Jr Street • San \n...[truncated]', 'has_attachments': False, 'attachments': [], 'body_full': 'Get your todo list done faster with coding agent and agent mode     \r\n\r\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c     \r\n\r\n"GitHub"                                  "GitHub"                                            <https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>                            \r\n\r\nCopilot IRL                   \r\n-------------------------------------------------\r\nSo far we’ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it’s time to really dig into what Copilot can accomplish in your workflow — and see it in action.  \r\n\r\n⚡ Lightning fast foundations                           \r\n----------------------------------------------------------------------------------\r\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR.                         \r\n\r\nKick things off fast with Copilot <https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n🔍 Review and refactor                           \r\n----------------------------------------------------------------------------\r\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That’s where Copilot can be useful. It doesn’t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here’s how. \r\n\r\nReview and refactor with Copilot <https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n🤖 Dig deeper into agent mode \r\n-------------------------------------------------------------------------------\r\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it’s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \r\n\r\nLearn more about agent mode <https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\r\n\r\n\r\n"X" <https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5> \u200a "Instagram" <https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5> \u200a "YouTube" <https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5> \u200a "LinkedIn" <https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5> \u200a "GitHub" <https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>\r\nPrivacy policy <https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5> • Terms of use <https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5> • Contact us <https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5> • Unsubscribe <https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>\r\nGitHub, Inc. • 88 Colin P Kelly Jr Street • San Francisco, CA 94107\r\n\r\n', 'body_clean': 'Get your todo list done faster with coding agent and agent mode \n\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \n\n"GitHub" "GitHub" <[link] \n\nCopilot IRL \n-------------------------------------------------\nSo far we’ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it’s time to really dig into what Copilot can accomplish in your workflow — and see it in action. \n\n⚡ Lightning fast foundations \n----------------------------------------------------------------------------------\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR. \n\nKick things off fast with Copilot <[link] \n\n🔍 Review and refactor \n----------------------------------------------------------------------------\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That’s where Copilot can be useful. It doesn’t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here’s how. \n\nReview and refactor with Copilot <[link] \n\n🤖 Dig deeper into agent mode \n-------------------------------------------------------------------------------\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it’s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \n\nLearn more about agent mode <[link] \n\n"X" <[link] \u200a "Instagram" <[link] \u200a "YouTube" <[link] \u200a "LinkedIn" <[link] \u200a "GitHub" <[link]\nPrivacy policy <[link] • Terms of use <[link] • Contact us <[link] • Unsubscribe <[link]\nGitHub, Inc. • 88 Colin P Kelly Jr Street • San \n...[truncated]', 'body_links': ['https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>', 'https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5>', 'https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5>', 'https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5>', 'https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>', 'https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5>', 'https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>']}, {'message_id': '19d3d5fceb0f530c', 'thread_id': '19d3d5fceb0f530c', 'from': 'Weaviate <support@weaviate.io>', 'subject': '🔴 Your Weaviate Sandbox cluster (knowledge-base) has expired', 'date': 'Mon, 30 Mar 2026 06:13:01 +0000 (UTC)', 'internal_date': '1774851181000', 'label_ids': ['CATEGORY_UPDATES', 'INBOX'], 'body': 'Hi 👋,\n\nYour free Weaviate Sandbox cluster has expired.\n\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\n\n*Thank you for using Weaviate!*\nThe Weaviate Team\n\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )', 'has_attachments': False, 'attachments': [], 'body_full': 'Hi 👋,\r\n\r\nYour free Weaviate Sandbox cluster has expired.\r\n\r\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\r\n\r\n*Thank you for using Weaviate!*\r\nThe Weaviate Team\r\n\r\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )', 'body_clean': 'Hi 👋,\n\nYour free Weaviate Sandbox cluster has expired.\n\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\n\n*Thank you for using Weaviate!*\nThe Weaviate Team\n\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )', 'body_links': ['https://weaviate.io/pricing', 'https://www.linkedin.com/company/weaviate-io/', 'https://twitter.com/weaviate_io/', 'https://weaviate.io/', 'https://weaviate.io/slack']}] (from emails)
+[2026-03-30 21:33:22.752] [PRINT] 
+[2026-03-30 21:33:22.752] [PRINT] 📊 CONTEXT AFTER STEP 1:
+[2026-03-30 21:33:22.766] [PRINT] ────────────────────────────────────────────────────────────
+[2026-03-30 21:33:22.785] [PRINT]    today_date: 2026-03-30
+[2026-03-30 21:33:22.804] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent']
+[2026-03-30 21:33:22.829] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails', 'count', 'query']
+[2026-03-30 21:33:22.849] [PRINT]    recent_emails: Array[2 items]
+[2026-03-30 21:33:22.867] [PRINT]       └─ First item keys: ['message_id', 'thread_id', 'from', 'subject', 'date', 'internal_date', 'label_ids', 'body', 'has_attachments', 'attachments', 'body_full', 'body_clean', 'body_links']
+[2026-03-30 21:33:22.885] [PRINT] ────────────────────────────────────────────────────────────
+[2026-03-30 21:33:22.919] [PRINT] 
+[2026-03-30 21:33:22.919] [PRINT] ============================================================
+[2026-03-30 21:33:22.934] [PRINT] ✅ ORCHESTRATOR COMPLETED
+[2026-03-30 21:33:22.951] [PRINT] ============================================================
+[2026-03-30 21:33:22.965] [PRINT] 📊 Total steps: 1
+[2026-03-30 21:33:22.984] [PRINT] ✓ Successful: 1
+[2026-03-30 21:33:23.009] [PRINT] ℹ️ No Results: 0
+[2026-03-30 21:33:23.029] [PRINT] ✗ Failed: 0
+[2026-03-30 21:33:23.045] [PRINT] ============================================================
+[2026-03-30 21:33:23.063] [INFO] [-]   STEP [orchestrator_complete]: steps=1, success=1, no_results=0, errors=0
+[2026-03-30 21:33:23.070] [PRINT] 
+[2026-03-30 21:33:23.070] [PRINT] ✅ Workflow completed successfully
+[2026-03-30 21:33:23.084] [INFO] [-]   WORKFLOW END: success (1/1 steps)
+[2026-03-30 21:33:23.086] [PRINT] 
+[2026-03-30 21:33:23.086] [PRINT] 📋 Generated Plan:
+[2026-03-30 21:33:23.086] [PRINT] {
+[2026-03-30 21:33:23.086] [PRINT]   "steps": [
+[2026-03-30 21:33:23.086] [PRINT]     {
+[2026-03-30 21:33:23.086] [PRINT]       "agent": "gmail_agent",
+[2026-03-30 21:33:23.086] [PRINT]       "tool": "search_emails",
+[2026-03-30 21:33:23.086] [PRINT]       "inputs": {
+[2026-03-30 21:33:23.086] [PRINT]         "query": "",
+[2026-03-30 21:33:23.086] [PRINT]         "max_results": 2
+[2026-03-30 21:33:23.086] [PRINT]       },
+[2026-03-30 21:33:23.086] [PRINT]       "output_variables": {
+[2026-03-30 21:33:23.086] [PRINT]         "recent_emails": "emails"
+[2026-03-30 21:33:23.086] [PRINT]       },
+[2026-03-30 21:33:23.086] [PRINT]       "description": "Search for the last 2 emails received"
+[2026-03-30 21:33:23.086] [PRINT]     }
+[2026-03-30 21:33:23.086] [PRINT]   ]
+[2026-03-30 21:33:23.086] [PRINT] }
+[2026-03-30 21:33:23.120] [PRINT] 
+[2026-03-30 21:33:23.120] [PRINT] 📊 Final Context: {
+[2026-03-30 21:33:23.120] [PRINT]   "today_date": "2026-03-30",
+[2026-03-30 21:33:23.120] [PRINT]   "_cached_tool_filter": {
+[2026-03-30 21:33:23.120] [PRINT]     "gmail_agent": [
+[2026-03-30 21:33:23.120] [PRINT]       "search_emails"
+[2026-03-30 21:33:23.120] [PRINT]     ]
+[2026-03-30 21:33:23.120] [PRINT]   },
+[2026-03-30 21:33:23.120] [PRINT]   "step_1_gmail_agent": {
+[2026-03-30 21:33:23.120] [PRINT]     "emails": [
+[2026-03-30 21:33:23.120] [PRINT]       {
+[2026-03-30 21:33:23.120] [PRINT]         "message_id": "19d3e9e3d0a4e17d",
+[2026-03-30 21:33:23.120] [PRINT]         "thread_id": "19d3e9e3d0a4e17d",
+[2026-03-30 21:33:23.120] [PRINT]         "from": "GitHub <marketing@github.com>",
+[2026-03-30 21:33:23.120] [PRINT]         "subject": "Get Copilot started on your todo list",
+[2026-03-30 21:33:23.120] [PRINT]         "date": "Mon, 30 Mar 2026 08:00:47 -0400",
+[2026-03-30 21:33:23.120] [PRINT]         "internal_date": "1774872047000",
+[2026-03-30 21:33:23.120] [PRINT]         "label_ids": [
+[2026-03-30 21:33:23.120] [PRINT]           "CATEGORY_UPDATES",
+[2026-03-30 21:33:23.120] [PRINT]           "INBOX"
+[2026-03-30 21:33:23.120] [PRINT]         ],
+[2026-03-30 21:33:23.120] [PRINT]         "body": "Get your todo list done faster with coding agent and agent mode \n\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \n\n\"GitHub\" \"GitHub\" <[link] \n\nCopilot IRL \n-------------------------------------------------\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action. \n\n\u26a1 Lightning fast foundations \n----------------------------------------------------------------------------------\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR. \n\nKick things off fast with Copilot <[link] \n\n\ud83d\udd0d Review and refactor \n----------------------------------------------------------------------------\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \n\nReview and refactor with Copilot <[link] \n\n\ud83e\udd16 Dig deeper into agent mode \n-------------------------------------------------------------------------------\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \n\nLearn more about agent mode <[link] \n\n\"X\" <[link] \u200a \"Instagram\" <[link] \u200a \"YouTube\" <[link] \u200a \"LinkedIn\" <[link] \u200a \"GitHub\" <[link]\nPrivacy policy <[link] \u2022 Terms of use <[link] \u2022 Contact us <[link] \u2022 Unsubscribe <[link]\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San \n...[truncated]",
+[2026-03-30 21:33:23.120] [PRINT]         "has_attachments": false,
+[2026-03-30 21:33:23.120] [PRINT]         "attachments": [],
+[2026-03-30 21:33:23.120] [PRINT]         "body_full": "Get your todo list done faster with coding agent and agent mode     \r\n\r\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c     \r\n\r\n\"GitHub\"                                  \"GitHub\"                                            <https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>                            \r\n\r\nCopilot IRL                   \r\n-------------------------------------------------\r\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action.  \r\n\r\n\u26a1 Lightning fast foundations                           \r\n----------------------------------------------------------------------------------\r\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR.                         \r\n\r\nKick things off fast with Copilot <https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\ud83d\udd0d Review and refactor                           \r\n----------------------------------------------------------------------------\r\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \r\n\r\nReview and refactor with Copilot <https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\ud83e\udd16 Dig deeper into agent mode \r\n-------------------------------------------------------------------------------\r\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \r\n\r\nLearn more about agent mode <https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\r\n\r\n\r\n\"X\" <https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"Instagram\" <https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"YouTube\" <https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"LinkedIn\" <https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"GitHub\" <https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>\r\nPrivacy policy <https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Terms of use <https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Contact us <https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Unsubscribe <https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>\r\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San Francisco, CA 94107\r\n\r\n",
+[2026-03-30 21:33:23.120] [PRINT]         "body_clean": "Get your todo list done faster with coding agent and agent mode \n\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \n\n\"GitHub\" \"GitHub\" <[link] \n\nCopilot IRL \n-------------------------------------------------\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action. \n\n\u26a1 Lightning fast foundations \n----------------------------------------------------------------------------------\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR. \n\nKick things off fast with Copilot <[link] \n\n\ud83d\udd0d Review and refactor \n----------------------------------------------------------------------------\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \n\nReview and refactor with Copilot <[link] \n\n\ud83e\udd16 Dig deeper into agent mode \n-------------------------------------------------------------------------------\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \n\nLearn more about agent mode <[link] \n\n\"X\" <[link] \u200a \"Instagram\" <[link] \u200a \"YouTube\" <[link] \u200a \"LinkedIn\" <[link] \u200a \"GitHub\" <[link]\nPrivacy policy <[link] \u2022 Terms of use <[link] \u2022 Contact us <[link] \u2022 Unsubscribe <[link]\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San \n...[truncated]",
+[2026-03-30 21:33:23.120] [PRINT]         "body_links": [
+[2026-03-30 21:33:23.120] [PRINT]           "https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]           "https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>"
+[2026-03-30 21:33:23.120] [PRINT]         ]
+[2026-03-30 21:33:23.120] [PRINT]       },
+[2026-03-30 21:33:23.120] [PRINT]       {
+[2026-03-30 21:33:23.120] [PRINT]         "message_id": "19d3d5fceb0f530c",
+[2026-03-30 21:33:23.120] [PRINT]         "thread_id": "19d3d5fceb0f530c",
+[2026-03-30 21:33:23.120] [PRINT]         "from": "Weaviate <support@weaviate.io>",
+[2026-03-30 21:33:23.120] [PRINT]         "subject": "\ud83d\udd34 Your Weaviate Sandbox cluster (knowledge-base) has expired",
+[2026-03-30 21:33:23.120] [PRINT]         "date": "Mon, 30 Mar 2026 06:13:01 +0000 (UTC)",
+[2026-03-30 21:33:23.120] [PRINT]         "internal_date": "1774851181000",
+[2026-03-30 21:33:23.120] [PRINT]         "label_ids": [
+[2026-03-30 21:33:23.120] [PRINT]           "CATEGORY_UPDATES",
+[2026-03-30 21:33:23.120] [PRINT]           "INBOX"
+[2026-03-30 21:33:23.120] [PRINT]         ],
+[2026-03-30 21:33:23.120] [PRINT]         "body": "Hi \ud83d\udc4b,\n\nYour free Weaviate Sandbox cluster has expired.\n\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\n\n*Thank you for using Weaviate!*\nThe Weaviate Team\n\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:23.120] [PRINT]         "has_attachments": false,
+[2026-03-30 21:33:23.120] [PRINT]         "attachments": [],
+[2026-03-30 21:33:23.120] [PRINT]         "body_full": "Hi \ud83d\udc4b,\r\n\r\nYour free Weaviate Sandbox cluster has expired.\r\n\r\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\r\n\r\n*Thank you for using Weaviate!*\r\nThe Weaviate Team\r\n\r\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:23.120] [PRINT]         "body_clean": "Hi \ud83d\udc4b,\n\nYour free Weaviate Sandbox cluster has expired.\n\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\n\n*Thank you for using Weaviate!*\nThe Weaviate Team\n\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:23.120] [PRINT]         "body_links": [
+[2026-03-30 21:33:23.120] [PRINT]           "https://weaviate.io/pricing",
+[2026-03-30 21:33:23.120] [PRINT]           "https://www.linkedin.com/company/weaviate-io/",
+[2026-03-30 21:33:23.120] [PRINT]           "https://twitter.com/weaviate_io/",
+[2026-03-30 21:33:23.120] [PRINT]           "https://weaviate.io/",
+[2026-03-30 21:33:23.120] [PRINT]           "https://weaviate.io/slack"
+[2026-03-30 21:33:23.120] [PRINT]         ]
+[2026-03-30 21:33:23.120] [PRINT]       }
+[2026-03-30 21:33:23.120] [PRINT]     ],
+[2026-03-30 21:33:23.120] [PRINT]     "count": 2,
+[2026-03-30 21:33:23.120] [PRINT]     "query": ""
+[2026-03-30 21:33:23.120] [PRINT]   },
+[2026-03-30 21:33:23.120] [PRINT]   "recent_emails": [
+[2026-03-30 21:33:23.120] [PRINT]     {
+[2026-03-30 21:33:23.120] [PRINT]       "message_id": "19d3e9e3d0a4e17d",
+[2026-03-30 21:33:23.120] [PRINT]       "thread_id": "19d3e9e3d0a4e17d",
+[2026-03-30 21:33:23.120] [PRINT]       "from": "GitHub <marketing@github.com>",
+[2026-03-30 21:33:23.120] [PRINT]       "subject": "Get Copilot started on your todo list",
+[2026-03-30 21:33:23.120] [PRINT]       "date": "Mon, 30 Mar 2026 08:00:47 -0400",
+[2026-03-30 21:33:23.120] [PRINT]       "internal_date": "1774872047000",
+[2026-03-30 21:33:23.120] [PRINT]       "label_ids": [
+[2026-03-30 21:33:23.120] [PRINT]         "CATEGORY_UPDATES",
+[2026-03-30 21:33:23.120] [PRINT]         "INBOX"
+[2026-03-30 21:33:23.120] [PRINT]       ],
+[2026-03-30 21:33:23.120] [PRINT]       "body": "Get your todo list done faster with coding agent and agent mode \n\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \n\n\"GitHub\" \"GitHub\" <[link] \n\nCopilot IRL \n-------------------------------------------------\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action. \n\n\u26a1 Lightning fast foundations \n----------------------------------------------------------------------------------\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR. \n\nKick things off fast with Copilot <[link] \n\n\ud83d\udd0d Review and refactor \n----------------------------------------------------------------------------\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \n\nReview and refactor with Copilot <[link] \n\n\ud83e\udd16 Dig deeper into agent mode \n-------------------------------------------------------------------------------\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \n\nLearn more about agent mode <[link] \n\n\"X\" <[link] \u200a \"Instagram\" <[link] \u200a \"YouTube\" <[link] \u200a \"LinkedIn\" <[link] \u200a \"GitHub\" <[link]\nPrivacy policy <[link] \u2022 Terms of use <[link] \u2022 Contact us <[link] \u2022 Unsubscribe <[link]\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San \n...[truncated]",
+[2026-03-30 21:33:23.120] [PRINT]       "has_attachments": false,
+[2026-03-30 21:33:23.120] [PRINT]       "attachments": [],
+[2026-03-30 21:33:23.120] [PRINT]       "body_full": "Get your todo list done faster with coding agent and agent mode     \r\n\r\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c     \r\n\r\n\"GitHub\"                                  \"GitHub\"                                            <https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>                            \r\n\r\nCopilot IRL                   \r\n-------------------------------------------------\r\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action.  \r\n\r\n\u26a1 Lightning fast foundations                           \r\n----------------------------------------------------------------------------------\r\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR.                         \r\n\r\nKick things off fast with Copilot <https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\ud83d\udd0d Review and refactor                           \r\n----------------------------------------------------------------------------\r\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \r\n\r\nReview and refactor with Copilot <https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\ud83e\udd16 Dig deeper into agent mode \r\n-------------------------------------------------------------------------------\r\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \r\n\r\nLearn more about agent mode <https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\r\n\r\n\r\n\"X\" <https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"Instagram\" <https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"YouTube\" <https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"LinkedIn\" <https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"GitHub\" <https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>\r\nPrivacy policy <https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Terms of use <https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Contact us <https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Unsubscribe <https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>\r\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San Francisco, CA 94107\r\n\r\n",
+[2026-03-30 21:33:23.120] [PRINT]       "body_clean": "Get your todo list done faster with coding agent and agent mode \n\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \n\n\"GitHub\" \"GitHub\" <[link] \n\nCopilot IRL \n-------------------------------------------------\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action. \n\n\u26a1 Lightning fast foundations \n----------------------------------------------------------------------------------\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR. \n\nKick things off fast with Copilot <[link] \n\n\ud83d\udd0d Review and refactor \n----------------------------------------------------------------------------\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \n\nReview and refactor with Copilot <[link] \n\n\ud83e\udd16 Dig deeper into agent mode \n-------------------------------------------------------------------------------\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \n\nLearn more about agent mode <[link] \n\n\"X\" <[link] \u200a \"Instagram\" <[link] \u200a \"YouTube\" <[link] \u200a \"LinkedIn\" <[link] \u200a \"GitHub\" <[link]\nPrivacy policy <[link] \u2022 Terms of use <[link] \u2022 Contact us <[link] \u2022 Unsubscribe <[link]\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San \n...[truncated]",
+[2026-03-30 21:33:23.120] [PRINT]       "body_links": [
+[2026-03-30 21:33:23.120] [PRINT]         "https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]         "https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>"
+[2026-03-30 21:33:23.120] [PRINT]       ]
+[2026-03-30 21:33:23.120] [PRINT]     },
+[2026-03-30 21:33:23.120] [PRINT]     {
+[2026-03-30 21:33:23.120] [PRINT]       "message_id": "19d3d5fceb0f530c",
+[2026-03-30 21:33:23.120] [PRINT]       "thread_id": "19d3d5fceb0f530c",
+[2026-03-30 21:33:23.120] [PRINT]       "from": "Weaviate <support@weaviate.io>",
+[2026-03-30 21:33:23.120] [PRINT]       "subject": "\ud83d\udd34 Your Weaviate Sandbox cluster (knowledge-base) has expired",
+[2026-03-30 21:33:23.120] [PRINT]       "date": "Mon, 30 Mar 2026 06:13:01 +0000 (UTC)",
+[2026-03-30 21:33:23.120] [PRINT]       "internal_date": "1774851181000",
+[2026-03-30 21:33:23.120] [PRINT]       "label_ids": [
+[2026-03-30 21:33:23.120] [PRINT]         "CATEGORY_UPDATES",
+[2026-03-30 21:33:23.120] [PRINT]         "INBOX"
+[2026-03-30 21:33:23.120] [PRINT]       ],
+[2026-03-30 21:33:23.120] [PRINT]       "body": "Hi \ud83d\udc4b,\n\nYour free Weaviate Sandbox cluster has expired.\n\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\n\n*Thank you for using Weaviate!*\nThe Weaviate Team\n\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:23.120] [PRINT]       "has_attachments": false,
+[2026-03-30 21:33:23.120] [PRINT]       "attachments": [],
+[2026-03-30 21:33:23.120] [PRINT]       "body_full": "Hi \ud83d\udc4b,\r\n\r\nYour free Weaviate Sandbox cluster has expired.\r\n\r\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\r\n\r\n*Thank you for using Weaviate!*\r\nThe Weaviate Team\r\n\r\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:23.120] [PRINT]       "body_clean": "Hi \ud83d\udc4b,\n\nYour free Weaviate Sandbox cluster has expired.\n\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\n\n*Thank you for using Weaviate!*\nThe Weaviate Team\n\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:23.120] [PRINT]       "body_links": [
+[2026-03-30 21:33:23.120] [PRINT]         "https://weaviate.io/pricing",
+[2026-03-30 21:33:23.120] [PRINT]         "https://www.linkedin.com/company/weaviate-io/",
+[2026-03-30 21:33:23.120] [PRINT]         "https://twitter.com/weaviate_io/",
+[2026-03-30 21:33:23.120] [PRINT]         "https://weaviate.io/",
+[2026-03-30 21:33:23.120] [PRINT]         "https://weaviate.io/slack"
+[2026-03-30 21:33:23.120] [PRINT]       ]
+[2026-03-30 21:33:23.120] [PRINT]     }
+[2026-03-30 21:33:23.120] [PRINT]   ],
+[2026-03-30 21:33:23.120] [PRINT]   "results": [
+[2026-03-30 21:33:23.120] [PRINT]     {
+[2026-03-30 21:33:23.120] [PRINT]       "step": 1,
+[2026-03-30 21:33:23.120] [PRINT]       "agent": "gmail_agent",
+[2026-03-30 21:33:23.120] [PRINT]       "tool": "search_emails",
+[2026-03-30 21:33:23.120] [PRINT]       "description": "Search for the last 2 emails received",
+[2026-03-30 21:33:23.120] [PRINT]       "inputs": {
+[2026-03-30 21:33:23.120] [PRINT]         "query": "",
+[2026-03-30 21:33:23.120] [PRINT]         "max_results": 2
+[2026-03-30 21:33:23.120] [PRINT]       },
+[2026-03-30 21:33:23.120] [PRINT]       "output": {
+[2026-03-30 21:33:23.120] [PRINT]         "success": true,
+[2026-03-30 21:33:23.120] [PRINT]         "emails": [
+[2026-03-30 21:33:23.120] [PRINT]           {
+[2026-03-30 21:33:23.120] [PRINT]             "message_id": "19d3e9e3d0a4e17d",
+[2026-03-30 21:33:23.120] [PRINT]             "thread_id": "19d3e9e3d0a4e17d",
+[2026-03-30 21:33:23.120] [PRINT]             "from": "GitHub <marketing@github.com>",
+[2026-03-30 21:33:23.120] [PRINT]             "subject": "Get Copilot started on your todo list",
+[2026-03-30 21:33:23.120] [PRINT]             "date": "Mon, 30 Mar 2026 08:00:47 -0400",
+[2026-03-30 21:33:23.120] [PRINT]             "internal_date": "1774872047000",
+[2026-03-30 21:33:23.120] [PRINT]             "label_ids": [
+[2026-03-30 21:33:23.120] [PRINT]               "CATEGORY_UPDATES",
+[2026-03-30 21:33:23.120] [PRINT]               "INBOX"
+[2026-03-30 21:33:23.120] [PRINT]             ],
+[2026-03-30 21:33:23.120] [PRINT]             "body": "Get your todo list done faster with coding agent and agent mode \n\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \n\n\"GitHub\" \"GitHub\" <[link] \n\nCopilot IRL \n-------------------------------------------------\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action. \n\n\u26a1 Lightning fast foundations \n----------------------------------------------------------------------------------\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR. \n\nKick things off fast with Copilot <[link] \n\n\ud83d\udd0d Review and refactor \n----------------------------------------------------------------------------\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \n\nReview and refactor with Copilot <[link] \n\n\ud83e\udd16 Dig deeper into agent mode \n-------------------------------------------------------------------------------\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \n\nLearn more about agent mode <[link] \n\n\"X\" <[link] \u200a \"Instagram\" <[link] \u200a \"YouTube\" <[link] \u200a \"LinkedIn\" <[link] \u200a \"GitHub\" <[link]\nPrivacy policy <[link] \u2022 Terms of use <[link] \u2022 Contact us <[link] \u2022 Unsubscribe <[link]\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San \n...[truncated]",
+[2026-03-30 21:33:23.120] [PRINT]             "has_attachments": false,
+[2026-03-30 21:33:23.120] [PRINT]             "attachments": [],
+[2026-03-30 21:33:23.120] [PRINT]             "body_full": "Get your todo list done faster with coding agent and agent mode     \r\n\r\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c     \r\n\r\n\"GitHub\"                                  \"GitHub\"                                            <https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>                            \r\n\r\nCopilot IRL                   \r\n-------------------------------------------------\r\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action.  \r\n\r\n\u26a1 Lightning fast foundations                           \r\n----------------------------------------------------------------------------------\r\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR.                         \r\n\r\nKick things off fast with Copilot <https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\ud83d\udd0d Review and refactor                           \r\n----------------------------------------------------------------------------\r\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \r\n\r\nReview and refactor with Copilot <https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\ud83e\udd16 Dig deeper into agent mode \r\n-------------------------------------------------------------------------------\r\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \r\n\r\nLearn more about agent mode <https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>                                                            \r\n\r\n\r\n\r\n\r\n\"X\" <https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"Instagram\" <https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"YouTube\" <https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"LinkedIn\" <https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5> \u200a \"GitHub\" <https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>\r\nPrivacy policy <https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Terms of use <https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Contact us <https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5> \u2022 Unsubscribe <https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>\r\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San Francisco, CA 94107\r\n\r\n",
+[2026-03-30 21:33:23.120] [PRINT]             "body_clean": "Get your todo list done faster with coding agent and agent mode \n\n\u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \n\n\"GitHub\" \"GitHub\" <[link] \n\nCopilot IRL \n-------------------------------------------------\nSo far we\u2019ve gone through how to set up Copilot Pro, tips for writing effective prompts, and choosing the right model for your job. Now, it\u2019s time to really dig into what Copilot can accomplish in your workflow \u2014 and see it in action. \n\n\u26a1 Lightning fast foundations \n----------------------------------------------------------------------------------\nBy asking Copilot to draft an issue, you can quickly design a clear plan for your project. Then you can assign that issue directly to the new GitHub Copilot coding agent, which will asynchronously work to execute on the task at hand and give you a PR. \n\nKick things off fast with Copilot <[link] \n\n\ud83d\udd0d Review and refactor \n----------------------------------------------------------------------------\nIn any development project, maintaining a clean and efficient codebase is crucial for making future work easier. But in reality, things can quickly become messy when your priorities are elsewhere (it happens!). That\u2019s where Copilot can be useful. It doesn\u2019t just assist in writing code, it also makes the review and refactoring process smoother and more efficient. Here\u2019s how. \n\nReview and refactor with Copilot <[link] \n\n\ud83e\udd16 Dig deeper into agent mode \n-------------------------------------------------------------------------------\nGitHub Copilot agent mode is a synchronous collaborator that performs multi-step coding tasks based on natural-language prompts. More simply, it\u2019s a problem solver that understands your intent, builds a solution, and iterates until it gets things right. \n\nLearn more about agent mode <[link] \n\n\"X\" <[link] \u200a \"Instagram\" <[link] \u200a \"YouTube\" <[link] \u200a \"LinkedIn\" <[link] \u200a \"GitHub\" <[link]\nPrivacy policy <[link] \u2022 Terms of use <[link] \u2022 Contact us <[link] \u2022 Unsubscribe <[link]\nGitHub, Inc. \u2022 88 Colin P Kelly Jr Street \u2022 San \n...[truncated]",
+[2026-03-30 21:33:23.120] [PRINT]             "body_links": [
+[2026-03-30 21:33:23.120] [PRINT]               "https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5>",
+[2026-03-30 21:33:23.120] [PRINT]               "https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>"
+[2026-03-30 21:33:23.120] [PRINT]             ]
+[2026-03-30 21:33:23.120] [PRINT]           },
+[2026-03-30 21:33:23.120] [PRINT]           {
+[2026-03-30 21:33:23.120] [PRINT]             "message_id": "19d3d5fceb0f530c",
+[2026-03-30 21:33:23.120] [PRINT]             "thread_id": "19d3d5fceb0f530c",
+[2026-03-30 21:33:23.120] [PRINT]             "from": "Weaviate <support@weaviate.io>",
+[2026-03-30 21:33:23.120] [PRINT]             "subject": "\ud83d\udd34 Your Weaviate Sandbox cluster (knowledge-base) has expired",
+[2026-03-30 21:33:23.120] [PRINT]             "date": "Mon, 30 Mar 2026 06:13:01 +0000 (UTC)",
+[2026-03-30 21:33:23.120] [PRINT]             "internal_date": "1774851181000",
+[2026-03-30 21:33:23.120] [PRINT]             "label_ids": [
+[2026-03-30 21:33:23.120] [PRINT]               "CATEGORY_UPDATES",
+[2026-03-30 21:33:23.120] [PRINT]               "INBOX"
+[2026-03-30 21:33:23.120] [PRINT]             ],
+[2026-03-30 21:33:23.120] [PRINT]             "body": "Hi \ud83d\udc4b,\n\nYour free Weaviate Sandbox cluster has expired.\n\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\n\n*Thank you for using Weaviate!*\nThe Weaviate Team\n\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:23.120] [PRINT]             "has_attachments": false,
+[2026-03-30 21:33:23.120] [PRINT]             "attachments": [],
+[2026-03-30 21:33:23.120] [PRINT]             "body_full": "Hi \ud83d\udc4b,\r\n\r\nYour free Weaviate Sandbox cluster has expired.\r\n\r\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\r\n\r\n*Thank you for using Weaviate!*\r\nThe Weaviate Team\r\n\r\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:23.120] [PRINT]             "body_clean": "Hi \ud83d\udc4b,\n\nYour free Weaviate Sandbox cluster has expired.\n\nFor more information about our production SaaS and prices, take a look at our pricing page ( https://weaviate.io/pricing ).\n\n*Thank you for using Weaviate!*\nThe Weaviate Team\n\n( https://www.linkedin.com/company/weaviate-io/ ) ( https://twitter.com/weaviate_io/ ) ( https://weaviate.io/ ) ( https://weaviate.io/slack )",
+[2026-03-30 21:33:23.120] [PRINT]             "body_links": [
+[2026-03-30 21:33:23.120] [PRINT]               "https://weaviate.io/pricing",
+[2026-03-30 21:33:23.120] [PRINT]               "https://www.linkedin.com/company/weaviate-io/",
+[2026-03-30 21:33:23.120] [PRINT]               "https://twitter.com/weaviate_io/",
+[2026-03-30 21:33:23.120] [PRINT]               "https://weaviate.io/",
+[2026-03-30 21:33:23.120] [PRINT]               "https://weaviate.io/slack"
+[2026-03-30 21:33:23.120] [PRINT]             ]
+[2026-03-30 21:33:23.120] [PRINT]           }
+[2026-03-30 21:33:23.120] [PRINT]         ],
+[2026-03-30 21:33:23.120] [PRINT]         "count": 2,
+[2026-03-30 21:33:23.120] [PRINT]         "query": "",
+[2026-03-30 21:33:23.120] [PRINT]         "error": null
+[2026-03-30 21:33:23.120] [PRINT]       },
+[2026-03-30 21:33:23.120] [PRINT]       "status": "success"
+[2026-03-30 21:33:23.120] [PRINT]     }
+[2026-03-30 21:33:23.120] [PRINT]   ]
+[2026-03-30 21:33:23.120] [PRINT] }
+[2026-03-30 21:33:23.146] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [summarization]: context filtering  | {"before_fields": 5, "before_chars": 46265, "after_fields": 1, "after_chars": 3593}
+[2026-03-30 21:33:23.147] [INFO] [req_20260330133259_6bcbf95e] [T:new]   STEP [summarization]: generating LLM summary (3638 chars context)
+[2026-03-30 21:33:23.149] [PRINT] 
+[2026-03-30 21:33:23.149] [PRINT] ============================================================
+[2026-03-30 21:33:23.170] [PRINT] SUMMARIZATION LLM INPUT
+[2026-03-30 21:33:23.190] [PRINT] ============================================================
+[2026-03-30 21:33:23.208] [PRINT] System prompt (374 chars):
+[2026-03-30 21:33:23.229] [PRINT] You are a concise AI assistant summarizing task results.
+[2026-03-30 21:33:23.229] [PRINT] 
+[2026-03-30 21:33:23.229] [PRINT] RULES:
+[2026-03-30 21:33:23.229] [PRINT] 1. Start with outcome: ✅ success or ❌ failed
+[2026-03-30 21:33:23.229] [PRINT] 2. Use ACTUAL DATA from context (names, subjects, dates - NOT "email data")
+[2026-03-30 21:33:23.229] [PRINT] 3. NEVER say: "variables", "fields available", "data includes"
+[2026-03-30 21:33:23.229] [PRINT] 4. Be SPECIFIC: "Found email from Mike about Rovo AI sent yesterday"
+[2026-03-30 21:33:23.229] [PRINT] 
+[2026-03-30 21:33:23.229] [PRINT] Use the ACTUAL content below, not generic descriptions.
+[2026-03-30 21:33:23.247] [PRINT] ────────────────────────────────────────────────────────────
+[2026-03-30 21:33:23.265] [PRINT] User prompt (3817 chars):
+[2026-03-30 21:33:23.282] [PRINT] Task: Search for the last 2 emails received
+[2026-03-30 21:33:23.282] [PRINT] Status: success
+[2026-03-30 21:33:23.282] [PRINT] Message: Workflow executed successfully
+[2026-03-30 21:33:23.282] [PRINT] 
+[2026-03-30 21:33:23.282] [PRINT] Context (use ACTUAL values below):
+[2026-03-30 21:33:23.282] [PRINT] 
+[2026-03-30 21:33:23.282] [PRINT] step_1_gmail_agent:
+[2026-03-30 21:33:23.282] [PRINT]   
+[2026-03-30 21:33:23.282] [PRINT]   emails (2 items):
+[2026-03-30 21:33:23.282] [PRINT]     [1]
+[2026-03-30 21:33:23.282] [PRINT]       • from: GitHub <marketing@github.com>
+[2026-03-30 21:33:23.282] [PRINT]       • subject: Get Copilot started on your todo list
+[2026-03-30 21:33:23.282] [PRINT]       • date: Mon, 30 Mar 2026 08:00:47 -0400
+[2026-03-30 21:33:23.282] [PRINT]       • attachments: []
+[2026-03-30 21:33:23.282] [PRINT]       • body_links: ['https://app.github.media/e/er?s=88570519&lid=263&elqTrackId=3beeddfb1037496e83f72d4bc926e898&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF537F69F9CEF578FC2281ECC1FF49AE04F6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://app.github.media/e/er?s=88570519&lid=8181&elqTrackId=160d63e42789402cb8fdef5e43f69efd&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5BBBAFB26652DB0FA8FFEFEB15315A1306D0CDD03F7E7AC228343D54B8750E8D5>', 'https://app.github.media/e/er?s=88570519&lid=8180&elqTrackId=df72e1cf37064ef8b3b6bfca166de424&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF530FFDA51CF92DEB8EEFACED0F4A4D92D6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://app.github.media/e/er?s=88570519&lid=8179&elqTrackId=dd4d0f4921e54ad38efd6a779e7cf5ca&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqak=8AF5E0951E3B166EF568927C17A7AC3868DB6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://x.com/github?elqTrackId=088c53e52834499bbe48caebc5ea5a34&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF57B6B90C7338035BE4705F4B72CF568E46D0CDD03F7E7AC228343D54B8750E8D5>', 'https://www.instagram.com/github/?elqTrackId=efe5410eae1342ed8c1456dbc3f8f8d7&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF54DAE6EB2D143FDB99BD426E2936774F86D0CDD03F7E7AC228343D54B8750E8D5>', 'https://www.youtube.com/github?elqTrackId=4b1fbabe41ea4b43bf0e05719b1c8a9a&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF56D83EA2DE97656FB68C73097672624F06D0CDD03F7E7AC228343D54B8750E8D5>', 'https://www.linkedin.com/company/github/?elqTrackId=278f9f44c60644068e75c9181028c338&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5547B39CB8BAB273748284E7EA2CF430D6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://github.com/?elqTrackId=bdc96bc1acc74bbe9d84b9cc93570ccb&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5702C8DE7697F3DDA78A1EC9AE4B7EB236D0CDD03F7E7AC228343D54B8750E8D5>', 'https://help.github.com/articles/github-privacy-policy/?elqTrackId=393a56d77e5c48689fcd1e8c60aff26e&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5E04316558EF6EBB648F4C27759A4107B6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://help.github.com/articles/github-terms-of-service/?elqTrackId=cc8cf764cc484eef9c4395039c733e33&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF5A5703D3C747559BB6A313BE3AD0068BB6D0CDD03F7E7AC228343D54B8750E8D5>', 'https://docs.github.com/en/support/contacting-github-support?elqTrackId=6389f5e65ae1426ab3c12b12c2241da0&elq=feb3b649ff7747a0b97f63294b1f7134&elqaid=4562&elqat=1&elqCampaignId=4748&elqak=8AF55F13ABC90CFA3C5284F763BEE95E5A316D0CDD03F7E7AC228343D54B8750E8D5>', 'https://app.github.media/e/u?s=88570519&elq=feb3b649ff7747a0b97f63294b1f7134&elqak=8AF56BA7C6108615C570BD3710CB7C8D7E206D0CDD03F7E7AC228343D54B8750E8D5>']
+[2026-03-30 21:33:23.282] [PRINT]     [2]
+[2026-03-30 21:33:23.282] [PRINT]       • from: Weaviate <support@weaviate.io>
+[2026-03-30 21:33:23.282] [PRINT]       • subject: 🔴 Your Weaviate Sandbox cluster (knowledge-base) has expired
+[2026-03-30 21:33:23.282] [PRINT]       • date: Mon, 30 Mar 2026 06:13:01 +0000 (UTC)
+[2026-03-30 21:33:23.282] [PRINT]       • attachments: []
+[2026-03-30 21:33:23.282] [PRINT]       • body_links: ['https://weaviate.io/pricing', 'https://www.linkedin.com/company/weaviate-io/', 'https://twitter.com/weaviate_io/', 'https://weaviate.io/', 'https://weaviate.io/slack']
+[2026-03-30 21:33:23.282] [PRINT]   count: 2
+[2026-03-30 21:33:23.282] [PRINT] 
+[2026-03-30 21:33:23.282] [PRINT] Summarize the results using specific data
+[2026-03-30 21:33:23.304] [PRINT] ============================================================
+[2026-03-30 21:33:26.877] [PRINT]   💰 ✅ [post] gpt-4o-mini | result_summarization | in=1918 out=115 | $0.0004 | 3540ms | cumulative: in=2633 out=194 total=2827 $0.0265
+[2026-03-30 21:33:26.900] [PRINT] 
+[2026-03-30 21:33:26.900] [PRINT] ============================================================
+[2026-03-30 21:33:26.918] [PRINT] SUMMARIZATION LLM OUTPUT (339 chars, 3540ms)
+[2026-03-30 21:33:26.938] [PRINT]   input_tokens=1918, output_tokens=115, cached=0
+[2026-03-30 21:33:26.963] [PRINT] ============================================================
+[2026-03-30 21:33:26.977] [PRINT] Outcome: ✅ success  
+[2026-03-30 21:33:26.977] [PRINT] Found 2 emails:  
+[2026-03-30 21:33:26.977] [PRINT] 1. From: GitHub <marketing@github.com>  
+[2026-03-30 21:33:26.977] [PRINT]    Subject: Get Copilot started on your todo list  
+[2026-03-30 21:33:26.977] [PRINT]    Date: Mon, 30 Mar 2026 08:00:47 -0400  
+[2026-03-30 21:33:26.977] [PRINT] 
+[2026-03-30 21:33:26.977] [PRINT] 2. From: Weaviate <support@weaviate.io>  
+[2026-03-30 21:33:26.977] [PRINT]    Subject: 🔴 Your Weaviate Sandbox cluster (knowledge-base) has expired  
+[2026-03-30 21:33:26.977] [PRINT]    Date: Mon, 30 Mar 2026 06:13:01 +0000 (UTC)
+[2026-03-30 21:33:26.992] [PRINT] ============================================================
+[2026-03-30 21:33:27.009] [INFO] [req_20260330133259_6bcbf95e] [T:new]   INFO: Memory: added assistant message
+    ↳ {"tokens": 119, "total": 176, "max": 2000, "response_preview": "Outcome: ✅ success  \nFound 2 emails:  \n1. From: GitHub <marketing@github.com>  \n   Subject: Get Copilot started on your todo list  \n   Date: Mon, 30 Mar 2026 08:00:47 -0400  \n\n2. From: Weaviate <suppo..."}
+[2026-03-30 21:33:27.071] [PRINT] 
+[2026-03-30 21:33:27.071] [PRINT] ============================================================
+[2026-03-30 21:33:27.083] [PRINT] 📊 REQUEST TOKEN SUMMARY
+[2026-03-30 21:33:27.100] [PRINT] ============================================================
+[2026-03-30 21:33:27.117] [PRINT]   LLM calls:        2
+[2026-03-30 21:33:27.135] [PRINT]   Total input:      2,633 tokens
+[2026-03-30 21:33:27.151] [PRINT]   Total output:     194 tokens
+[2026-03-30 21:33:27.168] [PRINT]   Total tokens:     2,827 tokens
+[2026-03-30 21:33:27.182] [PRINT]   Estimated cost:   $0.0265
+[2026-03-30 21:33:27.196] [PRINT]   Total duration:   17144ms (17.1s)
+[2026-03-30 21:33:27.212] [PRINT]   ────────────────────────────────────────────────────────
+[2026-03-30 21:33:27.228] [PRINT]   Breakdown by call:
+[2026-03-30 21:33:27.241] [PRINT]     1. gpt-4            in=715    out=79    $0.0262 4317ms
+[2026-03-30 21:33:27.257] [PRINT]     2. gpt-4o-mini      in=1918   out=115   $0.0004 3540ms
+[2026-03-30 21:33:27.273] [PRINT] ============================================================
+[2026-03-30 21:33:30.306] [INFO] [req_20260330133259_6bcbf95e] [T:new] ← RESPONSE: 200 (36579ms)
+[2026-03-30 21:33:30.308] [INFO] [req_20260330133259_6bcbf95e] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-03-30 23:56:39.673] [PRINT] ✅ SQLite thread manager initialized: threads.db
+[2026-03-30 23:56:39.861] [PRINT] ✅ Workflow graph compiled (FULL WORKFLOW)
+[2026-03-30 23:56:39.868] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-03-30 23:56:39.875] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-03-30 23:56:39.890] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-03-30 23:56:40.039] [PRINT] 🚀 Starting Supervisor Agent on port 8010
+[2026-03-30 23:56:40.056] [PRINT] 📚 API Documentation: http://localhost:8010/docs
+[2026-03-31 00:10:59.242] [INFO] [-] → REQUEST: PUT /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_6eedad6d  | {"query": null}
+[2026-03-31 00:10:59.271] [INFO] [-] ← RESPONSE: 200 (30ms)
+[2026-03-31 00:10:59.273] [INFO] [-] ─────────: ──────────────────────────────────────────────────
+[2026-03-31 00:10:59.278] [INFO] [-] → REQUEST: PUT /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_6eedad6d  | {"query": null}
+[2026-03-31 00:10:59.296] [INFO] [-] ← RESPONSE: 200 (19ms)
+[2026-03-31 00:10:59.298] [INFO] [-] ─────────: ──────────────────────────────────────────────────
+[2026-03-31 00:11:03.128] [INFO] [-] → REQUEST: PUT /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_6eedad6d  | {"query": null}
+[2026-03-31 00:11:03.150] [INFO] [-] ← RESPONSE: 200 (22ms)
+[2026-03-31 00:11:03.152] [INFO] [-] ─────────: ──────────────────────────────────────────────────

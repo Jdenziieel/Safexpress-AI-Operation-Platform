@@ -228,18 +228,7 @@ class ConversationalAgent(Tier0ChecksMixin):
             "execution_mode": conversation_state.execution_mode,
             "extracted_info": conversation_state.extracted_info,
         })
-    # In case of compound cancel detected, we should proceed with the task and if cancel only just return response that cancelle just fine.
-        if analysis.intent == ConversationIntent.TEMPLATE_UPLOAD:
-            if analysis.execution_ready:
-                response = f"✅ **Ready to process template!**\n\n"
-                response += f"**File:** {analysis.extracted_info.get('uploaded_file', {}).get('filename')}\n"
-                if analysis.extracted_info.get('save_to_drive'):
-                    response += f"**Template name:** {analysis.extracted_info.get('template_name')}\n"
-                response += f"**Document title:** {analysis.extracted_info.get('document_title')}\n\n"
-                response += f"I'll upload the template to your Drive and create the document now."
-        else:
-            response = analysis.clarification_question or "Please provide more details."
-    
+
         # Internal fields the user should never see in confirmations/summaries
         _INTERNAL_FIELDS = {"task_type", "original_message", "uploaded_file", "query", "_cached_tool_filter", "_enrichment_context"}
 
@@ -296,6 +285,17 @@ class ConversationalAgent(Tier0ChecksMixin):
                 response += "**Details:**\n"
                 for key, value in user_fields.items():
                     response += f"- **{key.replace('_', ' ').title()}:** {value}\n"
+
+        elif analysis.intent == ConversationIntent.TEMPLATE_UPLOAD:
+            if analysis.execution_ready:
+                response = f"✅ **Ready to process template!**\n\n"
+                response += f"**File:** {analysis.extracted_info.get('uploaded_file', {}).get('filename')}\n"
+                if analysis.extracted_info.get('save_to_drive'):
+                    response += f"**Template name:** {analysis.extracted_info.get('template_name')}\n"
+                response += f"**Document title:** {analysis.extracted_info.get('document_title')}\n\n"
+                response += f"I'll upload the template to your Drive and create the document now."
+            else:
+                response = analysis.clarification_question or "Please provide more details."
 
         else:
             response = "I'm processing your request..."
@@ -859,7 +859,7 @@ Available agents and tools:
 
         # Determine conversation phase from authoritative state flags only
         is_awaiting_confirmation = (
-            conversation_state.ready_for_execution or
+            conversation_state.ready_for_execution and
             conversation_state.intent == ConversationIntent.READY_TO_EXECUTE
         )
 

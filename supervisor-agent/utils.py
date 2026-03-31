@@ -157,6 +157,9 @@ def call_agent_with_retry(
                 if result.get("success"):
                     print(f"✅ Agent call succeeded on attempt {attempt + 1}")
                     return result
+                elif result.get("no_results"):
+                    print(f"ℹ️ Agent returned no results: {result.get('error')}")
+                    return result
                 else:
                     # Agent returned error but HTTP was successful
                     print(f"⚠️ Agent reported error: {result.get('error')}")

@@ -40,12 +40,16 @@ from s3_temp_storage import store_temp_file, delete_temp_file
 router = APIRouter()
 
 
-async def _resume_remaining_steps(conversation_state, previous_result, response_prefix, thread_id):
+async def _resume_remaining_steps(conversation_state, previous_result, response_prefix, thread_id,
+                                   approved_step_info: dict = None):
     """
     Resume execution of remaining steps after an approved action.
     
     Rebuilds the variable context from the previous result and the saved workflow_context,
     then re-invokes the orchestrator for remaining steps.
+    
+    Args:
+        approved_step_info: The pending action dict (has step_number, agent, output_variables, etc.)
     
     Returns (response_text, updated_conversation_state).
     """
@@ -56,11 +60,25 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
     # Rebuild context — merge saved workflow_context with the result from the approved action
     variable_context = conversation_state.workflow_context or {}
     
-    # Add the result from the just-executed action to context
+    # Add the result from the just-executed action under its step namespace
     if previous_result and isinstance(previous_result, dict):
         agent_result = previous_result.get("result", previous_result)
         fields_to_add = {k: v for k, v in agent_result.items() if k not in ("success", "error")}
-        variable_context.update(fields_to_add)
+
+        step_num = (approved_step_info or {}).get("step_number", 0)
+        agent_name = (approved_step_info or {}).get("agent", "unknown")
+        namespace_key = f"step_{step_num}_{agent_name}"
+        variable_context[namespace_key] = fields_to_add
+
+        # Process output_variables declared in the plan for this step
+        from supervisor_agent import extract_nested_value
+        output_vars = (approved_step_info or {}).get("output_variables", {})
+        for new_var_name, source_field_name in output_vars.items():
+            value = extract_nested_value(agent_result, source_field_name)
+            if value is not None:
+                variable_context[new_var_name] = value
+            elif source_field_name in agent_result:
+                variable_context[new_var_name] = agent_result[source_field_name]
     
     # Build a mini plan from remaining steps and run workflow orchestrator directly
     from supervisor_agent import orchestrator_node
@@ -403,10 +421,12 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
     conversation_state.last_executed_at = now_iso
     conversation_state.last_execution_status = status
     conversation_state.last_execution_message = message_text
-    # Preserve the task-specific summary; never overwrite with generic workflow message
-    if original_execution_summary:
-        conversation_state.execution_summary = original_execution_summary
     conversation_state.ready_for_execution = False
+    conversation_state.intent = None
+    conversation_state.execution_summary = None
+    conversation_state.extracted_info = {}
+    conversation_state.missing_fields = []
+    conversation_state.clarification_question = None
 
     # Populate completed_tasks from orchestrator step results
     for step_result in final_context.get("results", []):
@@ -1055,30 +1075,42 @@ async def send_message_to_thread(thread_id: str, request: dict):
                     
                     if remaining:
                         response_text += f"\n⏳ Continuing with {len(remaining)} remaining step(s)...\n"
-                        # Resume remaining steps (standard mode)
                         response_text, conversation_state = await _resume_remaining_steps(
-                            conversation_state, result, response_text, thread_id
+                            conversation_state, result, response_text, thread_id,
+                            approved_step_info=pending,
                         )
                     else:
                         response_text += "\nIs there anything else you'd like to do?"
                     
-                    # Update execution metadata
-                    now_iso = datetime.now(timezone.utc).isoformat()
-                    conversation_state.execution_history.append({
-                        "executed_at": now_iso,
-                        "status": "success",
-                        "message": f"Approved and executed: {description}",
-                    })
-                    conversation_state.has_executed = True
-                    conversation_state.last_executed_at = now_iso
-                    conversation_state.last_execution_status = "success"
-                    conversation_state.last_execution_message = f"Approved and executed: {description}"
-                    conversation_state.workflow_context = None
+                    if not conversation_state.workflow_paused:
+                        now_iso = datetime.now(timezone.utc).isoformat()
+                        conversation_state.execution_history.append({
+                            "executed_at": now_iso,
+                            "status": "success",
+                            "message": f"Approved and executed: {description}",
+                        })
+                        conversation_state.has_executed = True
+                        conversation_state.last_executed_at = now_iso
+                        conversation_state.last_execution_status = "success"
+                        conversation_state.last_execution_message = f"Approved and executed: {description}"
+                        conversation_state.workflow_context = None
+                        conversation_state.intent = None
+                        conversation_state.ready_for_execution = False
+                        conversation_state.execution_summary = None
+                        conversation_state.extracted_info = {}
+                        conversation_state.missing_fields = []
+                        conversation_state.clarification_question = None
                 else:
                     error_msg = result.get("error", "Unknown error")
                     response_text = f"❌ **Action Failed**\n\n{error_msg}\n\nWould you like to try again?"
                     conversation_state.remaining_steps = []
                     conversation_state.workflow_context = None
+                    conversation_state.intent = None
+                    conversation_state.ready_for_execution = False
+                    conversation_state.execution_summary = None
+                    conversation_state.extracted_info = {}
+                    conversation_state.missing_fields = []
+                    conversation_state.clarification_question = None
                 
             except Exception as e:
                 print(f"❌ Error executing approved action: {str(e)}")
@@ -1087,6 +1119,12 @@ async def send_message_to_thread(thread_id: str, request: dict):
                 conversation_state.workflow_paused = False
                 conversation_state.remaining_steps = []
                 conversation_state.workflow_context = None
+                conversation_state.intent = None
+                conversation_state.ready_for_execution = False
+                conversation_state.execution_summary = None
+                conversation_state.extracted_info = {}
+                conversation_state.missing_fields = []
+                conversation_state.clarification_question = None
             finally:
                 conversation_state.executing = False
                 conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
@@ -1100,10 +1138,12 @@ async def send_message_to_thread(thread_id: str, request: dict):
             conversation_state.workflow_paused = False
             conversation_state.remaining_steps = []
             conversation_state.workflow_context = None
-            
-            # Clean up extracted_info decision fields
-            conversation_state.extracted_info.pop("action_id", None)
-            conversation_state.extracted_info.pop("decision", None)
+            conversation_state.intent = None
+            conversation_state.ready_for_execution = False
+            conversation_state.execution_summary = None
+            conversation_state.extracted_info = {}
+            conversation_state.missing_fields = []
+            conversation_state.clarification_question = None
             
             # Remove from pending actions cache
             from supervisor_agent import remove_pending_action

@@ -138,7 +138,11 @@ def clean_email_body(html_body: str) -> Dict[str, Any]:
     }
 
 
-MAX_BODY_LENGTH = 2000
+MAX_BODY_LENGTH = 4000
+
+_INVISIBLE_CHARS = re.compile(r'[\u200a\u200b\u200c\u200d\u200e\u200f\u2028\u2029\ufeff\u00ad]')
+
+_ALT_TEXT_ARTIFACT = re.compile(r'^"[^"]*"\s*"?[^"]*"?\s*\[link\]\s*$')
 
 # Footer patterns that unambiguously mark the start of the boilerplate block.
 # Separators (--- / ===) are intentionally excluded because they also appear
@@ -157,6 +161,8 @@ _FOOTER_PATTERNS = [
     re.compile(r"^\s*to stop receiving", re.IGNORECASE),
     re.compile(r"^\s*powered by", re.IGNORECASE),
     re.compile(r"^\s*sent (by|from|via) .*(mailchimp|sendgrid|hubspot|constant contact)", re.IGNORECASE),
+    re.compile(r"^\s*privacy policy", re.IGNORECASE),
+    re.compile(r"^\s*\w[\w\s]*,\s*Inc\.", re.IGNORECASE),
 ]
 
 # A URL whose total length exceeds this threshold is considered a tracking URL
@@ -166,16 +172,22 @@ _TRACKING_URL_MIN_LEN = 120
 def clean_plain_text_body(body: str) -> Dict[str, Any]:
     """
     Clean a plain-text email body:
-      1. Replace tracking URLs (> 120 chars) with a short placeholder.
-      2. Strip common footer / boilerplate blocks.
-      3. Collapse excessive whitespace.
-      4. Cap total length at MAX_BODY_LENGTH.
+      1. Strip invisible Unicode characters (ZWNJ, hair-space, etc.).
+      2. Replace tracking URLs (> 120 chars) with ``[link]``.
+      3. Clean angle-bracket artifacts left after URL replacement.
+      4. Strip image alt-text artifact lines.
+      5. Collapse long separator lines (----…) to ``---``.
+      6. Strip footer / boilerplate blocks (including social-media rows).
+      7. Collapse excessive whitespace.
+      8. Cap total length at MAX_BODY_LENGTH.
 
     Returns a dict with the same shape as clean_email_body() so the
     caller can handle both paths uniformly.
     """
     if not body:
         return {"clean_text": "", "links": [], "images": [], "has_tables": False}
+
+    body = _INVISIBLE_CHARS.sub('', body)
 
     lines = body.splitlines()
     cleaned_lines: List[str] = []
@@ -192,7 +204,6 @@ def clean_plain_text_body(body: str) -> Dict[str, Any]:
     for line in lines:
         stripped = line.strip()
 
-        # Once we hit a footer marker, discard the rest
         if not hit_footer:
             for pat in _FOOTER_PATTERNS:
                 if pat.search(stripped):
@@ -203,16 +214,36 @@ def clean_plain_text_body(body: str) -> Dict[str, Any]:
 
         line = re.sub(r"https?://\S+", _shorten_url, line)
 
+        # Fix angle-bracket artifacts: <[link]> or <[link] or [link]>
+        line = line.replace('<[link]>', '[link]')
+        line = line.replace('<[link]', '[link]')
+        line = line.replace('[link]>', '[link]')
+
+        # Collapse long separator lines (5+ dashes or equals) to ---
+        line = re.sub(r'[-=]{5,}', '---', line)
+
+        stripped_after = line.strip()
+
+        # Drop image alt-text artifact lines: "GitHub" "GitHub" [link]
+        if _ALT_TEXT_ARTIFACT.match(stripped_after):
+            continue
+
+        # Drop social-media footer rows (3+ [link] on one line)
+        if stripped_after.count('[link]') >= 3:
+            continue
+
+        # Drop lines that became empty after cleaning
+        if not stripped_after and cleaned_lines and not cleaned_lines[-1].strip():
+            continue
+
         cleaned_lines.append(line)
 
     text = "\n".join(cleaned_lines)
 
-    # Collapse runs of blank lines / whitespace
     text = re.sub(r"\n{3,}", "\n\n", text)
     text = re.sub(r"[ \t]{2,}", " ", text)
     text = text.strip()
 
-    # Truncate
     if len(text) > MAX_BODY_LENGTH:
         text = text[:MAX_BODY_LENGTH] + "\n...[truncated]"
 
@@ -224,96 +255,70 @@ def clean_plain_text_body(body: str) -> Dict[str, Any]:
     }
 
 
-def extract_action_items(clean_text: str) -> List[str]:
+def _is_real_html(body: str) -> bool:
     """
-    Extract potential action items from email text.
-    
-    Args:
-        clean_text: Clean email body text
-        
-    Returns:
-        List of potential action items
+    Determine whether the body is genuine HTML vs plain text that happens
+    to contain angle-bracket URLs like ``<https://example.com/...>``.
+
+    Strategy: look for actual HTML structural tags (with or without attrs).
+    Angle-bracket-wrapped URLs (common in plain-text emails from Gmail API)
+    are NOT HTML.
     """
-    if not clean_text:
-        return []
-    
-    text_lower = clean_text.lower()
-    action_items = []
-    
-    # Common action phrases
-    action_patterns = [
-        r'please (.*?)[\.\n]',
-        r'you (?:need to|should|must) (.*?)[\.\n]',
-        r'(?:action required|urgent|important):? (.*?)[\.\n]',
-        r'reminder:? (.*?)[\.\n]',
-        r'due (?:date|by):? (.*?)[\.\n]',
-    ]
-    
-    for pattern in action_patterns:
-        matches = re.finditer(pattern, text_lower, re.IGNORECASE)
-        for match in matches:
-            action = match.group(1).strip()
-            if len(action) > 10 and len(action) < 200:  # Reasonable length
-                action_items.append(action)
-    
-    return action_items[:5]  # Return top 5
+    _STRUCTURAL_TAGS = re.compile(
+        r'<\s*/?\s*(?:html|head|body|div|span|p|br|table|tr|td|th|a|img|ul|ol|li|h[1-6]|style|script|meta|link|form|input|button|label|section|article|header|footer|nav|main)\b',
+        re.IGNORECASE,
+    )
+    return bool(_STRUCTURAL_TAGS.search(body))
 
 
 def format_email_object(email_obj: Dict[str, Any]) -> Dict[str, Any]:
     """
     Enhance email object with formatted body and extracted metadata.
     This is called by gmail-agent before returning emails.
-    
+
     Both HTML and plain-text emails are cleaned.  The original raw body
     is preserved in ``body_full`` so that forward / reply workflows can
     use the unmodified content when needed.
-    
-    Fields added for every email:
+
+    Fields set for every email:
+        - body:       Cleaned human-readable text (overwritten in place)
         - body_full:  Original unmodified body (HTML or plain text)
-        - body_clean: Clean text version
         - body_links: Extracted URLs
-        - action_items: Potential action items
 
     HTML-only extras:
         - body_html:       Original HTML
         - body_images:     Extracted images
         - body_has_tables: Boolean
-    
+
     Args:
         email_obj: Email dictionary with 'body' field
-        
+
     Returns:
         Enhanced email object
     """
     if 'body' not in email_obj or not email_obj['body']:
         return email_obj
-    
+
     original_body = email_obj['body']
 
-    # Always keep the raw original for forward / reply
     email_obj['body_full'] = original_body
-    
-    # Check if body is HTML (contains tags)
-    is_html = bool(re.search(r'<[^>]+>', original_body))
-    
+
+    is_html = _is_real_html(original_body)
+
     if is_html:
         formatted = clean_email_body(original_body)
-        
+
         email_obj['body_html'] = original_body
         email_obj['body'] = formatted['clean_text']
-        email_obj['body_clean'] = formatted['clean_text']
         email_obj['body_links'] = formatted['links']
         email_obj['body_images'] = formatted['images']
         email_obj['body_has_tables'] = formatted['has_tables']
-        email_obj['action_items'] = extract_action_items(formatted['clean_text'])
     else:
         formatted = clean_plain_text_body(original_body)
 
         email_obj['body'] = formatted['clean_text']
-        email_obj['body_clean'] = formatted['clean_text']
         email_obj['body_links'] = formatted['links']
-        email_obj['action_items'] = extract_action_items(formatted['clean_text'])
-    
+
     return email_obj
 
 

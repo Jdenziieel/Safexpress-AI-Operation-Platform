@@ -9,7 +9,7 @@ import httpx
 import traceback
 import tempfile
 import shutil
-from jinja2 import Template
+from jinja2 import Template, UndefinedError
 from typing import TypedDict, List, Optional, Dict, Any, Callable, Awaitable
 from datetime import datetime, timedelta, timezone
 from fastapi.middleware.cors import CORSMiddleware
@@ -906,23 +906,58 @@ def orchestrator_node(state: SharedState) -> SharedState:
         print(f"   Original inputs: {json.dumps(inputs, indent=6)}")
 
         substituted_inputs = {}
-        for key, value in inputs.items():
-            if isinstance(value, str):
-                # Use Jinja2 to substitute {{ variables }}
-                template = Template(value)
-                rendered = template.render(**variable_context)
-                # If the rendered value is a file_path and it came from uploaded_file,
-                # ensure the file is available locally (downloads from S3 if needed)
-                if key == "file_path" and rendered and "uploaded_file" in variable_context:
+        try:
+            for key, value in inputs.items():
+                if isinstance(value, str):
+                    template = Template(value)
+                    rendered = template.render(**variable_context)
+                    if key == "file_path" and rendered and "uploaded_file" in variable_context:
+                        from s3_temp_storage import resolve_file_to_local_path
+                        rendered = resolve_file_to_local_path(variable_context["uploaded_file"])
+                    substituted_inputs[key] = rendered
+                elif key == "file_path" and "uploaded_file" in variable_context:
                     from s3_temp_storage import resolve_file_to_local_path
-                    rendered = resolve_file_to_local_path(variable_context["uploaded_file"])
-                substituted_inputs[key] = rendered
-            elif key == "file_path" and "uploaded_file" in variable_context:
-                # Non-string file_path — resolve from uploaded_file context
-                from s3_temp_storage import resolve_file_to_local_path
-                substituted_inputs[key] = resolve_file_to_local_path(variable_context["uploaded_file"])
+                    substituted_inputs[key] = resolve_file_to_local_path(variable_context["uploaded_file"])
+                else:
+                    substituted_inputs[key] = value
+        except UndefinedError as e:
+            # A previous step likely returned no results, leaving a variable unset
+            missing_var = str(e).replace("'", "").split(" is ")[0] if " is " in str(e) else str(e)
+            no_results_steps = [r for r in results if r.get("status") == "no_results"]
+            if no_results_steps:
+                prior = no_results_steps[-1]
+                prior_desc = prior.get("description", prior.get("tool", "a previous step"))
+                error_msg = (
+                    f"Step {prior['step']} ({prior_desc}) returned no results, "
+                    f"so step {step_num} ({description}) could not proceed."
+                )
             else:
-                substituted_inputs[key] = value
+                error_msg = f"Step {step_num} ({description}) could not proceed — required data was not available from a previous step."
+
+            print(f"⚠️ {error_msg}")
+            trace.error(f"Variable substitution failed at step {step_num}", data={"missing_var": missing_var, "error": str(e)})
+
+            results.append({
+                "step": step_num,
+                "agent": agent_name,
+                "tool": tool_name,
+                "description": description,
+                "status": "skipped",
+                "error": error_msg,
+            })
+
+            variable_context["results"] = results
+            variable_context["stopped_at_step"] = step_num
+            variable_context["error"] = error_msg
+            variable_context["error_is_no_results"] = bool(no_results_steps)
+
+            return {
+                "final_context": variable_context,
+                "context": variable_context,
+                "results": results,
+                "stopped_at_step": step_num,
+                "error": error_msg,
+            }
 
         print(f"   Substituted inputs: {json.dumps(substituted_inputs, indent=6)}")
         print(f"   Available context variables: {list(variable_context.keys())}")
@@ -999,27 +1034,22 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 # The agent response can be in two formats:
                 # 1. Direct format: {"success": true, "drafts": [...], ...}
                 # 2. Wrapped format: {"success": true, "result": {"drafts": [...]}, ...}
-                # Try wrapped format first, fall back to direct format
                 agent_result = result.get("result", result)
 
-                # First, add ALL fields from the result to context (for backward compatibility)
-                # But exclude common wrapper fields
                 fields_to_add = {
                     k: v
                     for k, v in agent_result.items()
                     if k not in ["success", "error"]
                 }
-                variable_context.update(fields_to_add)
 
                 # Namespace the full result under step_{N}_{agent} to prevent collisions
                 namespace_key = f"step_{step_num}_{agent_name}"
                 variable_context[namespace_key] = fields_to_add
 
-                # Then, create renamed variables based on output_variables mapping
+                # Create renamed variables based on output_variables mapping
                 # Format: "new_variable_name": "source_field_name" or "nested.path[0].field"
                 print(f"\n📦 Variables added to context:")
                 for new_var_name, source_field_name in output_variables.items():
-                    # Try nested path extraction first (handles "drafts[0].id")
                     value = extract_nested_value(agent_result, source_field_name)
 
                     if value is not None:
@@ -1027,7 +1057,6 @@ def orchestrator_node(state: SharedState) -> SharedState:
                         print(
                             f"   ✓ {new_var_name} = {value} (from {source_field_name})"
                         )
-                    # Fallback to simple field access for backward compatibility
                     elif source_field_name in agent_result:
                         variable_context[new_var_name] = agent_result[source_field_name]
                         print(
@@ -1129,19 +1158,53 @@ def orchestrator_node(state: SharedState) -> SharedState:
                         output_summary="No results found (valid operation)"
                     )
 
-                    # Add empty result context to prevent downstream failures
-                    # Extract the result format to add empty defaults
+                    # Store empty result under step namespace (same pattern as success path)
                     agent_result = result.get("result", result)
                     fields_to_add = {
                         k: v
                         for k, v in agent_result.items()
                         if k not in ["success", "error", "no_results"]
                     }
-                    variable_context.update(fields_to_add)
+                    namespace_key = f"step_{step_num}_{agent_name}"
+                    variable_context[namespace_key] = fields_to_add
 
                     print(
-                        f"   Added empty context fields: {list(fields_to_add.keys())}"
+                        f"   Added empty context under {namespace_key}: {list(fields_to_add.keys())}"
                     )
+
+                    # Check if any remaining steps depend on output_variables from this step
+                    if step_num < len(plan):
+                        missing_vars = []
+                        for var_name in output_variables:
+                            if var_name not in variable_context:
+                                missing_vars.append(var_name)
+                        if missing_vars:
+                            remaining_count = len(plan) - step_num
+                            print(f"⚠️ Variables not populated due to no results: {missing_vars}")
+                            print(f"   Skipping {remaining_count} remaining step(s) that depend on these variables.")
+
+                            no_results_msg = error_msg
+                            results.append({
+                                "step": step_num + 1,
+                                "agent": plan[step_num]["agent"],
+                                "tool": plan[step_num].get("tool"),
+                                "description": f"Skipped — depends on '{missing_vars[0]}' which was not available",
+                                "status": "skipped",
+                            })
+
+                            variable_context["results"] = results
+                            variable_context["stopped_at_step"] = step_num
+                            variable_context["error"] = no_results_msg
+                            variable_context["error_is_no_results"] = True
+
+                            return {
+                                "final_context": variable_context,
+                                "context": variable_context,
+                                "results": results,
+                                "stopped_at_step": step_num,
+                                "error": no_results_msg,
+                            }
+
                 else:
                     # Actual error occurred - STOP EXECUTION
                     print(f"❌ Agent reported error: {error_msg}")

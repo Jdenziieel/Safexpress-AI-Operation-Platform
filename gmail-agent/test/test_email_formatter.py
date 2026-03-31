@@ -273,19 +273,16 @@ class TestFormatEmailObject:
         
         result = format_email_object(email)
         
-        assert "body_clean" in result
         assert "body_html" in result
         assert "body_links" in result
         assert "body_images" in result
         assert "body_has_tables" in result
-        assert "action_items" in result
         
         # Original HTML preserved in body_html
         assert result['body_html'] == "<p>Hello <strong>world</strong>!</p>"
         
         # Clean text in body
         assert result['body'] == "Hello world!"
-        assert result['body_clean'] == "Hello world!"
     
     def test_format_plain_text_email(self):
         """Test formatting plain text email"""
@@ -297,10 +294,8 @@ class TestFormatEmailObject:
         
         result = format_email_object(email)
         
-        # Plain text emails should not have extra fields
-        assert "body_clean" not in result
         assert "body_html" not in result
-        assert "body_links" not in result
+        assert "body_links" in result
         assert result['body'] == "Hello world!"
     
     def test_format_email_with_links(self):
@@ -414,10 +409,8 @@ class TestFormatEmailList:
         result = format_email_list(emails)
         
         assert len(result) == 2
-        # HTML email should have extra fields
-        assert "body_clean" in result[0]
-        # Plain text email should not
-        assert "body_clean" not in result[1]
+        assert "body_html" in result[0]
+        assert "body_html" not in result[1]
 
 
 class TestComplexHTMLScenarios:
