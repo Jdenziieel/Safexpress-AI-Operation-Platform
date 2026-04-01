@@ -485,6 +485,29 @@ def clear_sheet(
         return {"success": False, "error": f"Failed to clear sheet: {str(e)}"}
 
 
+def get_sheet_headers(
+    sheet_id: str,
+    sheet_name: str = "Sheet1",
+    credentials_dict: Optional[CredentialsDict] = None,
+) -> Dict[str, Any]:
+    """Get the header row of an existing sheet — needed for column mapping"""
+    try:
+        service = create_sheets_service(credentials_dict)
+        result = service.spreadsheets().values().get(
+            spreadsheetId=sheet_id,
+            range=f"{sheet_name}!1:1"
+        ).execute()
+        headers = result.get("values", [[]])[0]
+        return {
+            "success": True,
+            "headers": headers,
+            "column_count": len(headers),
+            "sheet_name": sheet_name,
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 def update_by_date_match(
     sheet_id: str,
     transformed_data: str,  # JSON string
@@ -859,6 +882,8 @@ def update_by_date_match(
 
         traceback.print_exc()
         return {"success": False, "error": f"Update failed: {str(e)}"}
+    
+    
 
 
 # ============================================================
@@ -895,6 +920,10 @@ TOOL_REGISTRY = {
         "func": update_by_date_match,
         "description": "Update Google Sheets rows by matching dates (no append, only update)",
     },
+    "get_sheet_headers": {
+    "func": get_sheet_headers,
+    "description": "Get header row of an existing sheet for column mapping",
+},
 }
 
 

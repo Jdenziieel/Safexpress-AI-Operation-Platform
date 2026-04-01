@@ -14,11 +14,11 @@ import json
 import pytz
 from dateutil import parser as date_parser
 
-# Import your existing tools
 from tools import (
     create_event_impl,
     create_multiple_events_impl,
     search_events_impl,
+    find_event_by_name,
     delete_event_impl,
     update_event_impl,
     handle_user_confirmation,
@@ -27,6 +27,7 @@ from tools import (
     notify_attendees_about_change,
     get_calendar_service,
     find_calendar_id_by_name,
+    _resolve_relative_date,
 )
 
 load_dotenv()
@@ -35,7 +36,7 @@ app = FastAPI(title="Calendar Agent API")
 
 
 # ============================================================
-# MODELS (Matching Supervisor's Format)
+# MODELS
 # ============================================================
 
 class CredentialsDict(BaseModel):
@@ -58,96 +59,160 @@ class TaskRequest(BaseModel):
 # HELPER FUNCTIONS
 # ============================================================
 
-def resolve_calendar_id(calendar_name: str = None) -> str:
+def sanitize_inputs(inputs: dict) -> dict:
     """
-    Resolve calendar name to calendar ID.
-    Returns "primary" if no name specified or name not found.
+    Clean up inputs from the supervisor before dispatching to tool functions.
+
+    - Strips whitespace from all string values.
+    - Drops keys whose string value is empty (so `if not value` checks work
+      reliably — supervisors often send {"event_id": ""} instead of omitting
+      the key entirely).
+    - Normalises common field aliases (e.g. "name" -> "event_name").
     """
+    cleaned = {}
+    for k, v in inputs.items():
+        if isinstance(v, str):
+            v = v.strip()
+            if v:  # only keep non-empty strings
+                cleaned[k] = v
+        else:
+            cleaned[k] = v
+
+    # Alias: some supervisors send "name" instead of "event_name"
+    if "name" in cleaned and "event_name" not in cleaned:
+        cleaned["event_name"] = cleaned.pop("name")
+
+    return cleaned
+
+
+def resolve_calendar_id(calendar_name: str = None,
+                         credentials_dict: dict = None) -> str:
+    """Resolve calendar name to ID. Returns 'primary' if not found."""
     if not calendar_name or calendar_name.lower() == "primary":
         return "primary"
-    
-    calendar_id = find_calendar_id_by_name(calendar_name)
+
+    calendar_id = find_calendar_id_by_name(calendar_name, credentials_dict)
     if calendar_id:
         return calendar_id
-    
-    print(f"⚠️ Calendar '{calendar_name}' not found, using primary")
+
+    print(f"Warning: Calendar '{calendar_name}' not found, using primary")
     return "primary"
 
 
-def auto_calculate_end_time(start_time: str, duration_hours: float = 1.0) -> str:
+def auto_calculate_end_time(start_time: str, duration_hours: float = 1.0) -> Optional[str]:
     """
-    Auto-calculate end time from start time.
-    Default duration is 1 hour.
+    Auto-calculate end time from start time. Default duration is 1 hour.
+
+    Handles bare time strings like '6 PM' or '14:00' by anchoring them to
+    today's date (Asia/Manila) before parsing, so dateutil never falls back
+    to the year-1900 default.
     """
     try:
-        start_dt = date_parser.parse(start_time)
+        tz = pytz.timezone("Asia/Manila")
+        now = datetime.now(tz)
+
+        resolved = _resolve_relative_date(start_time)
+        start_dt = date_parser.parse(resolved)
+
+        # Final safety net: if year is still 1900, anchor to today
+        if start_dt.year == 1900:
+            start_dt = start_dt.replace(year=now.year, month=now.month, day=now.day)
+
         end_dt = start_dt + timedelta(hours=duration_hours)
         return end_dt.strftime("%Y-%m-%d %H:%M")
     except Exception as e:
-        print(f"⚠️ Failed to auto-calculate end_time: {e}")
+        print(f"Warning: Failed to auto-calculate end_time: {e}")
         return None
 
 
+def _resolve_event_id(inputs: dict, calendar_id: str,
+                      credentials_dict: dict) -> tuple:
+    """
+    Return (event_id, error_dict_or_None).
+
+    Resolution order:
+      1. inputs["event_id"]  - use directly if present and non-empty
+      2. inputs["event_name"] / inputs["summary"] - substring search
+      3. Neither supplied - fetch upcoming events and return them as a
+         helpful prompt so the supervisor/user can pick one.
+    """
+    event_id = inputs.get("event_id")
+    if event_id:
+        return event_id, None
+
+    # Try name-based lookup
+    event_name = inputs.get("event_name") or inputs.get("summary")
+    if event_name:
+        lookup = find_event_by_name(event_name, calendar_id, credentials_dict)
+
+        if not lookup["found"]:
+            return None, {
+                "success": False,
+                "error": f"No upcoming event found matching '{event_name}'. Use list_events to verify the name."
+            }
+
+        if not lookup["exact"]:
+            match_list = "\n".join(
+                f"- {e['summary']} on {e['start_formatted']} (ID: {e['event_id']})"
+                for e in lookup["matches"]
+            )
+            return None, {
+                "success": False,
+                "requires_event_id": True,
+                "matches": lookup["matches"],
+                "error": (
+                    f"Multiple events match '{event_name}'. "
+                    f"Please re-send with the correct event_id:\n{match_list}"
+                )
+            }
+
+        resolved_id = lookup["matches"][0]["event_id"]
+        print(f"Info: Resolved '{event_name}' -> event_id: {resolved_id}")
+        return resolved_id, None
+
+    # Nothing supplied at all - list upcoming events so supervisor can choose
+    print("Warning: No event_id or event_name provided - fetching upcoming events for reference")
+    upcoming = search_events_impl(max_results=10, calendar_id=calendar_id,
+                                  credentials_dict=credentials_dict)
+    events = upcoming.get("events", [])
+
+    if not events:
+        return None, {
+            "success": False,
+            "error": "No event_id or event_name provided, and no upcoming events were found."
+        }
+
+    event_list = "\n".join(
+        f"- {e['summary']} on {e['start_formatted']} (ID: {e['event_id']})"
+        for e in events
+    )
+    return None, {
+        "success": False,
+        "requires_event_id": True,
+        "upcoming_events": events,
+        "error": (
+            "No event_id or event_name was provided. "
+            "Here are your upcoming events - re-send the request with the correct "
+            "event_id or event_name:\n" + event_list
+        )
+    }
+
+
 # ============================================================
-# TOOL IMPLEMENTATIONS (Matching supervisor's expectations)
+# TOOL IMPLEMENTATIONS
 # ============================================================
 
-def list_events(inputs: dict) -> dict:
-    """
-    List upcoming calendar events with structured output.
-    
-    Inputs:
-        time_min: str (optional) - Start time (YYYY-MM-DD or ISO)
-        time_max: str (optional) - End time (YYYY-MM-DD or ISO)
-        max_results: int (optional) - Number of events (default: 10)
-        calendar_name: str (optional) - Calendar name
-    
-    Returns:
-        success: bool
-        events: list of event objects with id, summary, start, end, etc.
-        count: int
-    """
+def list_events(inputs: dict, credentials_dict: dict = None) -> dict:
     try:
         max_results = inputs.get("max_results", 10)
         calendar_name = inputs.get("calendar_name", "")
-        
-        calendar_id = resolve_calendar_id(calendar_name)
-        
-        # Use the enhanced search_events_impl that returns structured data
-        result = search_events_impl(max_results, calendar_id)
-        
-        return result
-        
+        calendar_id = resolve_calendar_id(calendar_name, credentials_dict)
+        return search_events_impl(max_results, calendar_id, credentials_dict)
     except Exception as e:
-        return {
-            "success": False,
-            "events": [],
-            "count": 0,
-            "error": str(e)
-        }
+        return {"success": False, "events": [], "count": 0, "error": str(e)}
 
 
-def create_event(inputs: dict) -> dict:
-    """
-    Create a new calendar event with auto-calculated end time if needed.
-    
-    Inputs:
-        summary: str (required) - Event title
-        start_time: str (required) - Start datetime (supports "12 AM", "12:00 PM", etc.)
-        end_time: str (optional) - End datetime (auto-calculated if not provided)
-        description: str (optional)
-        location: str (optional)
-        attendees: list (optional) - List of emails
-        calendar_name: str (optional)
-        add_meet_link: bool (optional) - Add Google Meet link
-    
-    Returns:
-        success: bool
-        event_id: str
-        event_url: str
-        meet_link: str (if applicable)
-        message: str
-    """
+def create_event(inputs: dict, credentials_dict: dict = None) -> dict:
     try:
         summary = inputs.get("summary")
         start_time = inputs.get("start_time") or inputs.get("start")
@@ -157,23 +222,22 @@ def create_event(inputs: dict) -> dict:
         attendees = inputs.get("attendees") or inputs.get("emails", [])
         calendar_name = inputs.get("calendar_name", "")
         add_meet_link = inputs.get("add_meet_link", False)
-        
+
         if not summary:
             return {"success": False, "error": "summary is required"}
         if not start_time:
             return {"success": False, "error": "start_time is required"}
-        
-        # AUTO-CALCULATE END TIME if not provided
+
+        # Auto-calculate end time when it is not provided
         if not end_time:
             end_time = auto_calculate_end_time(start_time)
             if not end_time:
-                return {"success": False, "error": "Could not auto-calculate end_time"}
-            print(f"ℹ️ Auto-calculated end_time: {end_time} (start + 1 hour)")
-        
-        calendar_id = resolve_calendar_id(calendar_name)
-        
-        # Call create_event_impl which now returns Dict
-        result = create_event_impl(
+                return {"success": False, "error": "Could not auto-calculate end_time from the given start_time"}
+            print(f"Info: Auto-calculated end_time: {end_time} (start + 1 hour)")
+
+        calendar_id = resolve_calendar_id(calendar_name, credentials_dict)
+
+        return create_event_impl(
             summary=summary,
             start=start_time,
             end=end_time,
@@ -181,286 +245,129 @@ def create_event(inputs: dict) -> dict:
             description=description,
             location=location,
             calendar_id=calendar_id,
-            add_meet_link=add_meet_link
+            add_meet_link=add_meet_link,
+            credentials_dict=credentials_dict,
         )
-        
-        return result
-        
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
-def update_event(inputs: dict) -> dict:
-    """
-    Update an existing calendar event (supports changing name, time, location, attendees).
-    
-    Inputs:
-        event_id: str (required)
-        new_summary: str (optional) - New event title
-        new_start: str (optional) - New start time (supports "12 AM", "2:30 PM", etc.)
-        new_end: str (optional) - New end time
-        new_description: str (optional)
-        new_location: str (optional)
-        new_attendees: list (optional) - New list of attendee emails
-        calendar_name: str (optional)
-    
-    Returns:
-        success: bool
-        event_id: str
-        event_url: str
-        changes: list
-        message: str
-    """
+def update_event(inputs: dict, credentials_dict: dict = None) -> dict:
     try:
-        event_id = inputs.get("event_id")
-        if not event_id:
-            return {"success": False, "error": "event_id is required"}
-        
-        new_summary = inputs.get("new_summary")
-        new_start = inputs.get("new_start")
-        new_end = inputs.get("new_end")
-        new_description = inputs.get("new_description")
-        new_location = inputs.get("new_location")
-        new_attendees = inputs.get("new_attendees")
-        calendar_name = inputs.get("calendar_name", "")
-        
-        calendar_id = resolve_calendar_id(calendar_name)
-        
-        # Call update_event_impl which now returns Dict
-        result = update_event_impl(
+        calendar_id = resolve_calendar_id(inputs.get("calendar_name", ""), credentials_dict)
+
+        event_id, err = _resolve_event_id(inputs, calendar_id, credentials_dict)
+        if err:
+            return err
+
+        return update_event_impl(
             event_id=event_id,
-            new_summary=new_summary,
-            new_start=new_start,
-            new_end=new_end,
-            new_description=new_description,
-            new_location=new_location,
-            new_attendees=new_attendees,
-            calendar_id=calendar_id
+            new_summary=inputs.get("new_summary"),
+            new_start=inputs.get("new_start"),
+            new_end=inputs.get("new_end"),
+            new_description=inputs.get("new_description"),
+            new_location=inputs.get("new_location"),
+            new_attendees=inputs.get("new_attendees"),
+            calendar_id=calendar_id,
+            credentials_dict=credentials_dict,
         )
-        
-        return result
-        
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
-def delete_event(inputs: dict) -> dict:
+def delete_event(inputs: dict, credentials_dict: dict = None) -> dict:
     """
-    Delete a calendar event (with confirmation requirement).
-    
-    Inputs:
-        event_id: str (required)
-        calendar_name: str (optional)
-        confirmed: bool (optional) - Set to true to skip confirmation
-    
-    Returns:
-        success: bool
-        deleted: bool
-        requires_confirmation: bool (if confirmation needed)
-        event_title: str
-        event_start: str
-        confirmation_prompt: str (if confirmation needed)
-        message: str
+    Delete an event.
+
+    Accepts any of:
+      - event_id   - used directly
+      - event_name / summary - auto-resolved via name search
+      - neither    - returns the upcoming event list so the caller can pick one
+
+    Requires user confirmation unless inputs["confirmed"] == True.
     """
     try:
-        event_id = inputs.get("event_id")
-        if not event_id:
-            return {"success": False, "error": "event_id is required"}
-        
-        calendar_name = inputs.get("calendar_name", "")
-        confirmed = inputs.get("confirmed", False)
-        
-        calendar_id = resolve_calendar_id(calendar_name)
-        
-        # Call delete_event_impl which now returns Dict with confirmation support
-        result = delete_event_impl(
+        calendar_id = resolve_calendar_id(inputs.get("calendar_name", ""), credentials_dict)
+
+        event_id, err = _resolve_event_id(inputs, calendar_id, credentials_dict)
+        if err:
+            return err
+
+        return delete_event_impl(
             event_id=event_id,
             calendar_id=calendar_id,
-            skip_confirmation=confirmed
+            skip_confirmation=inputs.get("confirmed", False),
+            credentials_dict=credentials_dict,
         )
-        
-        return result
-        
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
-def confirm_delete_event(inputs: dict) -> dict:
+def confirm_delete_event(inputs: dict, credentials_dict: dict = None) -> dict:
     """
-    Confirm and execute deletion of a calendar event.
-    This is called after user confirms deletion.
-    
-    Inputs:
-        event_id: str (required)
-        calendar_name: str (optional)
-    
-    Returns:
-        success: bool
-        deleted: bool
-        message: str
+    Confirm and execute a previously requested deletion.
+    Accepts event_id directly, or resolves by event_name/summary.
     """
     try:
-        event_id = inputs.get("event_id")
-        if not event_id:
-            return {"success": False, "error": "event_id is required"}
-        
-        calendar_name = inputs.get("calendar_name", "")
-        calendar_id = resolve_calendar_id(calendar_name)
-        
-        # Call with skip_confirmation=True to actually delete
-        result = delete_event_impl(
+        calendar_id = resolve_calendar_id(inputs.get("calendar_name", ""), credentials_dict)
+
+        event_id, err = _resolve_event_id(inputs, calendar_id, credentials_dict)
+        if err:
+            return err
+
+        return delete_event_impl(
             event_id=event_id,
             calendar_id=calendar_id,
-            skip_confirmation=True
+            skip_confirmation=True,
+            credentials_dict=credentials_dict,
         )
-        
-        return result
-        
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
-def list_calendars(inputs: dict) -> dict:
-    """
-    List all user's calendars
-    
-    Returns:
-        success: bool
-        calendars: list
-        message: str
-    """
+def list_calendars(inputs: dict, credentials_dict: dict = None) -> dict:
     try:
-        result = list_calendars_impl()
-        
-        if "❌" in result or "Failed" in result:
-            return {
-                "success": False,
-                "calendars": [],
-                "message": result,
-                "error": result
-            }
-        
-        return {
-            "success": True,
-            "calendars": [],  # Could parse result into structured data
-            "message": result,
-            "error": None
-        }
-        
+        return list_calendars_impl(credentials_dict)
     except Exception as e:
-        return {
-            "success": False,
-            "calendars": [],
-            "error": str(e)
-        }
+        return {"success": False, "calendars": [], "error": str(e)}
 
 
-def create_calendar(inputs: dict) -> dict:
-    """
-    Create a new calendar
-    
-    Inputs:
-        calendar_name: str (required)
-        description: str (optional)
-    
-    Returns:
-        success: bool
-        calendar_id: str
-        message: str
-    """
+def create_calendar(inputs: dict, credentials_dict: dict = None) -> dict:
     try:
         calendar_name = inputs.get("calendar_name")
         if not calendar_name:
             return {"success": False, "error": "calendar_name is required"}
-        
-        description = inputs.get("description", "")
-        
-        result = create_calendar_impl(calendar_name, description)
-        
-        if "❌" in result or "Failed" in result:
-            return {
-                "success": False,
-                "calendar_id": None,
-                "message": result,
-                "error": result
-            }
-        
-        return {
-            "success": True,
-            "calendar_id": None,  # Could extract from result
-            "message": result,
-            "error": None
-        }
-        
+
+        return create_calendar_impl(
+            calendar_name,
+            inputs.get("description", ""),
+            credentials_dict,
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "calendar_id": None,
-            "error": str(e)
-        }
+        return {"success": False, "calendar_id": None, "error": str(e)}
 
 
-def resolve_conflict(inputs: dict) -> dict:
-    """
-    Resolve scheduling conflict by moving conflicting event
-    
-    Inputs:
-        conflict_id: str (required)
-        new_event: dict (required) - New event details
-        calendar_name: str (optional)
-    
-    Returns:
-        success: bool
-        message: str
-    """
+def resolve_conflict(inputs: dict, credentials_dict: dict = None) -> dict:
     try:
         conflict_id = inputs.get("conflict_id")
         new_event = inputs.get("new_event")
-        
+
         if not conflict_id:
             return {"success": False, "error": "conflict_id is required"}
         if not new_event:
             return {"success": False, "error": "new_event is required"}
-        
-        calendar_name = inputs.get("calendar_name", "")
-        calendar_id = resolve_calendar_id(calendar_name)
-        
-        result = handle_user_confirmation(conflict_id, new_event, calendar_id)
-        
-        if "❌" in result or "Failed" in result:
-            return {
-                "success": False,
-                "message": result,
-                "error": result
-            }
-        
-        return {
-            "success": True,
-            "message": result,
-            "error": None
-        }
-        
+
+        calendar_id = resolve_calendar_id(inputs.get("calendar_name", ""), credentials_dict)
+
+        return handle_user_confirmation(
+            conflict_id, new_event, calendar_id, credentials_dict
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
 # ============================================================
-# TOOL REGISTRY (Maps tool names to functions)
+# TOOL REGISTRY
 # ============================================================
 
 CALENDAR_TOOLS = {
@@ -481,47 +388,44 @@ CALENDAR_TOOLS = {
 
 @app.post("/execute_task")
 async def execute_task(request: TaskRequest):
-    """
-    Main endpoint that supervisor calls.
-    Executes calendar operations based on tool name.
-    """
+    """Main endpoint that supervisor calls."""
     try:
         tool_name = request.tool
-        inputs = request.inputs
-        
+        # Sanitize BEFORE dispatch - strips empty strings like {"event_id": ""}
+        # so downstream `if not value` checks work correctly.
+        inputs = sanitize_inputs(request.inputs)
+
         print(f"\n{'='*60}")
-        print(f"📅 CALENDAR AGENT - Executing: {tool_name}")
+        print(f"CALENDAR AGENT - Executing: {tool_name}")
         print(f"{'='*60}")
-        print(f"📥 Inputs: {json.dumps(inputs, indent=2)}")
-        
-        # Get tool function
+        print(f"Inputs (sanitized): {json.dumps(inputs, indent=2)}")
+
         tool_func = CALENDAR_TOOLS.get(tool_name)
         if not tool_func:
             raise HTTPException(
                 status_code=400,
                 detail=f"Unknown tool: {tool_name}. Available: {list(CALENDAR_TOOLS.keys())}"
             )
-        
-        # Execute tool
-        result = tool_func(inputs)
-        
-        print(f"✅ Result: {result.get('success')}")
+
+        creds = request.credentials_dict.dict() if request.credentials_dict else None
+        result = tool_func(inputs, credentials_dict=creds)
+
+        print(f"Result success: {result.get('success')}")
         if result.get('error'):
-            print(f"❌ Error: {result.get('error')}")
+            print(f"Error: {result.get('error')}")
         if result.get('event_id'):
-            print(f"🆔 Event ID: {result.get('event_id')}")
-        
-        # Print complete result before returning
-        print(f"\n📤 Complete Result:")
+            print(f"Event ID: {result.get('event_id')}")
+
+        print(f"\nComplete Result:")
         print(json.dumps(result, indent=2, default=str))
         print(f"{'='*60}\n")
-        
+
         return result
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Calendar Agent Error: {str(e)}")
+        print(f"Calendar Agent Error: {str(e)}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
@@ -529,7 +433,6 @@ async def execute_task(request: TaskRequest):
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
     return {
         "status": "healthy",
         "service": "calendar-agent",
@@ -539,29 +442,20 @@ async def health_check():
 
 @app.get("/")
 async def root():
-    """Root endpoint with available tools"""
     return {
         "service": "Calendar Agent API",
-        "version": "2.0.0",
+        "version": "2.3.0",
         "available_tools": list(CALENDAR_TOOLS.keys()),
         "tool_descriptions": {
             "list_events": "List upcoming calendar events with structured output",
-            "create_event": "Create a new event (auto-calculates end_time, supports 12 AM format)",
-            "update_event": "Update event (name, time, location, attendees)",
-            "delete_event": "Delete an event (requires confirmation first)",
-            "confirm_delete_event": "Confirm and execute deletion",
+            "create_event": "Create a new event (auto-calculates end_time if omitted; handles bare times like '6 PM')",
+            "update_event": "Update event by event_id, event_name, or summary (title, time, location, attendees)",
+            "delete_event": "Delete an event by event_id, event_name, or summary - auto-lists events if neither given",
+            "confirm_delete_event": "Confirm and execute deletion by event_id or event_name",
             "list_calendars": "List all user calendars",
             "create_calendar": "Create a new calendar",
             "resolve_conflict": "Resolve scheduling conflicts"
         },
-        "improvements": [
-            "✅ Proper 12 AM/PM time parsing",
-            "✅ Auto-calculate end_time if not provided",
-            "✅ Returns event_id in all operations",
-            "✅ Delete confirmation workflow",
-            "✅ Update supports attendees",
-            "✅ Structured data output for all tools"
-        ],
         "endpoints": {
             "execute_task": "/execute_task (POST) - Execute calendar operations",
             "health": "/health (GET) - Health check"
@@ -575,8 +469,7 @@ async def root():
 
 if __name__ == "__main__":
     port = int(os.getenv("CALENDAR_AGENT_PORT", "8005"))
-    print(f"🚀 Starting Calendar Agent v2.0 on port {port}")
-    print(f"📚 Available tools: {list(CALENDAR_TOOLS.keys())}")
-    print(f"✨ New features: 12 AM/PM support, event_id returns, delete confirmation")
-    print(f"📋 Ready to receive requests from Supervisor Agent")
+    print(f"Starting Calendar Agent v2.3 on port {port}")
+    print(f"Available tools: {list(CALENDAR_TOOLS.keys())}")
+    print(f"Ready to receive requests from Supervisor Agent")
     uvicorn.run(app, host="0.0.0.0", port=port)
