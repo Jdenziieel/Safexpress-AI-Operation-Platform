@@ -39,16 +39,23 @@ def get_calendar_service(credentials_dict: dict = None):
 
     # ── Option 1: Use credentials forwarded from the supervisor ──────────────
     if credentials_dict:
+        # Do NOT pass scopes here -- the auth server determines the granted
+        # scopes (calendar.events + calendar.readonly).  Passing the local
+        # SCOPES (which includes the broader 'calendar' scope) would cause
+        # token refresh to fail with "invalid_scope" because Google rejects
+        # scope escalation during refresh.
         creds = Credentials(
             token=credentials_dict.get("access_token"),
             refresh_token=credentials_dict.get("refresh_token"),
             token_uri=credentials_dict.get("token_uri", "https://oauth2.googleapis.com/token"),
             client_id=credentials_dict.get("client_id", os.getenv("GOOGLE_CLIENT_ID", "")),
             client_secret=credentials_dict.get("client_secret", os.getenv("GOOGLE_CLIENT_SECRET", "")),
-            scopes=SCOPES,
         )
-        if creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+        if creds.refresh_token:
+            try:
+                creds.refresh(Request())
+            except Exception:
+                pass
         return build('calendar', 'v3', credentials=creds)
 
     # ── Option 2: Fall back to local token.json ───────────────────────────────
@@ -364,20 +371,32 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
 
 
 def search_events_impl(max_results: int = 5, calendar_id: str = None,
-                       credentials_dict: dict = None) -> Dict:
+                       credentials_dict: dict = None,
+                       time_min: str = None, time_max: str = None) -> Dict:
     """Search upcoming events - RETURNS DICT with structured event data."""
     service = get_calendar_service(credentials_dict)
     cal_id = calendar_id or CALENDAR_ID
-    now = datetime.now(pytz.timezone("Asia/Manila")).isoformat()
+
+    if time_min:
+        formatted_min = format_datetime(time_min)
+        if not formatted_min:
+            formatted_min = time_min
+    else:
+        formatted_min = datetime.now(pytz.timezone("Asia/Manila")).isoformat()
+
+    list_kwargs = dict(
+        calendarId=cal_id,
+        timeMin=formatted_min,
+        maxResults=max_results,
+        singleEvents=True,
+        orderBy="startTime",
+    )
+    if time_max:
+        formatted_max = format_datetime(time_max)
+        list_kwargs["timeMax"] = formatted_max if formatted_max else time_max
 
     try:
-        events_result = service.events().list(
-            calendarId=cal_id,
-            timeMin=now,
-            maxResults=max_results,
-            singleEvents=True,
-            orderBy="startTime"
-        ).execute()
+        events_result = service.events().list(**list_kwargs).execute()
         events = events_result.get("items", [])
 
         if not events:

@@ -57,6 +57,7 @@ class ToolResponse(BaseModel):
 def create_sheets_service(credentials_dict: CredentialsDict):
     """Create authenticated Google Sheets service"""
     try:
+        from google.auth.transport.requests import Request as AuthRequest
         creds = Credentials(
             token=credentials_dict.access_token or os.getenv("GOOGLE_ACCESS_TOKEN"),
             refresh_token=credentials_dict.refresh_token
@@ -66,6 +67,11 @@ def create_sheets_service(credentials_dict: CredentialsDict):
             or os.getenv("GOOGLE_CLIENT_SECRET"),
             token_uri="https://oauth2.googleapis.com/token",
         )
+        if creds.refresh_token:
+            try:
+                creds.refresh(AuthRequest())
+            except Exception:
+                pass
         return build("sheets", "v4", credentials=creds)
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")

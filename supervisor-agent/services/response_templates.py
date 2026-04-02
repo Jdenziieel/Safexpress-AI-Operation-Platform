@@ -138,10 +138,8 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         "template": "Created document **{title}**: {document_url}",
     },
     ("docs_agent", "list_my_docs"): {
-        "type": "query",
-        "list_key": "documents",
-        "item_fields": ["name"],
-        "header": "Found {count} document(s):",
+        "type": "action",
+        "use_message": True,
     },
     ("docs_agent", "extract_template_format"): {
         "type": "action",
@@ -178,11 +176,8 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
     # ========================= CALENDAR AGENT =========================
 
     ("calendar_agent", "list_events"): {
-        "type": "query",
-        "list_key": "events",
-        "count_key": "count",
-        "item_fields": ["summary", "start", "end", "location"],
-        "header": "Found {count} event(s):",
+        "type": "action",
+        "use_message": True,
     },
     ("calendar_agent", "create_event"): {
         "type": "action",
@@ -236,18 +231,12 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         "header": "Found {count} folder(s):",
     },
     ("drive_agent", "list_files"): {
-        "type": "query",
-        "list_key": "files",
-        "count_key": "count",
-        "item_fields": ["name", "mimeType", "size"],
-        "header": "Found {count} file(s):",
+        "type": "action",
+        "use_message": True,
     },
     ("drive_agent", "search_files"): {
-        "type": "query",
-        "list_key": "results",
-        "count_key": "count",
-        "item_fields": ["name", "mimeType", "size"],
-        "header": "Found {count} file(s):",
+        "type": "action",
+        "use_message": True,
     },
     ("drive_agent", "get_folder_info"): {
         "type": "action",

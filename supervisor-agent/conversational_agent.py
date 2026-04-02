@@ -111,6 +111,98 @@ class ConversationalAgent(Tier0ChecksMixin):
         # Summarization service for post-execution result summaries
         self.summarization_service = SummarizationService(llm=self.quick_llm)
 
+    # ------------------------------------------------------------------
+    # Confirmation message formatter (uses quick_llm)
+    # ------------------------------------------------------------------
+
+    _ALWAYS_INTERNAL = frozenset({
+        "task_type", "original_message", "uploaded_file",
+    })
+
+    def _format_confirmation(self, execution_summary: str, extracted_info: dict) -> str:
+        """Build a user-friendly confirmation message via quick_llm."""
+
+        user_info = {
+            k: v for k, v in extracted_info.items()
+            if not k.startswith("_")
+            and k not in self._ALWAYS_INTERNAL
+            and v is not None and v != ""
+        }
+
+        header = f"✅ **Ready to execute!**\n\n"
+        footer = "\n\n---\nReply **\"yes\"** to proceed or **\"cancel\"** to stop."
+
+        if not user_info:
+            return f"{header}{execution_summary}{footer}"
+
+        prompt = (
+            f"Task summary: {execution_summary}\n\n"
+            f"Parameters:\n{json.dumps(user_info, indent=2, default=str)}\n\n"
+            "Format this as a clear confirmation message the user can review before I execute.\n"
+            "Rules:\n"
+            "- Present dates/times in human-readable format (e.g. \"Friday, April 3, 2026 at 11:00 AM\")\n"
+            "- List email addresses naturally (comma-separated, no brackets)\n"
+            "- Skip technical/internal parameters (time_min, time_max, query, max_results, message_id, etc.) "
+            "that duplicate info already in the summary or are meaningless to a user\n"
+            "- Keep it concise — bullet points for key details the user should verify\n"
+            "- Do NOT add information that isn't present\n"
+            "- Do NOT wrap in markdown code blocks"
+        )
+
+        try:
+            fmt_start = time.time()
+            llm_response = self.quick_llm.invoke(
+                [
+                    {"role": "system", "content": "You format task confirmations. Return ONLY the formatted message text, nothing else."},
+                    {"role": "user", "content": prompt},
+                ],
+                config={"timeout": 10, "max_tokens": 400},
+            )
+            fmt_duration = (time.time() - fmt_start) * 1000
+
+            fmt_in_tokens = 0
+            fmt_out_tokens = 0
+            fmt_cached = 0
+            if hasattr(llm_response, 'response_metadata'):
+                tu = llm_response.response_metadata.get('token_usage', {})
+                fmt_in_tokens = tu.get('prompt_tokens', 0)
+                fmt_out_tokens = tu.get('completion_tokens', 0)
+                fmt_cached = tu.get('prompt_tokens_details', {}).get('cached_tokens', 0)
+            if not fmt_in_tokens:
+                fmt_in_tokens = (len(prompt) + 80) // 4
+            if not fmt_out_tokens:
+                fmt_out_tokens = len(llm_response.content) // 4
+
+            logger.llm_call(
+                model=self.quick_model,
+                operation="confirmation_formatter",
+                input_tokens=fmt_in_tokens,
+                output_tokens=fmt_out_tokens,
+                duration_ms=fmt_duration,
+                tier="formatter",
+                prompt_summary=f"Formatting confirmation: {execution_summary[:50]}...",
+                success=True,
+                cached_tokens=fmt_cached,
+            )
+
+            formatted = llm_response.content.strip()
+            if formatted:
+                return f"{header}{formatted}{footer}"
+        except Exception as fmt_err:
+            logger.llm_call(
+                model=self.quick_model,
+                operation="confirmation_formatter",
+                input_tokens=(len(prompt) + 80) // 4,
+                output_tokens=0,
+                duration_ms=(time.time() - fmt_start) * 1000 if 'fmt_start' in locals() else 0,
+                tier="formatter",
+                prompt_summary=f"Formatting confirmation: {execution_summary[:50]}...",
+                success=False,
+                error=str(fmt_err),
+            )
+
+        return f"{header}{execution_summary}{footer}"
+
     def process_message(
         self, 
         user_message: str, 
@@ -201,18 +293,50 @@ class ConversationalAgent(Tier0ChecksMixin):
             conversation_state.ready_for_execution = False
             conversation_state.execution_summary = None
         else:
+            # Snapshot before merge (for confirmation detection via dict comparison)
+            old_info = conversation_state.extracted_info.copy()
+
+            # Was the system already showing a confirmation prompt?
+            was_awaiting = (
+                conversation_state.intent == ConversationIntent.READY_TO_EXECUTE
+                and not conversation_state.ready_for_execution
+            )
+
             # Update extracted information (merge new with existing)
             for key, value in analysis.extracted_info.items():
                 if value is not None and value != "":
-                    conversation_state.extracted_info[key] = value
+                    if key == "_cached_tool_filter" and key in conversation_state.extracted_info:
+                        existing = conversation_state.extracted_info[key]
+                        for agent, tools in value.items():
+                            if agent in existing:
+                                merged = list(set(existing[agent]) | set(tools))
+                                existing[agent] = merged
+                            else:
+                                existing[agent] = tools
+                    else:
+                        conversation_state.extracted_info[key] = value
             
             # Update other state fields
             conversation_state.missing_fields = analysis.missing_fields
             conversation_state.clarification_question = analysis.clarification_question
-            conversation_state.ready_for_execution = analysis.execution_ready
             conversation_state.execution_summary = analysis.execution_summary
             conversation_state.execution_mode = "standard"  # ReAct disabled — uncomment below to re-enable
             # conversation_state.execution_mode = getattr(analysis, 'execution_mode', 'standard')
+
+            # Gate ready_for_execution behind user confirmation.
+            # When Tier 1/0.5 first says READY_TO_EXECUTE, we keep
+            # ready_for_execution=False so routes/threads.py does NOT
+            # auto-execute.  The user sees the confirmation prompt and
+            # must reply "yes".  On that reply, Tier 0/0.5 returns
+            # READY_TO_EXECUTE with the same extracted_info (dict
+            # unchanged after merge) — only then do we set True.
+            if analysis.execution_ready and analysis.intent == ConversationIntent.READY_TO_EXECUTE:
+                if was_awaiting and conversation_state.extracted_info == old_info:
+                    conversation_state.ready_for_execution = True
+                else:
+                    conversation_state.ready_for_execution = False
+            else:
+                conversation_state.ready_for_execution = analysis.execution_ready
         
         # Update state with analysis intent
         conversation_state.intent = analysis.intent
@@ -270,21 +394,30 @@ class ConversationalAgent(Tier0ChecksMixin):
         elif analysis.intent == ConversationIntent.NEEDS_CLARIFICATION:
             response = f"📋 {analysis.clarification_question}\n\n"
             user_fields = {k: v for k, v in analysis.extracted_info.items()
-                          if k not in _INTERNAL_FIELDS and v}
+                          if k not in _INTERNAL_FIELDS
+                          and not k.startswith("_")
+                          and v}
             if user_fields:
                 response += "**What I have so far:**\n"
                 for key, value in user_fields.items():
                     response += f"- **{key.replace('_', ' ').title()}:** {value}\n"
         
         elif analysis.intent == ConversationIntent.READY_TO_EXECUTE:
-            response = f"✅ **Ready to execute!**\n\n"
-            response += f"**Task:** {analysis.execution_summary}\n\n"
-            user_fields = {k: v for k, v in analysis.extracted_info.items()
-                          if k not in _INTERNAL_FIELDS and v}
-            if user_fields:
-                response += "**Details:**\n"
-                for key, value in user_fields.items():
-                    response += f"- **{key.replace('_', ' ').title()}:** {value}\n"
+            if analysis.missing_fields and analysis.clarification_question:
+                response = f"📋 {analysis.clarification_question}\n\n"
+                user_fields = {k: v for k, v in conversation_state.extracted_info.items()
+                              if k not in _INTERNAL_FIELDS
+                              and not k.startswith("_")
+                              and v}
+                if user_fields:
+                    response += "**What I have so far:**\n"
+                    for key, value in user_fields.items():
+                        response += f"- **{key.replace('_', ' ').title()}:** {value}\n"
+            else:
+                response = self._format_confirmation(
+                    analysis.execution_summary or "",
+                    conversation_state.extracted_info,
+                )
 
         elif analysis.intent == ConversationIntent.TEMPLATE_UPLOAD:
             if analysis.execution_ready:
@@ -492,12 +625,25 @@ class ConversationalAgent(Tier0ChecksMixin):
         else:
             # Use the SAME tool-level filter that the supervisor will use later,
             # so we skip the redundant identify_relevant_agents() LLM call.
-            from tool_filter import get_optimized_capabilities
+            from tool_filter import get_optimized_capabilities, get_filtered_capabilities_v2
             filtered_caps, tool_filter_result = get_optimized_capabilities(user_message)
+
+            # Additive merge: preserve agents/tools identified in earlier turns
+            # so that follow-up messages (e.g. providing a missing email) don't
+            # drop agents the classifier can no longer see from context alone.
+            existing_filter = conversation_state.extracted_info.get("_cached_tool_filter")
+            if existing_filter:
+                for agent, tools in existing_filter.items():
+                    if agent in tool_filter_result:
+                        tool_filter_result[agent] = list(
+                            set(tool_filter_result[agent]) | set(tools)
+                        )
+                    else:
+                        tool_filter_result[agent] = tools
+                filtered_caps = get_filtered_capabilities_v2(tool_filter_result)
+
             relevant_agents = list(filtered_caps.keys())
             capabilities_to_show = self._build_capabilities_summary(relevant_agents)
-            # Cache the tool filter so the supervisor node can reuse it
-            # instead of making a redundant classification LLM call
             conversation_state.extracted_info["_cached_tool_filter"] = tool_filter_result
             cap_top_level = [line.strip() for line in capabilities_to_show.split('\n') if line.strip().startswith('**')]
             print(f"   relevant_agents: {relevant_agents}")
@@ -507,7 +653,12 @@ class ConversationalAgent(Tier0ChecksMixin):
         # Build system prompt — fixed rules first (cacheable prefix), dynamic
         # capabilities appended at the end so the stable prefix maximizes
         # OpenAI's automatic prompt caching (matches longest identical prefix)
-        system_prompt = """Validate and clarify user requests before execution. Check feasibility against available agents/tools, extract required fields, ask for missing info.
+        from datetime import datetime as _dt
+        today_date = _dt.now().strftime("%A, %B %d, %Y")
+
+        system_prompt = f"""Validate and clarify user requests before execution. Check feasibility against available agents/tools, extract required fields, ask for missing info.
+
+CURRENT DATE: {today_date}
 
 TEMPLATE+DATA WORKFLOW:
 When user mentions creating a document using BOTH a template AND a data file:
@@ -543,9 +694,10 @@ JSON OUTPUT:
 
 Be specific in clarification questions — reference what's already known.
 ROLE DISAMBIGUATION: When multiple entities mentioned, infer roles from cues ("from", "to", "template", "data"). If ambiguous, ask.
+EMAIL ADDRESSES: NEVER invent or guess email addresses. If the user provides only a name without an email address, set intent to "needs_clarification", add the email to "missing_fields", and ask for the actual email address.
 
 Available agents and tools:
-{capabilities}""".format(capabilities=capabilities_to_show)
+{capabilities_to_show}"""
 
         user_prompt = f"""{history_text}{exec_context}CURRENT USER MESSAGE: {enriched_message}"""
 
@@ -854,18 +1006,22 @@ Available agents and tools:
         # ------------------------------------------------------------------
         # Build LEAN context for Tier 0.5
         #   bot_signal  — conversation phase (confirm / clarify / open)
-        #   state_block — minimal structured context (field names only)
+        #   state_block — minimal structured context (field names only)j
         # ------------------------------------------------------------------
 
         # Determine conversation phase from authoritative state flags only
         is_awaiting_confirmation = (
-            conversation_state.ready_for_execution and
-            conversation_state.intent == ConversationIntent.READY_TO_EXECUTE
+            not conversation_state.ready_for_execution
+            and conversation_state.intent == ConversationIntent.READY_TO_EXECUTE
+            and not conversation_state.missing_fields
         )
 
         is_awaiting_clarification = (
-            conversation_state.intent == ConversationIntent.NEEDS_CLARIFICATION and
             conversation_state.clarification_question is not None
+            and (
+                conversation_state.intent == ConversationIntent.NEEDS_CLARIFICATION
+                or bool(conversation_state.missing_fields)
+            )
         )
 
         has_extracted_info = bool(conversation_state.extracted_info)
@@ -1102,6 +1258,10 @@ User: "{user_message}" """
             
             # 2. CONFIRMATION
             if category == "confirmation":
+                if conversation_state.missing_fields:
+                    trace.step("tier0.5", "confirmation blocked — missing fields still pending, routing to Tier 1",
+                               {"missing_fields": conversation_state.missing_fields})
+                    return None, query_scope, None
                 trace.step("tier0.5", "confirmation — user confirmed action")
                 return ConversationAnalysis(
                         intent=ConversationIntent.READY_TO_EXECUTE,
@@ -1356,8 +1516,18 @@ User: "{user_message}" """
             ), None, None
             
         except Exception as e:
-            # Check if this is an LLM service error (rate limit, quota, etc.)
             if is_llm_error(e):
+                logger.llm_call(
+                    model=self.quick_model,
+                    operation="tier_0.5_unified_check",
+                    input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
+                    output_tokens=0,
+                    duration_ms=(time.time() - start_time) * 1000 if 'start_time' in locals() else 0,
+                    tier="0.5",
+                    prompt_summary=f"Classifying: {user_message[:50]}...",
+                    success=False,
+                    error=str(e),
+                )
                 trace.error("Tier 0.5: LLM service error in unified quick check", e)
                 raise LLMServiceException(handle_llm_error(e))
             

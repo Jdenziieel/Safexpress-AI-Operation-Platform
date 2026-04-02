@@ -454,6 +454,7 @@ class SummarizationService:
             term in error_lower
             for term in [
                 "auth", "token", "credential", "unauthorized", "401", "403",
+                "scope", "invalid_scope",
             ]
         ):
             return "auth"

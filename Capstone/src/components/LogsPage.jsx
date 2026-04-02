@@ -3,7 +3,7 @@ import {
   Activity, Clock, CheckCircle, XCircle, AlertTriangle, RefreshCw,
   TrendingUp, TrendingDown, Server, Zap, Users, BarChart3, Eye,
   Filter, Search, ChevronDown, ChevronUp, AlertCircle, Bell, X,
-  Shield, Database, Calendar
+  Shield, Database, Calendar, DollarSign, Cpu
 } from 'lucide-react';
 import '../css/LogsPage.css';
 
@@ -378,6 +378,201 @@ const ActivityEntry = ({ activity, expanded, onToggle }) => {
 };
 
 // =============================================================================
+// TOKEN USAGE TAB COMPONENT
+// =============================================================================
+const TokenUsageTab = ({ tokenData, loading }) => {
+  if (loading) {
+    return (
+      <div className="token-tab-loading">
+        <RefreshCw size={24} className="spin" />
+        <span>Loading token data...</span>
+      </div>
+    );
+  }
+
+  const summary = tokenData?.token_summary;
+  const totals = summary?.totals || {};
+  const byModel = summary?.by_model || [];
+  const byTier = summary?.by_tier || [];
+  const byOperation = summary?.by_operation || [];
+
+  const formatTokens = (t) => {
+    if (!t) return '0';
+    if (t >= 1_000_000) return `${(t / 1_000_000).toFixed(2)}M`;
+    if (t >= 1_000) return `${(t / 1_000).toFixed(1)}K`;
+    return t.toLocaleString();
+  };
+
+  const formatCost = (c) => {
+    if (!c) return '$0.00';
+    return `$${parseFloat(c).toFixed(4)}`;
+  };
+
+  const maxTokens = byModel.reduce((m, r) => Math.max(m, r.tokens || 0), 1);
+
+  const hasData = (totals.total_calls || 0) > 0;
+
+  if (!hasData) {
+    return (
+      <div className="token-usage-tab">
+        <div className="no-data">
+          <DollarSign size={48} />
+          <p>No token usage data yet</p>
+          <span>Token consumption will appear here once the supervisor processes tasks</span>
+        </div>
+      </div>
+    );
+  }
+
+  const getOperationLabel = (op) => {
+    const labels = {
+      'tier_1_full_analysis': 'Full Task Analysis',
+      'tier_0.5_unified_check': 'Quick Intent Check',
+      'confirmation_formatter': 'Confirmation Formatter',
+      'agent_tool_classification': 'Agent/Tool Classifier',
+      'plan_generation': 'Execution Plan Generation',
+      'memory_summarization': 'Memory Summarization',
+      'response_composer_safety_net': 'Response Safety Net',
+      'content_enrichment': 'Content Enrichment'
+    };
+    return labels[op] || op?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown';
+  };
+
+  const getTierLabel = (tier) => {
+    const labels = {
+      '0.5': 'Quick Check (0.5)',
+      '1': 'Full Analysis (1)',
+      'classifier': 'Agent Classifier',
+      'supervisor': 'Plan Generation',
+      'formatter': 'Confirmation Fmt',
+      'memory': 'Memory',
+      'post': 'Post-Processing',
+      'enrichment': 'Enrichment'
+    };
+    return labels[tier] || tier || 'Other';
+  };
+
+  return (
+    <div className="token-usage-tab">
+      {/* Stat cards */}
+      <div className="stats-grid">
+        <StatsCard
+          icon={Cpu}
+          title="Total LLM Calls"
+          value={(totals.total_calls || 0).toLocaleString()}
+          subtitle={`${totals.successful_calls || 0} succeeded, ${totals.failed_calls || 0} failed`}
+        />
+        <StatsCard
+          icon={Zap}
+          title="Total Tokens"
+          value={formatTokens(totals.total_tokens)}
+          subtitle={`In: ${formatTokens(totals.total_input_tokens)} / Out: ${formatTokens(totals.total_output_tokens)}`}
+        />
+        <StatsCard
+          icon={DollarSign}
+          title="Estimated Cost"
+          value={formatCost(totals.total_cost_usd)}
+          subtitle="Based on model pricing"
+        />
+        <StatsCard
+          icon={Clock}
+          title="Avg Latency"
+          value={totals.avg_duration_ms ? `${(totals.avg_duration_ms / 1000).toFixed(2)}s` : 'N/A'}
+          subtitle="Per LLM call"
+        />
+      </div>
+
+      {/* Cost by Model table */}
+      {byModel.length > 0 && (
+        <div className="token-section">
+          <h2><Cpu size={20} /> Cost by Model</h2>
+          <div className="token-model-table">
+            <div className="token-table-header">
+              <span className="col-model">Model</span>
+              <span className="col-calls">Calls</span>
+              <span className="col-tokens">Input</span>
+              <span className="col-tokens">Output</span>
+              <span className="col-tokens">Total</span>
+              <span className="col-cost">Cost</span>
+              <span className="col-bar">Share</span>
+            </div>
+            {byModel.map((row) => (
+              <div key={row.model} className="token-table-row">
+                <span className="col-model">
+                  <Cpu size={14} />
+                  {row.model}
+                </span>
+                <span className="col-calls">{row.calls}</span>
+                <span className="col-tokens">{formatTokens(row.input_tokens)}</span>
+                <span className="col-tokens">{formatTokens(row.output_tokens)}</span>
+                <span className="col-tokens">{formatTokens(row.tokens)}</span>
+                <span className="col-cost">{formatCost(row.cost_usd)}</span>
+                <span className="col-bar">
+                  <div className="token-bar-track">
+                    <div
+                      className="token-bar-fill"
+                      style={{ width: `${((row.tokens || 0) / maxTokens) * 100}%` }}
+                    />
+                  </div>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Usage by Tier */}
+      {byTier.length > 0 && (
+        <div className="token-section">
+          <h2><BarChart3 size={20} /> Usage by Tier</h2>
+          <div className="token-tier-list">
+            {byTier.map((row) => {
+              const pct = totals.total_tokens ? ((row.tokens || 0) / totals.total_tokens * 100) : 0;
+              return (
+                <div key={row.tier || 'none'} className="token-tier-item">
+                  <div className="tier-info">
+                    <span className="tier-name">{getTierLabel(row.tier)}</span>
+                    <span className="tier-stats">{row.calls} calls &middot; {formatTokens(row.tokens)} tokens &middot; {formatCost(row.cost_usd)}</span>
+                  </div>
+                  <div className="tier-bar-track">
+                    <div className="tier-bar-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="tier-pct">{pct.toFixed(1)}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Usage by Operation */}
+      {byOperation.length > 0 && (
+        <div className="token-section">
+          <h2><Activity size={20} /> Usage by Operation</h2>
+          <div className="token-tier-list">
+            {byOperation.map((row) => {
+              const pct = totals.total_tokens ? ((row.tokens || 0) / totals.total_tokens * 100) : 0;
+              return (
+                <div key={row.operation || 'none'} className="token-tier-item">
+                  <div className="tier-info">
+                    <span className="tier-name">{getOperationLabel(row.operation)}</span>
+                    <span className="tier-stats">{row.calls} calls &middot; {formatTokens(row.tokens)} &middot; {formatCost(row.cost_usd)} &middot; <em>{row.models_used}</em></span>
+                  </div>
+                  <div className="tier-bar-track">
+                    <div className="tier-bar-fill operation" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="tier-pct">{pct.toFixed(1)}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// =============================================================================
 // MAIN LOGS PAGE COMPONENT
 // =============================================================================
 const LogsPage = () => {
@@ -394,6 +589,8 @@ const LogsPage = () => {
   const [expandedActivity, setExpandedActivity] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showHealthBanner, setShowHealthBanner] = useState(true);
+  const [tokenData, setTokenData] = useState(null);
+  const [tokenLoading, setTokenLoading] = useState(false);
   
   // Auto-refresh interval
   const refreshIntervalRef = useRef(null);
@@ -464,6 +661,21 @@ const LogsPage = () => {
     }
   }, []);
 
+  const fetchTokenStats = useCallback(async () => {
+    setTokenLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/logs/stats?period=${timePeriod}`);
+      if (response.ok) {
+        const data = await response.json();
+        setTokenData(data);
+      }
+    } catch (err) {
+      console.error('Error fetching token stats:', err);
+    } finally {
+      setTokenLoading(false);
+    }
+  }, [timePeriod]);
+
   // =============================================================================
   // REFRESH ALL DATA
   // =============================================================================
@@ -476,7 +688,8 @@ const LogsPage = () => {
         fetchAlerts(),
         fetchAdminStats(),
         fetchActivities(),
-        fetchAgentMetrics()
+        fetchAgentMetrics(),
+        fetchTokenStats()
       ]);
       setError(null);
     } catch (err) {
@@ -486,7 +699,7 @@ const LogsPage = () => {
       setIsRefreshing(false);
       setLoading(false);
     }
-  }, [fetchSystemHealth, fetchAlerts, fetchAdminStats, fetchActivities, fetchAgentMetrics]);
+  }, [fetchSystemHealth, fetchAlerts, fetchAdminStats, fetchActivities, fetchAgentMetrics, fetchTokenStats]);
 
   // =============================================================================
   // EFFECTS
@@ -508,7 +721,8 @@ const LogsPage = () => {
   // Refresh when time period changes
   useEffect(() => {
     fetchAdminStats();
-  }, [timePeriod, fetchAdminStats]);
+    fetchTokenStats();
+  }, [timePeriod, fetchAdminStats, fetchTokenStats]);
 
   // =============================================================================
   // COMPUTED VALUES
@@ -609,6 +823,13 @@ const LogsPage = () => {
           >
             <Activity size={18} />
             Activity Log
+          </button>
+          <button 
+            className={`tab ${activeTab === 'tokens' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tokens')}
+          >
+            <DollarSign size={18} />
+            Token Usage
           </button>
         </div>
       </div>
@@ -722,6 +943,11 @@ const LogsPage = () => {
               )}
             </div>
           </div>
+        )}
+
+        {/* Token Usage Tab */}
+        {activeTab === 'tokens' && (
+          <TokenUsageTab tokenData={tokenData} loading={tokenLoading} />
         )}
       </div>
     </div>

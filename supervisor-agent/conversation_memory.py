@@ -292,8 +292,18 @@ New turns:
             })
             
         except Exception as e:
-            # Check if this is an LLM service error (rate limit, quota, etc.)
             if is_llm_error(e):
+                logger.llm_call(
+                    model=self.llm.model_name if hasattr(self.llm, 'model_name') else "gpt-4o",
+                    operation="memory_summarization",
+                    input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
+                    output_tokens=0,
+                    duration_ms=(time.time() - start_time) * 1000 if 'start_time' in locals() else 0,
+                    tier="memory",
+                    prompt_summary=f"Summarizing {len(old_messages)} messages",
+                    success=False,
+                    error=str(e),
+                )
                 trace.error(f"Memory: LLM service error during summarization", e)
                 raise LLMServiceException(handle_llm_error(e))
 

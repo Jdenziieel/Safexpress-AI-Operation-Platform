@@ -206,8 +206,13 @@ def list_events(inputs: dict, credentials_dict: dict = None) -> dict:
     try:
         max_results = inputs.get("max_results", 10)
         calendar_name = inputs.get("calendar_name", "")
+        time_min = inputs.get("time_min")
+        time_max = inputs.get("time_max")
         calendar_id = resolve_calendar_id(calendar_name, credentials_dict)
-        return search_events_impl(max_results, calendar_id, credentials_dict)
+        return search_events_impl(
+            max_results, calendar_id, credentials_dict,
+            time_min=time_min, time_max=time_max,
+        )
     except Exception as e:
         return {"success": False, "events": [], "count": 0, "error": str(e)}
 

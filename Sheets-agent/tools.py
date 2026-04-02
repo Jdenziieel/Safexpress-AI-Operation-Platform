@@ -48,6 +48,7 @@ def create_sheets_tools(credentials: Dict[str, str]):
 
     def _get_sheets_service():
         """Helper to create authenticated Sheets service"""
+        from google.auth.transport.requests import Request as AuthRequest
         creds = Credentials(
             token=credentials.get("access_token"),
             refresh_token=credentials.get("refresh_token"),
@@ -55,6 +56,11 @@ def create_sheets_tools(credentials: Dict[str, str]):
             client_secret=credentials.get("client_secret"),
             token_uri="https://oauth2.googleapis.com/token",
         )
+        if creds.refresh_token:
+            try:
+                creds.refresh(AuthRequest())
+            except Exception:
+                pass
         return build("sheets", "v4", credentials=creds)
 
     def _parse_uploaded_file_impl(

@@ -50,7 +50,6 @@ def get_google_service(service_name: str, version: str, credentials_dict: Dict):
             print(f"❌ Failed to load credentials.json: {e}")
             raise Exception(f"Missing GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET. Add them to .env or credentials.json")
     
-    # Build credentials with all required fields
     creds = Credentials(
         token=credentials_dict.get("access_token"),
         refresh_token=credentials_dict.get("refresh_token"),
@@ -59,13 +58,19 @@ def get_google_service(service_name: str, version: str, credentials_dict: Dict):
         client_secret=client_secret,
     )
     
+    if creds.refresh_token:
+        try:
+            from google.auth.transport.requests import Request
+            creds.refresh(Request())
+        except Exception:
+            pass
+    
     print(f"🔧 Building {service_name} service with:")
     print(f"  - token: {'present' if creds.token else 'MISSING'}")
     print(f"  - refresh_token: {'present' if creds.refresh_token else 'MISSING'}")
     print(f"  - client_id: {'present' if client_id else 'MISSING'}")
     print(f"  - client_secret: {'present' if client_secret else 'MISSING'}")
     
-    # Build the service
     service = build(service_name, version, credentials=creds)
     
     return service
@@ -510,8 +515,8 @@ def _create_from_uploaded_template_impl(
                 from googleapiclient.discovery import build
                 from googleapiclient.http import MediaInMemoryUpload
                 from google.oauth2.credentials import Credentials
+                from google.auth.transport.requests import Request as AuthRequest
                 
-                # Build credentials
                 creds = Credentials(
                     token=credentials_dict.get("access_token"),
                     refresh_token=credentials_dict.get("refresh_token"),
@@ -519,6 +524,11 @@ def _create_from_uploaded_template_impl(
                     client_id=credentials_dict.get("client_id"),
                     client_secret=credentials_dict.get("client_secret")
                 )
+                if creds.refresh_token:
+                    try:
+                        creds.refresh(AuthRequest())
+                    except Exception:
+                        pass
                 
                 drive_service = build('drive', 'v3', credentials=creds)
                 
@@ -692,9 +702,9 @@ def _create_from_existing_data_and_template_impl(
         print(f"{'='*60}\n")
         
         from google.oauth2.credentials import Credentials
+        from google.auth.transport.requests import Request as AuthRequest
         from googleapiclient.discovery import build
         
-        # Build Drive service
         creds = Credentials(
             token=credentials_dict.get("access_token"),
             refresh_token=credentials_dict.get("refresh_token"),
@@ -702,6 +712,11 @@ def _create_from_existing_data_and_template_impl(
             client_id=credentials_dict.get("client_id"),
             client_secret=credentials_dict.get("client_secret")
         )
+        if creds.refresh_token:
+            try:
+                creds.refresh(AuthRequest())
+            except Exception:
+                pass
         
         drive_service = build('drive', 'v3', credentials=creds)
         
@@ -1060,9 +1075,9 @@ def _create_from_template_and_data_ids_impl(
         print(f"{'='*60}\n")
         
         from google.oauth2.credentials import Credentials
+        from google.auth.transport.requests import Request as AuthRequest
         from googleapiclient.discovery import build
         
-        # Build Drive service
         creds = Credentials(
             token=credentials_dict.get("access_token"),
             refresh_token=credentials_dict.get("refresh_token"),
@@ -1070,6 +1085,11 @@ def _create_from_template_and_data_ids_impl(
             client_id=credentials_dict.get("client_id"),
             client_secret=credentials_dict.get("client_secret")
         )
+        if creds.refresh_token:
+            try:
+                creds.refresh(AuthRequest())
+            except Exception:
+                pass
         
         drive_service = build('drive', 'v3', credentials=creds)
         

@@ -16,6 +16,7 @@ from tools import (
     _update_entire_doc_impl,
     _create_doc_with_content_impl,
     _add_text_from_file_impl,
+    _list_user_docs_impl,
 )
 from dotenv import load_dotenv
 
@@ -127,6 +128,9 @@ def _parse_tool_result(tool_name: str, raw: str, inputs: Dict[str, Any]) -> Dict
             "document_url": doc_url,
             "text_length": int(length_match.group(1)) if length_match else len(inputs.get("new_content", "")),
         }
+
+    if tool_name == "list_my_docs":
+        return {"success": True, "message": raw}
 
     return {"success": True, "raw_response": raw}
 
@@ -420,6 +424,7 @@ async def execute_task(request: AgentTaskRequest):
             "update_doc": _update_entire_doc_impl,
             "create_doc_with_content": _create_doc_with_content_impl,
             "add_text_from_file": _add_text_from_file_impl,
+            "list_my_docs": _list_user_docs_impl,
         }
 
         DICT_RETURNING_TOOLS = {"create_doc_with_content", "add_text_from_file"}

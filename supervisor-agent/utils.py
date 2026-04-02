@@ -94,8 +94,18 @@ Example: ["gmail_agent", "docs_agent"]"""
         agent_list = json.loads(response.content.strip())
         return agent_list
     except Exception as e:
-        # Check if this is an LLM service error (rate limit, quota, etc.)
         if is_llm_error(e):
+            logger.llm_call(
+                model=CLASSIFIER_MODEL,
+                operation="agent_classification",
+                input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
+                output_tokens=0,
+                duration_ms=(time.time() - start_time) * 1000 if 'start_time' in locals() else 0,
+                tier="classifier",
+                prompt_summary=f"Classifying agents for: {user_input[:50]}...",
+                success=False,
+                error=str(e),
+            )
             logger.error(f"LLM service error during agent classification: {e}")
             raise LLMServiceException(handle_llm_error(e))
         # For other errors (like JSON parse), log and fall back to all agents
@@ -162,7 +172,14 @@ def call_agent_with_retry(
                     return result
                 else:
                     # Agent returned error but HTTP was successful
+                    error_type = result.get("error_type", "")
                     print(f"⚠️ Agent reported error: {result.get('error')}")
+
+                    _NO_RETRY_TYPES = {"conflict", "validation_error", "not_found", "permission_denied"}
+                    if error_type in _NO_RETRY_TYPES:
+                        print(f"   ⛔ Non-retryable error type: {error_type}")
+                        return result
+
                     if attempt < max_retries - 1:
                         wait_time = backoff_factor**attempt
                         print(f"   Retrying in {wait_time}s...")

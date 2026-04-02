@@ -594,6 +594,33 @@ class StructuredLogger:
         level = LogLevel.INFO if success else LogLevel.ERROR
         self._log(level, f"LLM call: {operation}", component="llm", operation=operation, extra=extra)
         
+        # Persist to the dedicated llm_calls table for analytics queries
+        try:
+            storage = get_log_storage()
+            if storage:
+                storage.insert_llm_call(
+                    timestamp=datetime.utcnow().isoformat() + "Z",
+                    model=model,
+                    operation=operation,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    total_tokens=input_tokens + output_tokens,
+                    estimated_cost_usd=cost,
+                    duration_ms=duration_ms,
+                    success=success,
+                    request_id=request_id,
+                    conversation_id=conversation_id,
+                    tier=tier,
+                    prompt_summary=prompt_summary[:100] if prompt_summary else None,
+                    error=error,
+                    cumulative_tokens=token_summary.total_tokens if token_summary else None,
+                    cumulative_cost_usd=round(token_summary.total_estimated_cost, 6) if token_summary else None,
+                    user_id=user_id,
+                    service="supervisor",
+                )
+        except Exception:
+            pass
+        
         # Visible print so token usage appears in execution logs / console
         status_icon = "✅" if success else "❌"
         cached_note = f", cached={cached_tokens}" if cached_tokens > 0 else ""

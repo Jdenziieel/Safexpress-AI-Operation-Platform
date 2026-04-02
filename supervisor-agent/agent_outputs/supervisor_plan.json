@@ -1,16 +1,14 @@
 {
   "steps": [
     {
-      "agent": "gmail_agent",
-      "tool": "search_emails",
+      "agent": "calendar_agent",
+      "tool": "list_events",
       "inputs": {
-        "query": "from:lance",
-        "max_results": 3
+        "time_min": "2026-04-05T06:00:00",
+        "time_max": "2026-04-05T17:00:00"
       },
-      "output_variables": {
-        "emails_from_lance": "emails"
-      },
-      "description": "Search for emails from Lance"
+      "output_variables": {},
+      "description": "Check for any appointments on Friday, April 5, 2026, from 6AM to 5PM"
     }
   ]
 }

@@ -80,6 +80,11 @@ def get_session_drive_service(session_creds: Dict):
                         session_creds['client_secret'] = creds_file['web']['client_secret']
         
         creds = Credentials(**session_creds)
+        if creds.refresh_token:
+            try:
+                creds.refresh(Request())
+            except Exception:
+                pass
         return build('drive', 'v3', credentials=creds)
     except Exception as e:
         print(f"❌ Error creating Drive service: {e}")

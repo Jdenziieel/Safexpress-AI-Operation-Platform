@@ -30,7 +30,7 @@ def generate_token():
     if os.path.exists(TOKEN_PATH):
         print(f"⚠️ Token already exists at {TOKEN_PATH}")
         response = input("Delete and regenerate? (yes/no): ")
-        if response.lower() != 'yes':
+        if response.lower() not in ('yes', 'y'):
             print("❌ Aborted")
             return
         os.remove(TOKEN_PATH)
@@ -99,7 +99,7 @@ def generate_token():
             print("   3. Run this script again")
             
             response = input("\n   Continue saving token anyway? (yes/no): ")
-            if response.lower() != 'yes':
+            if response.lower() not in ('yes', 'y'):
                 print("❌ Aborted - token not saved")
                 return
         

@@ -7,6 +7,7 @@ querying, searching, and managing system logs.
 
 from fastapi import APIRouter, HTTPException
 from typing import Optional
+from datetime import datetime, timedelta
 from log_storage import LogStorage
 
 router = APIRouter(tags=["logs"])
@@ -126,6 +127,7 @@ async def search_logs(
 
 @router.get("/logs/stats")
 async def get_log_stats(
+    period: Optional[str] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None
 ):
@@ -133,15 +135,20 @@ async def get_log_stats(
     Get log statistics including token usage and cost summary.
     
     Query Parameters:
+        - period: Shorthand time range (1h, 6h, 24h, 7d, 30d). Ignored when start_time is provided.
         - start_time: Start of time range (ISO format)
         - end_time: End of time range (ISO format)
     
     Returns:
-        - token_summary: Total tokens and costs
+        - token_summary: Total tokens and costs (totals, by_model, by_tier, by_operation)
         - request_analytics: Per-request analytics
-        - log_level_counts: Count of logs by level
+        - time_range: Resolved time boundaries
     """
     try:
+        _PERIOD_HOURS = {"1h": 1, "6h": 6, "24h": 24, "7d": 168, "30d": 720}
+        if not start_time and period and period in _PERIOD_HOURS:
+            start_time = (datetime.utcnow() - timedelta(hours=_PERIOD_HOURS[period])).isoformat() + "Z"
+
         storage = LogStorage()
         
         token_summary = storage.get_token_summary(start_time, end_time)
@@ -152,7 +159,8 @@ async def get_log_stats(
             "request_analytics": request_analytics,
             "time_range": {
                 "start": start_time,
-                "end": end_time
+                "end": end_time,
+                "period": period
             }
         }
         

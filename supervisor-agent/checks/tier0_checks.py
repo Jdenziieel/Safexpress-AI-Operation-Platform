@@ -593,8 +593,9 @@ What would you like to do?"""
             return None
 
         is_awaiting_confirmation = (
-            conversation_state.ready_for_execution and
-            conversation_state.intent == ConversationIntent.READY_TO_EXECUTE
+            not conversation_state.ready_for_execution
+            and conversation_state.intent == ConversationIntent.READY_TO_EXECUTE
+            and not conversation_state.missing_fields
         )
 
         if not is_awaiting_confirmation:

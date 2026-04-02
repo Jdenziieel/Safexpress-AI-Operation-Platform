@@ -41,8 +41,11 @@ def _get_tool_filter_system_prompt() -> str:
 Available tools by agent:
 {json.dumps(compact_tools, indent=2)}
 
-Return ONLY a JSON object mapping agent names to arrays of tool names.
-Include ONLY the agents and tools that will actually be used. Less is better.
+RULES:
+- For ANY email sending (not forwarding/replying): ALWAYS include "create_draft_email" AND "send_draft_email". Only include "send_email_with_attachment" when user explicitly mentions attaching a LOCAL FILE.
+- Return ONLY a JSON object mapping agent names to arrays of tool names.
+- Include ONLY the agents and tools that will actually be used. Less is better.
+
 Example: {{"gmail_agent": ["search_emails", "reply_to_email"], "calendar_agent": ["create_event"]}}"""
 
     return _cached_system_prompt
@@ -111,10 +114,42 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                 valid_tools = [t for t in tools if t in agent_capabilities[agent]["tools"]]
                 if valid_tools:
                     validated[agent] = valid_tools
+
+        # Post-processing: keyword safety net — if the user mentions
+        # email/cc/bcc keywords but the classifier missed gmail_agent,
+        # inject the draft workflow tools so the plan can include emailing.
+        _EMAIL_KEYWORDS = {"email", "cc", "bcc", "send an email", "mail", "send email"}
+        input_lower = user_input.lower()
+        if "gmail_agent" not in validated and any(kw in input_lower for kw in _EMAIL_KEYWORDS):
+            validated["gmail_agent"] = ["create_draft_email", "send_draft_email"]
+
+        # Enforce draft workflow: if gmail_agent is present with any
+        # sending tool, ensure create_draft_email + send_draft_email exist.
+        _EMAIL_SEND_TOOLS = {"send_email_with_attachment", "send_email", "create_draft_email", "send_draft_email"}
+        _DRAFT_PAIR = ["create_draft_email", "send_draft_email"]
+        if "gmail_agent" in validated:
+            gmail_tools = validated["gmail_agent"]
+            if any(t in _EMAIL_SEND_TOOLS for t in gmail_tools):
+                gmail_caps = agent_capabilities.get("gmail_agent", {}).get("tools", {})
+                for dt in _DRAFT_PAIR:
+                    if dt not in gmail_tools and dt in gmail_caps:
+                        gmail_tools.append(dt)
+
         return validated
 
     except Exception as e:
         if is_llm_error(e):
+            logger.llm_call(
+                model=CLASSIFIER_MODEL,
+                operation="agent_tool_classification",
+                input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
+                output_tokens=0,
+                duration_ms=(time.time() - start_time) * 1000 if 'start_time' in locals() else 0,
+                tier="classifier",
+                prompt_summary=f"Classifying agents+tools for: {user_input[:50]}...",
+                success=False,
+                error=str(e),
+            )
             logger.error(f"LLM service error during agent+tool classification: {e}")
             raise LLMServiceException(handle_llm_error(e))
         # Fallback: return all agents with all tools

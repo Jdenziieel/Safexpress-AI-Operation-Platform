@@ -2,6 +2,7 @@ import os
 from typing import Dict, Any, List
 from langchain.tools import tool
 from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from email.mime.text import MIMEText
@@ -52,7 +53,6 @@ def _extract_body_from_payload(payload: dict) -> str:
 
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
 
-    # credentials for google services
     creds = Credentials(
         token=credentials_dict["access_token"],
         refresh_token=credentials_dict.get("refresh_token"),
@@ -61,11 +61,19 @@ def get_google_service(service_name: str, version: str, credentials_dict: Dict):
         client_secret=credentials_dict.get("client_secret", ""),
     )
 
+    # Proactively refresh: access_token from the supervisor may be stale.
+    # No `expiry` is set so creds.expired is always False; refresh explicitly.
+    if creds.refresh_token:
+        try:
+            creds.refresh(Request())
+        except Exception:
+            pass
+
     service = build(service_name, version, credentials=creds)
     return service
 
 
-def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -> Dict[str, Any]:
+def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict, cc: str = None, bcc: str = None) -> Dict[str, Any]:
     """
     Implementation of sending email logic
 
@@ -74,6 +82,8 @@ def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -
         subject: Subject of the email
         body: Email body text
         credentials_dict: Google OAuth credentials
+        cc: CC recipient(s), comma-separated
+        bcc: BCC recipient(s), comma-separated
 
     Returns:
         Dictionary with success status and email details
@@ -85,6 +95,10 @@ def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -
         message = MIMEText(body)
         message["to"] = to
         message["subject"] = subject
+        if cc:
+            message["cc"] = cc
+        if bcc:
+            message["bcc"] = bcc
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
@@ -264,7 +278,7 @@ def _search_emails_impl(
 
 # checking - status:
 def _send_email_with_attachments_impl(
-    to: str, subject: str, body: str, file_path: str, credentials_dict: Dict
+    to: str, subject: str, body: str, file_path: str, credentials_dict: Dict, cc: str = None, bcc: str = None
 ) -> Dict[str, Any]:
     """Send email with attachment via Gmail"""
     try:
@@ -275,6 +289,10 @@ def _send_email_with_attachments_impl(
         message = MIMEMultipart()
         message["to"] = to
         message["subject"] = subject
+        if cc:
+            message["cc"] = cc
+        if bcc:
+            message["bcc"] = bcc
 
         message.attach(MIMEText(body, "plain"))
 
@@ -661,7 +679,7 @@ def _get_thread_conversation_impl(thread_id: str, credentials_dict: Dict) -> Dic
 
 # checking - status: Done
 def _create_draft_email_impl(
-    to: str, subject: str, body: str, credentials_dict: Dict
+    to: str, subject: str, body: str, credentials_dict: Dict, cc: str = None, bcc: str = None
 ) -> Dict[str, Any]:
     """Create a draft email in Gmail"""
     try:
@@ -672,6 +690,10 @@ def _create_draft_email_impl(
         message = MIMEText(body)
         message["to"] = to
         message["subject"] = subject
+        if cc:
+            message["cc"] = cc
+        if bcc:
+            message["bcc"] = bcc
 
         # encode message
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()

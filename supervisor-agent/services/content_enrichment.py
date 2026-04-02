@@ -17,6 +17,7 @@ from typing import Dict, List, Optional, Any
 from langchain_openai import ChatOpenAI
 from execution_logger import trace
 from logging_config import memory_logger as logger
+from llm_error_handler import is_llm_error
 
 # Type A tasks produce short inline content
 INLINE_TASKS = {"generate_subject", "generate_title", "generate_summary", "fix_grammar", "formalize_text"}
@@ -200,5 +201,17 @@ Original message: "{user_message}"{file_section}"""
         return EnrichmentResult(enriched_message=enriched_text, context_variables=context_variables)
 
     except Exception as e:
+        if is_llm_error(e):
+            logger.llm_call(
+                model="gpt-4o-mini",
+                operation="content_enrichment",
+                input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
+                output_tokens=0,
+                duration_ms=(time.time() - start_time) * 1000 if 'start_time' in locals() else 0,
+                tier="enrichment",
+                prompt_summary=f"Enriching: {', '.join(task_set)}",
+                success=False,
+                error=str(e),
+            )
         trace.warning("Enrichment: LLM call failed, returning original message", {"error": str(e)})
         return EnrichmentResult(enriched_message=user_message, context_variables=context_variables)

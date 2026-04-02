@@ -79,6 +79,8 @@ class LogStorage:
                 timestamp TEXT NOT NULL,
                 request_id TEXT,
                 conversation_id TEXT,
+                user_id TEXT,
+                service TEXT DEFAULT 'supervisor',
                 model TEXT NOT NULL,
                 tier TEXT,
                 operation TEXT,
@@ -95,6 +97,16 @@ class LogStorage:
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        
+        # Migration: add columns if they don't exist (for existing databases)
+        try:
+            cursor.execute("ALTER TABLE llm_calls ADD COLUMN user_id TEXT")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE llm_calls ADD COLUMN service TEXT DEFAULT 'supervisor'")
+        except Exception:
+            pass
         
         # Agent calls table (for execution tracking)
         cursor.execute("""
@@ -173,6 +185,8 @@ class LogStorage:
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_request_id ON llm_calls(request_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_timestamp ON llm_calls(timestamp)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_model ON llm_calls(model)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_user_id ON llm_calls(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_operation ON llm_calls(operation)")
         
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_agent_request_id ON agent_calls(request_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_agent_timestamp ON agent_calls(timestamp)")
@@ -290,23 +304,25 @@ class LogStorage:
         prompt_summary: Optional[str] = None,
         error: Optional[str] = None,
         cumulative_tokens: Optional[int] = None,
-        cumulative_cost_usd: Optional[float] = None
+        cumulative_cost_usd: Optional[float] = None,
+        user_id: Optional[str] = None,
+        service: str = "supervisor"
     ) -> int:
         """Insert an LLM call record"""
         conn = self._get_connection()
         cursor = conn.cursor()
         
         cursor.execute("""
-            INSERT INTO llm_calls (timestamp, request_id, conversation_id, model, tier,
-                                  operation, input_tokens, output_tokens, total_tokens,
-                                  estimated_cost_usd, duration_ms, success, prompt_summary,
-                                  error, cumulative_tokens, cumulative_cost_usd)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO llm_calls (timestamp, request_id, conversation_id, user_id, service,
+                                  model, tier, operation, input_tokens, output_tokens,
+                                  total_tokens, estimated_cost_usd, duration_ms, success,
+                                  prompt_summary, error, cumulative_tokens, cumulative_cost_usd)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            timestamp, request_id, conversation_id, model, tier,
-            operation, input_tokens, output_tokens, total_tokens,
-            estimated_cost_usd, duration_ms, 1 if success else 0, prompt_summary,
-            error, cumulative_tokens, cumulative_cost_usd
+            timestamp, request_id, conversation_id, user_id, service,
+            model, tier, operation, input_tokens, output_tokens,
+            total_tokens, estimated_cost_usd, duration_ms, 1 if success else 0,
+            prompt_summary, error, cumulative_tokens, cumulative_cost_usd
         ))
         
         call_id = cursor.lastrowid
@@ -710,13 +726,16 @@ class LogStorage:
         
         totals = dict(cursor.fetchone())
         
-        # Group by model
+        # Group by model (with input/output split)
         cursor.execute(f"""
             SELECT 
                 model,
                 COUNT(*) as calls,
+                SUM(input_tokens) as input_tokens,
+                SUM(output_tokens) as output_tokens,
                 SUM(total_tokens) as tokens,
-                SUM(estimated_cost_usd) as cost_usd
+                SUM(estimated_cost_usd) as cost_usd,
+                AVG(duration_ms) as avg_duration_ms
             FROM llm_calls
             WHERE 1=1 {time_filter}
             GROUP BY model
@@ -740,12 +759,29 @@ class LogStorage:
         
         by_tier = [dict(row) for row in cursor.fetchall()]
         
+        # Group by operation
+        cursor.execute(f"""
+            SELECT 
+                operation,
+                COUNT(*) as calls,
+                SUM(total_tokens) as tokens,
+                SUM(estimated_cost_usd) as cost_usd,
+                GROUP_CONCAT(DISTINCT model) as models_used
+            FROM llm_calls
+            WHERE 1=1 {time_filter}
+            GROUP BY operation
+            ORDER BY cost_usd DESC
+        """, params)
+        
+        by_operation = [dict(row) for row in cursor.fetchall()]
+        
         conn.close()
         
         return {
             "totals": totals,
             "by_model": by_model,
-            "by_tier": by_tier
+            "by_tier": by_tier,
+            "by_operation": by_operation
         }
     
     def get_token_summary(

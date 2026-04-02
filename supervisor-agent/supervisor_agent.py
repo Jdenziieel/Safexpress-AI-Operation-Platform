@@ -362,7 +362,7 @@ PLANNING RULES:
 2. Declare output_variables as {{"new_name": "source_field"}} to rename fields from tool's "returns"
 3. Break tasks into sequential steps with clear data flow
 4. Use {{{{ today_date }}}} for date references (format: YYYY-MM-DD). For relative dates (yesterday, last week, etc.), compute from today_date.
-5. For ANY email sending: create_draft_email first, then optionally send_draft_email if explicitly requested
+5. For ANY email sending: create_draft_email first, then send_draft_email. Only use send_email_with_attachment when a LOCAL file (uploaded_file or downloaded path) must be attached — NEVER pass URLs/links as file_path; embed them in the email body instead.
 6. Follow tool-specific instructions in the capabilities (array_access hints, workflow definitions, can_be_derived_from)
 7. When uploaded_file is present in context: use {{{{ uploaded_file.temp_path }}}} for file_path inputs and {{{{ uploaded_file.filename }}}} for filename inputs.
 
@@ -428,12 +428,7 @@ Available agents and tools:
         execution_plan = result["parsed"]
         parsing_error = result.get("parsing_error")
 
-        if parsing_error:
-            raise ValueError(f"Plan parsing failed: {parsing_error}")
-        if execution_plan is None:
-            raise ValueError("Structured output returned None — LLM did not produce a valid plan")
-
-        # Real token tracking from the raw AIMessage
+        # Extract tokens BEFORE validation so they're logged even on parse failure
         input_tokens = 0
         output_tokens = 0
         cached_tokens = 0
@@ -442,6 +437,23 @@ Available agents and tools:
             input_tokens = token_usage.get('prompt_tokens', 0)
             output_tokens = token_usage.get('completion_tokens', 0)
             cached_tokens = token_usage.get('prompt_tokens_details', {}).get('cached_tokens', 0)
+
+        if parsing_error or execution_plan is None:
+            logger.llm_call(
+                model=LLM_MODEL,
+                operation="plan_generation",
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                duration_ms=duration_ms,
+                tier="supervisor",
+                prompt_summary=f"Planning: {user_input[:50]}...",
+                success=False,
+                cached_tokens=cached_tokens,
+                error=str(parsing_error) if parsing_error else "Structured output returned None",
+            )
+            if parsing_error:
+                raise ValueError(f"Plan parsing failed: {parsing_error}")
+            raise ValueError("Structured output returned None — LLM did not produce a valid plan")
 
         logger.llm_call(
             model=LLM_MODEL,
@@ -468,6 +480,17 @@ Available agents and tools:
 
     except Exception as e:
         if is_llm_error(e):
+            logger.llm_call(
+                model=LLM_MODEL,
+                operation="plan_generation",
+                input_tokens=(len(system_prompt) + len(user_input)) // 4,
+                output_tokens=0,
+                duration_ms=(time.time() - start_time) * 1000 if 'start_time' in locals() else 0,
+                tier="supervisor",
+                prompt_summary=f"Planning: {user_input[:50]}...",
+                success=False,
+                error=str(e),
+            )
             raise LLMServiceException(handle_llm_error(e))
         error_msg = f"Failed to generate plan: {str(e)}"
         print(f"❌ {error_msg}")
