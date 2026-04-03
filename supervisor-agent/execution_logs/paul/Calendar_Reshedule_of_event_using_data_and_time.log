@@ -1,0 +1,548 @@
+[2026-04-03 22:00:13.267] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd] → REQUEST: POST /threads/0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd/messages  | {"query": null}
+[2026-04-03 22:00:17.727] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   USER MSG: "Can you please reschedule my meeting on April 7 10AM-12PM to April 9 7AM-9AM"
+[2026-04-03 22:00:17.729] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:00:17.735] [PRINT]   📨  NEW MESSAGE  │  thread: 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd
+[2026-04-03 22:00:17.742] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:00:17.750] [PRINT]   User: Can you please reschedule my meeting on April 7 10AM-12PM to April 9 7AM-9AM
+[2026-04-03 22:00:17.759] [PRINT]   ConversationState:
+[2026-04-03 22:00:17.767] [PRINT]     extracted_info: {}
+[2026-04-03 22:00:17.774] [PRINT]     missing_fields: []
+[2026-04-03 22:00:17.785] [PRINT]     intent: null
+[2026-04-03 22:00:17.792] [PRINT]     clarification_question: null
+[2026-04-03 22:00:17.798] [PRINT]     ready_for_execution: false
+[2026-04-03 22:00:17.805] [PRINT]     execution_summary: null
+[2026-04-03 22:00:17.813] [PRINT]     execution_mode: "standard"
+[2026-04-03 22:00:17.819] [PRINT]     execution_history: [{"executed_at": "2026-04-03T13:58:25.208072+00:00", "status": "success", "message": "Workflow executed successfully"}]
+[2026-04-03 22:00:17.824] [PRINT]     completed_tasks: [{"task_type": "calendar_agent.create_event", "params_summary": "summary: Meeting, start_time: 2026-04-07T10:00:00", "status": "success", "result_summary": "event_id: q0m6d146pg4ligoaddgeu7ocpc", "timestamp": "2026-04-03T13:58:25.208072+00:00"}]
+[2026-04-03 22:00:17.830] [PRINT]     has_executed: true
+[2026-04-03 22:00:17.836] [PRINT]     last_executed_at: "2026-04-03T13:58:25.208072+00:00"
+[2026-04-03 22:00:17.842] [PRINT]     last_execution_status: "success"
+[2026-04-03 22:00:17.848] [PRINT]     last_execution_message: "Workflow executed successfully"
+[2026-04-03 22:00:17.855] [PRINT]     executing: false
+[2026-04-03 22:00:17.861] [PRINT]     pending_actions: []
+[2026-04-03 22:00:17.867] [PRINT]     workflow_paused: false
+[2026-04-03 22:00:17.873] [PRINT]     remaining_steps: []
+[2026-04-03 22:00:17.879] [PRINT]     workflow_context: null
+[2026-04-03 22:00:17.886] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:00:17.891] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   STEP [new_message]: thread=0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd, msg=Can you please reschedule my meeting on April 7 10AM-12PM to April 9 7AM-9AM
+[2026-04-03 22:00:17.892] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   INFO: Memory: added user message  | {"tokens": 32, "total": 438, "max": 2000}
+[2026-04-03 22:00:17.896] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-03 22:00:17.897] [PRINT] 
+[2026-04-03 22:00:17.897] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:00:17.902] [PRINT] 🔍 TIER 0.5 — Building prompt
+[2026-04-03 22:00:17.909] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:00:17.914] [PRINT]    bot_signal : (none)
+[2026-04-03 22:00:17.920] [PRINT]    state_block: (none)
+[2026-04-03 22:00:17.927] [PRINT]    file_context: (none)
+[2026-04-03 22:00:17.933] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:00:19.425] [PRINT]   💰 ✅ [0.5] gpt-4o-mini | tier_0.5_unified_check | in=561 out=34 | $0.0001 | 1425ms | cumulative: in=561 out=34 total=595 $0.0001
+[2026-04-03 22:00:19.434] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   STEP [tier0.5]: category: MODIFICATION, confidence: high
+    ↳ {"reasoning": "The user is requesting a change in the meeting schedule.", "raw_response": "{\n    \"category\": \"modification\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting a change in the meeting schedule.\"\n}"}
+[2026-04-03 22:00:19.434] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   STEP [tier0.5]: complex modification — proceeding to full analysis
+[2026-04-03 22:00:19.436] [PRINT] 
+[2026-04-03 22:00:19.436] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:00:19.447] [PRINT] 🧠 TIER 1 — Full Task Analysis
+[2026-04-03 22:00:19.456] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:00:19.464] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-03 22:00:19.464] [PRINT] 
+[2026-04-03 22:00:19.464] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-03 22:00:19.471] [PRINT] 🧠 BUILDING LLM CONTEXT
+[2026-04-03 22:00:19.479] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-03 22:00:19.489] [PRINT]    ✗ Summary: none
+[2026-04-03 22:00:19.497] [PRINT]    ✓ Recent messages: 6
+[2026-04-03 22:00:19.504] [PRINT]       USER: can you schedule me another meeting on April 7 10AM-12PM please invite pchua5644...
+[2026-04-03 22:00:19.510] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:00:19.510] [PRINT] 
+[2026-04-03 22:00:19.510] [PRINT] Please review the meeting event details before I execut...
+[2026-04-03 22:00:19.516] [PRINT]       USER: Yes
+[2026-04-03 22:00:19.522] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:00:19.522] [PRINT] 
+[2026-04-03 22:00:19.522] [PRINT] Please review the meeting event details before I execut...
+[2026-04-03 22:00:19.528] [PRINT]       ASSISTANT: ✅ Successfully created event 'Meeting' from 2026-04-07T10:00:00 to 2026-04-07T12...
+[2026-04-03 22:00:19.536] [PRINT]       USER: Can you please reschedule my meeting on April 7 10AM-12PM to April 9 7AM-9AM
+[2026-04-03 22:00:19.542] [PRINT] 
+[2026-04-03 22:00:19.542] [PRINT]    📏 Final context: 1285 chars (~321 tokens)
+[2026-04-03 22:00:19.548] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-03 22:00:19.554] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   STEP [context_built]: context assembled: summary=no, msgs=6, ~321 tokens  | {"has_summary": false, "recent_messages": 6, "context_chars": 1285, "context_tokens_est": 321}
+[2026-04-03 22:00:19.554] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-03 22:00:21.266] [PRINT]   💰 ✅ [classifier] gpt-3.5-turbo | agent_tool_classification | in=1037 out=15 | $0.0005 | 1661ms | cumulative: in=1598 out=49 total=1647 $0.0006
+[2026-04-03 22:00:21.273] [PRINT]    relevant_agents: ['calendar_agent']
+[2026-04-03 22:00:21.280] [PRINT]    capabilities (top-level): ['**CALENDAR_AGENT:**']
+[2026-04-03 22:00:21.286] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["calendar_agent"]}
+[2026-04-03 22:00:21.287] [PRINT]    user_prompt (1637 chars):
+[2026-04-03 22:00:21.292] [PRINT]      RECENT CONVERSATION:
+[2026-04-03 22:00:21.298] [PRINT]      USER: can you schedule me another meeting on April 7 10AM-12PM please invite pchua5644@gmail.com and please provide a google meet link too
+[2026-04-03 22:00:21.305] [PRINT]      ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:00:21.310] [PRINT]      
+[2026-04-03 22:00:21.316] [PRINT]      Please review the meeting event details before I execute:
+[2026-04-03 22:00:21.322] [PRINT]      
+[2026-04-03 22:00:21.328] [PRINT]      - **Summary**: Meeting
+[2026-04-03 22:00:21.335] [PRINT]      - **Date**: Thursday, April 7, 2026
+[2026-04-03 22:00:21.341] [PRINT]      - **Time**: 10:00 AM to 12:00 PM
+[2026-04-03 22:00:21.348] [PRINT]      - **Attendees**: pchua5644@gmail.com
+[2026-04-03 22:00:21.354] [PRINT]      - **Google Meet Link**: Included
+[2026-04-03 22:00:21.361] [PRINT]      
+[2026-04-03 22:00:21.367] [PRINT]      Let me know if you would like to proceed!
+[2026-04-03 22:00:21.374] [PRINT]      
+[2026-04-03 22:00:21.380] [PRINT]      ---
+[2026-04-03 22:00:21.387] [PRINT]      Reply **"yes"** to proceed or **"ca...
+[2026-04-03 22:00:21.394] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:00:36.162] [PRINT]   💰 ✅ [1] gpt-4 | tier_1_full_analysis | in=1163 out=366 | $0.0568 | 14734ms | cumulative: in=2761 out=415 total=3176 $0.0575
+[2026-04-03 22:00:36.169] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "update_event", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user wants to reschedule a meeting. The event_id can be derived from the original meeting time. The new start and end times have been provided.", "extracted_info": {"event_id": {"via list_events": "2026-04-07T10:00:00 to 2026-04-07T12:00:00"}, "new_start": "2026-04-09T07:00:00", "new_end": "2026-04-09T09:00:00"}}
+[2026-04-03 22:00:36.170] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-03 22:00:36.170] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Reschedule the meeting on April 7, 2026, from 10AM-12PM to April 9, 2026, from 7AM-9AM", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"calendar_agent": ["list_events", "update_event"]}, "event_id": {"via list_events": "2026-04-07T10:00:00 to 2026-04-07T12:00:00"}, "new_start": "2026-04-09T07:00:
+[2026-04-03 22:00:39.375] [PRINT]   💰 ✅ [formatter] gpt-4o-mini | confirmation_formatter | in=277 out=86 | $0.0001 | 3170ms | cumulative: in=3038 out=501 total=3539 $0.0576
+[2026-04-03 22:00:39.381] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   INFO: Memory: added assistant message
+    ↳ {"tokens": 117, "total": 555, "max": 2000, "response_preview": "✅ **Ready to execute!**\n\nYour meeting has been rescheduled. Please review the details below:\n\n- **Original Date & Time:** Thursday, April 7, 2026, from 10:00 AM to 12:00 PM\n- **New Date & Time:** Satu..."}
+[2026-04-03 22:00:39.399] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd]   BOT RESP: "✅ **Ready to execute!**
+
+Your meeting has been rescheduled. Please review the details below:
+
+- **Or..."
+[2026-04-03 22:00:39.407] [PRINT] 
+[2026-04-03 22:00:39.407] [PRINT] ============================================================
+[2026-04-03 22:00:39.412] [PRINT] 📊 REQUEST TOKEN SUMMARY
+[2026-04-03 22:00:39.418] [PRINT] ============================================================
+[2026-04-03 22:00:39.423] [PRINT]   LLM calls:        4
+[2026-04-03 22:00:39.429] [PRINT]   Total input:      3,038 tokens
+[2026-04-03 22:00:39.435] [PRINT]   Total output:     501 tokens
+[2026-04-03 22:00:39.441] [PRINT]   Total tokens:     3,539 tokens
+[2026-04-03 22:00:39.447] [PRINT]   Estimated cost:   $0.0576
+[2026-04-03 22:00:39.452] [PRINT]   Total duration:   21695ms (21.7s)
+[2026-04-03 22:00:39.458] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-03 22:00:39.464] [PRINT]   Breakdown by call:
+[2026-04-03 22:00:39.470] [PRINT]     1. gpt-4o-mini      in=561    out=34    $0.0001 1425ms
+[2026-04-03 22:00:39.476] [PRINT]     2. gpt-3.5-turbo    in=1037   out=15    $0.0005 1661ms
+[2026-04-03 22:00:39.481] [PRINT]     3. gpt-4            in=1163   out=366   $0.0568 14734ms
+[2026-04-03 22:00:39.487] [PRINT]     4. gpt-4o-mini      in=277    out=86    $0.0001 3170ms
+[2026-04-03 22:00:39.492] [PRINT] ============================================================
+[2026-04-03 22:00:43.222] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd] ← RESPONSE: 200 (29954ms)
+[2026-04-03 22:00:43.222] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd] ─────────: ──────────────────────────────────────────────────
+[2026-04-03 22:00:51.773] [INFO] [req_20260403140017_71bc1634] [T:53bf41dd] → REQUEST: POST /threads/0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd/messages  | {"query": null}
+[2026-04-03 22:00:56.196] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   USER MSG: "Yes"
+[2026-04-03 22:00:56.198] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:00:56.203] [PRINT]   📨  NEW MESSAGE  │  thread: 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd
+[2026-04-03 22:00:56.210] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:00:56.215] [PRINT]   User: Yes
+[2026-04-03 22:00:56.221] [PRINT]   ConversationState:
+[2026-04-03 22:00:56.227] [PRINT]     extracted_info: {"_cached_tool_filter": {"calendar_agent": ["list_events", "update_event"]}, "event_id": {"via list_events": "2026-04-07T10:00:00 to 2026-04-07T12:00:00"}, "new_start": "2026-04-09T07:00:00", "new_end": "2026-04-09T09:00:00"}
+[2026-04-03 22:00:56.233] [PRINT]     missing_fields: []
+[2026-04-03 22:00:56.239] [PRINT]     intent: "ready_to_execute"
+[2026-04-03 22:00:56.245] [PRINT]     clarification_question: null
+[2026-04-03 22:00:56.251] [PRINT]     ready_for_execution: false
+[2026-04-03 22:00:56.258] [PRINT]     execution_summary: "Reschedule the meeting on April 7, 2026, from 10AM-12PM to April 9, 2026, from 7AM-9AM"
+[2026-04-03 22:00:56.264] [PRINT]     execution_mode: "standard"
+[2026-04-03 22:00:56.270] [PRINT]     execution_history: [{"executed_at": "2026-04-03T13:58:25.208072+00:00", "status": "success", "message": "Workflow executed successfully"}]
+[2026-04-03 22:00:56.276] [PRINT]     completed_tasks: [{"task_type": "calendar_agent.create_event", "params_summary": "summary: Meeting, start_time: 2026-04-07T10:00:00", "status": "success", "result_summary": "event_id: q0m6d146pg4ligoaddgeu7ocpc", "timestamp": "2026-04-03T13:58:25.208072+00:00"}]
+[2026-04-03 22:00:56.282] [PRINT]     has_executed: true
+[2026-04-03 22:00:56.288] [PRINT]     last_executed_at: "2026-04-03T13:58:25.208072+00:00"
+[2026-04-03 22:00:56.295] [PRINT]     last_execution_status: "success"
+[2026-04-03 22:00:56.301] [PRINT]     last_execution_message: "Workflow executed successfully"
+[2026-04-03 22:00:56.307] [PRINT]     executing: false
+[2026-04-03 22:00:56.314] [PRINT]     pending_actions: []
+[2026-04-03 22:00:56.320] [PRINT]     workflow_paused: false
+[2026-04-03 22:00:56.326] [PRINT]     remaining_steps: []
+[2026-04-03 22:00:56.332] [PRINT]     workflow_context: null
+[2026-04-03 22:00:56.339] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:00:56.344] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   STEP [new_message]: thread=0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd, msg=Yes
+[2026-04-03 22:00:56.345] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   INFO: Memory: added user message  | {"tokens": 6, "total": 561, "max": 2000}
+[2026-04-03 22:00:56.349] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-03 22:00:56.350] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-03 22:00:56.350] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Reschedule the meeting on April 7, 2026, from 10AM-12PM to April 9, 2026, from 7AM-9AM", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"calendar_agent": ["update_event", "list_events"]}, "event_id": {"via list_events": "2026-04-07T10:00:00 to 2026-04-07T12:00:00"}, "new_start": "2026-04-09T07:00:0
+[2026-04-03 22:00:59.707] [PRINT]   💰 ✅ [formatter] gpt-4o-mini | confirmation_formatter | in=277 out=86 | $0.0001 | 3329ms | cumulative: in=277 out=86 total=363 $0.0001
+[2026-04-03 22:00:59.712] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   INFO: Memory: added assistant message
+    ↳ {"tokens": 117, "total": 678, "max": 2000, "response_preview": "✅ **Ready to execute!**\n\nYour meeting has been rescheduled. Please review the details below:\n\n- **Original Date & Time:** Thursday, April 7, 2026, from 10:00 AM to 12:00 PM\n- **New Date & Time:** Satu..."}
+[2026-04-03 22:00:59.730] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   BOT RESP [READY TO EXECUTE]: "✅ **Ready to execute!**
+
+Your meeting has been rescheduled. Please review the details below:
+
+- **Or..."
+[2026-04-03 22:00:59.730] [PRINT] 🚀 Thread 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd ready - executing workflow...
+[2026-04-03 22:00:59.737] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-03 22:00:59.754] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   WORKFLOW START: "Reschedule the meeting on April 7, 2026, from 10AM-12PM to April 9, 2026, from 7..." (0 steps)
+[2026-04-03 22:00:59.755] [PRINT] 📅 Date context: today=2026-04-03
+[2026-04-03 22:00:59.761] [PRINT] 🚀 Starting workflow execution (mode=standard)...
+[2026-04-03 22:00:59.766] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-03 22:00:59.768] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-03 22:00:59.774] [PRINT] 
+[2026-04-03 22:00:59.774] [PRINT] ============================================================
+[2026-04-03 22:00:59.781] [PRINT] 🧠 SUPERVISOR NODE - Planning Phase
+[2026-04-03 22:00:59.789] [PRINT] ============================================================
+[2026-04-03 22:00:59.795] [PRINT] 📥 User Input: Reschedule the meeting on April 7, 2026, from 10AM-12PM to April 9, 2026, from 7AM-9AM
+[2026-04-03 22:00:59.795] [PRINT] 
+[2026-04-03 22:00:59.795] [PRINT] Parameters:
+[2026-04-03 22:00:59.795] [PRINT] - event_id: {
+[2026-04-03 22:00:59.795] [PRINT]   "via list_events": "2026-04-07T10:00:00 to 2026-04-07T12:00:00"
+[2026-04-03 22:00:59.795] [PRINT] }
+[2026-04-03 22:00:59.795] [PRINT] - new_start: 2026-04-09T07:00:00
+[2026-04-03 22:00:59.795] [PRINT] - new_end: 2026-04-09T09:00:00
+[2026-04-03 22:00:59.801] [INFO] [-]   STEP [supervisor_node]: Planning for: Reschedule the meeting on April 7, 2026, from 10AM-12PM to April 9, 2026, from 7
+[2026-04-03 22:00:59.802] [PRINT] 📅 Context dates: today=2026-04-03
+[2026-04-03 22:00:59.808] [PRINT] 📌 Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-03 22:00:59.814] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['calendar_agent']
+[2026-04-03 22:00:59.814] [PRINT] 📌 Relevant agents: ['calendar_agent']
+[2026-04-03 22:00:59.820] [PRINT] 🔧 Filtered tools: {'calendar_agent': ['update_event', 'list_events']}
+[2026-04-03 22:00:59.826] [PRINT] 🤖 Calling LLM to generate multi-step plan...
+[2026-04-03 22:00:59.832] [PRINT] 💰 Token optimization:
+[2026-04-03 22:00:59.838] [PRINT]    Agents: 1/6
+[2026-04-03 22:00:59.844] [PRINT]    Tools: 2/44
+[2026-04-03 22:00:59.849] [PRINT]    Context size: 1,555 chars (~388 tokens)
+[2026-04-03 22:00:59.856] [INFO] [-]   STEP [plan_generation_start]: agents=1/6, tools=2/44, context_tokens~388
+[2026-04-03 22:01:09.562] [PRINT]   💰 ✅ [supervisor] gpt-4 | plan_generation | in=948 out=235 | $0.0425 | 9650ms | cumulative: in=1225 out=321 total=1546 $0.0426
+[2026-04-03 22:01:09.568] [PRINT] ✅ Plan generated successfully!
+[2026-04-03 22:01:09.574] [PRINT] 
+[2026-04-03 22:01:09.574] [PRINT] 📋 Generated Plan:
+[2026-04-03 22:01:09.574] [PRINT] {
+[2026-04-03 22:01:09.574] [PRINT]   "steps": [
+[2026-04-03 22:01:09.574] [PRINT]     {
+[2026-04-03 22:01:09.574] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 22:01:09.574] [PRINT]       "tool": "list_events",
+[2026-04-03 22:01:09.574] [PRINT]       "inputs": {
+[2026-04-03 22:01:09.574] [PRINT]         "time_min": "2026-04-07T10:00:00",
+[2026-04-03 22:01:09.574] [PRINT]         "time_max": "2026-04-07T12:00:00",
+[2026-04-03 22:01:09.574] [PRINT]         "max_results": 1
+[2026-04-03 22:01:09.574] [PRINT]       },
+[2026-04-03 22:01:09.574] [PRINT]       "output_variables": {
+[2026-04-03 22:01:09.574] [PRINT]         "event_id": "events[0].event_id"
+[2026-04-03 22:01:09.574] [PRINT]       },
+[2026-04-03 22:01:09.574] [PRINT]       "description": "Find the event on April 7, 2026, from 10AM-12PM"
+[2026-04-03 22:01:09.574] [PRINT]     },
+[2026-04-03 22:01:09.574] [PRINT]     {
+[2026-04-03 22:01:09.574] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 22:01:09.574] [PRINT]       "tool": "update_event",
+[2026-04-03 22:01:09.574] [PRINT]       "inputs": {
+[2026-04-03 22:01:09.574] [PRINT]         "event_id": "{{ event_id }}",
+[2026-04-03 22:01:09.574] [PRINT]         "new_start": "2026-04-09T07:00:00",
+[2026-04-03 22:01:09.574] [PRINT]         "new_end": "2026-04-09T09:00:00"
+[2026-04-03 22:01:09.574] [PRINT]       },
+[2026-04-03 22:01:09.574] [PRINT]       "output_variables": {},
+[2026-04-03 22:01:09.574] [PRINT]       "description": "Reschedule the event to April 9, 2026, from 7AM-9AM"
+[2026-04-03 22:01:09.574] [PRINT]     }
+[2026-04-03 22:01:09.574] [PRINT]   ]
+[2026-04-03 22:01:09.574] [PRINT] }
+[2026-04-03 22:01:09.582] [INFO] [-]   STEP [plan_generated]: 2 steps: calendar_agent.list_events, calendar_agent.update_event
+[2026-04-03 22:01:09.583] [PRINT] 
+[2026-04-03 22:01:09.583] [PRINT] 💾 Plan saved to: E:\capstone\New folder\latestupdatetes\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-03 22:01:09.590] [PRINT] ============================================================
+[2026-04-03 22:01:09.602] [PRINT] 
+[2026-04-03 22:01:09.602] [PRINT] ============================================================
+[2026-04-03 22:01:09.608] [PRINT] ⚙️ ORCHESTRATOR NODE - Execution Phase
+[2026-04-03 22:01:09.614] [PRINT] ============================================================
+[2026-04-03 22:01:09.621] [PRINT] ✅ Found 2 steps to execute
+[2026-04-03 22:01:09.627] [INFO] [-]   STEP [orchestrator_node]: 2 steps to execute
+[2026-04-03 22:01:09.628] [PRINT] 
+[2026-04-03 22:01:09.628] [PRINT] 📦 INITIAL CONTEXT:
+[2026-04-03 22:01:09.634] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:09.641] [PRINT]    today_date: 2026-04-03
+[2026-04-03 22:01:09.648] [PRINT]    _cached_tool_filter: dict (length: 1)
+[2026-04-03 22:01:09.654] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:09.662] [PRINT] ✅ Pre-flight credential check passed (5 fields)
+[2026-04-03 22:01:09.668] [PRINT] 
+[2026-04-03 22:01:09.668] [PRINT] ============================================================
+[2026-04-03 22:01:09.674] [PRINT] 📍 Step 1/2: calendar_agent.list_events
+[2026-04-03 22:01:09.680] [PRINT] 📝 Description: Find the event on April 7, 2026, from 10AM-12PM
+[2026-04-03 22:01:09.687] [PRINT] ============================================================
+[2026-04-03 22:01:09.700] [PRINT] ⚠️ Risk Level: safe
+[2026-04-03 22:01:09.705] [PRINT] 
+[2026-04-03 22:01:09.705] [PRINT] 🔄 Substituting variables in inputs...
+[2026-04-03 22:01:09.712] [PRINT]    Original inputs: {
+[2026-04-03 22:01:09.712] [PRINT]       "time_min": "2026-04-07T10:00:00",
+[2026-04-03 22:01:09.712] [PRINT]       "time_max": "2026-04-07T12:00:00",
+[2026-04-03 22:01:09.712] [PRINT]       "max_results": 1
+[2026-04-03 22:01:09.712] [PRINT] }
+[2026-04-03 22:01:09.719] [PRINT]    Substituted inputs: {
+[2026-04-03 22:01:09.719] [PRINT]       "time_min": "2026-04-07T10:00:00",
+[2026-04-03 22:01:09.719] [PRINT]       "time_max": "2026-04-07T12:00:00",
+[2026-04-03 22:01:09.719] [PRINT]       "max_results": 1
+[2026-04-03 22:01:09.719] [PRINT] }
+[2026-04-03 22:01:09.726] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-03 22:01:09.733] [INFO] [-]   STEP [variable_substitution]: step 1: calendar_agent.list_events  | {"inputs": {"time_min": "2026-04-07T10:00:00", "time_max": "2026-04-07T12:00:00", "max_results": 1}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-03 22:01:09.733] [PRINT] 
+[2026-04-03 22:01:09.733] [PRINT] 🌐 Calling agent microservice: http://localhost:8005/execute_task
+[2026-04-03 22:01:09.740] [PRINT] 
+[2026-04-03 22:01:09.740] [PRINT] 🔍 REQUEST PAYLOAD STRUCTURE:
+[2026-04-03 22:01:09.746] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:09.752] [PRINT]    Tool: list_events
+[2026-04-03 22:01:09.758] [PRINT]    Inputs keys: ['time_min', 'time_max', 'max_results']
+[2026-04-03 22:01:09.764] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-03 22:01:09.771] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-03 22:01:09.777] [PRINT]    Payload size: 740 bytes
+[2026-04-03 22:01:09.784] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:09.790] [PRINT] 
+[2026-04-03 22:01:09.790] [PRINT] 🚀 Sending request to agent...
+[2026-04-03 22:01:09.796] [PRINT]    URL: http://localhost:8005/execute_task
+[2026-04-03 22:01:09.802] [PRINT]    Timeout: 320 seconds
+[2026-04-03 22:01:09.808] [PRINT]    Max retries: 3
+[2026-04-03 22:01:09.814] [PRINT] 🔄 Attempt 1/3 calling http://localhost:8005/execute_task
+[2026-04-03 22:01:09.821] [PRINT]    ⏱️ Timeout set to: 320.0 seconds
+[2026-04-03 22:01:13.448] [PRINT] ✅ Agent call succeeded on attempt 1
+[2026-04-03 22:01:13.469] [PRINT] ⏱️ Agent call completed in 3679.43ms
+[2026-04-03 22:01:13.475] [PRINT] ✅ Agent response received
+[2026-04-03 22:01:13.482] [AGENT] [-]   AGENT: ✓ calendar_agent.list_events (3679ms)  | {"time_min": "2026-04-07T10:00:00", "time_max": "2026-04-07T12:00:00", "max_results": "1"}
+[2026-04-03 22:01:13.482] [PRINT] 
+[2026-04-03 22:01:13.482] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:13.488] [PRINT] 📦 FULL AGENT RESPONSE DATA:
+[2026-04-03 22:01:13.495] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:13.501] [PRINT] {
+[2026-04-03 22:01:13.501] [PRINT]   "success": true,
+[2026-04-03 22:01:13.501] [PRINT]   "events": [
+[2026-04-03 22:01:13.501] [PRINT]     {
+[2026-04-03 22:01:13.501] [PRINT]       "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:13.501] [PRINT]       "summary": "Meeting",
+[2026-04-03 22:01:13.501] [PRINT]       "start": "2026-04-07T10:00:00+08:00",
+[2026-04-03 22:01:13.501] [PRINT]       "start_formatted": "April 07, 2026 at 10:00 AM",
+[2026-04-03 22:01:13.501] [PRINT]       "end": "2026-04-07T12:00:00+08:00",
+[2026-04-03 22:01:13.501] [PRINT]       "location": "",
+[2026-04-03 22:01:13.501] [PRINT]       "attendees": [
+[2026-04-03 22:01:13.501] [PRINT]         "pchua5644@gmail.com"
+[2026-04-03 22:01:13.501] [PRINT]       ],
+[2026-04-03 22:01:13.501] [PRINT]       "attendee_count": 1
+[2026-04-03 22:01:13.501] [PRINT]     }
+[2026-04-03 22:01:13.501] [PRINT]   ],
+[2026-04-03 22:01:13.501] [PRINT]   "count": 1,
+[2026-04-03 22:01:13.501] [PRINT]   "message": "\ud83d\udcc5 Upcoming events:\n\n1. Meeting - April 07, 2026 at 10:00 AM \ud83d\udc65 (1 attendees)\n   \ud83c\udd94 ID: q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:13.501] [PRINT]   "error": null
+[2026-04-03 22:01:13.501] [PRINT] }
+[2026-04-03 22:01:13.508] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:13.515] [PRINT] 
+[2026-04-03 22:01:13.515] [PRINT] 📦 Variables added to context:
+[2026-04-03 22:01:13.522] [PRINT]    ✓ event_id = q0m6d146pg4ligoaddgeu7ocpc (from events[0].event_id)
+[2026-04-03 22:01:13.529] [PRINT] 
+[2026-04-03 22:01:13.529] [PRINT] 📊 CONTEXT AFTER STEP 1:
+[2026-04-03 22:01:13.535] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:13.541] [PRINT]    today_date: 2026-04-03
+[2026-04-03 22:01:13.548] [PRINT]    _cached_tool_filter: Dict with keys: ['calendar_agent']
+[2026-04-03 22:01:13.554] [PRINT]    step_1_calendar_agent: Dict with keys: ['events', 'count', 'message']
+[2026-04-03 22:01:13.560] [PRINT]    event_id: q0m6d146pg4ligoaddgeu7ocpc
+[2026-04-03 22:01:13.567] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:13.581] [PRINT] 
+[2026-04-03 22:01:13.581] [PRINT] ============================================================
+[2026-04-03 22:01:13.607] [PRINT] 📍 Step 2/2: calendar_agent.update_event
+[2026-04-03 22:01:13.613] [PRINT] 📝 Description: Reschedule the event to April 9, 2026, from 7AM-9AM
+[2026-04-03 22:01:13.620] [PRINT] ============================================================
+[2026-04-03 22:01:13.633] [PRINT] ⚠️ Risk Level: moderate
+[2026-04-03 22:01:13.639] [PRINT] 
+[2026-04-03 22:01:13.639] [PRINT] 🔄 Substituting variables in inputs...
+[2026-04-03 22:01:13.645] [PRINT]    Original inputs: {
+[2026-04-03 22:01:13.645] [PRINT]       "event_id": "{{ event_id }}",
+[2026-04-03 22:01:13.645] [PRINT]       "new_start": "2026-04-09T07:00:00",
+[2026-04-03 22:01:13.645] [PRINT]       "new_end": "2026-04-09T09:00:00"
+[2026-04-03 22:01:13.645] [PRINT] }
+[2026-04-03 22:01:13.652] [PRINT]    Substituted inputs: {
+[2026-04-03 22:01:13.652] [PRINT]       "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:13.652] [PRINT]       "new_start": "2026-04-09T07:00:00",
+[2026-04-03 22:01:13.652] [PRINT]       "new_end": "2026-04-09T09:00:00"
+[2026-04-03 22:01:13.652] [PRINT] }
+[2026-04-03 22:01:13.658] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_calendar_agent', 'event_id']
+[2026-04-03 22:01:13.664] [INFO] [-]   STEP [variable_substitution]: step 2: calendar_agent.update_event
+    ↳ {"inputs": {"event_id": "q0m6d146pg4ligoaddgeu7ocpc", "new_start": "2026-04-09T07:00:00", "new_end": "2026-04-09T09:00:00"}, "context_keys": ["today_date", "_cached_tool_filter", "step_1_calendar_agent", "event_id"]}
+[2026-04-03 22:01:13.665] [PRINT] 
+[2026-04-03 22:01:13.665] [PRINT] 🌐 Calling agent microservice: http://localhost:8005/execute_task
+[2026-04-03 22:01:13.672] [PRINT] 
+[2026-04-03 22:01:13.672] [PRINT] 🔍 REQUEST PAYLOAD STRUCTURE:
+[2026-04-03 22:01:13.678] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:13.684] [PRINT]    Tool: update_event
+[2026-04-03 22:01:13.690] [PRINT]    Inputs keys: ['event_id', 'new_start', 'new_end']
+[2026-04-03 22:01:13.696] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-03 22:01:13.703] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-03 22:01:13.708] [PRINT]    Payload size: 765 bytes
+[2026-04-03 22:01:13.714] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:13.720] [PRINT] 
+[2026-04-03 22:01:13.720] [PRINT] 🚀 Sending request to agent...
+[2026-04-03 22:01:13.726] [PRINT]    URL: http://localhost:8005/execute_task
+[2026-04-03 22:01:13.733] [PRINT]    Timeout: 320 seconds
+[2026-04-03 22:01:13.739] [PRINT]    Max retries: 3
+[2026-04-03 22:01:13.745] [PRINT] 🔄 Attempt 1/3 calling http://localhost:8005/execute_task
+[2026-04-03 22:01:13.751] [PRINT]    ⏱️ Timeout set to: 320.0 seconds
+[2026-04-03 22:01:17.943] [PRINT] ✅ Agent call succeeded on attempt 1
+[2026-04-03 22:01:17.984] [PRINT] ⏱️ Agent call completed in 4263.67ms
+[2026-04-03 22:01:17.990] [PRINT] ✅ Agent response received
+[2026-04-03 22:01:17.996] [AGENT] [-]   AGENT: ✓ calendar_agent.update_event (4264ms)  | {"event_id": "q0m6d146pg4ligoaddgeu7ocpc", "new_start": "2026-04-09T07:00:00", "new_end": "2026-04-09T09:00:00"}
+[2026-04-03 22:01:17.996] [PRINT] 
+[2026-04-03 22:01:17.996] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:18.001] [PRINT] 📦 FULL AGENT RESPONSE DATA:
+[2026-04-03 22:01:18.024] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:18.030] [PRINT] {
+[2026-04-03 22:01:18.030] [PRINT]   "success": true,
+[2026-04-03 22:01:18.030] [PRINT]   "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:18.030] [PRINT]   "event_url": "https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-03 22:01:18.030] [PRINT]   "changes": [
+[2026-04-03 22:01:18.030] [PRINT]     "start time to 2026-04-09T07:00:00",
+[2026-04-03 22:01:18.030] [PRINT]     "end time to 2026-04-09T09:00:00"
+[2026-04-03 22:01:18.030] [PRINT]   ],
+[2026-04-03 22:01:18.030] [PRINT]   "message": "\u270f\ufe0f Successfully updated 'Meeting': start time to 2026-04-09T07:00:00, end time to 2026-04-09T09:00:00 \ud83d\udce7 (attendees notified)\n\ud83d\udd17 View event: https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-03 22:01:18.030] [PRINT]   "error": null
+[2026-04-03 22:01:18.030] [PRINT] }
+[2026-04-03 22:01:18.036] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:18.042] [PRINT] 
+[2026-04-03 22:01:18.042] [PRINT] 📦 Variables added to context:
+[2026-04-03 22:01:18.049] [PRINT] 
+[2026-04-03 22:01:18.049] [PRINT] 📊 CONTEXT AFTER STEP 2:
+[2026-04-03 22:01:18.055] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:18.061] [PRINT]    today_date: 2026-04-03
+[2026-04-03 22:01:18.067] [PRINT]    _cached_tool_filter: Dict with keys: ['calendar_agent']
+[2026-04-03 22:01:18.073] [PRINT]    step_1_calendar_agent: Dict with keys: ['events', 'count', 'message']
+[2026-04-03 22:01:18.079] [PRINT]    event_id: q0m6d146pg4ligoaddgeu7ocpc
+[2026-04-03 22:01:18.086] [PRINT]    step_2_calendar_agent: Dict with keys: ['event_id', 'event_url', 'changes', 'message']
+[2026-04-03 22:01:18.091] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:01:18.104] [PRINT] 
+[2026-04-03 22:01:18.104] [PRINT] ============================================================
+[2026-04-03 22:01:18.109] [PRINT] ✅ ORCHESTRATOR COMPLETED
+[2026-04-03 22:01:18.115] [PRINT] ============================================================
+[2026-04-03 22:01:18.121] [PRINT] 📊 Total steps: 2
+[2026-04-03 22:01:18.127] [PRINT] ✓ Successful: 2
+[2026-04-03 22:01:18.133] [PRINT] ℹ️ No Results: 0
+[2026-04-03 22:01:18.140] [PRINT] ✗ Failed: 0
+[2026-04-03 22:01:18.146] [PRINT] ============================================================
+[2026-04-03 22:01:18.151] [INFO] [-]   STEP [orchestrator_complete]: steps=2, success=2, no_results=0, errors=0
+[2026-04-03 22:01:18.155] [PRINT] 
+[2026-04-03 22:01:18.155] [PRINT] ✅ Workflow completed successfully
+[2026-04-03 22:01:18.162] [INFO] [-]   WORKFLOW END: success (2/2 steps)
+[2026-04-03 22:01:18.163] [PRINT] 
+[2026-04-03 22:01:18.163] [PRINT] 📋 Generated Plan:
+[2026-04-03 22:01:18.163] [PRINT] {
+[2026-04-03 22:01:18.163] [PRINT]   "steps": [
+[2026-04-03 22:01:18.163] [PRINT]     {
+[2026-04-03 22:01:18.163] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 22:01:18.163] [PRINT]       "tool": "list_events",
+[2026-04-03 22:01:18.163] [PRINT]       "inputs": {
+[2026-04-03 22:01:18.163] [PRINT]         "time_min": "2026-04-07T10:00:00",
+[2026-04-03 22:01:18.163] [PRINT]         "time_max": "2026-04-07T12:00:00",
+[2026-04-03 22:01:18.163] [PRINT]         "max_results": 1
+[2026-04-03 22:01:18.163] [PRINT]       },
+[2026-04-03 22:01:18.163] [PRINT]       "output_variables": {
+[2026-04-03 22:01:18.163] [PRINT]         "event_id": "events[0].event_id"
+[2026-04-03 22:01:18.163] [PRINT]       },
+[2026-04-03 22:01:18.163] [PRINT]       "description": "Find the event on April 7, 2026, from 10AM-12PM"
+[2026-04-03 22:01:18.163] [PRINT]     },
+[2026-04-03 22:01:18.163] [PRINT]     {
+[2026-04-03 22:01:18.163] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 22:01:18.163] [PRINT]       "tool": "update_event",
+[2026-04-03 22:01:18.163] [PRINT]       "inputs": {
+[2026-04-03 22:01:18.163] [PRINT]         "event_id": "{{ event_id }}",
+[2026-04-03 22:01:18.163] [PRINT]         "new_start": "2026-04-09T07:00:00",
+[2026-04-03 22:01:18.163] [PRINT]         "new_end": "2026-04-09T09:00:00"
+[2026-04-03 22:01:18.163] [PRINT]       },
+[2026-04-03 22:01:18.163] [PRINT]       "output_variables": {},
+[2026-04-03 22:01:18.163] [PRINT]       "description": "Reschedule the event to April 9, 2026, from 7AM-9AM"
+[2026-04-03 22:01:18.163] [PRINT]     }
+[2026-04-03 22:01:18.163] [PRINT]   ]
+[2026-04-03 22:01:18.163] [PRINT] }
+[2026-04-03 22:01:18.171] [PRINT] 
+[2026-04-03 22:01:18.171] [PRINT] 📊 Final Context: {
+[2026-04-03 22:01:18.171] [PRINT]   "today_date": "2026-04-03",
+[2026-04-03 22:01:18.171] [PRINT]   "_cached_tool_filter": {
+[2026-04-03 22:01:18.171] [PRINT]     "calendar_agent": [
+[2026-04-03 22:01:18.171] [PRINT]       "update_event",
+[2026-04-03 22:01:18.171] [PRINT]       "list_events"
+[2026-04-03 22:01:18.171] [PRINT]     ]
+[2026-04-03 22:01:18.171] [PRINT]   },
+[2026-04-03 22:01:18.171] [PRINT]   "step_1_calendar_agent": {
+[2026-04-03 22:01:18.171] [PRINT]     "events": [
+[2026-04-03 22:01:18.171] [PRINT]       {
+[2026-04-03 22:01:18.171] [PRINT]         "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:18.171] [PRINT]         "summary": "Meeting",
+[2026-04-03 22:01:18.171] [PRINT]         "start": "2026-04-07T10:00:00+08:00",
+[2026-04-03 22:01:18.171] [PRINT]         "start_formatted": "April 07, 2026 at 10:00 AM",
+[2026-04-03 22:01:18.171] [PRINT]         "end": "2026-04-07T12:00:00+08:00",
+[2026-04-03 22:01:18.171] [PRINT]         "location": "",
+[2026-04-03 22:01:18.171] [PRINT]         "attendees": [
+[2026-04-03 22:01:18.171] [PRINT]           "pchua5644@gmail.com"
+[2026-04-03 22:01:18.171] [PRINT]         ],
+[2026-04-03 22:01:18.171] [PRINT]         "attendee_count": 1
+[2026-04-03 22:01:18.171] [PRINT]       }
+[2026-04-03 22:01:18.171] [PRINT]     ],
+[2026-04-03 22:01:18.171] [PRINT]     "count": 1,
+[2026-04-03 22:01:18.171] [PRINT]     "message": "\ud83d\udcc5 Upcoming events:\n\n1. Meeting - April 07, 2026 at 10:00 AM \ud83d\udc65 (1 attendees)\n   \ud83c\udd94 ID: q0m6d146pg4ligoaddgeu7ocpc"
+[2026-04-03 22:01:18.171] [PRINT]   },
+[2026-04-03 22:01:18.171] [PRINT]   "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:18.171] [PRINT]   "step_2_calendar_agent": {
+[2026-04-03 22:01:18.171] [PRINT]     "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:18.171] [PRINT]     "event_url": "https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-03 22:01:18.171] [PRINT]     "changes": [
+[2026-04-03 22:01:18.171] [PRINT]       "start time to 2026-04-09T07:00:00",
+[2026-04-03 22:01:18.171] [PRINT]       "end time to 2026-04-09T09:00:00"
+[2026-04-03 22:01:18.171] [PRINT]     ],
+[2026-04-03 22:01:18.171] [PRINT]     "message": "\u270f\ufe0f Successfully updated 'Meeting': start time to 2026-04-09T07:00:00, end time to 2026-04-09T09:00:00 \ud83d\udce7 (attendees notified)\n\ud83d\udd17 View event: https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA"
+[2026-04-03 22:01:18.171] [PRINT]   },
+[2026-04-03 22:01:18.171] [PRINT]   "results": [
+[2026-04-03 22:01:18.171] [PRINT]     {
+[2026-04-03 22:01:18.171] [PRINT]       "step": 1,
+[2026-04-03 22:01:18.171] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 22:01:18.171] [PRINT]       "tool": "list_events",
+[2026-04-03 22:01:18.171] [PRINT]       "description": "Find the event on April 7, 2026, from 10AM-12PM",
+[2026-04-03 22:01:18.171] [PRINT]       "inputs": {
+[2026-04-03 22:01:18.171] [PRINT]         "time_min": "2026-04-07T10:00:00",
+[2026-04-03 22:01:18.171] [PRINT]         "time_max": "2026-04-07T12:00:00",
+[2026-04-03 22:01:18.171] [PRINT]         "max_results": 1
+[2026-04-03 22:01:18.171] [PRINT]       },
+[2026-04-03 22:01:18.171] [PRINT]       "output": {
+[2026-04-03 22:01:18.171] [PRINT]         "success": true,
+[2026-04-03 22:01:18.171] [PRINT]         "events": [
+[2026-04-03 22:01:18.171] [PRINT]           {
+[2026-04-03 22:01:18.171] [PRINT]             "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:18.171] [PRINT]             "summary": "Meeting",
+[2026-04-03 22:01:18.171] [PRINT]             "start": "2026-04-07T10:00:00+08:00",
+[2026-04-03 22:01:18.171] [PRINT]             "start_formatted": "April 07, 2026 at 10:00 AM",
+[2026-04-03 22:01:18.171] [PRINT]             "end": "2026-04-07T12:00:00+08:00",
+[2026-04-03 22:01:18.171] [PRINT]             "location": "",
+[2026-04-03 22:01:18.171] [PRINT]             "attendees": [
+[2026-04-03 22:01:18.171] [PRINT]               "pchua5644@gmail.com"
+[2026-04-03 22:01:18.171] [PRINT]             ],
+[2026-04-03 22:01:18.171] [PRINT]             "attendee_count": 1
+[2026-04-03 22:01:18.171] [PRINT]           }
+[2026-04-03 22:01:18.171] [PRINT]         ],
+[2026-04-03 22:01:18.171] [PRINT]         "count": 1,
+[2026-04-03 22:01:18.171] [PRINT]         "message": "\ud83d\udcc5 Upcoming events:\n\n1. Meeting - April 07, 2026 at 10:00 AM \ud83d\udc65 (1 attendees)\n   \ud83c\udd94 ID: q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:18.171] [PRINT]         "error": null
+[2026-04-03 22:01:18.171] [PRINT]       },
+[2026-04-03 22:01:18.171] [PRINT]       "status": "success"
+[2026-04-03 22:01:18.171] [PRINT]     },
+[2026-04-03 22:01:18.171] [PRINT]     {
+[2026-04-03 22:01:18.171] [PRINT]       "step": 2,
+[2026-04-03 22:01:18.171] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 22:01:18.171] [PRINT]       "tool": "update_event",
+[2026-04-03 22:01:18.171] [PRINT]       "description": "Reschedule the event to April 9, 2026, from 7AM-9AM",
+[2026-04-03 22:01:18.171] [PRINT]       "inputs": {
+[2026-04-03 22:01:18.171] [PRINT]         "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:18.171] [PRINT]         "new_start": "2026-04-09T07:00:00",
+[2026-04-03 22:01:18.171] [PRINT]         "new_end": "2026-04-09T09:00:00"
+[2026-04-03 22:01:18.171] [PRINT]       },
+[2026-04-03 22:01:18.171] [PRINT]       "output": {
+[2026-04-03 22:01:18.171] [PRINT]         "success": true,
+[2026-04-03 22:01:18.171] [PRINT]         "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 22:01:18.171] [PRINT]         "event_url": "https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-03 22:01:18.171] [PRINT]         "changes": [
+[2026-04-03 22:01:18.171] [PRINT]           "start time to 2026-04-09T07:00:00",
+[2026-04-03 22:01:18.171] [PRINT]           "end time to 2026-04-09T09:00:00"
+[2026-04-03 22:01:18.171] [PRINT]         ],
+[2026-04-03 22:01:18.171] [PRINT]         "message": "\u270f\ufe0f Successfully updated 'Meeting': start time to 2026-04-09T07:00:00, end time to 2026-04-09T09:00:00 \ud83d\udce7 (attendees notified)\n\ud83d\udd17 View event: https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-03 22:01:18.171] [PRINT]         "error": null
+[2026-04-03 22:01:18.171] [PRINT]       },
+[2026-04-03 22:01:18.171] [PRINT]       "status": "success"
+[2026-04-03 22:01:18.171] [PRINT]     }
+[2026-04-03 22:01:18.171] [PRINT]   ]
+[2026-04-03 22:01:18.171] [PRINT] }
+[2026-04-03 22:01:18.178] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   STEP [response_composer]: template formatting  | {"total_steps": 2, "all_templated": true}
+[2026-04-03 22:01:18.179] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd]   INFO: Memory: added assistant message
+    ↳ {"tokens": 229, "total": 907, "max": 2000, "response_preview": "**Step 1** — Find the event on April 7, 2026, from 10AM-12PM:\n📅 Upcoming events:\n\n1. Meeting - April 07, 2026 at 10:00 AM 👥 (1 attendees)\n   🆔 ID: q0m6d146pg4ligoaddgeu7ocpc\n\n**Step 2** — Reschedule t..."}
+[2026-04-03 22:01:18.206] [PRINT] 
+[2026-04-03 22:01:18.206] [PRINT] ============================================================
+[2026-04-03 22:01:18.212] [PRINT] 📊 REQUEST TOKEN SUMMARY
+[2026-04-03 22:01:18.218] [PRINT] ============================================================
+[2026-04-03 22:01:18.225] [PRINT]   LLM calls:        2
+[2026-04-03 22:01:18.231] [PRINT]   Total input:      1,225 tokens
+[2026-04-03 22:01:18.238] [PRINT]   Total output:     321 tokens
+[2026-04-03 22:01:18.245] [PRINT]   Total tokens:     1,546 tokens
+[2026-04-03 22:01:18.251] [PRINT]   Estimated cost:   $0.0426
+[2026-04-03 22:01:18.257] [PRINT]   Total duration:   22032ms (22.0s)
+[2026-04-03 22:01:18.262] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-03 22:01:18.268] [PRINT]   Breakdown by call:
+[2026-04-03 22:01:18.274] [PRINT]     1. gpt-4o-mini      in=277    out=86    $0.0001 3329ms
+[2026-04-03 22:01:18.280] [PRINT]     2. gpt-4            in=948    out=235   $0.0425 9650ms
+[2026-04-03 22:01:18.286] [PRINT] ============================================================
+[2026-04-03 22:01:18.292] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd] ← RESPONSE: 200 (26520ms)
+[2026-04-03 22:01:18.293] [INFO] [req_20260403140056_0ea56fb7] [T:53bf41dd] ─────────: ──────────────────────────────────────────────────

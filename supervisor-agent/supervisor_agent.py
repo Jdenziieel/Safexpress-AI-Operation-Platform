@@ -197,6 +197,30 @@ async def broadcast_progress(thread_id: str, current_step: int, total_steps: int
         "status": status
     })
 
+
+def broadcast_progress_sync(step: int, total: int, step_name: str, agent: str = None, status: str = "executing"):
+    """Sync-safe wrapper: emit a WebSocket progress update from any context.
+
+    When called from a background thread (asyncio.to_thread), creates a
+    temporary event loop via asyncio.run().  When called from the event-loop
+    thread, schedules the coroutine as a task.
+    """
+    thread_id = get_current_thread_id()
+    if not thread_id:
+        return
+    coro = broadcast_progress(thread_id, step, total, step_name, agent, status)
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(coro)
+    except RuntimeError:
+        try:
+            asyncio.run(coro)
+        except Exception as e:
+            print(f"⚠️ WebSocket broadcast error: {e}")
+    except Exception as e:
+        print(f"⚠️ WebSocket broadcast error: {e}")
+
+
 # Initialize LLM
 llm = ChatOpenAI(
     model=LLM_MODEL, temperature=LLM_TEMPERATURE, openai_api_key=OPENAI_API_KEY
@@ -320,6 +344,9 @@ def supervisor_node(state: SharedState) -> SharedState:
     today_date = context.get("today_date", "")
     print(f"📅 Context dates: today={today_date}")
 
+    # === PROGRESS: Classifying agents ===
+    broadcast_progress_sync(0, 0, "Identifying the right tools...", status="classifying")
+
     # Reuse the tool filter from Tier 1 if available (avoids a redundant LLM call)
     cached_tool_filter = context.get("_cached_tool_filter")
     if cached_tool_filter:
@@ -398,6 +425,9 @@ Available agents and tools:
     total_tools = sum(len(tools) for tools in tool_filter.values())
     all_tools_count = sum(len(agent_capabilities[a]["tools"]) for a in agent_capabilities)
     
+    # === PROGRESS: Planning ===
+    broadcast_progress_sync(0, 0, "Creating execution plan...", status="planning")
+
     print("🤖 Calling LLM to generate multi-step plan...")
     print(f"💰 Token optimization:")
     print(f"   Agents: {len(relevant_agents)}/{len(agent_capabilities)}")
@@ -742,25 +772,8 @@ def orchestrator_node(state: SharedState) -> SharedState:
     trace.step("orchestrator_node", f"{len(plan)} steps to execute")
         
     
-    # Get thread_id from logging context for WebSocket broadcasting
-    thread_id = get_current_thread_id()
-    
-    # Helper to broadcast progress via WebSocket (handles sync context)
-    def broadcast_ws_progress(step: int, total: int, step_name: str, agent: str = None, status: str = "executing"):
-        if thread_id:
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # If we're in an async context, create a task
-                    asyncio.create_task(broadcast_progress(thread_id, step, total, step_name, agent, status))
-                else:
-                    # If no event loop is running, run synchronously
-                    loop.run_until_complete(broadcast_progress(thread_id, step, total, step_name, agent, status))
-            except RuntimeError:
-                # Create new event loop if none exists
-                asyncio.run(broadcast_progress(thread_id, step, total, step_name, agent, status))
-            except Exception as e:
-                print(f"⚠️ WebSocket broadcast error: {e}")
+    # Alias the global helper for local use
+    broadcast_ws_progress = broadcast_progress_sync
 
     # Print initial context
     print("\n📦 INITIAL CONTEXT:")

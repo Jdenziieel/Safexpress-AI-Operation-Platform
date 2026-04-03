@@ -1,0 +1,406 @@
+[2026-04-03 22:23:42.071] [INFO] [req_20260403142222_50a82a70] [T:53bf41dd] → REQUEST: POST /threads/0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd/messages  | {"query": null}
+[2026-04-03 22:23:46.485] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   USER MSG: "can you please edit my calendar named Evernight to Stelle?"
+[2026-04-03 22:23:46.487] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:23:46.493] [PRINT]   📨  NEW MESSAGE  │  thread: 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd
+[2026-04-03 22:23:46.499] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:23:46.506] [PRINT]   User: can you please edit my calendar named Evernight to Stelle?
+[2026-04-03 22:23:46.512] [PRINT]   ConversationState:
+[2026-04-03 22:23:46.518] [PRINT]     extracted_info: {}
+[2026-04-03 22:23:46.524] [PRINT]     missing_fields: []
+[2026-04-03 22:23:46.532] [PRINT]     intent: null
+[2026-04-03 22:23:46.537] [PRINT]     clarification_question: null
+[2026-04-03 22:23:46.544] [PRINT]     ready_for_execution: false
+[2026-04-03 22:23:46.549] [PRINT]     execution_summary: null
+[2026-04-03 22:23:46.555] [PRINT]     execution_mode: "standard"
+[2026-04-03 22:23:46.561] [PRINT]     execution_history: [{"executed_at": "2026-04-03T13:58:25.208072+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-03T14:00:59.754873+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-03T14:07:14.082077+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-03T14:09:57.011637+00:00", "status": "error", "message": "Step 1 (Update the name of the meeting on April 9, 7-9am to 'TestEditName') could not proceed \u2014 required data was not available from a previous step."}, {"executed_at": "2026-04-03T14:15:14.680394+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-03T14:19:40.758594+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-03T14:22:25.543459+00:00", "status": "success", "message": "Workflow executed successfully"}]
+[2026-04-03 22:23:46.567] [PRINT]     completed_tasks: [{"task_type": "calendar_agent.create_event", "params_summary": "summary: Meeting, start_time: 2026-04-07T10:00:00", "status": "success", "result_summary": "event_id: q0m6d146pg4ligoaddgeu7ocpc", "timestamp": "2026-04-03T13:58:25.208072+00:00"}, {"task_type": "calendar_agent.list_events", "params_summary": "time_min: 2026-04-07T10:00:00, time_max: 2026-04-07T12:00:00", "status": "success", "result_summary": "count: 1", "timestamp": "2026-04-03T14:00:59.754873+00:00"}, {"task_type": "calendar_agent.update_event", "params_summary": "event_id: q0m6d146pg4ligoaddgeu7ocpc", "status": "success", "result_summary": "event_id: q0m6d146pg4ligoaddgeu7ocpc", "timestamp": "2026-04-03T14:00:59.754873+00:00"}, {"task_type": "calendar_agent.list_events", "params_summary": "time_min: 2026-04-03, max_results: 10", "status": "success", "result_summary": "count: 3", "timestamp": "2026-04-03T14:07:14.082077+00:00"}, {"task_type": "calendar_agent.update_event", "params_summary": "event_id: a9kvaa1r5q9rqac2skr64qkibg", "status": "success", "result_summary": "event_id: a9kvaa1r5q9rqac2skr64qkibg", "timestamp": "2026-04-03T14:07:14.082077+00:00"}, {"task_type": "calendar_agent.list_events", "params_summary": "time_min: 2026-04-03, time_max: 2026-04-17", "status": "success", "result_summary": "count: 3", "timestamp": "2026-04-03T14:15:14.680394+00:00"}, {"task_type": "calendar_agent.create_calendar", "params_summary": "calendar_name: Evernight", "status": "success", "result_summary": "calendar_id: c_76a9ac2434e9793837a5e653ec19d97f15c02c", "timestamp": "2026-04-03T14:19:40.758594+00:00"}, {"task_type": "calendar_agent.create_event", "params_summary": "summary: Honkai, start_time: 2026-04-05T17:00:00", "status": "success", "result_summary": "event_id: mve3ednsrb5ev3q3vpi7ehbn58", "timestamp": "2026-04-03T14:22:25.543459+00:00"}]
+[2026-04-03 22:23:46.573] [PRINT]     has_executed: true
+[2026-04-03 22:23:46.579] [PRINT]     last_executed_at: "2026-04-03T14:22:25.543459+00:00"
+[2026-04-03 22:23:46.585] [PRINT]     last_execution_status: "success"
+[2026-04-03 22:23:46.591] [PRINT]     last_execution_message: "Workflow executed successfully"
+[2026-04-03 22:23:46.597] [PRINT]     executing: false
+[2026-04-03 22:23:46.603] [PRINT]     pending_actions: []
+[2026-04-03 22:23:46.609] [PRINT]     workflow_paused: false
+[2026-04-03 22:23:46.615] [PRINT]     remaining_steps: []
+[2026-04-03 22:23:46.622] [PRINT]     workflow_context: null
+[2026-04-03 22:23:46.628] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:23:46.634] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   STEP [new_message]: thread=0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd, msg=can you please edit my calendar named Evernight to Stelle?
+[2026-04-03 22:23:46.634] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   INFO: Memory: added user message  | {"tokens": 18, "total": 1878, "max": 2000}
+[2026-04-03 22:23:46.638] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-03 22:23:46.639] [PRINT] 
+[2026-04-03 22:23:46.639] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:23:46.644] [PRINT] 🔍 TIER 0.5 — Building prompt
+[2026-04-03 22:23:46.650] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:23:46.656] [PRINT]    bot_signal : (none)
+[2026-04-03 22:23:46.661] [PRINT]    state_block: (none)
+[2026-04-03 22:23:46.667] [PRINT]    file_context: (none)
+[2026-04-03 22:23:46.673] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:23:48.230] [PRINT]   💰 ✅ [0.5] gpt-4o-mini | tier_0.5_unified_check | in=545 out=36 | $0.0001 | 1525ms | cumulative: in=545 out=36 total=581 $0.0001
+[2026-04-03 22:23:48.235] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   STEP [tier0.5]: category: MODIFICATION, confidence: high
+    ↳ {"reasoning": "The user is requesting a change to the name of their calendar.", "raw_response": "{\n    \"category\": \"modification\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting a change to the name of their calendar.\"\n}"}
+[2026-04-03 22:23:48.236] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   STEP [tier0.5]: complex modification — proceeding to full analysis
+[2026-04-03 22:23:48.236] [PRINT] 
+[2026-04-03 22:23:48.236] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:23:48.241] [PRINT] 🧠 TIER 1 — Full Task Analysis
+[2026-04-03 22:23:48.247] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:23:48.252] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-03 22:23:48.253] [PRINT] 
+[2026-04-03 22:23:48.253] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-03 22:23:48.259] [PRINT] 🧠 BUILDING LLM CONTEXT
+[2026-04-03 22:23:48.264] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-03 22:23:48.269] [PRINT]    ✓ Summary (316 chars): User scheduled a meeting on April 9, 2026, from 7:00 AM to 9:00 AM with pchua5644@gmail.com via Google Meet. The meeting...
+[2026-04-03 22:23:48.275] [PRINT]    ✓ Recent messages: 29
+[2026-04-03 22:23:48.281] [PRINT]       USER: Can you please edit my Meeting name on April 9 7-9am to TestEditName
+[2026-04-03 22:23:48.290] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:48.290] [PRINT] 
+[2026-04-03 22:23:48.290] [PRINT] Your task summary is ready for review:
+[2026-04-03 22:23:48.290] [PRINT] 
+[2026-04-03 22:23:48.290] [PRINT] - **New Meeting...
+[2026-04-03 22:23:48.296] [PRINT]       USER: Yes
+[2026-04-03 22:23:48.302] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:48.302] [PRINT] 
+[2026-04-03 22:23:48.302] [PRINT] Your task summary is ready for review:
+[2026-04-03 22:23:48.302] [PRINT] 
+[2026-04-03 22:23:48.302] [PRINT] - **New Meeting...
+[2026-04-03 22:23:48.308] [PRINT]       ASSISTANT: ❌ **Unable to complete your request**
+[2026-04-03 22:23:48.308] [PRINT] 
+[2026-04-03 22:23:48.308] [PRINT] **Issue:** An earlier step returned no re...
+[2026-04-03 22:23:48.314] [PRINT]       USER: Hi can you please show me my upcoming meetings in my calendar
+[2026-04-03 22:23:48.320] [PRINT]       ASSISTANT: Here are some examples of what you can ask me:
+[2026-04-03 22:23:48.320] [PRINT] 
+[2026-04-03 22:23:48.320] [PRINT] 📧 **Email Examples:**
+[2026-04-03 22:23:48.320] [PRINT] - "Send an...
+[2026-04-03 22:23:48.326] [PRINT]       USER: Show my upcoming events for this week and next week
+[2026-04-03 22:23:48.332] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:48.332] [PRINT] 
+[2026-04-03 22:23:48.332] [PRINT] Task Confirmation:
+[2026-04-03 22:23:48.332] [PRINT] 
+[2026-04-03 22:23:48.332] [PRINT] - Listing upcoming events from Apri...
+[2026-04-03 22:23:48.338] [PRINT]       USER: yes
+[2026-04-03 22:23:48.344] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:48.344] [PRINT] 
+[2026-04-03 22:23:48.344] [PRINT] - Task: List upcoming events
+[2026-04-03 22:23:48.344] [PRINT] - Date Range: From Friday,...
+[2026-04-03 22:23:48.350] [PRINT]       ASSISTANT: 📅 Upcoming events:
+[2026-04-03 22:23:48.350] [PRINT] 
+[2026-04-03 22:23:48.350] [PRINT] 1. EditTestName - April 07, 2026 at 09:00 AM
+[2026-04-03 22:23:48.350] [PRINT]    🆔 ID: 4k5q3j...
+[2026-04-03 22:23:48.355] [PRINT]       USER: Can you delete Meeting on April 9 7AM?
+[2026-04-03 22:23:48.362] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:48.362] [PRINT] 
+[2026-04-03 22:23:48.362] [PRINT] - **Action**: Delete the meeting
+[2026-04-03 22:23:48.362] [PRINT] - **Date and Time**: F...
+[2026-04-03 22:23:48.368] [PRINT]       USER: Yes
+[2026-04-03 22:23:48.374] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:48.374] [PRINT] 
+[2026-04-03 22:23:48.374] [PRINT] - Task: Delete the meeting
+[2026-04-03 22:23:48.374] [PRINT] - Date and Time: Friday, Apr...
+[2026-04-03 22:23:48.380] [PRINT]       USER: approve
+[2026-04-03 22:23:48.385] [PRINT]       ASSISTANT: ⏳ Executing approved action...
+[2026-04-03 22:23:48.392] [PRINT]       USER: Can you please make me a new calendar named Evernight?
+[2026-04-03 22:23:48.398] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:48.398] [PRINT] 
+[2026-04-03 22:23:48.398] [PRINT] **Task Confirmation: Create a New Calendar**
+[2026-04-03 22:23:48.398] [PRINT] 
+[2026-04-03 22:23:48.398] [PRINT] - Calenda...
+[2026-04-03 22:23:48.404] [PRINT]       USER: yes
+[2026-04-03 22:23:48.409] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:48.409] [PRINT] 
+[2026-04-03 22:23:48.409] [PRINT] - Calendar Name: Evernight
+[2026-04-03 22:23:48.409] [PRINT] 
+[2026-04-03 22:23:48.409] [PRINT] Please confirm if you would...
+[2026-04-03 22:23:48.416] [PRINT]       ASSISTANT: ✅ Successfully created calendar 'Evernight'
+[2026-04-03 22:23:48.416] [PRINT] 📋 Calendar ID: c_76a9ac2434e9793837a...
+[2026-04-03 22:23:48.423] [PRINT]       USER: Can you please schedule a meeting in my Evernight calendar and the meeting will ...
+[2026-04-03 22:23:48.429] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:48.429] [PRINT] 
+[2026-04-03 22:23:48.429] [PRINT] - Meeting Title: Honkai
+[2026-04-03 22:23:48.429] [PRINT] - Date: Sunday, April 5, 2026
+[2026-04-03 22:23:48.429] [PRINT] -...
+[2026-04-03 22:23:48.435] [PRINT]       USER: Yes
+[2026-04-03 22:23:48.440] [PRINT]       ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:48.440] [PRINT] 
+[2026-04-03 22:23:48.440] [PRINT] - Meeting Name: Honkai
+[2026-04-03 22:23:48.440] [PRINT] - Date: Sunday, April 5, 2026
+[2026-04-03 22:23:48.440] [PRINT] - ...
+[2026-04-03 22:23:48.446] [PRINT]       ASSISTANT: ✅ Successfully created event 'Honkai' from 2026-04-05T17:00:00 to 2026-04-05T18:...
+[2026-04-03 22:23:48.451] [PRINT]       USER: can you please edit my calendar named Evernight to Stelle?
+[2026-04-03 22:23:48.459] [PRINT] 
+[2026-04-03 22:23:48.459] [PRINT]    📏 Final context: 6361 chars (~1590 tokens)
+[2026-04-03 22:23:48.466] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-03 22:23:48.471] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   STEP [context_built]: context assembled: summary=yes, msgs=29, ~1590 tokens  | {"has_summary": true, "recent_messages": 29, "context_chars": 6361, "context_tokens_est": 1590}
+[2026-04-03 22:23:48.471] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-03 22:23:49.577] [PRINT]   💰 ✅ [classifier] gpt-3.5-turbo | agent_tool_classification | in=1023 out=16 | $0.0005 | 1079ms | cumulative: in=1568 out=52 total=1620 $0.0006
+[2026-04-03 22:23:49.584] [PRINT]    relevant_agents: ['calendar_agent']
+[2026-04-03 22:23:49.590] [PRINT]    capabilities (top-level): ['**CALENDAR_AGENT:**']
+[2026-04-03 22:23:49.597] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["calendar_agent"]}
+[2026-04-03 22:23:49.598] [PRINT]    user_prompt (7259 chars):
+[2026-04-03 22:23:49.604] [PRINT]      CONVERSATION SUMMARY:
+[2026-04-03 22:23:49.609] [PRINT]      User scheduled a meeting on April 9, 2026, from 7:00 AM to 9:00 AM with pchua5644@gmail.com via Google Meet. The meeting was successfully created with a link provided. User also rescheduled another meeting named 'EditTestName' to April 11, 2026, from 3:00 PM to 7:00 PM. Invitations for both meetings have been sent.
+[2026-04-03 22:23:49.616] [PRINT]      
+[2026-04-03 22:23:49.621] [PRINT]      RECENT CONVERSATION:
+[2026-04-03 22:23:49.626] [PRINT]      USER: Can you please edit my Meeting name on April 9 7-9am to TestEditName
+[2026-04-03 22:23:49.633] [PRINT]      ASSISTANT: ✅ **Ready to execute!**
+[2026-04-03 22:23:49.640] [PRINT]      
+[2026-04-03 22:23:49.646] [PRINT]      Your task summary is ready f...
+[2026-04-03 22:23:49.651] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 22:23:55.608] [PRINT]   💰 ✅ [1] gpt-4 | tier_1_full_analysis | in=2899 out=122 | $0.0943 | 5923ms | cumulative: in=4467 out=174 total=4641 $0.0949
+[2026-04-03 22:23:55.615] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "update_calendar", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user has provided all the necessary information to rename the calendar 'Evernight' to 'Stelle'.", "extracted_info": {"calendar_name": "Evernight", "new_calendar_name": "Stelle"}}
+[2026-04-03 22:23:55.616] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-03 22:23:55.616] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Rename calendar 'Evernight' to 'Stelle'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"calendar_agent": ["list_calendars", "update_event"]}, "calendar_name": "Evernight", "new_calendar_name": "Stelle"}}
+[2026-04-03 22:23:56.602] [PRINT]   💰 ✅ [formatter] gpt-4o-mini | confirmation_formatter | in=190 out=29 | $0.0000 | 954ms | cumulative: in=4657 out=203 total=4860 $0.0950
+[2026-04-03 22:23:56.610] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   INFO: Memory: added assistant message
+    ↳ {"tokens": 60, "total": 1938, "max": 2000, "response_preview": "✅ **Ready to execute!**\n\n- Current calendar name: Evernight  \n- New calendar name: Stelle  \n\nPlease confirm if you would like to proceed with renaming the calendar.\n\n---\nReply **\"yes\"** to proceed or ..."}
+[2026-04-03 22:23:56.633] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd]   BOT RESP: "✅ **Ready to execute!**
+
+- Current calendar name: Evernight  
+- New calendar name: Stelle  
+
+Please ..."
+[2026-04-03 22:23:56.644] [PRINT] 
+[2026-04-03 22:23:56.644] [PRINT] ============================================================
+[2026-04-03 22:23:56.652] [PRINT] 📊 REQUEST TOKEN SUMMARY
+[2026-04-03 22:23:56.660] [PRINT] ============================================================
+[2026-04-03 22:23:56.666] [PRINT]   LLM calls:        4
+[2026-04-03 22:23:56.674] [PRINT]   Total input:      4,657 tokens
+[2026-04-03 22:23:56.681] [PRINT]   Total output:     203 tokens
+[2026-04-03 22:23:56.688] [PRINT]   Total tokens:     4,860 tokens
+[2026-04-03 22:23:56.694] [PRINT]   Estimated cost:   $0.0950
+[2026-04-03 22:23:56.701] [PRINT]   Total duration:   10173ms (10.2s)
+[2026-04-03 22:23:56.708] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-03 22:23:56.725] [PRINT]   Breakdown by call:
+[2026-04-03 22:23:56.739] [PRINT]     1. gpt-4o-mini      in=545    out=36    $0.0001 1525ms
+[2026-04-03 22:23:56.746] [PRINT]     2. gpt-3.5-turbo    in=1023   out=16    $0.0005 1079ms
+[2026-04-03 22:23:56.753] [PRINT]     3. gpt-4            in=2899   out=122   $0.0943 5923ms
+[2026-04-03 22:23:56.760] [PRINT]     4. gpt-4o-mini      in=190    out=29    $0.0000 954ms
+[2026-04-03 22:23:56.766] [PRINT] ============================================================
+[2026-04-03 22:24:00.665] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd] ← RESPONSE: 200 (18594ms)
+[2026-04-03 22:24:00.666] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd] ─────────: ──────────────────────────────────────────────────
+[2026-04-03 22:24:17.741] [INFO] [req_20260403142346_bbb4ad60] [T:53bf41dd] → REQUEST: POST /threads/0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd/messages  | {"query": null}
+[2026-04-03 22:24:22.188] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   USER MSG: "Yes"
+[2026-04-03 22:24:22.190] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:24:22.196] [PRINT]   📨  NEW MESSAGE  │  thread: 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd
+[2026-04-03 22:24:22.202] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:24:22.208] [PRINT]   User: Yes
+[2026-04-03 22:24:22.215] [PRINT]   ConversationState:
+[2026-04-03 22:24:22.221] [PRINT]     extracted_info: {"_cached_tool_filter": {"calendar_agent": ["list_calendars", "update_event"]}, "calendar_name": "Evernight", "new_calendar_name": "Stelle"}
+[2026-04-03 22:24:22.227] [PRINT]     missing_fields: []
+[2026-04-03 22:24:22.233] [PRINT]     intent: "ready_to_execute"
+[2026-04-03 22:24:22.239] [PRINT]     clarification_question: null
+[2026-04-03 22:24:22.245] [PRINT]     ready_for_execution: false
+[2026-04-03 22:24:22.251] [PRINT]     execution_summary: "Rename calendar 'Evernight' to 'Stelle'"
+[2026-04-03 22:24:22.257] [PRINT]     execution_mode: "standard"
+[2026-04-03 22:24:22.264] [PRINT]     execution_history: [{"executed_at": "2026-04-03T13:58:25.208072+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-03T14:00:59.754873+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-03T14:07:14.082077+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-03T14:09:57.011637+00:00", "status": "error", "message": "Step 1 (Update the name of the meeting on April 9, 7-9am to 'TestEditName') could not proceed \u2014 required data was not available from a previous step."}, {"executed_at": "2026-04-03T14:15:14.680394+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-03T14:19:40.758594+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-03T14:22:25.543459+00:00", "status": "success", "message": "Workflow executed successfully"}]
+[2026-04-03 22:24:22.270] [PRINT]     completed_tasks: [{"task_type": "calendar_agent.create_event", "params_summary": "summary: Meeting, start_time: 2026-04-07T10:00:00", "status": "success", "result_summary": "event_id: q0m6d146pg4ligoaddgeu7ocpc", "timestamp": "2026-04-03T13:58:25.208072+00:00"}, {"task_type": "calendar_agent.list_events", "params_summary": "time_min: 2026-04-07T10:00:00, time_max: 2026-04-07T12:00:00", "status": "success", "result_summary": "count: 1", "timestamp": "2026-04-03T14:00:59.754873+00:00"}, {"task_type": "calendar_agent.update_event", "params_summary": "event_id: q0m6d146pg4ligoaddgeu7ocpc", "status": "success", "result_summary": "event_id: q0m6d146pg4ligoaddgeu7ocpc", "timestamp": "2026-04-03T14:00:59.754873+00:00"}, {"task_type": "calendar_agent.list_events", "params_summary": "time_min: 2026-04-03, max_results: 10", "status": "success", "result_summary": "count: 3", "timestamp": "2026-04-03T14:07:14.082077+00:00"}, {"task_type": "calendar_agent.update_event", "params_summary": "event_id: a9kvaa1r5q9rqac2skr64qkibg", "status": "success", "result_summary": "event_id: a9kvaa1r5q9rqac2skr64qkibg", "timestamp": "2026-04-03T14:07:14.082077+00:00"}, {"task_type": "calendar_agent.list_events", "params_summary": "time_min: 2026-04-03, time_max: 2026-04-17", "status": "success", "result_summary": "count: 3", "timestamp": "2026-04-03T14:15:14.680394+00:00"}, {"task_type": "calendar_agent.create_calendar", "params_summary": "calendar_name: Evernight", "status": "success", "result_summary": "calendar_id: c_76a9ac2434e9793837a5e653ec19d97f15c02c", "timestamp": "2026-04-03T14:19:40.758594+00:00"}, {"task_type": "calendar_agent.create_event", "params_summary": "summary: Honkai, start_time: 2026-04-05T17:00:00", "status": "success", "result_summary": "event_id: mve3ednsrb5ev3q3vpi7ehbn58", "timestamp": "2026-04-03T14:22:25.543459+00:00"}]
+[2026-04-03 22:24:22.277] [PRINT]     has_executed: true
+[2026-04-03 22:24:22.282] [PRINT]     last_executed_at: "2026-04-03T14:22:25.543459+00:00"
+[2026-04-03 22:24:22.288] [PRINT]     last_execution_status: "success"
+[2026-04-03 22:24:22.295] [PRINT]     last_execution_message: "Workflow executed successfully"
+[2026-04-03 22:24:22.300] [PRINT]     executing: false
+[2026-04-03 22:24:22.307] [PRINT]     pending_actions: []
+[2026-04-03 22:24:22.313] [PRINT]     workflow_paused: false
+[2026-04-03 22:24:22.320] [PRINT]     remaining_steps: []
+[2026-04-03 22:24:22.326] [PRINT]     workflow_context: null
+[2026-04-03 22:24:22.332] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 22:24:22.339] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   STEP [new_message]: thread=0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd, msg=Yes
+[2026-04-03 22:24:22.339] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   INFO: Memory: added user message  | {"tokens": 6, "total": 1944, "max": 2000}
+[2026-04-03 22:24:22.343] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-03 22:24:22.344] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-03 22:24:22.344] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Rename calendar 'Evernight' to 'Stelle'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"calendar_agent": ["update_event", "list_calendars"]}, "calendar_name": "Evernight", "new_calendar_name": "Stelle"}}
+[2026-04-03 22:24:23.797] [PRINT]   💰 ✅ [formatter] gpt-4o-mini | confirmation_formatter | in=190 out=29 | $0.0000 | 1406ms | cumulative: in=190 out=29 total=219 $0.0000
+[2026-04-03 22:24:23.804] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   INFO: Memory: added assistant message
+    ↳ {"tokens": 61, "total": 2005, "max": 2000, "response_preview": "✅ **Ready to execute!**\n\nTask Confirmation:\n\n- Current Calendar Name: Evernight\n- New Calendar Name: Stelle\n\nPlease review the details above before proceeding with the rename.\n\n---\nReply **\"yes\"** to ..."}
+[2026-04-03 22:24:23.825] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   BOT RESP [READY TO EXECUTE]: "✅ **Ready to execute!**
+
+Task Confirmation:
+
+- Current Calendar Name: Evernight
+- New Calendar Name:..."
+[2026-04-03 22:24:23.825] [PRINT] 🚀 Thread 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd ready - executing workflow...
+[2026-04-03 22:24:23.831] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-03 22:24:23.847] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   WORKFLOW START: "Rename calendar 'Evernight' to 'Stelle'
+
+Parameters:
+- calendar_name: Evernight
+..." (0 steps)
+[2026-04-03 22:24:23.847] [PRINT] 📅 Date context: today=2026-04-03
+[2026-04-03 22:24:23.853] [PRINT] 🚀 Starting workflow execution (mode=standard)...
+[2026-04-03 22:24:23.860] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-03 22:24:23.862] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-03 22:24:23.869] [PRINT] 
+[2026-04-03 22:24:23.869] [PRINT] ============================================================
+[2026-04-03 22:24:23.875] [PRINT] 🧠 SUPERVISOR NODE - Planning Phase
+[2026-04-03 22:24:23.881] [PRINT] ============================================================
+[2026-04-03 22:24:23.889] [PRINT] 📥 User Input: Rename calendar 'Evernight' to 'Stelle'
+[2026-04-03 22:24:23.889] [PRINT] 
+[2026-04-03 22:24:23.889] [PRINT] Parameters:
+[2026-04-03 22:24:23.889] [PRINT] - calendar_name: Evernight
+[2026-04-03 22:24:23.889] [PRINT] - new_calendar_name: Stelle
+[2026-04-03 22:24:23.896] [INFO] [-]   STEP [supervisor_node]: Planning for: Rename calendar 'Evernight' to 'Stelle'
+
+Parameters:
+- calendar_name: Evernight
+
+[2026-04-03 22:24:23.896] [PRINT] 📅 Context dates: today=2026-04-03
+[2026-04-03 22:24:23.903] [PRINT] 📌 Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-03 22:24:23.909] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['calendar_agent']
+[2026-04-03 22:24:23.910] [PRINT] 📌 Relevant agents: ['calendar_agent']
+[2026-04-03 22:24:23.916] [PRINT] 🔧 Filtered tools: {'calendar_agent': ['update_event', 'list_calendars']}
+[2026-04-03 22:24:23.925] [PRINT] 🤖 Calling LLM to generate multi-step plan...
+[2026-04-03 22:24:23.933] [PRINT] 💰 Token optimization:
+[2026-04-03 22:24:23.940] [PRINT]    Agents: 1/6
+[2026-04-03 22:24:23.947] [PRINT]    Tools: 2/44
+[2026-04-03 22:24:23.953] [PRINT]    Context size: 1,233 chars (~308 tokens)
+[2026-04-03 22:24:23.960] [INFO] [-]   STEP [plan_generation_start]: agents=1/6, tools=2/44, context_tokens~308
+[2026-04-03 22:24:27.194] [PRINT]   💰 ✅ [supervisor] gpt-4 | plan_generation | in=774 out=71 | $0.0275 | 3204ms | cumulative: in=964 out=100 total=1064 $0.0275
+[2026-04-03 22:24:27.200] [PRINT] ✅ Plan generated successfully!
+[2026-04-03 22:24:27.207] [PRINT] 
+[2026-04-03 22:24:27.207] [PRINT] 📋 Generated Plan:
+[2026-04-03 22:24:27.207] [PRINT] {
+[2026-04-03 22:24:27.207] [PRINT]   "steps": [
+[2026-04-03 22:24:27.207] [PRINT]     {
+[2026-04-03 22:24:27.207] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 22:24:27.207] [PRINT]       "tool": "update_calendar",
+[2026-04-03 22:24:27.207] [PRINT]       "inputs": {
+[2026-04-03 22:24:27.207] [PRINT]         "calendar_name": "Evernight",
+[2026-04-03 22:24:27.207] [PRINT]         "new_calendar_name": "Stelle"
+[2026-04-03 22:24:27.207] [PRINT]       },
+[2026-04-03 22:24:27.207] [PRINT]       "output_variables": {},
+[2026-04-03 22:24:27.207] [PRINT]       "description": "Rename calendar 'Evernight' to 'Stelle'"
+[2026-04-03 22:24:27.207] [PRINT]     }
+[2026-04-03 22:24:27.207] [PRINT]   ]
+[2026-04-03 22:24:27.207] [PRINT] }
+[2026-04-03 22:24:27.214] [INFO] [-]   STEP [plan_generated]: 1 steps: calendar_agent.update_calendar
+[2026-04-03 22:24:27.215] [PRINT] 
+[2026-04-03 22:24:27.215] [PRINT] 💾 Plan saved to: E:\capstone\New folder\latestupdatetes\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-03 22:24:27.221] [PRINT] ============================================================
+[2026-04-03 22:24:27.229] [PRINT] 
+[2026-04-03 22:24:27.229] [PRINT] ============================================================
+[2026-04-03 22:24:27.235] [PRINT] ⚙️ ORCHESTRATOR NODE - Execution Phase
+[2026-04-03 22:24:27.241] [PRINT] ============================================================
+[2026-04-03 22:24:27.248] [PRINT] ✅ Found 1 steps to execute
+[2026-04-03 22:24:27.253] [INFO] [-]   STEP [orchestrator_node]: 1 steps to execute
+[2026-04-03 22:24:27.254] [PRINT] 
+[2026-04-03 22:24:27.254] [PRINT] 📦 INITIAL CONTEXT:
+[2026-04-03 22:24:27.260] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:24:27.266] [PRINT]    today_date: 2026-04-03
+[2026-04-03 22:24:27.272] [PRINT]    _cached_tool_filter: dict (length: 1)
+[2026-04-03 22:24:27.277] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:24:27.283] [PRINT] ✅ Pre-flight credential check passed (5 fields)
+[2026-04-03 22:24:27.289] [PRINT] 
+[2026-04-03 22:24:27.289] [PRINT] ============================================================
+[2026-04-03 22:24:27.295] [PRINT] 📍 Step 1/1: calendar_agent.update_calendar
+[2026-04-03 22:24:27.300] [PRINT] 📝 Description: Rename calendar 'Evernight' to 'Stelle'
+[2026-04-03 22:24:27.306] [PRINT] ============================================================
+[2026-04-03 22:24:27.320] [PRINT] ⚠️ Risk Level: moderate
+[2026-04-03 22:24:27.326] [PRINT] 
+[2026-04-03 22:24:27.326] [PRINT] 🔄 Substituting variables in inputs...
+[2026-04-03 22:24:27.332] [PRINT]    Original inputs: {
+[2026-04-03 22:24:27.332] [PRINT]       "calendar_name": "Evernight",
+[2026-04-03 22:24:27.332] [PRINT]       "new_calendar_name": "Stelle"
+[2026-04-03 22:24:27.332] [PRINT] }
+[2026-04-03 22:24:27.339] [PRINT]    Substituted inputs: {
+[2026-04-03 22:24:27.339] [PRINT]       "calendar_name": "Evernight",
+[2026-04-03 22:24:27.339] [PRINT]       "new_calendar_name": "Stelle"
+[2026-04-03 22:24:27.339] [PRINT] }
+[2026-04-03 22:24:27.345] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-03 22:24:27.351] [INFO] [-]   STEP [variable_substitution]: step 1: calendar_agent.update_calendar  | {"inputs": {"calendar_name": "Evernight", "new_calendar_name": "Stelle"}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-03 22:24:27.351] [PRINT] 
+[2026-04-03 22:24:27.351] [PRINT] 🌐 Calling agent microservice: http://localhost:8005/execute_task
+[2026-04-03 22:24:27.358] [PRINT] 
+[2026-04-03 22:24:27.358] [PRINT] 🔍 REQUEST PAYLOAD STRUCTURE:
+[2026-04-03 22:24:27.364] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:24:27.370] [PRINT]    Tool: update_calendar
+[2026-04-03 22:24:27.375] [PRINT]    Inputs keys: ['calendar_name', 'new_calendar_name']
+[2026-04-03 22:24:27.381] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-03 22:24:27.386] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-03 22:24:27.392] [PRINT]    Payload size: 717 bytes
+[2026-04-03 22:24:27.398] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:24:27.404] [PRINT] 
+[2026-04-03 22:24:27.404] [PRINT] 🚀 Sending request to agent...
+[2026-04-03 22:24:27.411] [PRINT]    URL: http://localhost:8005/execute_task
+[2026-04-03 22:24:27.416] [PRINT]    Timeout: 320 seconds
+[2026-04-03 22:24:27.422] [PRINT]    Max retries: 3
+[2026-04-03 22:24:27.429] [PRINT] 🔄 Attempt 1/3 calling http://localhost:8005/execute_task
+[2026-04-03 22:24:27.435] [PRINT]    ⏱️ Timeout set to: 320.0 seconds
+[2026-04-03 22:24:29.776] [PRINT] ❌ HTTP 400 on attempt 1
+[2026-04-03 22:24:29.816] [PRINT]    Client error - not retrying
+[2026-04-03 22:24:29.822] [PRINT] ⏱️ Agent call completed in 2418.34ms
+[2026-04-03 22:24:29.829] [PRINT] ❌ Unexpected error: Agent call failed after retries
+[2026-04-03 22:24:29.835] [PRINT] 🛑 STOPPING WORKFLOW - Unexpected Error in step 1
+[2026-04-03 22:24:29.841] [ERROR] [-]   ✗ ERROR: Unexpected error step 1: calendar_agent.update_calendar | ValueError: Agent call failed after retries
+[2026-04-03 22:24:29.842] [PRINT] 
+[2026-04-03 22:24:29.842] [PRINT] 🔍 FULL TRACEBACK:
+[2026-04-03 22:24:29.848] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:24:29.854] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 22:24:29.860] [PRINT] 
+[2026-04-03 22:24:29.860] [PRINT] ============================================================
+[2026-04-03 22:24:29.865] [PRINT] 🛑 ORCHESTRATOR STOPPED DUE TO UNEXPECTED ERROR
+[2026-04-03 22:24:29.872] [PRINT] ============================================================
+[2026-04-03 22:24:29.878] [PRINT] 📊 Completed steps: 1/1
+[2026-04-03 22:24:29.883] [PRINT] ✓ Successful: 0
+[2026-04-03 22:24:29.889] [PRINT] ℹ️ No Results: 0
+[2026-04-03 22:24:29.895] [PRINT] ✗ Failed at step: 1
+[2026-04-03 22:24:29.901] [PRINT] ============================================================
+[2026-04-03 22:24:29.909] [PRINT] 
+[2026-04-03 22:24:29.909] [PRINT] ✅ Workflow completed successfully
+[2026-04-03 22:24:29.916] [INFO] [-]   WORKFLOW END: success (1/1 steps)
+[2026-04-03 22:24:29.916] [PRINT] 
+[2026-04-03 22:24:29.916] [PRINT] 📋 Generated Plan:
+[2026-04-03 22:24:29.916] [PRINT] {
+[2026-04-03 22:24:29.916] [PRINT]   "steps": [
+[2026-04-03 22:24:29.916] [PRINT]     {
+[2026-04-03 22:24:29.916] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 22:24:29.916] [PRINT]       "tool": "update_calendar",
+[2026-04-03 22:24:29.916] [PRINT]       "inputs": {
+[2026-04-03 22:24:29.916] [PRINT]         "calendar_name": "Evernight",
+[2026-04-03 22:24:29.916] [PRINT]         "new_calendar_name": "Stelle"
+[2026-04-03 22:24:29.916] [PRINT]       },
+[2026-04-03 22:24:29.916] [PRINT]       "output_variables": {},
+[2026-04-03 22:24:29.916] [PRINT]       "description": "Rename calendar 'Evernight' to 'Stelle'"
+[2026-04-03 22:24:29.916] [PRINT]     }
+[2026-04-03 22:24:29.916] [PRINT]   ]
+[2026-04-03 22:24:29.916] [PRINT] }
+[2026-04-03 22:24:29.922] [PRINT] 
+[2026-04-03 22:24:29.922] [PRINT] 📊 Final Context: {
+[2026-04-03 22:24:29.922] [PRINT]   "today_date": "2026-04-03",
+[2026-04-03 22:24:29.922] [PRINT]   "_cached_tool_filter": {
+[2026-04-03 22:24:29.922] [PRINT]     "calendar_agent": [
+[2026-04-03 22:24:29.922] [PRINT]       "update_event",
+[2026-04-03 22:24:29.922] [PRINT]       "list_calendars"
+[2026-04-03 22:24:29.922] [PRINT]     ]
+[2026-04-03 22:24:29.922] [PRINT]   },
+[2026-04-03 22:24:29.922] [PRINT]   "results": [
+[2026-04-03 22:24:29.922] [PRINT]     {
+[2026-04-03 22:24:29.922] [PRINT]       "step": 1,
+[2026-04-03 22:24:29.922] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 22:24:29.922] [PRINT]       "tool": "update_calendar",
+[2026-04-03 22:24:29.922] [PRINT]       "status": "error",
+[2026-04-03 22:24:29.922] [PRINT]       "error": "Unexpected error: Agent call failed after retries"
+[2026-04-03 22:24:29.922] [PRINT]     }
+[2026-04-03 22:24:29.922] [PRINT]   ],
+[2026-04-03 22:24:29.922] [PRINT]   "stopped_at_step": 1,
+[2026-04-03 22:24:29.922] [PRINT]   "error": "Unexpected error: Agent call failed after retries"
+[2026-04-03 22:24:29.922] [PRINT] }
+[2026-04-03 22:24:29.929] [INFO] [req_20260403142422_62aace60] [T:53bf41dd]   INFO: Memory: added assistant message
+    ↳ {"tokens": 45, "total": 2050, "max": 2000, "response_preview": "❌ **Unable to complete your request**\n\n**Issue:** Unexpected error: Agent call failed after retries\n\n**Failed at step 1:** update_calendar\n\n---\n*Original request: \"your request\"*"}
+[2026-04-03 22:24:29.955] [PRINT] 
+[2026-04-03 22:24:29.955] [PRINT] ============================================================
+[2026-04-03 22:24:29.961] [PRINT] 📊 REQUEST TOKEN SUMMARY
+[2026-04-03 22:24:29.968] [PRINT] ============================================================
+[2026-04-03 22:24:29.974] [PRINT]   LLM calls:        2
+[2026-04-03 22:24:29.980] [PRINT]   Total input:      964 tokens
+[2026-04-03 22:24:29.989] [PRINT]   Total output:     100 tokens
+[2026-04-03 22:24:29.997] [PRINT]   Total tokens:     1,064 tokens
+[2026-04-03 22:24:30.004] [PRINT]   Estimated cost:   $0.0275
+[2026-04-03 22:24:30.012] [PRINT]   Total duration:   7782ms (7.8s)
+[2026-04-03 22:24:30.020] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-03 22:24:30.025] [PRINT]   Breakdown by call:
+[2026-04-03 22:24:30.032] [PRINT]     1. gpt-4o-mini      in=190    out=29    $0.0000 1406ms
+[2026-04-03 22:24:30.040] [PRINT]     2. gpt-4            in=774    out=71    $0.0275 3204ms
+[2026-04-03 22:24:30.046] [PRINT] ============================================================
+[2026-04-03 22:24:31.265] [INFO] [req_20260403142422_62aace60] [T:53bf41dd] ← RESPONSE: 200 (13524ms)
+[2026-04-03 22:24:31.265] [INFO] [req_20260403142422_62aace60] [T:53bf41dd] ─────────: ──────────────────────────────────────────────────

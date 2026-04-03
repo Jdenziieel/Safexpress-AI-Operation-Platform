@@ -1,0 +1,390 @@
+[2026-04-03 21:57:40.367] [INFO] [req_20260403135658_841693cc] [T:550eefe4] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-03 21:57:40.373] [INFO] [req_20260403135658_841693cc] [T:550eefe4] ← RESPONSE: 200 (5ms)
+[2026-04-03 21:57:40.373] [INFO] [req_20260403135658_841693cc] [T:550eefe4] ─────────: ──────────────────────────────────────────────────
+[2026-04-03 21:57:48.689] [INFO] [req_20260403135658_841693cc] [T:550eefe4] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-03 21:57:48.692] [INFO] [req_20260403135658_841693cc] [T:550eefe4] ← RESPONSE: 200 (3ms)
+[2026-04-03 21:57:48.693] [INFO] [req_20260403135658_841693cc] [T:550eefe4] ─────────: ──────────────────────────────────────────────────
+[2026-04-03 21:57:52.811] [INFO] [req_20260403135658_841693cc] [T:550eefe4] → REQUEST: POST /threads  | {"query": null}
+[2026-04-03 21:57:52.813] [INFO] [req_20260403135658_841693cc] [T:new]   STEP [create_thread]: user=0394a623-ae87-4b46-80ab-1a2210939426, has_message=True
+[2026-04-03 21:57:57.238] [PRINT] ✅ Created thread: 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd for user: 0394a623-ae87-4b46-80ab-1a2210939426
+[2026-04-03 21:57:57.245] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 21:57:57.251] [PRINT]   📨  NEW MESSAGE  │  thread: 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd
+[2026-04-03 21:57:57.258] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 21:57:57.264] [PRINT]   User: can you schedule me another meeting on April 7 10AM-12PM please invite pchua5644@gmail.com and please provide a google m...
+[2026-04-03 21:57:57.271] [PRINT]   ConversationState:
+[2026-04-03 21:57:57.278] [PRINT]     extracted_info: {}
+[2026-04-03 21:57:57.284] [PRINT]     missing_fields: []
+[2026-04-03 21:57:57.291] [PRINT]     intent: null
+[2026-04-03 21:57:57.297] [PRINT]     clarification_question: null
+[2026-04-03 21:57:57.304] [PRINT]     ready_for_execution: false
+[2026-04-03 21:57:57.310] [PRINT]     execution_summary: null
+[2026-04-03 21:57:57.316] [PRINT]     execution_mode: "standard"
+[2026-04-03 21:57:57.322] [PRINT]     execution_history: []
+[2026-04-03 21:57:57.328] [PRINT]     completed_tasks: []
+[2026-04-03 21:57:57.334] [PRINT]     has_executed: false
+[2026-04-03 21:57:57.340] [PRINT]     last_executed_at: null
+[2026-04-03 21:57:57.346] [PRINT]     last_execution_status: null
+[2026-04-03 21:57:57.352] [PRINT]     last_execution_message: null
+[2026-04-03 21:57:57.358] [PRINT]     executing: false
+[2026-04-03 21:57:57.365] [PRINT]     pending_actions: []
+[2026-04-03 21:57:57.371] [PRINT]     workflow_paused: false
+[2026-04-03 21:57:57.377] [PRINT]     remaining_steps: []
+[2026-04-03 21:57:57.383] [PRINT]     workflow_context: null
+[2026-04-03 21:57:57.390] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 21:57:57.396] [INFO] [req_20260403135757_16c8a3e8] [T:new]   STEP [new_message]: thread=0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd, msg=can you schedule me another meeting on April 7 10AM-12PM please invite pchua5644
+[2026-04-03 21:57:57.397] [INFO] [req_20260403135757_16c8a3e8] [T:new]   INFO: Memory: added user message  | {"tokens": 38, "total": 38, "max": 2000}
+[2026-04-03 21:57:57.403] [INFO] [req_20260403135757_16c8a3e8] [T:new]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-03 21:57:57.403] [PRINT] 
+[2026-04-03 21:57:57.403] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 21:57:57.409] [PRINT] 🔍 TIER 0.5 — Building prompt
+[2026-04-03 21:57:57.416] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 21:57:57.423] [PRINT]    bot_signal : (none)
+[2026-04-03 21:57:57.430] [PRINT]    state_block: (none)
+[2026-04-03 21:57:57.436] [PRINT]    file_context: (none)
+[2026-04-03 21:57:57.443] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 21:57:59.093] [PRINT]   💰 ✅ [0.5] gpt-4o-mini | tier_0.5_unified_check | in=567 out=38 | $0.0001 | 1591ms | cumulative: in=567 out=38 total=605 $0.0001
+[2026-04-03 21:57:59.100] [INFO] [req_20260403135757_16c8a3e8] [T:new]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting to schedule a meeting with specific details and an invitation.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting to schedule a meeting with specific details and an invitation.\"\n}"}
+[2026-04-03 21:57:59.101] [INFO] [req_20260403135757_16c8a3e8] [T:new]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-04-03 21:57:59.101] [PRINT] 
+[2026-04-03 21:57:59.101] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 21:57:59.108] [PRINT] 🧠 TIER 1 — Full Task Analysis
+[2026-04-03 21:57:59.116] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 21:57:59.122] [INFO] [req_20260403135757_16c8a3e8] [T:new]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-03 21:57:59.122] [PRINT] 
+[2026-04-03 21:57:59.122] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-03 21:57:59.129] [PRINT] 🧠 BUILDING LLM CONTEXT
+[2026-04-03 21:57:59.137] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-03 21:57:59.144] [PRINT]    ✗ Summary: none
+[2026-04-03 21:57:59.160] [PRINT]    ✓ Recent messages: 1
+[2026-04-03 21:57:59.173] [PRINT]       USER: can you schedule me another meeting on April 7 10AM-12PM please invite pchua5644...
+[2026-04-03 21:57:59.219] [PRINT] 
+[2026-04-03 21:57:59.219] [PRINT]    📏 Final context: 159 chars (~39 tokens)
+[2026-04-03 21:57:59.227] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-03 21:57:59.234] [INFO] [req_20260403135757_16c8a3e8] [T:new]   STEP [context_built]: context assembled: summary=no, msgs=1, ~39 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 159, "context_tokens_est": 39}
+[2026-04-03 21:57:59.237] [INFO] [req_20260403135757_16c8a3e8] [T:new]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-03 21:57:59.830] [PRINT]   💰 ✅ [classifier] gpt-3.5-turbo | agent_tool_classification | in=1043 out=11 | $0.0005 | 575ms | cumulative: in=1610 out=49 total=1659 $0.0006
+[2026-04-03 21:57:59.839] [PRINT]    relevant_agents: ['calendar_agent', 'gmail_agent']
+[2026-04-03 21:57:59.845] [PRINT]    capabilities (top-level): ['**CALENDAR_AGENT:**', '**GMAIL_AGENT:**']
+[2026-04-03 21:57:59.855] [INFO] [req_20260403135757_16c8a3e8] [T:new]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["calendar_agent", "gmail_agent"]}
+[2026-04-03 21:57:59.856] [PRINT]    user_prompt (315 chars):
+[2026-04-03 21:57:59.863] [PRINT]      RECENT CONVERSATION:
+[2026-04-03 21:57:59.874] [PRINT]      USER: can you schedule me another meeting on April 7 10AM-12PM please invite pchua5644@gmail.com and please provide a google meet link too
+[2026-04-03 21:57:59.883] [PRINT]      
+[2026-04-03 21:57:59.899] [PRINT]      CURRENT USER MESSAGE: can you schedule me another meeting on April 7 10AM-12PM please invite pchua5644@gmail.com and please provide a google meet link too
+[2026-04-03 21:57:59.906] [PRINT] ──────────────────────────────────────────────────
+[2026-04-03 21:58:07.613] [PRINT]   💰 ✅ [1] gpt-4 | tier_1_full_analysis | in=901 out=209 | $0.0396 | 7670ms | cumulative: in=2511 out=258 total=2769 $0.0402
+[2026-04-03 21:58:07.619] [INFO] [req_20260403135757_16c8a3e8] [T:new]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "create_event", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user wants to schedule a meeting on April 7 from 10AM to 12PM. They have provided all necessary details including the attendee's email and the request for a Google Meet link.", "extracted_info": {"summary": "Meeting", "start_time": "2026-04-07T10:00:00", "end_time": "2026-04-07T12:00:00", "attendees": ["pchua5644@gmail.com
+[2026-04-03 21:58:07.620] [INFO] [req_20260403135757_16c8a3e8] [T:new]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-03 21:58:07.620] [INFO] [req_20260403135757_16c8a3e8] [T:new]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Create a meeting event on April 7 from 10AM to 12PM, invite pchua5644@gmail.com and add a Google Meet link.", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"calendar_agent": ["create_event"], "gmail_agent": ["create_draft_email", "send_draft_email"]}, "summary": "Meeting", "start_time": "2026-04-
+[2026-04-03 21:58:10.340] [PRINT]   💰 ✅ [formatter] gpt-4o-mini | confirmation_formatter | in=263 out=82 | $0.0001 | 2671ms | cumulative: in=2774 out=340 total=3114 $0.0403
+[2026-04-03 21:58:10.347] [INFO] [req_20260403135757_16c8a3e8] [T:new]   INFO: Memory: added assistant message
+    ↳ {"tokens": 108, "total": 146, "max": 2000, "response_preview": "✅ **Ready to execute!**\n\nPlease review the meeting event details before I execute:\n\n- **Summary**: Meeting\n- **Date**: Thursday, April 7, 2026\n- **Time**: 10:00 AM to 12:00 PM\n- **Attendees**: pchua56..."}
+[2026-04-03 21:58:10.372] [PRINT] ✅ Created new thread: 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd for user: 0394a623-ae87-4b46-80ab-1a2210939426 with title: can you schedule me another meeting on April 7 10A...
+[2026-04-03 21:58:10.385] [PRINT] 
+[2026-04-03 21:58:10.385] [PRINT] ============================================================
+[2026-04-03 21:58:10.396] [PRINT] 📊 REQUEST TOKEN SUMMARY
+[2026-04-03 21:58:10.402] [PRINT] ============================================================
+[2026-04-03 21:58:10.409] [PRINT]   No LLM calls made in this request.
+[2026-04-03 21:58:10.416] [PRINT] ============================================================
+[2026-04-03 21:58:14.388] [INFO] [req_20260403135757_16c8a3e8] [T:new] ← RESPONSE: 200 (21577ms)
+[2026-04-03 21:58:14.388] [INFO] [req_20260403135757_16c8a3e8] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-03 21:58:18.189] [INFO] [req_20260403135757_16c8a3e8] [T:new] → REQUEST: POST /threads/0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd/messages  | {"query": null}
+[2026-04-03 21:58:22.647] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   USER MSG: "Yes"
+[2026-04-03 21:58:22.649] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 21:58:22.655] [PRINT]   📨  NEW MESSAGE  │  thread: 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd
+[2026-04-03 21:58:22.660] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 21:58:22.666] [PRINT]   User: Yes
+[2026-04-03 21:58:22.672] [PRINT]   ConversationState:
+[2026-04-03 21:58:22.680] [PRINT]     extracted_info: {"_cached_tool_filter": {"calendar_agent": ["create_event"], "gmail_agent": ["create_draft_email", "send_draft_email"]}, "summary": "Meeting", "start_time": "2026-04-07T10:00:00", "end_time": "2026-04-07T12:00:00", "attendees": ["pchua5644@gmail.com"], "add_meet_link": true}
+[2026-04-03 21:58:22.686] [PRINT]     missing_fields: []
+[2026-04-03 21:58:22.692] [PRINT]     intent: "ready_to_execute"
+[2026-04-03 21:58:22.698] [PRINT]     clarification_question: null
+[2026-04-03 21:58:22.703] [PRINT]     ready_for_execution: false
+[2026-04-03 21:58:22.709] [PRINT]     execution_summary: "Create a meeting event on April 7 from 10AM to 12PM, invite pchua5644@gmail.com and add a Google Meet link."
+[2026-04-03 21:58:22.715] [PRINT]     execution_mode: "standard"
+[2026-04-03 21:58:22.721] [PRINT]     execution_history: []
+[2026-04-03 21:58:22.727] [PRINT]     completed_tasks: []
+[2026-04-03 21:58:22.734] [PRINT]     has_executed: false
+[2026-04-03 21:58:22.739] [PRINT]     last_executed_at: null
+[2026-04-03 21:58:22.745] [PRINT]     last_execution_status: null
+[2026-04-03 21:58:22.751] [PRINT]     last_execution_message: null
+[2026-04-03 21:58:22.757] [PRINT]     executing: false
+[2026-04-03 21:58:22.763] [PRINT]     pending_actions: []
+[2026-04-03 21:58:22.769] [PRINT]     workflow_paused: false
+[2026-04-03 21:58:22.774] [PRINT]     remaining_steps: []
+[2026-04-03 21:58:22.781] [PRINT]     workflow_context: null
+[2026-04-03 21:58:22.786] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-03 21:58:22.792] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   STEP [new_message]: thread=0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd, msg=Yes
+[2026-04-03 21:58:22.793] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   INFO: Memory: added user message  | {"tokens": 6, "total": 152, "max": 2000}
+[2026-04-03 21:58:22.797] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-03 21:58:22.797] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-03 21:58:22.798] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Create a meeting event on April 7 from 10AM to 12PM, invite pchua5644@gmail.com and add a Google Meet link.", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"calendar_agent": ["create_event"], "gmail_agent": ["send_draft_email", "create_draft_email"]}, "summary": "Meeting", "start_time": "2026-04-0
+[2026-04-03 21:58:25.167] [PRINT]   💰 ✅ [formatter] gpt-4o-mini | confirmation_formatter | in=263 out=82 | $0.0001 | 2321ms | cumulative: in=263 out=82 total=345 $0.0001
+[2026-04-03 21:58:25.172] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   INFO: Memory: added assistant message
+    ↳ {"tokens": 108, "total": 260, "max": 2000, "response_preview": "✅ **Ready to execute!**\n\nPlease review the meeting event details before I execute:\n\n- **Summary**: Meeting\n- **Date**: Tuesday, April 7, 2026\n- **Time**: 10:00 AM to 12:00 PM\n- **Attendees**: pchua564..."}
+[2026-04-03 21:58:25.189] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   BOT RESP [READY TO EXECUTE]: "✅ **Ready to execute!**
+
+Please review the meeting event details before I execute:
+
+- **Summary**: M..."
+[2026-04-03 21:58:25.190] [PRINT] 🚀 Thread 0394a623-ae87-4b46-80ab-1a2210939426_53bf41dd ready - executing workflow...
+[2026-04-03 21:58:25.195] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-03 21:58:25.208] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   WORKFLOW START: "Create a meeting event on April 7 from 10AM to 12PM, invite pchua5644@gmail.com ..." (0 steps)
+[2026-04-03 21:58:25.208] [PRINT] 📅 Date context: today=2026-04-03
+[2026-04-03 21:58:25.213] [PRINT] 🚀 Starting workflow execution (mode=standard)...
+[2026-04-03 21:58:25.218] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-03 21:58:25.220] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-03 21:58:25.227] [PRINT] 
+[2026-04-03 21:58:25.227] [PRINT] ============================================================
+[2026-04-03 21:58:25.232] [PRINT] 🧠 SUPERVISOR NODE - Planning Phase
+[2026-04-03 21:58:25.238] [PRINT] ============================================================
+[2026-04-03 21:58:25.243] [PRINT] 📥 User Input: Create a meeting event on April 7 from 10AM to 12PM, invite pchua5644@gmail.com and add a Google Meet link.
+[2026-04-03 21:58:25.243] [PRINT] 
+[2026-04-03 21:58:25.243] [PRINT] Parameters:
+[2026-04-03 21:58:25.243] [PRINT] - summary: Meeting
+[2026-04-03 21:58:25.243] [PRINT] - start_time: 2026-04-07T10:00:00
+[2026-04-03 21:58:25.243] [PRINT] - end_time: 2026-04-07T12:00:00
+[2026-04-03 21:58:25.243] [PRINT] - attendees: [
+[2026-04-03 21:58:25.243] [PRINT]   "pchua5644@gmail.com"
+[2026-04-03 21:58:25.243] [PRINT] ]
+[2026-04-03 21:58:25.243] [PRINT] - add_meet_link: True
+[2026-04-03 21:58:25.248] [INFO] [-]   STEP [supervisor_node]: Planning for: Create a meeting event on April 7 from 10AM to 12PM, invite pchua5644@gmail.com 
+[2026-04-03 21:58:25.249] [PRINT] 📅 Context dates: today=2026-04-03
+[2026-04-03 21:58:25.254] [PRINT] 📌 Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-03 21:58:25.260] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['calendar_agent', 'gmail_agent']
+[2026-04-03 21:58:25.260] [PRINT] 📌 Relevant agents: ['calendar_agent', 'gmail_agent']
+[2026-04-03 21:58:25.265] [PRINT] 🔧 Filtered tools: {'calendar_agent': ['create_event'], 'gmail_agent': ['send_draft_email', 'create_draft_email']}
+[2026-04-03 21:58:25.271] [PRINT] 🤖 Calling LLM to generate multi-step plan...
+[2026-04-03 21:58:25.276] [PRINT] 💰 Token optimization:
+[2026-04-03 21:58:25.282] [PRINT]    Agents: 2/6
+[2026-04-03 21:58:25.288] [PRINT]    Tools: 3/44
+[2026-04-03 21:58:25.294] [PRINT]    Context size: 2,303 chars (~575 tokens)
+[2026-04-03 21:58:25.299] [INFO] [-]   STEP [plan_generation_start]: agents=2/6, tools=3/44, context_tokens~575
+[2026-04-03 21:58:31.426] [PRINT]   💰 ✅ [supervisor] gpt-4 | plan_generation | in=1115 out=161 | $0.0431 | 6089ms | cumulative: in=1378 out=243 total=1621 $0.0432
+[2026-04-03 21:58:31.432] [PRINT] ✅ Plan generated successfully!
+[2026-04-03 21:58:31.439] [PRINT] 
+[2026-04-03 21:58:31.439] [PRINT] 📋 Generated Plan:
+[2026-04-03 21:58:31.439] [PRINT] {
+[2026-04-03 21:58:31.439] [PRINT]   "steps": [
+[2026-04-03 21:58:31.439] [PRINT]     {
+[2026-04-03 21:58:31.439] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 21:58:31.439] [PRINT]       "tool": "create_event",
+[2026-04-03 21:58:31.439] [PRINT]       "inputs": {
+[2026-04-03 21:58:31.439] [PRINT]         "summary": "Meeting",
+[2026-04-03 21:58:31.439] [PRINT]         "start_time": "2026-04-07T10:00:00",
+[2026-04-03 21:58:31.439] [PRINT]         "end_time": "2026-04-07T12:00:00",
+[2026-04-03 21:58:31.439] [PRINT]         "attendees": [
+[2026-04-03 21:58:31.439] [PRINT]           "pchua5644@gmail.com"
+[2026-04-03 21:58:31.439] [PRINT]         ],
+[2026-04-03 21:58:31.439] [PRINT]         "add_meet_link": true
+[2026-04-03 21:58:31.439] [PRINT]       },
+[2026-04-03 21:58:31.439] [PRINT]       "output_variables": {
+[2026-04-03 21:58:31.439] [PRINT]         "event_id": "event_id",
+[2026-04-03 21:58:31.439] [PRINT]         "meet_link": "meet_link"
+[2026-04-03 21:58:31.439] [PRINT]       },
+[2026-04-03 21:58:31.439] [PRINT]       "description": "Create a meeting event on April 7 from 10AM to 12PM, invite pchua5644@gmail.com and add a Google Meet link"
+[2026-04-03 21:58:31.439] [PRINT]     }
+[2026-04-03 21:58:31.439] [PRINT]   ]
+[2026-04-03 21:58:31.439] [PRINT] }
+[2026-04-03 21:58:31.446] [INFO] [-]   STEP [plan_generated]: 1 steps: calendar_agent.create_event
+[2026-04-03 21:58:31.447] [PRINT] 
+[2026-04-03 21:58:31.447] [PRINT] 💾 Plan saved to: E:\capstone\New folder\latestupdatetes\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-03 21:58:31.454] [PRINT] ============================================================
+[2026-04-03 21:58:31.461] [PRINT] 
+[2026-04-03 21:58:31.461] [PRINT] ============================================================
+[2026-04-03 21:58:31.467] [PRINT] ⚙️ ORCHESTRATOR NODE - Execution Phase
+[2026-04-03 21:58:31.473] [PRINT] ============================================================
+[2026-04-03 21:58:31.479] [PRINT] ✅ Found 1 steps to execute
+[2026-04-03 21:58:31.485] [INFO] [-]   STEP [orchestrator_node]: 1 steps to execute
+[2026-04-03 21:58:31.485] [PRINT] 
+[2026-04-03 21:58:31.485] [PRINT] 📦 INITIAL CONTEXT:
+[2026-04-03 21:58:31.491] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 21:58:31.496] [PRINT]    today_date: 2026-04-03
+[2026-04-03 21:58:31.503] [PRINT]    _cached_tool_filter: dict (length: 2)
+[2026-04-03 21:58:31.509] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 21:58:31.515] [PRINT] ✅ Pre-flight credential check passed (5 fields)
+[2026-04-03 21:58:31.521] [PRINT] 
+[2026-04-03 21:58:31.521] [PRINT] ============================================================
+[2026-04-03 21:58:31.527] [PRINT] 📍 Step 1/1: calendar_agent.create_event
+[2026-04-03 21:58:31.533] [PRINT] 📝 Description: Create a meeting event on April 7 from 10AM to 12PM, invite pchua5644@gmail.com and add a Google Meet link
+[2026-04-03 21:58:31.539] [PRINT] ============================================================
+[2026-04-03 21:58:31.552] [PRINT] ⚠️ Risk Level: moderate
+[2026-04-03 21:58:31.558] [PRINT] 
+[2026-04-03 21:58:31.558] [PRINT] 🔄 Substituting variables in inputs...
+[2026-04-03 21:58:31.564] [PRINT]    Original inputs: {
+[2026-04-03 21:58:31.564] [PRINT]       "summary": "Meeting",
+[2026-04-03 21:58:31.564] [PRINT]       "start_time": "2026-04-07T10:00:00",
+[2026-04-03 21:58:31.564] [PRINT]       "end_time": "2026-04-07T12:00:00",
+[2026-04-03 21:58:31.564] [PRINT]       "attendees": [
+[2026-04-03 21:58:31.564] [PRINT]             "pchua5644@gmail.com"
+[2026-04-03 21:58:31.564] [PRINT]       ],
+[2026-04-03 21:58:31.564] [PRINT]       "add_meet_link": true
+[2026-04-03 21:58:31.564] [PRINT] }
+[2026-04-03 21:58:31.571] [PRINT]    Substituted inputs: {
+[2026-04-03 21:58:31.571] [PRINT]       "summary": "Meeting",
+[2026-04-03 21:58:31.571] [PRINT]       "start_time": "2026-04-07T10:00:00",
+[2026-04-03 21:58:31.571] [PRINT]       "end_time": "2026-04-07T12:00:00",
+[2026-04-03 21:58:31.571] [PRINT]       "attendees": [
+[2026-04-03 21:58:31.571] [PRINT]             "pchua5644@gmail.com"
+[2026-04-03 21:58:31.571] [PRINT]       ],
+[2026-04-03 21:58:31.571] [PRINT]       "add_meet_link": true
+[2026-04-03 21:58:31.571] [PRINT] }
+[2026-04-03 21:58:31.577] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-03 21:58:31.584] [INFO] [-]   STEP [variable_substitution]: step 1: calendar_agent.create_event
+    ↳ {"inputs": {"summary": "Meeting", "start_time": "2026-04-07T10:00:00", "end_time": "2026-04-07T12:00:00", "attendees": ["pchua5644@gmail.com"], "add_meet_link": true}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-03 21:58:31.585] [PRINT] 
+[2026-04-03 21:58:31.585] [PRINT] 🌐 Calling agent microservice: http://localhost:8005/execute_task
+[2026-04-03 21:58:31.591] [PRINT] 
+[2026-04-03 21:58:31.591] [PRINT] 🔍 REQUEST PAYLOAD STRUCTURE:
+[2026-04-03 21:58:31.597] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 21:58:31.602] [PRINT]    Tool: create_event
+[2026-04-03 21:58:31.609] [PRINT]    Inputs keys: ['summary', 'start_time', 'end_time', 'attendees', 'add_meet_link']
+[2026-04-03 21:58:31.614] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-03 21:58:31.620] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-03 21:58:31.626] [PRINT]    Payload size: 808 bytes
+[2026-04-03 21:58:31.631] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 21:58:31.637] [PRINT] 
+[2026-04-03 21:58:31.637] [PRINT] 🚀 Sending request to agent...
+[2026-04-03 21:58:31.642] [PRINT]    URL: http://localhost:8005/execute_task
+[2026-04-03 21:58:31.648] [PRINT]    Timeout: 320 seconds
+[2026-04-03 21:58:31.654] [PRINT]    Max retries: 3
+[2026-04-03 21:58:31.659] [PRINT] 🔄 Attempt 1/3 calling http://localhost:8005/execute_task
+[2026-04-03 21:58:31.665] [PRINT]    ⏱️ Timeout set to: 320.0 seconds
+[2026-04-03 21:58:36.908] [PRINT] ✅ Agent call succeeded on attempt 1
+[2026-04-03 21:58:36.929] [PRINT] ⏱️ Agent call completed in 5292.56ms
+[2026-04-03 21:58:36.935] [PRINT] ✅ Agent response received
+[2026-04-03 21:58:36.940] [AGENT] [-]   AGENT: ✓ calendar_agent.create_event (5293ms)  | {"summary": "Meeting", "start_time": "2026-04-07T10:00:00", "end_time": "2026-04-07T12:00:00", "attendees": "['pchua5644@gmail.com']", "add_meet_link": "True"}
+[2026-04-03 21:58:36.940] [PRINT] 
+[2026-04-03 21:58:36.940] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 21:58:36.946] [PRINT] 📦 FULL AGENT RESPONSE DATA:
+[2026-04-03 21:58:36.951] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 21:58:36.956] [PRINT] {
+[2026-04-03 21:58:36.956] [PRINT]   "success": true,
+[2026-04-03 21:58:36.956] [PRINT]   "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 21:58:36.956] [PRINT]   "event_url": "https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-03 21:58:36.956] [PRINT]   "meet_link": "https://meet.google.com/tpg-gede-zjq",
+[2026-04-03 21:58:36.956] [PRINT]   "message": "\u2705 Successfully created event 'Meeting' from 2026-04-07T10:00:00 to 2026-04-07T12:00:00\n\ud83d\udce7 Invitations sent to: pchua5644@gmail.com\n\ud83c\udfa5 Google Meet: https://meet.google.com/tpg-gede-zjq\n\ud83d\udd17 View event: https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-03 21:58:36.956] [PRINT]   "error": null
+[2026-04-03 21:58:36.956] [PRINT] }
+[2026-04-03 21:58:36.963] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 21:58:36.968] [PRINT] 
+[2026-04-03 21:58:36.968] [PRINT] 📦 Variables added to context:
+[2026-04-03 21:58:36.975] [PRINT]    ✓ event_id = q0m6d146pg4ligoaddgeu7ocpc (from event_id)
+[2026-04-03 21:58:36.981] [PRINT]    ✓ meet_link = https://meet.google.com/tpg-gede-zjq (from meet_link)
+[2026-04-03 21:58:36.987] [PRINT] 
+[2026-04-03 21:58:36.987] [PRINT] 📊 CONTEXT AFTER STEP 1:
+[2026-04-03 21:58:36.992] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 21:58:36.998] [PRINT]    today_date: 2026-04-03
+[2026-04-03 21:58:37.004] [PRINT]    _cached_tool_filter: Dict with keys: ['calendar_agent', 'gmail_agent']
+[2026-04-03 21:58:37.010] [PRINT]    step_1_calendar_agent: Dict with keys: ['event_id', 'event_url', 'meet_link', 'message']
+[2026-04-03 21:58:37.016] [PRINT]    event_id: q0m6d146pg4ligoaddgeu7ocpc
+[2026-04-03 21:58:37.022] [PRINT]    meet_link: https://meet.google.com/tpg-gede-zjq
+[2026-04-03 21:58:37.028] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-03 21:58:37.040] [PRINT] 
+[2026-04-03 21:58:37.040] [PRINT] ============================================================
+[2026-04-03 21:58:37.046] [PRINT] ✅ ORCHESTRATOR COMPLETED
+[2026-04-03 21:58:37.052] [PRINT] ============================================================
+[2026-04-03 21:58:37.058] [PRINT] 📊 Total steps: 1
+[2026-04-03 21:58:37.063] [PRINT] ✓ Successful: 1
+[2026-04-03 21:58:37.069] [PRINT] ℹ️ No Results: 0
+[2026-04-03 21:58:37.075] [PRINT] ✗ Failed: 0
+[2026-04-03 21:58:37.081] [PRINT] ============================================================
+[2026-04-03 21:58:37.096] [INFO] [-]   STEP [orchestrator_complete]: steps=1, success=1, no_results=0, errors=0
+[2026-04-03 21:58:37.099] [PRINT] 
+[2026-04-03 21:58:37.099] [PRINT] ✅ Workflow completed successfully
+[2026-04-03 21:58:37.118] [INFO] [-]   WORKFLOW END: success (1/1 steps)
+[2026-04-03 21:58:37.119] [PRINT] 
+[2026-04-03 21:58:37.119] [PRINT] 📋 Generated Plan:
+[2026-04-03 21:58:37.119] [PRINT] {
+[2026-04-03 21:58:37.119] [PRINT]   "steps": [
+[2026-04-03 21:58:37.119] [PRINT]     {
+[2026-04-03 21:58:37.119] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 21:58:37.119] [PRINT]       "tool": "create_event",
+[2026-04-03 21:58:37.119] [PRINT]       "inputs": {
+[2026-04-03 21:58:37.119] [PRINT]         "summary": "Meeting",
+[2026-04-03 21:58:37.119] [PRINT]         "start_time": "2026-04-07T10:00:00",
+[2026-04-03 21:58:37.119] [PRINT]         "end_time": "2026-04-07T12:00:00",
+[2026-04-03 21:58:37.119] [PRINT]         "attendees": [
+[2026-04-03 21:58:37.119] [PRINT]           "pchua5644@gmail.com"
+[2026-04-03 21:58:37.119] [PRINT]         ],
+[2026-04-03 21:58:37.119] [PRINT]         "add_meet_link": true
+[2026-04-03 21:58:37.119] [PRINT]       },
+[2026-04-03 21:58:37.119] [PRINT]       "output_variables": {
+[2026-04-03 21:58:37.119] [PRINT]         "event_id": "event_id",
+[2026-04-03 21:58:37.119] [PRINT]         "meet_link": "meet_link"
+[2026-04-03 21:58:37.119] [PRINT]       },
+[2026-04-03 21:58:37.119] [PRINT]       "description": "Create a meeting event on April 7 from 10AM to 12PM, invite pchua5644@gmail.com and add a Google Meet link"
+[2026-04-03 21:58:37.119] [PRINT]     }
+[2026-04-03 21:58:37.119] [PRINT]   ]
+[2026-04-03 21:58:37.119] [PRINT] }
+[2026-04-03 21:58:37.126] [PRINT] 
+[2026-04-03 21:58:37.126] [PRINT] 📊 Final Context: {
+[2026-04-03 21:58:37.126] [PRINT]   "today_date": "2026-04-03",
+[2026-04-03 21:58:37.126] [PRINT]   "_cached_tool_filter": {
+[2026-04-03 21:58:37.126] [PRINT]     "calendar_agent": [
+[2026-04-03 21:58:37.126] [PRINT]       "create_event"
+[2026-04-03 21:58:37.126] [PRINT]     ],
+[2026-04-03 21:58:37.126] [PRINT]     "gmail_agent": [
+[2026-04-03 21:58:37.126] [PRINT]       "send_draft_email",
+[2026-04-03 21:58:37.126] [PRINT]       "create_draft_email"
+[2026-04-03 21:58:37.126] [PRINT]     ]
+[2026-04-03 21:58:37.126] [PRINT]   },
+[2026-04-03 21:58:37.126] [PRINT]   "step_1_calendar_agent": {
+[2026-04-03 21:58:37.126] [PRINT]     "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 21:58:37.126] [PRINT]     "event_url": "https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-03 21:58:37.126] [PRINT]     "meet_link": "https://meet.google.com/tpg-gede-zjq",
+[2026-04-03 21:58:37.126] [PRINT]     "message": "\u2705 Successfully created event 'Meeting' from 2026-04-07T10:00:00 to 2026-04-07T12:00:00\n\ud83d\udce7 Invitations sent to: pchua5644@gmail.com\n\ud83c\udfa5 Google Meet: https://meet.google.com/tpg-gede-zjq\n\ud83d\udd17 View event: https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA"
+[2026-04-03 21:58:37.126] [PRINT]   },
+[2026-04-03 21:58:37.126] [PRINT]   "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 21:58:37.126] [PRINT]   "meet_link": "https://meet.google.com/tpg-gede-zjq",
+[2026-04-03 21:58:37.126] [PRINT]   "results": [
+[2026-04-03 21:58:37.126] [PRINT]     {
+[2026-04-03 21:58:37.126] [PRINT]       "step": 1,
+[2026-04-03 21:58:37.126] [PRINT]       "agent": "calendar_agent",
+[2026-04-03 21:58:37.126] [PRINT]       "tool": "create_event",
+[2026-04-03 21:58:37.126] [PRINT]       "description": "Create a meeting event on April 7 from 10AM to 12PM, invite pchua5644@gmail.com and add a Google Meet link",
+[2026-04-03 21:58:37.126] [PRINT]       "inputs": {
+[2026-04-03 21:58:37.126] [PRINT]         "summary": "Meeting",
+[2026-04-03 21:58:37.126] [PRINT]         "start_time": "2026-04-07T10:00:00",
+[2026-04-03 21:58:37.126] [PRINT]         "end_time": "2026-04-07T12:00:00",
+[2026-04-03 21:58:37.126] [PRINT]         "attendees": [
+[2026-04-03 21:58:37.126] [PRINT]           "pchua5644@gmail.com"
+[2026-04-03 21:58:37.126] [PRINT]         ],
+[2026-04-03 21:58:37.126] [PRINT]         "add_meet_link": true
+[2026-04-03 21:58:37.126] [PRINT]       },
+[2026-04-03 21:58:37.126] [PRINT]       "output": {
+[2026-04-03 21:58:37.126] [PRINT]         "success": true,
+[2026-04-03 21:58:37.126] [PRINT]         "event_id": "q0m6d146pg4ligoaddgeu7ocpc",
+[2026-04-03 21:58:37.126] [PRINT]         "event_url": "https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-03 21:58:37.126] [PRINT]         "meet_link": "https://meet.google.com/tpg-gede-zjq",
+[2026-04-03 21:58:37.126] [PRINT]         "message": "\u2705 Successfully created event 'Meeting' from 2026-04-07T10:00:00 to 2026-04-07T12:00:00\n\ud83d\udce7 Invitations sent to: pchua5644@gmail.com\n\ud83c\udfa5 Google Meet: https://meet.google.com/tpg-gede-zjq\n\ud83d\udd17 View event: https://www.google.com/calendar/event?eid=cTBtNmQxNDZwZzRsaWdvYWRkZ2V1N29jcGMgcGF1bC5jaHVhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-03 21:58:37.126] [PRINT]         "error": null
+[2026-04-03 21:58:37.126] [PRINT]       },
+[2026-04-03 21:58:37.126] [PRINT]       "status": "success"
+[2026-04-03 21:58:37.126] [PRINT]     }
+[2026-04-03 21:58:37.126] [PRINT]   ]
+[2026-04-03 21:58:37.126] [PRINT] }
+[2026-04-03 21:58:37.132] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-03 21:58:37.133] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd]   INFO: Memory: added assistant message
+    ↳ {"tokens": 146, "total": 406, "max": 2000, "response_preview": "✅ Successfully created event 'Meeting' from 2026-04-07T10:00:00 to 2026-04-07T12:00:00\n📧 Invitations sent to: pchua5644@gmail.com\n🎥 Google Meet: https://meet.google.com/tpg-gede-zjq\n🔗 View event: http..."}
+[2026-04-03 21:58:37.170] [PRINT] 
+[2026-04-03 21:58:37.170] [PRINT] ============================================================
+[2026-04-03 21:58:37.175] [PRINT] 📊 REQUEST TOKEN SUMMARY
+[2026-04-03 21:58:37.182] [PRINT] ============================================================
+[2026-04-03 21:58:37.188] [PRINT]   LLM calls:        2
+[2026-04-03 21:58:37.194] [PRINT]   Total input:      1,378 tokens
+[2026-04-03 21:58:37.200] [PRINT]   Total output:     243 tokens
+[2026-04-03 21:58:37.205] [PRINT]   Total tokens:     1,621 tokens
+[2026-04-03 21:58:37.211] [PRINT]   Estimated cost:   $0.0432
+[2026-04-03 21:58:37.217] [PRINT]   Total duration:   14562ms (14.6s)
+[2026-04-03 21:58:37.223] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-03 21:58:37.228] [PRINT]   Breakdown by call:
+[2026-04-03 21:58:37.235] [PRINT]     1. gpt-4o-mini      in=263    out=82    $0.0001 2321ms
+[2026-04-03 21:58:37.240] [PRINT]     2. gpt-4            in=1115   out=161   $0.0431 6089ms
+[2026-04-03 21:58:37.246] [PRINT] ============================================================
+[2026-04-03 21:58:37.252] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd] ← RESPONSE: 200 (19062ms)
+[2026-04-03 21:58:37.252] [INFO] [req_20260403135822_2ea1e36f] [T:53bf41dd] ─────────: ──────────────────────────────────────────────────

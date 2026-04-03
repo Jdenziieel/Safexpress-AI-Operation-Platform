@@ -1385,8 +1385,9 @@
 .inline-chat-progress {
   display: flex;
   flex-direction: column;
+  gap: 10px;
   margin: 16px 0;
-  padding: 16px 20px;
+  padding: 14px 18px;
   background: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 100%);
   border: 1px solid #d0deff;
   border-radius: 12px;
@@ -1395,101 +1396,106 @@
 }
 
 @keyframes progressFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ---- Stage timeline dots ---- */
+.stage-timeline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.stage-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #dde5f7;
+  color: #9ba8c9;
+  transition: all 0.35s ease;
+  flex-shrink: 0;
+}
+
+.stage-dot.past {
+  background: var(--aui-primary);
+  color: white;
+}
+
+.stage-dot.current {
+  background: var(--aui-primary);
+  color: white;
+  box-shadow: 0 0 0 3px rgba(74, 93, 199, 0.25);
+  animation: stagePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes stagePulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(74, 93, 199, 0.25); }
+  50%      { box-shadow: 0 0 0 6px rgba(74, 93, 199, 0.10); }
+}
+
+/* ---- Header row: icon + label + elapsed ---- */
 .inline-progress-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
 }
 
 .inline-progress-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   background: var(--aui-primary);
   border-radius: 50%;
   color: white;
+  flex-shrink: 0;
 }
 
 .inline-progress-icon .spinner {
   animation: spin 1s linear infinite;
 }
 
-.inline-progress-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--aui-primary);
-}
-
-.inline-progress-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.inline-progress-step {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.step-indicator {
+.inline-progress-label {
   display: flex;
   align-items: baseline;
-  gap: 4px;
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-
-.step-number {
-  font-weight: 700;
-  color: var(--aui-primary);
-}
-
-.step-total {
-  color: var(--aui-text-muted);
-  font-weight: 400;
-}
-
-.step-details {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }
 
-.step-name {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--aui-text);
+.inline-progress-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--aui-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.step-agent {
-  font-size: 0.75rem;
+.inline-step-counter {
+  font-size: 0.78rem;
+  font-weight: 500;
   color: var(--aui-text-muted);
+  white-space: nowrap;
 }
 
-/* Progress bar */
+.inline-elapsed {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--aui-text-muted);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+/* ---- Progress bar ---- */
 .inline-progress-bar-container {
   height: 4px;
   background: #dde5f7;
@@ -1501,24 +1507,13 @@
   height: 100%;
   background: linear-gradient(90deg, var(--aui-primary) 0%, #4a5dc7 100%);
   border-radius: 2px;
-  transition: width 0.4s ease-out;
+  transition: width 0.5s ease-out;
   animation: progressPulse 1.5s ease-in-out infinite;
 }
 
 @keyframes progressPulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.inline-progress-message {
-  font-size: 0.8rem;
-  color: var(--aui-text-muted);
-  font-style: italic;
-  padding-left: 4px;
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.7; }
 }
 
 /* Hide old execution progress panel since we're using inline */

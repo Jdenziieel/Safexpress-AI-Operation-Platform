@@ -42,7 +42,8 @@ from thread_manager import ThreadManager
 from logging_config import (
     conversational_logger as logger,
     get_current_request_id,
-    get_token_summary
+    get_token_summary,
+    get_current_thread_id,
 )
 
 # Import Tier 0 pattern-based checks mixin
@@ -276,6 +277,10 @@ class ConversationalAgent(Tier0ChecksMixin):
         # 3. Continue with standard message analysis for non-delivery-order requests
         analysis = self.analyze_request(user_message, conversation_state, state_id, uploaded_file=uploaded_file)
 
+        # === PROGRESS: Understanding ===
+        from supervisor_agent import broadcast_progress_sync
+        broadcast_progress_sync(0, 0, "Understanding your request...", status="understanding")
+
         trace.analysis_result(
             intent=str(analysis.intent) if hasattr(analysis, 'intent') else "unknown",
             ready=analysis.execution_ready if hasattr(analysis, 'execution_ready') else False,
@@ -298,7 +303,7 @@ class ConversationalAgent(Tier0ChecksMixin):
 
             # Was the system already showing a confirmation prompt?
             was_awaiting = (
-                conversation_state.intent == ConversationIntent.READY_TO_EXECUTE
+                conversation_state.intent in (ConversationIntent.READY_TO_EXECUTE, ConversationIntent.TEMPLATE_UPLOAD)
                 and not conversation_state.ready_for_execution
             )
 
@@ -315,6 +320,12 @@ class ConversationalAgent(Tier0ChecksMixin):
                                 existing[agent] = tools
                     else:
                         conversation_state.extracted_info[key] = value
+
+            # Ensure uploaded_file reaches extracted_info so the supervisor can access it.
+            # The template_upload handler already does this, but the task_request
+            # path through Tier 1 does not -- the LLM only extracts user-specified params.
+            if uploaded_file and "uploaded_file" not in conversation_state.extracted_info:
+                conversation_state.extracted_info["uploaded_file"] = uploaded_file
             
             # Update other state fields
             conversation_state.missing_fields = analysis.missing_fields
@@ -330,7 +341,7 @@ class ConversationalAgent(Tier0ChecksMixin):
             # must reply "yes".  On that reply, Tier 0/0.5 returns
             # READY_TO_EXECUTE with the same extracted_info (dict
             # unchanged after merge) — only then do we set True.
-            if analysis.execution_ready and analysis.intent == ConversationIntent.READY_TO_EXECUTE:
+            if analysis.execution_ready and analysis.intent in (ConversationIntent.READY_TO_EXECUTE, ConversationIntent.TEMPLATE_UPLOAD):
                 if was_awaiting and conversation_state.extracted_info == old_info:
                     conversation_state.ready_for_execution = True
                 else:
@@ -426,7 +437,7 @@ class ConversationalAgent(Tier0ChecksMixin):
                 if analysis.extracted_info.get('save_to_drive'):
                     response += f"**Template name:** {analysis.extracted_info.get('template_name')}\n"
                 response += f"**Document title:** {analysis.extracted_info.get('document_title')}\n\n"
-                response += f"I'll upload the template to your Drive and create the document now."
+                response += "---\nReply **\"yes\"** to proceed or **\"cancel\"** to stop."
             else:
                 response = analysis.clarification_question or "Please provide more details."
 
@@ -551,6 +562,8 @@ class ConversationalAgent(Tier0ChecksMixin):
         enrichment_context_vars = {}
         if enrichment_hints and enrichment_hints.get("needs_enrichment"):
             from services.content_enrichment import enrich_message as _enrich, extract_file_context
+            from supervisor_agent import broadcast_progress_sync
+            broadcast_progress_sync(0, 0, "Generating content...", status="understanding")
             print(f"\n{'─'*50}")
             print(f"✨ ENRICHMENT PHASE — Generating/transforming content")
             print(f"   Tasks: {enrichment_hints.get('tasks', [])}")
@@ -669,6 +682,7 @@ When user mentions creating a document using BOTH a template AND a data file:
 
 DERIVABLE FIELDS: Fields marked [via tool: criteria] are derived at execution time. Extract the search criteria instead — do NOT ask the user for the derived field.
 Example: forward_email(message_id [via search_emails: query], to) → extract {{"query": "...", "to": "..."}}
+When a file is attached (noted in the user message), file_path and filename are already provided by the upload system — do NOT list them as missing_fields.
 
 CONTEXT RULES:
 - Post-execution modifications are NEW tasks
@@ -699,7 +713,15 @@ EMAIL ADDRESSES: NEVER invent or guess email addresses. If the user provides onl
 Available agents and tools:
 {capabilities_to_show}"""
 
-        user_prompt = f"""{history_text}{exec_context}CURRENT USER MESSAGE: {enriched_message}"""
+        file_context_tier1 = ""
+        if uploaded_file:
+            file_context_tier1 = (
+                f"\n\nATTACHED FILE: {uploaded_file.get('filename', 'unknown')} "
+                f"({uploaded_file.get('mime_type', 'unknown')}, {uploaded_file.get('size', 0)} bytes). "
+                f"The file is available for upload/processing."
+            )
+
+        user_prompt = f"""{history_text}{exec_context}{file_context_tier1}CURRENT USER MESSAGE: {enriched_message}"""
 
         # Print user_prompt for observability
         user_prompt_preview = user_prompt[:500] + ("..." if len(user_prompt) > 500 else "")
@@ -1084,7 +1106,10 @@ CATEGORIES (pick ONE):
 4. followup_answer — Direct answer to bot's question ("john@example.com")
 5. casual_conversation — Chitchat, greetings
 6. unintelligible — Cannot understand
-7. template_upload — User uploaded file + wants document/save
+7. template_upload — User uploaded a DOCUMENT (DOCX/PDF/DOC) AND explicitly wants to CREATE A NEW DOCUMENT from it as a template. NOT for simple file uploads to Drive.
+   - "Upload this DOCX and use it as a template" = template_upload
+   - "Upload this image/file to my Drive folder" = task_request (NOT template_upload)
+   - "Save this file in my folder" = task_request (NOT template_upload)
 8. task_request — New action request or redo
 9. status_update — Asking about previous result ("did it work?")
 
@@ -1429,18 +1454,20 @@ User: "{user_message}" """
                 ), None, None
             
             if category == "template_upload":
-                if not uploaded_file:
+                effective_file = uploaded_file or conversation_state.extracted_info.get("uploaded_file")
+                if not effective_file:
                     trace.step("tier0.5", "template_upload detected but no file provided")
                     return ConversationAnalysis(
                         intent=ConversationIntent.NEEDS_CLARIFICATION,
                         task_type="template_upload",
-                        extracted_info={},
+                        extracted_info=conversation_state.extracted_info,
                         missing_fields=["file_upload"],
                         clarification_question="Please upload a template file to continue.",
                         reasoning="Template upload requested but no file attached",
                         execution_ready=False,
                         execution_summary=None
                 ), None, None
+                uploaded_file = effective_file
             
             save_to_drive = result.get("save_to_drive", True)
             template_name = result.get("template_name")
@@ -1456,21 +1483,6 @@ User: "{user_message}" """
                 "save_to_drive": save_to_drive,
                 "template_name": template_name
             }
-            if document_title:
-                extracted_info["document_title"] = document_title
-            
-            missing_fields = []
-            if not document_title:
-                missing_fields.append("document_title")
-
-            if missing_fields:
-                clarification_q = f"Great! I'll save this as '{template_name}' template.\n\n"
-                clarification_q += f"What should I title the new document I create from it?"
-            else:
-                clarification_q = None
-            
-            if template_name:
-                extracted_info["template_name"] = template_name
             if document_title:
                 extracted_info["document_title"] = document_title
             

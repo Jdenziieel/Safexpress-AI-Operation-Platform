@@ -476,6 +476,15 @@ agent_capabilities = {
                 },
                 "returns": ["success", "template_file_id", "template_file_name", "data_file_id", "data_file_name", "message", "error"],
             },
+            "rename_file": {
+                "description": "Rename a file or folder in Google Drive.",
+                "args": {
+                    "file_id": "str (required) — Drive file/folder ID to rename [via search_files: search_term]",
+                    "new_name": "str (required) — new name for the file/folder",
+                },
+                "returns": ["success", "file_id", "new_name", "message", "error"],
+                "can_be_derived_from": {"file_id": "search_files"},
+            },
         },
     },
 }

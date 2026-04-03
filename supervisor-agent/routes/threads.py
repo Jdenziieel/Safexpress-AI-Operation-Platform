@@ -28,6 +28,7 @@ from logging_config import (
 from supervisor_agent import (
     conversational_agent,
     save_conversation_state,
+    broadcast_progress,
 )
 from models.models import CreateThreadRequest
 from routes.workflow import run_workflow
@@ -424,6 +425,12 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
     conversation_state.ready_for_execution = False
     conversation_state.intent = None
     conversation_state.execution_summary = None
+
+    # Clean up temp file if execution was deferred from a prior upload request
+    deferred_file = conversation_state.extracted_info.get("uploaded_file")
+    if deferred_file and isinstance(deferred_file, dict):
+        delete_temp_file(deferred_file)
+
     conversation_state.extracted_info = {}
     conversation_state.missing_fields = []
     conversation_state.clarification_question = None
@@ -444,6 +451,9 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
     # Cap completed_tasks at 10 entries (FIFO)
     if len(conversation_state.completed_tasks) > 10:
         conversation_state.completed_tasks = conversation_state.completed_tasks[-10:]
+
+    # === PROGRESS: Composing response ===
+    await broadcast_progress(thread_id, 0, 0, "Preparing your response...", status="composing")
 
     # Generate user-friendly summary
     friendly_summary = conversational_agent.summarization_service.summarize_execution(
@@ -680,13 +690,17 @@ async def create_thread_with_upload(
         # Store in both cache and SQLite for persistence
         save_conversation_state(thread_id, conversation_state)
 
-        # Process message with file
-        response_text, updated_state = conversational_agent.process_message(
+        # === PROGRESS: Analyzing ===
+        await broadcast_progress(thread_id, 0, 0, "Analyzing your message...", status="analyzing")
+
+        # Run in thread so the event loop stays free to deliver WebSocket progress
+        response_text, updated_state = await asyncio.to_thread(
+            conversational_agent.process_message,
             user_message=message,
             conversation_state=conversation_state,
             state_id=thread_id,
             auto_save=True,
-            uploaded_file=uploaded_file
+            uploaded_file=uploaded_file,
         )
 
         print(f"🤖 Bot response: {response_text}")
@@ -969,12 +983,16 @@ async def send_message_to_thread(thread_id: str, request: dict):
                 detail="Thread is currently executing. Please wait until the operation completes.",
             )
 
-        # Process the message using the already-loaded state (avoids a redundant DB load)
-        response_text, conversation_state = conversational_agent.process_message(
+        # === PROGRESS: Analyzing ===
+        await broadcast_progress(thread_id, 0, 0, "Analyzing your message...", status="analyzing")
+
+        # Run in thread so the event loop stays free to deliver WebSocket progress
+        response_text, conversation_state = await asyncio.to_thread(
+            conversational_agent.process_message,
             user_message=message,
             conversation_state=conversation_state,
             state_id=thread_id,
-            auto_save=True
+            auto_save=True,
         )
 
         trace.bot_response(response_text, conversation_state.ready_for_execution)
@@ -1287,13 +1305,17 @@ async def send_message_to_thread_with_upload(
                 detail="Thread is currently executing. Please wait until the operation completes.",
             )
 
-        # Process message with file
-        response_text, updated_state = conversational_agent.process_message(
+        # === PROGRESS: Analyzing ===
+        await broadcast_progress(thread_id, 0, 0, "Analyzing your message...", status="analyzing")
+
+        # Run in thread so the event loop stays free to deliver WebSocket progress
+        response_text, updated_state = await asyncio.to_thread(
+            conversational_agent.process_message,
             user_message=message,
             conversation_state=conversation_state,
             state_id=thread_id,
             auto_save=True,
-            uploaded_file=uploaded_file
+            uploaded_file=uploaded_file,
         )
 
         print(f"🤖 Bot response: {response_text}")

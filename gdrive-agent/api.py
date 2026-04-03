@@ -34,6 +34,7 @@ from tools import (
     list_files_in_folder,
     get_folder_structure,
     search_files_in_safeexpress,
+    rename_file_impl,
 )
 
 # Initialize FastAPI app
@@ -814,6 +815,43 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
         }
 
 
+def rename_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Rename a file or folder in Google Drive.
+
+    Inputs:
+        file_id: str (required) - Drive file/folder ID to rename
+        new_name: str (required) - New name for the file/folder
+
+    Returns:
+        success: bool
+        file_id: str - ID of the renamed file
+        new_name: str - New name after renaming
+        message: str
+        error: str or None
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+
+        file_id = inputs.get("file_id")
+        new_name = inputs.get("new_name")
+        if not file_id:
+            return {"success": False, "error": "file_id is required"}
+        if not new_name:
+            return {"success": False, "error": "new_name is required"}
+
+        return rename_file_impl(service, file_id, new_name)
+
+    except Exception as e:
+        return {
+            "success": False,
+            "file_id": None,
+            "new_name": None,
+            "error": str(e),
+            "message": f"❌ Rename failed: {str(e)}"
+        }
+
+
 # ============================================================
 # TOOL REGISTRY (Maps tool names to functions)
 # ============================================================
@@ -827,7 +865,8 @@ DRIVE_TOOLS = {
     "get_folder_info": get_folder_info_tool,
     "upload_template": upload_template_tool, 
     "read_file_content": read_file_content_tool,
-    "search_template_and_data": search_template_and_data_tool
+    "search_template_and_data": search_template_and_data_tool,
+    "rename_file": rename_file_tool,
 }
 
 

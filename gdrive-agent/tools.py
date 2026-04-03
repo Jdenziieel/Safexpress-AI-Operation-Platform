@@ -576,3 +576,28 @@ def search_files_in_safeexpress(service, search_term: str) -> List[Dict]:
     if not result.get("success"):
         raise Exception(result.get("error"))
     return result.get("results", [])
+
+
+def rename_file_impl(service, file_id: str, new_name: str) -> Dict:
+    """Rename a file or folder in Google Drive - RETURNS DICT"""
+    try:
+        updated = service.files().update(
+            fileId=file_id,
+            body={'name': new_name},
+            fields='id, name'
+        ).execute()
+        return {
+            "success": True,
+            "file_id": updated['id'],
+            "new_name": updated['name'],
+            "message": f"Renamed to '{updated['name']}'",
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "file_id": None,
+            "new_name": None,
+            "message": f"Rename failed: {str(e)}",
+            "error": str(e)
+        }

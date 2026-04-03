@@ -24,7 +24,12 @@ import {
   DollarSign,
   ChevronDown,
   ChevronUp,
-  RefreshCw
+  RefreshCw,
+  Search,
+  ClipboardList,
+  Play,
+  PenTool,
+  Brain
 } from "lucide-react";
 import { getUserFromToken, getUserUUID } from "../utils/tokenManager";
 import "../css/AIChatNew.css";
@@ -134,64 +139,83 @@ function TokenUsageBadge({ usage }) {
   );
 }
 
-// Inline Chat Progress Component - Shows in message area during execution
-function InlineChatProgress({ progress }) {
+// Stage configuration: maps backend status codes to display props
+const STAGE_CONFIG = {
+  analyzing:        { icon: Search,        label: 'Analyzing',       percent: 5  },
+  understanding:    { icon: Brain,         label: 'Understanding',   percent: 15 },
+  classifying:      { icon: ListTodo,      label: 'Classifying',     percent: 25 },
+  planning:         { icon: ClipboardList, label: 'Planning',        percent: 35 },
+  executing:        { icon: Play,          label: 'Executing',       percent: 55 },
+  composing:        { icon: PenTool,       label: 'Composing',       percent: 90 },
+};
+
+const STAGE_ORDER = ['analyzing', 'understanding', 'classifying', 'planning', 'executing', 'composing'];
+
+function InlineChatProgress({ progress, startTime }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!startTime) return;
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 500);
+    return () => clearInterval(id);
+  }, [startTime]);
+
   if (!progress) return null;
   
-  const { current_step, total_steps, step_name, agent, status, message } = progress;
-  const isExecuting = status === 'executing' || status === 'processing' || status === 'in_progress';
-  
-  // Determine the title based on status
-  const getProgressTitle = () => {
-    switch(status) {
-      case 'initializing': return 'Preparing execution...';
-      case 'processing': return 'Processing your request...';
-      case 'executing': return 'Executing your request...';
-      case 'completed': return 'Completed!';
-      default: return 'Working on your request...';
-    }
-  };
-  
+  const { current_step, total_steps, step_name, status } = progress;
+  const stageCfg = STAGE_CONFIG[status] || STAGE_CONFIG.analyzing;
+  const StageIcon = stageCfg.icon;
+
+  // For executing steps, interpolate between 35% and 90%
+  let barPercent = stageCfg.percent;
+  if (status === 'executing' && total_steps > 0 && current_step > 0) {
+    barPercent = 35 + ((current_step / total_steps) * 55);
+  }
+
+  const currentIdx = STAGE_ORDER.indexOf(status);
+
   return (
     <div className="inline-chat-progress">
+      {/* Stage timeline */}
+      <div className="stage-timeline">
+        {STAGE_ORDER.map((stageKey, idx) => {
+          const cfg = STAGE_CONFIG[stageKey];
+          const Icon = cfg.icon;
+          const isPast = idx < currentIdx;
+          const isCurrent = idx === currentIdx;
+          return (
+            <div key={stageKey} className={`stage-dot ${isPast ? 'past' : ''} ${isCurrent ? 'current' : ''}`}>
+              <Icon size={14} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Main content */}
       <div className="inline-progress-header">
         <div className="inline-progress-icon">
-          <Loader2 size={18} className="spinner" />
+          {status === 'executing' ? <StageIcon size={18} /> : <Loader2 size={18} className="spinner" />}
         </div>
-        <div className="inline-progress-title">
-          {getProgressTitle()}
+        <div className="inline-progress-label">
+          <span className="inline-progress-title">{step_name || stageCfg.label}</span>
+          {status === 'executing' && total_steps > 0 && (
+            <span className="inline-step-counter">Step {current_step}/{total_steps}</span>
+          )}
         </div>
+        {elapsed > 0 && (
+          <div className="inline-elapsed">
+            <Clock size={12} />
+            <span>{elapsed}s</span>
+          </div>
+        )}
       </div>
-      
-      <div className="inline-progress-body">
-        {/* Current step info */}
-        <div className="inline-progress-step">
-          <div className="step-indicator">
-            <span className="step-number">Step {current_step || 1}</span>
-            {total_steps > 0 && <span className="step-total">of {total_steps}</span>}
-          </div>
-          <div className="step-details">
-            {step_name && <span className="step-name">{step_name}</span>}
-            {agent && <span className="step-agent">via {agent}</span>}
-          </div>
-        </div>
-        
-        {/* Progress bar */}
-        {total_steps > 0 && (
-          <div className="inline-progress-bar-container">
-            <div 
-              className="inline-progress-bar" 
-              style={{ width: `${Math.min((current_step / total_steps) * 100, 100)}%` }}
-            />
-          </div>
-        )}
-        
-        {/* Status message */}
-        {message && (
-          <div className="inline-progress-message">
-            {message}
-          </div>
-        )}
+
+      {/* Progress bar */}
+      <div className="inline-progress-bar-container">
+        <div
+          className="inline-progress-bar"
+          style={{ width: `${Math.min(barPercent, 100)}%` }}
+        />
       </div>
     </div>
   );
@@ -262,6 +286,7 @@ function AIChatNew() {
   const [currentRequestId, setCurrentRequestId] = useState(null);
   // Inline progress state - shows current execution status in chat area
   const [inlineProgress, setInlineProgress] = useState(null);
+  const [progressStartTime, setProgressStartTime] = useState(null);
   // Quota exceeded modal state
   const [showQuotaModal, setShowQuotaModal] = useState(false);
   const [quotaInfo, setQuotaInfo] = useState(null);
@@ -282,19 +307,19 @@ function AIChatNew() {
 
   // Connect to WebSocket for real-time progress updates
   const connectProgressWebSocket = (targetThreadId) => {
-    // Close existing connection if any
     disconnectProgressWebSocket();
     
     console.log('🔌 Connecting WebSocket for thread:', targetThreadId);
     
-    // Set initial progress state
+    // Show initial progress immediately
+    setProgressStartTime(Date.now());
     setInlineProgress({
       current_step: 0,
       total_steps: 0,
-      step_name: 'Connecting...',
+      step_name: 'Analyzing your message...',
       agent: null,
-      status: 'executing',
-      message: 'Establishing connection...'
+      status: 'analyzing',
+      message: 'Analyzing your message...'
     });
     
     try {
@@ -303,17 +328,11 @@ function AIChatNew() {
       
       ws.onopen = () => {
         console.log('✅ WebSocket connected for progress');
-        setInlineProgress(prev => ({
-          ...prev,
-          step_name: 'Connected',
-          message: 'Waiting for execution to start...'
-        }));
       };
       
       ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
-          console.log('📨 WebSocket message:', message);
           
           if (message.type === 'progress') {
             const data = message.data;
@@ -325,21 +344,12 @@ function AIChatNew() {
               status: data.status || 'executing',
               message: data.step_name || 'Working on your request...'
             });
-            
-            // If completed, disconnect after a short delay
-            if (data.status === 'completed') {
-              setTimeout(() => {
-                disconnectProgressWebSocket();
-              }, 1000);
-            }
           } else if (message.type === 'token_usage') {
             setTokenUsage(prev => ({
               total_tokens: message.data.total_tokens || prev.total_tokens,
               total_cost_usd: message.data.total_cost_usd || prev.total_cost_usd,
               llm_calls: message.data.llm_calls || prev.llm_calls
             }));
-          } else if (message.type === 'pong' || message.type === 'connected') {
-            // Heartbeat/connection confirmation - ignore
           }
         } catch (e) {
           console.warn('Failed to parse WebSocket message:', e);
@@ -348,18 +358,15 @@ function AIChatNew() {
       
       ws.onerror = (error) => {
         console.warn('WebSocket error:', error);
-        // Fall back to polling
         startProgressPolling(targetThreadId);
       };
       
       ws.onclose = () => {
-        console.log('🔌 WebSocket disconnected');
         progressWebSocketRef.current = null;
       };
       
     } catch (error) {
       console.warn('Failed to create WebSocket:', error);
-      // Fall back to polling
       startProgressPolling(targetThreadId);
     }
   };
@@ -392,14 +399,14 @@ function AIChatNew() {
     
     console.log('📊 Starting progress polling (fallback) for thread:', targetThreadId);
     
-    // Set initial inline progress state
+    setProgressStartTime(Date.now());
     setInlineProgress({
       current_step: 0,
       total_steps: 0,
-      step_name: 'Initializing...',
+      step_name: 'Analyzing your message...',
       agent: null,
-      status: 'executing',
-      message: 'Starting execution...'
+      status: 'analyzing',
+      message: 'Analyzing your message...'
     });
     
     // Poll immediately, then every 1.5 seconds
@@ -807,6 +814,7 @@ function AIChatNew() {
     // Reset progress state for new request
     setExecutionProgress(null);
     setInlineProgress(null);
+    setProgressStartTime(null);
     setTokenUsage({ total_tokens: 0, total_cost_usd: 0 });
     setCurrentRequestId(null);
 
@@ -840,15 +848,19 @@ function AIChatNew() {
       console.log("📤 Sending message:", userMessage);
       console.log("📍 Thread ID:", currentThreadId || "null (first message)");
 
-      // Show initial progress while processing
-      setInlineProgress({
-        current_step: 1,
-        total_steps: 0,
-        step_name: 'Processing your request...',
-        agent: null,
-        status: 'executing',
-        message: 'Analyzing your message...'
-      });
+      // Connect WebSocket BEFORE the HTTP call so we receive progress during execution
+      if (currentThreadId) {
+        connectProgressWebSocket(currentThreadId);
+      } else {
+        // No thread yet -- show static progress (no WS available until thread is created)
+        setProgressStartTime(Date.now());
+        setInlineProgress({
+          current_step: 0, total_steps: 0,
+          step_name: 'Analyzing your message...',
+          status: 'analyzing', agent: null,
+          message: 'Analyzing your message...'
+        });
+      }
 
       let responseData;
       
@@ -871,7 +883,6 @@ function AIChatNew() {
           }
           responseData = response.data;
           
-          // Check for LLM error in response
           if (responseData.is_llm_error) {
             const error = new Error(responseData.user_message || responseData.message);
             error.responseData = responseData;
@@ -880,9 +891,8 @@ function AIChatNew() {
           
           console.log("📥 Created thread:", responseData);
           
-          // Set the new thread ID
           setThreadId(responseData.thread_id);
-          await fetchThreads(); // Refresh threads list
+          await fetchThreads();
         } catch (error) {
           if (error.response?.data?.is_llm_error) {
             const llmError = new Error(error.response.data.user_message || error.response.data.message);
@@ -907,7 +917,6 @@ function AIChatNew() {
           }
           responseData = response.data;
           
-          // Check for LLM error in response
           if (responseData.is_llm_error) {
             const error = new Error(responseData.user_message || responseData.message);
             error.responseData = responseData;
@@ -916,33 +925,28 @@ function AIChatNew() {
           
           console.log("📥 Received response:", responseData);
         } catch (error) {
-          // Check for account deactivated error (403)
           if (error.response?.status === 403 || error.response?.data?.detail?.error === 'account_deactivated') {
             const deactivatedError = new Error(error.response?.data?.detail?.user_message || 'Your account has been deactivated. Please contact an administrator.');
             deactivatedError.isDeactivated = true;
             throw deactivatedError;
           }
           
-          // Check for quota exceeded error (429)
           if (error.response?.status === 429 || error.response?.data?.detail?.error === 'quota_exceeded') {
             const quotaError = new Error(error.response?.data?.detail?.user_message || 'Token quota exceeded. Please wait for your quota to reset.');
             quotaError.isQuotaExceeded = true;
             throw quotaError;
           }
           
-          // Check for LLM error in response
           if (error.response?.data?.is_llm_error) {
             const llmError = new Error(error.response.data.user_message || error.response.data.message);
             llmError.responseData = error.response.data;
             throw llmError;
           }
           
-          // If thread not found, create a new one
           if (error.response?.status === 404 || error.response?.data?.detail?.includes?.('not found')) {
             console.log("⚠️ Thread not found, creating new thread...");
-            setThreadId(null); // Clear invalid thread ID
+            setThreadId(null);
             
-            // Create new thread with this message
             const userId = getUserId();
             try {
               let newResponse;
@@ -960,7 +964,6 @@ function AIChatNew() {
               }
               responseData = newResponse.data;
               
-              // Check for LLM error
               if (responseData.is_llm_error) {
                 const llmError = new Error(responseData.user_message || responseData.message);
                 llmError.responseData = responseData;
@@ -984,10 +987,12 @@ function AIChatNew() {
         }
       }
 
-      // Capture request_id and token usage if available
+      // HTTP response arrived -- clear progress immediately
+      disconnectProgressWebSocket();
+      setInlineProgress(null);
+
       if (responseData.request_id) {
         setCurrentRequestId(responseData.request_id);
-        console.log("📋 Request ID:", responseData.request_id);
       }
       
       if (responseData.token_usage) {
@@ -998,151 +1003,16 @@ function AIChatNew() {
         });
       }
 
-      // Get the bot's response text
+      // Display the response instantly (execution already happened server-side)
       const fullResponse = responseData.bot_response || "No response received from the assistant.";
       
-      // Check if the conversation is now ready for execution
-      const isReadyForExecution = !!responseData.ready_for_execution;
-      
-      if (isReadyForExecution) {
-        console.log("✅ Workflow ready for execution based on response.");
-      } else {
-        // Not ready for execution - clear the inline progress
-        // (clarification or normal response, no execution needed)
-        setInlineProgress(null);
-      }
-
-      // Simulate streaming effect (word by word)
-      let currentText = "";
-      const words = fullResponse.split(" ");
-      for (let i = 0; i < words.length; i++) {
-        currentText += (i > 0 ? " " : "") + words[i];
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessageId
-              ? { ...msg, content: currentText }
-              : msg
-          )
-        );
-        await new Promise((resolve) => setTimeout(resolve, 30));
-      }
-
-      // Auto-execute when ready (requires manual approval if risk level is DANGEROUS)
-      if (isReadyForExecution) {
-        const execThreadId = responseData.thread_id || currentThreadId;
-        console.log("🔄 Auto-executing conversation:", execThreadId);
-        
-        // Connect WebSocket for real-time progress updates (falls back to polling if fails)
-        connectProgressWebSocket(execThreadId);
-        
-        // Initialize progress display (legacy panel)
-        setExecutionProgress({
-          current_step: 0,
-          total_steps: 1,
-          steps: [{ step_name: 'Initializing execution...' }],
-          status: 'executing'
-        });
-        
-        // Call the execute endpoint
-        const execResponse = await supervisorApi.post(
-          `/chat/${responseData.conversation_id || currentThreadId}/execute`
-        );
-
-        const execResult = execResponse.data;
-        console.log("✅ Execution completed or paused for approval:", execResult);
-
-        // Update progress with execution result
-        if (execResult.execution_steps) {
-          const steps = execResult.execution_steps.map(step => ({
-            step_name: step.description || step.tool,
-            agent: step.agent,
-            success: step.success
-          }));
-          
-          setExecutionProgress({
-            current_step: execResult.execution_steps.length,
-            total_steps: execResult.execution_steps.length,
-            steps: steps,
-            status: execResult.status
-          });
-          
-          // Update inline progress with final step
-          if (steps.length > 0) {
-            const lastStep = steps[steps.length - 1];
-            setInlineProgress({
-              current_step: steps.length,
-              total_steps: steps.length,
-              step_name: lastStep.step_name,
-              agent: lastStep.agent,
-              status: execResult.status === 'completed' ? 'completed' : 'executing',
-              message: execResult.status === 'completed' ? 'Finalizing...' : `Executing ${lastStep.step_name}...`
-            });
-          }
-        }
-
-        // Update token usage from execution
-        if (execResult.token_usage) {
-          setTokenUsage(prev => ({
-            total_tokens: (prev.total_tokens || 0) + (execResult.token_usage.total_tokens || 0),
-            total_cost_usd: (prev.total_cost_usd || 0) + (execResult.token_usage.total_cost_usd || 0),
-            llm_calls: (prev.llm_calls || 0) + (execResult.token_usage.llm_call_count || 0)
-          }));
-        }
-
-        // Check if execution was paused for approval
-        if (execResult.status === "approval_required") {
-          console.log("🔄 Execution paused, awaiting approval — handled via chat");
-          
-          // Disconnect WebSocket and clear inline progress - approval is handled in chat
-          disconnectProgressWebSocket();
-          setInlineProgress(null);
-          
-          // Add message indicating approval is needed
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `approval-needed-${Date.now()}`,
-              role: "assistant",
-              content: `⏸️ Action "${execResult.step_info?.description || "Unknown Action"}" requires your approval.`,
-              timestamp: new Date(),
-              info: true,
-            },
-          ]);
-        } else if (execResult.status === "completed") {
-          // Execution completed successfully - disconnect WebSocket and clear inline progress
-          disconnectProgressWebSocket();
-          setInlineProgress(null);
-          setExecutionProgress(prev => prev ? { ...prev, status: 'completed' } : null);
-          
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `exec-summary-${Date.now()}`,
-              role: "assistant",
-              content: `✅ Execution completed. Summary: ${execResult.execution_summary || "Task finished successfully."}`,
-              timestamp: new Date(),
-              info: true,
-              tokenUsage: tokenUsage  // Attach token usage to message
-            },
-          ]);
-        } else if (execResult.status === "failed") {
-          // Execution failed - disconnect WebSocket and clear inline progress
-          disconnectProgressWebSocket();
-          setInlineProgress(null);
-          setExecutionProgress(prev => prev ? { ...prev, status: 'failed' } : null);
-          
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `exec-error-${Date.now()}`,
-              role: "assistant",
-              content: `❌ Execution failed: ${execResult.error || "Unknown error occurred."}`,
-              timestamp: new Date(),
-              error: true,
-            },
-          ]);
-        }
-      }
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? { ...msg, content: fullResponse }
+            : msg
+        )
+      );
 
     } catch (error) {
       console.error("Error during chat or execution:", error);
@@ -1280,8 +1150,8 @@ function AIChatNew() {
       );
     } finally {
       setIsStreaming(false);
-      // Ensure inline progress is cleared when streaming ends
-      // (Don't clear here as it may already be handled above)
+      disconnectProgressWebSocket();
+      setInlineProgress(null);
     }
   };
   
@@ -1538,7 +1408,7 @@ function AIChatNew() {
                   
                   {/* Inline Progress Indicator - Shows during execution */}
                   {inlineProgress && (
-                    <InlineChatProgress progress={inlineProgress} />
+                    <InlineChatProgress progress={inlineProgress} startTime={progressStartTime} />
                   )}
                   
                   <div ref={messagesEndRef} />
