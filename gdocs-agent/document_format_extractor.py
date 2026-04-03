@@ -68,20 +68,20 @@ class DocumentFormatExtractor:
                 mime_type = file_metadata.get('mimeType')
                 file_name = file_metadata.get('name')
                 
-                print(f"📄 File: {file_name}")
-                print(f"📋 MIME Type: {mime_type}")
+                print(f" File: {file_name}")
+                print(f" MIME Type: {mime_type}")
                 
             except Exception as e:
                 return {"error": f"Cannot access file: {str(e)}"}
             
             # Handle based on file type
             if mime_type == 'application/vnd.google-apps.document':
-                # ✅ Native Google Doc - use Docs API
+                # Native Google Doc - use Docs API
                 print("   Type: Google Docs (native) → Using Docs API")
                 return self._extract_google_doc_structure(document_id, creds)
             
             elif mime_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-                # ✅ Word .docx file - extract text and treat as template
+                # Word .docx file - extract text and treat as template
                 print("   Type: Word .docx → Extracting as template")
                 return self._extract_docx_structure(document_id, drive_service, file_name)
             
@@ -245,7 +245,7 @@ class DocumentFormatExtractor:
                     'data': table_data
                 })
             
-            print(f"✅ Extracted {len(content_blocks)} content blocks from .docx")
+            print(f" Extracted {len(content_blocks)} content blocks from .docx")
             
             return {
                 "title": file_name.replace('.docx', ''),
@@ -316,7 +316,7 @@ class DocumentFormatExtractor:
             for match in blank_matches:
                 normalized = match.strip().upper().replace(' ', '_')
                 placeholders.add(normalized)
-                print(f"  🔍 Detected blank line placeholder: '{match}:____' → [{normalized}]")
+                print(f" Detected blank line placeholder: '{match}:____' → [{normalized}]")
             
             # Also check table data if present
             if block.get("type") == "table" and "data" in block:
@@ -345,7 +345,7 @@ class DocumentFormatExtractor:
                 placeholders.add(normalized)
         
         result = sorted(list(placeholders))
-        print(f"📋 Total placeholders found: {result}")
+        print(f" Total placeholders found: {result}")
         
         return result
 
@@ -394,7 +394,7 @@ class DocumentFormatExtractor:
             mime_type = file_metadata.get('mimeType')
             file_name = file_metadata.get('name', 'Template')
             
-            print(f"📄 Template: {file_name} ({mime_type})")
+            print(f" Template: {file_name} ({mime_type})")
             
             # Handle based on file type
             if mime_type == 'application/vnd.google-apps.document':
@@ -442,7 +442,7 @@ class DocumentFormatExtractor:
             ).execute()
             
             new_doc_id = copied_file['id']
-            print(f"✅ Created copy: {new_doc_id}")
+            print(f" Created copy: {new_doc_id}")
             
             # Step 2: Replace placeholders
             if placeholder_values:
@@ -478,7 +478,7 @@ class DocumentFormatExtractor:
                         documentId=new_doc_id,
                         body={'requests': requests}
                     ).execute()
-                    print(f"✅ Replaced {len(placeholder_values)} placeholders")
+                    print(f" Replaced {len(placeholder_values)} placeholders")
             
             doc_url = f"https://docs.google.com/document/d/{new_doc_id}/edit"
             
@@ -511,7 +511,7 @@ class DocumentFormatExtractor:
             from googleapiclient.http import MediaIoBaseDownload, MediaInMemoryUpload
             import re
             
-            print("📥 Downloading Word template...")
+            print(" Downloading Word template...")
             
             # Step 1: Download the .docx file
             request = drive_service.files().get_media(fileId=template_document_id)
@@ -528,7 +528,7 @@ class DocumentFormatExtractor:
             doc = Document(file_content)
             
             if placeholder_values:
-                print(f"🔄 Replacing {len(placeholder_values)} placeholders...")
+                print(f" Replacing {len(placeholder_values)} placeholders...")
                 
                 # Replace in paragraphs
                 for paragraph in doc.paragraphs:
@@ -577,7 +577,7 @@ class DocumentFormatExtractor:
             doc.save(output_docx)
             output_docx.seek(0)
             
-            print("📤 Uploading modified document to Drive...")
+            print(" Uploading modified document to Drive...")
             
             # Step 4: Upload as Google Doc (auto-converts)
             file_metadata = {
@@ -600,7 +600,7 @@ class DocumentFormatExtractor:
             new_doc_id = uploaded_file['id']
             doc_url = uploaded_file['webViewLink']
             
-            print(f"✅ Created Google Doc: {new_doc_id}")
+            print(f" Created Google Doc: {new_doc_id}")
             
             return {
                 "success": True,
@@ -694,7 +694,7 @@ if __name__ == "__main__":
     extractor = DocumentFormatExtractor(test_creds)
     
     # Example: List user's documents (both Google Docs and Word files)
-    print("📁 Your Documents:")
+    print(" Your Documents:")
     docs = extractor.list_my_docs()
     for i, doc in enumerate(docs[:5], 1):
         print(f"{i}. [{doc['type']}] {doc['name']} (ID: {doc['id']})")
@@ -702,14 +702,14 @@ if __name__ == "__main__":
     # Example: Extract format from a template
     # template_id = "YOUR_TEMPLATE_DOC_ID"
     # structure = extractor.extract_document_structure(template_id)
-    # print("\n📋 Template Structure:")
+    # print("\n Template Structure:")
     # print(f"Title: {structure['title']}")
     # print(f"File Type: {structure['file_type']}")
     # print(f"Blocks: {len(structure['content_blocks'])}")
     
     # Example: Identify placeholders
     # placeholders = extractor.identify_placeholders(structure)
-    # print(f"\n🔍 Placeholders: {placeholders}")
+    # print(f"\n Placeholders: {placeholders}")
     
     # Example: Create from template
     # result = extractor.create_from_template(
@@ -721,4 +721,4 @@ if __name__ == "__main__":
     #         "VENUE": "Conference Room A"
     #     }
     # )
-    # print(f"\n✅ Created: {result['url']}")
+    # print(f"\n Created: {result['url']}")

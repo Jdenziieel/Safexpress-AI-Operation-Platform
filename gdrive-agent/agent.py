@@ -256,7 +256,7 @@ def format_folder_tree(folders):
     if not folders:
         return "No folders found in SafeExpress."
     
-    lines = ["📁 SafeExpress/"]
+    lines = [" SafeExpress/"]
     for folder in folders:
         lines.append(folder["display"])
     return "\n".join(lines)
@@ -274,7 +274,7 @@ def agent_chat():
 
     # Auth check
     if "credentials" not in session:
-        return jsonify({"reply": "❌ Not authorized. Please log in first."}), 401
+        return jsonify({"reply": " Not authorized. Please log in first."}), 401
     
     service = get_session_drive_service(session["credentials"])
 
@@ -293,7 +293,7 @@ def agent_chat():
             
             location = f" to SafeExpress/{folder_path}" if folder_path else " to SafeExpress"
             return jsonify({
-                "reply": f"✅ Uploaded '{file.filename}'{location}!",
+                "reply": f" Uploaded '{file.filename}'{location}!",
                 "file_id": file_id
             })
 
@@ -302,11 +302,11 @@ def agent_chat():
             folder_path = parse_folder_path(message)
             
             if not folder_path:
-                return jsonify({"reply": "❌ Please specify a folder name. Example: 'create folder Operations/2024'"})
+                return jsonify({"reply": " Please specify a folder name. Example: 'create folder Operations/2024'"})
             
             folder_id = create_nested_folder(service, folder_path)
             return jsonify({
-                "reply": f"✅ Created folder: SafeExpress/{folder_path}",
+                "reply": f" Created folder: SafeExpress/{folder_path}",
                 "folder_id": folder_id
             })
 
@@ -335,21 +335,21 @@ def agent_chat():
                 if folder_id:
                     files = list_files_in_folder(service, folder_id)
                     if not files:
-                        return jsonify({"reply": f"📭 No files in '{folder_name}'"})
+                        return jsonify({"reply": f" No files in '{folder_name}'"})
                     
-                    file_list = "\n".join([f"📄 {f['name']}" for f in files])
+                    file_list = "\n".join([f" {f['name']}" for f in files])
                     return jsonify({"reply": f"Files in '{folder_name}':\n{file_list}"})
                 else:
-                    return jsonify({"reply": f"❌ Folder '{folder_name}' not found"})
+                    return jsonify({"reply": f" Folder '{folder_name}' not found"})
             else:
                 # List all files in SafeExpress root
                 safeexpress_id = get_safeexpress_folder_id(service)
                 files = list_files_in_folder(service, safeexpress_id)
                 
                 if not files:
-                    return jsonify({"reply": "📭 No files in SafeExpress root"})
+                    return jsonify({"reply": " No files in SafeExpress root"})
                 
-                file_list = "\n".join([f"📄 {f['name']}" for f in files])
+                file_list = "\n".join([f" {f['name']}" for f in files])
                 return jsonify({"reply": f"Files in SafeExpress:\n{file_list}"})
 
         # === SEARCH ===
@@ -358,37 +358,37 @@ def agent_chat():
             search_term = message.replace("search", "").replace("find", "").replace("for", "").strip()
             
             if not search_term:
-                return jsonify({"reply": "❌ Please specify what to search for"})
+                return jsonify({"reply": " Please specify what to search for"})
             
             results = search_files_in_safeexpress(service, search_term)
             
             if not results:
-                return jsonify({"reply": f"🔍 No files found matching '{search_term}'"})
+                return jsonify({"reply": f" No files found matching '{search_term}'"})
             
-            result_list = "\n".join([f"📄 {f['name']}" for f in results])
+            result_list = "\n".join([f" {f['name']}" for f in results])
             return jsonify({"reply": f"Found {len(results)} file(s):\n{result_list}"})
 
         # === HELP / DEFAULT ===
         else:
             return jsonify({
-                "reply": "🤖 I can help you with:\n\n"
-                        "📁 Folders:\n"
+                "reply": " I can help you with:\n\n"
+                        " Folders:\n"
                         "  • 'create folder <name>' - Create folder\n"
                         "  • 'create folder <path/to/folder>' - Nested folders\n"
                         "  • 'list folders' - Show folder structure\n\n"
-                        "📄 Files:\n"
+                        " Files:\n"
                         "  • Upload files using the attachment button\n"
                         "  • 'list files' - Show files in SafeExpress\n"
                         "  • 'list files in <folder>' - Show files in folder\n"
                         "  • 'search <term>' - Find files\n\n"
-                        "💡 Examples:\n"
+                        " Examples:\n"
                         "  • 'create folder Operations/2024/Reports'\n"
                         "  • 'list files in Operations'\n"
                         "  • 'search invoice'"
             })
 
     except Exception as e:
-        return jsonify({"reply": f"❌ Error: {str(e)}"}), 500
+        return jsonify({"reply": f" Error: {str(e)}"}), 500
 
 @app.route('/logout', methods=['POST'])
 def logout():

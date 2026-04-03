@@ -41,10 +41,10 @@ async def execute_task(request: AgentTaskRequest):
     try:
         # Create the agent with user credentials
         print(f"\n{'='*60}")
-        print(f"📨 Incoming Request")
+        print(f"Incoming Request")
         print(f"{'='*60}")
-        print(f"🔧 Tool: {request.tool}")
-        print(f"📥 Inputs: {json.dumps(request.inputs, indent=2)}")
+        print(f"Tool: {request.tool}")
+        print(f"Inputs: {json.dumps(request.inputs, indent=2)}")
         print(f"{'='*60}\n")
         
         import time
@@ -52,7 +52,7 @@ async def execute_task(request: AgentTaskRequest):
         
         # Option 1: Use ReAct agent (slower but can reason)
         # agent = create_email_agent(request.credentials_dict)
-        # print(f"✅ Agent created in {time.time() - start_time:.2f}s")
+        # print(f" Agent created in {time.time() - start_time:.2f}s")
         
         # Option 2: Direct tool execution with simple LLM for input transformation (FAST)
         from tools import (
@@ -136,30 +136,29 @@ Original body:
 
 Return ONLY the modified body text, nothing else."""
                     
-                    print(f"🤖 Using LLM to transform email {body_field}...")
+                    print(f"Using LLM to transform email {body_field}...")
                     llm_start = time.time()
                     response = llm.invoke(transform_prompt)
                     transformed_inputs[body_field] = response.content.strip()
-                    print(f"✅ LLM transformation completed in {time.time() - llm_start:.2f}s")
+                    print(f"LLM transformation completed in {time.time() - llm_start:.2f}s")
         
         # Call tool directly
-        print(f"🔧 Calling tool implementation directly...")
+        print(f"Calling tool implementation directly...")
         tool_start = time.time()
         result = tool_impl(**transformed_inputs, credentials_dict=request.credentials_dict)
-        print(f"✅ Tool executed in {time.time() - tool_start:.2f}s")
+        print(f"Tool executed in {time.time() - tool_start:.2f}s")
         
-        # Print complete result before returning
-        print(f"\n📤 Complete Result:")
+        print(f"\nComplete Result:")
         print(json.dumps(result, indent=2, default=str))
         
         print(f"\n{'='*60}")
-        print(f"✅ Success! Total time: {time.time() - start_time:.2f}s")
+        print(f"Success! Total time: {time.time() - start_time:.2f}s")
         print(f"{'='*60}\n")
         
         return result
     
     except Exception as e:
-        print(f"❌ Error executing task: {str(e)}")
+        print(f"Error executing task: {str(e)}")
         import traceback
         traceback.print_exc()
         
@@ -208,10 +207,10 @@ if __name__ == "__main__":
     import uvicorn
     
     print("=" * 60)
-    print("🚀 Starting Gmail Agent API Server")
+    print("Starting Gmail Agent API Server")
     print("=" * 60)
-    print("📡 Endpoint: http://localhost:8000")
-    print("📚 Docs: http://localhost:8000/docs")
+    print("Endpoint: http://localhost:8000")
+    print("Docs: http://localhost:8000/docs")
     print("=" * 60)
     
     uvicorn.run(app, host="0.0.0.0", port=8000)
@@ -260,10 +259,10 @@ if __name__ == "__main__":
 #     try:
 #         # Create the agent with user credentials
 #         print(f"\n{'='*60}")
-#         print(f"📨 Incoming Request")
+# print(f" Incoming Request")
 #         print(f"{'='*60}")
-#         print(f"🔧 Tool: {request.tool}")
-#         print(f"📥 Inputs: {json.dumps(request.inputs, indent=2)}")
+# print(f" Tool: {request.tool}")
+# print(f" Inputs: {json.dumps(request.inputs, indent=2)}")
 #         print(f"{'='*60}\n")
         
 #         import time
@@ -271,7 +270,7 @@ if __name__ == "__main__":
         
 #         agent = create_email_agent(request.credentials_dict)
         
-#         print(f"✅ Agent created in {time.time() - start_time:.2f}s")
+# print(f" Agent created in {time.time() - start_time:.2f}s")
         
 #         # Build email signature instruction for email-sending tools
 #         email_signature_instruction = ""
@@ -299,7 +298,7 @@ if __name__ == "__main__":
         
 #         # Invoke the agent with the constructed prompt
 #         # Set recursion_limit to 5 - enough for ReAct pattern (think→act→respond) but prevents excessive loops
-#         print(f"🤖 Invoking agent with recursion_limit=5...")
+# print(f" Invoking agent with recursion_limit=5...")
 #         invoke_start = time.time()
         
 #         result = agent.invoke(
@@ -307,7 +306,7 @@ if __name__ == "__main__":
 #             config={"recursion_limit": 5}  # Balanced: enough for ReAct, but prevents excessive reasoning
 #         )
         
-#         print(f"✅ Agent invocation completed in {time.time() - invoke_start:.2f}s")
+# print(f" Agent invocation completed in {time.time() - invoke_start:.2f}s")
         
 #         # Extract the agent's final response
 #         messages = result.get("messages", [])
@@ -330,7 +329,7 @@ if __name__ == "__main__":
 #             parsed_result = json.loads(json_str)
             
 #             print(f"\n{'='*60}")
-#             print(f"✅ Success! Total time: {time.time() - start_time:.2f}s")
+# print(f" Success! Total time: {time.time() - start_time:.2f}s")
 #             print(f"{'='*60}\n")
             
 #             # Return the tool's result directly (tools already have "success" field)
@@ -338,7 +337,7 @@ if __name__ == "__main__":
             
 #         except json.JSONDecodeError as e:
 #             # If agent didn't return valid JSON, return error in same format as tools
-#             print(f"⚠️ Warning: Agent response was not valid JSON: {e}")
+# print(f" Warning: Agent response was not valid JSON: {e}")
 #             print(f"Raw response: {final_message}")
             
 #             return {
@@ -348,7 +347,7 @@ if __name__ == "__main__":
 #             }
     
 #     except Exception as e:
-#         print(f"❌ Error executing task: {str(e)}")
+# print(f" Error executing task: {str(e)}")
 #         import traceback
 #         traceback.print_exc()
         
@@ -397,10 +396,10 @@ if __name__ == "__main__":
 #     import uvicorn
     
 #     print("=" * 60)
-#     print("🚀 Starting Gmail Agent API Server")
+# print(" Starting Gmail Agent API Server")
 #     print("=" * 60)
-#     print("📡 Endpoint: http://localhost:8001")
-#     print("📚 Docs: http://localhost:8001/docs")
+# print(" Endpoint: http://localhost:8001")
+# print(" Docs: http://localhost:8001/docs")
 #     print("=" * 60)
     
 #     uvicorn.run(app, host="0.0.0.0", port=8001)

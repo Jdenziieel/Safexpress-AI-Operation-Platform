@@ -275,9 +275,9 @@ def main():
         return
 
     try:
-        print("🤖 Initializing Google Docs Agent...")
+        print(" Initializing Google Docs Agent...")
         agent = create_docs_agent(test_credentials)
-        print("✅ Agent initialized successfully!\n")
+        print(" Agent initialized successfully!\n")
         print("\n" + "=" * 60)
         print("TEST OPTIONS")
         print("=" * 60)
@@ -375,13 +375,13 @@ Be concise and professional. Focus only on Google Docs tasks."""
             print(result)
 
         print("=" * 60)
-        print("✅ Test completed!")
+        print(" Test completed!")
         print("=" * 60)
 
     except Exception as e:
-        print(f"\n❌ Error: {e}")
-        print(f"\n🐛 Error Type: {type(e).__name__}")
-        print("\n🔧 Debugging Tips:")
+        print(f"\n Error: {e}")
+        print(f"\n Error Type: {type(e).__name__}")
+        print("\n Debugging Tips:")
         print("1. Check .env file has all variables (no quotes!)")
         print("2. Verify OpenAI API key is valid")
         print("3. Check if packages are installed: pip install -r requirements.txt")
@@ -389,7 +389,7 @@ Be concise and professional. Focus only on Google Docs tasks."""
 
         import traceback
 
-        print("\n📋 Full Error Details:")
+        print("\n Full Error Details:")
         traceback.print_exc()
 
 

@@ -23,6 +23,7 @@ from tools import (
     update_event_impl,
     handle_user_confirmation,
     create_calendar_impl,
+    rename_calendar_impl,
     list_calendars_impl,
     notify_attendees_about_change,
     get_calendar_service,
@@ -352,6 +353,29 @@ def create_calendar(inputs: dict, credentials_dict: dict = None) -> dict:
         return {"success": False, "calendar_id": None, "error": str(e)}
 
 
+def rename_calendar(inputs: dict, credentials_dict: dict = None) -> dict:
+    """Rename an existing Google Calendar."""
+    try:
+        calendar_name = inputs.get("calendar_name")
+        new_calendar_name = inputs.get("new_calendar_name")
+
+        if not calendar_name:
+            return {"success": False, "error": "calendar_name (current name) is required"}
+        if not new_calendar_name:
+            return {"success": False, "error": "new_calendar_name is required"}
+
+        calendar_id = find_calendar_id_by_name(calendar_name, credentials_dict)
+        if not calendar_id:
+            return {
+                "success": False,
+                "error": f"Calendar '{calendar_name}' not found. Use list_calendars to see available calendars."
+            }
+
+        return rename_calendar_impl(calendar_id, new_calendar_name, credentials_dict)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 def resolve_conflict(inputs: dict, credentials_dict: dict = None) -> dict:
     try:
         conflict_id = inputs.get("conflict_id")
@@ -383,6 +407,7 @@ CALENDAR_TOOLS = {
     "confirm_delete_event": confirm_delete_event,
     "list_calendars": list_calendars,
     "create_calendar": create_calendar,
+    "rename_calendar": rename_calendar,
     "resolve_conflict": resolve_conflict,
 }
 

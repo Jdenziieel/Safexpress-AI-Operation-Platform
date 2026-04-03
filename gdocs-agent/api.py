@@ -159,10 +159,10 @@ async def execute_task(request: AgentTaskRequest):
     }
     """
     try:
-        # ✅ SPECIAL HANDLING: Direct execution for create_from_uploaded_template
+        # SPECIAL HANDLING: Direct execution for create_from_uploaded_template
         # Bypass agent because it sometimes refuses this operation
         if request.tool == "create_from_uploaded_template":
-            print(f"🔧 Direct execution (bypassing agent): {request.tool}")
+            print(f" Direct execution (bypassing agent): {request.tool}")
             
             from tools import _create_from_uploaded_template_impl
             
@@ -188,10 +188,10 @@ async def execute_task(request: AgentTaskRequest):
             
             # Validate output_format
             if output_format not in ["google_docs", "pdf"]:
-                print(f"⚠️ Invalid output_format '{output_format}', defaulting to 'google_docs'")
+                print(f" Invalid output_format '{output_format}', defaulting to 'google_docs'")
                 output_format = "google_docs"
             
-            print(f"📄 Output format requested: {output_format}")
+            print(f" Output format requested: {output_format}")
             
             # Execute directly with output_format parameter
             try:
@@ -203,10 +203,10 @@ async def execute_task(request: AgentTaskRequest):
                     output_format=output_format
                 )
                 
-                print(f"📄 Direct execution result:\n{result_text}")
+                print(f" Direct execution result:\n{result_text}")
                 
                 # Parse result (it returns a formatted string)
-                if "✅" in result_text:
+                if "" in result_text:
                     # Extract document ID and URL from success message
                     import re
                     
@@ -248,7 +248,7 @@ async def execute_task(request: AgentTaskRequest):
                             "editable": True
                         }
                     
-                    print(f"\n📤 Complete Result:")
+                    print(f"\n Complete Result:")
                     print(json.dumps(parsed_result, indent=2, default=str))
                     print(f"{'='*60}\n")
                     
@@ -266,7 +266,7 @@ async def execute_task(request: AgentTaskRequest):
                         raw_response=result_text
                     )
             except Exception as direct_exec_error:
-                print(f"❌ Direct execution failed: {str(direct_exec_error)}")
+                print(f" Direct execution failed: {str(direct_exec_error)}")
                 import traceback
                 traceback.print_exc()
                 return AgentTaskResponse(
@@ -275,9 +275,9 @@ async def execute_task(request: AgentTaskRequest):
                     error=str(direct_exec_error)
                 )
             
-        # ✅ SPECIAL HANDLING: Direct execution for create_from_template_and_data_ids
+        # SPECIAL HANDLING: Direct execution for create_from_template_and_data_ids
         if request.tool == "create_from_template_and_data_ids":
-            print(f"🔧 Direct execution: {request.tool}")
+            print(f" Direct execution: {request.tool}")
             
             from tools import _create_from_template_and_data_ids_impl
             
@@ -316,9 +316,9 @@ async def execute_task(request: AgentTaskRequest):
                     output_format=output_format
                 )
                 
-                print(f"📄 Direct execution result:\n{result_text}")
+                print(f" Direct execution result:\n{result_text}")
                 
-                if "✅" in result_text:
+                if "" in result_text:
                     import re
                     
                     is_pdf = "PDF ID:" in result_text or output_format == "pdf"
@@ -361,7 +361,7 @@ async def execute_task(request: AgentTaskRequest):
                         raw_response=result_text
                     )
             except Exception as e:
-                print(f"❌ Direct execution failed: {str(e)}")
+                print(f" Direct execution failed: {str(e)}")
                 import traceback
                 traceback.print_exc()
                 return AgentTaskResponse(
@@ -370,9 +370,9 @@ async def execute_task(request: AgentTaskRequest):
                     error=str(e)
                 )
         
-        # ✅ SPECIAL HANDLING: Direct execution for analyze_uploaded_template
+        # SPECIAL HANDLING: Direct execution for analyze_uploaded_template
         if request.tool == "analyze_uploaded_template":
-            print(f"🔬 Analyzing uploaded template: {request.tool}")
+            print(f" Analyzing uploaded template: {request.tool}")
     
             from tools import _analyze_uploaded_template_impl
     
@@ -393,7 +393,7 @@ async def execute_task(request: AgentTaskRequest):
         
                 analysis_result = json.loads(analysis_json)
         
-                print(f"\n📤 Template Analysis Result:")
+                print(f"\n Template Analysis Result:")
                 print(json.dumps(analysis_result, indent=2))
                 print(f"{'='*60}\n")
         
@@ -403,7 +403,7 @@ async def execute_task(request: AgentTaskRequest):
                     raw_response=analysis_json
                 )
             except Exception as e:
-                print(f"❌ Analysis failed: {str(e)}")
+                print(f" Analysis failed: {str(e)}")
                 import traceback
                 traceback.print_exc()
                 return AgentTaskResponse(
@@ -430,7 +430,7 @@ async def execute_task(request: AgentTaskRequest):
         DICT_RETURNING_TOOLS = {"create_doc_with_content", "add_text_from_file"}
 
         if request.tool and request.tool in TOOL_MAP:
-            print(f"🔧 Direct dispatch: {request.tool}")
+            print(f" Direct dispatch: {request.tool}")
             tool_start = time.time()
 
             tool_impl = TOOL_MAP[request.tool]
@@ -542,7 +542,7 @@ Execute the task now and return ONLY the JSON response with the expected keys.
         raise ValueError("Request must have either 'task' or 'tool' field")
     
     except Exception as e:
-        print(f"❌ Error executing task: {str(e)}")
+        print(f" Error executing task: {str(e)}")
         import traceback
         traceback.print_exc()
         
@@ -598,10 +598,10 @@ if __name__ == "__main__":
     import uvicorn
     
     print("=" * 60)
-    print("🚀 Starting Google Docs Agent API Server")
+    print(" Starting Google Docs Agent API Server")
     print("=" * 60)
-    print("📡 Endpoint: http://localhost:8002")
-    print("📚 Docs: http://localhost:8002/docs")
+    print(" Endpoint: http://localhost:8002")
+    print(" Docs: http://localhost:8002/docs")
     print("=" * 60)
     
     uvicorn.run(app, host="0.0.0.0", port=8002)

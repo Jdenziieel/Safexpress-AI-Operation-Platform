@@ -28,17 +28,17 @@ def generate_token():
     
     # Check if token exists
     if os.path.exists(TOKEN_PATH):
-        print(f"⚠️ Token already exists at {TOKEN_PATH}")
+        print(f" Token already exists at {TOKEN_PATH}")
         response = input("Delete and regenerate? (yes/no): ")
         if response.lower() not in ('yes', 'y'):
-            print("❌ Aborted")
+            print(" Aborted")
             return
         os.remove(TOKEN_PATH)
-        print("🗑️ Deleted old token")
+        print(" Deleted old token")
     
     # Check credentials.json exists
     if not os.path.exists(CREDENTIALS_PATH):
-        print(f"❌ Error: {CREDENTIALS_PATH} not found!")
+        print(f" Error: {CREDENTIALS_PATH} not found!")
         return
     
     # Load credentials.json to check redirect URIs
@@ -46,7 +46,7 @@ def generate_token():
         creds_data = json.load(f)
         if 'web' in creds_data:
             redirect_uris = creds_data['web'].get('redirect_uris', [])
-            print(f"📋 Configured redirect URIs: {redirect_uris}")
+            print(f" Configured redirect URIs: {redirect_uris}")
             
             # Determine port from redirect URIs
             port = 8087  # default
@@ -57,39 +57,39 @@ def generate_token():
                         break
                     except:
                         pass
-            print(f"🔌 Using port: {port}")
+            print(f" Using port: {port}")
         else:
-            print("⚠️ Using 'installed' type credentials")
+            print(" Using 'installed' type credentials")
             port = 0  # Let Google choose
     
-    print(f"\n🔐 Starting OAuth flow with scopes:")
+    print(f"\n Starting OAuth flow with scopes:")
     for scope in SCOPES:
         print(f"   - {scope}")
-    print("\n📱 Your browser will open - sign in with your ORGANIZATION account")
-    print("⚠️ Make sure your organization allows this app!")
-    print("⚠️ If you've authenticated before, you may need to revoke access first:")
+    print("\n Your browser will open - sign in with your ORGANIZATION account")
+    print(" Make sure your organization allows this app!")
+    print(" If you've authenticated before, you may need to revoke access first:")
     print("   https://myaccount.google.com/permissions\n")
     
     try:
         flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
         
-        # ✅ CRITICAL: Request offline access and force consent to get refresh token
+        # CRITICAL: Request offline access and force consent to get refresh token
         creds = flow.run_local_server(
             port=port,
-            access_type='offline',      # ✅ GET REFRESH TOKEN
-            prompt='consent',            # ✅ FORCE CONSENT SCREEN
+            access_type='offline', # GET REFRESH TOKEN
+            prompt='consent', # FORCE CONSENT SCREEN
             include_granted_scopes='true',
-            success_message='✅ Authorization successful! You can close this window.',
+            success_message=' Authorization successful! You can close this window.',
             open_browser=True
         )
         
         # Verify we got both tokens
-        print(f"\n✅ Authentication successful!")
-        print(f"   Access token: {creds.token[:50]}..." if creds.token else "   ❌ No access token")
-        print(f"   Refresh token: {'✅ Received' if creds.refresh_token else '❌ NOT RECEIVED'}")
+        print(f"\n Authentication successful!")
+        print(f" Access token: {creds.token[:50]}..." if creds.token else " No access token")
+        print(f" Refresh token: {' Received' if creds.refresh_token else ' NOT RECEIVED'}")
         
         if not creds.refresh_token:
-            print("\n⚠️ WARNING: No refresh token received!")
+            print("\n WARNING: No refresh token received!")
             print("   Possible reasons:")
             print("   1. You've authenticated with this app before")
             print("   2. Your organization's security policies block refresh tokens")
@@ -100,7 +100,7 @@ def generate_token():
             
             response = input("\n   Continue saving token anyway? (yes/no): ")
             if response.lower() not in ('yes', 'y'):
-                print("❌ Aborted - token not saved")
+                print(" Aborted - token not saved")
                 return
         
         # Save token
@@ -108,8 +108,8 @@ def generate_token():
         with open(TOKEN_PATH, 'w') as token:
             token.write(creds.to_json())
         
-        print(f"\n💾 Token saved to {TOKEN_PATH}")
-        print(f"📋 Token scopes: {creds.scopes}")
+        print(f"\n Token saved to {TOKEN_PATH}")
+        print(f" Token scopes: {creds.scopes}")
         
         # Update .env files automatically (both local and supervisor-agent)
         script_dir = Path(__file__).resolve().parent
@@ -123,8 +123,8 @@ def generate_token():
             env_paths_to_update.append(('local', local_env_path))
 
         if not env_paths_to_update:
-            print("⚠️ No .env files found to update")
-            print("\n🔑 Add these to your .env file manually:")
+            print(" No .env files found to update")
+            print("\n Add these to your .env file manually:")
             print("=" * 60)
             print(f"GOOGLE_ACCESS_TOKEN={creds.token}")
             if creds.refresh_token:
@@ -134,7 +134,7 @@ def generate_token():
             print("=" * 60)
         
         for label, env_path in env_paths_to_update:
-            print(f"\n📝 Updating {label} .env file ({env_path})...")
+            print(f"\n Updating {label} .env file ({env_path})...")
             with open(env_path, 'r') as f:
                 lines = f.readlines()
 
@@ -162,10 +162,10 @@ def generate_token():
             with open(env_path, 'w') as f:
                 f.writelines(new_lines)
 
-            print(f"✅ {label} .env updated with tokens!")
+            print(f" {label} .env updated with tokens!")
         
         # Test Drive access
-        print(f"\n🧪 Testing Drive access...")
+        print(f"\n Testing Drive access...")
         from googleapiclient.discovery import build
         
         try:
@@ -173,26 +173,26 @@ def generate_token():
             results = service.files().list(pageSize=5, fields="files(id, name)").execute()
             files = results.get('files', [])
             
-            print(f"✅ Drive access verified!")
-            print(f"📂 Found {len(files)} file(s):")
+            print(f" Drive access verified!")
+            print(f" Found {len(files)} file(s):")
             for file in files[:3]:
                 print(f"   - {file['name']}")
                 
         except Exception as e:
-            print(f"❌ Drive access test failed: {e}")
+            print(f" Drive access test failed: {e}")
             print("   Your token might not have proper Drive permissions")
         
-        print("\n✨ Setup complete!")
+        print("\n Setup complete!")
         print("   Next steps:")
         print("   1. Restart your Drive Agent and Supervisor")
         print("   2. Try creating a folder through the Supervisor")
         
     except Exception as e:
-        print(f"\n❌ Error: {str(e)}")
+        print(f"\n Error: {str(e)}")
         import traceback
         traceback.print_exc()
         
-        print("\n🔧 Troubleshooting:")
+        print("\n Troubleshooting:")
         print("1. Check if 'web' OAuth client has correct redirect URIs:")
         print(f"   - http://localhost:{port}/")
         print("2. Wait 5-10 minutes after creating/modifying OAuth client")

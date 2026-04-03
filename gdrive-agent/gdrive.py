@@ -92,7 +92,7 @@ def agent_chat():
         if "to" in message:
             parts = message.split("to")
             folder_name = parts[-1].strip()
-        # ✅ Pass service as first parameter
+        # Pass service as first parameter
         file_id = upload_stream_to_folder(service, file.stream, file.filename, file.mimetype, folder_name)
         reply = f"Uploaded '{file.filename}' to SafeExpress!"
         if folder_name:
@@ -104,9 +104,9 @@ def agent_chat():
         match = re.search(r"create folder (?:named )?(.+)", message)
         folder_path = match.group(1).strip() if match else "New Folder"
         
-        # ✅ Use create_nested_folder which creates inside SafeExpress
+        # Use create_nested_folder which creates inside SafeExpress
         folder_id = create_nested_folder(service, folder_path)
-        return jsonify({"reply": f"📁 Folder created: SafeExpress/{folder_path}", "folder_id": folder_id})
+        return jsonify({"reply": f" Folder created: SafeExpress/{folder_path}", "folder_id": folder_id})
 
     # === Text-based Commands ===
     elif "list files" in message:
@@ -122,8 +122,8 @@ def agent_chat():
             filepath = match.group(2).strip()
             folder_name = match.group(3).strip()
             try:
-                file_id = upload_file_to_folder(service, filename, filepath, folder_name)  # ✅ ADD service
-                return jsonify({"reply": f"📤 File '{filename}' uploaded to SafeExpress/{folder_name}!", "file_id": file_id})
+                file_id = upload_file_to_folder(service, filename, filepath, folder_name) # ADD service
+                return jsonify({"reply": f" File '{filename}' uploaded to SafeExpress/{folder_name}!", "file_id": file_id})
             except Exception as e:
                 return jsonify({"reply": f"Error uploading file: {str(e)}"})
 
@@ -134,7 +134,7 @@ def agent_chat():
             filepath = parts[1].strip()
             try:
                 file_id = upload_file(filename, filepath)
-                return jsonify({"reply": f"📤 File '{filename}' uploaded successfully!", "file_id": file_id})
+                return jsonify({"reply": f" File '{filename}' uploaded successfully!", "file_id": file_id})
             except Exception as e:
                 return jsonify({"reply": f"Error uploading file: {str(e)}"})
 

@@ -48,7 +48,7 @@ def parse_calendar_prompt(natural_prompt: str) -> dict:
     try:
         return json.loads(response.content)
     except Exception as e:
-        print(f"⚠️ Failed to parse prompt: {e}")
+        print(f" Failed to parse prompt: {e}")
         return {
             "summary": "Untitled Event",
             "start": "",
@@ -80,7 +80,7 @@ def parse_multiple_events_prompt(natural_prompt: str) -> list:
             return events[:5]  # Limit to 5 events
         return [events]  # If single object, wrap in list
     except Exception as e:
-        print(f"⚠️ Failed to parse multiple events: {e}")
+        print(f" Failed to parse multiple events: {e}")
         return []
 
 def find_calendar_by_name(calendar_name: str) -> dict:
@@ -107,7 +107,7 @@ def find_calendar_by_name(calendar_name: str) -> dict:
         
         return None
     except Exception as e:
-        print(f"❌ Failed to search calendars: {str(e)}")
+        print(f" Failed to search calendars: {str(e)}")
         return None
 
 def search_event_by_description(search_query: str, max_results: int = 10, calendar_id: str = None) -> list:
@@ -147,7 +147,7 @@ def search_event_by_description(search_query: str, max_results: int = 10, calend
         
         return matching_events
     except Exception as e:
-        print(f"❌ Failed to search events: {str(e)}")
+        print(f" Failed to search events: {str(e)}")
         return []
 
 def create_calendar_agent():
@@ -179,7 +179,7 @@ def create_calendar_agent():
             if cal:
                 calendar_id = cal['id']
             else:
-                return f"❌ Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
+                return f" Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
         
         result = create_event_impl(summary, start, end, emails, description, location, calendar_id, add_google_meet)
         if isinstance(result, dict):
@@ -197,7 +197,7 @@ def create_calendar_agent():
             events = json.loads(events_json)
             return create_multiple_events_impl(events)
         except json.JSONDecodeError:
-            return "❌ Invalid JSON format for events"
+            return " Invalid JSON format for events"
 
     @tool
     def confirm_and_reschedule(conflict_id: str, new_event_json: str, calendar_id: str = "") -> str:
@@ -206,7 +206,7 @@ def create_calendar_agent():
             new_event = json.loads(new_event_json) if isinstance(new_event_json, str) else new_event_json
             return handle_user_confirmation(conflict_id, new_event, calendar_id if calendar_id else None)
         except:
-            return "❌ Invalid event data format"
+            return " Invalid event data format"
 
     @tool
     def search_calendar_events(max_results: int = 5, calendar_name: str = "primary") -> str:
@@ -225,7 +225,7 @@ def create_calendar_agent():
             if cal:
                 calendar_id = cal['id']
             else:
-                return f"❌ Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
+                return f" Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
         
         return search_events_impl(max_results, calendar_id)
 
@@ -248,14 +248,14 @@ def create_calendar_agent():
             if cal:
                 calendar_id = cal['id']
             else:
-                return f"❌ Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
+                return f" Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
         
         events = search_event_by_description(event_name, calendar_id=calendar_id)
         
         if not events:
-            return f"❌ No events found matching '{event_name}'"
+            return f" No events found matching '{event_name}'"
         
-        output = [f"📅 Found {len(events)} matching event(s):\n"]
+        output = [f" Found {len(events)} matching event(s):\n"]
         for i, event in enumerate(events, 1):
             start = event["start"].get("dateTime", event["start"].get("date"))
             try:
@@ -265,14 +265,14 @@ def create_calendar_agent():
                 formatted_start = start
             
             attendees = event.get("attendees", [])
-            attendee_info = f" 👥 ({len(attendees)} attendees)" if attendees else ""
+            attendee_info = f" ({len(attendees)} attendees)" if attendees else ""
             location = event.get("location", "")
-            location_info = f"\n   📍 {location}" if location else ""
+            location_info = f"\n {location}" if location else ""
             
             # Check for Google Meet link
             meet_info = ""
             if event.get("conferenceData"):
-                meet_info = "\n   🎥 Has Google Meet link"
+                meet_info = "\n Has Google Meet link"
             
             output.append(
                 f"{i}. {event.get('summary', 'No Title')} - {formatted_start}{attendee_info}{location_info}{meet_info}\n"
@@ -293,7 +293,7 @@ def create_calendar_agent():
             if cal:
                 calendar_id = cal['id']
             else:
-                return f"❌ Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
+                return f" Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
         
         return delete_event_impl(event_id, calendar_id)
 
@@ -311,7 +311,7 @@ def create_calendar_agent():
             if cal:
                 calendar_id = cal['id']
             else:
-                return f"❌ Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
+                return f" Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
         
         return update_event_impl(event_id, new_summary, new_start, new_end, 
                                 new_description, new_location, calendar_id)
@@ -336,8 +336,8 @@ def create_calendar_agent():
         cal = find_calendar_by_name(calendar_name)
         if cal:
             primary_tag = " ⭐ (Primary)" if cal.get('primary') else ""
-            return f"✅ Found calendar: {cal['summary']}{primary_tag}\n📋 ID: {cal['id']}"
-        return f"❌ Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
+            return f" Found calendar: {cal['summary']}{primary_tag}\n ID: {cal['id']}"
+        return f" Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
 
     @tool
     def notify_attendees(event_id: str, change_message: str, calendar_name: str = "") -> str:
@@ -351,7 +351,7 @@ def create_calendar_agent():
             if cal:
                 calendar_id = cal['id']
             else:
-                return f"❌ Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
+                return f" Calendar '{calendar_name}' not found. Use list_all_calendars to see available calendars."
         
         return notify_attendees_about_change(event_id, change_message, calendar_id)
 
@@ -373,7 +373,7 @@ def create_calendar_agent():
 
 def main():
     print("=" * 60)
-    print("📅 ENHANCED GOOGLE CALENDAR AGENT WITH GOOGLE MEET")
+    print(" ENHANCED GOOGLE CALENDAR AGENT WITH GOOGLE MEET")
     print("=" * 60)
 
     required_vars = ["OPENAI_API_KEY"]
@@ -386,14 +386,14 @@ def main():
         return
     
     if not os.path.exists("key/credentials.json"):
-        print("⚠️ Missing 'credentials.json' file!")
+        print(" Missing 'credentials.json' file!")
         print("Please download OAuth 2.0 credentials from Google Cloud Console")
         print("and save it as 'key/credentials.json' in the project directory.")
         return
 
     try:
         agent = create_calendar_agent()
-        print("✅ Agent initialized successfully!\n")
+        print(" Agent initialized successfully!\n")
 
         print("AVAILABLE FEATURES")
         print("=" * 60)
@@ -427,7 +427,7 @@ def main():
             prompt = input("Describe multiple events (e.g., 'Schedule team meetings: Monday 10AM with alice@email.com, Tuesday 2PM virtual meeting with bob@email.com'): ").strip()
             parsed_events = parse_multiple_events_prompt(prompt)
             if not parsed_events:
-                print("❌ Could not parse events from prompt")
+                print(" Could not parse events from prompt")
                 return
             test_message = f"Create {len(parsed_events)} events: {json.dumps(parsed_events)}"
 
@@ -460,7 +460,7 @@ def main():
             test_message = f"Send notification to attendees of '{event_name}' with message: {message}"
 
         else:
-            print("❌ Invalid choice.")
+            print(" Invalid choice.")
             return
 
         system_prompt = """
@@ -500,7 +500,7 @@ def main():
           AGENT: *creates event with Google Meet link*
           
           USER: "Schedule virtual meeting with team tomorrow 3PM"
-          AGENT: *creates event with Google Meet link immediately* "✅ Created virtual meeting with Google Meet link"
+          AGENT: *creates event with Google Meet link immediately* " Created virtual meeting with Google Meet link"
 
         CALENDAR NAME SUPPORT:
         - Users can specify calendars by name or use "primary" for default calendar
@@ -587,12 +587,12 @@ def main():
             # Check if the response indicates a conflict or asks a question
             is_question = any(keyword in response_text.lower() for keyword in [
                 "would you like", "do you want", "should i", "conflict", 
-                "reschedule", "⚠️", "?", "detected", "which", "which one"
+                "reschedule", "", "?", "detected", "which", "which one"
             ])
 
             # Check if it's a successful completion
             is_success = any(keyword in response_text.lower() for keyword in [
-                "successfully created", "✅", "event created", "deleted successfully", 
+                "successfully created", "", "event created", "deleted successfully",
                 "updated successfully", "upcoming events:", "moved", "calendar created",
                 "your calendars:", "notification sent", "successfully deleted", "successfully updated",
                 "google meet:"
@@ -607,14 +607,14 @@ def main():
                 follow_up = input("\nYour response: ").strip()
                 
                 if not follow_up:
-                    print("\n❌ No response provided. Exiting.")
+                    print("\n No response provided. Exiting.")
                     break
                 
                 # Check if user wants to cancel
                 if any(word in follow_up.lower() for word in ["no", "cancel", "nevermind", "stop", "don't"]):
                     conversation_history.append(("assistant", response_text))
                     conversation_history.append(("user", follow_up))
-                    print("\n❌ Operation cancelled by user.")
+                    print("\n Operation cancelled by user.")
                     break
                 
                 # Add assistant's response and user's follow-up to conversation history
@@ -627,11 +627,11 @@ def main():
                 break
 
         print("\n" + "=" * 60)
-        print("✅ Session completed!")
+        print(" Session completed!")
         print("=" * 60)
 
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n Error: {e}")
         import traceback
         traceback.print_exc()
 

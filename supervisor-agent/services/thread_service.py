@@ -80,7 +80,7 @@ class ThreadService:
             # Save initial empty state
             self.save_thread_to_db(thread_id, conversation_state)
 
-        print(f"✅ Created new thread: {thread_id} for user: {user_id} with title: {new_title}")
+        print(f" Created new thread: {thread_id} for user: {user_id} with title: {new_title}")
 
         return thread_id, conversation_state, bot_response
 

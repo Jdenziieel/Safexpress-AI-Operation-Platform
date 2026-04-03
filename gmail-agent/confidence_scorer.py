@@ -316,11 +316,11 @@ class ConfidenceScorer:
             #emoji base on score
 
             if score >= 0.8:
-                emoji = "🟢"
+                emoji = ""
             elif score >= 0.6:
-                emoji = "🟡"
+                emoji = ""
             else:
-                emoji = "🔴"
+                emoji = ""
 
         output.append(f" {emoji} {agent:8} {score:.3f} [{bar}]")
 
@@ -366,8 +366,8 @@ if __name__ == "__main__":
         
         print(scorer.explain_scores(test_query))
         
-        print("✅ Confidence scorer is working!\n")
+        print(" Confidence scorer is working!\n")
         
     except Exception as e:
-        print(f"❌ Error: {e}\n")
+        print(f" Error: {e}\n")
         print("Make sure OPENAI_API_KEY is set in your .env file!")

@@ -146,7 +146,7 @@ class ProgressConnectionManager:
         if thread_id not in self.active_connections:
             self.active_connections[thread_id] = []
         self.active_connections[thread_id].append(websocket)
-        print(f"📡 WebSocket connected for thread: {thread_id}")
+        print(f"WebSocket connected for thread: {thread_id}")
     
     def disconnect(self, websocket: WebSocket, thread_id: str):
         """Remove a WebSocket connection."""
@@ -155,7 +155,7 @@ class ProgressConnectionManager:
                 self.active_connections[thread_id].remove(websocket)
             if not self.active_connections[thread_id]:
                 del self.active_connections[thread_id]
-        print(f"📡 WebSocket disconnected for thread: {thread_id}")
+        print(f"WebSocket disconnected for thread: {thread_id}")
     
     async def send_progress(self, thread_id: str, progress_data: dict):
         """Send progress update to all connections for a thread."""
@@ -216,9 +216,9 @@ def broadcast_progress_sync(step: int, total: int, step_name: str, agent: str = 
         try:
             asyncio.run(coro)
         except Exception as e:
-            print(f"⚠️ WebSocket broadcast error: {e}")
+            print(f"WebSocket broadcast error: {e}")
     except Exception as e:
-        print(f"⚠️ WebSocket broadcast error: {e}")
+        print(f"WebSocket broadcast error: {e}")
 
 
 # Initialize LLM
@@ -266,10 +266,10 @@ def get_conversation_state(conversation_id: str) -> Optional[Any]:
             state = ConversationState(**state_dict)
             # Cache it for future access
             CONVERSATIONS[conversation_id] = state
-            print(f"📂 Loaded conversation state from SQLite: {conversation_id}")
+            print(f"Loaded conversation state from SQLite: {conversation_id}")
             return state
     except Exception as e:
-        print(f"⚠️ Error loading conversation state: {e}")
+        print(f"Error loading conversation state: {e}")
     
     return None
 
@@ -285,9 +285,9 @@ def save_conversation_state(conversation_id: str, state: Any):
     # Persist to SQLite (standalone table, no FK constraint)
     try:
         conversational_agent.thread_manager.save_conversation_state_standalone(conversation_id, state)
-        print(f"💾 Saved conversation state to SQLite: {conversation_id}")
+        print(f"Saved conversation state to SQLite: {conversation_id}")
     except Exception as e:
-        print(f"⚠️ Error saving conversation state: {e}")
+        print(f"Error saving conversation state: {e}")
 
 
 def remove_conversation_state(conversation_id: str):
@@ -332,17 +332,17 @@ def supervisor_node(state: SharedState) -> SharedState:
     """
     print(">>> RUNNING SUPERVISOR NODE VERSION 2 <<<")
     print("\n" + "=" * 60)
-    print("🧠 SUPERVISOR NODE - Planning Phase")
+    print("SUPERVISOR NODE - Planning Phase")
     print("=" * 60)
 
     user_input = state["input"]
     context = state.get("context", {})
-    print(f"📥 User Input: {user_input}\n")
+    print(f"User Input: {user_input}\n")
     trace.step("supervisor_node", f"Planning for: {user_input[:80]}")
 
     # Extract date info from context
     today_date = context.get("today_date", "")
-    print(f"📅 Context dates: today={today_date}")
+    print(f"Context dates: today={today_date}")
 
     # === PROGRESS: Classifying agents ===
     broadcast_progress_sync(0, 0, "Identifying the right tools...", status="classifying")
@@ -353,15 +353,15 @@ def supervisor_node(state: SharedState) -> SharedState:
         from tool_filter import get_filtered_capabilities_v2
         filtered_capabilities = get_filtered_capabilities_v2(cached_tool_filter)
         tool_filter = cached_tool_filter
-        print(f"📌 Reusing cached tool filter from Tier 1 (saved 1 LLM call)")
+        print(f"Reusing cached tool filter from Tier 1 (saved 1 LLM call)")
         trace.step("agent_filtering", f"reused cached filter, agents={list(filtered_capabilities.keys())}")
     else:
         filtered_capabilities, tool_filter = get_optimized_capabilities(user_input)
         trace.step("agent_filtering", f"fresh classification")
     relevant_agents = list(filtered_capabilities.keys())
     
-    print(f"📌 Relevant agents: {relevant_agents}")
-    print(f"🔧 Filtered tools: {tool_filter}")
+    print(f"Relevant agents: {relevant_agents}")
+    print(f"Filtered tools: {tool_filter}")
     
     # ===================================================================
     # BUILD SYSTEM PROMPT
@@ -392,6 +392,7 @@ PLANNING RULES:
 5. For ANY email sending: create_draft_email first, then send_draft_email. Only use send_email_with_attachment when a LOCAL file (uploaded_file or downloaded path) must be attached — NEVER pass URLs/links as file_path; embed them in the email body instead.
 6. Follow tool-specific instructions in the capabilities (array_access hints, workflow definitions, can_be_derived_from)
 7. When uploaded_file is present in context: ALWAYS use {{{{ uploaded_file.temp_path }}}} for file_path inputs. For filename: if a custom name was provided in the task parameters, use that literal string; otherwise fall back to {{{{ uploaded_file.filename }}}}.
+8. For delete_event: ALWAYS include "confirmed": true in inputs. The orchestrator approval mechanism already handles user confirmation.
 
 EXAMPLE:
 User: "Find the latest email from john@example.com and reply saying thanks"
@@ -428,8 +429,8 @@ Available agents and tools:
     # === PROGRESS: Planning ===
     broadcast_progress_sync(0, 0, "Creating execution plan...", status="planning")
 
-    print("🤖 Calling LLM to generate multi-step plan...")
-    print(f"💰 Token optimization:")
+    print("Calling LLM to generate multi-step plan...")
+    print(f"Token optimization:")
     print(f"   Agents: {len(relevant_agents)}/{len(agent_capabilities)}")
     print(f"   Tools: {total_tools}/{all_tools_count}")
     print(f"   Context size: {len(capability_summary):,} chars (~{len(capability_summary)//4:,} tokens)")
@@ -504,8 +505,8 @@ Available agents and tools:
             raise ValueError("Plan has no steps")
 
         steps = plan["steps"]
-        print("✅ Plan generated successfully!")
-        print(f"\n📋 Generated Plan:\n{json.dumps(plan, indent=2)}")
+        print("Plan generated successfully!")
+        print(f"\nGenerated Plan:\n{json.dumps(plan, indent=2)}")
         trace.step("plan_generated", f"{len(steps)} steps: {', '.join(s.get('agent','?')+'.'+s.get('tool','?') for s in steps)}")
 
     except Exception as e:
@@ -523,7 +524,7 @@ Available agents and tools:
             )
             raise LLMServiceException(handle_llm_error(e))
         error_msg = f"Failed to generate plan: {str(e)}"
-        print(f"❌ {error_msg}")
+        print(f"{error_msg}")
         trace.error(f"Plan generation failed: {e}")
         raise ValueError(error_msg)
 
@@ -531,7 +532,7 @@ Available agents and tools:
     plan_file = os.path.join(OUTPUT_DIR, "supervisor_plan.json")
     with open(plan_file, "w") as f:
         json.dump(plan, f, indent=2)
-    print(f"\n💾 Plan saved to: {plan_file}")
+    print(f"\nPlan saved to: {plan_file}")
     print("=" * 60 + "\n")
 
     return {"plan": plan, "context": state.get("context", {})}
@@ -745,11 +746,11 @@ def orchestrator_node(state: SharedState) -> SharedState:
     Manages variable substitution and context flow between steps.
     """
     print("\n" + "=" * 60)
-    print("⚙️ ORCHESTRATOR NODE - Execution Phase")
+    print("ORCHESTRATOR NODE - Execution Phase")
     print("=" * 60)
 
     # ===================================================================
-    # 🔍 DEBUG: Print incoming state structure
+    # DEBUG: Print incoming state structure
     # ===================================================================
 
     plan_dict = state.get("plan", {})
@@ -758,8 +759,8 @@ def orchestrator_node(state: SharedState) -> SharedState:
     results = []
 
     if not plan:
-        print("❌ ERROR: No steps found in plan!")
-        print(f"📋 Plan structure: {json.dumps(plan_dict, indent=2)}")
+        print("ERROR: No steps found in plan!")
+        print(f"Plan structure: {json.dumps(plan_dict, indent=2)}")
         trace.error("No steps found in plan", data={"plan_keys": list(plan_dict.keys())})
         return {
             "final_context": variable_context,
@@ -768,7 +769,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
             "error": "No steps to execute in plan"
         }
     
-    print(f"✅ Found {len(plan)} steps to execute")
+    print(f"Found {len(plan)} steps to execute")
     trace.step("orchestrator_node", f"{len(plan)} steps to execute")
         
     
@@ -776,7 +777,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
     broadcast_ws_progress = broadcast_progress_sync
 
     # Print initial context
-    print("\n📦 INITIAL CONTEXT:")
+    print("\nINITIAL CONTEXT:")
     print("─" * 60)
     for key, value in variable_context.items():
         if isinstance(value, (list, dict)):
@@ -805,7 +806,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
     if missing_cred_fields:
         error_msg = f"Missing required Google credentials: {', '.join(missing_cred_fields)}. Cannot execute plan."
-        print(f"❌ {error_msg}")
+        print(f"{error_msg}")
         trace.error(error_msg, data={"missing": missing_cred_fields})
         variable_context["error"] = error_msg
         return {
@@ -816,7 +817,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
             "error": error_msg,
         }
 
-    print(f"✅ Pre-flight credential check passed ({len(credentials_dict)} fields)")
+    print(f"Pre-flight credential check passed ({len(credentials_dict)} fields)")
 
     for step_num, step in enumerate(plan, 1):
         agent_name = step["agent"]
@@ -826,8 +827,8 @@ def orchestrator_node(state: SharedState) -> SharedState:
         output_variables = step.get("output_variables", {})
 
         print(f"\n{'='*60}")
-        print(f"📍 Step {step_num}/{len(plan)}: {agent_name}.{tool_name}")
-        print(f"📝 Description: {description}")
+        print(f"Step {step_num}/{len(plan)}: {agent_name}.{tool_name}")
+        print(f"Description: {description}")
         print(f"{'='*60}")
         
         # === PROGRESS LOGGING (step-based, no percentage) ===
@@ -846,9 +847,9 @@ def orchestrator_node(state: SharedState) -> SharedState:
         risk_level = get_action_risk_level(tool_name)
         needs_approval = requires_approval(tool_name)
 
-        print(f"⚠️ Risk Level: {risk_level.value}")
+        print(f"Risk Level: {risk_level.value}")
         if needs_approval:
-            print(f"⏸️ PAUSED - Action requires approval!")
+            print(f"⏸ PAUSED - Action requires approval!")
             # Substitute variables first so user sees actual values
             substituted_inputs = {}
             for key, value in inputs.items():
@@ -886,7 +887,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
             )
             store_pending_action(pending_action)
 
-            print(f"🔔 Approval required for action: {action_id}")
+            print(f"Approval required for action: {action_id}")
             print(f"   Details: {json.dumps(step_info, indent=4)}")
 
             # Collect remaining steps (after the current one)
@@ -912,7 +913,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
             })
 
             # STOP the loop — return with pending info so threads.py can pause workflow
-            print(f"⏸️ WORKFLOW PAUSED — waiting for chat-based approval")
+            print(f"⏸ WORKFLOW PAUSED — waiting for chat-based approval")
             variable_context["results"] = results
             
             # Include approval metadata in final_context so it flows to WorkflowResponse
@@ -938,7 +939,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
         # No approval needed — execute normally
 
         # STEP 1: Variable Substitution
-        print(f"\n🔄 Substituting variables in inputs...")
+        print(f"\nSubstituting variables in inputs...")
         print(f"   Original inputs: {json.dumps(inputs, indent=6)}")
 
         substituted_inputs = {}
@@ -970,7 +971,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
             else:
                 error_msg = f"Step {step_num} ({description}) could not proceed — required data was not available from a previous step."
 
-            print(f"⚠️ {error_msg}")
+            print(f"{error_msg}")
             trace.error(f"Variable substitution failed at step {step_num}", data={"missing_var": missing_var, "error": str(e)})
 
             results.append({
@@ -1003,7 +1004,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
         agent_url = AGENT_ENDPOINTS.get(agent_name)
         if not agent_url:
             error_msg = f"No endpoint configured for agent: {agent_name}"
-            print(f"❌ {error_msg}")
+            print(f"{error_msg}")
             trace.error(f"No endpoint for {agent_name}", data={"step": step_num})
             results.append({
                 "step": step_num,
@@ -1014,7 +1015,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
             })
             continue
 
-        print(f"\n🌐 Calling agent microservice: {agent_url}")
+        print(f"\nCalling agent microservice: {agent_url}")
 
         # Prepare request payload (tool-based format)
         request_payload = {
@@ -1023,8 +1024,8 @@ def orchestrator_node(state: SharedState) -> SharedState:
             "credentials_dict": credentials_dict  # Only string values, no expiry/scopes
         }
 
-        # 🔍 DEBUG: Print request payload structure (without sensitive data)
-        print(f"\n🔍 REQUEST PAYLOAD STRUCTURE:")
+        # DEBUG: Print request payload structure (without sensitive data)
+        print(f"\nREQUEST PAYLOAD STRUCTURE:")
         print("─" * 60)
         print(f"   Tool: {request_payload['tool']}")
         print(f"   Inputs keys: {list(request_payload['inputs'].keys())}")
@@ -1037,7 +1038,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
             # === AGENT CALL TIMING ===
             agent_start_time = time.time()
             
-            print(f"\n🚀 Sending request to agent...")
+            print(f"\nSending request to agent...")
             print(f"   URL: {agent_url}")
             print(f"   Timeout: 320 seconds")
             print(f"   Max retries: 3")
@@ -1051,16 +1052,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
             )
             
             agent_duration_ms = (time.time() - agent_start_time) * 1000
-            print(f"⏱️ Agent call completed in {agent_duration_ms:.2f}ms")
+            print(f"⏱ Agent call completed in {agent_duration_ms:.2f}ms")
 
             if not result:
                 raise ValueError("Agent call failed after retries")
 
-            print(f"✅ Agent response received")
+            print(f"Agent response received")
             trace.agent_call(agent_name, tool_name, substituted_inputs,
                              success=result.get("success", False), duration_ms=agent_duration_ms)
             print(f"\n{'─'*60}")
-            print(f"📦 FULL AGENT RESPONSE DATA:")
+            print(f"FULL AGENT RESPONSE DATA:")
             print(f"{'─'*60}")
             print(json.dumps(result, indent=2))
             print(f"{'─'*60}\n")
@@ -1084,27 +1085,26 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
                 # Create renamed variables based on output_variables mapping
                 # Format: "new_variable_name": "source_field_name" or "nested.path[0].field"
-                print(f"\n📦 Variables added to context:")
+                print(f"\nVariables added to context:")
                 for new_var_name, source_field_name in output_variables.items():
                     value = extract_nested_value(agent_result, source_field_name)
 
                     if value is not None:
                         variable_context[new_var_name] = value
                         print(
-                            f"   ✓ {new_var_name} = {value} (from {source_field_name})"
+                            f"   {new_var_name} = {value} (from {source_field_name})"
                         )
                     elif source_field_name in agent_result:
                         variable_context[new_var_name] = agent_result[source_field_name]
                         print(
-                            f"   ✓ {new_var_name} = {agent_result[source_field_name]} (from {source_field_name})"
+                            f"   {new_var_name} = {agent_result[source_field_name]} (from {source_field_name})"
                         )
                     else:
                         print(
-                            f"   ⚠️ {new_var_name} = NOT FOUND (looking for {source_field_name} in result)"
+                            f"   {new_var_name} = NOT FOUND (looking for {source_field_name} in result)"
                         )
 
-                # Print updated context after this step
-                print(f"\n📊 CONTEXT AFTER STEP {step_num}:")
+                print(f"\nCONTEXT AFTER STEP {step_num}:")
                 print("─" * 60)
                 for key, value in variable_context.items():
                     if isinstance(value, list):
@@ -1152,8 +1152,8 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 error_msg = result.get("error", "Unknown error")
                 is_no_results = result.get("no_results", False)
 
-                # 🔍 DEBUG: Print error details
-                print(f"\n🔍 ERROR RESPONSE DETAILS:")
+                # DEBUG: Print error details
+                print(f"\nERROR RESPONSE DETAILS:")
                 print("─" * 60)
                 print(f"   Error message: {error_msg}")
                 print(f"   Is no_results: {is_no_results}")
@@ -1162,7 +1162,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
                 if is_no_results:
                     # Graceful handling for empty results
-                    print(f"ℹ️ No results found: {error_msg}")
+                    print(f"ℹ No results found: {error_msg}")
                     print(
                         f"   This step returned no data, but the operation was valid."
                     )
@@ -1216,7 +1216,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
                                 missing_vars.append(var_name)
                         if missing_vars:
                             remaining_count = len(plan) - step_num
-                            print(f"⚠️ Variables not populated due to no results: {missing_vars}")
+                            print(f"Variables not populated due to no results: {missing_vars}")
                             print(f"   Skipping {remaining_count} remaining step(s) that depend on these variables.")
 
                             no_results_msg = error_msg
@@ -1243,8 +1243,8 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
                 else:
                     # Actual error occurred - STOP EXECUTION
-                    print(f"❌ Agent reported error: {error_msg}")
-                    print(f"🛑 STOPPING WORKFLOW - Error in step {step_num}")
+                    print(f"Agent reported error: {error_msg}")
+                    print(f"STOPPING WORKFLOW - Error in step {step_num}")
 
                     results.append(
                         {
@@ -1272,16 +1272,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
                     # Stop workflow and return early
                     print(f"\n{'='*60}")
-                    print("🛑 ORCHESTRATOR STOPPED DUE TO ERROR")
+                    print("ORCHESTRATOR STOPPED DUE TO ERROR")
                     print(f"{'='*60}")
-                    print(f"📊 Completed steps: {step_num}/{len(plan)}")
+                    print(f"Completed steps: {step_num}/{len(plan)}")
                     print(
-                        f"✓ Successful: {sum(1 for r in results if r.get('status') == 'success')}"
+                        f"Successful: {sum(1 for r in results if r.get('status') == 'success')}"
                     )
                     print(
-                        f"ℹ️ No Results: {sum(1 for r in results if r.get('status') == 'no_results')}"
+                        f"No Results: {sum(1 for r in results if r.get('status') == 'no_results')}"
                     )
-                    print(f"✗ Failed at step: {step_num}")
+                    print(f"Failed at step: {step_num}")
                     print(f"{'='*60}\n")
 
                     # Include results in final_context for summary generation
@@ -1299,12 +1299,12 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
         except httpx.HTTPError as e:
             error_msg = f"HTTP error calling {agent_name}: {str(e)}"
-            print(f"❌ {error_msg}")
-            print(f"🛑 STOPPING WORKFLOW - HTTP Error in step {step_num}")
+            print(f"{error_msg}")
+            print(f"STOPPING WORKFLOW - HTTP Error in step {step_num}")
             trace.error(f"HTTP error step {step_num}: {agent_name}.{tool_name}", data={"error": str(e), "type": type(e).__name__})
             
-            # 🔍 DEBUG: Print HTTP error details
-            print(f"\n🔍 HTTP ERROR DETAILS:")
+            # DEBUG: Print HTTP error details
+            print(f"\nHTTP ERROR DETAILS:")
             print("─" * 60)
             print(f"   Error type: {type(e).__name__}")
             print(f"   Error message: {str(e)}")
@@ -1325,16 +1325,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
             # Stop workflow and return early
             print(f"\n{'='*60}")
-            print("🛑 ORCHESTRATOR STOPPED DUE TO HTTP ERROR")
+            print("ORCHESTRATOR STOPPED DUE TO HTTP ERROR")
             print(f"{'='*60}")
-            print(f"📊 Completed steps: {step_num}/{len(plan)}")
+            print(f"Completed steps: {step_num}/{len(plan)}")
             print(
-                f"✓ Successful: {sum(1 for r in results if r.get('status') == 'success')}"
+                f"Successful: {sum(1 for r in results if r.get('status') == 'success')}"
             )
             print(
-                f"ℹ️ No Results: {sum(1 for r in results if r.get('status') == 'no_results')}"
+                f"No Results: {sum(1 for r in results if r.get('status') == 'no_results')}"
             )
-            print(f"✗ Failed at step: {step_num}")
+            print(f"Failed at step: {step_num}")
             print(f"{'='*60}\n")
 
             # Include results in final_context for summary generation
@@ -1352,12 +1352,12 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
         except Exception as e:
             error_msg = f"Unexpected error: {str(e)}"
-            print(f"❌ {error_msg}")
-            print(f"🛑 STOPPING WORKFLOW - Unexpected Error in step {step_num}")
+            print(f"{error_msg}")
+            print(f"STOPPING WORKFLOW - Unexpected Error in step {step_num}")
             trace.error(f"Unexpected error step {step_num}: {agent_name}.{tool_name}", exception=e)
             
-            # 🔍 DEBUG: Print full traceback
-            print(f"\n🔍 FULL TRACEBACK:")
+            # DEBUG: Print full traceback
+            print(f"\nFULL TRACEBACK:")
             print("─" * 60)
             traceback.print_exc()
             print("─" * 60)
@@ -1374,16 +1374,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
 
             # Stop workflow and return early
             print(f"\n{'='*60}")
-            print("🛑 ORCHESTRATOR STOPPED DUE TO UNEXPECTED ERROR")
+            print("ORCHESTRATOR STOPPED DUE TO UNEXPECTED ERROR")
             print(f"{'='*60}")
-            print(f"📊 Completed steps: {step_num}/{len(plan)}")
+            print(f"Completed steps: {step_num}/{len(plan)}")
             print(
-                f"✓ Successful: {sum(1 for r in results if r.get('status') == 'success')}"
+                f"Successful: {sum(1 for r in results if r.get('status') == 'success')}"
             )
             print(
-                f"ℹ️ No Results: {sum(1 for r in results if r.get('status') == 'no_results')}"
+                f"No Results: {sum(1 for r in results if r.get('status') == 'no_results')}"
             )
-            print(f"✗ Failed at step: {step_num}")
+            print(f"Failed at step: {step_num}")
             print(f"{'='*60}\n")
 
             # Include results in final_context for summary generation
@@ -1404,12 +1404,12 @@ def orchestrator_node(state: SharedState) -> SharedState:
     error_count = sum(1 for r in results if r.get('status') == 'error')
 
     print(f"\n{'='*60}")
-    print("✅ ORCHESTRATOR COMPLETED")
+    print("ORCHESTRATOR COMPLETED")
     print(f"{'='*60}")
-    print(f"📊 Total steps: {len(plan)}")
-    print(f"✓ Successful: {success_count}")
-    print(f"ℹ️ No Results: {no_results_count}")
-    print(f"✗ Failed: {error_count}")
+    print(f"Total steps: {len(plan)}")
+    print(f"Successful: {success_count}")
+    print(f"No Results: {no_results_count}")
+    print(f"Failed: {error_count}")
     print(f"{'='*60}\n")
     trace.step("orchestrator_complete", f"steps={len(plan)}, success={success_count}, no_results={no_results_count}, errors={error_count}")
 
@@ -1437,7 +1437,7 @@ graph.add_edge("orchestrator", END)
 
 workflow = graph.compile()
 
-print("✅ Workflow graph compiled (FULL WORKFLOW)")
+print("Workflow graph compiled (FULL WORKFLOW)")
 print("   Flow: supervisor → orchestrator → END")
 print(f"   Plans saved to: {OUTPUT_DIR}/supervisor_plan.json")
 print(f"   Agent endpoints: {list(AGENT_ENDPOINTS.keys())}")
@@ -1499,7 +1499,7 @@ react_workflow = None  # Stub so imports don't break
 #     action or declares the task complete.
 #     """
 #     print("\n" + "=" * 60)
-#     print("🧠 REACT PLANNER — Reason + Act")
+# print(" REACT PLANNER — Reason + Act")
 #     print("=" * 60)
 #
 #     user_input = state["input"]
@@ -1527,7 +1527,7 @@ react_workflow = None  # Stub so imports don't break
 #     # Safety: max iterations
 #     # ------------------------------------------------------------------
 #     if react_iteration >= MAX_REACT_ITERATIONS:
-#         print(f"⚠️ Max iterations reached ({MAX_REACT_ITERATIONS}) — forcing completion")
+# print(f" Max iterations reached ({MAX_REACT_ITERATIONS}) — forcing completion")
 #         trace.warning(f"React loop hit max iterations ({MAX_REACT_ITERATIONS})")
 #         return {
 #             "plan": {"steps": []},
@@ -1566,8 +1566,8 @@ react_workflow = None  # Stub so imports don't break
 #             context_vars_note += f"\n- uploaded_file: {{{{ uploaded_file.temp_path }}}} (file: {uf.get('filename', 'unknown')})"
 #
 #     total_tools = sum(len(tools) for tools in tool_filter.values())
-#     print(f"📌 Relevant agents: {list(filtered_capabilities.keys())}")
-#     print(f"🔧 Tools: {total_tools}")
+# print(f" Relevant agents: {list(filtered_capabilities.keys())}")
+# print(f" Tools: {total_tools}")
 #
 #     # ------------------------------------------------------------------
 #     # System prompt (ReAct-specific)
@@ -1599,7 +1599,7 @@ react_workflow = None  # Stub so imports don't break
 #     # ------------------------------------------------------------------
 #     # LLM call (structured output — ReactStep)
 #     # ------------------------------------------------------------------
-#     print("🤖 Calling LLM for next ReAct step...")
+# print(" Calling LLM for next ReAct step...")
 #     try:
 #         structured_llm = llm.with_structured_output(
 #             ReactStep, method="function_calling", include_raw=True
@@ -1640,7 +1640,7 @@ react_workflow = None  # Stub so imports don't break
 #             success=True,
 #         )
 #
-#         print(f"💭 Thought: {react_step.thought}")
+# print(f" Thought: {react_step.thought}")
 #         trace.step("react_thought", react_step.thought[:200])
 #
 #         # ------------------------------------------------------------------
@@ -1648,7 +1648,7 @@ react_workflow = None  # Stub so imports don't break
 #         # ------------------------------------------------------------------
 #         if react_step.done or react_step.next_step is None:
 #             summary = react_step.summary or "Task completed."
-#             print(f"✅ React planner declares DONE: {summary}")
+# print(f" React planner declares DONE: {summary}")
 #             trace.step(
 #                 "react_done",
 #                 f"Complete after {react_iteration} iterations: {summary}",
@@ -1678,7 +1678,7 @@ react_workflow = None  # Stub so imports don't break
 #         step_dict = react_step.next_step.model_dump()
 #         plan = {"steps": [step_dict]}
 #
-#         print(f"📋 Next step: {step_dict['agent']}.{step_dict['tool']}: {step_dict['description']}")
+# print(f" Next step: {step_dict['agent']}.{step_dict['tool']}: {step_dict['description']}")
 #         trace.step(
 #             "react_next_step",
 #             f"iter {react_iteration + 1}: {step_dict['agent']}.{step_dict['tool']}",
@@ -1720,7 +1720,7 @@ react_workflow = None  # Stub so imports don't break
 #     """
 #     final_context = state.get("final_context", {})
 #     if final_context.get("paused_for_approval"):
-#         print("⏸️ ReAct orchestrator paused for approval — exiting loop")
+# print("⏸ ReAct orchestrator paused for approval — exiting loop")
 #         return "paused"
 #     return "continue"
 #
@@ -1745,7 +1745,7 @@ react_workflow = None  # Stub so imports don't break
 #
 # react_workflow = react_graph.compile()
 #
-# print("✅ ReAct workflow graph compiled")
+# print(" ReAct workflow graph compiled")
 # print("   Flow: react_planner → [route] → orchestrator → [paused?] → END or ↺ react_planner")
 # print(f"   Max iterations: {MAX_REACT_ITERATIONS}")
 # --- END REACT FLOW DISABLED ---

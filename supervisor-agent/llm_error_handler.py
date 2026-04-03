@@ -81,7 +81,7 @@ def handle_llm_error(exception: Exception, context: str = None) -> LLMError:
     error_str = str(exception).lower()
     error_type_str = type(exception).__name__
     
-    print(f"🔴 LLM Error: {error_type_str}: {exception}")
+    print(f" LLM Error: {error_type_str}: {exception}")
     if context:
         print(f"   Context: {context}")
     

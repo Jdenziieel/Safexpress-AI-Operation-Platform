@@ -16,10 +16,10 @@ AGENT_ENDPOINTS = {
     "docs_agent": os.getenv("DOCS_AGENT_URL", "http://localhost:8002/execute_task"),
     "sheets_agent": os.getenv(
         "SHEETS_AGENT_URL", "http://localhost:8003/execute_task"
-    ),  # ✅ FIXED
+    ), # FIXED
     "mapping_agent": os.getenv(
         "MAPPING_AGENT_URL", "http://localhost:8004/execute_task"
-    ),  # ✅ Already correct
+    ), # Already correct
     "calendar_agent": os.getenv(
         "CALENDAR_AGENT_URL", "http://localhost:8005/execute_task"
     ),

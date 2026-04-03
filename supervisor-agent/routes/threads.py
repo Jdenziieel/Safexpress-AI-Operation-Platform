@@ -129,7 +129,7 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
             # Add completed steps from this resumption
             completed = [r for r in results if r.get("status") == "success"]
             if completed:
-                steps_summary = "\n".join(f"  ✅ Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
+                steps_summary = "\n".join(f"  Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
                 response_prefix += f"\n{steps_summary}\n"
             
             return response_prefix + "\n\n" + approval_msg, conversation_state
@@ -145,23 +145,23 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
         if completed:
             for r in completed:
                 desc = r.get("description", r.get("tool", ""))
-                response_prefix += f"\n  ✅ {desc}"
+                response_prefix += f"\n  {desc} — done"
         
         if errors:
             for r in errors:
                 desc = r.get("description", r.get("tool", ""))
                 err = r.get("error", "Unknown error")
-                response_prefix += f"\n  ❌ {desc}: {err}"
+                response_prefix += f"\n  {desc} — failed: {err}"
         
         response_prefix += "\n\nAll steps completed! Is there anything else you'd like to do?"
         
         return response_prefix, conversation_state
         
     except Exception as e:
-        print(f"❌ Error resuming remaining steps: {str(e)}")
+        print(f"Error resuming remaining steps: {str(e)}")
         conversation_state.remaining_steps = []
         conversation_state.workflow_context = None
-        return response_prefix + f"\n\n❌ Error continuing workflow: {str(e)}", conversation_state
+        return response_prefix + f"\n\nError continuing workflow: {str(e)}", conversation_state
 
 
 # --- REACT FLOW DISABLED — uncomment to re-enable ---
@@ -259,10 +259,10 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
 #         return response_prefix, conversation_state
 #         
 #     except Exception as e:
-#         print(f"❌ Error resuming ReAct workflow: {str(e)}")
+# print(f" Error resuming ReAct workflow: {str(e)}")
 #         conversation_state.remaining_steps = []
 #         conversation_state.workflow_context = None
-#         return response_prefix + f"\n\n❌ Error continuing workflow: {str(e)}", conversation_state
+# return response_prefix + f"\n\n Error continuing workflow: {str(e)}", conversation_state
 # --- END REACT FLOW DISABLED ---
 
 
@@ -402,7 +402,7 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
         results = final_context.get("results", [])
         completed = [r for r in results if r.get("status") == "success"]
         if completed:
-            steps_summary = "\n".join(f"  ✅ Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
+            steps_summary = "\n".join(f"  Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
             approval_message = f"**Completed so far:**\n{steps_summary}\n\n{approval_message}"
         
         return approval_message, conversation_state
@@ -555,7 +555,7 @@ async def create_thread(request: CreateThreadRequest):
 
         # If ready for execution after initial message, execute immediately
         if initial_message and conversation_state.ready_for_execution:
-            print(f"🚀 Thread {thread_id} ready - executing workflow...")
+            print(f"Thread {thread_id} ready - executing workflow...")
             trace.decision("ready_for_execution", "YES — executing immediately")
 
             # Mark as executing to prevent conflicts
@@ -606,7 +606,7 @@ async def create_thread(request: CreateThreadRequest):
         clear_request_context()
         raise
     except Exception as e:
-        print(f"❌ Error creating thread: {str(e)}")
+        print(f"Error creating thread: {str(e)}")
         logger.request_summary()
         clear_request_context()
         raise HTTPException(status_code=500, detail=str(e))
@@ -620,7 +620,7 @@ async def create_thread_with_upload(
 ):
     """
     Create a new thread with initial message AND file upload in one request.
-    This prevents the "📎 Uploading file..." secondary message issue.
+    This prevents the "Uploading file..." secondary message issue.
     """
 
     # === QUOTA CHECK: Verify user has quota before processing ===
@@ -703,12 +703,12 @@ async def create_thread_with_upload(
             uploaded_file=uploaded_file,
         )
 
-        print(f"🤖 Bot response: {response_text}")
-        print(f"✅ Ready to execute: {updated_state.ready_for_execution}")
+        print(f"Bot response: {response_text}")
+        print(f"Ready to execute: {updated_state.ready_for_execution}")
 
         # If ready for execution, execute immediately
         if updated_state.ready_for_execution:
-            print(f"🚀 Thread {thread_id} ready - executing workflow...")
+            print(f"Thread {thread_id} ready - executing workflow...")
 
             updated_state.executing = True
             conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
@@ -723,7 +723,7 @@ async def create_thread_with_upload(
 
                 # Clean up temp file after workflow completes
                 delete_temp_file(uploaded_file)
-                print(f"🗑️ Cleaned up uploaded file")
+                print(f"Cleaned up uploaded file")
         # else: Do NOT delete — file persists (local or S3) until workflow
         # eventually executes.  S3 lifecycle rule handles orphan cleanup.
 
@@ -742,13 +742,13 @@ async def create_thread_with_upload(
         }
 
     except Exception as e:
-        print(f"\n❌ Error creating thread with upload: {str(e)}")
+        print(f"\nError creating thread with upload: {str(e)}")
         traceback.print_exc()
 
         # Clean up temp file on error
         if 'uploaded_file' in locals():
             delete_temp_file(uploaded_file)
-            print(f"🗑️ Cleaned up uploaded file on error")
+            print(f"Cleaned up uploaded file on error")
 
         clear_request_context()
         raise HTTPException(status_code=500, detail=f"Failed to create thread with file: {str(e)}")
@@ -791,7 +791,7 @@ async def search_threads(user_id: str, q: str, limit: int = 20):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Error searching threads: {str(e)}")
+        print(f"Error searching threads: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -830,7 +830,7 @@ async def list_threads(user_id: str, status: str = "active", limit: int = 50, of
         }
 
     except Exception as e:
-        print(f"❌ Error listing threads: {str(e)}")
+        print(f"Error listing threads: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -860,7 +860,7 @@ async def get_thread(thread_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Error getting thread: {str(e)}")
+        print(f"Error getting thread: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -899,7 +899,7 @@ async def get_thread_messages(thread_id: str, limit: int = 50, offset: int = 0):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Error getting thread messages: {str(e)}")
+        print(f"Error getting thread messages: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1004,7 +1004,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
         
         if pending_decision == "approve" and pending_action_id and conversation_state.workflow_paused:
             # User approved the pending action — execute it
-            print(f"✅ Chat-based approval for action {pending_action_id}")
+            print(f"Chat-based approval for action {pending_action_id}")
             trace.step("chat_approval", f"Executing approved action: {pending_action_id}")
             
             pending = conversation_state.pending_actions[0] if conversation_state.pending_actions else {}
@@ -1022,7 +1022,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
                 }
                 result = await asyncio.to_thread(execute_single_action, step_info)
                 
-                print(f"✅ Action executed: {result.get('success', False)}")
+                print(f"Action executed: {result.get('success', False)}")
                 
                 # Clear pending state
                 conversation_state.pending_actions = []
@@ -1043,38 +1043,37 @@ async def send_message_to_thread(thread_id: str, request: dict):
                     description = pending.get("description", "Action")
                     tool_name = pending.get("tool", "unknown")
                     inputs = pending.get("inputs", {})
-                    response_text = f"✅ **Done — {description}**\n\n"
+                    response_text = f"**Done — {description}**\n\n"
 
-                    # Build a concise summary from actual inputs/results
                     detail_parts = []
                     action_result = result.get("result", {}) if isinstance(result.get("result"), dict) else {}
                     if tool_name in ("send_draft_email", "send_email_with_attachment"):
                         if inputs.get("to"):
-                            detail_parts.append(f"📧 Sent to **{inputs['to']}**")
+                            detail_parts.append(f"Sent to **{inputs['to']}**")
                         if inputs.get("subject"):
                             detail_parts.append(f"Subject: **{inputs['subject']}**")
                     elif tool_name == "reply_to_email":
-                        detail_parts.append("↩️ Reply sent")
+                        detail_parts.append("Reply sent")
                     elif tool_name == "create_draft_email":
                         if inputs.get("to"):
-                            detail_parts.append(f"📝 Draft created for **{inputs['to']}**")
+                            detail_parts.append(f"Draft created for **{inputs['to']}**")
                     elif tool_name in ("create_doc", "add_text"):
                         title = inputs.get("title") or action_result.get("title", "")
                         if title:
-                            detail_parts.append(f"📄 Document: **{title}**")
+                            detail_parts.append(f"Document: **{title}**")
                     elif tool_name == "create_event":
                         summary = inputs.get("summary") or inputs.get("title", "")
                         if summary:
-                            detail_parts.append(f"📅 Event: **{summary}**")
+                            detail_parts.append(f"Event: **{summary}**")
                     elif tool_name == "share_file":
                         if inputs.get("email"):
-                            detail_parts.append(f"🔗 Shared with **{inputs['email']}**")
+                            detail_parts.append(f"Shared with **{inputs['email']}**")
                     elif tool_name in ("delete_email", "delete_file", "delete_event"):
-                        detail_parts.append("🗑️ Deleted successfully")
+                        detail_parts.append("Deleted successfully")
                     elif tool_name == "upload_file":
                         fname = inputs.get("filename") or inputs.get("file_name", "")
                         if fname:
-                            detail_parts.append(f"📤 Uploaded **{fname}**")
+                            detail_parts.append(f"Uploaded **{fname}**")
 
                     if detail_parts:
                         response_text += "\n".join(f"- {p}" for p in detail_parts) + "\n"
@@ -1092,7 +1091,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
                     remaining = conversation_state.remaining_steps
                     
                     if remaining:
-                        response_text += f"\n⏳ Continuing with {len(remaining)} remaining step(s)...\n"
+                        response_text += f"\nContinuing with {len(remaining)} remaining step(s)...\n"
                         response_text, conversation_state = await _resume_remaining_steps(
                             conversation_state, result, response_text, thread_id,
                             approved_step_info=pending,
@@ -1120,7 +1119,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
                         conversation_state.clarification_question = None
                 else:
                     error_msg = result.get("error", "Unknown error")
-                    response_text = f"❌ **Action Failed**\n\n{error_msg}\n\nWould you like to try again?"
+                    response_text = f"**Action Failed**\n\n{error_msg}\n\nWould you like to try again?"
                     conversation_state.remaining_steps = []
                     conversation_state.workflow_context = None
                     conversation_state.intent = None
@@ -1131,8 +1130,8 @@ async def send_message_to_thread(thread_id: str, request: dict):
                     conversation_state.clarification_question = None
                 
             except Exception as e:
-                print(f"❌ Error executing approved action: {str(e)}")
-                response_text = f"❌ **Execution Error**\n\n{str(e)}\n\nWould you like to try again?"
+                print(f"Error executing approved action: {str(e)}")
+                response_text = f"**Execution Error**\n\n{str(e)}\n\nWould you like to try again?"
                 conversation_state.pending_actions = []
                 conversation_state.workflow_paused = False
                 conversation_state.remaining_steps = []
@@ -1149,7 +1148,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
         
         elif pending_decision == "reject" and pending_action_id and conversation_state.workflow_paused:
             # User rejected — response_text already set by Tier 0 check
-            print(f"🚫 Chat-based rejection for action {pending_action_id}")
+            print(f"Chat-based rejection for action {pending_action_id}")
             
             # Clear all pending state
             conversation_state.pending_actions = []
@@ -1174,7 +1173,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
 
         # If ready for execution, execute immediately
         elif conversation_state.ready_for_execution:
-            print(f"🚀 Thread {thread_id} ready - executing workflow...")
+            print(f"Thread {thread_id} ready - executing workflow...")
             trace.decision("ready_for_execution", "YES — executing workflow")
 
             # Mark as executing to prevent conflicts
@@ -1211,7 +1210,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
         clear_request_context()
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        print(f"❌ Error sending message to thread: {str(e)}")
+        print(f"Error sending message to thread: {str(e)}")
         clear_request_context()
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1281,7 +1280,7 @@ async def send_message_to_thread_with_upload(
     )
 
     try:
-        print(f"\n📎 File upload to thread {thread_id}: {file.filename}")
+        print(f"\nFile upload to thread {thread_id}: {file.filename}")
 
         # Store file via temp storage (local or S3 depending on TEMP_STORAGE_BACKEND)
         uploaded_file = store_temp_file(file.file, file.filename, file.content_type or "application/octet-stream")
@@ -1318,12 +1317,12 @@ async def send_message_to_thread_with_upload(
             uploaded_file=uploaded_file,
         )
 
-        print(f"🤖 Bot response: {response_text}")
-        print(f"✅ Ready to execute: {updated_state.ready_for_execution}")
+        print(f"Bot response: {response_text}")
+        print(f"Ready to execute: {updated_state.ready_for_execution}")
 
         # If ready for execution, execute immediately
         if updated_state.ready_for_execution:
-            print(f"🚀 Thread {thread_id} ready - executing workflow...")
+            print(f"Thread {thread_id} ready - executing workflow...")
 
             # Mark as executing to prevent conflicts
             updated_state.executing = True
@@ -1340,7 +1339,7 @@ async def send_message_to_thread_with_upload(
 
                 # Clean up temp file after workflow completes
                 delete_temp_file(uploaded_file)
-                print(f"🗑️ Cleaned up uploaded file")
+                print(f"Cleaned up uploaded file")
         # else: Do NOT delete — file persists until workflow eventually executes.
         # S3 lifecycle rule handles orphan cleanup.
 
@@ -1362,13 +1361,13 @@ async def send_message_to_thread_with_upload(
         clear_request_context()
         raise
     except Exception as e:
-        print(f"\n❌ Error sending message with upload to thread: {str(e)}")
+        print(f"\nError sending message with upload to thread: {str(e)}")
         traceback.print_exc()
 
         # Clean up temp file on error
         if 'uploaded_file' in locals():
             delete_temp_file(uploaded_file)
-            print(f"🗑️ Cleaned up uploaded file on error")
+            print(f"Cleaned up uploaded file on error")
 
         clear_request_context()
         raise HTTPException(status_code=500, detail=f"Upload processing failed: {str(e)}")
@@ -1418,7 +1417,7 @@ async def update_thread(thread_id: str, request: dict):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Error updating thread: {str(e)}")
+        print(f"Error updating thread: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1450,5 +1449,5 @@ async def delete_thread(thread_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Error deleting thread: {str(e)}")
+        print(f"Error deleting thread: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

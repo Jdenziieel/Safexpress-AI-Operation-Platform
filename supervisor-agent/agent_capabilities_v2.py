@@ -378,7 +378,7 @@ agent_capabilities = {
                 }
             },
             "create_from_template_and_data_ids": {
-    "description": "⚠️ REQUIRES drive_agent.search_template_and_data first to get file IDs, Create document from template and data files using their Google Drive file IDs (IDs already found by drive_agent.search_template_and_data)",
+    "description": " REQUIRES drive_agent.search_template_and_data first to get file IDs, Create document from template and data files using their Google Drive file IDs (IDs already found by drive_agent.search_template_and_data)",
     "triggers": ["template and data", "using X template and Y data"],
     "args": {
         "template_file_id": "str (required) — Google Drive file ID of template",
@@ -442,10 +442,10 @@ agent_capabilities = {
                     "[YEAR]": "Use key: YEAR",
                 },
                 "wrong_examples": {
-                    "Company Name": "❌ Has spaces and title case",
-                    "company_name": "❌ Lowercase",
-                    "CompanyName": "❌ Wrong casing",
-                    "[COMPANY_NAME]": "❌ Still has brackets",
+                    "Company Name": " Has spaces and title case",
+                    "company_name": " Lowercase",
+                    "CompanyName": " Wrong casing",
+                    "[COMPANY_NAME]": " Still has brackets",
                 },
             },
         },
@@ -855,7 +855,7 @@ agent_capabilities = {
                         "folders": "list — Array of folder objects with id, name, display, level",
                         "folders[].id": "str — Folder ID",
                         "folders[].name": "str — Folder name",
-                        "folders[].display": "str — Tree display format (e.g., '  📁 Reports')",
+                        "folders[].display": "str — Tree display format (e.g., ' Reports')",
                         "folders[].level": "int — Nesting level (0=root, 1=first level, etc.)",
                         "count": "int — Total number of folders",
                         "tree": "str — Full tree structure as formatted string",
@@ -914,13 +914,13 @@ agent_capabilities = {
                         "folder_path": "str — Full path (e.g., 'SafeExpress/Operations/2024')",
                         "file_count": "int — Number of files in folder",
                         "subfolder_count": "int — Number of subfolders",
-                        "message": "str — Summary (e.g., '📁 Operations/2024: 5 file(s), 3 subfolder(s)')",
+                        "message": "str — Summary (e.g., ' Operations/2024: 5 file(s), 3 subfolder(s)')",
                         "error": "str — Error message (null if successful)"
                     },
                     "example": "get_folder_info(folder_path='Operations/2024')"
                 },
                 "search_template_and_data": {
-    "description": "⚠️ USE THIS when user mentions BOTH template AND data files. Required before docs_agent.create_from_template_and_data_ids, Search Google Drive for both a template file and a data file by their names (used for template-based document creation workflow), ",
+    "description": " USE THIS when user mentions BOTH template AND data files. Required before docs_agent.create_from_template_and_data_ids, Search Google Drive for both a template file and a data file by their names (used for template-based document creation workflow), ",
     "args": {
         "template_name": "str (required) — Name or partial name of template file to search for (e.g., 'MOMtemplate', 'invoice template')",
         "data_name": "str (required) — Name or partial name of data file to search for (e.g., 'TestData123', 'customer_info')"

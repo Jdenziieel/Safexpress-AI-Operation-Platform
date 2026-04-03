@@ -46,7 +46,7 @@ class ThreadManager:
         """
         self.db_path = Path(db_path)
         self._init_database()
-        print(f"✅ SQLite thread manager initialized: {self.db_path}")
+        print(f" SQLite thread manager initialized: {self.db_path}")
     
     def _get_connection(self):
         """Get a database connection with foreign keys enabled"""
@@ -162,7 +162,7 @@ class ThreadManager:
         conn.commit()
         conn.close()
         
-        print(f"✅ Created thread: {thread_id} for user: {user_id}")
+        print(f" Created thread: {thread_id} for user: {user_id}")
         
         return ThreadMetadata(
             thread_id=thread_id,
@@ -414,7 +414,7 @@ class ThreadManager:
     
     def archive_thread(self, thread_id: str) -> bool:
         """Archive a thread (soft delete). Returns True if the thread existed."""
-        return self._set_thread_status(thread_id, "archived", "📦 Archived")
+        return self._set_thread_status(thread_id, "archived", " Archived")
 
     def delete_thread(self, thread_id: str, hard_delete: bool = False) -> bool:
         """Delete a thread (soft or hard). Returns True if the thread existed."""
@@ -430,10 +430,10 @@ class ThreadManager:
             conn.commit()
             conn.close()
             if deleted:
-                print(f"🗑️ Hard deleted thread: {thread_id}")
+                print(f" Hard deleted thread: {thread_id}")
             return deleted
         else:
-            return self._set_thread_status(thread_id, "deleted", "🗑️ Soft deleted")
+            return self._set_thread_status(thread_id, "deleted", " Soft deleted")
 
     def _set_thread_status(self, thread_id: str, status: str, label: str) -> bool:
         """Set thread status and return True if the thread existed."""
@@ -696,7 +696,7 @@ if __name__ == "__main__":
     messages = manager.get_messages(thread1.thread_id)
     print(f"   Found {len(messages)} messages:")
     for msg in messages:
-        role_icon = "👤" if msg['role'] == 'user' else "🤖"
+        role_icon = "" if msg['role'] == 'user' else ""
         content_preview = msg['content'][:50] + "..." if len(msg['content']) > 50 else msg['content']
         print(f"   {role_icon} {msg['role']}: {content_preview}")
     

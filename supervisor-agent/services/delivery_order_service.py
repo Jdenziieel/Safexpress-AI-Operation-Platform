@@ -153,19 +153,19 @@ class DeliveryOrderService:
             Formatted response string
         """
         if not preview_result["success"]:
-            return f"❌ Search failed: {preview_result['error']}"
+            return f" Search failed: {preview_result['error']}"
         
         preview = preview_result["preview"]
         
         if not preview:
-            return "📭 No delivery orders found matching your search. Try a different query."
+            return " No delivery orders found matching your search. Try a different query."
         
         # Store preview results in conversation state for later execution
         conversation_state.extracted_info["delivery_order_preview"] = preview
         conversation_state.extracted_info["delivery_order_total_found"] = preview_result.get("total_found", 0)
         
         # Build formatted response
-        response = f"📦 **Found {len(preview)} delivery order(s):**\n\n"
+        response = f" **Found {len(preview)} delivery order(s):**\n\n"
         
         for i, email in enumerate(preview, 1):
             response += f"**{i}. {email['subject']}**\n"
@@ -296,24 +296,24 @@ class DeliveryOrderService:
             Formatted response string
         """
         if not execution_result["success"]:
-            return f"❌ Processing failed: {execution_result.get('error', 'Unknown error')}"
+            return f" Processing failed: {execution_result.get('error', 'Unknown error')}"
         
         processed = execution_result.get("processed", [])
         errors = execution_result.get("errors", [])
         document_url = execution_result.get("document_url")
         
-        response = "✅ **Delivery order processing complete!**\n\n"
+        response = " **Delivery order processing complete!**\n\n"
         
         if processed:
             response += f"**Successfully processed: {len(processed)} order(s)**\n\n"
             for item in processed:
-                response += f"📄 {item.get('file_name', 'Unknown')}\n"
+                response += f" {item.get('file_name', 'Unknown')}\n"
                 response += f"   From: {item.get('email_from', 'Unknown')}\n"
                 response += f"   Subject: {item.get('email_subject', 'N/A')}\n"
-                response += f"   ✓ Parsed ✓ Transformed ✓ Uploaded\n\n"
+                response += f" Parsed Transformed Uploaded\n\n"
         
         if errors:
-            response += f"⚠️ **{len(errors)} error(s) occurred:**\n\n"
+            response += f" **{len(errors)} error(s) occurred:**\n\n"
             for error in errors[:3]:  # Show first 3 errors
                 response += f"   • {error}\n"
             if len(errors) > 3:
@@ -324,7 +324,7 @@ class DeliveryOrderService:
         
         # Add document link if created
         if document_url:
-            response += f"📋 **Summary Document Created:** [View in Google Docs]({document_url})\n\n"
+            response += f" **Summary Document Created:** [View in Google Docs]({document_url})\n\n"
         
         # Clean up conversation state
         conversation_state.extracted_info["delivery_order_stage"] = "completed"
@@ -349,7 +349,7 @@ class DeliveryOrderService:
         Returns:
             Formatted response showing email content
         """
-        response = f"📧 **Email Found!**\n\n"
+        response = f" **Email Found!**\n\n"
         response += f"**From:** {email_preview.get('from', 'Unknown')}\n"
         response += f"**Subject:** {email_preview.get('subject', 'N/A')}\n"
         response += f"**Date:** {email_preview.get('date', 'Unknown')}\n\n"
@@ -363,7 +363,7 @@ class DeliveryOrderService:
             response += "\n"
         
         # AI must understand content message
-        response += "✅ I understand the email content and found the attachment.\n\n"
+        response += " I understand the email content and found the attachment.\n\n"
         
         # Ask for destination
         response += "**Where would you like me to put the extracted data?**\n\n"
@@ -396,7 +396,7 @@ class DeliveryOrderService:
         Returns:
             Formatted string for user review
         """
-        response = f"📊 **Extracted Data from {filename}:**\n\n"
+        response = f" **Extracted Data from {filename}:**\n\n"
         
         # If it's structured data with rows
         if isinstance(parsed_data, dict):
@@ -422,7 +422,7 @@ class DeliveryOrderService:
                     if key not in ["rows", "metadata"]:
                         response += f"**{key}:** {value}\n"
         
-        response += "\n✅ Does this look correct?\n\n"
+        response += "\n Does this look correct?\n\n"
         response += "Please type **'Yes'** to confirm or **'No'** to cancel."
         
         return response
@@ -446,18 +446,18 @@ class DeliveryOrderService:
         Returns:
             Formatted confirmation message
         """
-        response = "✅ **Let me confirm your request:**\n\n"
+        response = " **Let me confirm your request:**\n\n"
         response += "**Plan:**\n"
-        response += "1. ✓ Read the document\n"
-        response += "2. ✓ Extract its contents\n"
-        response += "3. ✓ Save the data to the database\n"
+        response += "1. Read the document\n"
+        response += "2. Extract its contents\n"
+        response += "3. Save the data to the database\n"
         
         # Based on destination choice
         if destination_choice == "1" or destination_choice == "3":
-            response += f"4. ✓ Put the data in **{sheet_id}** Sheets\n"
+            response += f"4. Put the data in **{sheet_id}** Sheets\n"
         if destination_choice == "2" or destination_choice == "3":
             doc_title = summary_doc_title or "Delivery Order Summary"
-            response += f"4. ✓ Create a Google Doc: **{doc_title}**\n"
+            response += f"4. Create a Google Doc: **{doc_title}**\n"
         
         response += "\n**Is this correct?** (Reply: **Yes** to proceed or **No** to cancel)"
         
@@ -524,7 +524,7 @@ class DeliveryOrderService:
 
         # STAGE 0: Initial delivery order search
         if self.is_delivery_order_request(user_message) and not delivery_stage:
-            print(f"🚚 DELIVERY ORDER SEARCH: User is searching for delivery orders")
+            print(f" DELIVERY ORDER SEARCH: User is searching for delivery orders")
 
             query = user_message
             if "from:" not in query.lower():
@@ -541,21 +541,21 @@ class DeliveryOrderService:
             preview_result = self.handle_delivery_order_preview(query=query, credentials_dict=credentials_dict)
 
             if not preview_result["success"]:
-                response = f"❌ Search failed: {preview_result['error']}"
+                response = f" Search failed: {preview_result['error']}"
             else:
                 emails = preview_result["preview"]
                 if emails:
                     first_email = emails[0]
                     response = self.show_email_content_and_ask_destination(first_email, conversation_state)
                 else:
-                    response = "📭 No delivery orders found. Try a different search."
+                    response = " No delivery orders found. Try a different search."
                     conversation_state.extracted_info["delivery_order_stage"] = "completed"
 
             return finalize(response, conversation_state)
 
         # STAGE 1: Awaiting destination choice (sheets/docs/both)
         if delivery_stage == "awaiting_destination_choice":
-            print(f"🚚 DELIVERY ORDER DESTINATION: User choosing where to put data")
+            print(f" DELIVERY ORDER DESTINATION: User choosing where to put data")
 
             dest_result = self.handle_destination_choice(user_message, conversation_state)
             if not dest_result["success"]:
@@ -566,12 +566,12 @@ class DeliveryOrderService:
 
                 if dest_result["requires_sheet_id"]:
                     conversation_state.extracted_info["delivery_order_stage"] = "awaiting_sheet_id"
-                    response = "📊 **Which Google Sheet should I upload the data to?**\n\n"
+                    response = " **Which Google Sheet should I upload the data to?**\n\n"
                     response += "Provide the sheet ID or name (e.g., 'Order-123' or '1a2b3c4d5e6f')"
                     conversation_state.missing_fields = ["sheets_sheet_id"]
                 elif dest_result["requires_doc_title"]:
                     conversation_state.extracted_info["delivery_order_stage"] = "awaiting_doc_title"
-                    response = "📝 **What should I name the document?**\n\n"
+                    response = " **What should I name the document?**\n\n"
                     response += "E.g., 'Delivery Orders Summary' or 'Order Report Jan 2024'"
                     conversation_state.missing_fields = ["summary_doc_title"]
                 else:
@@ -582,7 +582,7 @@ class DeliveryOrderService:
 
         # STAGE 2: Awaiting sheet ID
         if delivery_stage == "awaiting_sheet_id":
-            print(f"🚚 DELIVERY ORDER SHEET_ID: User provided sheet ID")
+            print(f" DELIVERY ORDER SHEET_ID: User provided sheet ID")
 
             sheet_id = user_message.strip()
             conversation_state.extracted_info["sheets_sheet_id"] = sheet_id
@@ -590,7 +590,7 @@ class DeliveryOrderService:
             destination_type = conversation_state.extracted_info.get("destination_type", "sheets")
             if destination_type == "both":
                 conversation_state.extracted_info["delivery_order_stage"] = "awaiting_doc_title"
-                response = "📝 **What should I name the summary document?**\n\n"
+                response = " **What should I name the summary document?**\n\n"
                 response += "E.g., 'Delivery Orders Summary' or 'Order Report Jan 2024'"
                 conversation_state.missing_fields = ["summary_doc_title"]
             else:
@@ -601,7 +601,7 @@ class DeliveryOrderService:
 
         # STAGE 2.5: Awaiting doc title
         if delivery_stage == "awaiting_doc_title":
-            print(f"🚚 DELIVERY ORDER DOC_TITLE: User provided doc title")
+            print(f" DELIVERY ORDER DOC_TITLE: User provided doc title")
 
             doc_title = user_message.strip()
             conversation_state.extracted_info["summary_doc_title"] = doc_title
@@ -615,14 +615,14 @@ class DeliveryOrderService:
 
         # STAGE 3: Confirming the full plan
         if delivery_stage == "confirming_plan":
-            print(f"🚚 DELIVERY ORDER CONFIRM: User confirming the plan")
+            print(f" DELIVERY ORDER CONFIRM: User confirming the plan")
 
             user_lower = user_message.lower().strip()
             if user_lower not in ["yes", "y", "confirm", "proceed"]:
-                response = "❌ Plan cancelled. Let me know if you want to try again."
+                response = " Plan cancelled. Let me know if you want to try again."
                 conversation_state.extracted_info["delivery_order_stage"] = "completed"
             else:
-                response = "🔄 Great! Let me extract the contents and show them to you first...\n\n"
+                response = " Great! Let me extract the contents and show them to you first...\n\n"
 
                 extracted_data = {
                     "rows": [
@@ -641,14 +641,14 @@ class DeliveryOrderService:
 
         # STAGE 4: Awaiting data confirmation
         if delivery_stage == "awaiting_data_confirmation":
-            print(f"🚚 DELIVERY ORDER DATA_CHECK: User verifying extracted data")
+            print(f" DELIVERY ORDER DATA_CHECK: User verifying extracted data")
 
             user_lower = user_message.lower().strip()
             if user_lower not in ["yes", "y", "correct", "looks good"]:
-                response = "❌ Data verification refused. Request cancelled."
+                response = " Data verification refused. Request cancelled."
                 conversation_state.extracted_info["delivery_order_stage"] = "completed"
             else:
-                response = "✅ **Executing the workflow...**\n\n"
+                response = " **Executing the workflow...**\n\n"
 
                 conversation_state.extracted_info["delivery_order_stage"] = "executing"
                 destination_type = conversation_state.extracted_info.get("destination_type", "both")
@@ -672,7 +672,7 @@ class DeliveryOrderService:
 
         # STAGE (legacy): Awaiting sheet confirmation — direct execution
         if delivery_stage == "awaiting_sheet_confirmation":
-            print(f"🚚 DELIVERY ORDER EXECUTION: User confirmed, executing full workflow")
+            print(f" DELIVERY ORDER EXECUTION: User confirmed, executing full workflow")
 
             credentials_dict = {}
             execution_result = self.handle_delivery_order_execution(

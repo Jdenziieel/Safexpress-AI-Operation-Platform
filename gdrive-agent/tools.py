@@ -45,8 +45,8 @@ def get_token_drive_service():
             try:
                 creds.refresh(Request())
             except Exception as e:
-                print(f"⚠️ Token refresh failed: {e}")
-                print("🔄 Re-authenticating...")
+                print(f"Token refresh failed: {e}")
+                print("Re-authenticating...")
                 creds = None  # Force re-auth
         
         if not creds:  # Re-auth needed
@@ -87,7 +87,7 @@ def get_session_drive_service(session_creds: Dict):
                 pass
         return build('drive', 'v3', credentials=creds)
     except Exception as e:
-        print(f"❌ Error creating Drive service: {e}")
+        print(f"Error creating Drive service: {e}")
         raise
 
 
@@ -106,7 +106,7 @@ def find_folder(service, folder_name: str, parent_id: Optional[str] = None) -> O
         folders = results.get("files", [])
         return folders[0]["id"] if folders else None
     except Exception as e:
-        print(f"❌ Error finding folder '{folder_name}': {e}")
+        print(f"Error finding folder '{folder_name}': {e}")
         return None
 
 
@@ -123,7 +123,7 @@ def create_folder(service, folder_name: str, parent_id: Optional[str] = None) ->
         folder = service.files().create(body=metadata, fields="id").execute()
         return folder["id"]
     except Exception as e:
-        print(f"❌ Error creating folder '{folder_name}': {e}")
+        print(f"Error creating folder '{folder_name}': {e}")
         return None
 
 
@@ -202,7 +202,7 @@ def create_nested_folder_impl(service, folder_path: str) -> Dict:
             "folder_id": current_parent,
             "folder_url": folder_url,
             "folder_path": f"SafeExpress/{folder_path}",
-            "message": f"✅ Created folder: SafeExpress/{folder_path}",
+            "message": f"Created folder: SafeExpress/{folder_path}",
             "error": None
         }
     except Exception as e:
@@ -255,7 +255,7 @@ def list_files_in_folder_impl(service, folder_id: str) -> Dict:
         query = f"'{folder_id}' in parents and mimeType!='application/vnd.google-apps.folder' and trashed=false"
         results = service.files().list(
             q=query,
-            fields="files(id, name, mimeType, size, createdTime)",
+            fields="files(id, name, mimeType, size, createdTime, webViewLink)",
             orderBy="name"
         ).execute()
         
@@ -306,7 +306,7 @@ def get_folder_structure_impl(service, folder_id: Optional[str] = None, level: i
             structure.append({
                 "id": folder["id"],
                 "name": folder["name"],
-                "display": f"{indent}📁 {folder['name']}",
+                "display": f"{indent}{folder['name']}/",
                 "level": level
             })
             
@@ -368,7 +368,7 @@ def upload_file_to_folder_impl(service, filename: str, filepath: str, folder_pat
             "file_url": file_url,
             "filename": filename,
             "folder_path": location,
-            "message": f"✅ Uploaded '{filename}' to {location}",
+            "message": f"Uploaded '{filename}' to {location}",
             "error": None
         }
     except Exception as e:
@@ -384,10 +384,10 @@ def upload_file_to_folder_impl(service, filename: str, filepath: str, folder_pat
 def upload_stream_to_folder_impl(service, file_stream, filename: str, mimetype: str, folder_path: Optional[str] = None) -> Dict:
     """Upload a file stream to SafeExpress or a specific folder path - RETURNS DICT"""
     try:
-        # ✅ DEFAULT: Use "Templates" folder if no path specified
+        # DEFAULT: Use "Templates" folder if no path specified
         if folder_path is None:
             folder_path = "Templates"
-            print(f"📁 No folder specified, using default: SafeExpress/{folder_path}")
+            print(f"No folder specified, using default: SafeExpress/{folder_path}")
         
         # Get or create folder structure
         folder_result = create_nested_folder_impl(service, folder_path)
@@ -419,7 +419,7 @@ def upload_stream_to_folder_impl(service, file_stream, filename: str, mimetype: 
             "file_url": file_url,
             "filename": filename,
             "folder_path": location,
-            "message": f"✅ Uploaded '{filename}' to {location}",
+            "message": f"Uploaded '{filename}' to {location}",
             "error": None
         }
     except Exception as e:
@@ -438,7 +438,7 @@ def search_files_in_safeexpress_impl(service, search_term: str) -> Dict:
         query = f"name contains '{search_term}' and '{safeexpress_id}' in parents and trashed=false"
         results = service.files().list(
             q=query,
-            fields="files(id, name, mimeType, size, createdTime)",
+            fields="files(id, name, mimeType, size, createdTime, webViewLink)",
             pageSize=20
         ).execute()
         
@@ -450,14 +450,14 @@ def search_files_in_safeexpress_impl(service, search_term: str) -> Dict:
                 "results": [],
                 "count": 0,
                 "search_term": search_term,
-                "message": f"🔍 No files found matching '{search_term}'",
+                "message": f"No files found matching '{search_term}'",
                 "error": None
             }
         
         # Format results
         output = [f"Found {len(files)} file(s) matching '{search_term}':"]
         for file in files:
-            output.append(f"📄 {file['name']}")
+            output.append(f"  {file['name']}")
         
         return {
             "success": True,
@@ -514,7 +514,7 @@ def get_folder_info_impl(service, folder_path: str) -> Dict:
             "folder_path": f"SafeExpress/{folder_path}",
             "file_count": file_count,
             "subfolder_count": subfolder_count,
-            "message": f"📁 {folder_path}: {file_count} file(s), {subfolder_count} subfolder(s)",
+            "message": f"{folder_path}: {file_count} file(s), {subfolder_count} subfolder(s)",
             "error": None
         }
     except Exception as e:

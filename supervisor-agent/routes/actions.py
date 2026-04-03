@@ -116,7 +116,7 @@ async def approve_action(action_id: str, approval: ActionApprovalRequest):
             decided_by="user",
             error=approval.rejection_reason
         )
-        print(f"❌ Action {action_id} rejected: {approval.rejection_reason}")
+        print(f" Action {action_id} rejected: {approval.rejection_reason}")
         return {
             "status": "rejected",
             "action_id": action_id,
@@ -127,7 +127,7 @@ async def approve_action(action_id: str, approval: ActionApprovalRequest):
     if approval.decision == "skip":
         action.status = "skipped"
         storage.update_pending_action_status(action_id, "skipped", decided_by="user")
-        print(f"⏭️ Action {action_id} skipped")
+        print(f"⏭ Action {action_id} skipped")
         return {
             "status": "skipped",
             "action_id": action_id,
@@ -140,10 +140,10 @@ async def approve_action(action_id: str, approval: ActionApprovalRequest):
 
     # Apply modified inputs if provided
     if approval.modified_inputs:
-        print(f"📝 Inputs modified by user")
+        print(f" Inputs modified by user")
         action.step_info["inputs"] = approval.modified_inputs
 
-    print(f"✅ Action {action_id} approved, executing now...")
+    print(f" Action {action_id} approved, executing now...")
 
     # Execute the approved action
     try:

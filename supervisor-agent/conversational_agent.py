@@ -130,7 +130,7 @@ class ConversationalAgent(Tier0ChecksMixin):
             and v is not None and v != ""
         }
 
-        header = f"✅ **Ready to execute!**\n\n"
+        header = f"**Ready to execute!**\n\n"
         footer = "\n\n---\nReply **\"yes\"** to proceed or **\"cancel\"** to stop."
 
         if not user_info:
@@ -233,12 +233,12 @@ class ConversationalAgent(Tier0ChecksMixin):
         # ══════════════════════════════════════════════════════════════
         print("\n")
         print("═" * 70)
-        print(f"  📨  NEW MESSAGE  │  thread: {state_id}")
+        print(f"  NEW MESSAGE  |  thread: {state_id}")
         print("═" * 70)
         msg_preview = user_message[:120] + ("..." if len(user_message) > 120 else "")
         print(f"  User: {msg_preview}")
         if uploaded_file:
-            print(f"  📎 File: {uploaded_file.get('filename', '?')} ({uploaded_file.get('size', 0)} bytes)")
+            print(f"  File: {uploaded_file.get('filename', '?')} ({uploaded_file.get('size', 0)} bytes)")
         print("  ConversationState:")
         state_dump = conversation_state.model_dump(exclude={"memory_state"})
         for key, value in state_dump.items():
@@ -370,7 +370,7 @@ class ConversationalAgent(Tier0ChecksMixin):
         # Generate response based on intent
         if analysis.intent == ConversationIntent.SMALL_TALK:
             if analysis.task_type == "cancellation":
-                response = "👍 No problem! Request cancelled. Let me know if you need anything else."
+                response = "No problem! Request cancelled. Let me know if you need anything else."
             elif analysis.response_text:
                 response = analysis.response_text
             elif analysis.clarification_question:
@@ -379,13 +379,13 @@ class ConversationalAgent(Tier0ChecksMixin):
                 response = "I'm here to help! I can manage your emails, documents, spreadsheets, calendar, and Drive. What would you like me to do?"
 
         elif analysis.intent == ConversationIntent.CANCELLED:
-            response = "👍 No problem! Request cancelled.\n\n"
+            response = "No problem! Request cancelled.\n\n"
             if _prev_summary:
                 response += f"~~{_prev_summary}~~\n\n"
             response += "What would you like to do next?"
         
         elif analysis.intent == ConversationIntent.NOT_FEASIBLE:
-            response = f"❌ I'm unable to help with that request.\n\n"
+            response = f"I'm unable to help with that request.\n\n"
             response += f"**Reason:** {analysis.reasoning}\n\n"
             if analysis.suggested_alternatives:
                 response += "**What I can do instead:**\n"
@@ -394,7 +394,7 @@ class ConversationalAgent(Tier0ChecksMixin):
             response += "\nLet me know if there's something else I can help with."
         
         elif analysis.intent == ConversationIntent.TOO_COMPLEX:
-            response = f"⚠️ This task seems quite complex.\n\n"
+            response = f"This task seems quite complex.\n\n"
             response += f"**Analysis:** {analysis.reasoning}\n\n"
             if analysis.suggested_alternatives:
                 response += "**I suggest breaking it down:**\n"
@@ -403,7 +403,7 @@ class ConversationalAgent(Tier0ChecksMixin):
             response += f"\nWould you like to proceed with one of these approaches?"
 
         elif analysis.intent == ConversationIntent.NEEDS_CLARIFICATION:
-            response = f"📋 {analysis.clarification_question}\n\n"
+            response = f"{analysis.clarification_question}\n\n"
             user_fields = {k: v for k, v in analysis.extracted_info.items()
                           if k not in _INTERNAL_FIELDS
                           and not k.startswith("_")
@@ -415,7 +415,7 @@ class ConversationalAgent(Tier0ChecksMixin):
         
         elif analysis.intent == ConversationIntent.READY_TO_EXECUTE:
             if analysis.missing_fields and analysis.clarification_question:
-                response = f"📋 {analysis.clarification_question}\n\n"
+                response = f"{analysis.clarification_question}\n\n"
                 user_fields = {k: v for k, v in conversation_state.extracted_info.items()
                               if k not in _INTERNAL_FIELDS
                               and not k.startswith("_")
@@ -432,7 +432,7 @@ class ConversationalAgent(Tier0ChecksMixin):
 
         elif analysis.intent == ConversationIntent.TEMPLATE_UPLOAD:
             if analysis.execution_ready:
-                response = f"✅ **Ready to process template!**\n\n"
+                response = f"**Ready to process template!**\n\n"
                 response += f"**File:** {analysis.extracted_info.get('uploaded_file', {}).get('filename')}\n"
                 if analysis.extracted_info.get('save_to_drive'):
                     response += f"**Template name:** {analysis.extracted_info.get('template_name')}\n"
@@ -565,7 +565,7 @@ class ConversationalAgent(Tier0ChecksMixin):
             from supervisor_agent import broadcast_progress_sync
             broadcast_progress_sync(0, 0, "Generating content...", status="understanding")
             print(f"\n{'─'*50}")
-            print(f"✨ ENRICHMENT PHASE — Generating/transforming content")
+            print(f"ENRICHMENT PHASE — Generating/transforming content")
             print(f"   Tasks: {enrichment_hints.get('tasks', [])}")
             print(f"   File context needed: {enrichment_hints.get('file_context_needed', False)}")
             print(f"{'─'*50}")
@@ -575,7 +575,7 @@ class ConversationalAgent(Tier0ChecksMixin):
             if uploaded_file and enrichment_hints.get("file_context_needed"):
                 file_context = extract_file_context(uploaded_file)
                 if file_context:
-                    print(f"   📄 Extracted {len(file_context)} chars from {uploaded_file.get('filename', '?')}")
+                    print(f"   Extracted {len(file_context)} chars from {uploaded_file.get('filename', '?')}")
 
             result = _enrich(
                 user_message=user_message,
@@ -586,13 +586,13 @@ class ConversationalAgent(Tier0ChecksMixin):
             enrichment_context_vars = result.context_variables
 
             if enriched_message != user_message:
-                print(f"   ✨ Enriched: {enriched_message[:200]}{'...' if len(enriched_message) > 200 else ''}")
+                print(f"   Enriched: {enriched_message[:200]}{'...' if len(enriched_message) > 200 else ''}")
             if enrichment_context_vars:
-                print(f"   📦 Context vars stored: {list(enrichment_context_vars.keys())}")
+                print(f"   Context vars stored: {list(enrichment_context_vars.keys())}")
 
         # === TIER 1: FULL TASK ANALYSIS (~500-1500 TOKENS) ===
         print(f"\n{'─'*50}")
-        print(f"🧠 TIER 1 — Full Task Analysis")
+        print(f"TIER 1 — Full Task Analysis")
         print(f"{'─'*50}")
         trace.step("tier1", "performing full task analysis with capabilities")
         
@@ -971,7 +971,7 @@ Available agents and tools:
             # Add workflow documentation ONCE per agent (not per tool)
             if "template_with_data_workflow" in agent_info:
                 workflow = agent_info["template_with_data_workflow"]
-                capabilities.append(f"\n  📋 TEMPLATE+DATA WORKFLOW:")
+                capabilities.append(f"\n  TEMPLATE+DATA WORKFLOW:")
                 capabilities.append(f"     When to use: {workflow.get('when_to_use', '')}")
 
                 if "workflow_steps" in workflow:
@@ -1089,7 +1089,7 @@ Available agents and tools:
 
         # Log what we're feeding the LLM
         print(f"\n{'─'*50}")
-        print(f"🔍 TIER 0.5 — Building prompt")
+        print(f"TIER 0.5 — Building prompt")
         print(f"{'─'*50}")
         print(f"   bot_signal : {bot_signal.strip() if bot_signal else '(none)'}")
         print(f"   state_block: {state_block.strip() if state_block else '(none)'}")
@@ -1216,8 +1216,8 @@ User: "{user_message}" """
             
             # Low confidence → fall through to Tier 1 for reliable analysis
             if confidence == "low":
-                print(f"  ⚠️  TIER 0.5 LOW CONFIDENCE — category={category}, reasoning={reasoning}")
-                print(f"  ⚠️  Falling through to Tier 1 for full analysis")
+                print(f"  TIER 0.5 LOW CONFIDENCE — category={category}, reasoning={reasoning}")
+                print(f"  Falling through to Tier 1 for full analysis")
                 trace.step("tier0.5", "low confidence — falling through to Tier 1", {"category": category, "reasoning": reasoning})
                 return None, "specific", None
             
@@ -1229,11 +1229,11 @@ User: "{user_message}" """
                     status = conversation_state.last_execution_status or "unknown"
                     message = conversation_state.last_execution_message or "No details available"
                     if status == "success":
-                        status_response = f"✅ **Last execution: Successful**\n\n{message}\n\nAnything else you'd like to do?"
+                        status_response = f"**Last execution: Successful**\n\n{message}\n\nAnything else you'd like to do?"
                     elif status == "error":
-                        status_response = f"❌ **Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again or do something else?"
+                        status_response = f"**Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again or do something else?"
                     else:
-                        status_response = f"📊 **Last execution status:** {status}\n\n{message}"
+                        status_response = f"**Last execution status:** {status}\n\n{message}"
                     trace.step("tier0.5", "status_update — returning execution status")
                     return ConversationAnalysis(
                         intent=ConversationIntent.SMALL_TALK,
@@ -1302,7 +1302,7 @@ User: "{user_message}" """
             if category == "cancellation":
                 has_compound = result.get("has_compound_cancel", False)
                 if has_compound:
-                    print(f"  ⚠️  COMPOUND CANCEL detected — new task extracted, proceeding to Tier 1")
+                    print(f"  COMPOUND CANCEL detected — new task extracted, proceeding to Tier 1")
                     trace.step("tier0.5", "compound cancel+task — proceeding to full analysis")
                     return None, "specific", None
                 else:
@@ -1359,7 +1359,7 @@ User: "{user_message}" """
             # 5. FOLLOWUP ANSWER
             if category == "followup_answer":
                 extracted_value = result.get("extracted_value")
-                execution_summary_from_llm = result.get("execution_summary")  # ✅ Get execution_summary from LLM
+                execution_summary_from_llm = result.get("execution_summary") # Get execution_summary from LLM
                 
                 if extracted_value and missing_field:
                     trace.step("tier0.5", f"followup_answer: extracted {missing_field}", {"value": str(extracted_value)[:100], "extracted_info": conversation_state.extracted_info, "missing_fields": conversation_state.missing_fields})
@@ -1382,7 +1382,7 @@ User: "{user_message}" """
                     trace.step("tier0.5", "followup_answer: fields updated", {"updated_info": updated_info, "remaining_missing": remaining_missing})
                     
                     if not remaining_missing:
-                        # ✅ All fields complete - use execution_summary from LLM or generate fallback
+                        # All fields complete - use execution_summary from LLM or generate fallback
                         final_execution_summary = execution_summary_from_llm or conversation_state.execution_summary
                         
                         # If still no execution_summary, generate from extracted_info

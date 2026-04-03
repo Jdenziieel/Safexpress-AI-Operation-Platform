@@ -99,7 +99,7 @@ def find_calendar_id_by_name(calendar_name: str, credentials_dict: dict = None) 
                 return cal.get('id')
         return None
     except Exception as e:
-        print(f"❌ Failed to search calendars: {str(e)}")
+        print(f"Failed to search calendars: {str(e)}")
         return None
 
 
@@ -147,7 +147,7 @@ def format_datetime(dt_str: str) -> Optional[str]:
         dt = dt.astimezone(tz)
         return dt.isoformat(timespec="seconds")
     except Exception as e:
-        print(f"⚠️ Error formatting datetime '{dt_str}': {str(e)}")
+        print(f"Error formatting datetime '{dt_str}': {str(e)}")
         return None
 
 
@@ -215,7 +215,7 @@ def check_conflicts(start: str, end: str, calendar_id: str = None,
         ).execute()
         return events_result.get("items", [])
     except Exception as e:
-        print(f"❌ Failed to check conflicts: {str(e)}")
+        print(f"Failed to check conflicts: {str(e)}")
         return []
 
 
@@ -237,7 +237,7 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
             "success": False,
             "event_id": None,
             "event_url": None,
-            "message": f"❌ {start_validation['error']}",
+            "message": f"Invalid start time — {start_validation['error']}",
             "error": start_validation['error'],
             "error_type": "past_date"
         }
@@ -248,7 +248,7 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
             "success": False,
             "event_id": None,
             "event_url": None,
-            "message": f"❌ {end_validation['error']}",
+            "message": f"Invalid end time — {end_validation['error']}",
             "error": end_validation['error'],
             "error_type": "past_date"
         }
@@ -258,7 +258,7 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
             "success": False,
             "event_id": None,
             "event_url": None,
-            "message": "❌ End time must be after start time.",
+            "message": "End time must be after start time.",
             "error": "End time must be after start time",
             "error_type": "invalid_time_range"
         }
@@ -284,7 +284,7 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
             "status": "conflict",
             "conflict_id": conflict.get("id"),
             "conflict_title": conflict.get("summary", "No Title"),
-            "message": f"⚠️ Scheduling conflict detected with '{conflict.get('summary')}'",
+            "message": f"Scheduling conflict detected with '{conflict.get('summary')}'",
             "error": "Scheduling conflict detected",
             "error_type": "conflict",
             "new_event": {
@@ -342,14 +342,14 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
             if add_meet_link else None
         )
 
-        message_parts = [f"✅ Successfully created event '{summary}' from {start} to {end}"]
+        message_parts = [f"Successfully created event '{summary}' from {start} to {end}"]
         if emails:
-            message_parts.append(f"📧 Invitations sent to: {', '.join(emails)}")
+            message_parts.append(f"Invitations sent to: {', '.join(emails)}")
         if location:
-            message_parts.append(f"📍 Location: {location}")
+            message_parts.append(f"Location: {location}")
         if meet_link:
-            message_parts.append(f"🎥 Google Meet: {meet_link}")
-        message_parts.append(f"🔗 View event: {event_url}")
+            message_parts.append(f"Google Meet link: {meet_link}")
+        message_parts.append(f"View event: {event_url}")
 
         return {
             "success": True,
@@ -404,7 +404,7 @@ def search_events_impl(max_results: int = 5, calendar_id: str = None,
                 "success": True,
                 "events": [],
                 "count": 0,
-                "message": "📅 No upcoming events found.",
+                "message": "No upcoming events found.",
                 "error": None
             }
 
@@ -428,13 +428,13 @@ def search_events_impl(max_results: int = 5, calendar_id: str = None,
                 "attendee_count": len(event.get("attendees", []))
             })
 
-        output = ["📅 Upcoming events:\n"]
+        output = ["Upcoming events:\n"]
         for i, evt in enumerate(structured_events, 1):
-            attendee_info = f" 👥 ({evt['attendee_count']} attendees)" if evt['attendee_count'] > 0 else ""
-            location_info = f"\n   📍 {evt['location']}" if evt['location'] else ""
+            attendee_info = f" ({evt['attendee_count']} attendees)" if evt['attendee_count'] > 0 else ""
+            location_info = f"\n   Location: {evt['location']}" if evt['location'] else ""
             output.append(
                 f"{i}. {evt['summary']} - {evt['start_formatted']}{attendee_info}"
-                f"{location_info}\n   🆔 ID: {evt['event_id']}"
+                f"{location_info}\n   ID: {evt['event_id']}"
             )
 
         return {
@@ -505,7 +505,7 @@ def update_event_impl(event_id: str, new_summary: Optional[str] = None,
                 return {
                     "success": False,
                     "event_id": event_id,
-                    "message": f"❌ {start_validation['error']}",
+                    "message": f"Invalid start time — {start_validation['error']}",
                     "error": start_validation['error'],
                     "error_type": "past_date"
                 }
@@ -520,7 +520,7 @@ def update_event_impl(event_id: str, new_summary: Optional[str] = None,
                 return {
                     "success": False,
                     "event_id": event_id,
-                    "message": f"❌ {end_validation['error']}",
+                    "message": f"Invalid end time — {end_validation['error']}",
                     "error": end_validation['error'],
                     "error_type": "past_date"
                 }
@@ -552,7 +552,7 @@ def update_event_impl(event_id: str, new_summary: Optional[str] = None,
         changes_str = ", ".join(changes) if changes else "no changes"
         event_url = updated.get("htmlLink", "")
         has_attendees = event.get("attendees", [])
-        notify_msg = " 📧 (attendees notified)" if has_attendees else ""
+        notify_msg = " (attendees notified)" if has_attendees else ""
 
         return {
             "success": True,
@@ -560,8 +560,8 @@ def update_event_impl(event_id: str, new_summary: Optional[str] = None,
             "event_url": event_url,
             "changes": changes,
             "message": (
-                f"✏️ Successfully updated '{old_summary}': {changes_str}{notify_msg}\n"
-                f"🔗 View event: {event_url}"
+                f"Successfully updated '{old_summary}': {changes_str}{notify_msg}\n"
+                f"View event: {event_url}"
             ),
             "error": None
         }
@@ -597,10 +597,10 @@ def delete_event_impl(event_id: str, calendar_id: str = None,
                 "event_start": event_start,
                 "attendee_count": len(has_attendees),
                 "confirmation_prompt": (
-                    f"⚠️ Are you sure you want to delete '{event_title}' on {event_start}? "
+                    f"Are you sure you want to delete '{event_title}' on {event_start}? "
                     f"This will send cancellation emails to {len(has_attendees)} attendees."
                     if has_attendees else
-                    f"⚠️ Are you sure you want to delete '{event_title}' on {event_start}?"
+                    f"Are you sure you want to delete '{event_title}' on {event_start}?"
                 ),
                 "message": "Confirmation required before deletion",
                 "error": None
@@ -613,7 +613,7 @@ def delete_event_impl(event_id: str, calendar_id: str = None,
         ).execute()
 
         notify_msg = (
-            f" 📧 (cancellation emails sent to {len(has_attendees)} attendees)"
+            f" (cancellation emails sent to {len(has_attendees)} attendees)"
             if has_attendees else ""
         )
 
@@ -621,7 +621,7 @@ def delete_event_impl(event_id: str, calendar_id: str = None,
             "success": True,
             "deleted": True,
             "event_id": event_id,
-            "message": f"🗑️ Successfully deleted event '{event_title}'{notify_msg}",
+            "message": f"Successfully deleted event '{event_title}'{notify_msg}",
             "error": None
         }
     except Exception as e:
@@ -646,12 +646,12 @@ def list_calendars_impl(credentials_dict: dict = None) -> Dict:
             return {
                 "success": True,
                 "calendars": [],
-                "message": "📅 No calendars found.",
+                "message": "No calendars found.",
                 "error": None
             }
 
         structured_calendars = []
-        output = ["📅 Your Calendars:\n"]
+        output = ["Your Calendars:\n"]
 
         for i, cal in enumerate(calendars, 1):
             cal_name = cal.get('summary', 'Untitled Calendar')
@@ -664,8 +664,8 @@ def list_calendars_impl(credentials_dict: dict = None) -> Dict:
                 "primary": is_primary
             })
 
-            primary_marker = " ⭐ (Primary)" if is_primary else ""
-            output.append(f"{i}. {cal_name}{primary_marker}\n   📋 ID: {cal_id}")
+            primary_marker = " (Primary)" if is_primary else ""
+            output.append(f"{i}. {cal_name}{primary_marker}\n   ID: {cal_id}")
 
         return {
             "success": True,
@@ -701,9 +701,9 @@ def create_calendar_impl(calendar_name: str, description: str = "",
             "success": True,
             "calendar_id": calendar_id,
             "message": (
-                f"✅ Successfully created calendar '{calendar_name}'\n"
-                f"📋 Calendar ID: {calendar_id}\n"
-                f"💡 You can now schedule events on this calendar by specifying its name!"
+                f"Successfully created calendar '{calendar_name}'\n"
+                f"Calendar ID: {calendar_id}\n"
+                f"You can now schedule events on this calendar by specifying its name."
             ),
             "error": None
         }
@@ -712,6 +712,32 @@ def create_calendar_impl(calendar_name: str, description: str = "",
             "success": False,
             "calendar_id": None,
             "message": f"Failed to create calendar: {str(e)}",
+            "error": str(e)
+        }
+
+
+def rename_calendar_impl(calendar_id: str, new_name: str,
+                         credentials_dict: dict = None) -> Dict:
+    """Rename a calendar by updating its summary."""
+    service = get_calendar_service(credentials_dict)
+
+    try:
+        service.calendars().patch(
+            calendarId=calendar_id,
+            body={"summary": new_name}
+        ).execute()
+
+        return {
+            "success": True,
+            "calendar_id": calendar_id,
+            "message": f"Calendar successfully renamed to '{new_name}'",
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "calendar_id": calendar_id,
+            "message": f"Failed to rename calendar: {str(e)}",
             "error": str(e)
         }
 
@@ -743,7 +769,7 @@ def handle_user_confirmation(conflict_id: str, new_event: dict,
         service.events().update(
             calendarId=cal_id, eventId=conflict_id, body=event, sendUpdates='all'
         ).execute()
-        move_msg = f"✅ Moved '{event.get('summary')}' to {new_start.strftime('%B %d, %Y at %I:%M %p')}"
+        move_msg = f"Moved '{event.get('summary')}' to {new_start.strftime('%B %d, %Y at %I:%M %p')}"
     except Exception as e:
         return {"success": False, "message": f"Failed to move conflicting event: {str(e)}", "error": str(e)}
 
@@ -762,7 +788,7 @@ def handle_user_confirmation(conflict_id: str, new_event: dict,
     if not create_result.get("success"):
         return {
             "success": False,
-            "message": f"{move_msg}\n\n⚠️ But failed to create new event: {create_result.get('error')}",
+            "message": f"{move_msg}\n\nHowever, failed to create the new event: {create_result.get('error')}",
             "error": create_result.get("error")
         }
 
@@ -794,7 +820,7 @@ def notify_attendees_about_change(event_id: str, change_message: str,
 
         current_desc = event.get("description", "")
         timestamp = datetime.now(pytz.timezone('Asia/Manila')).strftime('%B %d, %Y at %I:%M %p')
-        updated_desc = f"{current_desc}\n\n---\n📢 Update ({timestamp}):\n{change_message}"
+        updated_desc = f"{current_desc}\n\n---\nUpdate ({timestamp}):\n{change_message}"
         event["description"] = updated_desc
 
         service.events().update(
@@ -804,7 +830,7 @@ def notify_attendees_about_change(event_id: str, change_message: str,
         attendee_emails = [att.get('email') for att in attendees]
         return {
             "success": True,
-            "message": f"✅ Notification sent to {len(attendees)} attendees: {', '.join(attendee_emails)}",
+            "message": f"Notification sent to {len(attendees)} attendees: {', '.join(attendee_emails)}",
             "error": None
         }
     except Exception as e:

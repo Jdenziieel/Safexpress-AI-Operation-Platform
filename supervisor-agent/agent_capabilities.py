@@ -246,7 +246,7 @@ agent_capabilities = {
             "analyze_uploaded_template": {
                 "description": "Analyze uploaded template file to extract structure and placeholders",
                 "instructions": """
-📋 STEP 2 of Template Workflow
+STEP 2 of Template Workflow
 - Use file_id from upload_template (Step 1)
 - Extracts placeholders like [DATE], [USER_NAME], [CONTENT]
 - Determines if template is ready for use
@@ -271,7 +271,7 @@ agent_capabilities = {
             "create_from_uploaded_template": {
                 "description": "Create document from analyzed template with placeholder replacement and optional PDF export",
                 "instructions": """
-📄 STEP 3 of Template Workflow
+STEP 3 of Template Workflow
 - Use template_id from analyze_uploaded_template (Step 2)
 - Replaces placeholders with actual values
 - Default: Creates editable Google Doc
@@ -281,7 +281,7 @@ OUTPUT FORMAT DETECTION:
 - If user says "create document" or "create doc" → output_format='google_docs' (default)
 - If user says "create PDF", "export as PDF", "save as PDF" → output_format='pdf'
 
-⚠️ CONTENT GENERATION RULE:
+CONTENT GENERATION RULE:
 When placeholder values need generated content (e.g., "write summary about X"):
 - Generate 2-3 sentences of ACTUAL content
 - NEVER just write literal phrases like "summary about X"
@@ -324,17 +324,17 @@ When placeholder values need generated content (e.g., "write summary about X"):
             "add_text": {
                 "description": "Adds text to an existing Google Doc",
                 "instructions": """
-⚠️ CONTENT GENERATION RULE:
+CONTENT GENERATION RULE:
 When user asks to "write about X" or "create content about Y":
 1. Generate 2-3 sentences of ACTUAL content
 2. NEVER just write literal phrases like "summary about X"
 
 Examples:
-❌ WRONG: text="summary about UST"
-✅ CORRECT: text="UST is a global provider of digital technology and transformation, IT services and solutions. Founded in 1998, the company is headquartered in California and operates across Americas, EMEA, and Asia-Pacific regions."
+WRONG: text="summary about UST"
+CORRECT: text="UST is a global provider of digital technology and transformation, IT services and solutions. Founded in 1998, the company is headquartered in California and operates across Americas, EMEA, and Asia-Pacific regions."
 
-❌ WRONG: text="write about AI benefits"
-✅ CORRECT: text="Artificial Intelligence offers numerous benefits including automation of repetitive tasks, enhanced decision-making through data analysis, and improved efficiency across various industries. AI systems can process vast amounts of information faster than humans, leading to better insights and predictions."
+WRONG: text="write about AI benefits"
+CORRECT: text="Artificial Intelligence offers numerous benefits including automation of repetitive tasks, enhanced decision-making through data analysis, and improved efficiency across various industries. AI systems can process vast amounts of information faster than humans, leading to better insights and predictions."
                 """,
                 "args": {
                     "document_id": "str (required) — the ID of the document",
@@ -366,7 +366,7 @@ Examples:
         "template_workflows": {
             "uploaded_template_workflow": {
                 "when_to_use": "When user uploads a file (PDF, DOCX) and wants to create a document from it",
-                "critical_instruction": "⚠️ MANDATORY 3-STEP WORKFLOW - Never skip any step!",
+                "critical_instruction": " MANDATORY 3-STEP WORKFLOW - Never skip any step!",
                 "required_steps": "ALWAYS use all 3 steps in order:",
                 "step_by_step": {
                     "step_1": {
@@ -443,7 +443,7 @@ Examples:
                     }
                 },
                 "critical_rules": [
-                    "⚠️ MANDATORY WORKFLOW: ALWAYS execute all 3 steps in exact order for uploaded templates",
+                    " MANDATORY WORKFLOW: ALWAYS execute all 3 steps in exact order for uploaded templates",
                     "Step 1: drive_agent.upload_template(file_path={{uploaded_file.temp_path}}) → file_id",
                     "Step 2: docs_agent.analyze_uploaded_template(template_file_id={{file_id}}) → template_id, placeholders",
                     "Step 3: docs_agent.create_from_uploaded_template(template_file_id={{template_id}}, new_title='...', placeholders='...', output_format='...') → document_id",
@@ -463,7 +463,7 @@ Examples:
             "create_from_existing_data_and_template": {
             "description": "Create document from existing data file and template file in Google Drive (using file names)",
     "instructions": """
-📊 USER-FRIENDLY AUTOMATED DOCUMENT CREATION
+USER-FRIENDLY AUTOMATED DOCUMENT CREATION
 - User provides FILE NAMES, not IDs
 - Example: "Create a document using template 'Monthly Report Template' and data 'January Data', call it 'January Report'"
 - Both files must exist in Google Drive (searches automatically)
@@ -532,7 +532,7 @@ SMART FEATURES:
                     "sample_data": "list — first 5 rows for analysis",
                 },
             },
-            "extract_dates_from_all_rows": {  # ✅ NEW
+            "extract_dates_from_all_rows": { # NEW
                 "description": "Extract dates from ALL rows for date-based matching",
                 "args": {
                     "data": "str (required) — JSON string from parse_file's full_data",
@@ -587,7 +587,7 @@ SMART FEATURES:
     "sheets_agent": {
         "description": "Google Sheets CRUD operations. Upload pre-transformed data from mapping_agent.",
         "tools": {
-            "update_by_date_match": {  # ✅ NEW - PRIMARY TOOL FOR DATE-BASED UPDATES
+            "update_by_date_match": { # NEW - PRIMARY TOOL FOR DATE-BASED UPDATES
                 "description": "Update Google Sheets rows by matching dates (NO append, only update existing rows)",
                 "args": {
                     "sheet_id": "str (required) — Google Sheets ID",
@@ -805,7 +805,7 @@ SMART FEATURES:
                         "folders": "list — Array of folder objects with id, name, display, level",
                         "folders[].id": "str — Folder ID",
                         "folders[].name": "str — Folder name",
-                        "folders[].display": "str — Tree display format (e.g., '  📁 Reports')",
+                        "folders[].display": "str — Tree display format (e.g., ' Reports')",
                         "folders[].level": "int — Nesting level (0=root, 1=first level, etc.)",
                         "count": "int — Total number of folders",
                         "tree": "str — Full tree structure as formatted string",
@@ -864,7 +864,7 @@ SMART FEATURES:
                         "folder_path": "str — Full path (e.g., 'SafeExpress/Operations/2024')",
                         "file_count": "int — Number of files in folder",
                         "subfolder_count": "int — Number of subfolders",
-                        "message": "str — Summary (e.g., '📁 Operations/2024: 5 file(s), 3 subfolder(s)')",
+                        "message": "str — Summary (e.g., ' Operations/2024: 5 file(s), 3 subfolder(s)')",
                         "error": "str — Error message (null if successful)"
                     },
                     "example": "get_folder_info(folder_path='Operations/2024')"

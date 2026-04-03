@@ -80,22 +80,22 @@ def run_workflow(user_input: str, context_overrides: dict = None, execution_mode
     selected_workflow = workflow
     execution_mode = "standard"  # Force standard until ReAct is re-enabled
 
-    print(f"📅 Date context: today={today}")
-    print(f"🚀 Starting workflow execution (mode={execution_mode})...")
+    print(f" Date context: today={today}")
+    print(f" Starting workflow execution (mode={execution_mode})...")
     trace.step("workflow_invoke", f"LangGraph workflow.invoke() starting (mode={execution_mode})")
 
     result_state = selected_workflow.invoke(initial_state)
 
-    print("\n✅ Workflow completed successfully")
+    print("\n Workflow completed successfully")
     plan = result_state.get('plan', {})
     steps = plan.get('steps', []) if isinstance(plan, dict) else []
     trace.workflow_end("success", steps_completed=len(steps), total_steps=len(steps))
 
     print(
-        f"\n📋 Generated Plan:\n{json.dumps(result_state.get('plan', {}), indent=2)}"
+        f"\n Generated Plan:\n{json.dumps(result_state.get('plan', {}), indent=2)}"
     )
     print(
-        f"\n📊 Final Context: {json.dumps(result_state.get('final_context', {}), indent=2)}"
+        f"\n Final Context: {json.dumps(result_state.get('final_context', {}), indent=2)}"
     )
 
     # Determine real status from result state
@@ -135,7 +135,7 @@ async def execute_workflow(request: UserRequest):
         )
         trace.set_context(request_id=request_id)
         trace.request_start("POST /workflow", {"input_preview": request.input[:80]})
-        print(f"\n📥 Received request: {request.input}")
+        print(f"\n Received request: {request.input}")
 
         result = run_workflow(request.input)
 

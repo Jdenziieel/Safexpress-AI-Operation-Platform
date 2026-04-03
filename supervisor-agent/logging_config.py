@@ -563,12 +563,12 @@ class StructuredLogger:
                     metadata={"cached_tokens": cached_tokens} if cached_tokens > 0 else None
                 )
             except Exception as e:
-                print(f"⚠️ Failed to report quota usage: {e}")
+                print(f"Failed to report quota usage: {e}")
         else:
             if not user_id:
-                print(f"⚠️ [TOKEN REPORTING SKIPPED] No user_id in context")
+                print(f"[TOKEN REPORTING SKIPPED] No user_id in context")
             if not success:
-                print(f"⚠️ [TOKEN REPORTING SKIPPED] LLM call not successful")
+                print(f"[TOKEN REPORTING SKIPPED] LLM call not successful")
         
         # Log the call
         extra = {
@@ -622,13 +622,13 @@ class StructuredLogger:
             pass
         
         # Visible print so token usage appears in execution logs / console
-        status_icon = "✅" if success else "❌"
+        status_icon = "OK" if success else "FAIL"
         cached_note = f", cached={cached_tokens}" if cached_tokens > 0 else ""
         cumulative_note = ""
         if token_summary:
             cumulative_note = f" | cumulative: in={token_summary.total_input_tokens} out={token_summary.total_output_tokens} total={token_summary.total_tokens} ${token_summary.total_estimated_cost:.4f}"
         print(
-            f"  💰 {status_icon} [{tier or '-'}] {model} | {operation} "
+            f" {status_icon} [{tier or '-'}] {model} | {operation} "
             f"| in={input_tokens} out={output_tokens}{cached_note} "
             f"| ${cost:.4f} | {duration_ms:.0f}ms{cumulative_note}"
         )
@@ -688,7 +688,7 @@ class StructuredLogger:
         
         # Visible total token summary printed to console / execution logs
         print(f"\n{'='*60}")
-        print(f"📊 REQUEST TOKEN SUMMARY")
+        print(f" REQUEST TOKEN SUMMARY")
         print(f"{'='*60}")
         if token_summary and token_summary.llm_calls:
             print(f"  LLM calls:        {len(token_summary.llm_calls)}")

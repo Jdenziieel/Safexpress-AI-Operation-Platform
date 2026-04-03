@@ -84,7 +84,7 @@ class Tier0ChecksMixin:
                 trace.step("tier0", f"pending action REJECTED via chat: {action_id}")
                 
                 # Build cancellation summary
-                cancel_msg = f"🚫 **Action Cancelled**\n\n"
+                cancel_msg = f" **Action Cancelled**\n\n"
                 cancel_msg += f"The following action has been cancelled:\n"
                 cancel_msg += f"- **Action:** {description}\n"
                 if pending.get("inputs"):
@@ -97,7 +97,7 @@ class Tier0ChecksMixin:
                 # Check if there were remaining steps
                 remaining_count = len(conversation_state.remaining_steps)
                 if remaining_count > 0:
-                    cancel_msg += f"\n⏭️ **{remaining_count} remaining step(s) were also cancelled.**\n"
+                    cancel_msg += f"\n⏭ **{remaining_count} remaining step(s) were also cancelled.**\n"
                 
                 cancel_msg += "\nIs there anything else you'd like to do?"
                 
@@ -128,7 +128,7 @@ class Tier0ChecksMixin:
             
             # Anything else while paused — remind user
             trace.step("tier0", "message blocked — workflow paused, pending action requires decision")
-            reminder_msg = f"⏸️ **Action Awaiting Your Decision**\n\n"
+            reminder_msg = f"⏸ **Action Awaiting Your Decision**\n\n"
             reminder_msg += f"**{description}**\n\n"
             reminder_msg += f"Please reply with:\n"
             reminder_msg += f"- **\"approve\"** or **\"yes\"** to proceed\n"
@@ -188,31 +188,31 @@ class Tier0ChecksMixin:
             if not any(task in user_lower for task in task_indicators):
                 trace.step("tier0", "greeting detected — instant response (0 tokens)")
                 
-                greeting_response = """Hello! 👋 I'm your workspace assistant. Here's what I can help you with:
+                greeting_response = """Hello! I'm your workspace assistant. Here's what I can help you with:
 
-📧 **Email (Gmail)**
+**Email (Gmail)**
 - Send, reply, forward, and draft emails
 - Search your inbox with filters (date, sender, subject, attachments)
 - Manage labels (star, mark important, archive)
 - Download attachments and view full email threads
 
-📄 **Documents (Google Docs)**
+**Documents (Google Docs)**
 - Create new documents or use templates
 - Upload your own templates and generate documents from them
 - Add and edit content in existing docs
 
-📊 **Spreadsheets (Google Sheets)**
+**Spreadsheets (Google Sheets)**
 - Create new spreadsheets
 - Upload and map data from CSV/Excel files
 - Update rows by date matching
 
-📅 **Calendar (Google Calendar)**
+**Calendar (Google Calendar)**
 - View upcoming events across all your calendars
 - Create, update, and delete events
 - Add Google Meet links and invite attendees
 - Resolve scheduling conflicts automatically
 
-📁 **Drive (Google Drive)**
+**Drive (Google Drive)**
 - Upload files and organize into folders
 - Search and list files across your Drive
 - Create folder structures
@@ -375,7 +375,7 @@ What would you like to do?"""
             
             examples = """Here are some examples of what you can ask me:
 
-📧 **Email Examples:**
+**Email Examples:**
 - "Send an email to john@example.com about the Q4 report"
 - "Search my emails from alice@company.com from last week"
 - "Draft an email to the team about project updates"
@@ -385,26 +385,26 @@ What would you like to do?"""
 - "Download the attachment from the latest report email"
 - "Show me the full thread with sarah@example.com"
 
-📄 **Document Examples:**
+**Document Examples:**
 - "Create a Google Doc titled Meeting Notes"
 - "Add a summary about Q4 performance to my document"
 - "Create a Board Meeting doc using MOMtemplate template and TestData123 data"
 - "Upload this template and create a new document called Project Plan"
 - "List my Google Docs"
 
-📊 **Spreadsheet Examples:**
+**Spreadsheet Examples:**
 - "Create a new spreadsheet called Sales Tracker"
 - "Upload the CSV data to my Q4 Reports sheet"
 - "Update the sheet with the latest date-matched data"
 
-📅 **Calendar Examples:**
+**Calendar Examples:**
 - "Schedule a meeting with Sarah tomorrow at 3pm"
 - "Show my upcoming events for next week"
 - "Create a team standup with a Google Meet link"
 - "Move my 2pm meeting to 4pm"
 - "Delete the cancelled event from yesterday"
 
-📁 **Drive Examples:**
+**Drive Examples:**
 - "Upload report.pdf to my Operations/2024 folder"
 - "List all files in my Reports folder"
 - "Create a folder structure for Q1 2025"
@@ -465,31 +465,31 @@ Try one of these or tell me what you'd like to do!"""
             
             help_response = """I can help you manage your workspace across several Google services. Here's a quick guide:
 
-📧 **Email (Gmail)**
+**Email (Gmail)**
 - Send, reply, forward, and draft emails
 - Search your inbox with filters (sender, date, subject, attachments)
 - Manage labels — star, mark important, archive, move to trash
 - Download email attachments
 - View full email conversation threads
 
-📄 **Documents (Google Docs)**
+**Documents (Google Docs)**
 - Create new documents from scratch
 - Use existing templates or upload your own
 - Add and edit content in documents
 - Create documents from template + data file combos
 
-📊 **Spreadsheets (Google Sheets)**
+**Spreadsheets (Google Sheets)**
 - Create new spreadsheets
 - Upload and map data from CSV/Excel files
 - Update rows by date matching
 
-📅 **Calendar (Google Calendar)**
+**Calendar (Google Calendar)**
 - View upcoming events across all calendars
 - Create, update, and delete events
 - Add Google Meet links and invite attendees
 - Handle scheduling conflicts automatically
 
-📁 **Drive (Google Drive)**
+**Drive (Google Drive)**
 - Upload files and organize into folders
 - Search and list files
 - Create folder structures
@@ -554,11 +554,11 @@ What would you like to do?"""
         message = conversation_state.last_execution_message or "No details available"
         
         if status == "success":
-            status_response = f"✅ **Last execution: Successful**\n\n{message}\n\nAnything else you'd like to do?"
+            status_response = f" **Last execution: Successful**\n\n{message}\n\nAnything else you'd like to do?"
         elif status == "error":
-            status_response = f"❌ **Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again or do something else?"
+            status_response = f" **Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again or do something else?"
         else:
-            status_response = f"📊 **Last execution status:** {status}\n\n{message}"
+            status_response = f" **Last execution status:** {status}\n\n{message}"
         
         trace.step("tier0", "quick_status_check returning", {
             "status": status,
@@ -647,19 +647,19 @@ def _build_rich_approval_message(pending_action: dict) -> str:
     total_steps = pending_action.get("total_steps")
     
     # Risk emoji
-    risk_emoji = "🔴" if risk_level == "CRITICAL" else "🟠"
+    risk_emoji = "" if risk_level == "CRITICAL" else ""
     risk_label = "CRITICAL" if risk_level == "CRITICAL" else "DANGEROUS"
     
     msg = f"{risk_emoji} **Action Requires Approval** — {risk_label}\n\n"
     
     if step_number and total_steps:
-        msg += f"📍 Step {step_number} of {total_steps}\n\n"
+        msg += f" Step {step_number} of {total_steps}\n\n"
     
     msg += f"**{description}**\n\n"
     
     # Tool-specific details
     if tool in ("send_draft_email", "send_email_with_attachment"):
-        msg += "📧 **Sending Email**\n"
+        msg += " **Sending Email**\n"
         if inputs.get("to"):
             msg += f"- **To:** {inputs['to']}\n"
         if inputs.get("subject"):
@@ -675,7 +675,7 @@ def _build_rich_approval_message(pending_action: dict) -> str:
             msg += f"- **BCC:** {inputs['bcc']}\n"
     
     elif tool == "reply_to_email":
-        msg += "↩️ **Replying to Email**\n"
+        msg += "↩ **Replying to Email**\n"
         if inputs.get("message_id"):
             msg += f"- **Message ID:** {inputs['message_id']}\n"
         if inputs.get("reply_body"):
@@ -685,7 +685,7 @@ def _build_rich_approval_message(pending_action: dict) -> str:
             msg += f"- **Reply preview:**\n  > {body_preview}\n"
     
     elif tool == "add_text":
-        msg += "📝 **Adding Text to Document**\n"
+        msg += " **Adding Text to Document**\n"
         if inputs.get("document_id"):
             msg += f"- **Document ID:** {inputs['document_id']}\n"
         if inputs.get("text"):
@@ -695,7 +695,7 @@ def _build_rich_approval_message(pending_action: dict) -> str:
             msg += f"- **Text preview:**\n  > {text_preview}\n"
     
     elif tool == "share_file":
-        msg += "🔗 **Sharing File**\n"
+        msg += " **Sharing File**\n"
         if inputs.get("file_id"):
             msg += f"- **File ID:** {inputs['file_id']}\n"
         if inputs.get("email"):
@@ -704,12 +704,12 @@ def _build_rich_approval_message(pending_action: dict) -> str:
             msg += f"- **Permission:** {inputs['role']}\n"
     
     elif tool in ("delete_email", "delete_file", "delete_event"):
-        msg += "🗑️ **Deleting Resource**\n"
+        msg += " **Deleting Resource**\n"
         for key, value in inputs.items():
             msg += f"- **{key}:** {value}\n"
     
     elif tool in ("edit_doc", "update_doc"):
-        msg += "✏️ **Editing Document**\n"
+        msg += " **Editing Document**\n"
         if inputs.get("document_id"):
             msg += f"- **Document ID:** {inputs['document_id']}\n"
         if inputs.get("old_text"):
@@ -719,7 +719,7 @@ def _build_rich_approval_message(pending_action: dict) -> str:
     
     else:
         # Generic — show all non-empty inputs
-        msg += f"🔧 **{tool}**\n"
+        msg += f" **{tool}**\n"
         for key, value in inputs.items():
             if value:
                 val_str = str(value)

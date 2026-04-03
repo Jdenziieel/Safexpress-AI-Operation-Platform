@@ -146,8 +146,8 @@ def call_agent_with_retry(
 
     for attempt in range(max_retries):
         try:
-            print(f"🔄 Attempt {attempt + 1}/{max_retries} calling {agent_url}")
-            print(f"   ⏱️ Timeout set to: {timeout} seconds")
+            print(f"Attempt {attempt + 1}/{max_retries} calling {agent_url}")
+            print(f" ⏱ Timeout set to: {timeout} seconds")
 
             # Configure httpx timeout properly - needs to be httpx.Timeout object for long operations
             timeout_config = httpx.Timeout(
@@ -165,19 +165,19 @@ def call_agent_with_retry(
 
                 # Check if the agent actually succeeded
                 if result.get("success"):
-                    print(f"✅ Agent call succeeded on attempt {attempt + 1}")
+                    print(f"Agent call succeeded on attempt {attempt + 1}")
                     return result
                 elif result.get("no_results"):
-                    print(f"ℹ️ Agent returned no results: {result.get('error')}")
+                    print(f"ℹ Agent returned no results: {result.get('error')}")
                     return result
                 else:
                     # Agent returned error but HTTP was successful
                     error_type = result.get("error_type", "")
-                    print(f"⚠️ Agent reported error: {result.get('error')}")
+                    print(f"Agent reported error: {result.get('error')}")
 
                     _NO_RETRY_TYPES = {"conflict", "validation_error", "not_found", "permission_denied"}
                     if error_type in _NO_RETRY_TYPES:
-                        print(f"   ⛔ Non-retryable error type: {error_type}")
+                        print(f"   Non-retryable error type: {error_type}")
                         return result
 
                     if attempt < max_retries - 1:
@@ -189,7 +189,7 @@ def call_agent_with_retry(
 
         except httpx.TimeoutException as e:
             last_exception = e
-            print(f"⏱️ Timeout on attempt {attempt + 1}: {str(e)}")
+            print(f"⏱ Timeout on attempt {attempt + 1}: {str(e)}")
             if attempt < max_retries - 1:
                 wait_time = backoff_factor**attempt
                 print(f"   Retrying in {wait_time}s...")
@@ -197,7 +197,7 @@ def call_agent_with_retry(
 
         except httpx.HTTPStatusError as e:
             last_exception = e
-            print(f"❌ HTTP {e.response.status_code} on attempt {attempt + 1}")
+            print(f"HTTP {e.response.status_code} on attempt {attempt + 1}")
 
             # Don't retry on 4xx client errors (except 429 rate limit)
             if 400 <= e.response.status_code < 500 and e.response.status_code != 429:
@@ -211,7 +211,7 @@ def call_agent_with_retry(
 
         except httpx.HTTPError as e:
             last_exception = e
-            print(f"❌ HTTP error on attempt {attempt + 1}: {str(e)}")
+            print(f"HTTP error on attempt {attempt + 1}: {str(e)}")
             if attempt < max_retries - 1:
                 wait_time = backoff_factor**attempt
                 print(f"   Retrying in {wait_time}s...")
@@ -219,14 +219,14 @@ def call_agent_with_retry(
 
         except Exception as e:
             last_exception = e
-            print(f"❌ Unexpected error on attempt {attempt + 1}: {str(e)}")
+            print(f"Unexpected error on attempt {attempt + 1}: {str(e)}")
             if attempt < max_retries - 1:
                 wait_time = backoff_factor**attempt
                 print(f"   Retrying in {wait_time}s...")
                 time.sleep(wait_time)
 
     # All retries exhausted
-    print(f"💀 All {max_retries} attempts failed. Last error: {last_exception}")
+    print(f"All {max_retries} attempts failed. Last error: {last_exception}")
     return None
 
 
@@ -245,7 +245,7 @@ async def async_call_agent_with_retry(
 
     for attempt in range(max_retries):
         try:
-            print(f"🔄 Attempt {attempt + 1}/{max_retries} calling {agent_url}")
+            print(f"Attempt {attempt + 1}/{max_retries} calling {agent_url}")
 
             timeout_config = httpx.Timeout(
                 timeout=timeout, connect=10.0, read=timeout, write=30.0, pool=10.0,
@@ -257,10 +257,10 @@ async def async_call_agent_with_retry(
                 result = response.json()
 
                 if result.get("success"):
-                    print(f"✅ Agent call succeeded on attempt {attempt + 1}")
+                    print(f"Agent call succeeded on attempt {attempt + 1}")
                     return result
                 else:
-                    print(f"⚠️ Agent reported error: {result.get('error')}")
+                    print(f"Agent reported error: {result.get('error')}")
                     if attempt < max_retries - 1:
                         wait_time = backoff_factor ** attempt
                         print(f"   Retrying in {wait_time}s...")
@@ -270,14 +270,14 @@ async def async_call_agent_with_retry(
 
         except httpx.TimeoutException as e:
             last_exception = e
-            print(f"⏱️ Timeout on attempt {attempt + 1}: {str(e)}")
+            print(f"⏱ Timeout on attempt {attempt + 1}: {str(e)}")
             if attempt < max_retries - 1:
                 wait_time = backoff_factor ** attempt
                 await asyncio.sleep(wait_time)
 
         except httpx.HTTPStatusError as e:
             last_exception = e
-            print(f"❌ HTTP {e.response.status_code} on attempt {attempt + 1}")
+            print(f"HTTP {e.response.status_code} on attempt {attempt + 1}")
             if 400 <= e.response.status_code < 500 and e.response.status_code != 429:
                 return None
             if attempt < max_retries - 1:
@@ -286,19 +286,19 @@ async def async_call_agent_with_retry(
 
         except httpx.HTTPError as e:
             last_exception = e
-            print(f"❌ HTTP error on attempt {attempt + 1}: {str(e)}")
+            print(f"HTTP error on attempt {attempt + 1}: {str(e)}")
             if attempt < max_retries - 1:
                 wait_time = backoff_factor ** attempt
                 await asyncio.sleep(wait_time)
 
         except Exception as e:
             last_exception = e
-            print(f"❌ Unexpected error on attempt {attempt + 1}: {str(e)}")
+            print(f"Unexpected error on attempt {attempt + 1}: {str(e)}")
             if attempt < max_retries - 1:
                 wait_time = backoff_factor ** attempt
                 await asyncio.sleep(wait_time)
 
-    print(f"💀 All {max_retries} attempts failed. Last error: {last_exception}")
+    print(f"All {max_retries} attempts failed. Last error: {last_exception}")
     return None
 
 

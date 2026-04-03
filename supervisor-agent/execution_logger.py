@@ -132,7 +132,7 @@ class ExecutionTracer:
     def llm_call(self, model: str, operation: str, input_tokens: int = 0,
                  output_tokens: int = 0, duration_ms: float = 0, success: bool = True):
         """Log an LLM API call."""
-        status = "✓" if success else "✗"
+        status = "" if success else ""
         total = input_tokens + output_tokens
         msg = f"{status} {model} → {operation} ({total} tokens, {duration_ms:.0f}ms)"
         self._write("LLM", "  LLM", msg, {
@@ -145,9 +145,9 @@ class ExecutionTracer:
         """Log an agent/tool call."""
         status = ""
         if success is True:
-            status = "✓ "
+            status = " "
         elif success is False:
-            status = "✗ "
+            status = " "
         msg = f"{status}{agent}.{tool}"
         if duration_ms is not None:
             msg += f" ({duration_ms:.0f}ms)"
@@ -195,11 +195,11 @@ class ExecutionTracer:
         msg = message
         if exception:
             msg += f" | {type(exception).__name__}: {str(exception)[:200]}"
-        self._write("ERROR", "  ✗ ERROR", msg, data)
+        self._write("ERROR", " ERROR", msg, data)
 
     def warning(self, message: str, data: dict = None):
         """Log a warning."""
-        self._write("WARN", "  ⚠ WARN", message, data)
+        self._write("WARN", " WARN", message, data)
 
     def info(self, message: str, data: dict = None):
         """Log general info."""
@@ -313,9 +313,9 @@ class TeeWriter:
 
         # Infer log level from emoji/content
         level = "INFO"
-        if any(marker in text for marker in ("❌", "ERROR", "CRITICAL", "🔴")):
+        if any(marker in text for marker in ("", "ERROR", "CRITICAL", "")):
             level = "ERROR"
-        elif any(marker in text for marker in ("⚠️", "WARN", "⚠")):
+        elif any(marker in text for marker in ("", "WARN", "")):
             level = "WARNING"
 
         storage.insert_log({

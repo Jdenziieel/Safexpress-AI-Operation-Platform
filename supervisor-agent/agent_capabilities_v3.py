@@ -362,7 +362,8 @@ agent_capabilities = {
             "update_event": {
                 "description": "Update existing event (title, time, location, attendees). Notifies attendees.",
                 "args": {
-                    "event_id": "str (required) — from list_events or create_event",
+                    "event_id": "str (optional) — use if already known from a previous step",
+                    "event_name": "str (optional) — event title/name for auto-lookup. Preferred when user refers to event by name",
                     "new_summary": "str (optional)",
                     "new_start": "str (optional)",
                     "new_end": "str (optional)",
@@ -372,26 +373,28 @@ agent_capabilities = {
                     "calendar_name": "str (optional)",
                 },
                 "returns": ["success", "event_id", "event_url", "changes", "message"],
-                "can_be_derived_from": {"event_id": "list_events"},
+                "note": "Pass event_name directly instead of listing events and guessing the index. The agent resolves the name to an ID internally.",
             },
             "delete_event": {
                 "description": "Delete calendar event. Sends cancellation to attendees.",
                 "args": {
-                    "event_id": "str (required)",
+                    "event_id": "str (optional) — use if already known from a previous step",
+                    "event_name": "str (optional) — event title/name for auto-lookup. Preferred when user refers to event by name",
                     "calendar_name": "str (optional)",
-                    "confirmed": "bool (optional) — true to skip confirmation",
+                    "confirmed": "bool (always pass true — the orchestrator approval workflow handles user confirmation)",
                 },
                 "returns": ["success", "deleted", "requires_confirmation", "event_title", "confirmation_prompt", "message"],
-                "can_be_derived_from": {"event_id": "list_events"},
+                "note": "Pass event_name directly instead of listing events and guessing the index. The agent resolves the name to an ID internally.",
             },
             "confirm_delete_event": {
                 "description": "Confirm deletion after delete_event returns requires_confirmation=true.",
                 "args": {
-                    "event_id": "str (required)",
+                    "event_id": "str (optional) — use if already known from a previous step",
+                    "event_name": "str (optional) — event title/name for auto-lookup",
                     "calendar_name": "str (optional)",
                 },
                 "returns": ["success", "deleted", "message"],
-                "can_be_derived_from": {"event_id": "list_events"},
+                "note": "Pass event_name directly instead of listing events and guessing the index. The agent resolves the name to an ID internally.",
             },
             "list_calendars": {
                 "description": "List all user's calendars.",
@@ -404,6 +407,14 @@ agent_capabilities = {
                 "args": {
                     "calendar_name": "str (required)",
                     "description": "str (optional)",
+                },
+                "returns": ["success", "calendar_id", "message"],
+            },
+            "rename_calendar": {
+                "description": "Rename an existing Google Calendar.",
+                "args": {
+                    "calendar_name": "str (required) — current calendar name",
+                    "new_calendar_name": "str (required) — new name for the calendar",
                 },
                 "returns": ["success", "calendar_id", "message"],
             },
@@ -441,7 +452,9 @@ agent_capabilities = {
             },
             "list_folders": {
                 "description": "List all folders with tree structure.",
-                "args": {},
+                "args": {
+                    "max_results": "int (optional) — limit number of folders returned",
+                },
                 "returns": ["success", "folders", "count", "tree", "message", "error"],
                 "returns_detail": "folders is an array; each folder has: id, name, createdTime",
             },
@@ -451,7 +464,7 @@ agent_capabilities = {
                     "folder_path": "str (optional) — folder to list (default: root)",
                 },
                 "returns": ["success", "files", "count", "folder_path", "message", "error"],
-                "returns_detail": "files is array of {id, name, mimeType, size, createdTime}",
+                "returns_detail": "files is array of {id, name, mimeType, size, createdTime, webViewLink}",
             },
             "search_files": {
                 "description": "Search files by name/keywords.",
@@ -459,7 +472,7 @@ agent_capabilities = {
                     "search_term": "str (required) — keywords to search",
                 },
                 "returns": ["success", "results", "count", "search_term", "message", "error"],
-                "returns_detail": "results is an array; each result has: id, name, mimeType, size, createdTime",
+                "returns_detail": "results is an array; each result has: id, name, mimeType, size, createdTime, webViewLink",
             },
             "get_folder_info": {
                 "description": "Get folder details (file count, subfolder count).",
@@ -477,10 +490,10 @@ agent_capabilities = {
                 "returns": ["success", "template_file_id", "template_file_name", "data_file_id", "data_file_name", "message", "error"],
             },
             "rename_file": {
-                "description": "Rename a file or folder in Google Drive.",
+                "description": "Rename a file OR folder in Google Drive. Works for both — Google Drive treats folders as files internally.",
                 "args": {
-                    "file_id": "str (required) — Drive file/folder ID to rename [via search_files: search_term]",
-                    "new_name": "str (required) — new name for the file/folder",
+                    "file_id": "str (required) — Drive file or folder ID to rename [via search_files: search_term]",
+                    "new_name": "str (required) — new name for the file or folder",
                 },
                 "returns": ["success", "file_id", "new_name", "message", "error"],
                 "can_be_derived_from": {"file_id": "search_files"},

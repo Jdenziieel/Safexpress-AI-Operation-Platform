@@ -953,7 +953,7 @@ class LogStorage:
         conn.commit()
         conn.close()
         
-        print(f"🧹 Cleared {total_deleted} log records")
+        print(f"Cleared {total_deleted} log records")
         return total_deleted
     
     def cleanup_old_logs(self, days_to_keep: int = 30) -> int:
@@ -988,7 +988,7 @@ class LogStorage:
         conn.close()
         
         total_deleted = logs_deleted + llm_deleted + agent_deleted + summary_deleted
-        print(f"🧹 Cleaned up {total_deleted} old log records (older than {days_to_keep} days)")
+        print(f"Cleaned up {total_deleted} old log records (older than {days_to_keep} days)")
         
         return total_deleted
 
@@ -1056,7 +1056,7 @@ class LogStorage:
         conn.commit()
         conn.close()
         
-        print(f"📝 Stored pending action: {action_id} ({agent_name}.{tool_name})")
+        print(f"Stored pending action: {action_id} ({agent_name}.{tool_name})")
         return row_id
     
     def get_pending_action(self, action_id: str) -> Optional[Dict[str, Any]]:
@@ -1166,7 +1166,7 @@ class LogStorage:
         conn.close()
         
         if updated:
-            print(f"✅ Updated action {action_id} status to: {status}")
+            print(f"Updated action {action_id} status to: {status}")
         
         return updated
     
@@ -1213,7 +1213,7 @@ class LogStorage:
         conn.close()
         
         if count > 0:
-            print(f"🧹 Marked {count} expired pending actions")
+            print(f"Marked {count} expired pending actions")
         
         return count
 
@@ -1247,7 +1247,7 @@ class LogStorage:
         conn.close()
         
         if count > 0:
-            print(f"🧹 Marked {count} expired pending actions (older than {expire_minutes}m)")
+            print(f"Marked {count} expired pending actions (older than {expire_minutes}m)")
         
         return count
     

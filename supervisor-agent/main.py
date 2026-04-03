@@ -40,7 +40,7 @@ async def ensure_print_capture(request: Request, call_next):
 
 
 if __name__ == "__main__":
-    print(f"🚀 Starting Supervisor Agent on port {SERVER_PORT}")
-    print(f"📚 API Documentation: http://localhost:{SERVER_PORT}/docs")
+    print(f" Starting Supervisor Agent on port {SERVER_PORT}")
+    print(f" API Documentation: http://localhost:{SERVER_PORT}/docs")
 
     uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT, access_log=False)

@@ -98,7 +98,7 @@ def get_service_from_creds(credentials_dict: CredentialsDict):
                     client_id = creds_file['web']['client_id']
                     client_secret = creds_file['web']['client_secret']
         except Exception as e:
-            print(f"⚠️ Warning: Could not load credentials.json: {e}")
+            print(f"Warning: Could not load credentials.json: {e}")
             # Fall back to environment variables
             client_id = os.getenv('GOOGLE_CLIENT_ID', '')
             client_secret = os.getenv('GOOGLE_CLIENT_SECRET', '')
@@ -118,7 +118,7 @@ def format_folder_tree(folders: list) -> str:
     if not folders:
         return "No folders found in SafeExpress."
     
-    lines = ["📁 SafeExpress/"]
+    lines = ["SafeExpress/"]
     for folder in folders:
         lines.append(folder["display"])
     return "\n".join(lines)
@@ -127,7 +127,7 @@ def format_folder_tree(folders: list) -> str:
 def format_file_list(files: list, location: str = "SafeExpress") -> str:
     """Format file list as readable text"""
     if not files:
-        return f"📭 No files in {location}"
+        return f"No files in {location}"
     
     lines = [f"Files in {location}:"]
     for file in files:
@@ -135,7 +135,9 @@ def format_file_list(files: list, location: str = "SafeExpress") -> str:
         if size != 'N/A' and size.isdigit():
             size_mb = round(int(size) / (1024 * 1024), 2)
             size = f"{size_mb} MB"
-        lines.append(f"📄 {file['name']} ({size})")
+        link = file.get('webViewLink', '')
+        link_part = f" — {link}" if link else ""
+        lines.append(f"  {file['name']} ({size}){link_part}")
     
     return "\n".join(lines)
 
@@ -192,7 +194,7 @@ def upload_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "file_url": file_url,
             "filename": filename,
             "folder_path": location,
-            "message": f"✅ Uploaded '{filename}' to {location}",
+            "message": f"Uploaded '{filename}' to {location}",
             "error": None
         }
         
@@ -201,7 +203,7 @@ def upload_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "success": False,
             "file_id": None,
             "error": str(e),
-            "message": f"❌ Upload failed: {str(e)}"
+            "message": f"Upload failed: {str(e)}"
         }
 
 
@@ -235,7 +237,7 @@ def create_folder_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "folder_id": folder_id,
             "folder_url": folder_url,
             "folder_path": f"SafeExpress/{folder_path}",
-            "message": f"✅ Created folder: SafeExpress/{folder_path}",
+            "message": f"Created folder: SafeExpress/{folder_path}",
             "error": None
         }
         
@@ -244,7 +246,7 @@ def create_folder_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "success": False,
             "folder_id": None,
             "error": str(e),
-            "message": f"❌ Folder creation failed: {str(e)}"
+            "message": f"Folder creation failed: {str(e)}"
         }
 
 
@@ -252,7 +254,8 @@ def list_folders_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
     List all folders in SafeExpress with tree structure
     
-    Inputs: (none required)
+    Inputs:
+        max_results: int (optional) - Limit number of folders returned
     
     Returns:
         success: bool
@@ -263,9 +266,13 @@ def list_folders_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
     try:
         service = get_service_from_creds(credentials_dict)
+        max_results = inputs.get("max_results")
         
-        # Get folder structure
         structure = get_folder_structure(service)
+        
+        if max_results and isinstance(max_results, int) and max_results > 0:
+            structure = structure[:max_results]
+        
         tree = format_folder_tree(structure)
         
         return {
@@ -283,7 +290,7 @@ def list_folders_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "folders": [],
             "count": 0,
             "error": str(e),
-            "message": f"❌ Failed to list folders: {str(e)}"
+            "message": f"Failed to list folders: {str(e)}"
         }
 
 
@@ -324,7 +331,7 @@ def list_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
                     "files": [],
                     "count": 0,
                     "error": f"Folder '{folder_path}' not found",
-                    "message": f"❌ Folder '{folder_path}' not found"
+                    "message": f"Folder '{folder_path}' not found"
                 }
             
             location = folder_path
@@ -350,7 +357,7 @@ def list_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "files": [],
             "count": 0,
             "error": str(e),
-            "message": f"❌ Failed to list files: {str(e)}"
+            "message": f"Failed to list files: {str(e)}"
         }
 
 
@@ -384,14 +391,14 @@ def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
                 "results": [],
                 "count": 0,
                 "search_term": search_term,
-                "message": f"🔍 No files found matching '{search_term}'",
+                "message": f"No files found matching '{search_term}'",
                 "error": None
             }
         
         # Format results
         result_lines = [f"Found {len(results)} file(s) matching '{search_term}':"]
         for file in results:
-            result_lines.append(f"📄 {file['name']}")
+            result_lines.append(f"  {file['name']}")
         
         return {
             "success": True,
@@ -408,7 +415,7 @@ def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "results": [],
             "count": 0,
             "error": str(e),
-            "message": f"❌ Search failed: {str(e)}"
+            "message": f"Search failed: {str(e)}"
         }
     
 def search_template_and_data_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
@@ -438,8 +445,8 @@ def search_template_and_data_tool(inputs: dict, credentials_dict: CredentialsDic
         if not data_name:
             return {"success": False, "error": "data_name is required"}
         
-        print(f"🔍 Searching for template: '{template_name}'")
-        print(f"🔍 Searching for data: '{data_name}'")
+        print(f"Searching for template: '{template_name}'")
+        print(f"Searching for data: '{data_name}'")
         
         # Search for template file
         template_query = f"name contains '{template_name}' and trashed=false"
@@ -466,22 +473,22 @@ def search_template_and_data_tool(inputs: dict, credentials_dict: CredentialsDic
             return {
                 "success": False,
                 "error": f"Template file '{template_name}' not found in Google Drive",
-                "message": f"❌ Template file '{template_name}' not found"
+                "message": f"Template file '{template_name}' not found"
             }
         
         if not data_files:
             return {
                 "success": False,
                 "error": f"Data file '{data_name}' not found in Google Drive",
-                "message": f"❌ Data file '{data_name}' not found"
+                "message": f"Data file '{data_name}' not found"
             }
         
         # Use first match for each
         template_file = template_files[0]
         data_file = data_files[0]
         
-        print(f"✅ Found template: {template_file['name']} (ID: {template_file['id']})")
-        print(f"✅ Found data: {data_file['name']} (ID: {data_file['id']})")
+        print(f"Found template: {template_file['name']} (ID: {template_file['id']})")
+        print(f"Found data: {data_file['name']} (ID: {data_file['id']})")
         
         return {
             "success": True,
@@ -489,7 +496,7 @@ def search_template_and_data_tool(inputs: dict, credentials_dict: CredentialsDic
             "template_file_name": template_file['name'],
             "data_file_id": data_file['id'],
             "data_file_name": data_file['name'],
-            "message": f"✅ Found template '{template_file['name']}' and data '{data_file['name']}'",
+            "message": f"Found template '{template_file['name']}' and data '{data_file['name']}'",
             "error": None
         }
         
@@ -499,7 +506,7 @@ def search_template_and_data_tool(inputs: dict, credentials_dict: CredentialsDic
         return {
             "success": False,
             "error": str(e),
-            "message": f"❌ Search failed: {str(e)}"
+            "message": f"Search failed: {str(e)}"
         }
     
 def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
@@ -543,9 +550,9 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
                 file_type = 'application/octet-stream'
                 detected_format = 'Unknown'
         
-        print(f"📄 Detected format: {detected_format}")
+        print(f"Detected format: {detected_format}")
         
-        # ✅ FIX 1: Use correct function names from your tools.py
+        # Use correct function names from tools.py
         # Get or create Templates folder using create_nested_folder_impl
         folder_path = "Templates"
         folder_result = create_nested_folder_impl(service, folder_path)
@@ -555,7 +562,7 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
                 "success": False,
                 "file_id": None,
                 "error": folder_result.get("error"),
-                "message": f"❌ Failed to create Templates folder: {folder_result.get('error')}"
+                "message": f"Failed to create Templates folder: {folder_result.get('error')}"
             }
         
         templates_folder_id = folder_result.get("folder_id")
@@ -564,11 +571,11 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
         should_convert = not preserve_format and detected_format in ['PDF', 'DOCX', 'DOC']
         
         if should_convert:
-            print(f"🔄 Converting {detected_format} to Google Docs format for editing...")
+            print(f"Converting {detected_format} to Google Docs format for editing...")
             target_mime = 'application/vnd.google-apps.document'
             conversion_note = f"Converted from {detected_format} to Google Docs (editable)"
         else:
-            print(f"📌 Preserving original {detected_format} format...")
+            print(f"Preserving original {detected_format} format...")
             target_mime = file_type
             conversion_note = f"Preserved original {detected_format} format"
         
@@ -580,7 +587,7 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
             'description': f"Original format: {detected_format}"
         }
         
-        # ✅ FIX 2: MediaFileUpload is already imported in your tools.py
+        # MediaFileUpload is already imported in tools.py
         media = MediaFileUpload(file_path, mimetype=file_type, resumable=True)
         
         uploaded_file = service.files().create(
@@ -601,7 +608,7 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
             "current_format": "Google Docs" if should_convert else detected_format,
             "is_editable": should_convert,
             "folder_path": "SafeExpress/Templates",
-            "message": f"✅ Template '{template_name}' uploaded to SafeExpress/Templates. {conversion_note}",
+            "message": f"Template '{template_name}' uploaded to SafeExpress/Templates. {conversion_note}",
             "error": None
         }
         
@@ -612,7 +619,7 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
             "success": False,
             "file_id": None,
             "error": str(e),
-            "message": f"❌ Upload failed: {str(e)}"
+            "message": f"Upload failed: {str(e)}"
         }
 
 def get_folder_info_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
@@ -652,7 +659,7 @@ def get_folder_info_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
             return {
                 "success": False,
                 "error": f"Folder '{folder_path}' not found",
-                "message": f"❌ Folder '{folder_path}' not found"
+                "message": f"Folder '{folder_path}' not found"
             }
         
         # Get files and subfolders
@@ -666,7 +673,7 @@ def get_folder_info_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
             "folder_path": f"SafeExpress/{folder_path}",
             "file_count": len(files),
             "subfolder_count": len(subfolders),
-            "message": f"📁 {folder_path}: {len(files)} file(s), {len(subfolders)} subfolder(s)",
+            "message": f"{folder_path}: {len(files)} file(s), {len(subfolders)} subfolder(s)",
             "error": None
         }
         
@@ -674,7 +681,7 @@ def get_folder_info_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
         return {
             "success": False,
             "error": str(e),
-            "message": f"❌ Failed to get folder info: {str(e)}"
+            "message": f"Failed to get folder info: {str(e)}"
         }
 
 def read_file_content_impl(service, file_id: str) -> Dict:
@@ -715,7 +722,7 @@ def read_file_content_impl(service, file_id: str) -> Dict:
             "mime_type": mime_type,
             "content": content,
             "content_length": len(content),
-            "message": f"✅ Read {len(content)} characters from '{file_name}'",
+            "message": f"Read {len(content)} characters from '{file_name}'",
             "error": None
         }
     except Exception as e:
@@ -776,7 +783,7 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
                 return {
                     "success": False,
                     "error": f"Folder not found: {folder_path}",
-                    "message": f"❌ Could not find folder '{folder_path}'"
+                    "message": f"Could not find folder '{folder_path}'"
                 }
             
             # Search for file in folder
@@ -788,7 +795,7 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
                 return {
                     "success": False,
                     "error": f"File not found: {filename}",
-                    "message": f"❌ Could not find file '{filename}' in {folder_path or 'SafeExpress'}"
+                    "message": f"Could not find file '{filename}' in {folder_path or 'SafeExpress'}"
                 }
             
             file_id = files[0]['id']
@@ -797,7 +804,7 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
             return {
                 "success": False,
                 "error": "file_id or file_path is required",
-                "message": "❌ Must provide either file_id or file_path"
+                "message": "Must provide either file_id or file_path"
             }
         
         # Read file content
@@ -811,7 +818,7 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
             "success": False,
             "content": None,
             "error": str(e),
-            "message": f"❌ Failed to read file: {str(e)}"
+            "message": f"Failed to read file: {str(e)}"
         }
 
 
@@ -848,7 +855,7 @@ def rename_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             "file_id": None,
             "new_name": None,
             "error": str(e),
-            "message": f"❌ Rename failed: {str(e)}"
+            "message": f"Rename failed: {str(e)}"
         }
 
 
@@ -886,9 +893,9 @@ async def execute_task(request: TaskRequest):
         credentials_dict = request.credentials_dict
         
         print(f"\n{'='*60}")
-        print(f"💾 DRIVE AGENT - Executing: {tool_name}")
+        print(f"DRIVE AGENT - Executing: {tool_name}")
         print(f"{'='*60}")
-        print(f"📥 Inputs: {json.dumps(inputs, indent=2)}")
+        print(f"Inputs: {json.dumps(inputs, indent=2)}")
         
         # Validate credentials
         if not credentials_dict:
@@ -908,16 +915,15 @@ async def execute_task(request: TaskRequest):
         # Execute tool
         result = tool_func(inputs, credentials_dict)
         
-        print(f"✅ Result: {result.get('success')}")
+        print(f"Result: {result.get('success')}")
         if result.get('error'):
-            print(f"❌ Error: {result.get('error')}")
+            print(f"Error: {result.get('error')}")
         if result.get('file_id'):
-            print(f"🆔 File ID: {result.get('file_id')}")
+            print(f"File ID: {result.get('file_id')}")
         if result.get('folder_id'):
-            print(f"📁 Folder ID: {result.get('folder_id')}")
+            print(f"Folder ID: {result.get('folder_id')}")
         
-        # Print complete result before returning
-        print(f"\n📤 Complete Result:")
+        print(f"\nComplete Result:")
         print(json.dumps(result, indent=2, default=str))
         print(f"{'='*60}\n")
         
@@ -926,7 +932,7 @@ async def execute_task(request: TaskRequest):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Drive Agent Error: {str(e)}")
+        print(f"Drive Agent Error: {str(e)}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
@@ -970,7 +976,7 @@ def read_file_content_impl(service, file_id: str) -> Dict:
             "mime_type": mime_type,
             "content": content,
             "content_length": len(content),
-            "message": f"✅ Read {len(content)} characters from '{file_name}'",
+            "message": f"Read {len(content)} characters from '{file_name}'",
             "error": None
         }
     except Exception as e:
@@ -1031,7 +1037,7 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
                 return {
                     "success": False,
                     "error": f"Folder not found: {folder_path}",
-                    "message": f"❌ Could not find folder '{folder_path}'"
+                    "message": f"Could not find folder '{folder_path}'"
                 }
             
             # Search for file in folder
@@ -1043,7 +1049,7 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
                 return {
                     "success": False,
                     "error": f"File not found: {filename}",
-                    "message": f"❌ Could not find file '{filename}' in {folder_path or 'SafeExpress'}"
+                    "message": f"Could not find file '{filename}' in {folder_path or 'SafeExpress'}"
                 }
             
             file_id = files[0]['id']
@@ -1052,7 +1058,7 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
             return {
                 "success": False,
                 "error": "file_id or file_path is required",
-                "message": "❌ Must provide either file_id or file_path"
+                "message": "Must provide either file_id or file_path"
             }
         
         # Read file content
@@ -1066,7 +1072,7 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
             "success": False,
             "content": None,
             "error": str(e),
-            "message": f"❌ Failed to read file: {str(e)}"
+            "message": f"Failed to read file: {str(e)}"
         }
 
 
@@ -1096,12 +1102,12 @@ async def root():
             "get_folder_info": "Get detailed info about a specific folder"
         },
         "improvements": [
-            "✅ Supervisor-compatible /execute_task endpoint",
-            "✅ Structured data output for all tools",
-            "✅ Proper error handling with success/error fields",
-            "✅ Credentials passed via request (no session storage)",
-            "✅ Direct file/folder URLs in responses",
-            "✅ Consistent return format across all tools"
+            "Supervisor-compatible /execute_task endpoint",
+            "Structured data output for all tools",
+            "Proper error handling with success/error fields",
+            "Credentials passed via request (no session storage)",
+            "Direct file/folder URLs in responses",
+            "Consistent return format across all tools"
         ],
         "endpoints": {
             "execute_task": "/execute_task (POST) - Execute Drive operations",
@@ -1116,8 +1122,7 @@ async def root():
 
 if __name__ == "__main__":
     port = int(os.getenv("DRIVE_AGENT_PORT", "8006"))
-    print(f"🚀 Starting Google Drive Agent v2.0 on port {port}")
-    print(f"📚 Available tools: {list(DRIVE_TOOLS.keys())}")
-    print(f"✨ New features: Supervisor integration, structured outputs, better error handling")
-    print(f"📋 Ready to receive requests from Supervisor Agent")
+    print(f"Starting Google Drive Agent v2.0 on port {port}")
+    print(f"Available tools: {list(DRIVE_TOOLS.keys())}")
+    print(f"Ready to receive requests from Supervisor Agent")
     uvicorn.run(app, host="0.0.0.0", port=port)

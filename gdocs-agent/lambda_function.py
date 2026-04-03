@@ -10,7 +10,7 @@ from agent import create_docs_agent
 def lambda_handler(event, context):
     """Google Docs Agent Lambda Handler"""
     try:
-        print("📄 Docs Agent Lambda invoked")
+        print(" Docs Agent Lambda invoked")
 
         # Parse event
         if isinstance(event.get("body"), str):
@@ -25,8 +25,8 @@ def lambda_handler(event, context):
         expected_output = body.get("expected_output")
         credentials_dict = body.get("credentials", {})
 
-        print(f"🔧 Tool/Task: {tool or task}")
-        print(f"📝 Inputs: {json.dumps(inputs)}")
+        print(f" Tool/Task: {tool or task}")
+        print(f" Inputs: {json.dumps(inputs)}")
 
         # Validate credentials
         if not credentials_dict.get("access_token"):
@@ -51,7 +51,7 @@ def lambda_handler(event, context):
             }
 
         # Create AI agent with explicit API key
-        print("🤖 Creating Docs agent...")
+        print(" Creating Docs agent...")
         agent = create_docs_agent(credentials_dict, openai_api_key=openai_api_key)
 
         # Build prompt
@@ -87,7 +87,7 @@ Execute intelligently and return JSON."""
             }
 
         # Invoke AI agent
-        print("🚀 Invoking AI agent...")
+        print(" Invoking AI agent...")
         result = agent.invoke({"messages": [("user", agent_prompt)]})
 
         # Parse response
@@ -96,7 +96,7 @@ Execute intelligently and return JSON."""
             raise ValueError("No response from agent")
 
         final_message = messages[-1].content
-        print(f"📨 Agent responded: {final_message[:200]}...")
+        print(f" Agent responded: {final_message[:200]}...")
 
         # Try to parse as JSON
         try:
@@ -134,7 +134,7 @@ Execute intelligently and return JSON."""
             }
 
     except Exception as e:
-        print(f"❌ ERROR: {str(e)}")
+        print(f" ERROR: {str(e)}")
         import traceback
 
         traceback.print_exc()

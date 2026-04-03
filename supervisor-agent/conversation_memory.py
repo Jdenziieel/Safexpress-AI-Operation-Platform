@@ -168,21 +168,21 @@ class ConversationMemoryManager:
         trace.step("memory_summarize", f"summarizing {len(old_messages)} old messages, keeping {len(recent_messages)} recent", {"split_point": split_point, "tokens_before": self.memory.current_token_count})
 
         print(f"\n{'='*55}")
-        print(f"📚 MEMORY SUMMARIZATION")
+        print(f"MEMORY SUMMARIZATION")
         print(f"{'='*55}")
         utilization = self.memory.current_token_count * 100 // max(1, self.memory.MAX_TOKENS_BEFORE_SUMMARY)
         print(f"   Token pressure: {self.memory.current_token_count}/{self.memory.MAX_TOKENS_BEFORE_SUMMARY} ({utilization}% full)")
         print(f"   Compressing {len(old_messages)} old messages → keeping {len(recent_messages)} recent")
-        print(f"\n   📜 Messages being summarized:")
+        print(f"\n   Messages being summarized:")
         for i, msg in enumerate(old_messages):
             role = msg.get('role', '?')
             content = msg.get('content', '')
             preview = content[:100] + '...' if len(content) > 100 else content
             print(f"      [{i+1}] {role.upper()}: {preview}")
         if self.memory.summary:
-            print(f"\n   📋 Previous summary: {self.memory.summary[:150]}{'...' if len(self.memory.summary) > 150 else ''}")
+            print(f"\n   Previous summary: {self.memory.summary[:150]}{'...' if len(self.memory.summary) > 150 else ''}")
         else:
-            print(f"\n   📋 Previous summary: (none — first summarization)")
+            print(f"\n   Previous summary: (none — first summarization)")
 
         # Format old messages for summarization
         conversation_text = ""
@@ -256,7 +256,7 @@ New turns:
 
             new_summary = summary_data.get("summary", "")
 
-            print(f"\n   📝 Summary output:")
+            print(f"\n   Summary output:")
             print(f"      {new_summary}")
 
             self.memory.summary = new_summary
@@ -269,7 +269,7 @@ New turns:
             self.memory.current_token_count = self._count_message_tokens(recent_messages)
             token_reduction = tokens_before - self.memory.current_token_count
 
-            print(f"\n   ✅ Token reduction: {tokens_before} → {self.memory.current_token_count} (saved {token_reduction} tokens, {len(old_messages)} messages compressed)")
+            print(f"\n   Token reduction: {tokens_before} -> {self.memory.current_token_count} (saved {token_reduction} tokens, {len(old_messages)} messages compressed)")
             print(f"{'='*55}\n")
 
             logger.info(
@@ -336,7 +336,7 @@ New turns:
         context_parts = []
 
         print(f"\n{'─'*55}")
-        print(f"🧠 BUILDING LLM CONTEXT")
+        print(f"BUILDING LLM CONTEXT")
         print(f"{'─'*55}")
 
         # Add summary if exists
@@ -344,25 +344,25 @@ New turns:
             context_parts.append("CONVERSATION SUMMARY:")
             context_parts.append(self.memory.summary)
             context_parts.append("")
-            print(f"   ✓ Summary ({len(self.memory.summary)} chars): {self.memory.summary[:120]}{'...' if len(self.memory.summary) > 120 else ''}")
+            print(f"   Summary ({len(self.memory.summary)} chars): {self.memory.summary[:120]}{'...' if len(self.memory.summary) > 120 else ''}")
         else:
-            print(f"   ✗ Summary: none")
+            print(f"   Summary: none")
 
         # Add recent message history
         if self.memory.working_context:
             context_parts.append("RECENT CONVERSATION:")
             for msg in self.memory.working_context:
                 context_parts.append(f"{msg['role'].upper()}: {msg['content']}")
-            print(f"   ✓ Recent messages: {len(self.memory.working_context)}")
+            print(f"   Recent messages: {len(self.memory.working_context)}")
             for msg in self.memory.working_context:
                 preview = msg.get('content', '')[:80]
                 print(f"      {msg.get('role','?').upper()}: {preview}{'...' if len(msg.get('content','')) > 80 else ''}")
         else:
-            print(f"   ✗ Recent messages: none")
+            print(f"   Recent messages: none")
 
         final_context = "\n".join(context_parts)
         context_tokens_est = len(final_context) // 4
-        print(f"\n   📏 Final context: {len(final_context)} chars (~{context_tokens_est} tokens)")
+        print(f"\n   Final context: {len(final_context)} chars (~{context_tokens_est} tokens)")
         print(f"{'─'*55}\n")
 
         trace.step("context_built", f"context assembled: summary={'yes' if self.memory.summary else 'no'}, msgs={len(self.memory.working_context)}, ~{context_tokens_est} tokens", {
@@ -498,7 +498,7 @@ if __name__ == "__main__":
         ("user", "Hi John, following up on our discussion about Q4 goals. Can we schedule a meeting for next Tuesday at 3pm?"),
         ("assistant", "Perfect! Should I send this email now?"),
         ("user", "Yes, please send it"),
-        ("assistant", "✅ Email sent successfully to john@example.com"),
+        ("assistant", "Email sent successfully to john@example.com"),
         ("user", "Now search my emails for invoices from last month"),
         ("assistant", "I found 5 invoices from October. Would you like me to list them?"),
     ]

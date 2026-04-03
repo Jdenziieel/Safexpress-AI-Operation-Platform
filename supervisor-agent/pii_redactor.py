@@ -81,16 +81,16 @@ class PIIRedactor:
     
     # Agent-friendly names
     AGENT_FRIENDLY_NAMES = {
-        'gmail': {'name': 'Email Service', 'icon': '📧'},
-        'gmail_agent': {'name': 'Email Service', 'icon': '📧'},
-        'calendar': {'name': 'Calendar Service', 'icon': '📅'},
-        'calendar_agent': {'name': 'Calendar Service', 'icon': '📅'},
-        'gdocs': {'name': 'Documents Service', 'icon': '📄'},
-        'gdocs_agent': {'name': 'Documents Service', 'icon': '📄'},
-        'sheets': {'name': 'Spreadsheets Service', 'icon': '📊'},
-        'sheets_agent': {'name': 'Spreadsheets Service', 'icon': '📊'},
-        'gdrive': {'name': 'File Storage Service', 'icon': '📁'},
-        'gdrive_agent': {'name': 'File Storage Service', 'icon': '📁'},
+        'gmail': {'name': 'Email Service', 'icon': ''},
+        'gmail_agent': {'name': 'Email Service', 'icon': ''},
+        'calendar': {'name': 'Calendar Service', 'icon': ''},
+        'calendar_agent': {'name': 'Calendar Service', 'icon': ''},
+        'gdocs': {'name': 'Documents Service', 'icon': ''},
+        'gdocs_agent': {'name': 'Documents Service', 'icon': ''},
+        'sheets': {'name': 'Spreadsheets Service', 'icon': ''},
+        'sheets_agent': {'name': 'Spreadsheets Service', 'icon': ''},
+        'gdrive': {'name': 'File Storage Service', 'icon': ''},
+        'gdrive_agent': {'name': 'File Storage Service', 'icon': ''},
     }
     
     # Tool action descriptions (privacy-safe)
@@ -289,7 +289,7 @@ class PIIRedactor:
         agent_lower = agent_name.lower() if agent_name else ''
         return cls.AGENT_FRIENDLY_NAMES.get(
             agent_lower, 
-            {'name': agent_name or 'Unknown Service', 'icon': '🤖'}
+            {'name': agent_name or 'Unknown Service', 'icon': ''}
         )
     
     @classmethod
@@ -312,7 +312,7 @@ class PIIRedactor:
         Create a privacy-safe summary of an action for admins.
         
         Instead of: "Sent email to john@example.com with subject 'Salary Discussion'"
-        Returns: {"summary": "Sent an email", "agent_friendly": "Email Service", "icon": "📧"}
+        Returns: {"summary": "Sent an email", "agent_friendly": "Email Service", "icon": ""}
         
         Args:
             agent_call: Agent call record from database
@@ -329,7 +329,7 @@ class PIIRedactor:
         agent_info = cls.get_agent_friendly_name(agent)
         action_desc = cls.get_action_description(tool)
         
-        status_icon = '✅' if success else '❌'
+        status_icon = '' if success else ''
         
         return {
             'timestamp': timestamp,

@@ -140,7 +140,7 @@ class QuotaClient:
             return response.json()
             
         except httpx.RequestError as e:
-            print(f"⚠️ Failed to report usage: {e}")
+            print(f" Failed to report usage: {e}")
             return {"success": False, "error": str(e)}
     
     async def get_balance(self, user_id: str) -> Dict[str, Any]:
@@ -153,7 +153,7 @@ class QuotaClient:
             return response.json()
             
         except httpx.RequestError as e:
-            print(f"⚠️ Failed to get balance: {e}")
+            print(f" Failed to get balance: {e}")
             return {"error": str(e)}
 
 
