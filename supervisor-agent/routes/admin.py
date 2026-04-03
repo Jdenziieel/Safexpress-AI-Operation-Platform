@@ -6,12 +6,21 @@ All responses have PII redaction applied — safe for admin viewing.
 """
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime, timedelta
 from collections import defaultdict
 
 from log_storage import LogStorage
 from pii_redactor import PIIRedactor
+
+_SEED_PRICING = {
+    "gpt-4o": {"input": 0.0025, "output": 0.01},
+    "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},
+    "gpt-4": {"input": 0.03, "output": 0.06},
+    "gpt-4-turbo": {"input": 0.01, "output": 0.03},
+    "gpt-3.5-turbo": {"input": 0.0005, "output": 0.0015},
+}
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -416,6 +425,165 @@ async def get_admin_alerts(
         raise HTTPException(status_code=500, detail=f"Error retrieving alerts: {str(e)}")
 
 
+# =========================================================================
+# USAGE SUMMARY
+# =========================================================================
+
+@router.get("/usage/summary")
+async def get_usage_summary():
+    """
+    Aggregated usage counts (conversations & requests) for today, this week,
+    and this month.  Privacy-safe: only totals, no user-identifiable data.
+    """
+    try:
+        storage = LogStorage()
+        summary = storage.get_usage_summary()
+        return summary
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving usage summary: {str(e)}")
+
+
+# =========================================================================
+# MODEL PRICING
+# =========================================================================
+
+class PricingUpdate(BaseModel):
+    input_rate_per_1k: float = Field(..., gt=0, description="Cost per 1 000 input tokens (USD)")
+    output_rate_per_1k: float = Field(..., gt=0, description="Cost per 1 000 output tokens (USD)")
+
+
+@router.get("/pricing")
+async def get_pricing():
+    """Return current per-model pricing rates."""
+    try:
+        storage = LogStorage()
+        storage.seed_model_pricing(_SEED_PRICING)
+        rows = storage.get_all_model_pricing()
+
+        token_stats = storage.get_token_usage_stats()
+        by_model_map = {m["model"]: m for m in token_stats.get("by_model", [])}
+
+        models = []
+        for row in rows:
+            usage = by_model_map.get(row["model"], {})
+            models.append({
+                "model": row["model"],
+                "input_rate_per_1k": row["input_rate_per_1k"],
+                "output_rate_per_1k": row["output_rate_per_1k"],
+                "updated_at": row["updated_at"],
+                "updated_by": row["updated_by"],
+                "total_input_tokens": usage.get("input_tokens", 0) or 0,
+                "total_output_tokens": usage.get("output_tokens", 0) or 0,
+                "total_cost_usd": round(usage.get("cost_usd", 0) or 0, 6),
+            })
+
+        return {
+            "models": models,
+            "notice": "Rate changes apply to future usage only. Historical costs are preserved."
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving pricing: {str(e)}")
+
+
+@router.put("/pricing/{model}")
+async def update_pricing(model: str, body: PricingUpdate):
+    """Update input/output rate for a model. Only affects future cost computations."""
+    try:
+        storage = LogStorage()
+        storage.update_model_pricing(
+            model=model,
+            input_rate=body.input_rate_per_1k,
+            output_rate=body.output_rate_per_1k,
+            updated_by="admin",
+        )
+
+        try:
+            import logging_config as _lc
+            _lc._pricing_cache_ts = 0.0
+        except Exception:
+            pass
+
+        return {
+            "model": model,
+            "input_rate_per_1k": body.input_rate_per_1k,
+            "output_rate_per_1k": body.output_rate_per_1k,
+            "updated_at": datetime.utcnow().isoformat(),
+            "notice": "Rate changes apply to future usage only. Historical costs are preserved."
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating pricing: {str(e)}")
+
+
+# =========================================================================
+# BUDGET SETTINGS
+# =========================================================================
+
+class BudgetUpdate(BaseModel):
+    monthly_budget_usd: Optional[float] = Field(None, ge=0, description="Monthly budget cap in USD")
+    alert_threshold_pct: Optional[float] = Field(None, ge=0, le=100, description="Alert when spend reaches this % of budget")
+
+
+@router.get("/settings/budget")
+async def get_budget():
+    """Return the current monthly budget cap and alert threshold."""
+    try:
+        storage = LogStorage()
+        budget_raw = storage.get_setting("monthly_budget_usd")
+        threshold_raw = storage.get_setting("alert_threshold_pct")
+
+        monthly_budget = float(budget_raw) if budget_raw else None
+        alert_threshold = float(threshold_raw) if threshold_raw else 80.0
+
+        month_start = (datetime.utcnow() - timedelta(days=30)).isoformat() + "Z"
+        token_stats = storage.get_token_usage_stats(start_time=month_start)
+        current_month_cost = round(token_stats["totals"].get("total_cost_usd", 0) or 0, 4)
+
+        over_budget = False
+        alert_triggered = False
+        if monthly_budget and monthly_budget > 0:
+            pct_used = (current_month_cost / monthly_budget) * 100
+            if pct_used >= 100:
+                over_budget = True
+            if pct_used >= alert_threshold:
+                alert_triggered = True
+        else:
+            pct_used = 0.0
+
+        return {
+            "monthly_budget_usd": monthly_budget,
+            "alert_threshold_pct": alert_threshold,
+            "current_month_cost_usd": current_month_cost,
+            "pct_used": round(pct_used, 1),
+            "over_budget": over_budget,
+            "alert_triggered": alert_triggered,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving budget: {str(e)}")
+
+
+@router.put("/settings/budget")
+async def update_budget(body: BudgetUpdate):
+    """Update monthly budget cap and/or alert threshold."""
+    try:
+        storage = LogStorage()
+        if body.monthly_budget_usd is not None:
+            storage.set_setting("monthly_budget_usd", str(body.monthly_budget_usd))
+        if body.alert_threshold_pct is not None:
+            storage.set_setting("alert_threshold_pct", str(body.alert_threshold_pct))
+
+        return await get_budget()
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating budget: {str(e)}")
+
+
+# =========================================================================
+# AGENT PERFORMANCE METRICS (with system-wide avg response time)
+# =========================================================================
+
 @router.get("/metrics")
 async def get_admin_metrics(
     start_time: Optional[str] = None,
@@ -423,23 +591,17 @@ async def get_admin_metrics(
     period: str = "24h"
 ):
     """
-    Get agent performance metrics for admin dashboard.
+    Agent performance metrics plus system-wide average response time.
 
-    Returns performance scores with plain-language status labels.
-    No user data is included.
+    Per-agent: success_rate, avg_response_time_ms, total_actions, failed_actions.
+    System-wide: avg_response_time_ms from request_summaries (time from user
+    input to system reply).
 
-    Query Parameters:
-        - start_time: Filter from this time (ISO format)
-        - end_time: Filter until this time (ISO format)
-        - period: Time period shorthand (1h, 24h, 7d, 30d)
-
-    Returns:
-        - metrics: Performance metrics per agent with friendly labels
+    Removed: overall_score, status_label, status_color, speed_score, speed_label.
     """
     try:
         storage = LogStorage()
 
-        # Calculate time range from period if not specified
         if not start_time and not end_time:
             now = datetime.utcnow()
             period_map = {
@@ -451,15 +613,13 @@ async def get_admin_metrics(
             delta = period_map.get(period, timedelta(hours=24))
             start_time = (now - delta).isoformat() + 'Z'
 
-        # Get agent calls data
         agent_calls = storage.get_agent_calls(
             start_time=start_time,
             end_time=end_time,
             limit=10000
         )
 
-        # Aggregate metrics per agent
-        agent_stats = {}
+        agent_stats: dict = {}
         for call in agent_calls:
             agent = call.get('agent_name', 'unknown')
             if agent not in agent_stats:
@@ -467,85 +627,40 @@ async def get_admin_metrics(
                     'total_calls': 0,
                     'successful_calls': 0,
                     'total_duration_ms': 0,
-                    'durations': []
                 }
 
             stats = agent_stats[agent]
             stats['total_calls'] += 1
             if call.get('success'):
                 stats['successful_calls'] += 1
-            duration = call.get('duration_ms', 0)
-            stats['total_duration_ms'] += duration
-            stats['durations'].append(duration)
+            stats['total_duration_ms'] += call.get('duration_ms', 0)
 
-        # Calculate performance scores with friendly labels
-        metrics = {}
+        agents_out = {}
         for agent, stats in agent_stats.items():
             total = stats['total_calls']
             successful = stats['successful_calls']
-
-            # Success rate
             success_rate = (successful / total * 100) if total > 0 else 0
-
-            # Speed score
             avg_duration = stats['total_duration_ms'] / total if total > 0 else 0
-            if avg_duration < 2000:
-                speed_score = 100
-                speed_label = 'Very Fast'
-            elif avg_duration < 5000:
-                speed_score = 85
-                speed_label = 'Fast'
-            elif avg_duration < 10000:
-                speed_score = 70
-                speed_label = 'Normal'
-            else:
-                speed_score = 50
-                speed_label = 'Slow'
 
-            # Overall score
-            overall_score = (success_rate * 0.6) + (speed_score * 0.4)
-
-            # Status label
-            if overall_score >= 90:
-                status_label = 'Working Great'
-                status_color = 'green'
-            elif overall_score >= 75:
-                status_label = 'Working Well'
-                status_color = 'blue'
-            elif overall_score >= 50:
-                status_label = 'Needs Attention'
-                status_color = 'yellow'
-            else:
-                status_label = 'Having Issues'
-                status_color = 'red'
-
-            agent_info = PIIRedactor.get_agent_friendly_name(agent)
-
-            metrics[agent] = {
-                'agent': agent,
-                'friendly_name': agent_info['name'],
-                'icon': agent_info['icon'],
-                'status_label': status_label,
-                'status_color': status_color,
-                'overall_score': round(overall_score, 1),
+            agents_out[agent] = {
                 'success_rate': round(success_rate, 1),
-                'speed_score': round(speed_score, 1),
-                'speed_label': speed_label,
                 'avg_response_time_ms': round(avg_duration, 0),
-                'avg_response_time_friendly': PIIRedactor.format_duration(avg_duration),
                 'total_actions': total,
-                'successful_actions': successful,
                 'failed_actions': total - successful,
             }
 
+        system_stats = storage.get_avg_response_time(
+            start_time=start_time, end_time=end_time
+        )
+
         return {
-            'metrics': metrics,
+            'system': system_stats,
+            'agents': agents_out,
             'period': period,
             'time_range': {
                 'start': start_time,
                 'end': end_time
             },
-            'agent_count': len(metrics),
             '_privacy': {
                 'pii_redacted': True,
                 'aggregated_metrics_only': True,
@@ -553,7 +668,5 @@ async def get_admin_metrics(
             }
         }
 
-    except ImportError as e:
-        raise HTTPException(status_code=500, detail=f"Module not available: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving metrics: {str(e)}")

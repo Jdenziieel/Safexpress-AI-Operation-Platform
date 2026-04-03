@@ -175,6 +175,26 @@ class LogStorage:
             )
         """)
         
+        # Model pricing table (admin-modifiable per-model rates)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS model_pricing (
+                model TEXT PRIMARY KEY,
+                input_rate_per_1k REAL NOT NULL,
+                output_rate_per_1k REAL NOT NULL,
+                updated_at TEXT NOT NULL,
+                updated_by TEXT
+            )
+        """)
+        
+        # System settings table (key-value store for admin config)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS system_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+        
         # Create indexes for common queries
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_level ON logs(level)")
@@ -991,6 +1011,155 @@ class LogStorage:
         print(f"Cleaned up {total_deleted} old log records (older than {days_to_keep} days)")
         
         return total_deleted
+
+    # =========================================================================
+    # MODEL PRICING METHODS
+    # =========================================================================
+
+    def seed_model_pricing(self, default_pricing: Dict[str, Dict[str, float]]):
+        """
+        Seed model_pricing table with defaults if empty.
+        Only inserts models that don't already exist (preserves admin edits).
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.utcnow().isoformat()
+
+        for model, rates in default_pricing.items():
+            if model == "default":
+                continue
+            cursor.execute(
+                "INSERT OR IGNORE INTO model_pricing (model, input_rate_per_1k, output_rate_per_1k, updated_at, updated_by) VALUES (?, ?, ?, ?, ?)",
+                (model, rates["input"], rates["output"], now, "system_seed")
+            )
+
+        conn.commit()
+        conn.close()
+
+    def get_all_model_pricing(self) -> List[Dict[str, Any]]:
+        """Return every row from model_pricing."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT model, input_rate_per_1k, output_rate_per_1k, updated_at, updated_by FROM model_pricing ORDER BY model")
+        rows = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return rows
+
+    def get_model_pricing(self, model: str) -> Optional[Dict[str, float]]:
+        """Get pricing for a single model. Returns None if not found."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT input_rate_per_1k, output_rate_per_1k FROM model_pricing WHERE model = ?", (model,))
+        row = cursor.fetchone()
+        conn.close()
+        if not row:
+            return None
+        return {"input": row["input_rate_per_1k"], "output": row["output_rate_per_1k"]}
+
+    def update_model_pricing(
+        self, model: str, input_rate: float, output_rate: float, updated_by: str = "admin"
+    ) -> bool:
+        """Update or insert pricing for a model. Returns True if a row was affected."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.utcnow().isoformat()
+        cursor.execute(
+            "INSERT OR REPLACE INTO model_pricing (model, input_rate_per_1k, output_rate_per_1k, updated_at, updated_by) VALUES (?, ?, ?, ?, ?)",
+            (model, input_rate, output_rate, now, updated_by)
+        )
+        affected = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        return affected
+
+    # =========================================================================
+    # SYSTEM SETTINGS METHODS
+    # =========================================================================
+
+    def get_setting(self, key: str) -> Optional[str]:
+        """Get a system setting value by key."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT value FROM system_settings WHERE key = ?", (key,))
+        row = cursor.fetchone()
+        conn.close()
+        return row["value"] if row else None
+
+    def set_setting(self, key: str, value: str) -> None:
+        """Set a system setting (insert or update)."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        now = datetime.utcnow().isoformat()
+        cursor.execute(
+            "INSERT OR REPLACE INTO system_settings (key, value, updated_at) VALUES (?, ?, ?)",
+            (key, value, now)
+        )
+        conn.commit()
+        conn.close()
+
+    # =========================================================================
+    # USAGE SUMMARY METHODS
+    # =========================================================================
+
+    def get_usage_summary(self) -> Dict[str, Any]:
+        """
+        Return conversation and request counts for today, this week, this month.
+        Uses request_summaries table with completed_at timestamps.
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        now = datetime.utcnow()
+        today_start = (now - timedelta(hours=24)).isoformat()
+        week_start = (now - timedelta(days=7)).isoformat()
+        month_start = (now - timedelta(days=30)).isoformat()
+
+        def _counts(start: str):
+            cursor.execute(
+                "SELECT COUNT(*) as requests, COUNT(DISTINCT conversation_id) as conversations "
+                "FROM request_summaries WHERE completed_at >= ?",
+                (start,)
+            )
+            row = cursor.fetchone()
+            return {"conversations": row["conversations"] or 0, "requests": row["requests"] or 0}
+
+        result = {
+            "today": _counts(today_start),
+            "this_week": _counts(week_start),
+            "this_month": _counts(month_start),
+        }
+
+        conn.close()
+        return result
+
+    def get_avg_response_time(
+        self, start_time: Optional[str] = None, end_time: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Return system-wide average response time from request_summaries.
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        time_filter = ""
+        params = []
+        if start_time:
+            time_filter += " AND completed_at >= ?"
+            params.append(start_time)
+        if end_time:
+            time_filter += " AND completed_at <= ?"
+            params.append(end_time)
+
+        cursor.execute(
+            f"SELECT AVG(total_duration_ms) as avg_ms, COUNT(*) as total "
+            f"FROM request_summaries WHERE total_duration_ms > 0 {time_filter}",
+            params
+        )
+        row = cursor.fetchone()
+        conn.close()
+        return {
+            "avg_response_time_ms": round(row["avg_ms"], 0) if row["avg_ms"] else 0,
+            "total_requests": row["total"] or 0,
+        }
 
     # =========================================================================
     # PENDING ACTIONS METHODS

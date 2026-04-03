@@ -56,16 +56,75 @@ QUOTA_ENABLED = os.getenv("QUOTA_ENABLED", "true").lower() in ("true", "1", "yes
 
 # ============================================================================
 # TOKEN PRICING (per 1K tokens) - Updated for GPT-4o
+# Hardcoded defaults used as seed values and fallback when DB is unavailable.
+# Admin can override per-model rates via PUT /admin/pricing/{model}.
 # ============================================================================
 
-MODEL_PRICING = {
-    "gpt-4o": {"input": 0.0025, "output": 0.01},        # $2.50/1M input, $10/1M output
-    "gpt-4o-mini": {"input": 0.00015, "output": 0.0006}, # $0.15/1M input, $0.60/1M output
-    "gpt-4": {"input": 0.03, "output": 0.06},           # $30/1M input, $60/1M output
-    "gpt-4-turbo": {"input": 0.01, "output": 0.03},     # $10/1M input, $30/1M output
-    "gpt-3.5-turbo": {"input": 0.0005, "output": 0.0015}, # $0.50/1M input, $1.50/1M output
-    "default": {"input": 0.01, "output": 0.03}          # Fallback pricing
+_DEFAULT_MODEL_PRICING = {
+    "gpt-4o": {"input": 0.0025, "output": 0.01},
+    "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},
+    "gpt-4": {"input": 0.03, "output": 0.06},
+    "gpt-4-turbo": {"input": 0.01, "output": 0.03},
+    "gpt-3.5-turbo": {"input": 0.0005, "output": 0.0015},
+    "default": {"input": 0.01, "output": 0.03},
 }
+
+# Keep the old name around so any existing import of MODEL_PRICING still works.
+MODEL_PRICING = _DEFAULT_MODEL_PRICING
+
+# ── Cached DB-backed pricing lookup ────────────────────────────────────
+_pricing_cache: Dict[str, Dict[str, float]] = {}
+_pricing_cache_ts: float = 0.0
+_PRICING_CACHE_TTL: float = 60.0  # seconds
+_pricing_cache_lock = threading.Lock()
+_pricing_seeded = False
+
+
+def _refresh_pricing_cache():
+    """Reload the full model_pricing table into _pricing_cache."""
+    global _pricing_cache, _pricing_cache_ts, _pricing_seeded
+    storage = get_log_storage()
+    if not storage:
+        return
+
+    if not _pricing_seeded:
+        storage.seed_model_pricing(_DEFAULT_MODEL_PRICING)
+        _pricing_seeded = True
+
+    rows = storage.get_all_model_pricing()
+    new_cache = {}
+    for row in rows:
+        new_cache[row["model"]] = {
+            "input": row["input_rate_per_1k"],
+            "output": row["output_rate_per_1k"],
+        }
+    _pricing_cache.update(new_cache)
+    _pricing_cache_ts = time.time()
+
+
+def get_model_pricing(model: str) -> Dict[str, float]:
+    """
+    Return {"input": <rate>, "output": <rate>} for *model*.
+
+    Reads from an in-memory cache backed by the model_pricing SQLite table.
+    Falls back to the hardcoded _DEFAULT_MODEL_PRICING dict if the DB is
+    unavailable or the model is unknown.
+    """
+    global _pricing_cache_ts
+
+    now = time.time()
+    if now - _pricing_cache_ts > _PRICING_CACHE_TTL:
+        with _pricing_cache_lock:
+            if now - _pricing_cache_ts > _PRICING_CACHE_TTL:
+                try:
+                    _refresh_pricing_cache()
+                except Exception:
+                    pass
+
+    if model in _pricing_cache:
+        return _pricing_cache[model]
+
+    return _DEFAULT_MODEL_PRICING.get(model, _DEFAULT_MODEL_PRICING["default"])
 
 
 def get_log_storage():
@@ -519,7 +578,7 @@ class StructuredLogger:
             cached_tokens: Number of prompt tokens served from OpenAI cache (50% discount)
         """
         # Calculate cost — cached prompt tokens get 50% discount from OpenAI
-        pricing = MODEL_PRICING.get(model, MODEL_PRICING["default"])
+        pricing = get_model_pricing(model)
         non_cached_input = input_tokens - cached_tokens
         cost = (
             (non_cached_input * pricing["input"] / 1000)
