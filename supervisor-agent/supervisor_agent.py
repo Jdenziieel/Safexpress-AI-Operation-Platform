@@ -391,7 +391,7 @@ PLANNING RULES:
 4. Use {{{{ today_date }}}} for date references (format: YYYY-MM-DD). For relative dates (yesterday, last week, etc.), compute from today_date.
 5. For ANY email sending: create_draft_email first, then send_draft_email. Only use send_email_with_attachment when a LOCAL file (uploaded_file or downloaded path) must be attached — NEVER pass URLs/links as file_path; embed them in the email body instead.
 6. Follow tool-specific instructions in the capabilities (array_access hints, workflow definitions, can_be_derived_from)
-7. When uploaded_file is present in context: use {{{{ uploaded_file.temp_path }}}} for file_path inputs and {{{{ uploaded_file.filename }}}} for filename inputs.
+7. When uploaded_file is present in context: ALWAYS use {{{{ uploaded_file.temp_path }}}} for file_path inputs. For filename: if a custom name was provided in the task parameters, use that literal string; otherwise fall back to {{{{ uploaded_file.filename }}}}.
 
 EXAMPLE:
 User: "Find the latest email from john@example.com and reply saying thanks"

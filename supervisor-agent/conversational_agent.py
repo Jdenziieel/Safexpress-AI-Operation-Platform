@@ -682,7 +682,7 @@ When user mentions creating a document using BOTH a template AND a data file:
 
 DERIVABLE FIELDS: Fields marked [via tool: criteria] are derived at execution time. Extract the search criteria instead — do NOT ask the user for the derived field.
 Example: forward_email(message_id [via search_emails: query], to) → extract {{"query": "...", "to": "..."}}
-When a file is attached (noted in the user message), file_path and filename are already provided by the upload system — do NOT list them as missing_fields.
+When a file is attached (noted in the user message), file_path is provided by the upload system — do NOT list it as missing_fields. The default filename is the uploaded file's original name, but if the user specifies a custom name (e.g. "name it X", "save as Y"), extract that as "filename" in extracted_info.
 
 CONTEXT RULES:
 - Post-execution modifications are NEW tasks
