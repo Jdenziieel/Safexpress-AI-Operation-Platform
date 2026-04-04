@@ -56,7 +56,7 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
     """
     remaining = conversation_state.remaining_steps
     if not remaining:
-        return response_prefix + "\nIs there anything else you'd like to do?", conversation_state
+        return response_prefix + "\nIs there anything else I can help with?", conversation_state
     
     # Rebuild context — merge saved workflow_context with the result from the approved action
     variable_context = conversation_state.workflow_context or {}
@@ -153,7 +153,7 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
                 err = r.get("error", "Unknown error")
                 response_prefix += f"\n  {desc} — failed: {err}"
         
-        response_prefix += "\n\nAll steps completed! Is there anything else you'd like to do?"
+        response_prefix += "\n\nAll steps completed! Is there anything else I can help with?"
         
         return response_prefix, conversation_state
         
@@ -1097,7 +1097,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
                             approved_step_info=pending,
                         )
                     else:
-                        response_text += "\nIs there anything else you'd like to do?"
+                        response_text += "\nIs there anything else I can help with?"
                     
                     if not conversation_state.workflow_paused:
                         now_iso = datetime.now(timezone.utc).isoformat()
@@ -1119,7 +1119,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
                         conversation_state.clarification_question = None
                 else:
                     error_msg = result.get("error", "Unknown error")
-                    response_text = f"**Action Failed**\n\n{error_msg}\n\nWould you like to try again?"
+                    response_text = f"**Action Failed**\n\n{error_msg}\n\nWould you like to try again, or is there something else I can help with?"
                     conversation_state.remaining_steps = []
                     conversation_state.workflow_context = None
                     conversation_state.intent = None
@@ -1131,7 +1131,7 @@ async def send_message_to_thread(thread_id: str, request: dict):
                 
             except Exception as e:
                 print(f"Error executing approved action: {str(e)}")
-                response_text = f"**Execution Error**\n\n{str(e)}\n\nWould you like to try again?"
+                response_text = f"**Execution Error**\n\n{str(e)}\n\nWould you like to try again, or is there something else I can help with?"
                 conversation_state.pending_actions = []
                 conversation_state.workflow_paused = False
                 conversation_state.remaining_steps = []

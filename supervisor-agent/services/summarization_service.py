@@ -122,7 +122,7 @@ class SummarizationService:
             formatted_steps.append((step, text))
 
         if not formatted_steps:
-            return f" Completed: {original_request}"
+            return f"Completed: {original_request}"
 
         trace.step("response_composer", "template formatting", {
             "total_steps": len(formatted_steps),
@@ -214,7 +214,7 @@ class SummarizationService:
             "You are composing a user-friendly response from pre-formatted step results.\n"
             "The data below is already extracted and cleaned — use it directly.\n"
             "Do NOT add information that isn't present. Keep it concise.\n"
-            "Start with for success."
+            "Use bold markdown for key details. Do not prefix with emoji."
         )
         user_prompt = (
             f"Task: {original_request}\n\n"
@@ -297,7 +297,7 @@ class SummarizationService:
                 {"error": str(e)},
             )
             parts = [t for _, t in formatted_steps if t]
-            return "\n\n".join(parts) if parts else f" Completed: {original_request}"
+            return "\n\n".join(parts) if parts else f"Completed: {original_request}"
 
     # ------------------------------------------------------------------
     # Error / no-results templates (unchanged)
@@ -311,7 +311,7 @@ class SummarizationService:
         results: List[Dict],
         stopped_at_step: Optional[int],
     ) -> str:
-        lines = [" **Unable to complete your request**\n"]
+        lines = ["**Unable to complete your request**\n"]
 
         error_msg = final_context.get("error", execution_message)
         error_category = self._categorize_error(error_msg)
@@ -366,7 +366,7 @@ class SummarizationService:
             lines.append("**What was completed before the error:**")
             for step in successful_steps:
                 desc = step.get("description", step.get("tool", "Unknown step"))
-                lines.append(f" {desc}")
+                lines.append(f"- {desc}")
             lines.append("")
 
         if stopped_at_step:
@@ -395,7 +395,7 @@ class SummarizationService:
     def _format_no_results_response(
         self, original_request: str, results: List[Dict]
     ) -> str:
-        lines = ["ℹ **Search completed - No results found**\n"]
+        lines = ["**Search completed — No results found**\n"]
 
         for result in results:
             if isinstance(result, dict) and result.get("status") == "no_results":

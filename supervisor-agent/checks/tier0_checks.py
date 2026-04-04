@@ -74,7 +74,7 @@ class Tier0ChecksMixin:
                     task_type="pending_action_approved",
                     extracted_info={"action_id": action_id, "decision": "approve"},
                     missing_fields=[],
-                    response_text="⏳ Executing approved action...",
+                    response_text="Executing approved action...",
                     reasoning=f"User approved pending action: {tool_name}",
                     execution_ready=False,
                     execution_summary=None
@@ -84,7 +84,7 @@ class Tier0ChecksMixin:
                 trace.step("tier0", f"pending action REJECTED via chat: {action_id}")
                 
                 # Build cancellation summary
-                cancel_msg = f" **Action Cancelled**\n\n"
+                cancel_msg = f"**Action Cancelled**\n\n"
                 cancel_msg += f"The following action has been cancelled:\n"
                 cancel_msg += f"- **Action:** {description}\n"
                 if pending.get("inputs"):
@@ -97,9 +97,9 @@ class Tier0ChecksMixin:
                 # Check if there were remaining steps
                 remaining_count = len(conversation_state.remaining_steps)
                 if remaining_count > 0:
-                    cancel_msg += f"\n⏭ **{remaining_count} remaining step(s) were also cancelled.**\n"
+                    cancel_msg += f"\n**{remaining_count} remaining step(s) were also cancelled.**\n"
                 
-                cancel_msg += "\nIs there anything else you'd like to do?"
+                cancel_msg += "\nIs there anything else I can help with?"
                 
                 return ConversationAnalysis(
                     intent=ConversationIntent.SMALL_TALK,
@@ -128,7 +128,7 @@ class Tier0ChecksMixin:
             
             # Anything else while paused — remind user
             trace.step("tier0", "message blocked — workflow paused, pending action requires decision")
-            reminder_msg = f"⏸ **Action Awaiting Your Decision**\n\n"
+            reminder_msg = f"**Action Awaiting Your Decision**\n\n"
             reminder_msg += f"**{description}**\n\n"
             reminder_msg += f"Please reply with:\n"
             reminder_msg += f"- **\"approve\"** or **\"yes\"** to proceed\n"
@@ -554,11 +554,11 @@ What would you like to do?"""
         message = conversation_state.last_execution_message or "No details available"
         
         if status == "success":
-            status_response = f" **Last execution: Successful**\n\n{message}\n\nAnything else you'd like to do?"
+            status_response = f"**Last execution: Successful**\n\n{message}\n\nIs there anything else I can help with?"
         elif status == "error":
-            status_response = f" **Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again or do something else?"
+            status_response = f"**Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again, or is there something else I can help with?"
         else:
-            status_response = f" **Last execution status:** {status}\n\n{message}"
+            status_response = f"**Last execution status:** {status}\n\n{message}"
         
         trace.step("tier0", "quick_status_check returning", {
             "status": status,
@@ -646,20 +646,18 @@ def _build_rich_approval_message(pending_action: dict) -> str:
     step_number = pending_action.get("step_number")
     total_steps = pending_action.get("total_steps")
     
-    # Risk emoji
-    risk_emoji = "" if risk_level == "CRITICAL" else ""
     risk_label = "CRITICAL" if risk_level == "CRITICAL" else "DANGEROUS"
     
-    msg = f"{risk_emoji} **Action Requires Approval** — {risk_label}\n\n"
+    msg = f"**Action Requires Approval** — {risk_label}\n\n"
     
     if step_number and total_steps:
-        msg += f" Step {step_number} of {total_steps}\n\n"
+        msg += f"Step {step_number} of {total_steps}\n\n"
     
     msg += f"**{description}**\n\n"
     
     # Tool-specific details
     if tool in ("send_draft_email", "send_email_with_attachment"):
-        msg += " **Sending Email**\n"
+        msg += "**Sending Email**\n"
         if inputs.get("to"):
             msg += f"- **To:** {inputs['to']}\n"
         if inputs.get("subject"):
@@ -675,7 +673,7 @@ def _build_rich_approval_message(pending_action: dict) -> str:
             msg += f"- **BCC:** {inputs['bcc']}\n"
     
     elif tool == "reply_to_email":
-        msg += "↩ **Replying to Email**\n"
+        msg += "**Replying to Email**\n"
         if inputs.get("message_id"):
             msg += f"- **Message ID:** {inputs['message_id']}\n"
         if inputs.get("reply_body"):
@@ -685,7 +683,7 @@ def _build_rich_approval_message(pending_action: dict) -> str:
             msg += f"- **Reply preview:**\n  > {body_preview}\n"
     
     elif tool == "add_text":
-        msg += " **Adding Text to Document**\n"
+        msg += "**Adding Text to Document**\n"
         if inputs.get("document_id"):
             msg += f"- **Document ID:** {inputs['document_id']}\n"
         if inputs.get("text"):
@@ -695,7 +693,7 @@ def _build_rich_approval_message(pending_action: dict) -> str:
             msg += f"- **Text preview:**\n  > {text_preview}\n"
     
     elif tool == "share_file":
-        msg += " **Sharing File**\n"
+        msg += "**Sharing File**\n"
         if inputs.get("file_id"):
             msg += f"- **File ID:** {inputs['file_id']}\n"
         if inputs.get("email"):
@@ -704,12 +702,12 @@ def _build_rich_approval_message(pending_action: dict) -> str:
             msg += f"- **Permission:** {inputs['role']}\n"
     
     elif tool in ("delete_email", "delete_file", "delete_event"):
-        msg += " **Deleting Resource**\n"
+        msg += "**Deleting Resource**\n"
         for key, value in inputs.items():
             msg += f"- **{key}:** {value}\n"
     
     elif tool in ("edit_doc", "update_doc"):
-        msg += " **Editing Document**\n"
+        msg += "**Editing Document**\n"
         if inputs.get("document_id"):
             msg += f"- **Document ID:** {inputs['document_id']}\n"
         if inputs.get("old_text"):
@@ -719,7 +717,7 @@ def _build_rich_approval_message(pending_action: dict) -> str:
     
     else:
         # Generic — show all non-empty inputs
-        msg += f" **{tool}**\n"
+        msg += f"**{tool}**\n"
         for key, value in inputs.items():
             if value:
                 val_str = str(value)
@@ -728,6 +726,6 @@ def _build_rich_approval_message(pending_action: dict) -> str:
                 msg += f"- **{key}:** {val_str}\n"
     
     msg += f"\n---\n"
-    msg += f"Reply **\"approve\"** to proceed or **\"cancel\"** to stop."
+    msg += f"Reply **\"yes\"** to proceed or **\"cancel\"** to stop."
     
     return msg

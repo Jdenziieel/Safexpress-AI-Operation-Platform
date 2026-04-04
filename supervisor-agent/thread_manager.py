@@ -124,6 +124,13 @@ class ThreadManager:
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(thread_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at)")
         
+        # Migration: add attachment columns to messages (safe for existing DBs)
+        for col, col_type in [("file_name", "TEXT"), ("file_type", "TEXT"), ("file_size", "INTEGER")]:
+            try:
+                cursor.execute(f"ALTER TABLE messages ADD COLUMN {col} {col_type}")
+            except Exception:
+                pass  # column already exists
+        
         conn.commit()
         conn.close()
     
@@ -541,7 +548,15 @@ class ThreadManager:
         
         return count
     
-    def add_message(self, thread_id: str, role: str, content: str) -> int:
+    def add_message(
+        self,
+        thread_id: str,
+        role: str,
+        content: str,
+        file_name: Optional[str] = None,
+        file_type: Optional[str] = None,
+        file_size: Optional[int] = None,
+    ) -> int:
         """
         Add a message to a thread.
         
@@ -549,6 +564,9 @@ class ThreadManager:
             thread_id: Thread identifier
             role: Message role ('user' or 'assistant')
             content: Message content
+            file_name: Original filename of attachment (optional)
+            file_type: MIME type of attachment (optional)
+            file_size: Size in bytes of attachment (optional)
         
         Returns:
             message_id of the created message
@@ -559,9 +577,9 @@ class ThreadManager:
         cursor = conn.cursor()
         
         cursor.execute("""
-            INSERT INTO messages (thread_id, role, content, created_at)
-            VALUES (?, ?, ?, ?)
-        """, (thread_id, role, content, now))
+            INSERT INTO messages (thread_id, role, content, created_at, file_name, file_type, file_size)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (thread_id, role, content, now, file_name, file_type, file_size))
         
         message_id = cursor.lastrowid
         
@@ -590,13 +608,15 @@ class ThreadManager:
             offset: Offset for pagination
         
         Returns:
-            List of message dictionaries with id, role, content, created_at
+            List of message dictionaries with id, role, content, created_at,
+            and optional file_name, file_type, file_size
         """
         conn = self._get_connection()
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT message_id, thread_id, role, content, created_at
+            SELECT message_id, thread_id, role, content, created_at,
+                   file_name, file_type, file_size
             FROM messages
             WHERE thread_id = ?
             ORDER BY created_at ASC
@@ -608,13 +628,18 @@ class ThreadManager:
         
         messages = []
         for row in rows:
-            messages.append({
+            msg = {
                 'message_id': row[0],
                 'thread_id': row[1],
                 'role': row[2],
                 'content': row[3],
-                'created_at': row[4]
-            })
+                'created_at': row[4],
+            }
+            if row[5]:
+                msg['file_name'] = row[5]
+                msg['file_type'] = row[6]
+                msg['file_size'] = row[7]
+            messages.append(msg)
         
         return messages
     

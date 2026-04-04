@@ -285,6 +285,7 @@
 [2026-04-04 00:00:36.242] [INFO] [req_20260403160027_17e9a1c0] [T:0c22b6d7] ← RESPONSE: 200 (36659ms)
 [2026-04-04 00:00:36.243] [INFO] [req_20260403160027_17e9a1c0] [T:0c22b6d7] ─────────: ──────────────────────────────────────────────────
 [2026-04-04 00:00:36.249] [PRINT] 📡 WebSocket disconnected for thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_0c22b6d7
+<<<<<<< HEAD
 [2026-04-04 15:15:16.676] [INFO] [-] → REQUEST: POST /threads/admin-001_536dca98/messages  | {"query": null}
 [2026-04-04 15:15:21.193] [INFO] [req_20260404071521_91555f4e] [T:536dca98]   USER MSG: "Add this text to Sprint 6 Notes: "Q2 planning discussion: Budget approved for 3 new hires effective ..."
 [2026-04-04 15:15:21.367] [INFO] [req_20260404071521_91555f4e] [T:536dca98]   INFO: Memory: loaded from state  | {"total_messages": 47, "working_context": 4, "has_summary": true}
@@ -3362,3 +3363,80 @@ Parameters:
 [2026-04-04 17:06:03.391] [PRINT] ============================================================
 [2026-04-04 17:06:03.399] [INFO] [req_20260404090552_b6182ad7] [T:952e52db] ← RESPONSE: 200 (15413ms)
 [2026-04-04 17:06:03.400] [INFO] [req_20260404090552_b6182ad7] [T:952e52db] ─────────: ──────────────────────────────────────────────────
+=======
+[2026-04-04 05:52:12.300] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-04 05:52:12.492] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-04 05:52:12.504] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-04 05:52:12.514] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-04 05:52:12.526] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-04 05:52:12.816] [PRINT]  Starting Supervisor Agent on port 8010
+[2026-04-04 05:52:12.836] [PRINT]  API Documentation: http://localhost:8010/docs
+[2026-04-04 16:17:20.982] [INFO] [-] → REQUEST: POST /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_0c22b6d7/messages  | {"query": null}
+[2026-04-04 16:17:26.220] [INFO] [req_20260404081726_511d8c7d] [T:0c22b6d7]   USER MSG: "asd"
+[2026-04-04 16:17:26.515] [INFO] [req_20260404081726_511d8c7d] [T:0c22b6d7]   INFO: Memory: loaded from state  | {"total_messages": 8, "working_context": 8, "has_summary": false}
+[2026-04-04 16:17:26.516] [INFO] [req_20260404081726_511d8c7d] [T:0c22b6d7]   STEP [memory_load]: loaded from state  | {"messages": 8}
+[2026-04-04 16:17:26.524] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-04 16:17:26.525] [PRINT] WebSocket connected for thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_0c22b6d7
+[2026-04-04 16:17:26.540] [PRINT]   NEW MESSAGE  |  thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_0c22b6d7
+[2026-04-04 16:17:26.549] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-04 16:17:26.560] [PRINT]   User: asd
+[2026-04-04 16:17:26.570] [PRINT]   ConversationState:
+[2026-04-04 16:17:26.581] [PRINT]     extracted_info: {}
+[2026-04-04 16:17:26.590] [PRINT]     missing_fields: ["all"]
+[2026-04-04 16:17:26.598] [PRINT]     intent: "needs_clarification"
+[2026-04-04 16:17:26.608] [PRINT]     clarification_question: "I didn't quite catch that. Could you rephrase what you'd like me to help with?"
+[2026-04-04 16:17:26.615] [PRINT]     ready_for_execution: false
+[2026-04-04 16:17:26.623] [PRINT]     execution_summary: null
+[2026-04-04 16:17:26.632] [PRINT]     execution_mode: "standard"
+[2026-04-04 16:17:26.640] [PRINT]     execution_history: []
+[2026-04-04 16:17:26.649] [PRINT]     completed_tasks: []
+[2026-04-04 16:17:26.658] [PRINT]     has_executed: false
+[2026-04-04 16:17:26.665] [PRINT]     last_executed_at: null
+[2026-04-04 16:17:26.673] [PRINT]     last_execution_status: null
+[2026-04-04 16:17:26.681] [PRINT]     last_execution_message: null
+[2026-04-04 16:17:26.689] [PRINT]     executing: false
+[2026-04-04 16:17:26.696] [PRINT]     pending_actions: []
+[2026-04-04 16:17:26.704] [PRINT]     workflow_paused: false
+[2026-04-04 16:17:26.712] [PRINT]     remaining_steps: []
+[2026-04-04 16:17:26.720] [PRINT]     workflow_context: null
+[2026-04-04 16:17:26.728] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-04 16:17:26.736] [INFO] [-]   STEP [new_message]: thread=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_0c22b6d7, msg=asd
+[2026-04-04 16:17:26.850] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 2143, "max": 2000}
+[2026-04-04 16:17:26.892] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": ["all"], "first_missing_field": "all", "awaiting_confirmation": false, "awaiting_clarification": true}
+[2026-04-04 16:17:26.894] [PRINT] 
+[2026-04-04 16:17:26.894] [PRINT] ──────────────────────────────────────────────────
+[2026-04-04 16:17:26.914] [PRINT] TIER 0.5 — Building prompt
+[2026-04-04 16:17:26.957] [PRINT] ──────────────────────────────────────────────────
+[2026-04-04 16:17:26.973] [PRINT]    bot_signal : PHASE: Awaiting answer — bot asked: "I didn't quite catch that. Could you rephrase what you'd like me to help with?"
+[2026-04-04 16:17:26.987] [PRINT]    state_block: (none)
+[2026-04-04 16:17:27.001] [PRINT]    file_context: (none)
+[2026-04-04 16:17:27.017] [PRINT] ──────────────────────────────────────────────────
+[2026-04-04 16:17:29.279] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=646 out=39 | $0.0001 | 2227ms | cumulative: in=646 out=39 total=685 $0.0001
+[2026-04-04 16:17:29.299] [INFO] [-]   STEP [tier0.5]: category: UNINTELLIGIBLE, confidence: high
+    ↳ {"reasoning": "The user's response is not understandable and does not convey a clear request.", "raw_response": "{\n    \"category\": \"unintelligible\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user's response is not understandable and does not convey a clear request.\"\n}"}
+[2026-04-04 16:17:29.300] [INFO] [-]   STEP [tier0.5]: unintelligible input
+[2026-04-04 16:17:29.302] [INFO] [-]   ANALYSIS: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False  | {"missing_fields": ["all"]}
+[2026-04-04 16:17:29.303] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.NEEDS_CLARIFICATION
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "N/A", "missing_fields": ["all"], "clarification_question": "I didn't quite catch that. Could you rephrase what you'd like me to help with?", "ready_for_execution": false, "execution_summary": null, "execution_mode": "standard", "extracted_info": {}}
+[2026-04-04 16:17:29.304] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 25, "total": 2168, "max": 2000, "response_preview": "I didn't quite catch that. Could you rephrase what you'd like me to help with?\n\n"}
+[2026-04-04 16:17:29.336] [INFO] [req_20260404081726_511d8c7d] [T:0c22b6d7]   BOT RESP: "I didn't quite catch that. Could you rephrase what you'd like me to help with?
+
+"
+[2026-04-04 16:17:29.350] [PRINT] 
+[2026-04-04 16:17:29.350] [PRINT] ============================================================
+[2026-04-04 16:17:29.358] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-04 16:17:29.367] [PRINT] ============================================================
+[2026-04-04 16:17:29.375] [PRINT]   LLM calls:        1
+[2026-04-04 16:17:29.383] [PRINT]   Total input:      646 tokens
+[2026-04-04 16:17:29.392] [PRINT]   Total output:     39 tokens
+[2026-04-04 16:17:29.401] [PRINT]   Total tokens:     685 tokens
+[2026-04-04 16:17:29.409] [PRINT]   Estimated cost:   $0.0001
+[2026-04-04 16:17:29.418] [PRINT]   Total duration:   3134ms (3.1s)
+[2026-04-04 16:17:29.426] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-04 16:17:29.434] [PRINT]   Breakdown by call:
+[2026-04-04 16:17:29.444] [PRINT]     1. gpt-4o-mini      in=646    out=39    $0.0001 2227ms
+[2026-04-04 16:17:29.454] [PRINT] ============================================================
+[2026-04-04 16:17:32.467] [INFO] [req_20260404081726_511d8c7d] [T:0c22b6d7] ← RESPONSE: 200 (11485ms)
+[2026-04-04 16:17:32.468] [INFO] [req_20260404081726_511d8c7d] [T:0c22b6d7] ─────────: ──────────────────────────────────────────────────
+[2026-04-04 16:17:32.475] [PRINT] WebSocket disconnected for thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_0c22b6d7
+>>>>>>> e9ee825adf9b28325651e60699929c5b40648cb3

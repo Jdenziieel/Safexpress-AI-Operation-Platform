@@ -18,6 +18,7 @@ from langchain_openai import ChatOpenAI
 from execution_logger import trace
 from logging_config import memory_logger as logger
 from llm_error_handler import is_llm_error
+from s3_temp_storage import resolve_file_to_local_path
 
 # Type A tasks produce short inline content
 INLINE_TASKS = {"generate_subject", "generate_title", "generate_summary", "fix_grammar", "formalize_text"}
@@ -44,7 +45,11 @@ def extract_file_context(uploaded_file: Dict[str, Any], max_chars: int = 3000) -
     Returns truncated text or None if unsupported/unreadable.
     """
     mime = uploaded_file.get("mime_type", "")
-    file_path = uploaded_file.get("temp_path")
+    try:
+        file_path = resolve_file_to_local_path(uploaded_file)
+    except FileNotFoundError:
+        trace.warning("Enrichment: file not found for extraction", {"uploaded_file": uploaded_file})
+        return None
 
     if not file_path or not os.path.exists(file_path):
         trace.warning("Enrichment: file not found for extraction", {"path": file_path})
