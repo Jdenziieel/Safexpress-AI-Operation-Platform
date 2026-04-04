@@ -106,7 +106,7 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         "list_key": "drafts",
         "count_key": "count",
         "nested_message": True,
-        "item_fields": [],
+        "item_fields": ["draft_id"],
         "header": "Found {count} draft(s):",
     },
     ("gmail_agent", "send_email_with_attachment"): {
@@ -297,6 +297,7 @@ COMPOSE_PATTERNS: Dict[tuple, str] = {
     ("search_emails", "forward_email"): "Found and forwarded",
     ("search_emails", "reply_to_email"): "Found and replied",
     ("create_draft_email", "send_draft_email"): "Created and sent",
+    ("search_drafts", "send_draft_email"): "Found and sent draft",
     ("search_template_and_data", "create_from_template_and_data_ids"): "Found files and created document",
     ("list_my_docs", "read_doc"): "Found and read document",
     ("search_files", "upload_mapped_data"): "Found sheet and uploaded data",
@@ -383,6 +384,11 @@ def _format_item(template_def: dict, item: dict, single_item: bool) -> list:
     if template_def.get("nested_message") and isinstance(item.get("message"), dict):
         msg = item["message"]
         parts = []
+        # Top-level item_fields first (e.g. draft_id lives outside message)
+        for field in template_def.get("item_fields", []):
+            val = item.get(field, "")
+            if val:
+                parts.append(f"{field.replace('_', ' ').title()}: {val}")
         for key in ("to", "subject", "date"):
             val = msg.get(key, "")
             if val:

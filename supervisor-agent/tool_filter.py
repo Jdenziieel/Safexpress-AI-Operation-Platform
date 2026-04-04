@@ -135,6 +135,14 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                     if dt not in gmail_tools and dt in gmail_caps:
                         gmail_tools.append(dt)
 
+            # send_draft_email needs a draft_id which typically comes from
+            # search_drafts.  Include it so the supervisor can plan a
+            # search-first step when the user refers to a draft by name.
+            if "send_draft_email" in gmail_tools and "search_drafts" not in gmail_tools:
+                all_gmail = agent_capabilities.get("gmail_agent", {}).get("tools", {})
+                if "search_drafts" in all_gmail:
+                    gmail_tools.append("search_drafts")
+
         return validated
 
     except Exception as e:
