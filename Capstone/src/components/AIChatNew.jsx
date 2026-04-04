@@ -29,7 +29,9 @@ import {
   ClipboardList,
   Play,
   PenTool,
-  Brain
+  Brain,
+  FileText,
+  Image as ImageIcon
 } from "lucide-react";
 import { getUserFromToken, getUserUUID } from "../utils/tokenManager";
 import "../css/AIChatNew.css";
@@ -134,6 +136,31 @@ function TokenUsageBadge({ usage }) {
           <DollarSign size={12} />
           {usage.total_cost_usd.toFixed(4)}
         </span>
+      )}
+    </div>
+  );
+}
+
+// Attachment Badge Component - shows file info on messages
+function AttachmentBadge({ fileName, fileType, fileSize }) {
+  if (!fileName) return null;
+
+  const isImage = fileType && fileType.startsWith('image/');
+  const Icon = isImage ? ImageIcon : FileText;
+
+  const formatSize = (bytes) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return (
+    <div className="message-attachment-badge">
+      <Icon size={14} className="attachment-badge-icon" />
+      <span className="attachment-badge-name">{fileName}</span>
+      {fileSize > 0 && (
+        <span className="attachment-badge-size">{formatSize(fileSize)}</span>
       )}
     </div>
   );
@@ -683,12 +710,20 @@ function AIChatNew() {
       const data = response.data;
       console.log("Loaded thread messages:", data);
 
-      const formattedMessages = (data.messages || []).map((msg, idx) => ({
-        id: msg.message_id || `msg-${thread_id}-${idx}`,
-        role: msg.role || "assistant",
-        content: msg.content || "No content",
-        timestamp: msg.created_at ? new Date(msg.created_at) : new Date(),
-      }));
+      const formattedMessages = (data.messages || []).map((msg, idx) => {
+        const m = {
+          id: msg.message_id || `msg-${thread_id}-${idx}`,
+          role: msg.role || "assistant",
+          content: msg.content || "No content",
+          timestamp: msg.created_at ? new Date(msg.created_at) : new Date(),
+        };
+        if (msg.file_name) {
+          m.file_name = msg.file_name;
+          m.file_type = msg.file_type;
+          m.file_size = msg.file_size;
+        }
+        return m;
+      });
       setMessages(formattedMessages);
       console.log(`✅ Loaded ${formattedMessages.length} messages for thread ${thread_id}`);
     } catch (error) {
@@ -818,17 +853,24 @@ function AIChatNew() {
     setTokenUsage({ total_tokens: 0, total_cost_usd: 0 });
     setCurrentRequestId(null);
 
-    // Add user's message immediately
+    // Snapshot files before clearing
+    const filesToSend = [...attachedFiles];
+
+    // Add user's message immediately (include attachment info for display)
     const userMessageObj = {
       id: `user-${Date.now()}`,
       role: "user",
       content: userMessage,
       timestamp: new Date(),
     };
+    if (filesToSend.length > 0) {
+      userMessageObj.file_name = filesToSend[0].name;
+      userMessageObj.file_type = filesToSend[0].type;
+      userMessageObj.file_size = filesToSend[0].size;
+    }
 
     setMessages((prev) => [...prev, userMessageObj]);
     setInput("");
-    const filesToSend = [...attachedFiles];
     setAttachedFiles([]);
     setIsStreaming(true);
 
@@ -1370,6 +1412,13 @@ function AIChatNew() {
                           )}
                         </div>
                         <div className="chat-message-content">
+                          {message.file_name && (
+                            <AttachmentBadge
+                              fileName={message.file_name}
+                              fileType={message.file_type}
+                              fileSize={message.file_size}
+                            />
+                          )}
                           {emails && emails.length > 0 ? (
                             <>
                               <div className="email-results-header">

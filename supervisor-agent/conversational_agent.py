@@ -254,7 +254,14 @@ class ConversationalAgent(Tier0ChecksMixin):
         
         # Also store in messages table if this is a persistent thread
         if auto_save and state_id != "default":
-            self.thread_manager.add_message(state_id, "user", user_message)
+            file_kwargs = {}
+            if uploaded_file:
+                file_kwargs = {
+                    "file_name": uploaded_file.get("filename"),
+                    "file_type": uploaded_file.get("mime_type"),
+                    "file_size": uploaded_file.get("size"),
+                }
+            self.thread_manager.add_message(state_id, "user", user_message, **file_kwargs)
         
         # === DELIVERY ORDER ADAPTER ===
         def _finalize_delivery(response: str, state: ConversationState) -> tuple[str, ConversationState]:
@@ -370,7 +377,7 @@ class ConversationalAgent(Tier0ChecksMixin):
         # Generate response based on intent
         if analysis.intent == ConversationIntent.SMALL_TALK:
             if analysis.task_type == "cancellation":
-                response = "No problem! Request cancelled. Let me know if you need anything else."
+                response = "No problem! Request cancelled. Is there anything else I can help with?"
             elif analysis.response_text:
                 response = analysis.response_text
             elif analysis.clarification_question:
@@ -382,7 +389,7 @@ class ConversationalAgent(Tier0ChecksMixin):
             response = "No problem! Request cancelled.\n\n"
             if _prev_summary:
                 response += f"~~{_prev_summary}~~\n\n"
-            response += "What would you like to do next?"
+            response += "Is there anything else I can help with?"
         
         elif analysis.intent == ConversationIntent.NOT_FEASIBLE:
             response = f"I'm unable to help with that request.\n\n"
@@ -391,7 +398,7 @@ class ConversationalAgent(Tier0ChecksMixin):
                 response += "**What I can do instead:**\n"
                 for alt in analysis.suggested_alternatives:
                     response += f"- {alt}\n"
-            response += "\nLet me know if there's something else I can help with."
+            response += "\nIs there anything else I can help with?"
         
         elif analysis.intent == ConversationIntent.TOO_COMPLEX:
             response = f"This task seems quite complex.\n\n"
@@ -1112,6 +1119,7 @@ CATEGORIES (pick ONE):
    - "Save this file in my folder" = task_request (NOT template_upload)
 8. task_request — New action request or redo
 9. status_update — Asking about previous result ("did it work?")
+10. file_query — User is asking to READ, summarize, analyze, or identify the content of an attached file WITHOUT requesting an action ("what does this say?", "summarize this", "can you identify this file?", "what's in this PDF?"). NOT file_query if user wants an action ("email this to John", "upload this to Drive", "create a doc from this").
 
 RULES:
 - "No, do X instead" or "just do X" = modification (NOT cancellation)
@@ -1229,9 +1237,9 @@ User: "{user_message}" """
                     status = conversation_state.last_execution_status or "unknown"
                     message = conversation_state.last_execution_message or "No details available"
                     if status == "success":
-                        status_response = f"**Last execution: Successful**\n\n{message}\n\nAnything else you'd like to do?"
+                        status_response = f"**Last execution: Successful**\n\n{message}\n\nIs there anything else I can help with?"
                     elif status == "error":
-                        status_response = f"**Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again or do something else?"
+                        status_response = f"**Last execution: Failed**\n\n**Error:** {message}\n\nWould you like to try again, or is there something else I can help with?"
                     else:
                         status_response = f"**Last execution status:** {status}\n\n{message}"
                     trace.step("tier0.5", "status_update — returning execution status")
@@ -1280,6 +1288,30 @@ User: "{user_message}" """
                     trace.step("tier0.5", "enrichment detected", {"tasks": enrichment_hints.get("tasks", []), "file_context_needed": enrichment_hints.get("file_context_needed", False)})
                 trace.step("tier0.5", "task_request — proceeding to full analysis", {"query_scope": query_scope, "has_enrichment": bool(enrichment_hints)})
                 return None, query_scope, enrichment_hints  # Pass query_scope + enrichment to Tier 1
+            
+            # 1b. FILE QUERY — read-only file question, redirect to actionable options
+            if category == "file_query":
+                filename = uploaded_file.get("filename", "this file") if uploaded_file else "the file"
+                redirect_response = (
+                    f"I'm not able to read or analyze file contents directly, "
+                    f"but I can help you **do things** with **{filename}**:\n\n"
+                    f"- **Upload** it to Google Drive\n"
+                    f"- **Email** it to someone\n"
+                    f"- **Create a Google Doc** from its content\n"
+                    f"- **Use it as a template** for document generation\n\n"
+                    f"What would you like to do with it?"
+                )
+                trace.step("tier0.5", "file_query — redirecting to actionable options", {"filename": filename})
+                return ConversationAnalysis(
+                    intent=ConversationIntent.SMALL_TALK,
+                    task_type="file_query_redirect",
+                    extracted_info={},
+                    missing_fields=[],
+                    response_text=redirect_response,
+                    reasoning="File reading is outside system capabilities; redirecting to actionable options",
+                    execution_ready=False,
+                    execution_summary=None
+                ), None, None
             
             # 2. CONFIRMATION
             if category == "confirmation":
