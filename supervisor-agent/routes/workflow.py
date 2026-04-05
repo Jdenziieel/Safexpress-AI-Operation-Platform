@@ -86,10 +86,39 @@ def run_workflow(user_input: str, context_overrides: dict = None, execution_mode
 
     result_state = selected_workflow.invoke(initial_state)
 
-    print("\n Workflow completed successfully")
+    # Determine real status FIRST — before any logging
+    final_context = result_state.get("final_context", {})
+    has_error = result_state.get("error") or final_context.get("error")
+    is_paused = final_context.get("paused_for_approval", False)
+    is_disambig = final_context.get("paused_for_disambiguation", False)
+
+    if is_paused:
+        status = "paused_for_approval"
+        message = "Workflow paused — action requires approval"
+    elif is_disambig:
+        status = "paused_for_disambiguation"
+        message = "Workflow paused — multiple results need user selection"
+    elif has_error:
+        status = "error"
+        message = result_state.get("error") or "Workflow execution error"
+    else:
+        status = "success"
+        message = "Workflow executed successfully"
+
+    # Log with real status and actual completed count
     plan = result_state.get('plan', {})
     steps = plan.get('steps', []) if isinstance(plan, dict) else []
-    trace.workflow_end("success", steps_completed=len(steps), total_steps=len(steps))
+    results = final_context.get("results", [])
+    completed = sum(1 for r in results if r.get("status") in ("success", "no_results"))
+
+    if status == "success":
+        print("\n Workflow completed successfully")
+    elif status.startswith("paused"):
+        print(f"\n Workflow paused: {message}")
+    else:
+        print(f"\n Workflow failed: {message}")
+
+    trace.workflow_end(status, steps_completed=completed, total_steps=len(steps))
 
     print(
         f"\n Generated Plan:\n{json.dumps(result_state.get('plan', {}), indent=2)}"
@@ -97,21 +126,6 @@ def run_workflow(user_input: str, context_overrides: dict = None, execution_mode
     print(
         f"\n Final Context: {json.dumps(result_state.get('final_context', {}), indent=2)}"
     )
-
-    # Determine real status from result state
-    final_context = result_state.get("final_context", {})
-    has_error = result_state.get("error") or final_context.get("error")
-    is_paused = final_context.get("paused_for_approval", False)
-    
-    if is_paused:
-        status = "paused_for_approval"
-        message = "Workflow paused — action requires approval"
-    elif has_error:
-        status = "error"
-        message = result_state.get("error") or "Workflow execution error"
-    else:
-        status = "success"
-        message = "Workflow executed successfully"
 
     return WorkflowResponse(
         status=status,

@@ -143,6 +143,22 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                 if "search_drafts" in all_gmail:
                     gmail_tools.append("search_drafts")
 
+        # Docs agent safety net: whenever docs_agent is included, ensure
+        # list_my_docs is present so the supervisor can resolve document
+        # names to IDs (required by Rule 9 in the planning prompt).
+        # Also ensure edit/update tools are present when the request implies
+        # modifying document content.
+        if "docs_agent" in validated:
+            docs_tools = validated["docs_agent"]
+            docs_caps = agent_capabilities.get("docs_agent", {}).get("tools", {})
+            if "list_my_docs" not in docs_tools and "list_my_docs" in docs_caps:
+                docs_tools.append("list_my_docs")
+            _DOC_EDIT_KEYWORDS = {"fix", "grammar", "edit", "rewrite", "update", "replace", "change", "modify", "correct", "summarize", "translate"}
+            if any(kw in input_lower for kw in _DOC_EDIT_KEYWORDS):
+                for t in ["read_doc", "edit_doc", "update_doc"]:
+                    if t not in docs_tools and t in docs_caps:
+                        docs_tools.append(t)
+
         # Delivery order workflow: ensure all three agents and their
         # specialised tools are present when the request involves
         # delivery/purchase orders.
@@ -240,5 +256,10 @@ def get_optimized_capabilities(
 
     # Filter capabilities using the result
     capabilities = get_filtered_capabilities_v2(tool_filter)
+
+    # Always include llm_tool — it's a built-in orchestrator tool, not a classifiable agent
+    if "llm_tool" not in capabilities:
+        from agent_capabilities_v3 import agent_capabilities
+        capabilities["llm_tool"] = agent_capabilities["llm_tool"]
 
     return capabilities, tool_filter

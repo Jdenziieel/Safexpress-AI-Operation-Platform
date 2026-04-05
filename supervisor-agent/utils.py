@@ -17,6 +17,7 @@ from langchain_openai import ChatOpenAI
 from agent_capabilities_v3 import agent_capabilities
 from config import (
     CLASSIFIER_MODEL,
+    LLM_MODEL,
     DEFAULT_MAX_RETRIES,
     DEFAULT_TIMEOUT,
     DEFAULT_BACKOFF_FACTOR,
@@ -354,3 +355,91 @@ def generate_action_summary(tool: str, inputs: dict) -> dict:
         summary["details"] = inputs
 
     return summary
+
+
+def execute_llm_transform(instruction: str, content: str, trace=None) -> dict:
+    """
+    Run an LLM transformation on content (e.g., fix grammar, summarize, translate).
+    This is a local call — no HTTP to an external agent.
+
+    Args:
+        instruction: What transformation to apply (e.g. "Fix the grammar and spelling")
+        content: The text content to transform
+        trace: Optional trace object for logging
+
+    Returns:
+        dict with keys: success, transformed_content, error
+    """
+    if not content or not content.strip():
+        return {"success": False, "error": "No text content provided to transform", "transformed_content": ""}
+    if not instruction or not instruction.strip():
+        return {"success": False, "error": "No transformation instruction provided", "transformed_content": ""}
+
+    system_prompt = (
+        "You are a precise text transformation assistant. "
+        "Apply the requested transformation to the provided content. "
+        "Return ONLY the transformed text — no explanations, no markdown fences, no preamble."
+    )
+    user_prompt = f"Instruction: {instruction}\n\nContent to transform:\n{content}"
+
+    llm = ChatOpenAI(
+        model=LLM_MODEL,
+        temperature=0.1,
+        openai_api_key=OPENAI_API_KEY,
+    )
+
+    try:
+        start_time = time.time()
+        response = llm.invoke([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ])
+        duration_ms = (time.time() - start_time) * 1000
+
+        input_tokens = 0
+        output_tokens = 0
+        if hasattr(response, "response_metadata"):
+            token_usage = response.response_metadata.get("token_usage", {})
+            input_tokens = token_usage.get("prompt_tokens", 0)
+            output_tokens = token_usage.get("completion_tokens", 0)
+
+        logger.llm_call(
+            model=LLM_MODEL,
+            operation="transform_text",
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            duration_ms=duration_ms,
+            tier="orchestrator",
+            prompt_summary=f"Transform: {instruction[:50]}...",
+            success=True,
+        )
+
+        transformed = response.content.strip()
+        if trace:
+            trace.step("llm_transform", f"Transformed {len(content)} chars -> {len(transformed)} chars")
+
+        return {
+            "success": True,
+            "transformed_content": transformed,
+        }
+
+    except Exception as e:
+        if is_llm_error(e):
+            logger.llm_call(
+                model=LLM_MODEL,
+                operation="transform_text",
+                input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
+                output_tokens=0,
+                duration_ms=(time.time() - start_time) * 1000 if "start_time" in locals() else 0,
+                tier="orchestrator",
+                prompt_summary=f"Transform: {instruction[:50]}...",
+                success=False,
+                error=str(e),
+            )
+            raise LLMServiceException(handle_llm_error(e))
+        logger.error(f"LLM transform failed: {e}")
+        return {
+            "success": False,
+            "error": f"Transform failed: {str(e)}",
+            "transformed_content": "",
+        }

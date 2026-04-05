@@ -150,9 +150,9 @@ agent_capabilities = {
                 "returns": ["success", "document_id", "document_url", "title", "error"],
             },
             "list_my_docs": {
-                "description": "List user's Google Docs to find templates.",
+                "description": "Search user's Google Docs by name. ALWAYS use this first to resolve a document name/title to its ID before calling read_doc, edit_doc, update_doc, or add_text. Returns a list of matching documents with their IDs.",
                 "args": {
-                    "search_query": "str (optional) — keyword to search",
+                    "search_query": "str (optional) — document name or keyword to search",
                 },
                 "returns": ["success", "documents", "error"],
                 "returns_detail": "documents is array of {id, name}",
@@ -210,6 +210,25 @@ agent_capabilities = {
                 },
                 "returns": ["success", "document_id", "content", "title", "error"],
                 "can_be_derived_from": {"document_id": "list_my_docs: title"},
+            },
+            "edit_doc": {
+                "description": "Find and replace specific text in a Google Doc. Use for targeted edits like fixing a paragraph or replacing a section.",
+                "args": {
+                    "document_id": "str (required) — document ID",
+                    "old_text": "str (required) — exact text to find in the document",
+                    "new_text": "str (required) — replacement text",
+                },
+                "returns": ["success", "document_id", "error"],
+                "can_be_derived_from": {"document_id": "list_my_docs"},
+            },
+            "update_doc": {
+                "description": "Replace the entire content of a Google Doc with new content. Use for full rewrites like grammar-fixed versions.",
+                "args": {
+                    "document_id": "str (required) — document ID",
+                    "new_content": "str (required) — the complete new content for the document",
+                },
+                "returns": ["success", "document_id", "error"],
+                "can_be_derived_from": {"document_id": "list_my_docs"},
             },
             "create_from_template_and_data_ids": {
                 "description": "Create document from template and data files using Google Drive file IDs. Requires drive_agent.search_template_and_data first.",
@@ -531,6 +550,19 @@ agent_capabilities = {
                 },
                 "returns": ["success", "file_id", "new_name", "message", "error"],
                 "can_be_derived_from": {"file_id": "search_files"},
+            },
+        },
+    },
+    "llm_tool": {
+        "description": "Built-in LLM transformation tool. Runs locally in the orchestrator — no external agent call. Use this between read and write steps to transform content.",
+        "tools": {
+            "transform_text": {
+                "description": "Transform text content using an LLM (e.g. fix grammar, summarize, translate, rewrite). Place between a read step and a write step. The instruction should describe the transformation; content is the text to transform.",
+                "args": {
+                    "instruction": "str (required) — what to do with the content (e.g. 'Fix all grammar and spelling errors')",
+                    "content": "str (required) — the text to transform (use {{ variable }} from a previous read step)",
+                },
+                "returns": ["success", "transformed_content", "error"],
             },
         },
     },

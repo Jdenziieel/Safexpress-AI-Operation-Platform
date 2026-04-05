@@ -33,7 +33,7 @@ from supervisor_agent import (
 from models.models import CreateThreadRequest
 from routes.workflow import run_workflow
 from routes.actions import execute_single_action
-from checks.tier0_checks import _build_rich_approval_message
+from checks.tier0_checks import _build_rich_approval_message, _build_disambiguation_message
 from execution_logger import trace
 from llm_error_handler import LLMServiceException
 from s3_temp_storage import store_temp_file, delete_temp_file
@@ -133,7 +133,32 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
                 response_prefix += f"\n{steps_summary}\n"
             
             return response_prefix + "\n\n" + approval_msg, conversation_state
-        
+
+        # Check if the resumed execution paused for disambiguation
+        if final_context.get("paused_for_disambiguation"):
+            options = final_context.get("disambiguation_options", [])
+            variable = final_context.get("disambiguation_variable", "")
+            new_remaining = final_context.get("remaining_steps", [])
+            source_tool = final_context.get("disambiguation_source_tool", "")
+
+            conversation_state.disambiguation_options = options
+            conversation_state.disambiguation_variable = variable
+            conversation_state.remaining_steps = new_remaining
+            ctx = {k: v for k, v in final_context.items()
+                   if k not in ("paused_for_disambiguation", "disambiguation_options",
+                                "disambiguation_variable", "disambiguation_source_tool",
+                                "remaining_steps", "results")}
+            conversation_state.workflow_context = ctx
+
+            disambig_msg = _build_disambiguation_message(options, source_tool)
+
+            completed = [r for r in results if r.get("status") == "success"]
+            if completed:
+                steps_summary = "\n".join(f"  Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
+                response_prefix += f"\n{steps_summary}\n"
+
+            return response_prefix + "\n\n" + disambig_msg, conversation_state
+
         # All remaining steps completed
         conversation_state.remaining_steps = []
         conversation_state.workflow_context = None
@@ -407,6 +432,36 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
         
         return approval_message, conversation_state
 
+    # === CHECK: Did workflow pause for disambiguation? ===
+    if status == "paused_for_disambiguation" and final_context.get("paused_for_disambiguation"):
+        trace.step("workflow_paused", "Workflow paused — disambiguation needed")
+
+        options = final_context.get("disambiguation_options", [])
+        variable = final_context.get("disambiguation_variable", "")
+        remaining_steps = final_context.get("remaining_steps", [])
+        source_tool = final_context.get("disambiguation_source_tool", "")
+
+        conversation_state.disambiguation_options = options
+        conversation_state.disambiguation_variable = variable
+        conversation_state.remaining_steps = remaining_steps
+        workflow_ctx = {k: v for k, v in final_context.items()
+                       if k not in ("paused_for_disambiguation", "disambiguation_options",
+                                    "disambiguation_variable", "disambiguation_source_tool",
+                                    "remaining_steps", "results")}
+        workflow_ctx["_execution_mode"] = execution_mode
+        conversation_state.workflow_context = workflow_ctx
+        conversation_state.ready_for_execution = False
+
+        disambig_message = _build_disambiguation_message(options, source_tool)
+
+        results = final_context.get("results", [])
+        completed = [r for r in results if r.get("status") == "success"]
+        if completed:
+            steps_summary = "\n".join(f"  Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
+            disambig_message = f"**Completed so far:**\n{steps_summary}\n\n{disambig_message}"
+
+        return disambig_message, conversation_state
+
     # === Normal completion path ===
 
     # Append lean history entry (for future DB observability)
@@ -501,6 +556,8 @@ def _clear_workflow_state(state):
     state.extracted_info = {}
     state.missing_fields = []
     state.clarification_question = None
+    state.disambiguation_options = []
+    state.disambiguation_variable = None
 
 
 def _has_actionable_task(state) -> bool:
@@ -669,6 +726,75 @@ async def _handle_pending_action_decision(conversation_state, thread_id: str, re
             pass
 
         conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+        return response_text, conversation_state, True
+
+    return response_text, conversation_state, False
+
+
+async def _handle_disambiguation_selection(conversation_state, thread_id: str, response_text: str):
+    """Handle user's disambiguation selection — inject chosen item into context and resume.
+
+    Returns:
+        (response_text, conversation_state, handled)
+    """
+    decision = conversation_state.extracted_info.get("decision")
+
+    if decision == "cancel" and conversation_state.disambiguation_options:
+        trace.step("disambiguation_cancel", "User cancelled disambiguation")
+        _clear_workflow_state(conversation_state)
+        conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+        return response_text, conversation_state, True
+
+    if decision == "select" and conversation_state.disambiguation_options:
+        selected_item = conversation_state.extracted_info.get("selected_item", {})
+        variable_name = conversation_state.disambiguation_variable
+        remaining = conversation_state.remaining_steps
+
+        trace.step("disambiguation_select", f"User selected: {selected_item.get('name', selected_item.get('id', ''))}")
+
+        # Rebuild context with the selected item injected
+        variable_context = conversation_state.workflow_context or {}
+
+        if variable_name:
+            variable_context[variable_name] = [selected_item]
+
+        selected_name = selected_item.get("name") or selected_item.get("title") or "selected item"
+        response_text = f"Selected **{selected_name}** — continuing workflow...\n"
+
+        # Clear disambiguation state before resuming
+        conversation_state.disambiguation_options = []
+        conversation_state.disambiguation_variable = None
+        conversation_state.extracted_info.pop("decision", None)
+        conversation_state.extracted_info.pop("selected_item", None)
+        conversation_state.extracted_info.pop("selected_index", None)
+
+        if not remaining:
+            _clear_workflow_state(conversation_state)
+            response_text += "\nNo remaining steps. Is there anything else I can help with?"
+            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+            return response_text, conversation_state, True
+
+        # Resume remaining steps
+        conversation_state.workflow_context = variable_context
+        try:
+            conversation_state.executing = True
+            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+
+            response_text, conversation_state = await _resume_remaining_steps(
+                conversation_state, None, response_text, thread_id,
+                approved_step_info=None,
+            )
+
+            if not conversation_state.workflow_paused and not conversation_state.disambiguation_options:
+                _clear_workflow_state(conversation_state)
+        except Exception as e:
+            print(f"Error resuming after disambiguation: {e}")
+            response_text += f"\nError continuing workflow: {str(e)}"
+            _clear_workflow_state(conversation_state)
+        finally:
+            conversation_state.executing = False
+            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+
         return response_text, conversation_state, True
 
     return response_text, conversation_state, False
@@ -1145,6 +1271,12 @@ async def send_message_to_thread(thread_id: str, request: dict):
             conversation_state, thread_id, response_text
         )
 
+        # === HANDLE DISAMBIGUATION SELECTION ===
+        if not handled:
+            response_text, conversation_state, handled = await _handle_disambiguation_selection(
+                conversation_state, thread_id, response_text
+            )
+
         if not handled and conversation_state.ready_for_execution:
             if _has_actionable_task(conversation_state):
                 print(f"Thread {thread_id} ready - executing workflow...")
@@ -1274,6 +1406,11 @@ async def send_message_to_thread_with_upload(
         response_text, updated_state, handled = await _handle_pending_action_decision(
             updated_state, thread_id, response_text
         )
+
+        if not handled:
+            response_text, updated_state, handled = await _handle_disambiguation_selection(
+                updated_state, thread_id, response_text
+            )
 
         if not handled and updated_state.ready_for_execution:
             if _has_actionable_task(updated_state):

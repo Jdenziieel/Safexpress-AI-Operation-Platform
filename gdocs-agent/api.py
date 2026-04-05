@@ -130,7 +130,24 @@ def _parse_tool_result(tool_name: str, raw: str, inputs: Dict[str, Any]) -> Dict
         }
 
     if tool_name == "list_my_docs":
-        return {"success": True, "message": raw}
+        documents = []
+        if raw and not raw.startswith("No documents") and not raw.startswith("Error"):
+            doc_blocks = re.split(r'\n\d+\.\s+', raw)
+            for block in doc_blocks[1:]:
+                lines = block.strip().split('\n')
+                name = lines[0].strip() if lines else ""
+                doc_entry = {"name": name, "id": "", "url": "", "modified": ""}
+                for line in lines[1:]:
+                    line = line.strip()
+                    if line.startswith("ID:"):
+                        doc_entry["id"] = line[3:].strip()
+                    elif line.startswith("URL:"):
+                        doc_entry["url"] = line[4:].strip()
+                    elif line.startswith("Modified:"):
+                        doc_entry["modified"] = line[9:].strip()
+                if doc_entry["id"]:
+                    documents.append(doc_entry)
+        return {"success": True, "documents": documents}
 
     return {"success": True, "raw_response": raw}
 

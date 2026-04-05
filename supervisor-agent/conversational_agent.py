@@ -510,7 +510,12 @@ class ConversationalAgent(Tier0ChecksMixin):
         pending_result = self._quick_pending_action_check(user_message, conversation_state)
         if pending_result is not None:
             return pending_result
-        
+
+        # GATE CHECK: Disambiguation selection (blocks input when waiting for user pick)
+        disambig_result = self._quick_disambiguation_check(user_message, conversation_state)
+        if disambig_result is not None:
+            return disambig_result
+
         # Check for greetings first (most common)
         greeting_result = self._quick_greeting_check(user_message)
         if greeting_result is not None:

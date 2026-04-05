@@ -44,6 +44,7 @@ from agent_capabilities_v3 import agent_capabilities
 from utils import (
     call_agent_with_retry,
     generate_action_summary,
+    execute_llm_transform,
 )
 
 # Import conversational agent
@@ -359,6 +360,12 @@ def supervisor_node(state: SharedState) -> SharedState:
     else:
         filtered_capabilities, tool_filter = get_optimized_capabilities(user_input)
         trace.step("agent_filtering", f"fresh classification")
+
+    # Always include llm_tool — it's a built-in orchestrator tool, not a classifiable agent
+    if "llm_tool" not in filtered_capabilities:
+        from agent_capabilities_v3 import agent_capabilities as all_capabilities
+        if "llm_tool" in all_capabilities:
+            filtered_capabilities["llm_tool"] = all_capabilities["llm_tool"]
     relevant_agents = list(filtered_capabilities.keys())
     
     print(f"Relevant agents: {relevant_agents}")
@@ -394,6 +401,8 @@ PLANNING RULES:
 6. Follow tool-specific instructions in the capabilities (array_access hints, workflow definitions, can_be_derived_from)
 7. When uploaded_file is present in context: ALWAYS use {{{{ uploaded_file.temp_path }}}} for file_path inputs. For filename: if a custom name was provided in the task parameters, use that literal string; otherwise fall back to {{{{ uploaded_file.filename }}}}.
 8. For delete_event: ALWAYS include "confirmed": true in inputs. The orchestrator approval mechanism already handles user confirmation.
+9. DOCUMENT IDs: NEVER use a document title/name as a document_id. ALWAYS use docs_agent.list_my_docs first to resolve a document name to its real ID, then reference the ID via {{{{ variable }}}} in subsequent steps (read_doc, edit_doc, update_doc, add_text).
+10. LLM TRANSFORM: llm_tool.transform_text can transform ANY text between a read step and a write step — not limited to docs. Pattern: (1) read content from any source (read_doc, search_emails, get_thread_conversation, etc.), (2) llm_tool.transform_text with the content variable and an instruction, (3) write the result to any destination (update_doc, edit_doc, create_draft_email, add_text, create_doc_with_content, reply_to_email, etc.). Examples: fix grammar in a doc, summarize an email into a doc, rewrite a draft before sending, translate document content. The llm_tool runs locally — no agent endpoint needed.
 
 EXAMPLE:
 User: "Find the latest email from john@example.com and reply saying thanks"
@@ -506,6 +515,28 @@ Available agents and tools:
             raise ValueError("Plan has no steps")
 
         steps = plan["steps"]
+
+        # Validate that every agent in the plan actually exists
+        valid_steps = []
+        for step in steps:
+            agent = step.get("agent", "")
+            tool = step.get("tool", "")
+            if agent == "llm_tool":
+                valid_steps.append(step)
+            elif agent not in AGENT_ENDPOINTS:
+                trace.warning(f"Plan validation: removing step with unknown agent '{agent}.{tool}'")
+                print(f"  Plan validation: '{agent}' is not a registered agent — removing step")
+            else:
+                valid_steps.append(step)
+
+        if not valid_steps:
+            raise ValueError("Plan has no valid steps after validation")
+
+        if len(valid_steps) < len(steps):
+            print(f"  Plan validation: {len(steps)} → {len(valid_steps)} steps (removed {len(steps) - len(valid_steps)} invalid)")
+            plan["steps"] = valid_steps
+            steps = valid_steps
+
         print("Plan generated successfully!")
         print(f"\nGenerated Plan:\n{json.dumps(plan, indent=2)}")
         trace.step("plan_generated", f"{len(steps)} steps: {', '.join(s.get('agent','?')+'.'+s.get('tool','?') for s in steps)}")
@@ -993,11 +1024,61 @@ def orchestrator_node(state: SharedState) -> SharedState:
         print(f"   Available context variables: {list(variable_context.keys())}")
         trace.step("variable_substitution", f"step {step_num}: {agent_name}.{tool_name}", data={"inputs": substituted_inputs, "context_keys": list(variable_context.keys())})
 
+        # STEP 1.5: Handle built-in llm_tool locally (no HTTP call)
+        if agent_name == "llm_tool" and tool_name == "transform_text":
+            print(f"\n Running built-in LLM transform (no HTTP call)")
+            try:
+                transform_result = execute_llm_transform(
+                    instruction=substituted_inputs.get("instruction", ""),
+                    content=substituted_inputs.get("content", ""),
+                    trace=trace,
+                )
+                if transform_result.get("success"):
+                    results.append({
+                        "step": step_num,
+                        "agent": agent_name,
+                        "tool": tool_name,
+                        "status": "success",
+                        "result": transform_result,
+                    })
+                    namespace_key = f"step_{step_num}_{agent_name}"
+                    variable_context[namespace_key] = {
+                        k: v for k, v in transform_result.items() if k not in ("success", "error")
+                    }
+                    for new_var_name, source_field_name in output_variables.items():
+                        value = extract_nested_value(transform_result, source_field_name)
+                        if value is not None:
+                            variable_context[new_var_name] = value
+                        elif source_field_name in transform_result:
+                            variable_context[new_var_name] = transform_result[source_field_name]
+                        print(f"   {new_var_name} = {variable_context.get(new_var_name, 'NOT FOUND')} (from {source_field_name})")
+                    trace.step("llm_transform_complete", f"step {step_num}: transform_text succeeded")
+                else:
+                    results.append({
+                        "step": step_num,
+                        "agent": agent_name,
+                        "tool": tool_name,
+                        "status": "error",
+                        "error": transform_result.get("error", "Transform failed"),
+                    })
+                    trace.error(f"LLM transform failed at step {step_num}")
+            except LLMServiceException as e:
+                results.append({
+                    "step": step_num,
+                    "agent": agent_name,
+                    "tool": tool_name,
+                    "status": "error",
+                    "error": str(e),
+                })
+                trace.error(f"LLM transform error at step {step_num}: {e}")
+            continue
+
         # STEP 2: Call Agent Microservice
         agent_url = AGENT_ENDPOINTS.get(agent_name)
         if not agent_url:
             error_msg = f"No endpoint configured for agent: {agent_name}"
             print(f"{error_msg}")
+            print(f"STOPPING WORKFLOW - No endpoint for agent '{agent_name}' in step {step_num}")
             trace.error(f"No endpoint for {agent_name}", data={"step": step_num})
             results.append({
                 "step": step_num,
@@ -1006,7 +1087,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 "status": "error",
                 "error": error_msg,
             })
-            continue
+            variable_context["results"] = results
+            variable_context["stopped_at_step"] = step_num
+            variable_context["error"] = error_msg
+            return {
+                "final_context": variable_context,
+                "context": variable_context,
+                "results": results,
+                "stopped_at_step": step_num,
+                "error": error_msg,
+            }
 
         print(f"\nCalling agent microservice: {agent_url}")
 
@@ -1140,6 +1230,58 @@ def orchestrator_node(state: SharedState) -> SharedState:
                     duration_ms=agent_duration_ms,
                     output_summary=f"Fields returned: {list(agent_result.keys())}"
                 )
+
+                # === DISAMBIGUATION CHECK ===
+                # If a search/list tool returns multiple results and there are remaining
+                # steps that depend on the output, pause for user to pick the correct one.
+                DISAMBIGUATION_TOOLS = {
+                    "list_my_docs": "documents",
+                    "search_files": "results",
+                    "search_emails": "emails",
+                    "search_drafts": "drafts",
+                    "list_files": "files",
+                }
+                results_field = DISAMBIGUATION_TOOLS.get(tool_name)
+                is_last_step = (step_num == len(plan))
+
+                if results_field and not is_last_step:
+                    items = agent_result.get(results_field, [])
+                    # Find which output variable maps to the results array
+                    disambig_var = None
+                    for var_name, source_field in output_variables.items():
+                        if source_field == results_field:
+                            disambig_var = var_name
+                            break
+
+                    if disambig_var and isinstance(items, list) and len(items) > 1:
+                        print(f"\n DISAMBIGUATION: {tool_name} returned {len(items)} results — pausing for user selection")
+
+                        remaining_steps = []
+                        for future_step_num, future_step in enumerate(plan[step_num:], step_num + 1):
+                            remaining_steps.append({
+                                "step_number": future_step_num,
+                                "agent": future_step.get("agent"),
+                                "tool": future_step.get("tool"),
+                                "description": future_step.get("description", ""),
+                                "inputs": future_step.get("inputs", {}),
+                                "output_variables": future_step.get("output_variables", {}),
+                            })
+
+                        variable_context["results"] = results
+                        variable_context["paused_for_disambiguation"] = True
+                        variable_context["disambiguation_options"] = items
+                        variable_context["disambiguation_variable"] = disambig_var
+                        variable_context["disambiguation_source_tool"] = tool_name
+                        variable_context["remaining_steps"] = remaining_steps
+
+                        trace.step("disambiguation_pause", f"step {step_num}: {tool_name} returned {len(items)} results, pausing")
+
+                        return {
+                            "final_context": variable_context,
+                            "context": variable_context,
+                            "results": results,
+                        }
+
             else:
                 # Handle failure - distinguish between no_results and actual errors
                 error_msg = result.get("error") or (result.get("result") or {}).get("error") or "Unknown error"

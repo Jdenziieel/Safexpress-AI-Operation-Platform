@@ -56,6 +56,8 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     "list_events": ActionRiskLevel.SAFE,
     "get_event": ActionRiskLevel.SAFE,
     "search_knowledge_base": ActionRiskLevel.SAFE,
+    "list_my_docs": ActionRiskLevel.SAFE,
+    "transform_text": ActionRiskLevel.SAFE,
     
     # MODERATE - Modifies internal state
     "create_draft_email": ActionRiskLevel.MODERATE,  # Draft only, not sent
@@ -71,6 +73,8 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     "reply_to_email": ActionRiskLevel.DANGEROUS,
     "send_email_with_attachment": ActionRiskLevel.DANGEROUS,
     "add_text": ActionRiskLevel.DANGEROUS,           # Modifies shared doc
+    "edit_doc": ActionRiskLevel.DANGEROUS,           # Targeted text replacement in doc
+    "update_doc": ActionRiskLevel.DANGEROUS,         # Full doc content replacement
     "share_file": ActionRiskLevel.DANGEROUS,
     "write_delivery_order_data": ActionRiskLevel.DANGEROUS,  # Writes rows to user sheet
     
@@ -120,7 +124,11 @@ class ConversationState(BaseModel):
     workflow_paused: bool = False
     remaining_steps: List[Dict[str, Any]] = Field(default_factory=list)
     workflow_context: Optional[Dict[str, Any]] = None  # Saved variable_context for resumption
-    
+
+    # Disambiguation state (multi-result pause)
+    disambiguation_options: List[Dict[str, Any]] = Field(default_factory=list)
+    disambiguation_variable: Optional[str] = None
+
     # NEW: Memory manager state (for persistence)
     memory_state: Optional[Dict[str, Any]] = None
 

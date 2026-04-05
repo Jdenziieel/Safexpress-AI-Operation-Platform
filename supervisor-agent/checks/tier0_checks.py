@@ -156,6 +156,112 @@ class Tier0ChecksMixin:
         # Not a pending action scenario — pass through
         return None
 
+    def _quick_disambiguation_check(self, user_message: str, conversation_state: ConversationState) -> Optional[ConversationAnalysis]:
+        """
+        GATE CHECK: When workflow is paused for disambiguation, intercept input.
+
+        Detects: numeric selection, ordinal words, exact/partial name matches, cancel.
+        Blocks unrelated input with a reminder.
+
+        Returns:
+            ConversationAnalysis with disambiguation handling, or None to pass through.
+        """
+        if not conversation_state.disambiguation_options:
+            return None
+
+        options = conversation_state.disambiguation_options
+        user_lower = user_message.lower().strip()
+
+        # Cancel
+        cancel_patterns = ["cancel", "stop", "abort", "nevermind", "never mind", "no"]
+        if any(user_lower == p for p in cancel_patterns):
+            trace.step("tier0", "disambiguation CANCELLED by user")
+            return ConversationAnalysis(
+                intent=ConversationIntent.SMALL_TALK,
+                task_type="disambiguation_cancelled",
+                extracted_info={"decision": "cancel"},
+                missing_fields=[],
+                response_text="**Selection cancelled.** The workflow has been stopped.\n\nIs there anything else I can help with?",
+                reasoning="User cancelled disambiguation selection",
+                execution_ready=False,
+                execution_summary=None,
+            )
+
+        selected_index = None
+
+        # Numeric selection: "1", "2", etc.
+        if user_lower.isdigit():
+            idx = int(user_lower) - 1
+            if 0 <= idx < len(options):
+                selected_index = idx
+
+        # Ordinal words: "first", "the second one", "last", etc.
+        if selected_index is None:
+            ordinal_map = {
+                "first": 0, "1st": 0, "the first": 0, "the first one": 0,
+                "second": 1, "2nd": 1, "the second": 1, "the second one": 1,
+                "third": 2, "3rd": 2, "the third": 2, "the third one": 2,
+                "fourth": 3, "4th": 3, "the fourth": 3, "the fourth one": 3,
+                "fifth": 4, "5th": 4, "the fifth": 4, "the fifth one": 4,
+                "last": len(options) - 1, "the last": len(options) - 1, "the last one": len(options) - 1,
+            }
+            if user_lower in ordinal_map:
+                idx = ordinal_map[user_lower]
+                if 0 <= idx < len(options):
+                    selected_index = idx
+
+        # Exact name match (case-insensitive)
+        if selected_index is None:
+            for i, opt in enumerate(options):
+                name = (opt.get("name") or opt.get("title") or "").lower()
+                if name and user_lower == name:
+                    selected_index = i
+                    break
+
+        # Partial/unique name match
+        if selected_index is None:
+            partial_matches = []
+            for i, opt in enumerate(options):
+                name = (opt.get("name") or opt.get("title") or "").lower()
+                if name and user_lower in name:
+                    partial_matches.append(i)
+            if len(partial_matches) == 1:
+                selected_index = partial_matches[0]
+
+        if selected_index is not None:
+            selected = options[selected_index]
+            name = selected.get("name") or selected.get("title") or f"Item {selected_index + 1}"
+            trace.step("tier0", f"disambiguation resolved: selected '{name}' (index {selected_index})")
+            return ConversationAnalysis(
+                intent=ConversationIntent.SMALL_TALK,
+                task_type="disambiguation_selected",
+                extracted_info={
+                    "decision": "select",
+                    "selected_index": selected_index,
+                    "selected_item": selected,
+                },
+                missing_fields=[],
+                response_text=f"Selected **{name}** — continuing workflow...",
+                reasoning=f"User selected option {selected_index + 1} for disambiguation",
+                execution_ready=False,
+                execution_summary=None,
+            )
+
+        # Unrecognised input — remind
+        trace.step("tier0", "disambiguation: unrecognised input, reminding user")
+        reminder = "I didn't understand your selection.\n\n"
+        reminder += _build_disambiguation_message(options, "")
+        return ConversationAnalysis(
+            intent=ConversationIntent.SMALL_TALK,
+            task_type="disambiguation_reminder",
+            extracted_info={},
+            missing_fields=[],
+            response_text=reminder,
+            reasoning="User input did not match any disambiguation option",
+            execution_ready=False,
+            execution_summary=None,
+        )
+
     def _quick_greeting_check(self, user_message: str) -> Optional[ConversationAnalysis]:
         """
         Instant response to greetings without LLM call.
@@ -710,14 +816,24 @@ def _build_rich_approval_message(pending_action: dict) -> str:
         for key, value in inputs.items():
             msg += f"- **{key}:** {value}\n"
     
-    elif tool in ("edit_doc", "update_doc"):
-        msg += "**Editing Document**\n"
+    elif tool == "edit_doc":
+        msg += "**Editing Document (find & replace)**\n"
         if inputs.get("document_id"):
             msg += f"- **Document ID:** {inputs['document_id']}\n"
         if inputs.get("old_text"):
             msg += f"- **Find:** {inputs['old_text'][:100]}{'...' if len(inputs.get('old_text', '')) > 100 else ''}\n"
         if inputs.get("new_text"):
             msg += f"- **Replace with:** {inputs['new_text'][:100]}{'...' if len(inputs.get('new_text', '')) > 100 else ''}\n"
+
+    elif tool == "update_doc":
+        msg += "**Replacing Entire Document Content**\n"
+        if inputs.get("document_id"):
+            msg += f"- **Document ID:** {inputs['document_id']}\n"
+        if inputs.get("new_content"):
+            preview = inputs["new_content"][:300]
+            if len(inputs["new_content"]) > 300:
+                preview += "..."
+            msg += f"- **New content preview:**\n  > {preview}\n"
     
     else:
         # Generic — show all non-empty inputs
@@ -732,4 +848,27 @@ def _build_rich_approval_message(pending_action: dict) -> str:
     msg += f"\n---\n"
     msg += f"Reply **\"yes\"** to proceed or **\"cancel\"** to stop."
     
+    return msg
+
+
+def _build_disambiguation_message(options, source_tool):
+    """
+    Build a user-friendly markdown message presenting multiple search results.
+    No LLM call — purely formatting.
+    """
+    msg = "**Multiple results found** — please select one:\n\n"
+
+    for i, option in enumerate(options, 1):
+        name = option.get("name") or option.get("title") or option.get("subject") or f"Item {i}"
+        msg += f"**{i}.** {name}\n"
+        if option.get("id"):
+            msg += f"   ID: `{option['id']}`\n"
+        if option.get("modified"):
+            msg += f"   Modified: {option['modified']}\n"
+        msg += "\n"
+
+    msg += "---\n"
+    msg += "Reply with the **number** (e.g. \"1\") or the **name** of the item you want.\n"
+    msg += "Reply **\"cancel\"** to stop."
+
     return msg
