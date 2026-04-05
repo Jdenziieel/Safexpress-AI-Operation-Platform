@@ -1,14 +1,16 @@
 {
   "steps": [
     {
-      "agent": "calendar_agent",
-      "tool": "list_events",
+      "agent": "sheets_agent",
+      "tool": "create_sheet",
       "inputs": {
-        "time_min": "2026-04-05T06:00:00",
-        "time_max": "2026-04-05T17:00:00"
+        "title": "Revenue_Q2-2026 (Final)"
       },
-      "output_variables": {},
-      "description": "Check for any appointments on Friday, April 5, 2026, from 6AM to 5PM"
+      "output_variables": {
+        "new_sheet_id": "sheet_id",
+        "new_sheet_url": "sheet_url"
+      },
+      "description": "Create a new Google Spreadsheet titled 'Revenue_Q2-2026 (Final)'"
     }
   ]
 }
