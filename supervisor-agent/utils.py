@@ -175,7 +175,7 @@ def call_agent_with_retry(
                     error_type = result.get("error_type", "")
                     print(f"Agent reported error: {result.get('error')}")
 
-                    _NO_RETRY_TYPES = {"conflict", "validation_error", "not_found", "permission_denied"}
+                    _NO_RETRY_TYPES = {"conflict", "validation_error", "not_found", "permission_denied", "read_only"}
                     if error_type in _NO_RETRY_TYPES:
                         print(f"   Non-retryable error type: {error_type}")
                         return result

@@ -263,22 +263,10 @@ class ConversationalAgent(Tier0ChecksMixin):
                 }
             self.thread_manager.add_message(state_id, "user", user_message, **file_kwargs)
         
-        # === DELIVERY ORDER ADAPTER ===
-        def _finalize_delivery(response: str, state: ConversationState) -> tuple[str, ConversationState]:
-            """Save state & return — shared epilogue for every delivery stage."""
-            memory_manager.add_message("assistant", response)
-            if auto_save and state_id != "default":
-                self.thread_manager.add_message(state_id, "assistant", response)
-            self._save_memory_to_state(state, state_id)
-            if auto_save and state_id != "default":
-                self.thread_service.save_thread_to_db(state_id, state)
-            return response, state
-
-        delivery_result = self.delivery_order_service.route_delivery_stage(
-            user_message, conversation_state, _finalize_delivery
-        )
-        if delivery_result is not None:
-            return delivery_result
+        # === DELIVERY ORDER ADAPTER (DISABLED) ===
+        # Replaced by tool-based workflow through supervisor/orchestrator.
+        # See: mapping_agent.parse_delivery_order_pdfs, sheets_agent.validate_delivery_sheet,
+        #      sheets_agent.preview_delivery_order_insertion, sheets_agent.write_delivery_order_data
         # === END DELIVERY ORDER ADAPTER ===
         
         # 3. Continue with standard message analysis for non-delivery-order requests

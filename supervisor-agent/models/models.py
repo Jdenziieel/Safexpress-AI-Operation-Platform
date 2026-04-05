@@ -72,6 +72,7 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     "send_email_with_attachment": ActionRiskLevel.DANGEROUS,
     "add_text": ActionRiskLevel.DANGEROUS,           # Modifies shared doc
     "share_file": ActionRiskLevel.DANGEROUS,
+    "write_delivery_order_data": ActionRiskLevel.DANGEROUS,  # Writes rows to user sheet
     
     # CRITICAL - Irreversible actions
     "delete_email": ActionRiskLevel.CRITICAL,

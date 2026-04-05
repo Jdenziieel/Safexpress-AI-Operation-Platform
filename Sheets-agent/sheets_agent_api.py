@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Any, Optional
 import os
+import re
 import uvicorn
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -47,6 +48,7 @@ class ToolResponse(BaseModel):
     success: bool
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
+    error_type: Optional[str] = None
 
 
 # ============================================================
@@ -893,6 +895,509 @@ def update_by_date_match(
 
 
 # ============================================================
+# DELIVERY ORDER SHEET TOOLS
+# ============================================================
+
+_SHEET_URL_RE = re.compile(r"spreadsheets/d/([a-zA-Z0-9_-]+)")
+
+_EXPECTED_HEADERS = ["Date", "Order Reference", "Item Code", "Item Description", "QTY", "UOM", "CB Date", "Requested by"]
+_EXPECTED_TABS = {"Food", "non-food"}
+
+
+def _parse_orders_input(parsed_orders: Any) -> list:
+    """Robustly parse the parsed_orders argument which may arrive as a
+    JSON string, Python repr string (from Jinja2 rendering), dict wrapper,
+    or a native list.  Returns the list of order objects or raises ValueError."""
+    if isinstance(parsed_orders, str):
+        try:
+            parsed_orders = json.loads(parsed_orders)
+        except json.JSONDecodeError:
+            import ast
+            try:
+                parsed_orders = ast.literal_eval(parsed_orders)
+            except (ValueError, SyntaxError) as e:
+                raise ValueError(f"Could not parse parsed_orders string: {e}")
+    if isinstance(parsed_orders, dict) and "parsed_orders" in parsed_orders:
+        parsed_orders = parsed_orders["parsed_orders"]
+    if not isinstance(parsed_orders, list):
+        raise ValueError(f"parsed_orders must be a list, got {type(parsed_orders).__name__}")
+    return parsed_orders
+
+
+def _extract_sheet_id(sheet_id_or_url: str) -> str:
+    """Extract the spreadsheet ID from a URL or return as-is if already an ID."""
+    m = _SHEET_URL_RE.search(sheet_id_or_url)
+    if m:
+        return m.group(1)
+    return sheet_id_or_url.strip()
+
+
+def _classify_http_error(e: HttpError) -> Dict[str, Any]:
+    """Map a Google API HttpError to a user-friendly message explaining the
+    access/permission problem."""
+    status = e.resp.status if hasattr(e, "resp") else 0
+    if status == 404:
+        return {
+            "success": False,
+            "error": (
+                "The spreadsheet was not found. This usually means the link is "
+                "incorrect, the sheet has been deleted, or it has not been shared "
+                "with you at all. Please double-check the URL and ensure the "
+                "owner has shared it with your Google account."
+            ),
+            "error_type": "not_found",
+        }
+    if status == 403:
+        detail = str(e)
+        if "insufficientPermissions" in detail or "PERMISSION_DENIED" in detail:
+            return {
+                "success": False,
+                "error": (
+                    "You do not have permission to access this spreadsheet. "
+                    "Ask the sheet owner to share it with your Google account."
+                ),
+                "error_type": "permission_denied",
+            }
+        return {
+            "success": False,
+            "error": (
+                "Access to this spreadsheet was denied. You may only have "
+                "view/read-only access. To write data you need Editor access — "
+                "ask the sheet owner to change your permission from Viewer to Editor."
+            ),
+            "error_type": "permission_denied",
+        }
+    return {"success": False, "error": f"Google Sheets API error (HTTP {status}): {e}"}
+
+
+def _find_tab(tab_names: List[str], target: str) -> Optional[str]:
+    """Case-insensitive tab lookup. Returns the actual tab name as it appears
+    in the spreadsheet, or None if no match."""
+    target_lower = target.lower()
+    for t in tab_names:
+        if t.lower() == target_lower:
+            return t
+    return None
+
+
+def _check_write_permission(service, sheet_id: str) -> Optional[str]:
+    """Attempt a no-op write that only editors can perform.
+    Returns an error string if write is not possible, or None if OK.
+
+    Strategy: update the spreadsheet title to its current value.  This is a
+    no-data-change write that the API still gate-keeps behind editor
+    permissions."""
+    try:
+        spreadsheet = service.spreadsheets().get(
+            spreadsheetId=sheet_id, fields="properties.title"
+        ).execute()
+        current_title = spreadsheet.get("properties", {}).get("title", "")
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=sheet_id,
+            body={
+                "requests": [{
+                    "updateSpreadsheetProperties": {
+                        "properties": {"title": current_title},
+                        "fields": "title",
+                    }
+                }]
+            },
+        ).execute()
+        return None
+    except HttpError as e:
+        status = e.resp.status if hasattr(e, "resp") else 0
+        if status == 403:
+            return (
+                "You have read-only (Viewer) access to this spreadsheet. "
+                "To write delivery order data you need Editor access. "
+                "Ask the sheet owner to change your sharing permission to Editor."
+            )
+        return f"Write permission check failed (HTTP {status}): {e}"
+    except Exception as e:
+        return f"Write permission check failed: {e}"
+
+
+def validate_delivery_sheet(
+    sheet_id: str,
+    credentials_dict: Optional[CredentialsDict] = None,
+) -> Dict[str, Any]:
+    """
+    Validate that a Google Sheet matches the Production Materials Requisition
+    List template (headers A-H and Food/non-food tabs).  Also verifies the
+    caller has **Editor** (write) access so issues surface early.
+
+    Args:
+        sheet_id: Google Sheets ID or full URL.
+        credentials_dict: Google OAuth credentials.
+
+    Returns:
+        Validation result with is_valid, headers_found, tabs_found, mismatch_details.
+    """
+    try:
+        if not credentials_dict:
+            return {"success": False, "error": "Credentials required"}
+
+        real_id = _extract_sheet_id(sheet_id)
+        service = create_sheets_service(credentials_dict)
+
+        # --- 1. Fetch spreadsheet metadata (tests basic read access) --------
+        try:
+            spreadsheet = service.spreadsheets().get(spreadsheetId=real_id).execute()
+        except HttpError as e:
+            return _classify_http_error(e)
+
+        tab_names = [
+            s.get("properties", {}).get("title", "")
+            for s in spreadsheet.get("sheets", [])
+        ]
+
+        # --- 2. Case-insensitive tab matching ------------------------------
+        matching_tabs: List[str] = []
+        missing_expected: List[str] = []
+        for expected_tab in _EXPECTED_TABS:
+            actual = _find_tab(tab_names, expected_tab)
+            if actual:
+                matching_tabs.append(actual)
+            else:
+                missing_expected.append(expected_tab)
+
+        # --- 3. Check headers in EVERY matching tab -------------------------
+        all_headers: Dict[str, List[str]] = {}
+        mismatches: List[Dict[str, Any]] = []
+
+        tabs_to_check = matching_tabs if matching_tabs else tab_names[:1]
+        for tab in tabs_to_check:
+            try:
+                result = (
+                    service.spreadsheets()
+                    .values()
+                    .get(spreadsheetId=real_id, range=f"'{tab}'!1:1")
+                    .execute()
+                )
+                row = result.get("values", [[]])[0] if result.get("values") else []
+            except HttpError:
+                row = []
+            all_headers[tab] = row
+
+            for idx, expected in enumerate(_EXPECTED_HEADERS):
+                actual = row[idx] if idx < len(row) else "<missing>"
+                if actual.strip().lower() != expected.strip().lower():
+                    mismatches.append({
+                        "tab": tab,
+                        "column": chr(65 + idx),
+                        "expected": expected,
+                        "found": actual,
+                    })
+
+        is_valid = len(mismatches) == 0 and len(matching_tabs) == len(_EXPECTED_TABS)
+
+        if not is_valid:
+            details = []
+            if mismatches:
+                details.append("Header mismatches: " + ", ".join(
+                    f"[{m['tab']}] Column {m['column']} expected '{m['expected']}' but found '{m['found']}'"
+                    for m in mismatches
+                ))
+            if missing_expected:
+                details.append(f"Missing tabs: {', '.join(missing_expected)}")
+            return {
+                "success": False,
+                "is_valid": False,
+                "sheet_id": real_id,
+                "headers_by_tab": all_headers,
+                "tabs_found": tab_names,
+                "mismatch_details": mismatches,
+                "missing_tabs": missing_expected,
+                "error": "The provided sheet does not match the requisition list template. " + "; ".join(details),
+            }
+
+        # --- 4. Proactive write-permission check ----------------------------
+        write_err = _check_write_permission(service, real_id)
+        if write_err:
+            return {
+                "success": False,
+                "is_valid": True,
+                "sheet_id": real_id,
+                "tabs_found": tab_names,
+                "matching_tabs": matching_tabs,
+                "error": write_err,
+                "error_type": "read_only",
+            }
+
+        return {
+            "success": True,
+            "is_valid": True,
+            "sheet_id": real_id,
+            "headers_by_tab": all_headers,
+            "tabs_found": tab_names,
+            "matching_tabs": matching_tabs,
+            "message": "Sheet is a valid requisition list template with write access confirmed",
+        }
+
+    except HttpError as e:
+        return _classify_http_error(e)
+    except Exception as e:
+        return {"success": False, "error": f"Validation failed: {str(e)}"}
+
+
+def preview_delivery_order_insertion(
+    sheet_id: str,
+    parsed_orders: Any,
+    credentials_dict: Optional[CredentialsDict] = None,
+) -> Dict[str, Any]:
+    """
+    Preview what will be written to the requisition sheet.  Detects duplicates
+    (same Order Reference + Item Code already in sheet), missing data, and rows
+    that would override existing data.
+
+    Args:
+        sheet_id: Google Sheets ID or URL.
+        parsed_orders: JSON string (or list) of parsed orders from
+                       mapping_agent.parse_delivery_order_pdfs.
+        credentials_dict: Google OAuth credentials.
+
+    Returns:
+        Preview report with rows, duplicates, warnings, target_tab info.
+    """
+    try:
+        if not credentials_dict:
+            return {"success": False, "error": "Credentials required"}
+
+        try:
+            parsed_orders = _parse_orders_input(parsed_orders)
+        except ValueError as e:
+            return {"success": False, "error": str(e)}
+
+        real_id = _extract_sheet_id(sheet_id)
+        service = create_sheets_service(credentials_dict)
+
+        try:
+            spreadsheet = service.spreadsheets().get(spreadsheetId=real_id).execute()
+        except HttpError as e:
+            return _classify_http_error(e)
+
+        tab_names = [
+            s.get("properties", {}).get("title", "")
+            for s in spreadsheet.get("sheets", [])
+        ]
+
+        # Build flat rows and group by target tab (case-insensitive lookup)
+        tab_rows: Dict[str, List[List[str]]] = {}
+        all_preview_rows = []
+        warnings: List[str] = []
+
+        for order in parsed_orders:
+            header = order.get("header", {})
+            category = (header.get("category") or "").strip().upper()
+            desired_tab = "Food" if category == "FOOD" else "non-food"
+            actual_tab = _find_tab(tab_names, desired_tab)
+
+            if not actual_tab:
+                warnings.append(f"Tab '{desired_tab}' not found in sheet for order {header.get('reference_number', '?')}")
+                continue
+
+            date_val = header.get("date", "")
+            ref = header.get("reference_number", "")
+            requested_by = header.get("requested_by", "")
+            header_cb_date = header.get("cb_date", "")
+
+            for item in order.get("line_items", []):
+                row = [
+                    date_val,
+                    ref,
+                    item.get("item_code", ""),
+                    item.get("item_description", ""),
+                    str(item.get("qty", "")),
+                    item.get("uom", ""),
+                    item.get("cb_date", "") or header_cb_date,
+                    requested_by,
+                ]
+                tab_rows.setdefault(actual_tab, []).append(row)
+                all_preview_rows.append({
+                    "tab": actual_tab,
+                    "values": row,
+                })
+
+                if not item.get("item_code"):
+                    warnings.append(f"Missing Item Code in row: {item.get('item_description', '?')[:40]}")
+                if not item.get("qty") and item.get("qty") != 0:
+                    warnings.append(f"Missing QTY for {item.get('item_code', '?')}")
+
+        # Check for duplicates against existing sheet data
+        duplicates: List[Dict[str, Any]] = []
+        for tab_name, new_rows in tab_rows.items():
+            try:
+                existing = (
+                    service.spreadsheets()
+                    .values()
+                    .get(spreadsheetId=real_id, range=f"'{tab_name}'!A:H")
+                    .execute()
+                )
+                existing_values = existing.get("values", [])
+                existing_keys = set()
+                for erow in existing_values[1:]:
+                    if len(erow) >= 3:
+                        existing_keys.add((erow[1].strip() if len(erow) > 1 else "", erow[2].strip() if len(erow) > 2 else ""))
+
+                for row in new_rows:
+                    key = (row[1].strip(), row[2].strip())
+                    if key in existing_keys:
+                        duplicates.append({
+                            "tab": tab_name,
+                            "order_reference": key[0],
+                            "item_code": key[1],
+                        })
+            except Exception as e:
+                warnings.append(f"Could not read existing data from tab '{tab_name}': {str(e)}")
+
+        total_new = sum(len(rows) for rows in tab_rows.values())
+
+        return {
+            "success": True,
+            "preview_rows": all_preview_rows,
+            "total_new_rows": total_new,
+            "duplicates": duplicates,
+            "duplicate_count": len(duplicates),
+            "warnings": warnings,
+            "target_tabs": list(tab_rows.keys()),
+            "message": f"{total_new} row(s) ready to insert across {len(tab_rows)} tab(s). "
+                       + (f"{len(duplicates)} duplicate(s) detected." if duplicates else "No duplicates detected."),
+        }
+
+    except HttpError as e:
+        return _classify_http_error(e)
+    except Exception as e:
+        return {"success": False, "error": f"Preview failed: {str(e)}"}
+
+
+def write_delivery_order_data(
+    sheet_id: str,
+    parsed_orders: Any,
+    credentials_dict: Optional[CredentialsDict] = None,
+) -> Dict[str, Any]:
+    """
+    Write confirmed delivery order data to the requisition sheet.
+    Appends rows to the correct tab (Food / non-food) based on category.
+
+    Args:
+        sheet_id: Google Sheets ID or URL.
+        parsed_orders: JSON string (or list) of parsed orders.
+        credentials_dict: Google OAuth credentials.
+
+    Returns:
+        Summary of rows written per tab.
+    """
+    try:
+        if not credentials_dict:
+            return {"success": False, "error": "Credentials required"}
+
+        try:
+            parsed_orders = _parse_orders_input(parsed_orders)
+        except ValueError as e:
+            return {"success": False, "error": str(e)}
+
+        real_id = _extract_sheet_id(sheet_id)
+        service = create_sheets_service(credentials_dict)
+
+        try:
+            spreadsheet = service.spreadsheets().get(spreadsheetId=real_id).execute()
+        except HttpError as e:
+            return _classify_http_error(e)
+
+        tab_names = [
+            s.get("properties", {}).get("title", "")
+            for s in spreadsheet.get("sheets", [])
+        ]
+
+        # Build flat rows grouped by target tab (case-insensitive lookup)
+        tab_rows: Dict[str, List[List[str]]] = {}
+        skipped_warnings: List[str] = []
+
+        for order in parsed_orders:
+            header = order.get("header", {})
+            category = (header.get("category") or "").strip().upper()
+            desired_tab = "Food" if category == "FOOD" else "non-food"
+            actual_tab = _find_tab(tab_names, desired_tab)
+
+            if not actual_tab:
+                skipped_warnings.append(
+                    f"Tab '{desired_tab}' not found for order {header.get('reference_number', '?')}"
+                )
+                continue
+
+            date_val = header.get("date", "")
+            ref = header.get("reference_number", "")
+            requested_by = header.get("requested_by", "")
+            header_cb_date = header.get("cb_date", "")
+
+            for item in order.get("line_items", []):
+                row = [
+                    date_val,
+                    ref,
+                    item.get("item_code", ""),
+                    item.get("item_description", ""),
+                    str(item.get("qty", "")),
+                    item.get("uom", ""),
+                    item.get("cb_date", "") or header_cb_date,
+                    requested_by,
+                ]
+                tab_rows.setdefault(actual_tab, []).append(row)
+
+        if not tab_rows:
+            return {
+                "success": False,
+                "error": "No rows to write. " + (" ".join(skipped_warnings) if skipped_warnings else "parsed_orders may be empty."),
+            }
+
+        total_written = 0
+        tabs_used = []
+        errors = []
+
+        for tab_name, rows in tab_rows.items():
+            try:
+                service.spreadsheets().values().append(
+                    spreadsheetId=real_id,
+                    range=f"'{tab_name}'!A:H",
+                    valueInputOption="USER_ENTERED",
+                    insertDataOption="INSERT_ROWS",
+                    body={"values": rows},
+                ).execute()
+                total_written += len(rows)
+                tabs_used.append({"tab": tab_name, "rows_written": len(rows)})
+            except HttpError as e:
+                status = e.resp.status if hasattr(e, "resp") else 0
+                if status == 403:
+                    return {
+                        "success": False,
+                        "error": (
+                            f"Failed to write to tab '{tab_name}': you only have "
+                            "read-only access to this spreadsheet. Ask the sheet "
+                            "owner to grant you Editor permission."
+                        ),
+                        "error_type": "read_only",
+                    }
+                errors.append(f"Error writing to '{tab_name}': {e}")
+            except Exception as e:
+                errors.append(f"Error writing to '{tab_name}': {e}")
+
+        if errors and total_written == 0:
+            return {"success": False, "error": "; ".join(errors)}
+
+        return {
+            "success": True,
+            "rows_written": total_written,
+            "tabs_used": tabs_used,
+            "errors": errors if errors else None,
+            "message": f"Successfully wrote {total_written} row(s) to {len(tabs_used)} tab(s)",
+        }
+
+    except HttpError as e:
+        return _classify_http_error(e)
+    except Exception as e:
+        return {"success": False, "error": f"Write failed: {str(e)}"}
+
+
+# ============================================================
 # TOOL REGISTRY
 # ============================================================
 
@@ -927,9 +1432,21 @@ TOOL_REGISTRY = {
         "description": "Update Google Sheets rows by matching dates (no append, only update)",
     },
     "get_sheet_headers": {
-    "func": get_sheet_headers,
-    "description": "Get header row of an existing sheet for column mapping",
-},
+        "func": get_sheet_headers,
+        "description": "Get header row of an existing sheet for column mapping",
+    },
+    "validate_delivery_sheet": {
+        "func": validate_delivery_sheet,
+        "description": "Validate that a sheet matches the requisition list template",
+    },
+    "preview_delivery_order_insertion": {
+        "func": preview_delivery_order_insertion,
+        "description": "Preview delivery order data before writing to sheet",
+    },
+    "write_delivery_order_data": {
+        "func": write_delivery_order_data,
+        "description": "Write confirmed delivery order data to the requisition sheet",
+    },
 }
 
 
@@ -983,6 +1500,7 @@ async def execute_tool(request: ToolRequest):
             success=result.get("success", False),
             result=result if result.get("success") else None,
             error=result.get("error") if not result.get("success") else None,
+            error_type=result.get("error_type") if not result.get("success") else None,
         )
 
     except Exception as e:

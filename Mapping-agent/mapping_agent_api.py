@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Any, Optional
 import os
+import re
 import uvicorn
 import pandas as pd
 import io
@@ -15,6 +16,13 @@ import json
 from datetime import datetime
 from dotenv import load_dotenv
 from safexpressops_target_columns import SAFEXPRESSOPS_TARGET_COLUMNS
+
+try:
+    import pdfplumber
+    PDFPLUMBER_AVAILABLE = True
+except ImportError:
+    PDFPLUMBER_AVAILABLE = False
+    print("Warning: pdfplumber not installed. parse_delivery_order_pdfs will not work.")
 
 
 # Load environment variables from .env file
@@ -931,6 +939,267 @@ def extract_dates_from_all_rows(
 
 
 # ============================================================
+# DELIVERY ORDER PDF PARSING
+# ============================================================
+
+_REQUISITION_MARKERS = {"PRODUCTION MATERIALS REQUISITION LIST", "REQUISITION LIST"}
+
+_HEADER_PATTERNS = {
+    "reference_number": re.compile(r"(?:Ref(?:erence)?\.?\s*(?:No\.?|Number|#)?|Order\s*(?:No\.?|Ref))\s*[:\-]?\s*([A-Z0-9]+)", re.IGNORECASE),
+    "date": re.compile(r"(?:Date|Order\s*Date)\s*[:\-]?\s*(.+?)(?:\s{2,}|$)", re.IGNORECASE),
+    "category": re.compile(r"(?:Category|Type)\s*[:\-]?\s*(FOOD|NON[\s\-]?FOOD)", re.IGNORECASE),
+    "allergen": re.compile(r"(?:Allergen)\s*[:\-]?\s*(.+?)(?:\s{2,}|$)", re.IGNORECASE),
+    "cb_date": re.compile(r"(?:CB\s*Date|Cut[\s\-]?off)\s*[:\-]?\s*(.+?)(?:\s{2,}|$)", re.IGNORECASE),
+    "requested_by": re.compile(r"(?:Requested\s*(?:By|by))\s*[:\-]?\s*(.+?)(?:\s{2,}|$)", re.IGNORECASE),
+}
+
+
+def _extract_header_from_text(full_text: str) -> Dict[str, str]:
+    """Extract header fields from the raw text of the first page."""
+    header: Dict[str, str] = {}
+    for field, pattern in _HEADER_PATTERNS.items():
+        m = pattern.search(full_text)
+        if m:
+            header[field] = m.group(1).strip()
+    return header
+
+
+def _is_requisition_pdf(first_page_text: str) -> bool:
+    upper = first_page_text.upper()
+    return any(marker in upper for marker in _REQUISITION_MARKERS)
+
+
+def _clean_cell(val: Any) -> str:
+    if val is None:
+        return ""
+    return str(val).strip()
+
+
+def _parse_single_pdf(file_path: str) -> Dict[str, Any]:
+    """Parse a single PDF and return structured data or rejection info."""
+    if not PDFPLUMBER_AVAILABLE:
+        return {"rejected": True, "file": os.path.basename(file_path), "reason": "pdfplumber not installed"}
+
+    if not file_path.lower().endswith(".pdf"):
+        return {"rejected": True, "file": os.path.basename(file_path), "reason": "Not a PDF file"}
+
+    if not os.path.exists(file_path):
+        return {"rejected": True, "file": os.path.basename(file_path), "reason": f"File not found: {file_path}"}
+
+    try:
+        with pdfplumber.open(file_path) as pdf:
+            if not pdf.pages:
+                return {"rejected": True, "file": os.path.basename(file_path), "reason": "PDF has no pages"}
+
+            first_page_text = pdf.pages[0].extract_text() or ""
+
+            if not _is_requisition_pdf(first_page_text):
+                return {"rejected": True, "file": os.path.basename(file_path), "reason": "Not a requisition list template"}
+
+            all_text = first_page_text
+            for page in pdf.pages[1:]:
+                pt = page.extract_text() or ""
+                all_text += "\n" + pt
+
+            header = _extract_header_from_text(all_text)
+
+            # Also look for requested_by in footer area (last page)
+            if "requested_by" not in header or not header["requested_by"]:
+                last_page_text = pdf.pages[-1].extract_text() or ""
+                m = _HEADER_PATTERNS["requested_by"].search(last_page_text)
+                if m:
+                    header["requested_by"] = m.group(1).strip()
+
+            line_items: List[Dict[str, Any]] = []
+            warnings: List[str] = []
+            # Carry column indices across pages so continuation pages
+            # without a repeated header row are still parsed.
+            last_known_col_indices: Dict[str, int] = {}
+
+            for page_idx, page in enumerate(pdf.pages):
+                tables = page.extract_tables()
+                if not tables:
+                    continue
+
+                for table in tables:
+                    if not table or len(table) < 2:
+                        continue
+
+                    # Find the header row of the items table
+                    header_row_idx = None
+                    col_indices: Dict[str, int] = {}
+
+                    for row_idx, row in enumerate(table):
+                        row_upper = [_clean_cell(c).upper() for c in row]
+                        has_item_code = any("ITEM" in c and "CODE" in c for c in row_upper) or any("ITEMCODE" in c.replace(" ", "") for c in row_upper)
+                        has_description = any("DESC" in c for c in row_upper) or any("ITEM" in c and ("DESC" in c or "NAME" in c) for c in row_upper)
+                        has_qty = any(c in ("QTY", "QUANTITY") for c in row_upper)
+                        has_uom = any(c in ("UOM", "UNIT") for c in row_upper)
+
+                        if (has_item_code or has_description) and (has_qty or has_uom):
+                            header_row_idx = row_idx
+                            for ci, cell_val in enumerate(row_upper):
+                                clean = cell_val.replace(" ", "")
+                                if "ITEMCODE" in clean or ("ITEM" in cell_val and "CODE" in cell_val):
+                                    col_indices["item_code"] = ci
+                                elif "DESC" in cell_val or ("ITEM" in cell_val and "NAME" in cell_val):
+                                    col_indices["item_description"] = ci
+                                elif cell_val in ("QTY", "QUANTITY"):
+                                    col_indices["qty"] = ci
+                                elif cell_val in ("UOM", "UNIT"):
+                                    col_indices["uom"] = ci
+                                elif "CB" in cell_val and "DATE" in cell_val:
+                                    col_indices["cb_date"] = ci
+                            last_known_col_indices = col_indices
+                            break
+
+                    if header_row_idx is None:
+                        if not last_known_col_indices:
+                            continue
+                        # Continuation page without a repeated header row —
+                        # treat ALL rows as data using the prior page's columns.
+                        col_indices = last_known_col_indices
+                        data_rows = table
+                    else:
+                        data_rows = table[header_row_idx + 1:]
+
+                    # — data_rows is now set regardless of header presence —
+                    for row in data_rows:
+                        if not row or all(_clean_cell(c) == "" for c in row):
+                            continue
+
+                        item = {}
+                        for field_name, ci in col_indices.items():
+                            if ci < len(row):
+                                item[field_name] = _clean_cell(row[ci])
+                            else:
+                                item[field_name] = ""
+
+                        # Parse qty as float
+                        qty_str = item.get("qty", "")
+                        if qty_str:
+                            try:
+                                item["qty"] = float(qty_str.replace(",", ""))
+                            except ValueError:
+                                item["qty"] = qty_str
+                        else:
+                            item["qty"] = ""
+
+                        # Skip rows that look like sub-totals or footers
+                        item_code = item.get("item_code", "")
+                        desc = item.get("item_description", "")
+                        if not item_code and not desc:
+                            continue
+
+                        # Warn on missing critical fields
+                        row_warnings = []
+                        if not item.get("item_code"):
+                            row_warnings.append(f"Missing item_code for: {desc[:40]}")
+                        if not item.get("qty") and item.get("qty") != 0:
+                            row_warnings.append(f"Missing qty for: {item_code or desc[:40]}")
+                        if not item.get("uom"):
+                            row_warnings.append(f"Missing uom for: {item_code or desc[:40]}")
+
+                        warnings.extend(row_warnings)
+                        line_items.append(item)
+
+            return {
+                "rejected": False,
+                "file": os.path.basename(file_path),
+                "header": header,
+                "line_items": line_items,
+                "warnings": warnings,
+            }
+
+    except Exception as e:
+        return {"rejected": True, "file": os.path.basename(file_path), "reason": f"Error reading PDF: {str(e)}"}
+
+
+def _flatten_file_paths(raw: Any) -> List[str]:
+    """Accept either a flat list of paths or the nested gmail response and
+    extract all attachment file_path values into a flat list."""
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except json.JSONDecodeError:
+            import ast
+            try:
+                raw = ast.literal_eval(raw)
+            except (ValueError, SyntaxError):
+                return [raw]
+
+    if not isinstance(raw, list):
+        return []
+
+    paths: List[str] = []
+    for item in raw:
+        if isinstance(item, str):
+            paths.append(item)
+        elif isinstance(item, dict):
+            # Could be an email object with nested attachments
+            if "attachments" in item:
+                for att in item["attachments"]:
+                    fp = att.get("file_path")
+                    if fp:
+                        paths.append(fp)
+            elif "file_path" in item:
+                paths.append(item["file_path"])
+    return paths
+
+
+def parse_delivery_order_pdfs(file_paths: Any) -> Dict[str, Any]:
+    """
+    Parse PDF attachments as Production Materials Requisition Lists.
+
+    Args:
+        file_paths: List of local file paths, or the full response from
+                    search_emails_with_delivery_order_attachments (nested
+                    emails_with_attachments format). Both are accepted.
+
+    Returns:
+        Dictionary with parsed_orders, rejected_files, totals.
+    """
+    try:
+        # Accept the full gmail tool response dict
+        if isinstance(file_paths, dict):
+            if "emails_with_attachments" in file_paths:
+                file_paths = file_paths["emails_with_attachments"]
+            elif "file_paths" in file_paths:
+                file_paths = file_paths["file_paths"]
+
+        file_paths = _flatten_file_paths(file_paths)
+
+        if not file_paths:
+            return {"success": False, "error": "No file paths provided. Expected a list of paths or the gmail search response with attachments."}
+
+        parsed_orders = []
+        rejected_files = []
+
+        for fp in file_paths:
+            result = _parse_single_pdf(str(fp))
+            if result.get("rejected"):
+                rejected_files.append({"file": result["file"], "reason": result["reason"]})
+            else:
+                parsed_orders.append({
+                    "file": result["file"],
+                    "header": result["header"],
+                    "line_items": result["line_items"],
+                    "warnings": result["warnings"],
+                })
+
+        return {
+            "success": True,
+            "parsed_orders": parsed_orders,
+            "rejected_files": rejected_files,
+            "total_parsed": len(parsed_orders),
+            "total_rejected": len(rejected_files),
+        }
+
+    except Exception as e:
+        return {"success": False, "error": f"Failed to parse delivery order PDFs: {str(e)}"}
+
+
+# ============================================================
 # TOOL REGISTRY
 # ============================================================
 
@@ -970,6 +1239,10 @@ TOOL_REGISTRY = {
     "extract_date_from_data": {
         "func": extract_date_from_data,
         "description": "Extract date from parsed data for data identification",
+    },
+    "parse_delivery_order_pdfs": {
+        "func": parse_delivery_order_pdfs,
+        "description": "Parse PDF attachments as Production Materials Requisition Lists",
     },
 }
 

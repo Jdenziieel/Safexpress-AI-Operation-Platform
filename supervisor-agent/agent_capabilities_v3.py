@@ -294,6 +294,15 @@ agent_capabilities = {
                 },
                 "returns": ["success", "date", "formatted_display"],
             },
+            "parse_delivery_order_pdfs": {
+                "description": "Parse PDF attachments as Production Materials Requisition Lists. Reads each PDF, detects valid templates by content, extracts header and line items. Reports rejected/non-template files. Accepts flat file path list OR the full response from search_emails_with_delivery_order_attachments (emails_with_attachments array).",
+                "args": {
+                    "file_paths": "List[str] or List[dict] (required) — flat list of local file paths, or emails_with_attachments array from gmail search",
+                },
+                "returns": ["success", "parsed_orders", "rejected_files", "total_parsed", "total_rejected", "error"],
+                "returns_detail": "parsed_orders is array; each has: file, header {reference_number, date, category, allergen, cb_date, requested_by}, line_items [{item_code, item_description, qty, uom, cb_date}], warnings",
+                "can_be_derived_from": {"file_paths": "gmail_agent.search_emails_with_delivery_order_attachments"},
+            },
         },
     },
     "sheets_agent": {
@@ -328,6 +337,31 @@ agent_capabilities = {
                     "title": "str (required)",
                 },
                 "returns": ["success", "sheet_id", "sheet_url"],
+            },
+            "validate_delivery_sheet": {
+                "description": "Validate that a Google Sheet matches the Production Materials Requisition List template. Checks headers (Date, Order Reference, Item Code, Item Description, QTY, UOM, CB Date, Requested by) and tabs (Food, non-food) with case-insensitive tab matching. Also verifies the caller has Editor (write) access. Returns specific errors for: sheet not found, no access, read-only access, or template mismatch.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID or URL (URL is auto-parsed to extract ID)",
+                },
+                "returns": ["success", "is_valid", "headers_by_tab", "tabs_found", "matching_tabs", "mismatch_details", "error", "error_type"],
+            },
+            "preview_delivery_order_insertion": {
+                "description": "Preview what will be written to the requisition sheet. Checks for duplicates (same Order Reference + Item Code), missing data, and rows that would be overridden. Returns preview for user approval.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID",
+                    "parsed_orders": "str (required) — JSON of parsed orders from mapping_agent.parse_delivery_order_pdfs",
+                },
+                "returns": ["success", "preview_rows", "total_new_rows", "duplicates", "duplicate_count", "warnings", "target_tabs", "message", "error"],
+                "can_be_derived_from": {"parsed_orders": "mapping_agent.parse_delivery_order_pdfs"},
+            },
+            "write_delivery_order_data": {
+                "description": "Write confirmed delivery order data to the requisition sheet. Appends rows to the correct tab (Food or non-food) based on category.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID",
+                    "parsed_orders": "str (required) — JSON of parsed orders from mapping_agent.parse_delivery_order_pdfs",
+                },
+                "returns": ["success", "rows_written", "tabs_used", "message", "error"],
+                "can_be_derived_from": {"parsed_orders": "mapping_agent.parse_delivery_order_pdfs"},
             },
         },
     },

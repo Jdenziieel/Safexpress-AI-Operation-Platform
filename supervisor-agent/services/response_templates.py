@@ -271,6 +271,10 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         "type": "action",
         "template": "Extracted date: {formatted_display}",
     },
+    ("mapping_agent", "parse_delivery_order_pdfs"): {
+        "type": "action",
+        "template": "Parsed {total_parsed} delivery order(s), {total_rejected} file(s) rejected",
+    },
 
     # ========================= SHEETS AGENT =========================
 
@@ -285,6 +289,18 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
     ("sheets_agent", "create_sheet"): {
         "type": "action",
         "template": "Created spreadsheet: {sheet_url}",
+    },
+    ("sheets_agent", "validate_delivery_sheet"): {
+        "type": "action",
+        "use_message": True,
+    },
+    ("sheets_agent", "preview_delivery_order_insertion"): {
+        "type": "action",
+        "use_message": True,
+    },
+    ("sheets_agent", "write_delivery_order_data"): {
+        "type": "action",
+        "use_message": True,
     },
 }
 
@@ -302,6 +318,9 @@ COMPOSE_PATTERNS: Dict[tuple, str] = {
     ("list_my_docs", "read_doc"): "Found and read document",
     ("search_files", "upload_mapped_data"): "Found sheet and uploaded data",
     ("parse_file", "transform_data"): "Parsed and transformed data",
+    ("search_emails_with_delivery_order_attachments", "parse_delivery_order_pdfs"): "Found and parsed delivery orders",
+    ("validate_delivery_sheet", "preview_delivery_order_insertion"): "Validated sheet and prepared preview",
+    ("preview_delivery_order_insertion", "write_delivery_order_data"): "Previewed and wrote delivery order data",
 }
 
 

@@ -143,6 +143,27 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                 if "search_drafts" in all_gmail:
                     gmail_tools.append("search_drafts")
 
+        # Delivery order workflow: ensure all three agents and their
+        # specialised tools are present when the request involves
+        # delivery/purchase orders.
+        _DELIVERY_KEYWORDS = {"delivery order", "purchase order", "requisition list", "po attachment", "order list"}
+        if any(kw in input_lower for kw in _DELIVERY_KEYWORDS):
+            _do_tool_map = {
+                "gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"],
+                "mapping_agent": ["parse_delivery_order_pdfs"],
+                "sheets_agent": ["validate_delivery_sheet", "preview_delivery_order_insertion", "write_delivery_order_data"],
+            }
+            for agent_name, required_tools in _do_tool_map.items():
+                agent_caps = agent_capabilities.get(agent_name, {}).get("tools", {})
+                if agent_name not in validated:
+                    valid = [t for t in required_tools if t in agent_caps]
+                    if valid:
+                        validated[agent_name] = valid
+                else:
+                    for t in required_tools:
+                        if t not in validated[agent_name] and t in agent_caps:
+                            validated[agent_name].append(t)
+
         return validated
 
     except Exception as e:

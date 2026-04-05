@@ -725,6 +725,27 @@ class StructuredLogger:
         level = LogLevel.INFO if success else LogLevel.ERROR
         message = f"Agent call: {agent_name}.{tool_name} (step {step_number}/{total_steps})"
         self._log(level, message, component="orchestrator", operation="agent_call", extra=extra)
+        
+        # Persist to the dedicated agent_calls table for metrics queries
+        try:
+            storage = get_log_storage()
+            if storage:
+                storage.insert_agent_call(
+                    timestamp=datetime.utcnow().isoformat() + "Z",
+                    agent_name=agent_name,
+                    tool_name=tool_name,
+                    step_number=step_number,
+                    total_steps=total_steps,
+                    inputs=inputs,
+                    success=success,
+                    duration_ms=duration_ms,
+                    request_id=get_current_request_id(),
+                    conversation_id=get_current_conversation_id(),
+                    output_summary=output_summary,
+                    error=error,
+                )
+        except Exception:
+            pass
     
     def request_summary(self):
         """Log end-of-request summary with total token usage"""
@@ -768,6 +789,34 @@ class StructuredLogger:
         else:
             print(f"  No LLM calls made in this request.")
         print(f"{'='*60}\n")
+        
+        # Persist to the dedicated request_summaries table for usage/metrics queries
+        try:
+            storage = get_log_storage()
+            if storage:
+                request_id = get_current_request_id()
+                if request_id:
+                    started_at_iso = None
+                    if start_time:
+                        started_at_iso = datetime.utcfromtimestamp(start_time).isoformat() + "Z"
+                    
+                    storage.insert_request_summary(
+                        request_id=request_id,
+                        conversation_id=get_current_conversation_id(),
+                        thread_id=get_current_thread_id(),
+                        started_at=started_at_iso,
+                        completed_at=datetime.utcnow().isoformat() + "Z",
+                        total_duration_ms=total_duration_ms,
+                        total_input_tokens=token_summary.total_input_tokens if token_summary else 0,
+                        total_output_tokens=token_summary.total_output_tokens if token_summary else 0,
+                        total_tokens=token_summary.total_tokens if token_summary else 0,
+                        total_cost_usd=round(token_summary.total_estimated_cost, 6) if token_summary else 0.0,
+                        llm_call_count=len(token_summary.llm_calls) if token_summary else 0,
+                        agent_call_count=0,
+                        success=True,
+                    )
+        except Exception:
+            pass
 
 
 # ============================================================================
