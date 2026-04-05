@@ -517,3 +517,522 @@ Paramete
 [2026-04-06 02:39:58.627] [INFO] [req_20260405183931_6c0972ce] [T:884b2539] ← RESPONSE: 200 (31776ms)
 [2026-04-06 02:39:58.627] [INFO] [req_20260405183931_6c0972ce] [T:884b2539] ─────────: ──────────────────────────────────────────────────
 [2026-04-06 02:39:58.630] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_884b2539
+[2026-04-06 03:18:16.154] [INFO] [req_20260405183931_6c0972ce] [T:884b2539] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-06 03:18:16.158] [INFO] [req_20260405183931_6c0972ce] [T:884b2539] ← RESPONSE: 200 (4ms)
+[2026-04-06 03:18:16.158] [INFO] [req_20260405183931_6c0972ce] [T:884b2539] ─────────: ──────────────────────────────────────────────────
+[2026-04-06 03:18:22.069] [INFO] [req_20260405183931_6c0972ce] [T:884b2539] → REQUEST: POST /threads  | {"query": null}
+[2026-04-06 03:18:22.071] [INFO] [req_20260405183931_6c0972ce] [T:new]   STEP [create_thread]: user=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a, has_message=True
+[2026-04-06 03:18:26.502] [PRINT]  Created thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742 for user: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a
+[2026-04-06 03:18:26.514] [PRINT]  Created new thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742 for user: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a with title: None
+[2026-04-06 03:18:26.525] [PRINT] Saved conversation state to SQLite: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742
+[2026-04-06 03:18:26.536] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-06 03:18:26.542] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742
+[2026-04-06 03:18:26.548] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-06 03:18:26.554] [PRINT]   User: Hi can you find a file named project_brief within my google drive then make a new document out of it? name the new docum...
+[2026-04-06 03:18:26.561] [PRINT]   ConversationState:
+[2026-04-06 03:18:26.567] [PRINT]     extracted_info: {}
+[2026-04-06 03:18:26.574] [PRINT]     missing_fields: []
+[2026-04-06 03:18:26.580] [PRINT]     intent: null
+[2026-04-06 03:18:26.586] [PRINT]     clarification_question: null
+[2026-04-06 03:18:26.593] [PRINT]     ready_for_execution: false
+[2026-04-06 03:18:26.600] [PRINT]     execution_summary: null
+[2026-04-06 03:18:26.606] [PRINT]     execution_mode: "standard"
+[2026-04-06 03:18:26.612] [PRINT]     execution_history: []
+[2026-04-06 03:18:26.617] [PRINT]     completed_tasks: []
+[2026-04-06 03:18:26.623] [PRINT]     has_executed: false
+[2026-04-06 03:18:26.629] [PRINT]     last_executed_at: null
+[2026-04-06 03:18:26.635] [PRINT]     last_execution_status: null
+[2026-04-06 03:18:26.640] [PRINT]     last_execution_message: null
+[2026-04-06 03:18:26.645] [PRINT]     executing: false
+[2026-04-06 03:18:26.651] [PRINT]     pending_actions: []
+[2026-04-06 03:18:26.657] [PRINT]     workflow_paused: false
+[2026-04-06 03:18:26.662] [PRINT]     remaining_steps: []
+[2026-04-06 03:18:26.667] [PRINT]     workflow_context: null
+[2026-04-06 03:18:26.673] [PRINT]     disambiguation_options: []
+[2026-04-06 03:18:26.678] [PRINT]     disambiguation_variable: null
+[2026-04-06 03:18:26.684] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-06 03:18:26.690] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742, msg=Hi can you find a file named project_brief within my google drive then make a ne
+[2026-04-06 03:18:26.691] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 39, "total": 39, "max": 2000}
+[2026-04-06 03:18:26.695] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-06 03:18:26.696] [PRINT] 
+[2026-04-06 03:18:26.696] [PRINT] ──────────────────────────────────────────────────
+[2026-04-06 03:18:26.701] [PRINT] TIER 0.5 — Building prompt
+[2026-04-06 03:18:26.706] [PRINT] ──────────────────────────────────────────────────
+[2026-04-06 03:18:26.711] [PRINT]    bot_signal : (none)
+[2026-04-06 03:18:26.717] [PRINT]    state_block: (none)
+[2026-04-06 03:18:26.722] [PRINT]    file_context: (none)
+[2026-04-06 03:18:26.728] [PRINT] ──────────────────────────────────────────────────
+[2026-04-06 03:18:28.398] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=730 out=42 | $0.0001 | 1638ms | cumulative: in=730 out=42 total=772 $0.0001
+[2026-04-06 03:18:28.403] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting an action to find a specific file and create a new document from it.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting an action to find a specific file and create a new document from it.\"\n}"}
+[2026-04-06 03:18:28.404] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-04-06 03:18:28.404] [PRINT] 
+[2026-04-06 03:18:28.404] [PRINT] ──────────────────────────────────────────────────
+[2026-04-06 03:18:28.409] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-06 03:18:28.415] [PRINT] ──────────────────────────────────────────────────
+[2026-04-06 03:18:28.419] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-06 03:18:28.420] [PRINT] 
+[2026-04-06 03:18:28.420] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-06 03:18:28.425] [PRINT] BUILDING LLM CONTEXT
+[2026-04-06 03:18:28.430] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-06 03:18:28.436] [PRINT]    Summary: none
+[2026-04-06 03:18:28.442] [PRINT]    Recent messages: 1
+[2026-04-06 03:18:28.449] [PRINT]       USER: Hi can you find a file named project_brief within my google drive then make a ne...
+[2026-04-06 03:18:28.456] [PRINT] 
+[2026-04-06 03:18:28.456] [PRINT]    Final context: 171 chars (~42 tokens)
+[2026-04-06 03:18:28.462] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-06 03:18:28.468] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=1, ~42 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 171, "context_tokens_est": 42}
+[2026-04-06 03:18:28.468] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-06 03:18:29.280] [PRINT]  OK [classifier] gpt-3.5-turbo | agent_tool_classification | in=1298 out=22 | $0.0007 | 786ms | cumulative: in=2028 out=64 total=2092 $0.0008
+[2026-04-06 03:18:29.286] [PRINT]    relevant_agents: ['drive_agent', 'docs_agent', 'llm_tool']
+[2026-04-06 03:18:29.292] [PRINT]    capabilities (top-level): ['**DRIVE_AGENT:**', '**DOCS_AGENT:**', '**LLM_TOOL:**']
+[2026-04-06 03:18:29.299] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["drive_agent", "docs_agent", "llm_tool"]}
+[2026-04-06 03:18:29.299] [PRINT]    user_prompt (339 chars):
+[2026-04-06 03:18:29.306] [PRINT]      RECENT CONVERSATION:
+[2026-04-06 03:18:29.312] [PRINT]      USER: Hi can you find a file named project_brief within my google drive then make a new document out of it? name the new document New_Document_Brief2!
+[2026-04-06 03:18:29.318] [PRINT]      
+[2026-04-06 03:18:29.325] [PRINT]      CURRENT USER MESSAGE: Hi can you find a file named project_brief within my google drive then make a new document out of it? name the new document New_Document_Brief2!
+[2026-04-06 03:18:29.331] [PRINT] ──────────────────────────────────────────────────
+[2026-04-06 03:18:34.169] [PRINT]  OK [1] gpt-4 | tier_1_full_analysis | in=1287 out=152 | $0.0477 | 4785ms | cumulative: in=3315 out=216 total=3531 $0.0485
+[2026-04-06 03:18:34.176] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "copy_existing_file_to_document", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user has provided all the necessary information to find an existing file named 'project_brief' and create a new document from it, named 'New_Document_Brief2'.", "extracted_info": {"file_name": "project_brief", "new_title": "New_Document_Brief2"}}
+[2026-04-06 03:18:34.177] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-06 03:18:34.178] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Find file 'project_brief' and create new document 'New_Document_Brief2'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"drive_agent": ["search_files"], "docs_agent": ["create_from_uploaded_template", "list_my_docs"]}, "file_name": "project_brief", "new_title": "New_Document_Brief2"}}
+[2026-04-06 03:18:35.390] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=204 out=33 | $0.0001 | 1186ms | cumulative: in=3519 out=249 total=3768 $0.0486
+[2026-04-06 03:18:35.397] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 61, "total": 100, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- Find file: project_brief\n- Create new document titled: New_Document_Brief2\n\nPlease review the details above before proceeding.\n\n---\nReply **\"yes\"** to proc..."}
+[2026-04-06 03:18:35.422] [PRINT] 
+[2026-04-06 03:18:35.422] [PRINT] ============================================================
+[2026-04-06 03:18:35.427] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-06 03:18:35.433] [PRINT] ============================================================
+[2026-04-06 03:18:35.439] [PRINT]   LLM calls:        4
+[2026-04-06 03:18:35.445] [PRINT]   Total input:      3,519 tokens
+[2026-04-06 03:18:35.451] [PRINT]   Total output:     249 tokens
+[2026-04-06 03:18:35.457] [PRINT]   Total tokens:     3,768 tokens
+[2026-04-06 03:18:35.463] [PRINT]   Estimated cost:   $0.0486
+[2026-04-06 03:18:35.469] [PRINT]   Total duration:   8896ms (8.9s)
+[2026-04-06 03:18:35.476] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-06 03:18:35.481] [PRINT]   Breakdown by call:
+[2026-04-06 03:18:35.487] [PRINT]     1. gpt-4o-mini      in=730    out=42    $0.0001 1638ms
+[2026-04-06 03:18:35.493] [PRINT]     2. gpt-3.5-turbo    in=1298   out=22    $0.0007 786ms
+[2026-04-06 03:18:35.499] [PRINT]     3. gpt-4            in=1287   out=152   $0.0477 4785ms
+[2026-04-06 03:18:35.505] [PRINT]     4. gpt-4o-mini      in=204    out=33    $0.0001 1186ms
+[2026-04-06 03:18:35.511] [PRINT] ============================================================
+[2026-04-06 03:18:39.453] [INFO] [req_20260405191826_5d8b59e7] [T:new] ← RESPONSE: 200 (17384ms)
+[2026-04-06 03:18:39.453] [INFO] [req_20260405191826_5d8b59e7] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-06 03:18:47.421] [PRINT] WebSocket connected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742
+[2026-04-06 03:18:47.467] [INFO] [req_20260405191826_5d8b59e7] [T:new] → REQUEST: POST /threads/65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742/messages  | {"query": null}
+[2026-04-06 03:18:51.848] [INFO] [req_20260405191851_94004523] [T:a1054742]   USER MSG: "Yes"
+[2026-04-06 03:18:51.849] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-06 03:18:51.855] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742
+[2026-04-06 03:18:51.862] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-06 03:18:51.867] [PRINT]   User: Yes
+[2026-04-06 03:18:51.873] [PRINT]   ConversationState:
+[2026-04-06 03:18:51.879] [PRINT]     extracted_info: {"_cached_tool_filter": {"drive_agent": ["search_files"], "docs_agent": ["create_from_uploaded_template", "list_my_docs"]}, "file_name": "project_brief", "new_title": "New_Document_Brief2"}
+[2026-04-06 03:18:51.884] [PRINT]     missing_fields: []
+[2026-04-06 03:18:51.889] [PRINT]     intent: "ready_to_execute"
+[2026-04-06 03:18:51.896] [PRINT]     clarification_question: null
+[2026-04-06 03:18:51.901] [PRINT]     ready_for_execution: false
+[2026-04-06 03:18:51.907] [PRINT]     execution_summary: "Find file 'project_brief' and create new document 'New_Document_Brief2'"
+[2026-04-06 03:18:51.912] [PRINT]     execution_mode: "standard"
+[2026-04-06 03:18:51.917] [PRINT]     execution_history: []
+[2026-04-06 03:18:51.923] [PRINT]     completed_tasks: []
+[2026-04-06 03:18:51.929] [PRINT]     has_executed: false
+[2026-04-06 03:18:51.935] [PRINT]     last_executed_at: null
+[2026-04-06 03:18:51.940] [PRINT]     last_execution_status: null
+[2026-04-06 03:18:51.947] [PRINT]     last_execution_message: null
+[2026-04-06 03:18:51.953] [PRINT]     executing: false
+[2026-04-06 03:18:51.958] [PRINT]     pending_actions: []
+[2026-04-06 03:18:51.964] [PRINT]     workflow_paused: false
+[2026-04-06 03:18:51.970] [PRINT]     remaining_steps: []
+[2026-04-06 03:18:51.976] [PRINT]     workflow_context: null
+[2026-04-06 03:18:51.982] [PRINT]     disambiguation_options: []
+[2026-04-06 03:18:51.988] [PRINT]     disambiguation_variable: null
+[2026-04-06 03:18:51.994] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-06 03:18:52.000] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742, msg=Yes
+[2026-04-06 03:18:52.001] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 106, "max": 2000}
+[2026-04-06 03:18:52.005] [INFO] [-]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-06 03:18:52.006] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-06 03:18:52.007] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Find file 'project_brief' and create new document 'New_Document_Brief2'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"drive_agent": ["search_files"], "docs_agent": ["create_from_uploaded_template", "list_my_docs"]}, "file_name": "project_brief", "new_title": "New_Document_Brief2"}}
+[2026-04-06 03:18:53.889] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=204 out=32 | $0.0000 | 1855ms | cumulative: in=204 out=32 total=236 $0.0000
+[2026-04-06 03:18:53.894] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 60, "total": 166, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- Find file: project_brief\n- Create new document: New_Document_Brief2\n\nPlease review the details above before proceeding.\n\n---\nReply **\"yes\"** to proceed or ..."}
+[2026-04-06 03:18:53.911] [INFO] [req_20260405191851_94004523] [T:a1054742]   BOT RESP [READY TO EXECUTE]: "**Ready to execute!**
+
+Task Confirmation:
+
+- Find file: project_brief
+- Create new document: New_Doc..."
+[2026-04-06 03:18:53.911] [PRINT] Thread 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742 ready - executing workflow...
+[2026-04-06 03:18:53.917] [INFO] [req_20260405191851_94004523] [T:a1054742]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-06 03:18:53.928] [INFO] [req_20260405191851_94004523] [T:a1054742]   WORKFLOW START: "Find file 'project_brief' and create new document 'New_Document_Brief2'
+
+Paramet..." (0 steps)
+[2026-04-06 03:18:53.929] [PRINT]  Date context: today=2026-04-06
+[2026-04-06 03:18:53.935] [PRINT]  Starting workflow execution (mode=standard)...
+[2026-04-06 03:18:53.941] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-06 03:18:53.943] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-06 03:18:53.949] [PRINT] 
+[2026-04-06 03:18:53.949] [PRINT] ============================================================
+[2026-04-06 03:18:53.955] [PRINT] SUPERVISOR NODE - Planning Phase
+[2026-04-06 03:18:53.961] [PRINT] ============================================================
+[2026-04-06 03:18:53.967] [PRINT] User Input: Find file 'project_brief' and create new document 'New_Document_Brief2'
+[2026-04-06 03:18:53.967] [PRINT] 
+[2026-04-06 03:18:53.967] [PRINT] Parameters:
+[2026-04-06 03:18:53.967] [PRINT] - file_name: project_brief
+[2026-04-06 03:18:53.967] [PRINT] - new_title: New_Document_Brief2
+[2026-04-06 03:18:53.973] [INFO] [-]   STEP [supervisor_node]: Planning for: Find file 'project_brief' and create new document 'New_Document_Brief2'
+
+Paramet
+[2026-04-06 03:18:53.973] [PRINT] Context dates: today=2026-04-06
+[2026-04-06 03:18:53.981] [PRINT] Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-06 03:18:53.987] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['drive_agent', 'docs_agent']
+[2026-04-06 03:18:53.988] [PRINT] Relevant agents: ['drive_agent', 'docs_agent', 'llm_tool']
+[2026-04-06 03:18:53.995] [PRINT] Filtered tools: {'drive_agent': ['search_files'], 'docs_agent': ['create_from_uploaded_template', 'list_my_docs']}
+[2026-04-06 03:18:54.001] [PRINT] Calling LLM to generate multi-step plan...
+[2026-04-06 03:18:54.007] [PRINT] Token optimization:
+[2026-04-06 03:18:54.014] [PRINT]    Agents: 3/7
+[2026-04-06 03:18:54.020] [PRINT]    Tools: 3/54
+[2026-04-06 03:18:54.026] [PRINT]    Context size: 4,961 chars (~1,240 tokens)
+[2026-04-06 03:18:54.031] [INFO] [-]   STEP [plan_generation_start]: agents=3/7, tools=3/54, context_tokens~1240
+[2026-04-06 03:18:58.656] [PRINT]  OK [supervisor] gpt-4 | plan_generation | in=1913 out=169 | $0.0675 | 4574ms | cumulative: in=2117 out=201 total=2318 $0.0676
+[2026-04-06 03:18:58.661] [PRINT] Plan generated successfully!
+[2026-04-06 03:18:58.667] [PRINT] 
+[2026-04-06 03:18:58.667] [PRINT] Generated Plan:
+[2026-04-06 03:18:58.667] [PRINT] {
+[2026-04-06 03:18:58.667] [PRINT]   "steps": [
+[2026-04-06 03:18:58.667] [PRINT]     {
+[2026-04-06 03:18:58.667] [PRINT]       "agent": "drive_agent",
+[2026-04-06 03:18:58.667] [PRINT]       "tool": "search_files",
+[2026-04-06 03:18:58.667] [PRINT]       "inputs": {
+[2026-04-06 03:18:58.667] [PRINT]         "search_term": "project_brief"
+[2026-04-06 03:18:58.667] [PRINT]       },
+[2026-04-06 03:18:58.667] [PRINT]       "output_variables": {
+[2026-04-06 03:18:58.667] [PRINT]         "template_file_id": "results[0].id"
+[2026-04-06 03:18:58.667] [PRINT]       },
+[2026-04-06 03:18:58.667] [PRINT]       "description": "Search for the file 'project_brief' in Google Drive"
+[2026-04-06 03:18:58.667] [PRINT]     },
+[2026-04-06 03:18:58.667] [PRINT]     {
+[2026-04-06 03:18:58.667] [PRINT]       "agent": "docs_agent",
+[2026-04-06 03:18:58.667] [PRINT]       "tool": "create_from_uploaded_template",
+[2026-04-06 03:18:58.667] [PRINT]       "inputs": {
+[2026-04-06 03:18:58.667] [PRINT]         "template_file_id": "{{ template_file_id }}",
+[2026-04-06 03:18:58.667] [PRINT]         "new_title": "New_Document_Brief2"
+[2026-04-06 03:18:58.667] [PRINT]       },
+[2026-04-06 03:18:58.667] [PRINT]       "output_variables": {},
+[2026-04-06 03:18:58.667] [PRINT]       "description": "Create a new document from the found file and name it 'New_Document_Brief2'"
+[2026-04-06 03:18:58.667] [PRINT]     }
+[2026-04-06 03:18:58.667] [PRINT]   ]
+[2026-04-06 03:18:58.667] [PRINT] }
+[2026-04-06 03:18:58.672] [INFO] [-]   STEP [plan_generated]: 2 steps: drive_agent.search_files, docs_agent.create_from_uploaded_template
+[2026-04-06 03:18:58.673] [PRINT] 
+[2026-04-06 03:18:58.673] [PRINT] Plan saved to: E:\capstone\New folder\Citrus\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-06 03:18:58.679] [PRINT] ============================================================
+[2026-04-06 03:18:58.686] [PRINT] 
+[2026-04-06 03:18:58.686] [PRINT] ============================================================
+[2026-04-06 03:18:58.691] [PRINT] ORCHESTRATOR NODE - Execution Phase
+[2026-04-06 03:18:58.697] [PRINT] ============================================================
+[2026-04-06 03:18:58.703] [PRINT] Found 2 steps to execute
+[2026-04-06 03:18:58.708] [INFO] [-]   STEP [orchestrator_node]: 2 steps to execute
+[2026-04-06 03:18:58.709] [PRINT] 
+[2026-04-06 03:18:58.709] [PRINT] INITIAL CONTEXT:
+[2026-04-06 03:18:58.714] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:18:58.719] [PRINT]    today_date: 2026-04-06
+[2026-04-06 03:18:58.726] [PRINT]    _cached_tool_filter: dict (length: 2)
+[2026-04-06 03:18:58.731] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:18:58.736] [PRINT] Pre-flight credential check passed (5 fields)
+[2026-04-06 03:18:58.742] [PRINT] 
+[2026-04-06 03:18:58.742] [PRINT] ============================================================
+[2026-04-06 03:18:58.747] [PRINT] Step 1/2: drive_agent.search_files
+[2026-04-06 03:18:58.752] [PRINT] Description: Search for the file 'project_brief' in Google Drive
+[2026-04-06 03:18:58.758] [PRINT] ============================================================
+[2026-04-06 03:18:58.770] [PRINT] Risk Level: safe
+[2026-04-06 03:18:58.777] [PRINT] 
+[2026-04-06 03:18:58.777] [PRINT] Substituting variables in inputs...
+[2026-04-06 03:18:58.784] [PRINT]    Original inputs: {
+[2026-04-06 03:18:58.784] [PRINT]       "search_term": "project_brief"
+[2026-04-06 03:18:58.784] [PRINT] }
+[2026-04-06 03:18:58.790] [PRINT]    Substituted inputs: {
+[2026-04-06 03:18:58.790] [PRINT]       "search_term": "project_brief"
+[2026-04-06 03:18:58.790] [PRINT] }
+[2026-04-06 03:18:58.796] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-06 03:18:58.801] [INFO] [-]   STEP [variable_substitution]: step 1: drive_agent.search_files  | {"inputs": {"search_term": "project_brief"}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-06 03:18:58.802] [PRINT] 
+[2026-04-06 03:18:58.802] [PRINT] Calling agent microservice: http://localhost:8006/execute_task
+[2026-04-06 03:18:58.807] [PRINT] 
+[2026-04-06 03:18:58.807] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-06 03:18:58.812] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:18:58.817] [PRINT]    Tool: search_files
+[2026-04-06 03:18:58.823] [PRINT]    Inputs keys: ['search_term']
+[2026-04-06 03:18:58.828] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-06 03:18:58.834] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-06 03:18:58.839] [PRINT]    Payload size: 686 bytes
+[2026-04-06 03:18:58.845] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:18:58.850] [PRINT] 
+[2026-04-06 03:18:58.850] [PRINT] Sending request to agent...
+[2026-04-06 03:18:58.856] [PRINT]    URL: http://localhost:8006/execute_task
+[2026-04-06 03:18:58.863] [PRINT]    Timeout: 320 seconds
+[2026-04-06 03:18:58.869] [PRINT]    Max retries: 3
+[2026-04-06 03:18:58.875] [PRINT] Attempt 1/3 calling http://localhost:8006/execute_task
+[2026-04-06 03:18:58.881] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-06 03:19:03.174] [PRINT] Agent call succeeded on attempt 1
+[2026-04-06 03:19:03.205] [PRINT] ⏱ Agent call completed in 4354.54ms
+[2026-04-06 03:19:03.211] [PRINT] Agent response received
+[2026-04-06 03:19:03.218] [AGENT] [-]   AGENT:  drive_agent.search_files (4355ms)  | {"search_term": "project_brief"}
+[2026-04-06 03:19:03.218] [PRINT] 
+[2026-04-06 03:19:03.218] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:03.224] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-06 03:19:03.235] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:03.240] [PRINT] {
+[2026-04-06 03:19:03.240] [PRINT]   "success": true,
+[2026-04-06 03:19:03.240] [PRINT]   "results": [
+[2026-04-06 03:19:03.240] [PRINT]     {
+[2026-04-06 03:19:03.240] [PRINT]       "id": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq",
+[2026-04-06 03:19:03.240] [PRINT]       "name": "project_brief.docx",
+[2026-04-06 03:19:03.240] [PRINT]       "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+[2026-04-06 03:19:03.240] [PRINT]       "webViewLink": "https://docs.google.com/document/d/1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq/edit?usp=drivesdk&ouid=104152594721810958324&rtpof=true&sd=true",
+[2026-04-06 03:19:03.240] [PRINT]       "createdTime": "2026-04-05T18:17:09.227Z",
+[2026-04-06 03:19:03.240] [PRINT]       "size": "8219"
+[2026-04-06 03:19:03.240] [PRINT]     }
+[2026-04-06 03:19:03.240] [PRINT]   ],
+[2026-04-06 03:19:03.240] [PRINT]   "count": 1,
+[2026-04-06 03:19:03.240] [PRINT]   "search_term": "project_brief",
+[2026-04-06 03:19:03.240] [PRINT]   "message": "Found 1 file(s) matching 'project_brief':\n  project_brief.docx",
+[2026-04-06 03:19:03.240] [PRINT]   "error": null
+[2026-04-06 03:19:03.240] [PRINT] }
+[2026-04-06 03:19:03.247] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:03.252] [PRINT] 
+[2026-04-06 03:19:03.252] [PRINT] Variables added to context:
+[2026-04-06 03:19:03.258] [PRINT]    template_file_id = 1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq (from results[0].id)
+[2026-04-06 03:19:03.264] [PRINT] 
+[2026-04-06 03:19:03.264] [PRINT] CONTEXT AFTER STEP 1:
+[2026-04-06 03:19:03.270] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:03.276] [PRINT]    today_date: 2026-04-06
+[2026-04-06 03:19:03.283] [PRINT]    _cached_tool_filter: Dict with keys: ['drive_agent', 'docs_agent']
+[2026-04-06 03:19:03.288] [PRINT]    step_1_drive_agent: Dict with keys: ['results', 'count', 'search_term', 'message']
+[2026-04-06 03:19:03.295] [PRINT]    template_file_id: 1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq
+[2026-04-06 03:19:03.301] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:03.318] [PRINT] 
+[2026-04-06 03:19:03.318] [PRINT] ============================================================
+[2026-04-06 03:19:03.323] [PRINT] Step 2/2: docs_agent.create_from_uploaded_template
+[2026-04-06 03:19:03.330] [PRINT] Description: Create a new document from the found file and name it 'New_Document_Brief2'
+[2026-04-06 03:19:03.335] [PRINT] ============================================================
+[2026-04-06 03:19:03.347] [PRINT] Risk Level: moderate
+[2026-04-06 03:19:03.353] [PRINT] 
+[2026-04-06 03:19:03.353] [PRINT] Substituting variables in inputs...
+[2026-04-06 03:19:03.359] [PRINT]    Original inputs: {
+[2026-04-06 03:19:03.359] [PRINT]       "template_file_id": "{{ template_file_id }}",
+[2026-04-06 03:19:03.359] [PRINT]       "new_title": "New_Document_Brief2"
+[2026-04-06 03:19:03.359] [PRINT] }
+[2026-04-06 03:19:03.365] [PRINT]    Substituted inputs: {
+[2026-04-06 03:19:03.365] [PRINT]       "template_file_id": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq",
+[2026-04-06 03:19:03.365] [PRINT]       "new_title": "New_Document_Brief2"
+[2026-04-06 03:19:03.365] [PRINT] }
+[2026-04-06 03:19:03.370] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_drive_agent', 'template_file_id']
+[2026-04-06 03:19:03.376] [INFO] [-]   STEP [variable_substitution]: step 2: docs_agent.create_from_uploaded_template
+    ↳ {"inputs": {"template_file_id": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq", "new_title": "New_Document_Brief2"}, "context_keys": ["today_date", "_cached_tool_filter", "step_1_drive_agent", "template_file_id"]}
+[2026-04-06 03:19:03.376] [PRINT] 
+[2026-04-06 03:19:03.376] [PRINT] Calling agent microservice: http://localhost:8002/execute_task
+[2026-04-06 03:19:03.381] [PRINT] 
+[2026-04-06 03:19:03.381] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-06 03:19:03.387] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:03.392] [PRINT]    Tool: create_from_uploaded_template
+[2026-04-06 03:19:03.398] [PRINT]    Inputs keys: ['template_file_id', 'new_title']
+[2026-04-06 03:19:03.403] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-06 03:19:03.408] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-06 03:19:03.414] [PRINT]    Payload size: 764 bytes
+[2026-04-06 03:19:03.419] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:03.424] [PRINT] 
+[2026-04-06 03:19:03.424] [PRINT] Sending request to agent...
+[2026-04-06 03:19:03.430] [PRINT]    URL: http://localhost:8002/execute_task
+[2026-04-06 03:19:03.435] [PRINT]    Timeout: 320 seconds
+[2026-04-06 03:19:03.441] [PRINT]    Max retries: 3
+[2026-04-06 03:19:03.446] [PRINT] Attempt 1/3 calling http://localhost:8002/execute_task
+[2026-04-06 03:19:03.451] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-06 03:19:13.317] [PRINT] Agent call succeeded on attempt 1
+[2026-04-06 03:19:13.354] [PRINT] ⏱ Agent call completed in 9929.57ms
+[2026-04-06 03:19:13.361] [PRINT] Agent response received
+[2026-04-06 03:19:13.367] [AGENT] [-]   AGENT:  docs_agent.create_from_uploaded_template (9930ms)  | {"template_file_id": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq", "new_title": "New_Document_Brief2"}
+[2026-04-06 03:19:13.368] [PRINT] 
+[2026-04-06 03:19:13.368] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:13.375] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-06 03:19:13.381] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:13.387] [PRINT] {
+[2026-04-06 03:19:13.387] [PRINT]   "success": true,
+[2026-04-06 03:19:13.387] [PRINT]   "result": {
+[2026-04-06 03:19:13.387] [PRINT]     "success": true,
+[2026-04-06 03:19:13.387] [PRINT]     "document_id": "1Nfe2gNOSJlWYYvYdmdWfuEnPkYOOImuI2RP0zQ4eLsk",
+[2026-04-06 03:19:13.387] [PRINT]     "document_url": "https://docs.google.com/document/d/1Nfe2gNOSJlWYYvYdmdWfuEnPkYOOImuI2RP0zQ4eLsk/edit?usp=drivesdk",
+[2026-04-06 03:19:13.387] [PRINT]     "title": "New_Document_Brief2",
+[2026-04-06 03:19:13.387] [PRINT]     "template_used": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq",
+[2026-04-06 03:19:13.387] [PRINT]     "format": "Google Docs",
+[2026-04-06 03:19:13.387] [PRINT]     "editable": true
+[2026-04-06 03:19:13.387] [PRINT]   },
+[2026-04-06 03:19:13.387] [PRINT]   "raw_response": "Document created from uploaded template.\n\nTitle: New_Document_Brief2\nDocument ID: 1Nfe2gNOSJlWYYvYdmdWfuEnPkYOOImuI2RP0zQ4eLsk\nURL: https://docs.google.com/document/d/1Nfe2gNOSJlWYYvYdmdWfuEnPkYOOImuI2RP0zQ4eLsk/edit?usp=drivesdk\n\nFormat: Google Docs (editable)",
+[2026-04-06 03:19:13.387] [PRINT]   "error": null
+[2026-04-06 03:19:13.387] [PRINT] }
+[2026-04-06 03:19:13.393] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:13.400] [PRINT] 
+[2026-04-06 03:19:13.400] [PRINT] Variables added to context:
+[2026-04-06 03:19:13.407] [PRINT] 
+[2026-04-06 03:19:13.407] [PRINT] CONTEXT AFTER STEP 2:
+[2026-04-06 03:19:13.416] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:13.422] [PRINT]    today_date: 2026-04-06
+[2026-04-06 03:19:13.428] [PRINT]    _cached_tool_filter: Dict with keys: ['drive_agent', 'docs_agent']
+[2026-04-06 03:19:13.434] [PRINT]    step_1_drive_agent: Dict with keys: ['results', 'count', 'search_term', 'message']
+[2026-04-06 03:19:13.441] [PRINT]    template_file_id: 1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq
+[2026-04-06 03:19:13.447] [PRINT]    step_2_docs_agent: Dict with keys: ['document_id', 'document_url', 'title', 'template_used', 'format', 'editable']
+[2026-04-06 03:19:13.453] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-06 03:19:13.470] [PRINT] 
+[2026-04-06 03:19:13.470] [PRINT] ============================================================
+[2026-04-06 03:19:13.475] [PRINT] ORCHESTRATOR COMPLETED
+[2026-04-06 03:19:13.481] [PRINT] ============================================================
+[2026-04-06 03:19:13.486] [PRINT] Total steps: 2
+[2026-04-06 03:19:13.492] [PRINT] Successful: 2
+[2026-04-06 03:19:13.497] [PRINT] No Results: 0
+[2026-04-06 03:19:13.503] [PRINT] Failed: 0
+[2026-04-06 03:19:13.509] [PRINT] ============================================================
+[2026-04-06 03:19:13.515] [INFO] [-]   STEP [orchestrator_complete]: steps=2, success=2, no_results=0, errors=0
+[2026-04-06 03:19:13.519] [PRINT] 
+[2026-04-06 03:19:13.519] [PRINT]  Workflow completed successfully
+[2026-04-06 03:19:13.525] [INFO] [-]   WORKFLOW END: success (2/2 steps)
+[2026-04-06 03:19:13.526] [PRINT] 
+[2026-04-06 03:19:13.526] [PRINT]  Generated Plan:
+[2026-04-06 03:19:13.526] [PRINT] {
+[2026-04-06 03:19:13.526] [PRINT]   "steps": [
+[2026-04-06 03:19:13.526] [PRINT]     {
+[2026-04-06 03:19:13.526] [PRINT]       "agent": "drive_agent",
+[2026-04-06 03:19:13.526] [PRINT]       "tool": "search_files",
+[2026-04-06 03:19:13.526] [PRINT]       "inputs": {
+[2026-04-06 03:19:13.526] [PRINT]         "search_term": "project_brief"
+[2026-04-06 03:19:13.526] [PRINT]       },
+[2026-04-06 03:19:13.526] [PRINT]       "output_variables": {
+[2026-04-06 03:19:13.526] [PRINT]         "template_file_id": "results[0].id"
+[2026-04-06 03:19:13.526] [PRINT]       },
+[2026-04-06 03:19:13.526] [PRINT]       "description": "Search for the file 'project_brief' in Google Drive"
+[2026-04-06 03:19:13.526] [PRINT]     },
+[2026-04-06 03:19:13.526] [PRINT]     {
+[2026-04-06 03:19:13.526] [PRINT]       "agent": "docs_agent",
+[2026-04-06 03:19:13.526] [PRINT]       "tool": "create_from_uploaded_template",
+[2026-04-06 03:19:13.526] [PRINT]       "inputs": {
+[2026-04-06 03:19:13.526] [PRINT]         "template_file_id": "{{ template_file_id }}",
+[2026-04-06 03:19:13.526] [PRINT]         "new_title": "New_Document_Brief2"
+[2026-04-06 03:19:13.526] [PRINT]       },
+[2026-04-06 03:19:13.526] [PRINT]       "output_variables": {},
+[2026-04-06 03:19:13.526] [PRINT]       "description": "Create a new document from the found file and name it 'New_Document_Brief2'"
+[2026-04-06 03:19:13.526] [PRINT]     }
+[2026-04-06 03:19:13.526] [PRINT]   ]
+[2026-04-06 03:19:13.526] [PRINT] }
+[2026-04-06 03:19:13.533] [PRINT] 
+[2026-04-06 03:19:13.533] [PRINT]  Final Context: {
+[2026-04-06 03:19:13.533] [PRINT]   "today_date": "2026-04-06",
+[2026-04-06 03:19:13.533] [PRINT]   "_cached_tool_filter": {
+[2026-04-06 03:19:13.533] [PRINT]     "drive_agent": [
+[2026-04-06 03:19:13.533] [PRINT]       "search_files"
+[2026-04-06 03:19:13.533] [PRINT]     ],
+[2026-04-06 03:19:13.533] [PRINT]     "docs_agent": [
+[2026-04-06 03:19:13.533] [PRINT]       "create_from_uploaded_template",
+[2026-04-06 03:19:13.533] [PRINT]       "list_my_docs"
+[2026-04-06 03:19:13.533] [PRINT]     ]
+[2026-04-06 03:19:13.533] [PRINT]   },
+[2026-04-06 03:19:13.533] [PRINT]   "step_1_drive_agent": {
+[2026-04-06 03:19:13.533] [PRINT]     "results": [
+[2026-04-06 03:19:13.533] [PRINT]       {
+[2026-04-06 03:19:13.533] [PRINT]         "id": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq",
+[2026-04-06 03:19:13.533] [PRINT]         "name": "project_brief.docx",
+[2026-04-06 03:19:13.533] [PRINT]         "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+[2026-04-06 03:19:13.533] [PRINT]         "webViewLink": "https://docs.google.com/document/d/1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq/edit?usp=drivesdk&ouid=104152594721810958324&rtpof=true&sd=true",
+[2026-04-06 03:19:13.533] [PRINT]         "createdTime": "2026-04-05T18:17:09.227Z",
+[2026-04-06 03:19:13.533] [PRINT]         "size": "8219"
+[2026-04-06 03:19:13.533] [PRINT]       }
+[2026-04-06 03:19:13.533] [PRINT]     ],
+[2026-04-06 03:19:13.533] [PRINT]     "count": 1,
+[2026-04-06 03:19:13.533] [PRINT]     "search_term": "project_brief",
+[2026-04-06 03:19:13.533] [PRINT]     "message": "Found 1 file(s) matching 'project_brief':\n  project_brief.docx"
+[2026-04-06 03:19:13.533] [PRINT]   },
+[2026-04-06 03:19:13.533] [PRINT]   "template_file_id": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq",
+[2026-04-06 03:19:13.533] [PRINT]   "step_2_docs_agent": {
+[2026-04-06 03:19:13.533] [PRINT]     "document_id": "1Nfe2gNOSJlWYYvYdmdWfuEnPkYOOImuI2RP0zQ4eLsk",
+[2026-04-06 03:19:13.533] [PRINT]     "document_url": "https://docs.google.com/document/d/1Nfe2gNOSJlWYYvYdmdWfuEnPkYOOImuI2RP0zQ4eLsk/edit?usp=drivesdk",
+[2026-04-06 03:19:13.533] [PRINT]     "title": "New_Document_Brief2",
+[2026-04-06 03:19:13.533] [PRINT]     "template_used": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq",
+[2026-04-06 03:19:13.533] [PRINT]     "format": "Google Docs",
+[2026-04-06 03:19:13.533] [PRINT]     "editable": true
+[2026-04-06 03:19:13.533] [PRINT]   },
+[2026-04-06 03:19:13.533] [PRINT]   "results": [
+[2026-04-06 03:19:13.533] [PRINT]     {
+[2026-04-06 03:19:13.533] [PRINT]       "step": 1,
+[2026-04-06 03:19:13.533] [PRINT]       "agent": "drive_agent",
+[2026-04-06 03:19:13.533] [PRINT]       "tool": "search_files",
+[2026-04-06 03:19:13.533] [PRINT]       "description": "Search for the file 'project_brief' in Google Drive",
+[2026-04-06 03:19:13.533] [PRINT]       "inputs": {
+[2026-04-06 03:19:13.533] [PRINT]         "search_term": "project_brief"
+[2026-04-06 03:19:13.533] [PRINT]       },
+[2026-04-06 03:19:13.533] [PRINT]       "output": {
+[2026-04-06 03:19:13.533] [PRINT]         "success": true,
+[2026-04-06 03:19:13.533] [PRINT]         "results": [
+[2026-04-06 03:19:13.533] [PRINT]           {
+[2026-04-06 03:19:13.533] [PRINT]             "id": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq",
+[2026-04-06 03:19:13.533] [PRINT]             "name": "project_brief.docx",
+[2026-04-06 03:19:13.533] [PRINT]             "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+[2026-04-06 03:19:13.533] [PRINT]             "webViewLink": "https://docs.google.com/document/d/1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq/edit?usp=drivesdk&ouid=104152594721810958324&rtpof=true&sd=true",
+[2026-04-06 03:19:13.533] [PRINT]             "createdTime": "2026-04-05T18:17:09.227Z",
+[2026-04-06 03:19:13.533] [PRINT]             "size": "8219"
+[2026-04-06 03:19:13.533] [PRINT]           }
+[2026-04-06 03:19:13.533] [PRINT]         ],
+[2026-04-06 03:19:13.533] [PRINT]         "count": 1,
+[2026-04-06 03:19:13.533] [PRINT]         "search_term": "project_brief",
+[2026-04-06 03:19:13.533] [PRINT]         "message": "Found 1 file(s) matching 'project_brief':\n  project_brief.docx",
+[2026-04-06 03:19:13.533] [PRINT]         "error": null
+[2026-04-06 03:19:13.533] [PRINT]       },
+[2026-04-06 03:19:13.533] [PRINT]       "status": "success"
+[2026-04-06 03:19:13.533] [PRINT]     },
+[2026-04-06 03:19:13.533] [PRINT]     {
+[2026-04-06 03:19:13.533] [PRINT]       "step": 2,
+[2026-04-06 03:19:13.533] [PRINT]       "agent": "docs_agent",
+[2026-04-06 03:19:13.533] [PRINT]       "tool": "create_from_uploaded_template",
+[2026-04-06 03:19:13.533] [PRINT]       "description": "Create a new document from the found file and name it 'New_Document_Brief2'",
+[2026-04-06 03:19:13.533] [PRINT]       "inputs": {
+[2026-04-06 03:19:13.533] [PRINT]         "template_file_id": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq",
+[2026-04-06 03:19:13.533] [PRINT]         "new_title": "New_Document_Brief2"
+[2026-04-06 03:19:13.533] [PRINT]       },
+[2026-04-06 03:19:13.533] [PRINT]       "output": {
+[2026-04-06 03:19:13.533] [PRINT]         "success": true,
+[2026-04-06 03:19:13.533] [PRINT]         "document_id": "1Nfe2gNOSJlWYYvYdmdWfuEnPkYOOImuI2RP0zQ4eLsk",
+[2026-04-06 03:19:13.533] [PRINT]         "document_url": "https://docs.google.com/document/d/1Nfe2gNOSJlWYYvYdmdWfuEnPkYOOImuI2RP0zQ4eLsk/edit?usp=drivesdk",
+[2026-04-06 03:19:13.533] [PRINT]         "title": "New_Document_Brief2",
+[2026-04-06 03:19:13.533] [PRINT]         "template_used": "1v4AX7e_Z7b4uzmoQbp6G39zNp9Qu6aDq",
+[2026-04-06 03:19:13.533] [PRINT]         "format": "Google Docs",
+[2026-04-06 03:19:13.533] [PRINT]         "editable": true
+[2026-04-06 03:19:13.533] [PRINT]       },
+[2026-04-06 03:19:13.533] [PRINT]       "status": "success"
+[2026-04-06 03:19:13.533] [PRINT]     }
+[2026-04-06 03:19:13.533] [PRINT]   ]
+[2026-04-06 03:19:13.533] [PRINT] }
+[2026-04-06 03:19:13.540] [WARN] [req_20260405191851_94004523] [T:a1054742]  WARN: No response template for docs_agent.create_from_uploaded_template — LLM safety net will be used
+[2026-04-06 03:19:13.541] [INFO] [req_20260405191851_94004523] [T:a1054742]   STEP [response_composer]: template formatting  | {"total_steps": 2, "all_templated": false}
+[2026-04-06 03:19:13.541] [INFO] [req_20260405191851_94004523] [T:a1054742]   STEP [response_composer]: LLM safety-net compose (624 chars context)
+[2026-04-06 03:19:16.129] [PRINT]  OK [post] gpt-4o-mini | response_composer_safety_net | in=309 out=100 | $0.0001 | 2546ms | cumulative: in=2426 out=301 total=2727 $0.0677
+[2026-04-06 03:19:16.136] [INFO] [req_20260405191851_94004523] [T:a1054742]   INFO: Memory: added assistant message
+    ↳ {"tokens": 106, "total": 272, "max": 2000, "response_preview": "I found the file **project_brief.docx** in Google Drive and created a new document titled **New_Document_Brief2**. \n\nYou can access it [here](https://docs.google.com/document/d/1Nfe2gNOSJlWYYvYdmdWfuE..."}
+[2026-04-06 03:19:16.160] [PRINT] 
+[2026-04-06 03:19:16.160] [PRINT] ============================================================
+[2026-04-06 03:19:16.166] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-06 03:19:16.171] [PRINT] ============================================================
+[2026-04-06 03:19:16.176] [PRINT]   LLM calls:        3
+[2026-04-06 03:19:16.182] [PRINT]   Total input:      2,426 tokens
+[2026-04-06 03:19:16.187] [PRINT]   Total output:     301 tokens
+[2026-04-06 03:19:16.193] [PRINT]   Total tokens:     2,727 tokens
+[2026-04-06 03:19:16.198] [PRINT]   Estimated cost:   $0.0677
+[2026-04-06 03:19:16.204] [PRINT]   Total duration:   24342ms (24.3s)
+[2026-04-06 03:19:16.209] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-06 03:19:16.214] [PRINT]   Breakdown by call:
+[2026-04-06 03:19:16.219] [PRINT]     1. gpt-4o-mini      in=204    out=32    $0.0000 1855ms
+[2026-04-06 03:19:16.224] [PRINT]     2. gpt-4            in=1913   out=169   $0.0675 4574ms
+[2026-04-06 03:19:16.230] [PRINT]     3. gpt-4o-mini      in=309    out=100   $0.0001 2546ms
+[2026-04-06 03:19:16.235] [PRINT] ============================================================
+[2026-04-06 03:19:19.250] [INFO] [req_20260405191851_94004523] [T:a1054742] ← RESPONSE: 200 (31783ms)
+[2026-04-06 03:19:19.251] [INFO] [req_20260405191851_94004523] [T:a1054742] ─────────: ──────────────────────────────────────────────────
+[2026-04-06 03:19:19.253] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742
