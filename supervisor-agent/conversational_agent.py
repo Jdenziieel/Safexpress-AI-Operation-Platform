@@ -700,12 +700,8 @@ CONTEXT RULES:
 
 INTENT: needs_clarification | not_feasible | too_complex | ready_to_execute | small_talk
 
-MULTI-STEP / COMPOUND TASKS:
-The supervisor CAN plan and execute multi-step workflows involving DIFFERENT agents in a single request (e.g. "create a calendar event and update a spreadsheet"). These are NOT too_complex — treat them as ready_to_execute (or needs_clarification if info is missing). Combine all sub-tasks into one execution_summary.
-Reserve too_complex ONLY for requests that genuinely exceed system capabilities (e.g. tasks requiring agents/tools that don't exist, or open-ended research with no clear end state).
-
 EXECUTION MODE:
-- "standard": Default. Plan all steps upfront then execute. Use for straightforward tasks (send email, create doc, search+reply) AND multi-step tasks across agents.
+- "standard": Default. Plan all steps upfront then execute. Use for straightforward tasks (send email, create doc, search+reply).
 
 JSON OUTPUT:
 {{

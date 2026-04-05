@@ -771,32 +771,6 @@ def get_all_pending_actions(thread_id: str = None) -> List[Dict]:
     return storage.get_pending_actions(thread_id=thread_id, status="pending")
 
 
-PARAMETER_ALIASES: Dict[tuple, Dict[str, str]] = {
-    ("drive_agent", "search_files"): {"query": "search_term"},
-}
-"""Maps (agent, tool) → {llm_generated_name: canonical_name}.
-
-The supervisor LLM occasionally generates parameter names that don't match
-the agent's expected schema (e.g. ``query`` instead of ``search_term``).
-This mapping is applied just before sending the HTTP request so the agent
-receives the correct key.
-"""
-
-
-def _normalise_inputs(agent: str, tool: str, inputs: dict) -> dict:
-    """Rename LLM-generated parameter names to canonical agent names."""
-    aliases = PARAMETER_ALIASES.get((agent, tool))
-    if not aliases:
-        return inputs
-    normalised = {}
-    for key, value in inputs.items():
-        canonical = aliases.get(key, key)
-        if canonical != key:
-            print(f"   Parameter alias: '{key}' → '{canonical}' (for {agent}.{tool})")
-        normalised[canonical] = value
-    return normalised
-
-
 def orchestrator_node(state: SharedState) -> SharedState:
     """
     Executes the plan by calling specialized agent microservices via HTTP.
@@ -915,8 +889,6 @@ def orchestrator_node(state: SharedState) -> SharedState:
                         substituted_inputs[key] = rendered
                 else:
                     substituted_inputs[key] = value
-
-            substituted_inputs = _normalise_inputs(agent_name, tool_name, substituted_inputs)
 
             # Create action approval request
             action_id = generate_action_id()
@@ -1047,9 +1019,6 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 "stopped_at_step": step_num,
                 "error": error_msg,
             }
-
-        # Normalise parameter names before sending to agent
-        substituted_inputs = _normalise_inputs(agent_name, tool_name, substituted_inputs)
 
         print(f"   Substituted inputs: {json.dumps(substituted_inputs, indent=6)}")
         print(f"   Available context variables: {list(variable_context.keys())}")
