@@ -1810,3 +1810,182 @@ def _process_delivery_order_workflow_impl(
             "search_summary": {},
             "error": f"Workflow error: {str(e)}"
         }
+
+
+def _extract_attachment_data_impl(
+    message_id: str,
+    attachment_id: str,
+    filename: str = "attachment",
+    mapping_agent_url: str = None,
+    credentials_dict: Dict[str, Any] = None
+) -> Dict[str, Any]:
+    """
+    Download an email attachment and extract structured data via the mapping agent.
+
+    Steps:
+        1. Download the attachment from Gmail using message_id + attachment_id
+        2. Base64-encode the file content
+        3. Call mapping_agent parse_file to extract structured data
+
+    Args:
+        message_id: Gmail message ID containing the attachment
+        attachment_id: Gmail attachment ID within the message
+        filename: Original filename (used to determine file type)
+        mapping_agent_url: URL of the mapping agent (default from env MAPPING_AGENT_URL)
+        credentials_dict: OAuth credentials dict
+
+    Returns:
+        Dict with success, parsed_data, filename, file_size, error
+    """
+    try:
+        if mapping_agent_url is None:
+            mapping_agent_url = os.getenv("MAPPING_AGENT_URL", "http://localhost:8004")
+
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        attachment = (
+            gmail_service.users()
+            .messages()
+            .attachments()
+            .get(userId="me", messageId=message_id, id=attachment_id)
+            .execute()
+        )
+
+        file_data = base64.urlsafe_b64decode(attachment.get("data", ""))
+        file_size = len(file_data)
+
+        ext = os.path.splitext(filename)[-1].lower().lstrip(".")
+        file_type_map = {
+            "xlsx": "excel", "xls": "excel",
+            "csv": "csv", "json": "json",
+        }
+        file_type = file_type_map.get(ext)
+        if not file_type:
+            return {
+                "success": False,
+                "parsed_data": None,
+                "filename": filename,
+                "file_size": file_size,
+                "error": f"Unsupported attachment type '.{ext}'. Supported: csv, xlsx, xls, json",
+            }
+
+        tmp_dir = tempfile.mkdtemp(prefix="gmail_extract_")
+        tmp_path = os.path.join(tmp_dir, filename)
+        with open(tmp_path, "wb") as f:
+            f.write(file_data)
+
+        parse_payload = {
+            "tool": "parse_file",
+            "inputs": {
+                "file_content": tmp_path,
+                "file_type": file_type,
+            },
+        }
+
+        resp = httpx.post(
+            f"{mapping_agent_url}/execute_task",
+            json=parse_payload,
+            timeout=30.0,
+        )
+        parse_result = resp.json()
+
+        try:
+            shutil.rmtree(tmp_dir)
+        except Exception:
+            pass
+
+        if not parse_result.get("success"):
+            return {
+                "success": False,
+                "parsed_data": None,
+                "filename": filename,
+                "file_size": file_size,
+                "error": parse_result.get("error", "Mapping agent parse_file failed"),
+            }
+
+        inner_result = parse_result.get("result") or {}
+        return {
+            "success": True,
+            "parsed_data": inner_result,
+            "filename": filename,
+            "file_size": file_size,
+            "error": None,
+        }
+
+    except HttpError as e:
+        return {"success": False, "parsed_data": None, "filename": filename,
+                "file_size": 0, "error": f"Gmail API error: {str(e)}"}
+    except Exception as e:
+        return {"success": False, "parsed_data": None, "filename": filename,
+                "file_size": 0, "error": f"Unexpected error: {str(e)}"}
+
+
+def _map_columns_to_sheet_impl(
+    data: Any,
+    sheet_id: str,
+    sheet_name: str = "Sheet1",
+    append_mode: bool = True,
+    sheets_agent_url: str = None,
+    credentials_dict: Dict[str, Any] = None
+) -> Dict[str, Any]:
+    """
+    Map extracted data columns to a Google Sheet via the sheets agent.
+
+    Args:
+        data: Extracted/transformed data (dict or list of dicts, or JSON string)
+        sheet_id: Google Sheets spreadsheet ID
+        sheet_name: Target sheet/tab name (default: "Sheet1")
+        append_mode: If True, append rows; if False, overwrite
+        sheets_agent_url: URL of the sheets agent (default from env SHEETS_AGENT_URL)
+        credentials_dict: OAuth credentials dict
+
+    Returns:
+        Dict with success, rows_written, sheet_id, error
+    """
+    try:
+        if sheets_agent_url is None:
+            sheets_agent_url = os.getenv("SHEETS_AGENT_URL", "http://localhost:8003")
+
+        if isinstance(data, (dict, list)):
+            transformed_data = json.dumps(data)
+        else:
+            transformed_data = str(data)
+
+        upload_payload = {
+            "tool": "upload_mapped_data",
+            "inputs": {
+                "sheet_id": sheet_id,
+                "transformed_data": transformed_data,
+                "sheet_name": sheet_name,
+                "append_mode": append_mode,
+            },
+            "credentials_dict": credentials_dict or {},
+        }
+
+        resp = httpx.post(
+            f"{sheets_agent_url}/execute_task",
+            json=upload_payload,
+            timeout=30.0,
+        )
+        upload_result = resp.json()
+
+        if not upload_result.get("success"):
+            return {
+                "success": False,
+                "rows_written": 0,
+                "sheet_id": sheet_id,
+                "error": upload_result.get("error", "Sheets agent upload_mapped_data failed"),
+            }
+
+        inner = upload_result.get("result") or {}
+        rows = inner.get("rows_written") or inner.get("rows_added", 0)
+        return {
+            "success": True,
+            "rows_written": rows,
+            "sheet_id": sheet_id,
+            "error": None,
+        }
+
+    except Exception as e:
+        return {"success": False, "rows_written": 0, "sheet_id": sheet_id,
+                "error": f"Unexpected error: {str(e)}"}

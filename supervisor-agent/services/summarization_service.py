@@ -448,7 +448,7 @@ class SummarizationService:
         return "\n".join(lines)
 
     def _categorize_error(self, error_msg: str) -> str:
-        error_lower = error_msg.lower()
+        error_lower = (error_msg or "").lower()
 
         if any(
             term in error_lower

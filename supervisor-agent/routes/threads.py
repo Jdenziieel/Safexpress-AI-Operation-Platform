@@ -422,18 +422,13 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
     conversation_state.last_executed_at = now_iso
     conversation_state.last_execution_status = status
     conversation_state.last_execution_message = message_text
-    conversation_state.ready_for_execution = False
-    conversation_state.intent = None
-    conversation_state.execution_summary = None
 
     # Clean up temp file if execution was deferred from a prior upload request
     deferred_file = conversation_state.extracted_info.get("uploaded_file")
     if deferred_file and isinstance(deferred_file, dict):
         delete_temp_file(deferred_file)
 
-    conversation_state.extracted_info = {}
-    conversation_state.missing_fields = []
-    conversation_state.clarification_question = None
+    _clear_workflow_state(conversation_state)
 
     # Populate completed_tasks from orchestrator step results
     for step_result in final_context.get("results", []):
@@ -474,6 +469,204 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
     return friendly_summary, conversation_state
 
 # ============================================================
+# SHARED HELPERS
+# ============================================================
+
+def _check_quota_or_raise(user_id: str, estimated_tokens: int = 2000):
+    """Raise 403 (deactivated) or 429 (exceeded) if user fails quota check."""
+    quota_result = check_user_quota(user_id, estimated_tokens=estimated_tokens)
+    if not quota_result.allowed:
+        error_message = quota_result.error or "Quota check failed"
+        if quota_result.user_deactivated:
+            raise HTTPException(status_code=403, detail={
+                "error": "account_deactivated",
+                "message": error_message,
+                "user_message": "Your account has been deactivated. Please contact an administrator."
+            })
+        else:
+            raise HTTPException(status_code=429, detail={
+                "error": "quota_exceeded",
+                "message": error_message,
+                "user_message": error_message
+            })
+
+
+def _clear_workflow_state(state):
+    """Reset all workflow-related fields after execution completes, fails, or is rejected."""
+    state.remaining_steps = []
+    state.workflow_context = None
+    state.intent = None
+    state.ready_for_execution = False
+    state.execution_summary = None
+    state.extracted_info = {}
+    state.missing_fields = []
+    state.clarification_question = None
+
+
+async def _execute_workflow_guarded(conversation_state, thread_id: str, cleanup_file: dict = None):
+    """Mark state as executing, run the workflow, and guarantee cleanup in finally.
+
+    Args:
+        cleanup_file: Optional uploaded-file dict to delete after workflow finishes.
+
+    Returns:
+        (response_text, updated_conversation_state)
+    """
+    conversation_state.executing = True
+    conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+    try:
+        response_text, conversation_state = await _run_workflow_and_update_state(
+            conversation_state, thread_id=thread_id
+        )
+        return response_text, conversation_state
+    finally:
+        conversation_state.executing = False
+        conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+        if cleanup_file:
+            delete_temp_file(cleanup_file)
+            print(f"Cleaned up uploaded file")
+
+
+async def _handle_pending_action_decision(conversation_state, thread_id: str, response_text: str):
+    """Shared handler for chat-based approve/reject of pending actions.
+
+    Returns:
+        (response_text, conversation_state, handled) where handled=True if
+        a pending-action decision was processed.
+    """
+    pending_decision = conversation_state.extracted_info.get("decision")
+    pending_action_id = conversation_state.extracted_info.get("action_id")
+
+    if pending_decision == "approve" and pending_action_id and conversation_state.workflow_paused:
+        print(f"Chat-based approval for action {pending_action_id}")
+        trace.step("chat_approval", f"Executing approved action: {pending_action_id}")
+
+        pending = conversation_state.pending_actions[0] if conversation_state.pending_actions else {}
+
+        try:
+            conversation_state.executing = True
+            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+
+            step_info = {
+                "agent": pending.get("agent"),
+                "tool": pending.get("tool"),
+                "inputs": pending.get("inputs", {}),
+            }
+            result = await asyncio.to_thread(execute_single_action, step_info)
+
+            print(f"Action executed: {result.get('success', False)}")
+
+            conversation_state.pending_actions = []
+            conversation_state.workflow_paused = False
+
+            from supervisor_agent import remove_pending_action
+            try:
+                remove_pending_action(pending_action_id)
+            except Exception:
+                pass
+
+            conversation_state.extracted_info.pop("action_id", None)
+            conversation_state.extracted_info.pop("decision", None)
+
+            if result.get("success"):
+                description = pending.get("description", "Action")
+                tool_name = pending.get("tool", "unknown")
+                inputs = pending.get("inputs", {})
+                response_text = f"**Done — {description}**\n\n"
+
+                detail_parts = []
+                action_result = result.get("result", {}) if isinstance(result.get("result"), dict) else {}
+                if tool_name in ("send_draft_email", "send_email_with_attachment"):
+                    if inputs.get("to"):
+                        detail_parts.append(f"Sent to **{inputs['to']}**")
+                    if inputs.get("subject"):
+                        detail_parts.append(f"Subject: **{inputs['subject']}**")
+                elif tool_name == "reply_to_email":
+                    detail_parts.append("Reply sent")
+                elif tool_name == "create_draft_email":
+                    if inputs.get("to"):
+                        detail_parts.append(f"Draft created for **{inputs['to']}**")
+                elif tool_name in ("create_doc", "add_text"):
+                    title = inputs.get("title") or action_result.get("title", "")
+                    if title:
+                        detail_parts.append(f"Document: **{title}**")
+                elif tool_name == "create_event":
+                    summary = inputs.get("summary") or inputs.get("title", "")
+                    if summary:
+                        detail_parts.append(f"Event: **{summary}**")
+                elif tool_name == "share_file":
+                    if inputs.get("email"):
+                        detail_parts.append(f"Shared with **{inputs['email']}**")
+                elif tool_name in ("delete_email", "delete_file", "delete_event"):
+                    detail_parts.append("Deleted successfully")
+                elif tool_name == "upload_file":
+                    fname = inputs.get("filename") or inputs.get("file_name", "")
+                    if fname:
+                        detail_parts.append(f"Uploaded **{fname}**")
+
+                if detail_parts:
+                    response_text += "\n".join(f"- {p}" for p in detail_parts) + "\n"
+
+                remaining = conversation_state.remaining_steps
+
+                if remaining:
+                    response_text += f"\nContinuing with {len(remaining)} remaining step(s)...\n"
+                    response_text, conversation_state = await _resume_remaining_steps(
+                        conversation_state, result, response_text, thread_id,
+                        approved_step_info=pending,
+                    )
+                else:
+                    response_text += "\nIs there anything else I can help with?"
+
+                if not conversation_state.workflow_paused:
+                    now_iso = datetime.now(timezone.utc).isoformat()
+                    conversation_state.execution_history.append({
+                        "executed_at": now_iso,
+                        "status": "success",
+                        "message": f"Approved and executed: {description}",
+                    })
+                    conversation_state.has_executed = True
+                    conversation_state.last_executed_at = now_iso
+                    conversation_state.last_execution_status = "success"
+                    conversation_state.last_execution_message = f"Approved and executed: {description}"
+                    _clear_workflow_state(conversation_state)
+            else:
+                error_msg = result.get("error", "Unknown error")
+                response_text = f"**Action Failed**\n\n{error_msg}\n\nWould you like to try again, or is there something else I can help with?"
+                _clear_workflow_state(conversation_state)
+
+        except Exception as e:
+            print(f"Error executing approved action: {str(e)}")
+            response_text = f"**Execution Error**\n\n{str(e)}\n\nWould you like to try again, or is there something else I can help with?"
+            conversation_state.pending_actions = []
+            conversation_state.workflow_paused = False
+            _clear_workflow_state(conversation_state)
+        finally:
+            conversation_state.executing = False
+            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+
+        return response_text, conversation_state, True
+
+    elif pending_decision == "reject" and pending_action_id and conversation_state.workflow_paused:
+        print(f"Chat-based rejection for action {pending_action_id}")
+
+        conversation_state.pending_actions = []
+        conversation_state.workflow_paused = False
+        _clear_workflow_state(conversation_state)
+
+        from supervisor_agent import remove_pending_action
+        try:
+            remove_pending_action(pending_action_id)
+        except Exception:
+            pass
+
+        conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+        return response_text, conversation_state, True
+
+    return response_text, conversation_state, False
+
+
+# ============================================================
 # THREAD MANAGEMENT ENDPOINTS
 # ============================================================
 @router.post("/threads")
@@ -491,31 +684,9 @@ async def create_thread(request: CreateThreadRequest):
     trace.set_context(thread_id="new")
     trace.step("create_thread", f"user={user_id}, has_message={initial_message is not None}")
 
-    # === QUOTA CHECK: Verify user has quota before processing ===
-    quota_result = check_user_quota(user_id, estimated_tokens=2000)
-    if not quota_result.allowed:
-        trace.decision("quota_check", f"DENIED: {quota_result.error}")
-        error_message = quota_result.error or "Quota check failed"
-        if quota_result.user_deactivated:
-            raise HTTPException(
-                status_code=403,
-                detail={
-                    "error": "account_deactivated",
-                    "message": error_message,
-                    "user_message": "Your account has been deactivated. Please contact an administrator."
-                }
-            )
-        else:
-            raise HTTPException(
-                status_code=429,
-                detail={
-                    "error": "quota_exceeded",
-                    "message": error_message,
-                    "user_message": error_message
-                }
-            )
+    _check_quota_or_raise(user_id)
 
-    # === REQUEST CONTEXT: Initialize logging context. This is just for logging ===
+    # === REQUEST CONTEXT: Initialize logging context ===
     request_id = set_request_context(
         request_id=generate_request_id(),
         conversation_id=None,
@@ -535,44 +706,44 @@ async def create_thread(request: CreateThreadRequest):
     )
 
     try:
-        # 1. Create thread using conversational agent in thread_service.py
-        thread_id, conversation_state, bot_response = conversational_agent.thread_service.create_new_thread(
+        thread_id, conversation_state, _ = conversational_agent.thread_service.create_new_thread(
             user_id=user_id,
-            initial_message=initial_message
+            initial_message=None
         )
 
-        # Update logging context with real thread_id
         set_request_context(
             request_id=request_id,
             conversation_id=thread_id,
             thread_id=thread_id,
             user_id=user_id
         )
-        # trace.set_context(request_id=request_id, thread_id=thread_id)
 
-        # Track whether workflow execution happened
+        save_conversation_state(thread_id, conversation_state)
+
+        bot_response = None
         execution_completed = False
 
-        # If ready for execution after initial message, execute immediately
-        if initial_message and conversation_state.ready_for_execution:
-            print(f"Thread {thread_id} ready - executing workflow...")
-            trace.decision("ready_for_execution", "YES — executing immediately")
+        if initial_message:
+            auto_title = conversational_agent.thread_service.thread_manager.auto_generate_title(initial_message)
+            conversational_agent.thread_service.thread_manager.update_thread(thread_id, title=auto_title)
 
-            # Mark as executing to prevent conflicts
-            conversation_state.executing = True
-            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+            await broadcast_progress(thread_id, 0, 0, "Analyzing your message...", status="analyzing")
+            bot_response, conversation_state = await asyncio.to_thread(
+                conversational_agent.process_message,
+                user_message=initial_message,
+                conversation_state=conversation_state,
+                state_id=thread_id,
+                auto_save=True,
+            )
 
-            try:
-                bot_response, conversation_state = await _run_workflow_and_update_state(
-                    conversation_state, thread_id=thread_id
+            if conversation_state.ready_for_execution:
+                print(f"Thread {thread_id} ready - executing workflow...")
+                trace.decision("ready_for_execution", "YES — executing immediately")
+                bot_response, conversation_state = await _execute_workflow_guarded(
+                    conversation_state, thread_id
                 )
                 execution_completed = True
-            finally:
-                # Clear executing flag and save
-                conversation_state.executing = False
-                conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
 
-        # Get thread metadata
         thread_metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
         response = {
@@ -582,7 +753,6 @@ async def create_thread(request: CreateThreadRequest):
             "message": "Thread created successfully"
         }
 
-        # If there was an initial message, include the bot's response
         if initial_message and bot_response:
             response["bot_response"] = bot_response
             response["ready_for_execution"] = conversation_state.ready_for_execution
@@ -595,13 +765,16 @@ async def create_thread(request: CreateThreadRequest):
             else:
                 response["needs_clarification"] = False
 
-        # Log request summary before returning
         logger.request_summary()
         clear_request_context()
 
         return response
 
     except HTTPException:
+        logger.request_summary()
+        clear_request_context()
+        raise
+    except LLMServiceException:
         logger.request_summary()
         clear_request_context()
         raise
@@ -623,28 +796,7 @@ async def create_thread_with_upload(
     This prevents the "Uploading file..." secondary message issue.
     """
 
-    # === QUOTA CHECK: Verify user has quota before processing ===
-    quota_result = check_user_quota(user_id, estimated_tokens=2000)
-    if not quota_result.allowed:
-        error_message = quota_result.error or "Quota check failed"
-        if quota_result.user_deactivated:
-            raise HTTPException(
-                status_code=403,
-                detail={
-                    "error": "account_deactivated",
-                    "message": error_message,
-                    "user_message": "Your account has been deactivated. Please contact an administrator."
-                }
-            )
-        else:
-            raise HTTPException(
-                status_code=429,
-                detail={
-                    "error": "quota_exceeded",
-                    "message": error_message,
-                    "user_message": error_message
-                }
-            )
+    _check_quota_or_raise(user_id)
 
     # === REQUEST CONTEXT: Initialize logging context ===
     request_id = set_request_context(
@@ -673,10 +825,11 @@ async def create_thread_with_upload(
         print(f"  → Stored: {uploaded_file.get('temp_path') or uploaded_file.get('s3_key')}")
         print(f"  → Size: {uploaded_file['size']} bytes")
 
-        # Create thread with initial message AND file
+        # Create thread WITHOUT running analysis -- we call process_message
+        # ourselves below so the uploaded_file is visible to Tier 0.5/1.
         thread_id, conversation_state, bot_response = conversational_agent.thread_service.create_new_thread(
             user_id=user_id,
-            initial_message=message
+            initial_message=None
         )
 
         # Update logging context with real thread_id
@@ -689,6 +842,11 @@ async def create_thread_with_upload(
 
         # Store in both cache and SQLite for persistence
         save_conversation_state(thread_id, conversation_state)
+
+        # Auto-generate title from the user's message (create_new_thread
+        # skips this when initial_message is None).
+        auto_title = conversational_agent.thread_service.thread_manager.auto_generate_title(message)
+        conversational_agent.thread_service.thread_manager.update_thread(thread_id, title=auto_title)
 
         # === PROGRESS: Analyzing ===
         await broadcast_progress(thread_id, 0, 0, "Analyzing your message...", status="analyzing")
@@ -706,31 +864,14 @@ async def create_thread_with_upload(
         print(f"Bot response: {response_text}")
         print(f"Ready to execute: {updated_state.ready_for_execution}")
 
-        # If ready for execution, execute immediately
         if updated_state.ready_for_execution:
             print(f"Thread {thread_id} ready - executing workflow...")
+            response_text, updated_state = await _execute_workflow_guarded(
+                updated_state, thread_id, cleanup_file=uploaded_file
+            )
 
-            updated_state.executing = True
-            conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
-
-            try:
-                response_text, updated_state = await _run_workflow_and_update_state(
-                    updated_state, thread_id=thread_id
-                )
-            finally:
-                updated_state.executing = False
-                conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
-
-                # Clean up temp file after workflow completes
-                delete_temp_file(uploaded_file)
-                print(f"Cleaned up uploaded file")
-        # else: Do NOT delete — file persists (local or S3) until workflow
-        # eventually executes.  S3 lifecycle rule handles orphan cleanup.
-
-        # Get thread metadata
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
-        # Log request summary before returning
         logger.request_summary()
         clear_request_context()
 
@@ -741,14 +882,15 @@ async def create_thread_with_upload(
             "metadata": metadata
         }
 
+    except LLMServiceException:
+        clear_request_context()
+        raise
     except Exception as e:
         print(f"\nError creating thread with upload: {str(e)}")
         traceback.print_exc()
 
-        # Clean up temp file on error
         if 'uploaded_file' in locals():
             delete_temp_file(uploaded_file)
-            print(f"Cleaned up uploaded file on error")
 
         clear_request_context()
         raise HTTPException(status_code=500, detail=f"Failed to create thread with file: {str(e)}")
@@ -916,30 +1058,9 @@ async def send_message_to_thread(thread_id: str, request: dict):
         Bot response and updated thread metadata
     """
 
-    # === QUOTA CHECK: Extract user_id from thread_id and verify quota ===
     user_id = thread_id.split('_')[0] if '_' in thread_id else None
     if user_id:
-        quota_result = check_user_quota(user_id, estimated_tokens=2000)
-        if not quota_result.allowed:
-            error_message = quota_result.error or "Quota check failed"
-            if quota_result.user_deactivated:
-                raise HTTPException(
-                    status_code=403,
-                    detail={
-                        "error": "account_deactivated",
-                        "message": error_message,
-                        "user_message": "Your account has been deactivated. Please contact an administrator."
-                    }
-                )
-            else:
-                raise HTTPException(
-                    status_code=429,
-                    detail={
-                        "error": "quota_exceeded",
-                        "message": error_message,
-                        "user_message": error_message
-                    }
-                )
+        _check_quota_or_raise(user_id)
 
     # === REQUEST CONTEXT: Initialize logging context for this thread ===
     conversation_id = thread_id.split('_')[-1] if '_' in thread_id else thread_id
@@ -998,198 +1119,17 @@ async def send_message_to_thread(thread_id: str, request: dict):
         trace.bot_response(response_text, conversation_state.ready_for_execution)
 
         # === HANDLE PENDING ACTION APPROVAL/REJECTION (chat-based) ===
-        # Check by looking at the conversation analysis result in extracted_info
-        pending_decision = conversation_state.extracted_info.get("decision")
-        pending_action_id = conversation_state.extracted_info.get("action_id")
-        
-        if pending_decision == "approve" and pending_action_id and conversation_state.workflow_paused:
-            # User approved the pending action — execute it
-            print(f"Chat-based approval for action {pending_action_id}")
-            trace.step("chat_approval", f"Executing approved action: {pending_action_id}")
-            
-            pending = conversation_state.pending_actions[0] if conversation_state.pending_actions else {}
-            
-            try:
-                # Mark as executing
-                conversation_state.executing = True
-                conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
-                
-                # Execute the approved action
-                step_info = {
-                    "agent": pending.get("agent"),
-                    "tool": pending.get("tool"),
-                    "inputs": pending.get("inputs", {}),
-                }
-                result = await asyncio.to_thread(execute_single_action, step_info)
-                
-                print(f"Action executed: {result.get('success', False)}")
-                
-                # Clear pending state
-                conversation_state.pending_actions = []
-                conversation_state.workflow_paused = False
-                
-                # Remove from cache/DB so it doesn't linger after successful execution
-                from supervisor_agent import remove_pending_action
-                try:
-                    remove_pending_action(pending_action_id)
-                except Exception:
-                    pass
-                
-                # Clean up extracted_info decision fields
-                conversation_state.extracted_info.pop("action_id", None)
-                conversation_state.extracted_info.pop("decision", None)
-                
-                if result.get("success"):
-                    description = pending.get("description", "Action")
-                    tool_name = pending.get("tool", "unknown")
-                    inputs = pending.get("inputs", {})
-                    response_text = f"**Done — {description}**\n\n"
+        response_text, conversation_state, handled = await _handle_pending_action_decision(
+            conversation_state, thread_id, response_text
+        )
 
-                    detail_parts = []
-                    action_result = result.get("result", {}) if isinstance(result.get("result"), dict) else {}
-                    if tool_name in ("send_draft_email", "send_email_with_attachment"):
-                        if inputs.get("to"):
-                            detail_parts.append(f"Sent to **{inputs['to']}**")
-                        if inputs.get("subject"):
-                            detail_parts.append(f"Subject: **{inputs['subject']}**")
-                    elif tool_name == "reply_to_email":
-                        detail_parts.append("Reply sent")
-                    elif tool_name == "create_draft_email":
-                        if inputs.get("to"):
-                            detail_parts.append(f"Draft created for **{inputs['to']}**")
-                    elif tool_name in ("create_doc", "add_text"):
-                        title = inputs.get("title") or action_result.get("title", "")
-                        if title:
-                            detail_parts.append(f"Document: **{title}**")
-                    elif tool_name == "create_event":
-                        summary = inputs.get("summary") or inputs.get("title", "")
-                        if summary:
-                            detail_parts.append(f"Event: **{summary}**")
-                    elif tool_name == "share_file":
-                        if inputs.get("email"):
-                            detail_parts.append(f"Shared with **{inputs['email']}**")
-                    elif tool_name in ("delete_email", "delete_file", "delete_event"):
-                        detail_parts.append("Deleted successfully")
-                    elif tool_name == "upload_file":
-                        fname = inputs.get("filename") or inputs.get("file_name", "")
-                        if fname:
-                            detail_parts.append(f"Uploaded **{fname}**")
-
-                    if detail_parts:
-                        response_text += "\n".join(f"- {p}" for p in detail_parts) + "\n"
-                    
-                    # Check remaining steps
-                    # NOTE: ReAct continuation disabled — uncomment to re-enable
-                    # saved_ctx = conversation_state.workflow_context or {}
-                    # is_react = saved_ctx.get("_execution_mode") == "react"
-                    # if is_react:
-                    #     response_text += f"\n⏳ Continuing ReAct workflow...\n"
-                    #     response_text, conversation_state = await _resume_react_workflow(
-                    #         conversation_state, result, response_text, thread_id
-                    #     )
-                    # elif remaining:
-                    remaining = conversation_state.remaining_steps
-                    
-                    if remaining:
-                        response_text += f"\nContinuing with {len(remaining)} remaining step(s)...\n"
-                        response_text, conversation_state = await _resume_remaining_steps(
-                            conversation_state, result, response_text, thread_id,
-                            approved_step_info=pending,
-                        )
-                    else:
-                        response_text += "\nIs there anything else I can help with?"
-                    
-                    if not conversation_state.workflow_paused:
-                        now_iso = datetime.now(timezone.utc).isoformat()
-                        conversation_state.execution_history.append({
-                            "executed_at": now_iso,
-                            "status": "success",
-                            "message": f"Approved and executed: {description}",
-                        })
-                        conversation_state.has_executed = True
-                        conversation_state.last_executed_at = now_iso
-                        conversation_state.last_execution_status = "success"
-                        conversation_state.last_execution_message = f"Approved and executed: {description}"
-                        conversation_state.workflow_context = None
-                        conversation_state.intent = None
-                        conversation_state.ready_for_execution = False
-                        conversation_state.execution_summary = None
-                        conversation_state.extracted_info = {}
-                        conversation_state.missing_fields = []
-                        conversation_state.clarification_question = None
-                else:
-                    error_msg = result.get("error", "Unknown error")
-                    response_text = f"**Action Failed**\n\n{error_msg}\n\nWould you like to try again, or is there something else I can help with?"
-                    conversation_state.remaining_steps = []
-                    conversation_state.workflow_context = None
-                    conversation_state.intent = None
-                    conversation_state.ready_for_execution = False
-                    conversation_state.execution_summary = None
-                    conversation_state.extracted_info = {}
-                    conversation_state.missing_fields = []
-                    conversation_state.clarification_question = None
-                
-            except Exception as e:
-                print(f"Error executing approved action: {str(e)}")
-                response_text = f"**Execution Error**\n\n{str(e)}\n\nWould you like to try again, or is there something else I can help with?"
-                conversation_state.pending_actions = []
-                conversation_state.workflow_paused = False
-                conversation_state.remaining_steps = []
-                conversation_state.workflow_context = None
-                conversation_state.intent = None
-                conversation_state.ready_for_execution = False
-                conversation_state.execution_summary = None
-                conversation_state.extracted_info = {}
-                conversation_state.missing_fields = []
-                conversation_state.clarification_question = None
-            finally:
-                conversation_state.executing = False
-                conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
-        
-        elif pending_decision == "reject" and pending_action_id and conversation_state.workflow_paused:
-            # User rejected — response_text already set by Tier 0 check
-            print(f"Chat-based rejection for action {pending_action_id}")
-            
-            # Clear all pending state
-            conversation_state.pending_actions = []
-            conversation_state.workflow_paused = False
-            conversation_state.remaining_steps = []
-            conversation_state.workflow_context = None
-            conversation_state.intent = None
-            conversation_state.ready_for_execution = False
-            conversation_state.execution_summary = None
-            conversation_state.extracted_info = {}
-            conversation_state.missing_fields = []
-            conversation_state.clarification_question = None
-            
-            # Remove from pending actions cache
-            from supervisor_agent import remove_pending_action
-            try:
-                remove_pending_action(pending_action_id)
-            except Exception:
-                pass
-            
-            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
-
-        # If ready for execution, execute immediately
-        elif conversation_state.ready_for_execution:
+        if not handled and conversation_state.ready_for_execution:
             print(f"Thread {thread_id} ready - executing workflow...")
             trace.decision("ready_for_execution", "YES — executing workflow")
+            response_text, conversation_state = await _execute_workflow_guarded(
+                conversation_state, thread_id
+            )
 
-            # Mark as executing to prevent conflicts
-            conversation_state.executing = True
-            conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
-
-            try:
-                response_text, conversation_state = await _run_workflow_and_update_state(
-                    conversation_state, thread_id=thread_id
-                )
-            finally:
-                # Clear executing flag and save
-                conversation_state.executing = False
-                conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
-
-        # Get updated metadata
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
         # Log request summary before returning
@@ -1204,6 +1144,9 @@ async def send_message_to_thread(thread_id: str, request: dict):
         }
 
     except HTTPException:
+        clear_request_context()
+        raise
+    except LLMServiceException:
         clear_request_context()
         raise
     except ValueError as e:
@@ -1233,30 +1176,9 @@ async def send_message_to_thread_with_upload(
         Bot response and updated thread metadata
     """
 
-    # === QUOTA CHECK: Verify user has quota before processing ===
     user_id = thread_id.split('_')[0] if '_' in thread_id else None
     if user_id:
-        quota_result = check_user_quota(user_id, estimated_tokens=2000)
-        if not quota_result.allowed:
-            error_message = quota_result.error or "Quota check failed"
-            if quota_result.user_deactivated:
-                raise HTTPException(
-                    status_code=403,
-                    detail={
-                        "error": "account_deactivated",
-                        "message": error_message,
-                        "user_message": "Your account has been deactivated. Please contact an administrator."
-                    }
-                )
-            else:
-                raise HTTPException(
-                    status_code=429,
-                    detail={
-                        "error": "quota_exceeded",
-                        "message": error_message,
-                        "user_message": error_message
-                    }
-                )
+        _check_quota_or_raise(user_id)
 
     # === REQUEST CONTEXT: Initialize logging context for this thread ===
     conversation_id = thread_id.split('_')[-1] if '_' in thread_id else thread_id
@@ -1320,33 +1242,18 @@ async def send_message_to_thread_with_upload(
         print(f"Bot response: {response_text}")
         print(f"Ready to execute: {updated_state.ready_for_execution}")
 
-        # If ready for execution, execute immediately
-        if updated_state.ready_for_execution:
+        response_text, updated_state, handled = await _handle_pending_action_decision(
+            updated_state, thread_id, response_text
+        )
+
+        if not handled and updated_state.ready_for_execution:
             print(f"Thread {thread_id} ready - executing workflow...")
+            response_text, updated_state = await _execute_workflow_guarded(
+                updated_state, thread_id, cleanup_file=uploaded_file
+            )
 
-            # Mark as executing to prevent conflicts
-            updated_state.executing = True
-            conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
-
-            try:
-                response_text, updated_state = await _run_workflow_and_update_state(
-                    updated_state, thread_id=thread_id
-                )
-            finally:
-                # Clear executing flag and save
-                updated_state.executing = False
-                conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
-
-                # Clean up temp file after workflow completes
-                delete_temp_file(uploaded_file)
-                print(f"Cleaned up uploaded file")
-        # else: Do NOT delete — file persists until workflow eventually executes.
-        # S3 lifecycle rule handles orphan cleanup.
-
-        # Get updated metadata
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
-        # Log request summary before returning
         logger.request_summary()
         clear_request_context()
 
@@ -1360,14 +1267,15 @@ async def send_message_to_thread_with_upload(
     except HTTPException:
         clear_request_context()
         raise
+    except LLMServiceException:
+        clear_request_context()
+        raise
     except Exception as e:
         print(f"\nError sending message with upload to thread: {str(e)}")
         traceback.print_exc()
 
-        # Clean up temp file on error
         if 'uploaded_file' in locals():
             delete_temp_file(uploaded_file)
-            print(f"Cleaned up uploaded file on error")
 
         clear_request_context()
         raise HTTPException(status_code=500, detail=f"Upload processing failed: {str(e)}")

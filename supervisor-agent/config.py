@@ -52,6 +52,22 @@ PLAN_SCHEMA = {
 GOOGLE_ACCESS_TOKEN = os.getenv("GOOGLE_ACCESS_TOKEN")
 GOOGLE_REFRESH_TOKEN = os.getenv("GOOGLE_REFRESH_TOKEN")
 
+
+def get_google_credentials() -> dict:
+    """Build a complete Google OAuth credentials dict for agent calls.
+
+    Used by both the orchestrator loop and execute_single_action so
+    the credential set is always identical and supports token refresh.
+    """
+    creds = {
+        "access_token": os.getenv("GOOGLE_ACCESS_TOKEN"),
+        "refresh_token": os.getenv("GOOGLE_REFRESH_TOKEN"),
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "client_id": os.getenv("GOOGLE_CLIENT_ID") or os.getenv("OAUTH_CLIENT_ID"),
+        "client_secret": os.getenv("GOOGLE_CLIENT_SECRET") or os.getenv("OAUTH_CLIENT_SECRET"),
+    }
+    return {k: v for k, v in creds.items() if v}
+
 # OpenAI API configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4")

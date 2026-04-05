@@ -12,7 +12,7 @@ import os
 
 from models.models import ActionApprovalRequest
 from log_storage import LogStorage
-from config import AGENT_ENDPOINTS
+from config import AGENT_ENDPOINTS, get_google_credentials
 from utils import call_agent_with_retry, generate_action_summary
 from supervisor_agent import (
     PendingAction,
@@ -36,10 +36,7 @@ def execute_single_action(step_info: dict) -> dict:
     request_payload = {
         "tool": tool_name,
         "inputs": inputs,
-        "credentials_dict": {
-            "access_token": os.getenv("GOOGLE_ACCESS_TOKEN"),
-            "refresh_token": os.getenv("GOOGLE_REFRESH_TOKEN"),
-        },
+        "credentials_dict": get_google_credentials(),
     }
 
     # Use retry logic

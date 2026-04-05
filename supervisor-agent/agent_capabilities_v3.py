@@ -209,7 +209,7 @@ agent_capabilities = {
                     "document_id": "str (required) — document ID to read",
                 },
                 "returns": ["success", "document_id", "content", "title", "error"],
-                "can_be_derived_from": {"document_id": "list_my_docs"},
+                "can_be_derived_from": {"document_id": "list_my_docs: title"},
             },
             "create_from_template_and_data_ids": {
                 "description": "Create document from template and data files using Google Drive file IDs. Requires drive_agent.search_template_and_data first.",

@@ -438,7 +438,7 @@ Try one of these or tell me what you'd like to do!"""
             ConversationAnalysis with help response, or None if not a help request
         """
         help_keywords = [
-            "help", "guide", "tutorial", "teach me", "explain",
+            "help", "guide", "tutorial", "teach me",
             "instructions", "show me how", "get started", "getting started",
             "how to start", "how do i begin", "how do i use", "how does this work",
             "i need help", "i'm new", "i am new", "first time", "beginner",

@@ -7,11 +7,13 @@ Run this file to start the server:
 
 import uvicorn
 from fastapi import Request
+from fastapi.responses import JSONResponse
 
 # Import the FastAPI app and shared objects from supervisor_agent
 # (this triggers LangGraph compilation, LLM init, etc.)
 from supervisor_agent import app
 from config import SERVER_PORT, SERVER_HOST
+from llm_error_handler import LLMServiceException
 
 # Register route modules
 from routes.threads import router as threads_router
@@ -29,6 +31,15 @@ app.include_router(actions_router)
 app.include_router(logs_router)
 app.include_router(realtime_router)
 app.include_router(health_router)
+
+
+@app.exception_handler(LLMServiceException)
+async def llm_exception_handler(request: Request, exc: LLMServiceException):
+    """Return structured LLM error responses instead of generic 500s."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=exc.to_dict(),
+    )
 
 
 @app.middleware("http")

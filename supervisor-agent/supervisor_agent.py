@@ -34,6 +34,7 @@ from config import (
     QUICK_MODEL,
     SERVER_PORT,
     SERVER_HOST,
+    get_google_credentials,
 )  
 
 # Import agent capabilities
@@ -791,15 +792,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
     # ===================================================================
     # PRE-FLIGHT: Build and validate Google credentials ONCE before loop
     # ===================================================================
-    credentials_dict = {
-        "access_token": os.getenv("GOOGLE_ACCESS_TOKEN"),
-        "refresh_token": os.getenv("GOOGLE_REFRESH_TOKEN"),
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "client_id": os.getenv("GOOGLE_CLIENT_ID") or os.getenv("OAUTH_CLIENT_ID"),
-        "client_secret": os.getenv("GOOGLE_CLIENT_SECRET") or os.getenv("OAUTH_CLIENT_SECRET"),
-    }
-    # Remove None/empty values (Google rejects these)
-    credentials_dict = {k: v for k, v in credentials_dict.items() if v}
+    credentials_dict = get_google_credentials()
 
     required_cred_fields = ["access_token", "refresh_token", "client_id", "client_secret"]
     missing_cred_fields = [f for f in required_cred_fields if not credentials_dict.get(f)]
@@ -1149,7 +1142,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 )
             else:
                 # Handle failure - distinguish between no_results and actual errors
-                error_msg = result.get("error", "Unknown error")
+                error_msg = result.get("error") or (result.get("result") or {}).get("error") or "Unknown error"
                 is_no_results = result.get("no_results", False)
 
                 # DEBUG: Print error details

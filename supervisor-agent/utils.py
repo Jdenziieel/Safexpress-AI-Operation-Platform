@@ -173,7 +173,8 @@ def call_agent_with_retry(
                 else:
                     # Agent returned error but HTTP was successful
                     error_type = result.get("error_type", "")
-                    print(f"Agent reported error: {result.get('error')}")
+                    error_detail = result.get("error") or (result.get("result") or {}).get("error") or "Unknown error"
+                    print(f"Agent reported error: {error_detail}")
 
                     _NO_RETRY_TYPES = {"conflict", "validation_error", "not_found", "permission_denied", "read_only"}
                     if error_type in _NO_RETRY_TYPES:
