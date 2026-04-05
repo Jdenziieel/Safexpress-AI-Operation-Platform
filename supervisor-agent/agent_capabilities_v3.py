@@ -245,6 +245,18 @@ agent_capabilities = {
                     "data_file_id": "drive_agent.search_template_and_data",
                 },
             },
+            "create_from_uploaded_template": {
+                "description": "Create a new Google Doc from an existing file in Google Drive. Converts .docx, .pdf, .txt files to editable Google Docs.",
+                "triggers": ["find file", "create document from", "make a new document out of"],
+                "args": {
+                    "template_file_id": "str (required) — Drive file ID of the source file",
+                    "new_title": "str (required) — title for new document",
+                    "placeholders": "str (optional) — JSON string of placeholder replacements",
+                    "output_format": "str (optional) — 'google_docs' (default) or 'pdf'",
+                },
+                "returns": ["success", "document_id", "document_url", "title", "error"],
+                "can_be_derived_from": {"template_file_id": "drive_agent.search_files"},
+            },
         },
         "template_with_data_workflow": {
             "when_to_use": "When user mentions BOTH a template AND data/content files. ALWAYS use this 2-step workflow.",
@@ -264,6 +276,25 @@ agent_capabilities = {
                 "template_name": "Look for keywords: 'template', 'format', 'use X template' - extract the file name",
                 "data_name": "Look for keywords: 'data', 'content', 'use X document/file' - extract the file name",
                 "new_title": "Look for: 'titled X', 'call it X', 'name it X', or infer from context",
+            },
+        },
+        "copy_existing_file_to_document": {
+            "when_to_use": "When user wants to find an existing file in Google Drive and create a new Google Doc from it. Triggers on 'find file X and make a new document', 'create document from Y', 'convert Z to Google Doc'.",
+            "workflow_steps": {
+                "step_1": {
+                    "agent": "drive_agent",
+                    "tool": "search_files",
+                    "purpose": "Search Google Drive for the specified file",
+                },
+                "step_2": {
+                    "agent": "docs_agent",
+                    "tool": "create_from_uploaded_template",
+                    "purpose": "Create a new Google Doc from the found file",
+                },
+            },
+            "extraction_rules": {
+                "file_name": "Look for the file name to search for (e.g., 'project_brief', 'report.docx')",
+                "new_title": "Look for the desired title of the new document (e.g., 'New_Document_Brief', 'Report Copy')",
             },
         },
     },

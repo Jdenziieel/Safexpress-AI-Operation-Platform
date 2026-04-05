@@ -683,6 +683,13 @@ When user mentions creating a document using BOTH a template AND a data file:
 - execution_summary: "Create [new_title] from [template_name] using [data_name] data"
 - If all 3 present → ready_to_execute; otherwise → needs_clarification
 
+COPY EXISTING FILE WORKFLOW:
+When user wants to find an existing file and create a new document from it:
+- Extract: file_name, new_title
+- task_type: "copy_existing_file_to_document"
+- execution_summary: "Find file '[file_name]' and create new document '[new_title]'"
+- If both file_name and new_title present → ready_to_execute; otherwise → needs_clarification
+
 DERIVABLE FIELDS: Fields marked [via tool: criteria] are derived at execution time. Extract the search criteria instead — do NOT ask the user for the derived field.
 Example: forward_email(message_id [via search_emails: query], to) → extract {{"query": "...", "to": "..."}}
 When a file is attached (noted in the user message), file_path is provided by the upload system — do NOT list it as missing_fields. The default filename is the uploaded file's original name, but if the user specifies a custom name (e.g. "name it X", "save as Y"), extract that as "filename" in extracted_info.

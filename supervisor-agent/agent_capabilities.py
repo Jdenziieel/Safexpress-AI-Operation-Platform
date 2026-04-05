@@ -503,6 +503,43 @@ SMART FEATURES:
         "Make a PDF using template 'Invoice Template' and data 'Client Data', name it 'Invoice 2025-001'"
     ]
 },
+            "copy_existing_file_to_document": {
+                "description": "Find an existing file in Google Drive and create a new Google Doc from it",
+                "instructions": """
+SIMPLE FILE COPY TO DOCUMENT
+- User provides FILE NAME to search for
+- Example: "Find file named 'project_brief' and make a new document out of it, name the new document 'New_Document_Brief'"
+- File must exist in Google Drive (searches automatically)
+- Supports any file type that can be converted to Google Docs (.docx, .txt, .pdf, etc.)
+- Creates a new editable Google Doc with the same content
+
+SMART FEATURES:
+- Searches for files containing the name (partial matches)
+- If multiple files found, uses the first one
+- Converts file to Google Docs format
+- Preserves formatting where possible
+                """,
+                "args": {
+                    "file_name": "str (required) — Name of file to find in Google Drive (e.g., 'project_brief')",
+                    "new_title": "str (required) — Title for new document (e.g., 'New_Document_Brief')"
+                },
+                "returns": {
+                    "success": "bool",
+                    "document_id": "str",
+                    "document_url": "str",
+                    "title": "str",
+                    "error": "str"
+                },
+                "example_prompts": [
+                    "Find file named 'project_brief' and make a new document out of it, name the new document 'New_Document_Brief'",
+                    "Search for 'report.docx' and create a new doc called 'Report Copy'",
+                    "Locate 'template.pdf' and convert it to a Google Doc named 'Template Doc'"
+                ],
+                "required_steps": [
+                    "STEP 1: drive_agent.search_files (find file) → file_id",
+                    "STEP 2: docs_agent.create_from_uploaded_template (create document) → document_id"
+                ]
+            },
             "placeholder_replacement_rules": {
                 "key_format": "Keys must EXACTLY match placeholder names (without brackets)",
                 "examples": {
