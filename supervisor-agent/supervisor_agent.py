@@ -1027,12 +1027,14 @@ def orchestrator_node(state: SharedState) -> SharedState:
         # STEP 1.5: Handle built-in llm_tool locally (no HTTP call)
         if agent_name == "llm_tool" and tool_name == "transform_text":
             print(f"\n Running built-in LLM transform (no HTTP call)")
+            llm_tool_start = time.time()
             try:
                 transform_result = execute_llm_transform(
                     instruction=substituted_inputs.get("instruction", ""),
                     content=substituted_inputs.get("content", ""),
                     trace=trace,
                 )
+                llm_tool_duration_ms = (time.time() - llm_tool_start) * 1000
                 if transform_result.get("success"):
                     results.append({
                         "step": step_num,
@@ -1053,16 +1055,38 @@ def orchestrator_node(state: SharedState) -> SharedState:
                             variable_context[new_var_name] = transform_result[source_field_name]
                         print(f"   {new_var_name} = {variable_context.get(new_var_name, 'NOT FOUND')} (from {source_field_name})")
                     trace.step("llm_transform_complete", f"step {step_num}: transform_text succeeded")
+                    orchestrator_logger.agent_call(
+                        agent_name=agent_name,
+                        tool_name=tool_name,
+                        step_number=step_num,
+                        total_steps=len(plan),
+                        inputs=substituted_inputs,
+                        success=True,
+                        duration_ms=llm_tool_duration_ms,
+                        output_summary="Transform succeeded",
+                    )
                 else:
+                    transform_error = transform_result.get("error", "Transform failed")
                     results.append({
                         "step": step_num,
                         "agent": agent_name,
                         "tool": tool_name,
                         "status": "error",
-                        "error": transform_result.get("error", "Transform failed"),
+                        "error": transform_error,
                     })
                     trace.error(f"LLM transform failed at step {step_num}")
+                    orchestrator_logger.agent_call(
+                        agent_name=agent_name,
+                        tool_name=tool_name,
+                        step_number=step_num,
+                        total_steps=len(plan),
+                        inputs=substituted_inputs,
+                        success=False,
+                        duration_ms=llm_tool_duration_ms,
+                        error=transform_error,
+                    )
             except LLMServiceException as e:
+                llm_tool_duration_ms = (time.time() - llm_tool_start) * 1000
                 results.append({
                     "step": step_num,
                     "agent": agent_name,
@@ -1071,6 +1095,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
                     "error": str(e),
                 })
                 trace.error(f"LLM transform error at step {step_num}: {e}")
+                orchestrator_logger.agent_call(
+                    agent_name=agent_name,
+                    tool_name=tool_name,
+                    step_number=step_num,
+                    total_steps=len(plan),
+                    inputs=substituted_inputs,
+                    success=False,
+                    duration_ms=llm_tool_duration_ms,
+                    error=str(e),
+                )
             continue
 
         # STEP 2: Call Agent Microservice
@@ -1087,6 +1121,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 "status": "error",
                 "error": error_msg,
             })
+            orchestrator_logger.agent_call(
+                agent_name=agent_name,
+                tool_name=tool_name,
+                step_number=step_num,
+                total_steps=len(plan),
+                inputs=substituted_inputs,
+                success=False,
+                duration_ms=0,
+                error=error_msg,
+            )
             variable_context["results"] = results
             variable_context["stopped_at_step"] = step_num
             variable_context["error"] = error_msg
@@ -1457,6 +1501,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
                     "error": error_msg,
                 }
             )
+            orchestrator_logger.agent_call(
+                agent_name=agent_name,
+                tool_name=tool_name,
+                step_number=step_num,
+                total_steps=len(plan),
+                inputs=substituted_inputs,
+                success=False,
+                duration_ms=(time.time() - agent_start_time) * 1000 if 'agent_start_time' in locals() else 0,
+                error=error_msg,
+            )
 
             # Stop workflow and return early
             print(f"\n{'='*60}")
@@ -1505,6 +1559,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
                     "status": "error",
                     "error": error_msg,
                 }
+            )
+            orchestrator_logger.agent_call(
+                agent_name=agent_name,
+                tool_name=tool_name,
+                step_number=step_num,
+                total_steps=len(plan),
+                inputs=substituted_inputs,
+                success=False,
+                duration_ms=agent_duration_ms if 'agent_duration_ms' in locals() else 0,
+                error=error_msg,
             )
 
             # Stop workflow and return early

@@ -670,3 +670,96 @@ async def get_admin_metrics(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving metrics: {str(e)}")
+
+
+# =========================================================================
+# INTERNAL COMPONENT METRICS (Conversational + Supervisor layers)
+# =========================================================================
+
+_CONVERSATIONAL_TIERS = ("0.5", "1", "formatter", "memory")
+_SUPERVISOR_TIERS = ("supervisor", "classifier", "orchestrator")
+
+
+@router.get("/metrics/internal")
+async def get_internal_metrics(
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    period: str = "24h"
+):
+    """
+    Internal component metrics derived from LLM calls grouped by tier.
+
+    Returns two logical components:
+    - conversational: tiers 0.5, 1, formatter, memory
+    - supervisor: tiers supervisor, classifier, orchestrator
+    """
+    try:
+        storage = LogStorage()
+
+        if not start_time and not end_time:
+            now = datetime.utcnow()
+            period_map = {
+                "1h": timedelta(hours=1),
+                "24h": timedelta(hours=24),
+                "7d": timedelta(days=7),
+                "30d": timedelta(days=30),
+            }
+            delta = period_map.get(period, timedelta(hours=24))
+            start_time = (now - delta).isoformat() + "Z"
+
+        all_tiers = _CONVERSATIONAL_TIERS + _SUPERVISOR_TIERS
+        placeholders = ",".join("?" for _ in all_tiers)
+        time_filter = ""
+        params: list = list(all_tiers)
+        if start_time:
+            time_filter += " AND timestamp >= ?"
+            params.append(start_time)
+        if end_time:
+            time_filter += " AND timestamp <= ?"
+            params.append(end_time)
+
+        conn = storage._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            f"""
+            SELECT tier,
+                   COUNT(*)                    AS total_calls,
+                   SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) AS successful_calls,
+                   AVG(duration_ms)            AS avg_duration_ms,
+                   SUM(total_tokens)           AS total_tokens,
+                   SUM(estimated_cost_usd)     AS total_cost_usd
+            FROM llm_calls
+            WHERE tier IN ({placeholders}) {time_filter}
+            GROUP BY tier
+            """,
+            params,
+        )
+        rows = [dict(r) for r in cursor.fetchall()]
+        conn.close()
+
+        def _aggregate(tiers):
+            matching = [r for r in rows if r["tier"] in tiers]
+            total = sum(r["total_calls"] for r in matching)
+            successful = sum(r["successful_calls"] for r in matching)
+            tokens = sum(r["total_tokens"] or 0 for r in matching)
+            cost = sum(r["total_cost_usd"] or 0 for r in matching)
+            avg_ms = sum((r["avg_duration_ms"] or 0) * r["total_calls"] for r in matching) / total if total else 0
+            return {
+                "total_calls": total,
+                "successful_calls": successful,
+                "failed_calls": total - successful,
+                "success_rate": round((successful / total * 100) if total > 0 else 0, 1),
+                "avg_duration_ms": round(avg_ms, 0),
+                "total_tokens": tokens,
+                "total_cost_usd": round(cost, 6),
+            }
+
+        return {
+            "conversational": _aggregate(_CONVERSATIONAL_TIERS),
+            "supervisor": _aggregate(_SUPERVISOR_TIERS),
+            "period": period,
+            "time_range": {"start": start_time, "end": end_time},
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving internal metrics: {str(e)}")

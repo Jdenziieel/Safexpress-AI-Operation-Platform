@@ -231,7 +231,8 @@ const TokenCostTab = ({ tokenData, tokenLoading, pricingData, budgetData, onSave
       'formatter': 'Confirmation Fmt',
       'memory': 'Memory',
       'post': 'Post-Processing',
-      'enrichment': 'Enrichment'
+      'enrichment': 'Enrichment',
+      'orchestrator': 'LLM Transform',
     };
     return labels[tier] || tier || 'Other';
   };
@@ -439,7 +440,7 @@ const TokenCostTab = ({ tokenData, tokenLoading, pricingData, budgetData, onSave
 // =============================================================================
 // AGENT PERFORMANCE TAB (with system avg response time)
 // =============================================================================
-const AgentPerformanceTab = ({ metricsData, loading, timePeriod }) => {
+const AgentPerformanceTab = ({ metricsData, loading, timePeriod, internalMetrics }) => {
   if (loading) {
     return (
       <div className="token-tab-loading">
@@ -463,11 +464,11 @@ const AgentPerformanceTab = ({ metricsData, loading, timePeriod }) => {
     const nameMap = {
       'gmail_agent': 'Email Service',
       'calendar_agent': 'Calendar Service',
-      'gdocs_agent': 'Documents Service',
-      'gdrive_agent': 'Storage Service',
+      'docs_agent': 'Documents Service',
+      'drive_agent': 'Storage Service',
       'sheets_agent': 'Spreadsheets Service',
-      'supervisor_agent': 'Central Coordinator',
-      'mapping_agent': 'Data Mapping Service'
+      'mapping_agent': 'Data Mapping Service',
+      'llm_tool': 'LLM Transform',
     };
     return nameMap[name] || name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
@@ -548,6 +549,58 @@ const AgentPerformanceTab = ({ metricsData, loading, timePeriod }) => {
           </div>
         )}
       </div>
+
+      {/* Internal Components */}
+      {internalMetrics && (
+        <>
+          <div className="services-header" style={{ marginTop: 40 }}>
+            <h2>Internal Components</h2>
+            <p>Supervisor and conversational layer LLM metrics</p>
+          </div>
+          <div className="agents-grid">
+            {[
+              { key: 'conversational', label: 'Conversational Agent', desc: 'Intent analysis, classification, formatting, memory' },
+              { key: 'supervisor', label: 'Supervisor / Orchestrator', desc: 'Tool filtering, plan generation, LLM transforms' },
+            ].map(({ key, label, desc }) => {
+              const d = internalMetrics[key] || {};
+              const rate = d.success_rate || 0;
+              const badgeClass = getSuccessBadgeClass(rate);
+              return (
+                <div key={key} className="agent-card">
+                  <div className="agent-card-header">
+                    <div className="agent-info">
+                      <div>
+                        <h3 className="agent-name">{label}</h3>
+                        <p className="agent-description">{desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="agent-stats" style={{ borderTop: 'none', paddingTop: 0 }}>
+                    <div className="stat">
+                      <span className={`stat-value log-status-icon ${badgeClass}`}>{rate.toFixed(1)}%</span>
+                      <span className="stat-label">Success Rate</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-value">{formatMs(d.avg_duration_ms)}</span>
+                      <span className="stat-label">Avg Latency</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-value">{(d.total_calls || 0).toLocaleString()}</span>
+                      <span className="stat-label">LLM Calls</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-value" style={{ color: (d.failed_calls || 0) > 0 ? '#ef4444' : undefined }}>
+                        {d.failed_calls || 0}
+                      </span>
+                      <span className="stat-label">Failed</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -570,6 +623,7 @@ const LogsPage = () => {
   const [budgetData, setBudgetData] = useState(null);
   const [metricsData, setMetricsData] = useState(null);
   const [metricsLoading, setMetricsLoading] = useState(false);
+  const [internalMetrics, setInternalMetrics] = useState(null);
 
   const refreshIntervalRef = useRef(null);
 
@@ -630,6 +684,15 @@ const LogsPage = () => {
     }
   }, [timePeriod]);
 
+  const fetchInternalMetrics = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/metrics/internal?period=${timePeriod}`);
+      if (res.ok) setInternalMetrics(await res.json());
+    } catch (err) {
+      console.error('Error fetching internal metrics:', err);
+    }
+  }, [timePeriod]);
+
   // ── Save handlers ──
 
   const handleSaveRate = async (model, inputRate, outputRate) => {
@@ -674,6 +737,7 @@ const LogsPage = () => {
         fetchPricing(),
         fetchBudget(),
         fetchMetrics(),
+        fetchInternalMetrics(),
       ]);
       setError(null);
     } catch (err) {
@@ -683,7 +747,7 @@ const LogsPage = () => {
       setIsRefreshing(false);
       setLoading(false);
     }
-  }, [fetchUsageSummary, fetchTokenStats, fetchPricing, fetchBudget, fetchMetrics]);
+  }, [fetchUsageSummary, fetchTokenStats, fetchPricing, fetchBudget, fetchMetrics, fetchInternalMetrics]);
 
   // ── Effects ──
 
@@ -698,7 +762,8 @@ const LogsPage = () => {
   useEffect(() => {
     fetchTokenStats();
     fetchMetrics();
-  }, [timePeriod, fetchTokenStats, fetchMetrics]);
+    fetchInternalMetrics();
+  }, [timePeriod, fetchTokenStats, fetchMetrics, fetchInternalMetrics]);
 
   // ── Render ──
 
@@ -791,6 +856,7 @@ const LogsPage = () => {
             metricsData={metricsData}
             loading={metricsLoading}
             timePeriod={timePeriod}
+            internalMetrics={internalMetrics}
           />
         )}
       </div>
