@@ -16,10 +16,10 @@
       "tool": "create_from_uploaded_template",
       "inputs": {
         "template_file_id": "{{ template_file_id }}",
-        "new_title": "New_Document_Brief"
+        "new_title": "New_Document_Brief2"
       },
       "output_variables": {},
-      "description": "Create a new document titled 'New_Document_Brief' from the found file"
+      "description": "Create a new document from the found file and name it 'New_Document_Brief2'"
     }
   ]
 }
