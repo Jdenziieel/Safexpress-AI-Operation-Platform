@@ -130,6 +130,9 @@ class ConversationalAgent(Tier0ChecksMixin):
             and v is not None and v != ""
         }
 
+        if not execution_summary and not user_info:
+            return "Is there anything else I can help with?"
+
         header = f"**Ready to execute!**\n\n"
         footer = "\n\n---\nReply **\"yes\"** to proceed or **\"cancel\"** to stop."
 
@@ -1303,6 +1306,26 @@ User: "{user_message}" """
             
             # 2. CONFIRMATION
             if category == "confirmation":
+                has_actionable_task = (
+                    conversation_state.execution_summary
+                    or any(
+                        k for k in conversation_state.extracted_info
+                        if not k.startswith("_") and k not in self._ALWAYS_INTERNAL
+                    )
+                )
+                if not has_actionable_task:
+                    trace.step("tier0.5", "confirmation — no pending task, treating as acknowledgment")
+                    return ConversationAnalysis(
+                        intent=ConversationIntent.SMALL_TALK,
+                        task_type="acknowledgment",
+                        extracted_info={},
+                        missing_fields=[],
+                        response_text="Is there anything else I can help with?",
+                        reasoning="User said yes but no task is pending",
+                        execution_ready=False,
+                        execution_summary=None,
+                    ), None, None
+
                 if conversation_state.missing_fields:
                     trace.step("tier0.5", "confirmation blocked — missing fields still pending, routing to Tier 1",
                                {"missing_fields": conversation_state.missing_fields})

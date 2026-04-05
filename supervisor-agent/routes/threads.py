@@ -503,6 +503,14 @@ def _clear_workflow_state(state):
     state.clarification_question = None
 
 
+def _has_actionable_task(state) -> bool:
+    """Return True if conversation state contains a real task to execute."""
+    return bool(
+        state.execution_summary
+        or any(k for k in state.extracted_info if not k.startswith("_"))
+    )
+
+
 async def _execute_workflow_guarded(conversation_state, thread_id: str, cleanup_file: dict = None):
     """Mark state as executing, run the workflow, and guarantee cleanup in finally.
 
@@ -737,12 +745,19 @@ async def create_thread(request: CreateThreadRequest):
             )
 
             if conversation_state.ready_for_execution:
-                print(f"Thread {thread_id} ready - executing workflow...")
-                trace.decision("ready_for_execution", "YES — executing immediately")
-                bot_response, conversation_state = await _execute_workflow_guarded(
-                    conversation_state, thread_id
-                )
-                execution_completed = True
+                if _has_actionable_task(conversation_state):
+                    print(f"Thread {thread_id} ready - executing workflow...")
+                    trace.decision("ready_for_execution", "YES — executing immediately")
+                    bot_response, conversation_state = await _execute_workflow_guarded(
+                        conversation_state, thread_id
+                    )
+                    execution_completed = True
+                else:
+                    trace.warning("ready_for_execution=True but no task context — resetting")
+                    conversation_state.ready_for_execution = False
+                    conversation_state.intent = None
+                    bot_response = "Is there anything else I can help with?"
+                    conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
 
         thread_metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
@@ -865,10 +880,17 @@ async def create_thread_with_upload(
         print(f"Ready to execute: {updated_state.ready_for_execution}")
 
         if updated_state.ready_for_execution:
-            print(f"Thread {thread_id} ready - executing workflow...")
-            response_text, updated_state = await _execute_workflow_guarded(
-                updated_state, thread_id, cleanup_file=uploaded_file
-            )
+            if _has_actionable_task(updated_state):
+                print(f"Thread {thread_id} ready - executing workflow...")
+                response_text, updated_state = await _execute_workflow_guarded(
+                    updated_state, thread_id, cleanup_file=uploaded_file
+                )
+            else:
+                trace.warning("ready_for_execution=True but no task context — resetting")
+                updated_state.ready_for_execution = False
+                updated_state.intent = None
+                response_text = "Is there anything else I can help with?"
+                conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
 
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
@@ -1124,11 +1146,18 @@ async def send_message_to_thread(thread_id: str, request: dict):
         )
 
         if not handled and conversation_state.ready_for_execution:
-            print(f"Thread {thread_id} ready - executing workflow...")
-            trace.decision("ready_for_execution", "YES — executing workflow")
-            response_text, conversation_state = await _execute_workflow_guarded(
-                conversation_state, thread_id
-            )
+            if _has_actionable_task(conversation_state):
+                print(f"Thread {thread_id} ready - executing workflow...")
+                trace.decision("ready_for_execution", "YES — executing workflow")
+                response_text, conversation_state = await _execute_workflow_guarded(
+                    conversation_state, thread_id
+                )
+            else:
+                trace.warning("ready_for_execution=True but no task context — resetting")
+                conversation_state.ready_for_execution = False
+                conversation_state.intent = None
+                response_text = "Is there anything else I can help with?"
+                conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
 
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
@@ -1247,10 +1276,17 @@ async def send_message_to_thread_with_upload(
         )
 
         if not handled and updated_state.ready_for_execution:
-            print(f"Thread {thread_id} ready - executing workflow...")
-            response_text, updated_state = await _execute_workflow_guarded(
-                updated_state, thread_id, cleanup_file=uploaded_file
-            )
+            if _has_actionable_task(updated_state):
+                print(f"Thread {thread_id} ready - executing workflow...")
+                response_text, updated_state = await _execute_workflow_guarded(
+                    updated_state, thread_id, cleanup_file=uploaded_file
+                )
+            else:
+                trace.warning("ready_for_execution=True but no task context — resetting")
+                updated_state.ready_for_execution = False
+                updated_state.intent = None
+                response_text = "Is there anything else I can help with?"
+                conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
 
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 

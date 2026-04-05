@@ -596,6 +596,10 @@ What would you like to do?"""
             not conversation_state.ready_for_execution
             and conversation_state.intent == ConversationIntent.READY_TO_EXECUTE
             and not conversation_state.missing_fields
+            and (
+                conversation_state.execution_summary
+                or any(k for k in conversation_state.extracted_info if not k.startswith("_"))
+            )
         )
 
         if not is_awaiting_confirmation:

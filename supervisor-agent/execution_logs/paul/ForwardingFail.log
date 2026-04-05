@@ -1,0 +1,248 @@
+[2026-04-05 17:10:31.988] [PRINT] WebSocket connected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_f48e9272
+[2026-04-05 17:10:32.035] [INFO] [req_20260405090541_8d1301b4] [T:f48e9272] → REQUEST: POST /threads/65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_f48e9272/messages  | {"query": null}
+[2026-04-05 17:10:36.431] [INFO] [req_20260405091036_e981d99a] [T:f48e9272]   USER MSG: "can you forward an email from Eventbrite to my friend Kita?"
+[2026-04-05 17:10:36.433] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-05 17:10:36.442] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_f48e9272
+[2026-04-05 17:10:36.449] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-05 17:10:36.458] [PRINT]   User: can you forward an email from Eventbrite to my friend Kita?
+[2026-04-05 17:10:36.466] [PRINT]   ConversationState:
+[2026-04-05 17:10:36.475] [PRINT]     extracted_info: {}
+[2026-04-05 17:10:36.482] [PRINT]     missing_fields: []
+[2026-04-05 17:10:36.490] [PRINT]     intent: null
+[2026-04-05 17:10:36.497] [PRINT]     clarification_question: null
+[2026-04-05 17:10:36.506] [PRINT]     ready_for_execution: false
+[2026-04-05 17:10:36.513] [PRINT]     execution_summary: null
+[2026-04-05 17:10:36.522] [PRINT]     execution_mode: "standard"
+[2026-04-05 17:10:36.529] [PRINT]     execution_history: [{"executed_at": "2026-04-05T08:47:34.310608+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-05T08:49:11.494856+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-05T08:50:36.827780+00:00", "status": "success", "message": "Approved and executed: Send the draft email with id r-6540306273126774248"}, {"executed_at": "2026-04-05T08:58:14.837393+00:00", "status": "error", "message": "Gmail API error: <HttpError 400 when requesting https://gmail.googleapis.com/gmail/v1/users/me/drafts?alt=json returned \"Invalid To header\". Details: \"[{'message': 'Invalid To header', 'domain': 'global', 'reason': 'invalidArgument'}]\">"}, {"executed_at": "2026-04-05T09:01:53.132671+00:00", "status": "success", "message": "Approved and executed: Reply to the email with the message 'This is a response! Thankyou!'"}, {"executed_at": "2026-04-05T09:05:43.498731+00:00", "status": "error", "message": "Unexpected error: Agent call failed after retries"}]
+[2026-04-05 17:10:36.538] [PRINT]     completed_tasks: [{"task_type": "gmail_agent.search_emails", "params_summary": "query: , max_results: 3", "status": "success", "result_summary": "count: 3", "timestamp": "2026-04-05T08:47:34.310608+00:00"}, {"task_type": "gmail_agent.search_drafts", "params_summary": "query: Coffee Request Meeting", "status": "success", "result_summary": "count: 1", "timestamp": "2026-04-05T08:49:11.494856+00:00"}, {"task_type": "gmail_agent.search_emails", "params_summary": "query: from:Kita subject:TestReply", "status": "success", "result_summary": "count: 1", "timestamp": "2026-04-05T08:58:14.837393+00:00"}]
+[2026-04-05 17:10:36.547] [PRINT]     has_executed: true
+[2026-04-05 17:10:36.554] [PRINT]     last_executed_at: "2026-04-05T09:05:43.498731+00:00"
+[2026-04-05 17:10:36.562] [PRINT]     last_execution_status: "error"
+[2026-04-05 17:10:36.570] [PRINT]     last_execution_message: "Unexpected error: Agent call failed after retries"
+[2026-04-05 17:10:36.578] [PRINT]     executing: false
+[2026-04-05 17:10:36.594] [PRINT]     pending_actions: []
+[2026-04-05 17:10:36.602] [PRINT]     workflow_paused: false
+[2026-04-05 17:10:36.611] [PRINT]     remaining_steps: []
+[2026-04-05 17:10:36.617] [PRINT]     workflow_context: null
+[2026-04-05 17:10:36.623] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-05 17:10:36.629] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_f48e9272, msg=can you forward an email from Eventbrite to my friend Kita?
+[2026-04-05 17:10:36.629] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 20, "total": 1646, "max": 2000}
+[2026-04-05 17:10:36.634] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-05 17:10:36.634] [PRINT] 
+[2026-04-05 17:10:36.634] [PRINT] ──────────────────────────────────────────────────
+[2026-04-05 17:10:36.641] [PRINT] TIER 0.5 — Building prompt
+[2026-04-05 17:10:36.647] [PRINT] ──────────────────────────────────────────────────
+[2026-04-05 17:10:36.652] [PRINT]    bot_signal : (none)
+[2026-04-05 17:10:36.659] [PRINT]    state_block: (none)
+[2026-04-05 17:10:36.665] [PRINT]    file_context: (none)
+[2026-04-05 17:10:36.672] [PRINT] ──────────────────────────────────────────────────
+[2026-04-05 17:10:39.048] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=708 out=38 | $0.0001 | 2342ms | cumulative: in=708 out=38 total=746 $0.0001
+[2026-04-05 17:10:39.055] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting an action to forward an email to a specific recipient.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting an action to forward an email to a specific recipient.\"\n}"}
+[2026-04-05 17:10:39.055] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-04-05 17:10:39.056] [PRINT] 
+[2026-04-05 17:10:39.056] [PRINT] ──────────────────────────────────────────────────
+[2026-04-05 17:10:39.061] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-05 17:10:39.066] [PRINT] ──────────────────────────────────────────────────
+[2026-04-05 17:10:39.072] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-05 17:10:39.072] [PRINT] 
+[2026-04-05 17:10:39.072] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-05 17:10:39.077] [PRINT] BUILDING LLM CONTEXT
+[2026-04-05 17:10:39.083] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-05 17:10:39.089] [PRINT]    Summary: none
+[2026-04-05 17:10:39.094] [PRINT]    Recent messages: 35
+[2026-04-05 17:10:39.099] [PRINT]       USER: Hi can you search 3 of my latest emails?
+[2026-04-05 17:10:39.106] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.106] [PRINT] 
+[2026-04-05 17:10:39.106] [PRINT] Task Confirmation:
+[2026-04-05 17:10:39.106] [PRINT] 
+[2026-04-05 17:10:39.106] [PRINT] - Action: Search for the 3 most recen...
+[2026-04-05 17:10:39.111] [PRINT]       USER: Yes
+[2026-04-05 17:10:39.116] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.116] [PRINT] 
+[2026-04-05 17:10:39.116] [PRINT] Task Confirmation:
+[2026-04-05 17:10:39.116] [PRINT] 
+[2026-04-05 17:10:39.116] [PRINT] - Action: Search for the 3 most recen...
+[2026-04-05 17:10:39.123] [PRINT]       ASSISTANT: Found 3 email(s):
+[2026-04-05 17:10:39.123] [PRINT]   1. From: Eventbrite <noreply@order.eventbrite.com> | Subject...
+[2026-04-05 17:10:39.130] [PRINT]       USER: can you search my draft titled Coffee Request Meeting?
+[2026-04-05 17:10:39.137] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.137] [PRINT] 
+[2026-04-05 17:10:39.137] [PRINT] - Task: Search drafts for "Coffee Request Meeting"
+[2026-04-05 17:10:39.137] [PRINT] - Quer...
+[2026-04-05 17:10:39.142] [PRINT]       USER: Yes
+[2026-04-05 17:10:39.148] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.148] [PRINT] 
+[2026-04-05 17:10:39.148] [PRINT] - Task: Search drafts for "Coffee Request Meeting"
+[2026-04-05 17:10:39.148] [PRINT] - Quer...
+[2026-04-05 17:10:39.153] [PRINT]       ASSISTANT: Found 1 draft(s):
+[2026-04-05 17:10:39.153] [PRINT]   1. Draft Id: r-6540306273126774248 | Date: Sat, 4 Apr 2026 0...
+[2026-04-05 17:10:39.159] [PRINT]       USER: Can you send that draft to them now?
+[2026-04-05 17:10:39.165] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.165] [PRINT] 
+[2026-04-05 17:10:39.165] [PRINT] - Task: Send draft email
+[2026-04-05 17:10:39.165] [PRINT] - Draft ID: r-654030627312677424...
+[2026-04-05 17:10:39.171] [PRINT]       USER: Yes
+[2026-04-05 17:10:39.176] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.176] [PRINT] 
+[2026-04-05 17:10:39.176] [PRINT] - Task: Send draft email
+[2026-04-05 17:10:39.176] [PRINT] - Draft ID: r-654030627312677424...
+[2026-04-05 17:10:39.182] [PRINT]       USER: Yes
+[2026-04-05 17:10:39.187] [PRINT]       ASSISTANT: Executing approved action...
+[2026-04-05 17:10:39.193] [PRINT]       USER: Hi can you reply to my friends email from Kita? stating "Hi, this is a reply!" a...
+[2026-04-05 17:10:39.198] [PRINT]       ASSISTANT: I found multiple emails from Kita. Could you please specify which email you woul...
+[2026-04-05 17:10:39.205] [PRINT]       USER: Reply the one that has the subject TestReply
+[2026-04-05 17:10:39.210] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.210] [PRINT] 
+[2026-04-05 17:10:39.210] [PRINT] - Replying to email from: Kita
+[2026-04-05 17:10:39.210] [PRINT] - Subject: TestReply
+[2026-04-05 17:10:39.210] [PRINT] - Mes...
+[2026-04-05 17:10:39.215] [PRINT]       USER: Yes
+[2026-04-05 17:10:39.222] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.222] [PRINT] 
+[2026-04-05 17:10:39.222] [PRINT] - **Action**: Reply to email
+[2026-04-05 17:10:39.222] [PRINT] - **From**: Kita
+[2026-04-05 17:10:39.222] [PRINT] - **Subject...
+[2026-04-05 17:10:39.228] [PRINT]       ASSISTANT: **Unable to complete your request**
+[2026-04-05 17:10:39.228] [PRINT] 
+[2026-04-05 17:10:39.228] [PRINT] **Issue:** Gmail API error: <HttpError 400 ...
+[2026-04-05 17:10:39.233] [PRINT]       USER: can you reply to an email titled TestReply with "This is a response! Thankyou!"
+[2026-04-05 17:10:39.238] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.238] [PRINT] 
+[2026-04-05 17:10:39.238] [PRINT] - **Email Subject:** TestReply
+[2026-04-05 17:10:39.238] [PRINT] - **Reply Message:** This ...
+[2026-04-05 17:10:39.243] [PRINT]       USER: Yes
+[2026-04-05 17:10:39.249] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.249] [PRINT] 
+[2026-04-05 17:10:39.249] [PRINT] - **Email Subject:** TestReply
+[2026-04-05 17:10:39.249] [PRINT] - **Reply Message:** This ...
+[2026-04-05 17:10:39.254] [PRINT]       USER: Yes
+[2026-04-05 17:10:39.259] [PRINT]       ASSISTANT: Executing approved action...
+[2026-04-05 17:10:39.264] [PRINT]       USER: Hi can you fix my grammar in my draft titled "TestingGrammar"
+[2026-04-05 17:10:39.270] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.270] [PRINT] 
+[2026-04-05 17:10:39.270] [PRINT] Task Confirmation:
+[2026-04-05 17:10:39.270] [PRINT] 
+[2026-04-05 17:10:39.270] [PRINT] - Task: Fix grammar in the draft
+[2026-04-05 17:10:39.270] [PRINT] - Dr...
+[2026-04-05 17:10:39.275] [PRINT]       USER: Yes
+[2026-04-05 17:10:39.280] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:39.280] [PRINT] 
+[2026-04-05 17:10:39.280] [PRINT] Task Confirmation:
+[2026-04-05 17:10:39.280] [PRINT] 
+[2026-04-05 17:10:39.280] [PRINT] - Task: Fix grammar in the draft titl...
+[2026-04-05 17:10:39.289] [PRINT]       ASSISTANT: **Unable to complete your request**
+[2026-04-05 17:10:39.289] [PRINT] 
+[2026-04-05 17:10:39.289] [PRINT] **Issue:** Unexpected error: Agent call fai...
+[2026-04-05 17:10:39.295] [PRINT]       USER: can you forward an email from Eventbrite to my friend Kita?
+[2026-04-05 17:10:39.301] [PRINT] 
+[2026-04-05 17:10:39.301] [PRINT]    Final context: 5768 chars (~1442 tokens)
+[2026-04-05 17:10:39.307] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-05 17:10:39.313] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=35, ~1442 tokens  | {"has_summary": false, "recent_messages": 35, "context_chars": 5768, "context_tokens_est": 1442}
+[2026-04-05 17:10:39.313] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-05 17:10:40.628] [PRINT]  OK [classifier] gpt-3.5-turbo | agent_tool_classification | in=1159 out=11 | $0.0006 | 1279ms | cumulative: in=1867 out=49 total=1916 $0.0007
+[2026-04-05 17:10:40.634] [PRINT]    relevant_agents: ['gmail_agent']
+[2026-04-05 17:10:40.640] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**']
+[2026-04-05 17:10:40.646] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent"]}
+[2026-04-05 17:10:40.647] [PRINT]    user_prompt (6282 chars):
+[2026-04-05 17:10:40.653] [PRINT]      RECENT CONVERSATION:
+[2026-04-05 17:10:40.659] [PRINT]      USER: Hi can you search 3 of my latest emails?
+[2026-04-05 17:10:40.665] [PRINT]      ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:40.672] [PRINT]      
+[2026-04-05 17:10:40.678] [PRINT]      Task Confirmation:
+[2026-04-05 17:10:40.684] [PRINT]      
+[2026-04-05 17:10:40.691] [PRINT]      - Action: Search for the 3 most recent emails
+[2026-04-05 17:10:40.696] [PRINT]      - Results: 3 emails will be retrieved
+[2026-04-05 17:10:40.702] [PRINT]      
+[2026-04-05 17:10:40.708] [PRINT]      Please confirm if you would like to proceed with this task.
+[2026-04-05 17:10:40.714] [PRINT]      
+[2026-04-05 17:10:40.720] [PRINT]      ---
+[2026-04-05 17:10:40.726] [PRINT]      Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-05 17:10:40.732] [PRINT]      USER: Yes
+[2026-04-05 17:10:40.738] [PRINT]      ASSISTANT: **Ready to execute!**
+[2026-04-05 17:10:40.745] [PRINT]      
+[2026-04-05 17:10:40.751] [PRINT]      Task Confirmation:
+[2026-04-05 17:10:40.757] [PRINT]      
+[2026-04-05 17:10:40.763] [PRINT]      - Action: Search for the 3 most recent emails
+[2026-04-05 17:10:40.769] [PRINT]      - Number of emails to retrieve: 3
+[2026-04-05 17:10:40.775] [PRINT]      
+[2026-04-05 17:10:40.780] [PRINT]      Please confirm if you would lik...
+[2026-04-05 17:10:40.786] [PRINT] ──────────────────────────────────────────────────
+[2026-04-05 17:10:45.664] [PRINT]  OK [1] gpt-4 | tier_1_full_analysis | in=2506 out=146 | $0.0839 | 4835ms | cumulative: in=4373 out=195 total=4568 $0.0847
+[2026-04-05 17:10:45.672] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "forward_email", "missing_fields": ["message_id"], "clarification_question": "I found multiple emails from Eventbrite. Could you please specify which email you would like me to forward to Kita?", "execution_ready": false, "reasoning": "There are multiple emails from Eventbrite, so I need to know which one to forward.", "extracted_info": {"query": "from:Eventbrite", "to": "Kita"}}
+[2026-04-05 17:10:45.674] [INFO] [-]   ANALYSIS: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False  | {"missing_fields": ["message_id"]}
+[2026-04-05 17:10:45.675] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.NEEDS_CLARIFICATION
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "N/A", "missing_fields": ["message_id"], "clarification_question": "I found multiple emails from Eventbrite. Could you please specify which email you would like me to forward to Kita?", "ready_for_execution": false, "execution_summary": "Forward an email from Eventbrite to Kita", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["forward_email"]}, "query": "from:Eventbrite", "to": "Kita"}}
+[2026-04-05 17:10:45.676] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 45, "total": 1691, "max": 2000, "response_preview": "I found multiple emails from Eventbrite. Could you please specify which email you would like me to forward to Kita?\n\n**What I have so far:**\n- **To:** Kita\n"}
+[2026-04-05 17:10:45.703] [INFO] [req_20260405091036_e981d99a] [T:f48e9272]   BOT RESP: "I found multiple emails from Eventbrite. Could you please specify which email you would like me to f..."
+[2026-04-05 17:10:45.716] [PRINT] 
+[2026-04-05 17:10:45.716] [PRINT] ============================================================
+[2026-04-05 17:10:45.723] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-05 17:10:45.731] [PRINT] ============================================================
+[2026-04-05 17:10:45.739] [PRINT]   LLM calls:        3
+[2026-04-05 17:10:45.747] [PRINT]   Total input:      4,373 tokens
+[2026-04-05 17:10:45.754] [PRINT]   Total output:     195 tokens
+[2026-04-05 17:10:45.763] [PRINT]   Total tokens:     4,568 tokens
+[2026-04-05 17:10:45.771] [PRINT]   Estimated cost:   $0.0847
+[2026-04-05 17:10:45.779] [PRINT]   Total duration:   9285ms (9.3s)
+[2026-04-05 17:10:45.787] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-05 17:10:45.796] [PRINT]   Breakdown by call:
+[2026-04-05 17:10:45.805] [PRINT]     1. gpt-4o-mini      in=708    out=38    $0.0001 2342ms
+[2026-04-05 17:10:45.813] [PRINT]     2. gpt-3.5-turbo    in=1159   out=11    $0.0006 1279ms
+[2026-04-05 17:10:45.820] [PRINT]     3. gpt-4            in=2506   out=146   $0.0839 4835ms
+[2026-04-05 17:10:45.827] [PRINT] ============================================================
+[2026-04-05 17:10:48.840] [INFO] [req_20260405091036_e981d99a] [T:f48e9272] ← RESPONSE: 200 (16805ms)
+[2026-04-05 17:10:48.840] [INFO] [req_20260405091036_e981d99a] [T:f48e9272] ─────────: ──────────────────────────────────────────────────
+[2026-04-05 17:10:48.843] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_f48e9272
+[2026-04-05 17:11:30.358] [INFO] [req_20260405091036_e981d99a] [T:f48e9272] → REQUEST: POST /threads/65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_f48e9272/messages  | {"query": null}
+[2026-04-05 17:11:34.774] [INFO] [req_20260405091134_ef485296] [T:f48e9272]   USER MSG: "forward the one with the subject Order Confirmation for UST-CICS Pre-Travel Orientation (INTERNATION..."
+[2026-04-05 17:11:34.778] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-05 17:11:34.779] [PRINT] WebSocket connected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_f48e9272
+[2026-04-05 17:11:34.785] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_f48e9272
+[2026-04-05 17:11:34.791] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-05 17:11:34.800] [PRINT]   User: forward the one with the subject Order Confirmation for UST-CICS Pre-Travel Orientation (INTERNATIONAL)
+[2026-04-05 17:11:34.806] [PRINT]   ConversationState:
+[2026-04-05 17:11:34.813] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["forward_email"]}, "query": "from:Eventbrite", "to": "Kita"}
+[2026-04-05 17:11:34.819] [PRINT]     missing_fields: ["message_id"]
+[2026-04-05 17:11:34.825] [PRINT]     intent: "needs_clarification"
+[2026-04-05 17:11:34.831] [PRINT]     clarification_question: "I found multiple emails from Eventbrite. Could you please specify which email you would like me to forward to Kita?"
+[2026-04-05 17:11:34.838] [PRINT]     ready_for_execution: false
+[2026-04-05 17:11:34.846] [PRINT]     execution_summary: "Forward an email from Eventbrite to Kita"
+[2026-04-05 17:11:34.854] [PRINT]     execution_mode: "standard"
+[2026-04-05 17:11:34.862] [PRINT]     execution_history: [{"executed_at": "2026-04-05T08:47:34.310608+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-05T08:49:11.494856+00:00", "status": "success", "message": "Workflow executed successfully"}, {"executed_at": "2026-04-05T08:50:36.827780+00:00", "status": "success", "message": "Approved and executed: Send the draft email with id r-6540306273126774248"}, {"executed_at": "2026-04-05T08:58:14.837393+00:00", "status": "error", "message": "Gmail API error: <HttpError 400 when requesting https://gmail.googleapis.com/gmail/v1/users/me/drafts?alt=json returned \"Invalid To header\". Details: \"[{'message': 'Invalid To header', 'domain': 'global', 'reason': 'invalidArgument'}]\">"}, {"executed_at": "2026-04-05T09:01:53.132671+00:00", "status": "success", "message": "Approved and executed: Reply to the email with the message 'This is a response! Thankyou!'"}, {"executed_at": "2026-04-05T09:05:43.498731+00:00", "status": "error", "message": "Unexpected error: Agent call failed after retries"}]
+[2026-04-05 17:11:34.868] [PRINT]     completed_tasks: [{"task_type": "gmail_agent.search_emails", "params_summary": "query: , max_results: 3", "status": "success", "result_summary": "count: 3", "timestamp": "2026-04-05T08:47:34.310608+00:00"}, {"task_type": "gmail_agent.search_drafts", "params_summary": "query: Coffee Request Meeting", "status": "success", "result_summary": "count: 1", "timestamp": "2026-04-05T08:49:11.494856+00:00"}, {"task_type": "gmail_agent.search_emails", "params_summary": "query: from:Kita subject:TestReply", "status": "success", "result_summary": "count: 1", "timestamp": "2026-04-05T08:58:14.837393+00:00"}]
+[2026-04-05 17:11:34.876] [PRINT]     has_executed: true
+[2026-04-05 17:11:34.883] [PRINT]     last_executed_at: "2026-04-05T09:05:43.498731+00:00"
+[2026-04-05 17:11:34.888] [PRINT]     last_execution_status: "error"
+[2026-04-05 17:11:34.902] [PRINT]     last_execution_message: "Unexpected error: Agent call failed after retries"
+[2026-04-05 17:11:34.908] [PRINT]     executing: false
+[2026-04-05 17:11:34.915] [PRINT]     pending_actions: []
+[2026-04-05 17:11:34.922] [PRINT]     workflow_paused: false
+[2026-04-05 17:11:34.928] [PRINT]     remaining_steps: []
+[2026-04-05 17:11:34.934] [PRINT]     workflow_context: null
+[2026-04-05 17:11:34.942] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-05 17:11:34.949] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_f48e9272, msg=forward the one with the subject Order Confirmation for UST-CICS Pre-Travel Orie
+[2026-04-05 17:11:34.949] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 26, "total": 1717, "max": 2000}
+[2026-04-05 17:11:34.954] [INFO] [-]   STEP [tier0]: quick status check request detected (0 tokens)
+[2026-04-05 17:11:34.954] [INFO] [-]   STEP [tier0]: quick_status_check returning  | {"status": "error", "message_preview": "Unexpected error: Agent call failed after retries"}
+[2026-04-05 17:11:34.955] [INFO] [-]   ANALYSIS: intent=ConversationIntent.SMALL_TALK, ready=False  | {"missing_fields": []}
+[2026-04-05 17:11:34.956] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.SMALL_TALK
+    ↳ {"intent": "ConversationIntent.SMALL_TALK", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": null, "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["forward_email"]}, "query": "from:Eventbrite", "to": "Kita"}}
+[2026-04-05 17:11:34.957] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 40, "total": 1757, "max": 2000, "response_preview": "**Last execution: Failed**\n\n**Error:** Unexpected error: Agent call failed after retries\n\nWould you like to try again, or is there something else I can help with?"}
+[2026-04-05 17:11:34.981] [INFO] [req_20260405091134_ef485296] [T:f48e9272]   BOT RESP: "**Last execution: Failed**
+
+**Error:** Unexpected error: Agent call failed after retries
+
+Would you ..."
+[2026-04-05 17:11:34.989] [PRINT] 
+[2026-04-05 17:11:34.989] [PRINT] ============================================================
+[2026-04-05 17:11:34.998] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-05 17:11:35.007] [PRINT] ============================================================
+[2026-04-05 17:11:35.014] [PRINT]   No LLM calls made in this request.
+[2026-04-05 17:11:35.021] [PRINT] ============================================================
+[2026-04-05 17:11:35.034] [INFO] [req_20260405091134_ef485296] [T:f48e9272] ← RESPONSE: 200 (4676ms)
+[2026-04-05 17:11:35.035] [INFO] [req_20260405091134_ef485296] [T:f48e9272] ─────────: ──────────────────────────────────────────────────
+[2026-04-05 17:11:35.038] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_f48e9272
