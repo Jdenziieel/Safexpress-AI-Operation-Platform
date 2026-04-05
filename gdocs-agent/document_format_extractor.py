@@ -12,14 +12,20 @@ from googleapiclient.errors import HttpError
 
 
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
-    """Get Google API service"""
+    """Get Google API service from credentials passed by the supervisor."""
     creds = Credentials(
         token=credentials_dict["access_token"],
         refresh_token=credentials_dict.get("refresh_token"),
-        token_uri="https://oauth2.googleapis.com/token",
-        client_id=os.getenv("GOOGLE_CLIENT_ID"),
-        client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+        token_uri=credentials_dict.get("token_uri", "https://oauth2.googleapis.com/token"),
+        client_id=credentials_dict.get("client_id", ""),
+        client_secret=credentials_dict.get("client_secret", ""),
     )
+    if creds.refresh_token:
+        try:
+            from google.auth.transport.requests import Request
+            creds.refresh(Request())
+        except Exception:
+            pass
     service = build(service_name, version, credentials=creds)
     return service
 
