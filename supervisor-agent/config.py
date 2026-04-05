@@ -79,6 +79,10 @@ CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "gpt-3.5-turbo")
 # Lightweight model for quick checks, memory summarization, result summarization
 QUICK_MODEL = os.getenv("QUICK_MODEL", "gpt-4o-mini")
 
+# Transform layer (llm_tool.transform_text) — cheaper model with large context window
+TRANSFORM_MODEL = os.getenv("TRANSFORM_MODEL", "gpt-4o")
+TRANSFORM_MAX_INPUT_TOKENS = int(os.getenv("TRANSFORM_MAX_INPUT_TOKENS", "20000"))
+
 # Server configuration
 SERVER_PORT = int(os.getenv("PORT", "8010"))
 SERVER_HOST = os.getenv("HOST", "0.0.0.0")

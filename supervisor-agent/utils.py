@@ -15,6 +15,7 @@ import httpx
 from typing import List, Dict, Optional
 from langchain_openai import ChatOpenAI
 from agent_capabilities_v3 import agent_capabilities
+import tiktoken
 from config import (
     CLASSIFIER_MODEL,
     LLM_MODEL,
@@ -22,6 +23,8 @@ from config import (
     DEFAULT_TIMEOUT,
     DEFAULT_BACKOFF_FACTOR,
     OPENAI_API_KEY,
+    TRANSFORM_MODEL,
+    TRANSFORM_MAX_INPUT_TOKENS,
 )
 
 # Import LLM error handler for unified error handling
@@ -375,6 +378,18 @@ def execute_llm_transform(instruction: str, content: str, trace=None) -> dict:
     if not instruction or not instruction.strip():
         return {"success": False, "error": "No transformation instruction provided", "transformed_content": ""}
 
+    _encoding = tiktoken.get_encoding("cl100k_base")
+    estimated_tokens = len(_encoding.encode(content))
+    if estimated_tokens > TRANSFORM_MAX_INPUT_TOKENS:
+        error_msg = (
+            f"Content too large for transform "
+            f"(~{estimated_tokens:,} tokens, limit is {TRANSFORM_MAX_INPUT_TOKENS:,}). "
+            f"Try a smaller document or a specific section."
+        )
+        if trace:
+            trace.warning(f"llm_transform rejected: {estimated_tokens} tokens exceeds limit")
+        return {"success": False, "error": error_msg, "transformed_content": ""}
+
     system_prompt = (
         "You are a precise text transformation assistant. "
         "Apply the requested transformation to the provided content. "
@@ -383,7 +398,7 @@ def execute_llm_transform(instruction: str, content: str, trace=None) -> dict:
     user_prompt = f"Instruction: {instruction}\n\nContent to transform:\n{content}"
 
     llm = ChatOpenAI(
-        model=LLM_MODEL,
+        model=TRANSFORM_MODEL,
         temperature=0.1,
         openai_api_key=OPENAI_API_KEY,
     )
@@ -404,7 +419,7 @@ def execute_llm_transform(instruction: str, content: str, trace=None) -> dict:
             output_tokens = token_usage.get("completion_tokens", 0)
 
         logger.llm_call(
-            model=LLM_MODEL,
+            model=TRANSFORM_MODEL,
             operation="transform_text",
             input_tokens=input_tokens,
             output_tokens=output_tokens,
@@ -426,7 +441,7 @@ def execute_llm_transform(instruction: str, content: str, trace=None) -> dict:
     except Exception as e:
         if is_llm_error(e):
             logger.llm_call(
-                model=LLM_MODEL,
+                model=TRANSFORM_MODEL,
                 operation="transform_text",
                 input_tokens=(len(system_prompt) + len(user_prompt)) // 4,
                 output_tokens=0,

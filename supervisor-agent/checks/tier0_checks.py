@@ -628,6 +628,10 @@ What would you like to do?"""
         Detect status check requests after execution and provide quick update.
         Uses pattern matching + execution history lookup.
         
+        Only triggers for short messages (<=8 words) to avoid intercepting
+        task requests that coincidentally contain status-like words
+        (e.g. "forward the email with subject Order Confirmation...").
+        
         Args:
             user_message: Current user input
             conversation_state: Previous conversation context
@@ -635,6 +639,12 @@ What would you like to do?"""
         Returns:
             ConversationAnalysis with status response, or None if not a status check
         """
+        user_lower = user_message.lower().strip()
+        word_count = len(user_lower.split())
+
+        if word_count > 8:
+            return None
+
         status_keywords = [
             "status", "done", "finished", "complete", "did it work",
             "success", "result", "what happened", "is it done",
@@ -642,9 +652,8 @@ What would you like to do?"""
             "any updates", "how did it go", "outcome", "did it finish",
             "is it complete", "has it been sent", "was it created",
             "did it fail", "any errors", "what's the result",
-            "confirmation", "did you do it", "is it ready"
+            "did you do it", "is it ready"
         ]
-        user_lower = user_message.lower().strip()
         
         # Check if this is a status request
         if not any(keyword in user_lower for keyword in status_keywords):
