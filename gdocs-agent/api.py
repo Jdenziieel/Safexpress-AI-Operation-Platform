@@ -16,6 +16,7 @@ from tools import (
     _update_entire_doc_impl,
     _create_doc_with_content_impl,
     _add_text_from_file_impl,
+    _create_from_uploaded_template_impl,
     _list_user_docs_impl,
 )
 from dotenv import load_dotenv
@@ -441,6 +442,7 @@ async def execute_task(request: AgentTaskRequest):
             "update_doc": _update_entire_doc_impl,
             "create_doc_with_content": _create_doc_with_content_impl,
             "add_text_from_file": _add_text_from_file_impl,
+            "create_from_uploaded_template": _create_from_uploaded_template_impl,
             "list_my_docs": _list_user_docs_impl,
         }
 
@@ -452,7 +454,14 @@ async def execute_task(request: AgentTaskRequest):
 
             tool_impl = TOOL_MAP[request.tool]
             try:
-                raw_result = tool_impl(**request.inputs, credentials_dict=request.credentials_dict)
+                tool_inputs = dict(request.inputs or {})
+                if request.tool == "edit_doc" and "content" in tool_inputs:
+                    if "new_text" not in tool_inputs:
+                        tool_inputs["new_text"] = tool_inputs.pop("content")
+                    else:
+                        tool_inputs.pop("content", None)
+
+                raw_result = tool_impl(**tool_inputs, credentials_dict=request.credentials_dict)
                 elapsed = time.time() - tool_start
                 print(f"Tool executed in {elapsed:.2f}s")
 

@@ -205,7 +205,11 @@ def _share_google_docs_impl(
 
 
 def _edit_google_doc_impl(
-    document_id: str, old_text: str, new_text: str, credentials_dict: Dict
+    document_id: str,
+    old_text: str = None,
+    new_text: str = None,
+    content: str = None,
+    credentials_dict: Dict = None,
 ) -> str:
     """Implementation of editing/replacing text in a Google Doc
 
@@ -213,11 +217,22 @@ def _edit_google_doc_impl(
         document_id: The ID of the document to edit
         old_text: The text to find and replace
         new_text: The replacement text
+        content: Alias for new_text when the request uses generic content field
         credentials_dict: Google OAuth credentials
 
     Returns:
         Success message with edit details
     """
+    if new_text is None and content is not None:
+        new_text = content
+
+    if not old_text or not new_text:
+        return (
+            "Error: edit_doc requires both old_text and new_text. "
+            "Provide the exact text to replace and the replacement text, "
+            "or use update_doc to replace the whole document content."
+        )
+
     try:
         docs_service = get_google_service("docs", "v1", credentials_dict)
 

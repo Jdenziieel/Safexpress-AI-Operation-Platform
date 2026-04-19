@@ -1,16 +1,25 @@
 {
   "steps": [
     {
-      "agent": "sheets_agent",
-      "tool": "create_sheet",
+      "agent": "drive_agent",
+      "tool": "search_files",
       "inputs": {
-        "title": "Revenue_Q2-2026 (Final)"
+        "search_term": "project_brief"
       },
       "output_variables": {
-        "new_sheet_id": "sheet_id",
-        "new_sheet_url": "sheet_url"
+        "template_file_id": "results[0].id"
       },
-      "description": "Create a new Google Spreadsheet titled 'Revenue_Q2-2026 (Final)'"
+      "description": "Search for the file 'project_brief' in Google Drive"
+    },
+    {
+      "agent": "docs_agent",
+      "tool": "create_from_uploaded_template",
+      "inputs": {
+        "template_file_id": "{{ template_file_id }}",
+        "new_title": "New_Document_Brief2"
+      },
+      "output_variables": {},
+      "description": "Create a new document from the found file and name it 'New_Document_Brief2'"
     }
   ]
 }

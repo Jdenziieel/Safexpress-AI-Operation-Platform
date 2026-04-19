@@ -17,6 +17,7 @@ from tools import (
     _update_entire_doc_impl,
     _create_doc_with_content_impl,
     _add_text_from_file_impl,
+    _create_from_uploaded_template_impl,
 )
 from dotenv import load_dotenv
 
@@ -220,6 +221,51 @@ def create_docs_agent(credentials_dict: Dict):
         )
         return json.dumps(result)
 
+    @tool
+    def create_from_uploaded_template(
+        template_file_id: str, new_title: str, placeholders: str = "", output_format: str = "google_docs"
+    ) -> str:
+        """Creates a new document from an uploaded template file in Google Drive.
+
+        Args:
+            template_file_id: Google Drive file ID of the template (can be .docx, .pdf, etc.)
+            new_title: Title for the new document
+            placeholders: JSON string of placeholder values (optional)
+            output_format: "google_docs" (editable) or "pdf" (final output)
+
+        This will:
+        1. Convert the uploaded file to a Google Doc
+        2. Replace placeholders with your values
+        3. Create a new formatted document
+
+        Use this when user wants to:
+        - Create document from their uploaded template
+        - Convert Word/PDF files to Google Docs
+        - Replicate their custom document style from Drive files
+
+        Example:
+        create_from_uploaded_template(
+            "1abc123xyz",
+            "Project Brief Copy",
+            '{"DATE": "April 6, 2026"}',
+            "google_docs"
+        )
+        """
+        import json
+
+        # Parse placeholder values
+        placeholder_values = {}
+        if placeholders:
+            try:
+                placeholder_values = json.loads(placeholders)
+            except:
+                pass
+
+        result = _create_from_uploaded_template_impl(
+            template_file_id, new_title, placeholder_values, credentials_dict, output_format
+        )
+        return result
+
     tools = [
         list_my_docs,
         extract_template_format,
@@ -232,6 +278,7 @@ def create_docs_agent(credentials_dict: Dict):
         update_doc,
         create_doc_with_content,
         add_text_from_file,
+        create_from_uploaded_template,
     ]
 
     # create the agent using langgraph's react pattern

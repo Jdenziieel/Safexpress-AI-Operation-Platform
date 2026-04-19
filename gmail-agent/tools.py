@@ -2,7 +2,6 @@ import os
 from typing import Dict, Any, List
 from langchain.tools import tool
 from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from email.mime.text import MIMEText
@@ -20,60 +19,183 @@ import httpx
 from datetime import datetime
 
 
-def _extract_body_from_payload(payload: dict) -> str:
-    """Recursively traverse MIME parts to find the email body.
-
-    Prefers text/plain over text/html. Handles arbitrarily nested
-    multipart/* structures (e.g. multipart/mixed > multipart/alternative).
-    """
-    plain = ""
-    html = ""
-
-    def _walk(part):
-        nonlocal plain, html
-        mime = part.get("mimeType", "")
-
-        if mime == "text/plain" and not plain:
-            data = part.get("body", {}).get("data")
-            if data:
-                plain = base64.urlsafe_b64decode(data).decode("utf-8")
-        elif mime == "text/html" and not html:
-            data = part.get("body", {}).get("data")
-            if data:
-                html = base64.urlsafe_b64decode(data).decode("utf-8")
-        elif mime.startswith("multipart/"):
-            for sub in part.get("parts", []):
-                _walk(sub)
-                if plain:
-                    return
-
-    _walk(payload)
-    return plain or html
-
-
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
 
+    # credentials for google services
     creds = Credentials(
         token=credentials_dict["access_token"],
         refresh_token=credentials_dict.get("refresh_token"),
         token_uri="https://oauth2.googleapis.com/token",
         client_id=credentials_dict.get("client_id", ""),
         client_secret=credentials_dict.get("client_secret", ""),
+        scopes=[
+            "https://www.googleapis.com/auth/gmail.send",
+            "https://www.googleapis.com/auth/gmail.modify",
+            "https://www.googleapis.com/auth/gmail.readonly",
+        ],
     )
-
-    # Proactively refresh: access_token from the supervisor may be stale.
-    # No `expiry` is set so creds.expired is always False; refresh explicitly.
-    if creds.refresh_token:
-        try:
-            creds.refresh(Request())
-        except Exception:
-            pass
 
     service = build(service_name, version, credentials=creds)
     return service
 
 
-def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict, cc: str = None, bcc: str = None) -> Dict[str, Any]:
+def _extract_attachment_data_impl(
+    attachment_data: str,      # base64-encoded file from _download_attachment_impl
+    file_name: str,
+    credentials_dict: Dict = None
+) -> Dict[str, Any]:
+    import base64, json
+    from io import BytesIO
+
+    file_bytes = base64.b64decode(attachment_data)
+    ext = file_name.lower().split(".")[-1]
+
+    # ── XLSX / CSV ────────────────────────────────────────────
+    if ext in ["xlsx", "xls", "csv"]:
+        try:
+            import pandas as pd
+            df = pd.read_csv(BytesIO(file_bytes)) if ext == "csv" else pd.read_excel(BytesIO(file_bytes))
+            df.columns = [str(c) if not str(c).startswith("Unnamed") else f"col_{i}" for i, c in enumerate(df.columns)]
+            df = df.dropna(how="all")
+            return {
+                "success": True,
+                "columns": list(df.columns),
+                "rows": df.fillna("").to_dict(orient="records"),
+                "row_count": len(df),
+                "raw_text": df.to_string(index=False),
+                "source_type": ext,
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    # ── PDF or image ──────────────────────────────────────────
+    elif ext in ["pdf", "png", "jpg", "jpeg", "webp"]:
+        try:
+            import anthropic, base64 as b64
+            from PIL import Image
+
+            # Convert PDF pages to images
+            if ext == "pdf":
+                from pdf2image import convert_from_bytes
+                images = convert_from_bytes(file_bytes, dpi=250, fmt="png")
+            else:
+                images = [Image.open(BytesIO(file_bytes))]
+
+            client = anthropic.Anthropic()
+            all_rows, detected_columns, raw_pages = [], [], []
+
+            for page_num, image in enumerate(images):
+                if image.mode != "RGB":
+                    image = image.convert("RGB")
+                # Upscale tiny images
+                w, h = image.size
+                if w < 1000:
+                    image = image.resize((int(w * 1000/w), int(h * 1000/w)))
+
+                buf = BytesIO()
+                image.save(buf, format="PNG")
+                img_b64 = b64.b64encode(buf.getvalue()).decode()
+
+                response = client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=4096,
+                    messages=[{
+                        "role": "user",
+                        "content": [
+                            {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": img_b64}},
+                            {"type": "text", "text": """Extract ALL structured data from this document.
+Instructions:
+1. Read every piece of text including handwritten notes
+2. Find tables — extract headers and all rows exactly
+3. Find key-value pairs (e.g. "Invoice No: 123") — treat keys as columns
+4. If the document has BOTH a header section AND a table, add header fields as extra columns on every table row
+5. For merged/spanned cells, repeat the value in each affected row
+6. Preserve original values exactly
+
+Return ONLY this JSON, nothing else:
+{"columns": ["col1", ...], "rows": [{"col1": "val"}, ...], "raw_text": "full plain text of document"}
+If no table exists, put key-value pairs as a single row.
+If blank, return {"columns": [], "rows": [], "raw_text": ""}"""}
+                        ]
+                    }]
+                )
+
+                text = response.content[0].text.strip()
+                if "```json" in text:
+                    text = text.split("```json")[1].split("```")[0].strip()
+                elif "```" in text:
+                    text = text.split("```")[1].split("```")[0].strip()
+
+                try:
+                    page_data = json.loads(text)
+                    if page_data.get("columns") and not detected_columns:
+                        detected_columns = page_data["columns"]
+                    all_rows.extend(page_data.get("rows", []))
+                    raw_pages.append(page_data.get("raw_text", ""))
+                except json.JSONDecodeError:
+                    raw_pages.append(text)
+
+            return {
+                "success": True,
+                "columns": detected_columns,
+                "rows": all_rows,
+                "row_count": len(all_rows),
+                "raw_text": "\n\n".join(raw_pages),
+                "source_type": ext,
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    else:
+        return {"success": False, "error": f"Unsupported file type: {ext}"}
+
+
+def _map_columns_to_sheet_impl(
+    extracted_columns: list,
+    sheet_columns: list,
+    sample_rows: list = None,
+    credentials_dict: Dict = None
+) -> Dict[str, Any]:
+    import anthropic, json
+    client = anthropic.Anthropic()
+
+    sample_str = ""
+    if sample_rows:
+        sample_str = f"\nSample data (first 2 rows):\n{json.dumps(sample_rows[:2], indent=2)}"
+
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1000,
+        messages=[{
+            "role": "user",
+            "content": f"""Map the extracted columns to the sheet columns.
+
+Extracted columns: {extracted_columns}
+Sheet columns: {sheet_columns}{sample_str}
+
+Rules:
+- Map each extracted column to the BEST matching sheet column
+- If no match, map to null
+- Consider abbreviations, synonyms, different naming conventions
+- Return ONLY valid JSON: {{"extracted_col": "sheet_col_or_null"}}"""
+        }]
+    )
+
+    text = response.content[0].text.strip()
+    if "```json" in text:
+        text = text.split("```json")[1].split("```")[0].strip()
+    elif "```" in text:
+        text = text.split("```")[1].split("```")[0].strip()
+
+    mapping = json.loads(text)
+    return {
+        "success": True,
+        "mapping": mapping,
+        "unmapped": [k for k, v in mapping.items() if v is None]
+    }
+
+
+def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict) -> Dict[str, Any]:
     """
     Implementation of sending email logic
 
@@ -82,8 +204,6 @@ def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict, c
         subject: Subject of the email
         body: Email body text
         credentials_dict: Google OAuth credentials
-        cc: CC recipient(s), comma-separated
-        bcc: BCC recipient(s), comma-separated
 
     Returns:
         Dictionary with success status and email details
@@ -95,10 +215,6 @@ def _send_email_impl(to: str, subject: str, body: str, credentials_dict: Dict, c
         message = MIMEText(body)
         message["to"] = to
         message["subject"] = subject
-        if cc:
-            message["cc"] = cc
-        if bcc:
-            message["bcc"] = bcc
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
@@ -216,7 +332,22 @@ def _search_emails_impl(
                 elif header["name"] == "Date":
                     date = header["value"]
 
-            body = _extract_body_from_payload(message["payload"])
+            # get full message body
+            body = ""
+            if "parts" in message["payload"]:
+                # multipart message
+                for part in message["payload"]["parts"]:
+                    if part["mimeType"] == "text/plain" and "data" in part.get("body", {}):
+                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
+                        break
+                    elif part["mimeType"] == "text/html" and not body and "data" in part.get("body", {}):
+                        # fallback to HTML if no plain text
+                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
+            elif "body" in message["payload"] and "data" in message["payload"]["body"]:
+                # simple message
+                body = base64.urlsafe_b64decode(message["payload"]["body"]["data"]).decode("utf-8")
+
+            # if body is still empty, use snippet
             if not body:
                 body = message.get("snippet", "")
 
@@ -278,7 +409,7 @@ def _search_emails_impl(
 
 # checking - status:
 def _send_email_with_attachments_impl(
-    to: str, subject: str, body: str, file_path: str, credentials_dict: Dict, cc: str = None, bcc: str = None
+    to: str, subject: str, body: str, file_path: str, credentials_dict: Dict
 ) -> Dict[str, Any]:
     """Send email with attachment via Gmail"""
     try:
@@ -289,10 +420,6 @@ def _send_email_with_attachments_impl(
         message = MIMEMultipart()
         message["to"] = to
         message["subject"] = subject
-        if cc:
-            message["cc"] = cc
-        if bcc:
-            message["bcc"] = bcc
 
         message.attach(MIMEText(body, "plain"))
 
@@ -511,7 +638,21 @@ def _forward_email_impl(
             elif header["name"] == "Date":
                 original_date = header["value"]
 
-        original_body = _extract_body_from_payload(original_message["payload"])
+        # Get original body
+        original_body = ""
+        if "parts" in original_message["payload"]:
+            for part in original_message["payload"]["parts"]:
+                if part["mimeType"] == "text/plain":
+                    if "data" in part["body"]:
+                        original_body = base64.urlsafe_b64decode(
+                            part["body"]["data"]
+                        ).decode("utf-8")
+                    break
+        else:
+            if "body" in original_message["payload"] and "data" in original_message["payload"]["body"]:
+                original_body = base64.urlsafe_b64decode(
+                    original_message["payload"]["body"]["data"]
+                ).decode("utf-8")
 
         # Build forwarded message
         forward_subject = f"Fwd: {original_subject}" if not original_subject.startswith("Fwd:") else original_subject
@@ -633,7 +774,19 @@ def _get_thread_conversation_impl(thread_id: str, credentials_dict: Dict) -> Dic
                 elif header["name"] == "Date":
                     date = header["value"]
 
-            body = _extract_body_from_payload(message["payload"])
+            # get message body
+            body = ""
+            if "parts" in message["payload"]:
+                # multipart message
+                for part in message["payload"]["parts"]:
+                    if part["mimeType"] == "text/plain" and "data" in part["body"]:
+                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
+                        break
+            elif "body" in message["payload"] and "data" in message["payload"]["body"]:
+                # simple message
+                body = base64.urlsafe_b64decode(message["payload"]["body"]["data"]).decode("utf-8")
+
+            # get snippet if body is empty
             if not body:
                 body = message.get("snippet", "")
 
@@ -679,7 +832,7 @@ def _get_thread_conversation_impl(thread_id: str, credentials_dict: Dict) -> Dic
 
 # checking - status: Done
 def _create_draft_email_impl(
-    to: str, subject: str, body: str, credentials_dict: Dict, cc: str = None, bcc: str = None
+    to: str, subject: str, body: str, credentials_dict: Dict
 ) -> Dict[str, Any]:
     """Create a draft email in Gmail"""
     try:
@@ -690,10 +843,6 @@ def _create_draft_email_impl(
         message = MIMEText(body)
         message["to"] = to
         message["subject"] = subject
-        if cc:
-            message["cc"] = cc
-        if bcc:
-            message["bcc"] = bcc
 
         # encode message
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
@@ -889,7 +1038,17 @@ def _search_drafts_impl(
                 elif header["name"] == "Date":
                     date = header["value"]
             
-            body = _extract_body_from_payload(message["payload"])
+            # get message body
+            body = ""
+            if "parts" in message["payload"]:
+                # multipart message
+                for part in message["payload"]["parts"]:
+                    if part["mimeType"] == "text/plain" and "data" in part["body"]:
+                        body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
+                        break
+            elif "body" in message["payload"] and "data" in message["payload"]["body"]:
+                # simple message
+                body = base64.urlsafe_b64decode(message["payload"]["body"]["data"]).decode("utf-8")
             
             # Structure to match Gmail API format with nested message object
             draft_details.append({
@@ -1810,182 +1969,3 @@ def _process_delivery_order_workflow_impl(
             "search_summary": {},
             "error": f"Workflow error: {str(e)}"
         }
-
-
-def _extract_attachment_data_impl(
-    message_id: str,
-    attachment_id: str,
-    filename: str = "attachment",
-    mapping_agent_url: str = None,
-    credentials_dict: Dict[str, Any] = None
-) -> Dict[str, Any]:
-    """
-    Download an email attachment and extract structured data via the mapping agent.
-
-    Steps:
-        1. Download the attachment from Gmail using message_id + attachment_id
-        2. Base64-encode the file content
-        3. Call mapping_agent parse_file to extract structured data
-
-    Args:
-        message_id: Gmail message ID containing the attachment
-        attachment_id: Gmail attachment ID within the message
-        filename: Original filename (used to determine file type)
-        mapping_agent_url: URL of the mapping agent (default from env MAPPING_AGENT_URL)
-        credentials_dict: OAuth credentials dict
-
-    Returns:
-        Dict with success, parsed_data, filename, file_size, error
-    """
-    try:
-        if mapping_agent_url is None:
-            mapping_agent_url = os.getenv("MAPPING_AGENT_URL", "http://localhost:8004")
-
-        gmail_service = get_google_service("gmail", "v1", credentials_dict)
-
-        attachment = (
-            gmail_service.users()
-            .messages()
-            .attachments()
-            .get(userId="me", messageId=message_id, id=attachment_id)
-            .execute()
-        )
-
-        file_data = base64.urlsafe_b64decode(attachment.get("data", ""))
-        file_size = len(file_data)
-
-        ext = os.path.splitext(filename)[-1].lower().lstrip(".")
-        file_type_map = {
-            "xlsx": "excel", "xls": "excel",
-            "csv": "csv", "json": "json",
-        }
-        file_type = file_type_map.get(ext)
-        if not file_type:
-            return {
-                "success": False,
-                "parsed_data": None,
-                "filename": filename,
-                "file_size": file_size,
-                "error": f"Unsupported attachment type '.{ext}'. Supported: csv, xlsx, xls, json",
-            }
-
-        tmp_dir = tempfile.mkdtemp(prefix="gmail_extract_")
-        tmp_path = os.path.join(tmp_dir, filename)
-        with open(tmp_path, "wb") as f:
-            f.write(file_data)
-
-        parse_payload = {
-            "tool": "parse_file",
-            "inputs": {
-                "file_content": tmp_path,
-                "file_type": file_type,
-            },
-        }
-
-        resp = httpx.post(
-            f"{mapping_agent_url}/execute_task",
-            json=parse_payload,
-            timeout=30.0,
-        )
-        parse_result = resp.json()
-
-        try:
-            shutil.rmtree(tmp_dir)
-        except Exception:
-            pass
-
-        if not parse_result.get("success"):
-            return {
-                "success": False,
-                "parsed_data": None,
-                "filename": filename,
-                "file_size": file_size,
-                "error": parse_result.get("error", "Mapping agent parse_file failed"),
-            }
-
-        inner_result = parse_result.get("result") or {}
-        return {
-            "success": True,
-            "parsed_data": inner_result,
-            "filename": filename,
-            "file_size": file_size,
-            "error": None,
-        }
-
-    except HttpError as e:
-        return {"success": False, "parsed_data": None, "filename": filename,
-                "file_size": 0, "error": f"Gmail API error: {str(e)}"}
-    except Exception as e:
-        return {"success": False, "parsed_data": None, "filename": filename,
-                "file_size": 0, "error": f"Unexpected error: {str(e)}"}
-
-
-def _map_columns_to_sheet_impl(
-    data: Any,
-    sheet_id: str,
-    sheet_name: str = "Sheet1",
-    append_mode: bool = True,
-    sheets_agent_url: str = None,
-    credentials_dict: Dict[str, Any] = None
-) -> Dict[str, Any]:
-    """
-    Map extracted data columns to a Google Sheet via the sheets agent.
-
-    Args:
-        data: Extracted/transformed data (dict or list of dicts, or JSON string)
-        sheet_id: Google Sheets spreadsheet ID
-        sheet_name: Target sheet/tab name (default: "Sheet1")
-        append_mode: If True, append rows; if False, overwrite
-        sheets_agent_url: URL of the sheets agent (default from env SHEETS_AGENT_URL)
-        credentials_dict: OAuth credentials dict
-
-    Returns:
-        Dict with success, rows_written, sheet_id, error
-    """
-    try:
-        if sheets_agent_url is None:
-            sheets_agent_url = os.getenv("SHEETS_AGENT_URL", "http://localhost:8003")
-
-        if isinstance(data, (dict, list)):
-            transformed_data = json.dumps(data)
-        else:
-            transformed_data = str(data)
-
-        upload_payload = {
-            "tool": "upload_mapped_data",
-            "inputs": {
-                "sheet_id": sheet_id,
-                "transformed_data": transformed_data,
-                "sheet_name": sheet_name,
-                "append_mode": append_mode,
-            },
-            "credentials_dict": credentials_dict or {},
-        }
-
-        resp = httpx.post(
-            f"{sheets_agent_url}/execute_task",
-            json=upload_payload,
-            timeout=30.0,
-        )
-        upload_result = resp.json()
-
-        if not upload_result.get("success"):
-            return {
-                "success": False,
-                "rows_written": 0,
-                "sheet_id": sheet_id,
-                "error": upload_result.get("error", "Sheets agent upload_mapped_data failed"),
-            }
-
-        inner = upload_result.get("result") or {}
-        rows = inner.get("rows_written") or inner.get("rows_added", 0)
-        return {
-            "success": True,
-            "rows_written": rows,
-            "sheet_id": sheet_id,
-            "error": None,
-        }
-
-    except Exception as e:
-        return {"success": False, "rows_written": 0, "sheet_id": sheet_id,
-                "error": f"Unexpected error: {str(e)}"}
