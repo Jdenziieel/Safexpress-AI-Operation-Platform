@@ -124,14 +124,14 @@ def test_scenario_infeasible():
     return result["conversation_id"]
 
 def test_scenario_too_complex():
-    """Test Scenario 3: Task is too complex"""
+    """Test Scenario 3: Task is too vague/unbounded"""
     print("\n" + "🎬 "*20)
-    print("SCENARIO 3: Complex Task - Multiple Operations")
+    print("SCENARIO 3: Vague Request - Too Broad to Plan")
     print("🎬 "*20 + "\n")
     
-    print("👤 USER: Find all emails from last month, summarize them, and send to my team\n")
+    print("👤 USER: Organize all my emails, documents, and calendar for maximum productivity\n")
     result = send_chat_message(
-        "Find all emails from last month, summarize them, and send to my team"
+        "Organize all my emails, documents, and calendar for maximum productivity"
     )
     print_response(result)
     

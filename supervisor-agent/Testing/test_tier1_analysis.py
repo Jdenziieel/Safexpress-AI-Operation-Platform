@@ -129,7 +129,7 @@ CONTEXT RULES:
 INTENT CLASSIFICATION:
 - needs_clarification: Missing required fields
 - not_feasible: No matching capability (explain why, suggest alternatives)
-- too_complex: Multi-step/unclear (break down, suggest simpler approach)
+- too_complex: Vague/unbounded request — system has tools but request is too broad for a concrete plan
 - ready_to_execute: All fields present
 - small_talk: Non-task conversation
 

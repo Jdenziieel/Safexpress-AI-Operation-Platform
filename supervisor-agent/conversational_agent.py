@@ -305,6 +305,31 @@ class ConversationalAgent(Tier0ChecksMixin):
                 and not conversation_state.ready_for_execution
             )
 
+            # ----------------------------------------------------------
+            # Task-switch detection: when Tier 1 returns a different
+            # task_type, the user has moved on to a new request.
+            # Clear stale fields to prevent cross-task pollution
+            # (e.g. old file_name, sections leaking into a new CSV task).
+            # Internal fields (_cached_tool_filter etc.) are preserved.
+            # ----------------------------------------------------------
+            _prev_task = conversation_state.extracted_info.get("task_type")
+            _new_task = analysis.extracted_info.get("task_type")
+            if (
+                _new_task
+                and _prev_task
+                and _new_task != _prev_task
+                and analysis.intent in (
+                    ConversationIntent.READY_TO_EXECUTE,
+                    ConversationIntent.NEEDS_CLARIFICATION,
+                    ConversationIntent.TOO_COMPLEX,
+                    ConversationIntent.NOT_FEASIBLE,
+                )
+            ):
+                _keep = {k: v for k, v in conversation_state.extracted_info.items()
+                         if k.startswith("_")}
+                conversation_state.extracted_info = _keep
+                trace.step("task_switch", f"cleared stale extracted_info: {_prev_task} → {_new_task}")
+
             # Update extracted information (merge new with existing)
             for key, value in analysis.extracted_info.items():
                 if value is not None and value != "":
@@ -392,13 +417,13 @@ class ConversationalAgent(Tier0ChecksMixin):
             response += "\nIs there anything else I can help with?"
         
         elif analysis.intent == ConversationIntent.TOO_COMPLEX:
-            response = f"This task seems quite complex.\n\n"
-            response += f"**Analysis:** {analysis.reasoning}\n\n"
+            response = f"That request is a bit too broad for me to turn into a concrete plan.\n\n"
+            response += f"**Why:** {analysis.reasoning}\n\n"
             if analysis.suggested_alternatives:
-                response += "**I suggest breaking it down:**\n"
+                response += "**Try being more specific, for example:**\n"
                 for i, alt in enumerate(analysis.suggested_alternatives, 1):
                     response += f"{i}. {alt}\n"
-            response += f"\nWould you like to proceed with one of these approaches?"
+            response += f"\nCould you narrow it down so I know exactly what to do?"
 
         elif analysis.intent == ConversationIntent.NEEDS_CLARIFICATION:
             response = f"{analysis.clarification_question}\n\n"
@@ -691,14 +716,17 @@ CONTEXT RULES:
 - Post-execution modifications are NEW tasks
 - Compound cancel ("cancel X and do Y"): Extract ONLY the new task (Y)
 
-INTENT: needs_clarification | not_feasible | too_complex | ready_to_execute | small_talk
+COMPOUND TASKS (NOT too_complex):
+A message listing 2-10 concrete steps — numbered ("1.", "2."), joined by "and"/"then", or in separate sentences — is a compound task. If every step maps to a tool in the available agents, set intent=ready_to_execute (or needs_clarification if a field is missing) and combine all sub-tasks into one execution_summary.
 
-MULTI-STEP / COMPOUND TASKS:
-The supervisor CAN plan and execute multi-step workflows involving DIFFERENT agents in a single request (e.g. "create a calendar event and update a spreadsheet"). These are NOT too_complex — treat them as ready_to_execute (or needs_clarification if info is missing). Combine all sub-tasks into one execution_summary.
-Reserve too_complex ONLY for requests that genuinely exceed system capabilities (e.g. tasks requiring agents/tools that don't exist, or open-ended research with no clear end state).
+CONCRETE STEP = one verb + one specific target resource that maps to a single tool. "Send email to X", "update Meetings Tracker sheet", "create Client Call event", "upload report.pdf" are each 1 step. Internal sub-calls (draft+send, list+resolve ID) still count as ONE step at the user level.
 
-EXECUTION MODE:
-- "standard": Default. Plan all steps upfront then execute. Use for straightforward tasks (send email, create doc, search+reply) AND multi-step tasks across agents.
+INTENT RULES:
+- ready_to_execute: 1-10 concrete steps with all required fields present AND every step maps to an available tool.
+- needs_clarification: (a) concrete step(s) identified but at least one field missing — ask with specifics, OR (b) PARTIAL FEASIBILITY — some actions map to available tools but others do NOT. List the unsupported actions in suggested_alternatives and ask whether to proceed with the feasible subset only.
+- too_complex: unbounded wording ("everything", "all my X", "organise", "summarise whole Y") that cannot be enumerated into <=10 concrete steps. Populate suggested_alternatives with 2-3 narrowed tasks. NEVER use for 2-10 numbered/joined concrete actions.
+- not_feasible: NO action in the request maps to any available tool. Populate suggested_alternatives.
+- small_talk: conversational message, no task.
 
 JSON OUTPUT:
 {{
@@ -708,6 +736,7 @@ JSON OUTPUT:
     "missing_fields": [],
     "clarification_question": null,
     "reasoning": "...",
+    "suggested_alternatives": [],
     "execution_ready": false,
     "execution_summary": "human-readable task description",
     "execution_mode": "standard"
@@ -876,7 +905,35 @@ Available agents and tools:
             # Attach enrichment context variables so they flow to the orchestrator
             if enrichment_context_vars:
                 analysis_result.extracted_info["_enrichment_context"] = enrichment_context_vars
-            
+
+            # Safety net: catch TOO_COMPLEX false positives when Tier 0.5 + classifier
+            # already agreed the task is concrete (has enrichment tasks + cached tools).
+            # This recovers from Tier 1 occasionally ignoring the compound-task rule.
+            if analysis_result.intent == ConversationIntent.TOO_COMPLEX:
+                enrichment_tasks = (enrichment_hints or {}).get("tasks") or []
+                cached_filter = conversation_state.extracted_info.get("_cached_tool_filter") or {}
+                if enrichment_tasks and cached_filter:
+                    override_intent = (
+                        ConversationIntent.NEEDS_CLARIFICATION
+                        if analysis_result.missing_fields
+                        else ConversationIntent.READY_TO_EXECUTE
+                    )
+                    trace.warning(
+                        f"Tier 1 returned TOO_COMPLEX but Tier 0.5 + classifier already "
+                        f"resolved concrete tools — overriding to {override_intent.value}",
+                        data={
+                            "enrichment_tasks": enrichment_tasks,
+                            "cached_tools": cached_filter,
+                            "tier1_reasoning": analysis_result.reasoning,
+                        },
+                    )
+                    updates = {"intent": override_intent}
+                    if override_intent == ConversationIntent.READY_TO_EXECUTE:
+                        updates["execution_ready"] = True
+                        if not analysis_result.execution_summary:
+                            updates["execution_summary"] = " AND ".join(enrichment_tasks)
+                    analysis_result = analysis_result.model_copy(update=updates)
+
             # Log analysis result
             trace.step("analysis_result", f"intent={analysis_result.intent}, ready={analysis_result.execution_ready}", {
                 "intent": str(analysis_result.intent),

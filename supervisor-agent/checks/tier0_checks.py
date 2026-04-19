@@ -536,6 +536,10 @@ Try one of these or tell me what you'd like to do!"""
         Detect help/tutorial requests and provide structured guidance.
         Uses pattern matching for instant response without LLM call.
         
+        Only triggers for genuine "how do I use this?" questions.
+        Short messages (<=5 words) and error/failure contexts are
+        excluded to avoid intercepting questions like "Explain why failed?"
+        
         Args:
             user_message: Current user input
             conversation_state: Previous conversation context
@@ -553,9 +557,26 @@ Try one of these or tell me what you'd like to do!"""
             "not sure what to do", "don't know what to do"
         ]
         user_lower = user_message.lower().strip()
+        word_count = len(user_lower.split())
+
+        # Short messages that happen to contain a help keyword are more
+        # likely contextual questions (e.g. "explain why failed?") than
+        # genuine tutorial requests.  Let Tier 0.5 handle them.
+        if word_count <= 5:
+            return None
         
         # Check if this is a help request
         if not any(keyword in user_lower for keyword in help_keywords):
+            return None
+
+        # Messages referencing errors/failures are asking about a specific
+        # problem, not requesting a generic tutorial.
+        error_context_words = [
+            "fail", "failed", "error", "wrong", "broke", "broken",
+            "crash", "issue", "problem", "bug", "why", "reason",
+            "cause", "explain",
+        ]
+        if any(word in user_lower for word in error_context_words):
             return None
         
         # Check if it's a general help request (not task-specific like "how do I send email")

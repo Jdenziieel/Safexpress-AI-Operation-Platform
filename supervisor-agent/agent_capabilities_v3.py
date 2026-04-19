@@ -268,12 +268,12 @@ agent_capabilities = {
         },
     },
     "mapping_agent": {
-        "description": "Parse files (CSV/Excel/JSON), intelligently map columns, transform data structure. No Google Sheets operations.",
+        "description": "Parse LOCAL files (CSV/Excel/JSON), intelligently map columns, transform data structure. LIMITATION: Can only process files already on disk (user uploads, email attachments). Cannot download or read files from Google Drive — there is no Drive download tool.",
         "tools": {
             "parse_file": {
-                "description": "Parse CSV/Excel/JSON files into structured data.",
+                "description": "Parse a LOCAL CSV/Excel/JSON file into structured data. Requires a local file path (e.g. from user upload or email attachment download). CANNOT read files from Google Drive by file ID.",
                 "args": {
-                    "file_content": "str (required) — file path or content",
+                    "file_content": "str (required) — local file path or raw content string (NOT a Google Drive file ID)",
                     "file_type": "str (required) — csv, xlsx, xls, excel, or json",
                 },
                 "returns": ["success", "columns", "row_count", "full_data", "sample_data"],
@@ -328,10 +328,10 @@ agent_capabilities = {
         "description": "Google Sheets CRUD. Upload pre-transformed data from mapping_agent.",
         "tools": {
             "update_by_date_match": {
-                "description": "Update Sheets rows by matching dates (update existing rows only, no append).",
+                "description": "Update Sheets rows by matching dates (update existing rows only, no append). Requires locally processed data.",
                 "args": {
                     "sheet_id": "str (required) — Google Sheets ID",
-                    "transformed_data": "str (required) — JSON from mapping_agent.transform_data",
+                    "transformed_data": "str (required) — JSON array of row objects from mapping_agent.transform_data (NOT a file ID)",
                     "rows_with_dates": "list (required) — from mapping_agent.extract_dates_from_all_rows",
                     "sheet_name": "str (optional) — default 'DATA ENTRY'",
                     "date_column": "str (optional) — default 'Date'",
@@ -340,10 +340,10 @@ agent_capabilities = {
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "upload_mapped_data": {
-                "description": "Upload/append pre-transformed data. Use update_by_date_match for date matching instead.",
+                "description": "Upload/append pre-transformed data to a Google Sheet. Requires locally processed data — CANNOT accept a Google Drive file ID or URL as transformed_data.",
                 "args": {
                     "sheet_id": "str (required) — Google Sheets ID",
-                    "transformed_data": "str (required) — JSON from mapping_agent.transform_data",
+                    "transformed_data": "str (required) — JSON array of row objects from mapping_agent.transform_data (NOT a file ID or file path)",
                     "sheet_name": "str (optional) — default 'Sheet1'",
                     "append_mode": "bool (optional) — true to append",
                 },

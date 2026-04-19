@@ -94,7 +94,7 @@ class ConversationIntent(str, Enum):
     """Intent classification for conversation state"""
     NEEDS_CLARIFICATION = "needs_clarification"  # Missing info, ask user
     NOT_FEASIBLE = "not_feasible"  # Can't do with current tools
-    TOO_COMPLEX = "too_complex"  # Task needs breaking down
+    TOO_COMPLEX = "too_complex"  # Vague/unbounded request that can't be turned into a concrete plan
     READY_TO_EXECUTE = "ready_to_execute"  # All info present, proceed
     SMALL_TALK = "small_talk"  # Not a task request
     CANCELLED = "cancelled"  # User cancelled the request but data preserved

@@ -403,6 +403,8 @@ PLANNING RULES:
 8. For delete_event: ALWAYS include "confirmed": true in inputs. The orchestrator approval mechanism already handles user confirmation.
 9. DOCUMENT IDs: NEVER use a document title/name as a document_id. ALWAYS use docs_agent.list_my_docs first to resolve a document name to its real ID, then reference the ID via {{{{ variable }}}} in subsequent steps (read_doc, edit_doc, update_doc, add_text).
 10. LLM TRANSFORM: llm_tool.transform_text can transform ANY text between a read step and a write step — not limited to docs. Pattern: (1) read content from any source (read_doc, search_emails, get_thread_conversation, etc.), (2) llm_tool.transform_text with the content variable and an instruction, (3) write the result to any destination (update_doc, edit_doc, create_draft_email, add_text, create_doc_with_content, reply_to_email, etc.). Examples: fix grammar in a doc, summarize an email into a doc, rewrite a draft before sending, translate document content. The llm_tool runs locally — no agent endpoint needed.
+11. DRIVE FILE LIMITATION: There is NO tool to download or read file contents from Google Drive. drive_agent.search_files returns file metadata (id, name) only — NOT the file content. You CANNOT pass a Drive file ID to mapping_agent.parse_file or sheets_agent.upload_mapped_data. The mapping_agent can only process LOCAL files (user uploads, email attachment downloads). If a task requires reading a Drive-hosted CSV/Excel file, the plan is NOT feasible — return an empty steps array.
+12. USER-INTENT COVERAGE: If the user's request mentions an action that has NO matching tool in the capabilities above, DO NOT silently drop it and DO NOT invent a tool. Plan steps for the feasible actions only, then APPEND one final llm_tool.transform_text step with inputs {{"instruction": "Return this text verbatim.", "content": "Note: I was unable to <short description of skipped action(s)>."}}. This surfaces the gap to the user in the final response.
 
 EXAMPLE:
 User: "Find the latest email from john@example.com and reply saying thanks"
@@ -1072,7 +1074,7 @@ def orchestrator_node(state: SharedState) -> SharedState:
                         "agent": agent_name,
                         "tool": tool_name,
                         "status": "success",
-                        "result": transform_result,
+                        "output": transform_result,
                     })
                     namespace_key = f"step_{step_num}_{agent_name}"
                     variable_context[namespace_key] = {

@@ -302,6 +302,13 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         "type": "action",
         "use_message": True,
     },
+
+    # ========================= LLM TOOL (built-in) =========================
+
+    ("llm_tool", "transform_text"): {
+        "type": "action",
+        "template": "{transformed_content}",
+    },
 }
 
 
