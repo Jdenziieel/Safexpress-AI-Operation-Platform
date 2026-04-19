@@ -28,3 +28,9 @@ __pycache__/
 *.db
 *.sqlite3
 package-lock.json
+
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
+!.env.*.example
