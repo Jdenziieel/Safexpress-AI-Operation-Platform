@@ -727,7 +727,7 @@ async def get_internal_metrics(
                    SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) AS successful_calls,
                    AVG(duration_ms)            AS avg_duration_ms,
                    SUM(total_tokens)           AS total_tokens,
-                   SUM(estimated_cost_usd)     AS total_cost_usd
+                   SUM(COALESCE(cost_usd, estimated_cost_usd, 0)) AS total_cost_usd
             FROM llm_calls
             WHERE tier IN ({placeholders}) {time_filter}
             GROUP BY tier

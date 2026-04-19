@@ -73,6 +73,10 @@ class LogStorage:
         """)
         
         # LLM calls table (for token tracking and cost analysis)
+        # Note: `estimated_cost_usd` is the legacy column; `cost_usd` is the
+        # aligned column matching /quota/report + quota-lambda + kb-lambda.
+        # Writes populate BOTH columns so legacy readers keep working while new
+        # readers can standardise on `cost_usd`.
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS llm_calls (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,6 +92,7 @@ class LogStorage:
                 output_tokens INTEGER DEFAULT 0,
                 total_tokens INTEGER DEFAULT 0,
                 estimated_cost_usd REAL DEFAULT 0.0,
+                cost_usd REAL DEFAULT 0.0,
                 duration_ms REAL DEFAULT 0.0,
                 success INTEGER DEFAULT 1,
                 prompt_summary TEXT,
@@ -105,6 +110,17 @@ class LogStorage:
             pass
         try:
             cursor.execute("ALTER TABLE llm_calls ADD COLUMN service TEXT DEFAULT 'supervisor'")
+        except Exception:
+            pass
+        # Additive migration for the token-logging-schema-alignment plan.
+        # Adds cost_usd alongside estimated_cost_usd and back-fills existing
+        # rows so downstream SUM(cost_usd) queries return identical totals.
+        try:
+            cursor.execute("ALTER TABLE llm_calls ADD COLUMN cost_usd REAL DEFAULT 0.0")
+            cursor.execute(
+                "UPDATE llm_calls SET cost_usd = estimated_cost_usd "
+                "WHERE cost_usd IS NULL OR cost_usd = 0.0"
+            )
         except Exception:
             pass
         
@@ -315,8 +331,8 @@ class LogStorage:
         input_tokens: int,
         output_tokens: int,
         total_tokens: int,
-        estimated_cost_usd: float,
-        duration_ms: float,
+        cost_usd: Optional[float] = None,
+        duration_ms: float = 0.0,
         success: bool = True,
         request_id: Optional[str] = None,
         conversation_id: Optional[str] = None,
@@ -326,22 +342,34 @@ class LogStorage:
         cumulative_tokens: Optional[int] = None,
         cumulative_cost_usd: Optional[float] = None,
         user_id: Optional[str] = None,
-        service: str = "supervisor"
+        service: str = "supervisor",
+        estimated_cost_usd: Optional[float] = None,  # legacy kwarg alias
     ) -> int:
-        """Insert an LLM call record"""
+        """
+        Insert an LLM call record.
+
+        ``cost_usd`` is the canonical parameter (matches /quota/report schema).
+        ``estimated_cost_usd`` is accepted as a legacy alias so any caller still
+        using the old keyword keeps working during the alignment rollout.
+        Both DB columns (`estimated_cost_usd` and `cost_usd`) receive the value.
+        """
+        # Accept the legacy keyword, but prefer the canonical one if both given
+        if cost_usd is None:
+            cost_usd = estimated_cost_usd if estimated_cost_usd is not None else 0.0
+
         conn = self._get_connection()
         cursor = conn.cursor()
         
         cursor.execute("""
             INSERT INTO llm_calls (timestamp, request_id, conversation_id, user_id, service,
                                   model, tier, operation, input_tokens, output_tokens,
-                                  total_tokens, estimated_cost_usd, duration_ms, success,
+                                  total_tokens, estimated_cost_usd, cost_usd, duration_ms, success,
                                   prompt_summary, error, cumulative_tokens, cumulative_cost_usd)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             timestamp, request_id, conversation_id, user_id, service,
             model, tier, operation, input_tokens, output_tokens,
-            total_tokens, estimated_cost_usd, duration_ms, 1 if success else 0,
+            total_tokens, cost_usd, cost_usd, duration_ms, 1 if success else 0,
             prompt_summary, error, cumulative_tokens, cumulative_cost_usd
         ))
         
@@ -730,13 +758,15 @@ class LogStorage:
             params.append(end_time)
         
         # Total stats
+        # Prefer the aligned cost_usd column, fall back to legacy estimated_cost_usd
+        # so pre-migration rows (if any) still contribute to aggregates.
         cursor.execute(f"""
             SELECT 
                 COUNT(*) as total_calls,
                 SUM(input_tokens) as total_input_tokens,
                 SUM(output_tokens) as total_output_tokens,
                 SUM(total_tokens) as total_tokens,
-                SUM(estimated_cost_usd) as total_cost_usd,
+                SUM(COALESCE(cost_usd, estimated_cost_usd, 0)) as total_cost_usd,
                 AVG(duration_ms) as avg_duration_ms,
                 SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) as successful_calls,
                 SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) as failed_calls
@@ -754,7 +784,7 @@ class LogStorage:
                 SUM(input_tokens) as input_tokens,
                 SUM(output_tokens) as output_tokens,
                 SUM(total_tokens) as tokens,
-                SUM(estimated_cost_usd) as cost_usd,
+                SUM(COALESCE(cost_usd, estimated_cost_usd, 0)) as cost_usd,
                 AVG(duration_ms) as avg_duration_ms
             FROM llm_calls
             WHERE 1=1 {time_filter}
@@ -770,7 +800,7 @@ class LogStorage:
                 tier,
                 COUNT(*) as calls,
                 SUM(total_tokens) as tokens,
-                SUM(estimated_cost_usd) as cost_usd
+                SUM(COALESCE(cost_usd, estimated_cost_usd, 0)) as cost_usd
             FROM llm_calls
             WHERE 1=1 {time_filter}
             GROUP BY tier
@@ -785,7 +815,7 @@ class LogStorage:
                 operation,
                 COUNT(*) as calls,
                 SUM(total_tokens) as tokens,
-                SUM(estimated_cost_usd) as cost_usd,
+                SUM(COALESCE(cost_usd, estimated_cost_usd, 0)) as cost_usd,
                 GROUP_CONCAT(DISTINCT model) as models_used
             FROM llm_calls
             WHERE 1=1 {time_filter}
@@ -847,7 +877,7 @@ class LogStorage:
                 SUM(input_tokens) as total_input_tokens,
                 SUM(output_tokens) as total_output_tokens,
                 SUM(total_tokens) as total_tokens,
-                SUM(estimated_cost_usd) as total_cost_usd,
+                SUM(COALESCE(cost_usd, estimated_cost_usd, 0)) as total_cost_usd,
                 GROUP_CONCAT(DISTINCT model) as models_used
             FROM llm_calls
             WHERE request_id IS NOT NULL {time_filter}

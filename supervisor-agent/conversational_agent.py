@@ -120,14 +120,46 @@ class ConversationalAgent(Tier0ChecksMixin):
         "task_type", "original_message", "uploaded_file",
     })
 
-    def _format_confirmation(self, execution_summary: str, extracted_info: dict) -> str:
+    @staticmethod
+    def _valid_tool_fields(tool_filter: dict | None) -> set[str] | None:
+        """Union of accepted parameter names across all tools in the filter.
+
+        Returns None when the filter is unknown so callers can fall back to
+        the original behaviour (accept everything). Returning None rather
+        than an empty set prevents accidentally stripping every field when
+        we simply don't know which tools are in play.
+        """
+        if not tool_filter:
+            return None
+        try:
+            from agent_capabilities_v3 import agent_capabilities
+        except Exception:
+            return None
+        fields: set[str] = set()
+        for agent, tools in tool_filter.items():
+            agent_spec = agent_capabilities.get(agent) or {}
+            tool_specs = agent_spec.get("tools", {}) or {}
+            for tool_name in tools or []:
+                tool_spec = tool_specs.get(tool_name) or {}
+                for arg_name in (tool_spec.get("args") or {}):
+                    fields.add(arg_name)
+        return fields or None
+
+    def _format_confirmation(
+        self,
+        execution_summary: str,
+        extracted_info: dict,
+        tool_filter: dict | None = None,
+    ) -> str:
         """Build a user-friendly confirmation message via quick_llm."""
 
+        valid_fields = self._valid_tool_fields(tool_filter)
         user_info = {
             k: v for k, v in extracted_info.items()
             if not k.startswith("_")
             and k not in self._ALWAYS_INTERNAL
             and v is not None and v != ""
+            and (valid_fields is None or k in valid_fields)
         }
 
         if not execution_summary and not user_info:
@@ -139,8 +171,22 @@ class ConversationalAgent(Tier0ChecksMixin):
         if not user_info:
             return f"{header}{execution_summary}{footer}"
 
+        tool_scope_note = ""
+        if tool_filter:
+            flat = ", ".join(
+                f"{agent}.{tool}"
+                for agent, tools in tool_filter.items()
+                for tool in (tools or [])
+            )
+            if flat:
+                tool_scope_note = (
+                    f"\nActive tools: {flat}. Describe ONLY actions these "
+                    "tools cover; drop any task with no matching tool.\n"
+                )
+
         prompt = (
-            f"Task summary: {execution_summary}\n\n"
+            f"Task summary: {execution_summary}\n"
+            f"{tool_scope_note}\n"
             f"Parameters:\n{json.dumps(user_info, indent=2, default=str)}\n\n"
             "Format this as a clear confirmation message the user can review before I execute.\n"
             "Rules:\n"
@@ -387,8 +433,15 @@ class ConversationalAgent(Tier0ChecksMixin):
             "extracted_info": conversation_state.extracted_info,
         })
 
-        # Internal fields the user should never see in confirmations/summaries
-        _INTERNAL_FIELDS = {"task_type", "original_message", "uploaded_file", "query", "_cached_tool_filter", "_enrichment_context"}
+        # Internal fields the user should never see in confirmations/summaries.
+        # Single source of truth: self._ALWAYS_INTERNAL (defined at class
+        # level, also used by _format_confirmation). Underscore-prefixed
+        # keys like _cached_tool_filter / _enrichment_context are already
+        # stripped by the `not k.startswith("_")` filter below, so they do
+        # NOT need to appear here. `query` is intentionally NOT internal —
+        # it is a user-facing argument for Gmail search tools (search_emails,
+        # search_drafts, etc.) and should surface in the "What I have so far"
+        # block so users can verify the search criteria before confirming.
 
         # Generate response based on intent
         if analysis.intent == ConversationIntent.SMALL_TALK:
@@ -427,22 +480,33 @@ class ConversationalAgent(Tier0ChecksMixin):
 
         elif analysis.intent == ConversationIntent.NEEDS_CLARIFICATION:
             response = f"{analysis.clarification_question}\n\n"
+            _tool_fields = self._valid_tool_fields(
+                conversation_state.extracted_info.get("_cached_tool_filter")
+            )
             user_fields = {k: v for k, v in analysis.extracted_info.items()
-                          if k not in _INTERNAL_FIELDS
+                          if k not in self._ALWAYS_INTERNAL
                           and not k.startswith("_")
-                          and v}
+                          and v
+                          and (_tool_fields is None or k in _tool_fields)}
             if user_fields:
                 response += "**What I have so far:**\n"
                 for key, value in user_fields.items():
                     response += f"- **{key.replace('_', ' ').title()}:** {value}\n"
+            if analysis.suggested_alternatives:
+                response += "\n**Actions I can't do in this request:**\n"
+                for alt in analysis.suggested_alternatives:
+                    response += f"- {alt}\n"
         
         elif analysis.intent == ConversationIntent.READY_TO_EXECUTE:
+            _tool_filter = conversation_state.extracted_info.get("_cached_tool_filter")
+            _tool_fields = self._valid_tool_fields(_tool_filter)
             if analysis.missing_fields and analysis.clarification_question:
                 response = f"{analysis.clarification_question}\n\n"
                 user_fields = {k: v for k, v in conversation_state.extracted_info.items()
-                              if k not in _INTERNAL_FIELDS
+                              if k not in self._ALWAYS_INTERNAL
                               and not k.startswith("_")
-                              and v}
+                              and v
+                              and (_tool_fields is None or k in _tool_fields)}
                 if user_fields:
                     response += "**What I have so far:**\n"
                     for key, value in user_fields.items():
@@ -451,6 +515,7 @@ class ConversationalAgent(Tier0ChecksMixin):
                 response = self._format_confirmation(
                     analysis.execution_summary or "",
                     conversation_state.extracted_info,
+                    tool_filter=_tool_filter,
                 )
 
         elif analysis.intent == ConversationIntent.TEMPLATE_UPLOAD:
@@ -728,12 +793,13 @@ A message listing 2-10 concrete steps — numbered ("1.", "2."), joined by "and"
 
 CONCRETE STEP = one verb + one specific target resource that maps to a single tool. "Send email to X", "update Meetings Tracker sheet", "create Client Call event", "upload report.pdf" are each 1 step. Internal sub-calls (draft+send, list+resolve ID) still count as ONE step at the user level.
 
-INTENT RULES:
-- ready_to_execute: 1-10 concrete steps with all required fields present AND every step maps to an available tool.
-- needs_clarification: (a) concrete step(s) identified but at least one field missing — ask with specifics, OR (b) PARTIAL FEASIBILITY — some actions map to available tools but others do NOT. List the unsupported actions in suggested_alternatives and ask whether to proceed with the feasible subset only.
-- too_complex: unbounded wording ("everything", "all my X", "organise", "summarise whole Y") that cannot be enumerated into <=10 concrete steps. Populate suggested_alternatives with 2-3 narrowed tasks. NEVER use for 2-10 numbered/joined concrete actions.
-- not_feasible: NO action in the request maps to any available tool. Populate suggested_alternatives.
-- small_talk: conversational message, no task.
+INTENT RULES (in order — STOP at first match):
+1. small_talk: conversational, no task.
+2. too_complex: unbounded wording ("everything", "all my X", "organise", "summarise whole Y") that cannot be enumerated into <=10 concrete steps. Populate suggested_alternatives with 2-3 narrowed tasks. NEVER use for 2-10 concrete actions.
+3. not_feasible: NO action maps to any available tool. Populate suggested_alternatives.
+4. needs_clarification (partial feasibility): some actions map to tools, some do not. Check BEFORE missing-field. List unsupported actions in suggested_alternatives and ask to proceed with the feasible subset only. Extract fields, clarification_question, and execution_summary ONLY for the feasible subset — no params from unsupported actions (e.g. no "destination" if no flight-booking tool).
+5. needs_clarification (missing field): every action is feasible but a required field is missing — ask with specifics.
+6. ready_to_execute: 1-10 concrete steps, all required fields present, every step maps to a tool.
 
 JSON OUTPUT:
 {{
@@ -1476,20 +1542,52 @@ User: "{user_message}" """
             if category == "followup_answer":
                 extracted_value = result.get("extracted_value")
                 execution_summary_from_llm = result.get("execution_summary") # Get execution_summary from LLM
-                
+
+                # Guard: if the field Tier 1 asked about does not belong to any
+                # tool in the cached filter, the prior clarification was itself
+                # misdirected (likely an infeasible action slipped through).
+                # Escalate to Tier 1 so it can re-evaluate feasibility and
+                # apply the PARTIAL FEASIBILITY intent rule correctly.
+                _cached_filter = conversation_state.extracted_info.get("_cached_tool_filter")
+                _tool_fields = self._valid_tool_fields(_cached_filter)
+                if (
+                    _tool_fields is not None
+                    and missing_field
+                    and missing_field not in _tool_fields
+                    and not (
+                        isinstance(extracted_value, dict)
+                        and any(k in _tool_fields for k in extracted_value)
+                    )
+                ):
+                    trace.step(
+                        "tier0.5",
+                        f"followup_answer: field '{missing_field}' not in any available tool — escalating to Tier 1",
+                        {"tool_filter": _cached_filter},
+                    )
+                    return None, "specific", None
+
                 if extracted_value and missing_field:
                     trace.step("tier0.5", f"followup_answer: extracted {missing_field}", {"value": str(extracted_value)[:100], "extracted_info": conversation_state.extracted_info, "missing_fields": conversation_state.missing_fields})
                     updated_info = conversation_state.extracted_info.copy()
                     
                     # Check if extracted_value is a dict with multiple fields
                     if isinstance(extracted_value, dict):
-                        # User provided multiple pieces of info - merge all fields
+                        # User provided multiple pieces of info - merge all fields.
+                        # When we know the tool field set, silently drop keys
+                        # that don't belong to any active tool (prevents
+                        # Tier 0.5 from persisting ghost fields like
+                        # "destination" for an unsupported flight action).
                         trace.step("tier0.5", "multi-field answer detected — merging all fields")
-                        for key, val in extracted_value.items():
+                        filtered_value = {
+                            k: v for k, v in extracted_value.items()
+                            if _tool_fields is None or k in _tool_fields
+                        }
+                        for key, val in filtered_value.items():
                             updated_info[key] = val
-                        
-                        # Remove all fields that were provided from missing_fields
-                        remaining_missing = [f for f in conversation_state.missing_fields if f not in extracted_value]
+                        remaining_missing = [
+                            f for f in conversation_state.missing_fields
+                            if f not in filtered_value
+                        ]
                     else:
                         # Single field answer - assign to missing_field
                         updated_info[missing_field] = extracted_value
