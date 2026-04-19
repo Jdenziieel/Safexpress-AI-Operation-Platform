@@ -1036,10 +1036,3 @@ Paramet
 [2026-04-06 03:19:19.250] [INFO] [req_20260405191851_94004523] [T:a1054742] ← RESPONSE: 200 (31783ms)
 [2026-04-06 03:19:19.251] [INFO] [req_20260405191851_94004523] [T:a1054742] ─────────: ──────────────────────────────────────────────────
 [2026-04-06 03:19:19.253] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_a1054742
-[2026-04-19 18:17:32.944] [PRINT]  SQLite thread manager initialized: threads.db
-[2026-04-19 18:17:33.065] [PRINT] Workflow graph compiled (FULL WORKFLOW)
-[2026-04-19 18:17:33.077] [PRINT]    Flow: supervisor → orchestrator → END
-[2026-04-19 18:17:33.084] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
-[2026-04-19 18:17:33.093] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
-[2026-04-19 18:17:33.268] [PRINT]  Starting Supervisor Agent on port 8010
-[2026-04-19 18:17:33.280] [PRINT]  API Documentation: http://localhost:8010/docs

@@ -630,10 +630,6 @@ class StructuredLogger:
                 print(f"[TOKEN REPORTING SKIPPED] LLM call not successful")
         
         # Log the call
-        # Emit the aligned `cost_usd` key going forward (matches /quota/report,
-        # kb-lambda, and the supervisor log_storage.llm_calls.cost_usd column).
-        # The legacy `estimated_cost_usd` key is kept for one release so any
-        # existing log-tailing dashboards continue to resolve the value.
         extra = {
             "model": model,
             "tier": tier,
@@ -641,8 +637,7 @@ class StructuredLogger:
             "output_tokens": output_tokens,
             "cached_tokens": cached_tokens,
             "total_tokens": input_tokens + output_tokens,
-            "cost_usd": round(cost, 6),
-            "estimated_cost_usd": round(cost, 6),  # legacy alias
+            "estimated_cost_usd": round(cost, 6),
             "duration_ms": round(duration_ms, 2),
             "success": success
         }
@@ -669,7 +664,7 @@ class StructuredLogger:
                     input_tokens=input_tokens,
                     output_tokens=output_tokens,
                     total_tokens=input_tokens + output_tokens,
-                    cost_usd=cost,
+                    estimated_cost_usd=cost,
                     duration_ms=duration_ms,
                     success=success,
                     request_id=request_id,
