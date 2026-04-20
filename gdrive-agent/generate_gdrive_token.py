@@ -10,29 +10,12 @@ from google.auth.transport.requests import Request
 from pathlib import Path
 
 # ALL SCOPES YOU NEED (add/remove as needed)
-#
-# IMPORTANT: This list MUST cover every scope any downstream agent will
-# request at runtime. If a runtime agent asks for a scope that wasn't
-# granted to the refresh token, Google rejects the next refresh with
-# `invalid_scope: Bad Request`.
-#
-# Keep in sync with `authserver/backend/settings.py` SOCIALACCOUNT_PROVIDERS
-# and with `gmail-agent/generate_gmail_tokens.py`.
 SCOPES = [
-    # Gmail
-    'https://www.googleapis.com/auth/gmail.readonly',
-    'https://www.googleapis.com/auth/gmail.send',
-    'https://www.googleapis.com/auth/gmail.modify',
-    # Docs
-    'https://www.googleapis.com/auth/documents',
-    # Drive
     'https://www.googleapis.com/auth/drive',
     'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/drive.metadata.readonly',
-    # Calendar
-    'https://www.googleapis.com/auth/calendar.events',
-    'https://www.googleapis.com/auth/calendar.readonly',
-    # Sheets
+    'https://www.googleapis.com/auth/gmail.modify',
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/documents',
     'https://www.googleapis.com/auth/spreadsheets',
 ]
 

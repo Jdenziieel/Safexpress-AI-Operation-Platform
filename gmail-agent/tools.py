@@ -23,22 +23,17 @@ from datetime import datetime
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
 
     # credentials for google services
-    #
-    # NOTE: Do NOT pass scopes=[...] here. The auth server / local token
-    # generator decides which scopes the refresh_token was granted. Passing
-    # a fixed scope list forces google-auth to send `scope=...` on every
-    # refresh request; if ANY of those scopes weren't granted (e.g. the
-    # user ran generate_gdrive_token.py which omits gmail.send and
-    # gmail.readonly) Google rejects the refresh with
-    # `invalid_scope: Bad Request`. The granted scope set already provides
-    # everything this agent needs (gmail.modify alone covers read + send +
-    # label operations). Mirror the calendar-agent pattern.
     creds = Credentials(
         token=credentials_dict["access_token"],
         refresh_token=credentials_dict.get("refresh_token"),
-        token_uri=credentials_dict.get("token_uri", "https://oauth2.googleapis.com/token"),
+        token_uri="https://oauth2.googleapis.com/token",
         client_id=credentials_dict.get("client_id", ""),
         client_secret=credentials_dict.get("client_secret", ""),
+        scopes=[
+            "https://www.googleapis.com/auth/gmail.send",
+            "https://www.googleapis.com/auth/gmail.modify",
+            "https://www.googleapis.com/auth/gmail.readonly",
+        ],
     )
 
     service = build(service_name, version, credentials=creds)

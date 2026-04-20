@@ -195,14 +195,12 @@ async def get_request_logs(request_id: str):
             data = log.get("data", {})
             if log.get("component") == "llm" and "input_tokens" in data:
                 token_total += data.get("total_tokens", 0)
-                # Prefer aligned `cost_usd`; fall back to legacy key for old logs
-                call_cost = data.get("cost_usd", data.get("estimated_cost_usd", 0))
-                cost_total += call_cost or 0
+                cost_total += data.get("estimated_cost_usd", 0)
                 llm_calls.append({
                     "operation": log.get("operation"),
                     "model": data.get("model"),
                     "tokens": data.get("total_tokens"),
-                    "cost_usd": call_cost,
+                    "cost_usd": data.get("estimated_cost_usd"),
                     "duration_ms": data.get("duration_ms")
                 })
             elif log.get("component") == "orchestrator" and "agent" in data:

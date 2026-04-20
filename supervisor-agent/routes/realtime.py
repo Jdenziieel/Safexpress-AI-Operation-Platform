@@ -210,8 +210,7 @@ async def get_thread_progress(thread_id: str):
                 data = log.get("data", {}) or {}
                 if "total_tokens" in data:
                     total_tokens += data.get("total_tokens", 0)
-                    # Prefer aligned `cost_usd`; fall back to legacy key for old logs
-                    total_cost += data.get("cost_usd", data.get("estimated_cost_usd", 0)) or 0
+                    total_cost += data.get("estimated_cost_usd", 0)
                     llm_calls += 1
             
             if llm_calls > 0:
