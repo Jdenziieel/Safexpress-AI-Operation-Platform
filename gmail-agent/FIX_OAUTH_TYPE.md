@@ -48,22 +48,34 @@ Your `credentials.json` is configured as **"web"** type OAuth client, but the re
    ```
 
 ### **Step 5: Generate New Tokens**
-Since you have new credentials, you need to re-authorize:
+Since you have new credentials, you need to re-authorize. **This is the only
+script you ever need** — it grants the full scope superset used by every agent
+(gmail, calendar, docs, sheets, drive) and auto-writes all four keys
+(`GOOGLE_ACCESS_TOKEN`, `GOOGLE_REFRESH_TOKEN`, `GOOGLE_CLIENT_ID`,
+`GOOGLE_CLIENT_SECRET`) to BOTH `supervisor-agent/.env` and `gmail-agent/.env`.
+No manual editing required.
 
 ```powershell
-cd d:\Github\Ai-Agents\gmail-agent
+cd <repo>\gmail-agent
 python generate_gmail_tokens.py
 ```
 
 This will:
-- Open your browser for Google login
-- Generate new access_token and refresh_token
-- Save them to your .env file
+- Open your browser for Google login (pick the account you want in the prompt;
+  press Enter at the email prompt to choose in the browser — nothing is hardcoded)
+- Generate new `access_token` and `refresh_token` for **all** Google services
+- Write all four OAuth keys to `supervisor-agent/.env` and `gmail-agent/.env`
+  atomically (other variables in those files are preserved)
 
-### **Step 6: Restart Backend**
+### **Step 6: Restart All Agents**
+Every running agent process needs to be restarted so it reloads the new tokens.
+The supervisor forwards credentials to sub-agents at request time, so if any
+process started before Step 5, its in-memory copy is stale.
+
 ```powershell
-cd d:\Github\Ai-Agents\supervisor-agent
-python supervisor_agent.py
+# Stop every running agent terminal (Ctrl+C) then restart them:
+# gmail-agent (port 8000), gdrive-agent (8001), gdocs-agent (8002),
+# calendar-agent (8003), Sheets-agent, supervisor-agent.
 ```
 
 ---
@@ -83,11 +95,20 @@ Your credentials were created as "web" type, which has stricter requirements and
 
 ## Quick Checklist
 
-Before creating new credentials, verify:
-- ✅ Gmail API is enabled in your project
-- ✅ OAuth consent screen is configured
-- ✅ Your email is added as a test user
-- ✅ Scopes include: gmail.send, gmail.modify, gmail.readonly
+Before creating new credentials, verify in Google Cloud Console:
+- Gmail API, Calendar API, Drive API, Docs API, and Sheets API are all enabled
+  in your project (the generator grants scopes for all of them in one flow)
+- OAuth consent screen is configured
+- Your email is added as a test user
+- Scopes on the OAuth consent screen include every one of these:
+  - `https://www.googleapis.com/auth/gmail.send`
+  - `https://www.googleapis.com/auth/gmail.modify`
+  - `https://www.googleapis.com/auth/gmail.readonly`
+  - `https://www.googleapis.com/auth/calendar`
+  - `https://www.googleapis.com/auth/calendar.events`
+  - `https://www.googleapis.com/auth/documents`
+  - `https://www.googleapis.com/auth/spreadsheets`
+  - `https://www.googleapis.com/auth/drive`
 
 ---
 

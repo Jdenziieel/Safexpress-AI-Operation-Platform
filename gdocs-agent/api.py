@@ -181,9 +181,11 @@ async def execute_task(request: AgentTaskRequest):
         # Bypass agent because it sometimes refuses this operation
         if request.tool == "create_from_uploaded_template":
             print(f" Direct execution (bypassing agent): {request.tool}")
-            
-            from tools import _create_from_uploaded_template_impl
-            
+            # NOTE: _create_from_uploaded_template_impl is already imported at module scope (top of file).
+            # Do NOT re-import it here — a local `from tools import ...` would bind the name as a local
+            # variable of this function, shadowing the module-level import and breaking every other
+            # branch (TOOL_MAP) with UnboundLocalError when request.tool != "create_from_uploaded_template".
+
             # Extract inputs
             template_file_id = request.inputs.get("template_file_id")
             new_title = request.inputs.get("new_title")

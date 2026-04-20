@@ -23,17 +23,22 @@ from datetime import datetime
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
 
     # credentials for google services
+    #
+    # NOTE: scopes= is intentionally omitted. The refresh_token is minted with
+    # its own granted scope set by generate_gmail_tokens.py; passing a narrower
+    # or different list here makes google-auth send a mismatched `scope`
+    # parameter on refresh, which Google rejects with
+    #     RefreshError: ('invalid_scope: Bad Request', {...})
+    # even when the refresh_token actually covers all the Gmail scopes we need.
+    # The access_token returned by refresh is already limited to whatever the
+    # refresh_token was granted, so there is no privilege risk in omitting
+    # scopes here — we just stop the spurious preflight mismatch.
     creds = Credentials(
         token=credentials_dict["access_token"],
         refresh_token=credentials_dict.get("refresh_token"),
         token_uri="https://oauth2.googleapis.com/token",
         client_id=credentials_dict.get("client_id", ""),
         client_secret=credentials_dict.get("client_secret", ""),
-        scopes=[
-            "https://www.googleapis.com/auth/gmail.send",
-            "https://www.googleapis.com/auth/gmail.modify",
-            "https://www.googleapis.com/auth/gmail.readonly",
-        ],
     )
 
     service = build(service_name, version, credentials=creds)

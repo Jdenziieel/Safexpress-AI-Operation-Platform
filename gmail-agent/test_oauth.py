@@ -36,17 +36,15 @@ def test_credentials():
     print("\n🔐 Creating OAuth credentials object...")
     
     try:
+        # Mirror tools.py: do NOT pass scopes=, otherwise google-auth sends a
+        # mismatched scope parameter on refresh and Google returns invalid_scope.
+        # The refresh_token already carries its granted scope set.
         creds = Credentials(
             token=access_token,
             refresh_token=refresh_token,
             token_uri="https://oauth2.googleapis.com/token",
             client_id=client_id,
             client_secret=client_secret,
-            scopes=[
-                "https://www.googleapis.com/auth/gmail.send",
-                "https://www.googleapis.com/auth/gmail.modify",
-                "https://www.googleapis.com/auth/gmail.readonly",
-            ],
         )
         
         print("✓ Credentials object created")
@@ -67,15 +65,28 @@ def test_credentials():
     except Exception as e:
         print(f"\n❌ FAILED: {e}")
         
-        error_str = str(e)
-        if "unauthorized_client" in error_str.lower():
-            print("\n💡 This is the 'unauthorized_client' error!")
+        error_str = str(e).lower()
+        if "invalid_scope" in error_str:
+            print("\n💡 'invalid_scope' — the scopes requested on refresh don't match")
+            print("   what the refresh_token was granted. Most common causes:")
+            print("   1. The refresh_token was minted with a narrower scope set")
+            print("      (e.g. only gmail.modify, missing gmail.send/gmail.readonly).")
+            print("   2. Code downstream is passing a stale scopes=[...] list to")
+            print("      Credentials(...) that no longer matches the grant.")
+            print("   Fix: revoke the app at https://myaccount.google.com/permissions")
+            print("        then run: python generate_gmail_tokens.py")
+        elif "unauthorized_client" in error_str:
+            print("\n💡 'unauthorized_client' — client_id/client_secret mismatch.")
             print("   Possible causes:")
-            print("   1. Token scopes don't match between tools.py and generated tokens")
-            print("   2. Client ID/Secret don't match credentials.json")
-            print("   3. OAuth client was deleted or changed in Google Cloud Console")
-        elif "invalid_grant" in error_str.lower():
+            print("   1. .env GOOGLE_CLIENT_ID/SECRET don't match credentials.json.")
+            print("   2. OAuth client was deleted or rotated in Google Cloud Console.")
+            print("   Fix: rerun generate_gmail_tokens.py (it syncs all 4 keys).")
+        elif "invalid_grant" in error_str:
             print("\n💡 Token expired or revoked. Run: python generate_gmail_tokens.py")
+        elif "invalid_client" in error_str:
+            print("\n💡 'invalid_client' — .env client_id/client_secret don't match")
+            print("   the OAuth client that issued the refresh_token.")
+            print("   Fix: run generate_gmail_tokens.py against the right credentials.json.")
         
         return False
 
