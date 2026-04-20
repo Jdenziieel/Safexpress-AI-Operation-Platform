@@ -1,25 +1,16 @@
 {
   "steps": [
     {
-      "agent": "drive_agent",
-      "tool": "search_files",
+      "agent": "gmail_agent",
+      "tool": "search_emails",
       "inputs": {
-        "search_term": "project_brief"
+        "query": "from:jdenziieel",
+        "max_results": 3
       },
       "output_variables": {
-        "template_file_id": "results[0].id"
+        "latest_emails": "emails"
       },
-      "description": "Search for the file 'project_brief' in Google Drive"
-    },
-    {
-      "agent": "docs_agent",
-      "tool": "create_from_uploaded_template",
-      "inputs": {
-        "template_file_id": "{{ template_file_id }}",
-        "new_title": "New_Document_Brief2"
-      },
-      "output_variables": {},
-      "description": "Create a new document from the found file and name it 'New_Document_Brief2'"
+      "description": "Search for the latest 3 emails from 'jdenziieel'"
     }
   ]
 }

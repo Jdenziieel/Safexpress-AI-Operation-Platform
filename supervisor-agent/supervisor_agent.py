@@ -14,6 +14,7 @@ from typing import TypedDict, List, Optional, Dict, Any, Callable, Awaitable
 from datetime import datetime, timedelta, timezone
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import re
 import uvicorn
 import asyncio
 import uuid
@@ -401,10 +402,16 @@ PLANNING RULES:
 6. Follow tool-specific instructions in the capabilities (array_access hints, workflow definitions, can_be_derived_from)
 7. When uploaded_file is present in context: ALWAYS use {{{{ uploaded_file.temp_path }}}} for file_path inputs. For filename: if a custom name was provided in the task parameters, use that literal string; otherwise fall back to {{{{ uploaded_file.filename }}}}.
 8. For delete_event: ALWAYS include "confirmed": true in inputs. The orchestrator approval mechanism already handles user confirmation.
-9. DOCUMENT IDs: NEVER use a document title/name as a document_id. ALWAYS use docs_agent.list_my_docs first to resolve a document name to its real ID, then reference the ID via {{{{ variable }}}} in subsequent steps (read_doc, edit_doc, update_doc, add_text).
+9. ID RESOLUTION: NEVER use a title, name, date, or other descriptive reference directly as an ID field (document_id, event_id, file_id, message_id, draft_id). Insert a lookup step first. In the lookup step, declare output_variables (per Rule 2) to name the resolved ID, then reference it with {{{{ var }}}} in the mutation step — exactly like the EXAMPLE below.
+   - DOCS: docs_agent.list_my_docs → declare output_variables {{"document_id": "documents[0].id"}} → reference {{{{ document_id }}}} in read_doc / edit_doc / update_doc / add_text.
+   - CALENDAR events (two paths):
+     (a) TITLE keyword: if the user named the event (e.g. "my Sprint Review meeting", "delete the Standup"), pass event_name directly to update_event / delete_event / confirm_delete_event — the calendar agent does a case-insensitive substring match on upcoming events. It fails on zero matches or multiple matches, so only use this path when the user gave a clear, likely-unique title keyword.
+     (b) TIME/ATTRIBUTE reference: if the user referred by date/time/attendees/location (e.g. "my meeting on April 9 7-9am", "the 2pm tomorrow"), call calendar_agent.list_events first with a narrow time window → declare output_variables {{"event_id": "events[0].event_id"}} → reference {{{{ event_id }}}} in the mutation step.
+   - DRIVE files: drive_agent.search_files → declare output_variables {{"file_id": "results[0].id"}} → reference {{{{ file_id }}}} in rename_file. Honor the `can_be_derived_from` hint on the tool capability.
 10. LLM TRANSFORM: llm_tool.transform_text can transform ANY text between a read step and a write step — not limited to docs. Pattern: (1) read content from any source (read_doc, search_emails, get_thread_conversation, etc.), (2) llm_tool.transform_text with the content variable and an instruction, (3) write the result to any destination (update_doc, edit_doc, create_draft_email, add_text, create_doc_with_content, reply_to_email, etc.). Examples: fix grammar in a doc, summarize an email into a doc, rewrite a draft before sending, translate document content. The llm_tool runs locally — no agent endpoint needed.
 11. DRIVE FILE LIMITATION: There is NO tool to download or read file contents from Google Drive. drive_agent.search_files returns file metadata (id, name) only — NOT the file content. You CANNOT pass a Drive file ID to mapping_agent.parse_file or sheets_agent.upload_mapped_data. The mapping_agent can only process LOCAL files (user uploads, email attachment downloads). If a task requires reading a Drive-hosted CSV/Excel file, the plan is NOT feasible — return an empty steps array.
 12. USER-INTENT COVERAGE: If the user's request mentions an action that has NO matching tool in the capabilities above, DO NOT silently drop it and DO NOT invent a tool. Plan steps for the feasible actions only, then APPEND one final llm_tool.transform_text step with inputs {{"instruction": "Return this text verbatim.", "content": "Note: I was unable to <short description of skipped action(s)>."}}. This surfaces the gap to the user in the final response.
+13. VARIABLE REFERENCES: Only use {{{{ var }}}} syntax for variables that are (a) listed in AVAILABLE CONTEXT VARIABLES above, or (b) declared via output_variables in an EARLIER step of the plan you are producing. Task parameters passed inline (from the user's request / extracted info) are NOT templatable — use their literal values directly in inputs, not as {{{{ var }}}} references. If you need a value that isn't yet available (e.g. an event_id, file_id, or document_id), insert a lookup step (list_events, search_files, list_my_docs, etc.) first — see Rule 9. Never emit a template like {{{{ field.query }}}} or {{{{ field.some_attr }}}} unless `field` is a real variable produced by a prior step.
 
 EXAMPLE:
 User: "Find the latest email from john@example.com and reply saying thanks"
@@ -1278,8 +1285,10 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 )
 
                 # === DISAMBIGUATION CHECK ===
-                # If a search/list tool returns multiple results and there are remaining
-                # steps that depend on the output, pause for user to pick the correct one.
+                # If a search/list tool returns multiple results AND a later step
+                # actually consumes the output variable, pause so the user can pick
+                # the correct one. If no later step references the variable (i.e.
+                # the user just wanted the list), continue execution without pausing.
                 DISAMBIGUATION_TOOLS = {
                     "list_my_docs": "documents",
                     "search_files": "results",
@@ -1300,33 +1309,61 @@ def orchestrator_node(state: SharedState) -> SharedState:
                             break
 
                     if disambig_var and isinstance(items, list) and len(items) > 1:
-                        print(f"\n DISAMBIGUATION: {tool_name} returned {len(items)} results — pausing for user selection")
+                        # Downstream-usage gate: only pause if a remaining step's
+                        # Jinja inputs actually reference this variable. Matches
+                        # {{ var }}, {{var}}, {{ var.x }}, {{ var[0] }}, {{ var|f }}
+                        # but not {{ var_other }} (word-boundary-like via lookahead).
+                        disambig_pattern = re.compile(
+                            r"\{\{\s*" + re.escape(disambig_var) + r"(?=\s|\}|\.|\[|\|)"
+                        )
+                        downstream_uses_var = False
+                        for future_step in plan[step_num:]:
+                            future_inputs_str = json.dumps(
+                                future_step.get("inputs", {}), default=str
+                            )
+                            if disambig_pattern.search(future_inputs_str):
+                                downstream_uses_var = True
+                                break
 
-                        remaining_steps = []
-                        for future_step_num, future_step in enumerate(plan[step_num:], step_num + 1):
-                            remaining_steps.append({
-                                "step_number": future_step_num,
-                                "agent": future_step.get("agent"),
-                                "tool": future_step.get("tool"),
-                                "description": future_step.get("description", ""),
-                                "inputs": future_step.get("inputs", {}),
-                                "output_variables": future_step.get("output_variables", {}),
-                            })
+                        if not downstream_uses_var:
+                            print(
+                                f"\n DISAMBIGUATION SKIPPED: {tool_name} returned "
+                                f"{len(items)} results, but no remaining step references "
+                                f"{{{{ {disambig_var} }}}} — continuing execution"
+                            )
+                            trace.step(
+                                "disambiguation_skipped",
+                                f"step {step_num}: {tool_name} returned {len(items)} results "
+                                f"but downstream steps do not consume `{disambig_var}` — no pause",
+                            )
+                        else:
+                            print(f"\n DISAMBIGUATION: {tool_name} returned {len(items)} results — pausing for user selection")
 
-                        variable_context["results"] = results
-                        variable_context["paused_for_disambiguation"] = True
-                        variable_context["disambiguation_options"] = items
-                        variable_context["disambiguation_variable"] = disambig_var
-                        variable_context["disambiguation_source_tool"] = tool_name
-                        variable_context["remaining_steps"] = remaining_steps
+                            remaining_steps = []
+                            for future_step_num, future_step in enumerate(plan[step_num:], step_num + 1):
+                                remaining_steps.append({
+                                    "step_number": future_step_num,
+                                    "agent": future_step.get("agent"),
+                                    "tool": future_step.get("tool"),
+                                    "description": future_step.get("description", ""),
+                                    "inputs": future_step.get("inputs", {}),
+                                    "output_variables": future_step.get("output_variables", {}),
+                                })
 
-                        trace.step("disambiguation_pause", f"step {step_num}: {tool_name} returned {len(items)} results, pausing")
+                            variable_context["results"] = results
+                            variable_context["paused_for_disambiguation"] = True
+                            variable_context["disambiguation_options"] = items
+                            variable_context["disambiguation_variable"] = disambig_var
+                            variable_context["disambiguation_source_tool"] = tool_name
+                            variable_context["remaining_steps"] = remaining_steps
 
-                        return {
-                            "final_context": variable_context,
-                            "context": variable_context,
-                            "results": results,
-                        }
+                            trace.step("disambiguation_pause", f"step {step_num}: {tool_name} returned {len(items)} results, pausing")
+
+                            return {
+                                "final_context": variable_context,
+                                "context": variable_context,
+                                "results": results,
+                            }
 
             else:
                 # Handle failure - distinguish between no_results and actual errors

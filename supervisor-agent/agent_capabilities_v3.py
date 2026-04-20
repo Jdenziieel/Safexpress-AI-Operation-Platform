@@ -45,13 +45,14 @@ agent_capabilities = {
                 "can_be_derived_from": {"message_id": "search_emails"},
             },
             "forward_email": {
-                "description": "Forward an email to another recipient.",
+                "description": "Forward an email verbatim (HTML body + original attachments preserved) to another recipient.",
                 "args": {
                     "message_id": "str (required) — message ID to forward",
                     "to": "str (required) — recipient email",
-                    "forward_message": "str (optional) — additional message",
+                    "forward_message": "str (optional) — additional message prepended before the forwarded content",
                 },
-                "returns": ["success", "forwarded_message_id", "thread_id", "to", "subject", "error"],
+                "returns": ["success", "forwarded_message_id", "thread_id", "to", "subject", "original_from", "forward_message", "attachments_forwarded", "error"],
+                "returns_detail": "attachments_forwarded is a list of filenames re-attached from the original message (may be empty)",
                 "can_be_derived_from": {"message_id": "search_emails"},
             },
             "create_draft_email": {

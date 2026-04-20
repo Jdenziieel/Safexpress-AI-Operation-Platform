@@ -1043,3 +1043,1104 @@ Paramet
 [2026-04-19 18:17:33.093] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
 [2026-04-19 18:17:33.268] [PRINT]  Starting Supervisor Agent on port 8010
 [2026-04-19 18:17:33.280] [PRINT]  API Documentation: http://localhost:8010/docs
+[2026-04-19 22:31:30.627] [INFO] [-] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-19 22:31:30.655] [INFO] [-] ← RESPONSE: 200 (29ms)
+[2026-04-19 22:31:30.656] [INFO] [-] ─────────: ──────────────────────────────────────────────────
+[2026-04-19 22:31:33.960] [INFO] [-] → REQUEST: POST /threads  | {"query": null}
+[2026-04-19 22:31:33.972] [INFO] [-] [T:new]   STEP [create_thread]: user=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03, has_message=True
+[2026-04-19 22:31:34.071] [PRINT]  Created thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9 for user: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03
+[2026-04-19 22:31:34.146] [PRINT]  Created new thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9 for user: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03 with title: None
+[2026-04-19 22:31:34.202] [PRINT] Saved conversation state to SQLite: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 22:31:34.294] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:31:34.319] [PRINT]   NEW MESSAGE  |  thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 22:31:34.354] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:31:34.370] [PRINT]   User: Search my email
+[2026-04-19 22:31:34.389] [PRINT]   ConversationState:
+[2026-04-19 22:31:34.405] [PRINT]     extracted_info: {}
+[2026-04-19 22:31:34.440] [PRINT]     missing_fields: []
+[2026-04-19 22:31:34.476] [PRINT]     intent: null
+[2026-04-19 22:31:34.503] [PRINT]     clarification_question: null
+[2026-04-19 22:31:34.533] [PRINT]     ready_for_execution: false
+[2026-04-19 22:31:34.566] [PRINT]     execution_summary: null
+[2026-04-19 22:31:34.595] [PRINT]     execution_mode: "standard"
+[2026-04-19 22:31:34.610] [PRINT]     execution_history: []
+[2026-04-19 22:31:34.639] [PRINT]     completed_tasks: []
+[2026-04-19 22:31:34.659] [PRINT]     has_executed: false
+[2026-04-19 22:31:34.685] [PRINT]     last_executed_at: null
+[2026-04-19 22:31:34.704] [PRINT]     last_execution_status: null
+[2026-04-19 22:31:34.723] [PRINT]     last_execution_message: null
+[2026-04-19 22:31:34.747] [PRINT]     executing: false
+[2026-04-19 22:31:34.773] [PRINT]     pending_actions: []
+[2026-04-19 22:31:34.797] [PRINT]     workflow_paused: false
+[2026-04-19 22:31:34.822] [PRINT]     remaining_steps: []
+[2026-04-19 22:31:34.880] [PRINT]     workflow_context: null
+[2026-04-19 22:31:34.898] [PRINT]     disambiguation_options: []
+[2026-04-19 22:31:34.920] [PRINT]     disambiguation_variable: null
+[2026-04-19 22:31:34.938] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:31:34.957] [INFO] [-]   STEP [new_message]: thread=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9, msg=Search my email
+[2026-04-19 22:31:57.714] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 8, "total": 8, "max": 2000}
+[2026-04-19 22:31:57.722] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-19 22:31:57.722] [PRINT] 
+[2026-04-19 22:31:57.722] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:31:57.730] [PRINT] TIER 0.5 — Building prompt
+[2026-04-19 22:31:57.741] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:31:57.754] [PRINT]    bot_signal : (none)
+[2026-04-19 22:31:57.766] [PRINT]    state_block: (none)
+[2026-04-19 22:31:57.781] [PRINT]    file_context: (none)
+[2026-04-19 22:31:57.796] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:00.185] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=699 out=35 | $0.0001 | 2359ms | cumulative: in=699 out=35 total=734 $0.0001
+[2026-04-19 22:32:00.196] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting a new action to search their email.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting a new action to search their email.\"\n}"}
+[2026-04-19 22:32:00.197] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-04-19 22:32:00.200] [PRINT] 
+[2026-04-19 22:32:00.200] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:00.242] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-19 22:32:00.293] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:00.322] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-19 22:32:00.326] [PRINT] 
+[2026-04-19 22:32:00.326] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-19 22:32:00.343] [PRINT] BUILDING LLM CONTEXT
+[2026-04-19 22:32:00.359] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-19 22:32:00.370] [PRINT]    Summary: none
+[2026-04-19 22:32:00.381] [PRINT]    Recent messages: 1
+[2026-04-19 22:32:00.395] [PRINT]       USER: Search my email
+[2026-04-19 22:32:00.406] [PRINT] 
+[2026-04-19 22:32:00.406] [PRINT]    Final context: 42 chars (~10 tokens)
+[2026-04-19 22:32:00.419] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-19 22:32:00.430] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=1, ~10 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 42, "context_tokens_est": 10}
+[2026-04-19 22:32:00.431] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-19 22:32:01.848] [PRINT]  OK [classifier] gpt-3.5-turbo | agent_tool_classification | in=1274 out=8 | $0.0006 | 1376ms | cumulative: in=1973 out=43 total=2016 $0.0008
+[2026-04-19 22:32:01.876] [PRINT]    relevant_agents: ['gmail_agent', 'llm_tool']
+[2026-04-19 22:32:01.910] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**', '**LLM_TOOL:**']
+[2026-04-19 22:32:01.938] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent", "llm_tool"]}
+[2026-04-19 22:32:01.941] [PRINT]    user_prompt (81 chars):
+[2026-04-19 22:32:01.965] [PRINT]      RECENT CONVERSATION:
+[2026-04-19 22:32:01.989] [PRINT]      USER: Search my email
+[2026-04-19 22:32:02.009] [PRINT]      
+[2026-04-19 22:32:02.023] [PRINT]      CURRENT USER MESSAGE: Search my email
+[2026-04-19 22:32:02.036] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:05.655] [PRINT]  OK [1] gpt-4 | tier_1_full_analysis | in=1158 out=126 | $0.0423 | 3580ms | cumulative: in=3131 out=169 total=3300 $0.0431
+[2026-04-19 22:32:05.674] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "search_emails", "missing_fields": ["query"], "clarification_question": "Could you please specify what you're looking for in your emails? For example, you can provide a keyword, sender's name, or subject.", "execution_ready": false, "reasoning": "The user wants to search their emails, but they haven't provided any specific search criteria.", "extracted_info": {}}
+[2026-04-19 22:32:05.679] [INFO] [-]   ANALYSIS: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False  | {"missing_fields": ["query"]}
+[2026-04-19 22:32:05.681] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.NEEDS_CLARIFICATION
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "N/A", "missing_fields": ["query"], "clarification_question": "Could you please specify what you're looking for in your emails? For example, you can provide a keyword, sender's name, or subject.", "ready_for_execution": false, "execution_summary": null, "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails"]}}}
+[2026-04-19 22:32:05.682] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 34, "total": 42, "max": 2000, "response_preview": "Could you please specify what you're looking for in your emails? For example, you can provide a keyword, sender's name, or subject.\n\n"}
+[2026-04-19 22:32:05.738] [PRINT] 
+[2026-04-19 22:32:05.738] [PRINT] ============================================================
+[2026-04-19 22:32:05.743] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-19 22:32:05.748] [PRINT] ============================================================
+[2026-04-19 22:32:05.754] [PRINT]   LLM calls:        3
+[2026-04-19 22:32:05.761] [PRINT]   Total input:      3,131 tokens
+[2026-04-19 22:32:05.767] [PRINT]   Total output:     169 tokens
+[2026-04-19 22:32:05.772] [PRINT]   Total tokens:     3,300 tokens
+[2026-04-19 22:32:05.779] [PRINT]   Estimated cost:   $0.0431
+[2026-04-19 22:32:05.789] [PRINT]   Total duration:   31547ms (31.5s)
+[2026-04-19 22:32:05.796] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-19 22:32:05.803] [PRINT]   Breakdown by call:
+[2026-04-19 22:32:05.811] [PRINT]     1. gpt-4o-mini      in=699    out=35    $0.0001 2359ms
+[2026-04-19 22:32:05.821] [PRINT]     2. gpt-3.5-turbo    in=1274   out=8     $0.0006 1376ms
+[2026-04-19 22:32:05.828] [PRINT]     3. gpt-4            in=1158   out=126   $0.0423 3580ms
+[2026-04-19 22:32:05.835] [PRINT] ============================================================
+[2026-04-19 22:32:05.851] [INFO] [req_20260419143133_63826aed] [T:new] ← RESPONSE: 200 (31891ms)
+[2026-04-19 22:32:05.852] [INFO] [req_20260419143133_63826aed] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-19 22:32:31.611] [PRINT] WebSocket connected for thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 22:32:31.670] [INFO] [req_20260419143133_63826aed] [T:new] → REQUEST: POST /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9/messages  | {"query": null}
+[2026-04-19 22:32:31.731] [INFO] [req_20260419143231_bb4abb9d] [T:c31c66f9]   USER MSG: "For jdenziieel emails"
+[2026-04-19 22:32:31.742] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:32:31.758] [PRINT]   NEW MESSAGE  |  thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 22:32:31.781] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:32:31.797] [PRINT]   User: For jdenziieel emails
+[2026-04-19 22:32:31.817] [PRINT]   ConversationState:
+[2026-04-19 22:32:31.841] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_emails"]}}
+[2026-04-19 22:32:31.866] [PRINT]     missing_fields: ["query"]
+[2026-04-19 22:32:31.884] [PRINT]     intent: "needs_clarification"
+[2026-04-19 22:32:31.907] [PRINT]     clarification_question: "Could you please specify what you're looking for in your emails? For example, you can provide a keyword, sender's name, or subject."
+[2026-04-19 22:32:31.926] [PRINT]     ready_for_execution: false
+[2026-04-19 22:32:31.955] [PRINT]     execution_summary: null
+[2026-04-19 22:32:31.984] [PRINT]     execution_mode: "standard"
+[2026-04-19 22:32:32.001] [PRINT]     execution_history: []
+[2026-04-19 22:32:32.031] [PRINT]     completed_tasks: []
+[2026-04-19 22:32:32.078] [PRINT]     has_executed: false
+[2026-04-19 22:32:32.095] [PRINT]     last_executed_at: null
+[2026-04-19 22:32:32.112] [PRINT]     last_execution_status: null
+[2026-04-19 22:32:32.127] [PRINT]     last_execution_message: null
+[2026-04-19 22:32:32.146] [PRINT]     executing: false
+[2026-04-19 22:32:32.170] [PRINT]     pending_actions: []
+[2026-04-19 22:32:32.192] [PRINT]     workflow_paused: false
+[2026-04-19 22:32:32.221] [PRINT]     remaining_steps: []
+[2026-04-19 22:32:32.253] [PRINT]     workflow_context: null
+[2026-04-19 22:32:32.275] [PRINT]     disambiguation_options: []
+[2026-04-19 22:32:32.298] [PRINT]     disambiguation_variable: null
+[2026-04-19 22:32:32.317] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:32:32.337] [INFO] [-]   STEP [new_message]: thread=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9, msg=For jdenziieel emails
+[2026-04-19 22:32:32.338] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 12, "total": 54, "max": 2000}
+[2026-04-19 22:32:32.346] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check
+    ↳ {"extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails"]}}, "missing_fields": ["query"], "first_missing_field": "query", "awaiting_confirmation": false, "awaiting_clarification": true}
+[2026-04-19 22:32:32.348] [PRINT] 
+[2026-04-19 22:32:32.348] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:32.367] [PRINT] TIER 0.5 — Building prompt
+[2026-04-19 22:32:32.385] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:32.404] [PRINT]    bot_signal : PHASE: Awaiting answer — bot asked: "Could you please specify what you're looking for in your emails? For example, you can provide a keyword, sender's name, or subject."
+[2026-04-19 22:32:32.432] [PRINT]    state_block: TASK FIELDS: [_cached_tool_filter] — missing: [query]
+[2026-04-19 22:32:32.469] [PRINT]    file_context: (none)
+[2026-04-19 22:32:32.498] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:34.326] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=776 out=35 | $0.0001 | 1749ms | cumulative: in=776 out=35 total=811 $0.0001
+[2026-04-19 22:32:34.365] [INFO] [-]   STEP [tier0.5]: category: FOLLOWUP_ANSWER, confidence: high
+    ↳ {"reasoning": "The user provided a specific query related to their emails.", "raw_response": "{\n    \"category\": \"followup_answer\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user provided a specific query related to their emails.\"\n}"}
+[2026-04-19 22:32:34.366] [INFO] [-]   STEP [tier0.5]: complex followup answer — proceeding to full analysis
+[2026-04-19 22:32:34.373] [PRINT] 
+[2026-04-19 22:32:34.373] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:34.404] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-19 22:32:34.425] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:34.443] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-19 22:32:34.447] [PRINT] 
+[2026-04-19 22:32:34.447] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-19 22:32:34.460] [PRINT] BUILDING LLM CONTEXT
+[2026-04-19 22:32:34.506] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-19 22:32:34.521] [PRINT]    Summary: none
+[2026-04-19 22:32:34.546] [PRINT]    Recent messages: 3
+[2026-04-19 22:32:34.573] [PRINT]       USER: Search my email
+[2026-04-19 22:32:34.591] [PRINT]       ASSISTANT: Could you please specify what you're looking for in your emails? For example, yo...
+[2026-04-19 22:32:34.605] [PRINT]       USER: For jdenziieel emails
+[2026-04-19 22:32:34.627] [PRINT] 
+[2026-04-19 22:32:34.627] [PRINT]    Final context: 215 chars (~53 tokens)
+[2026-04-19 22:32:34.644] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-19 22:32:34.660] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=3, ~53 tokens  | {"has_summary": false, "recent_messages": 3, "context_chars": 215, "context_tokens_est": 53}
+[2026-04-19 22:32:34.663] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-19 22:32:35.608] [PRINT]  OK [classifier] gpt-3.5-turbo | agent_tool_classification | in=1278 out=11 | $0.0007 | 877ms | cumulative: in=2054 out=46 total=2100 $0.0008
+[2026-04-19 22:32:35.660] [PRINT]    relevant_agents: ['gmail_agent']
+[2026-04-19 22:32:35.680] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**']
+[2026-04-19 22:32:35.709] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent"]}
+[2026-04-19 22:32:35.711] [PRINT]    user_prompt (260 chars):
+[2026-04-19 22:32:35.723] [PRINT]      RECENT CONVERSATION:
+[2026-04-19 22:32:35.741] [PRINT]      USER: Search my email
+[2026-04-19 22:32:35.771] [PRINT]      ASSISTANT: Could you please specify what you're looking for in your emails? For example, you can provide a keyword, sender's name, or subject.
+[2026-04-19 22:32:35.806] [PRINT]      
+[2026-04-19 22:32:35.833] [PRINT]      
+[2026-04-19 22:32:35.847] [PRINT]      USER: For jdenziieel emails
+[2026-04-19 22:32:35.857] [PRINT]      
+[2026-04-19 22:32:35.883] [PRINT]      CURRENT USER MESSAGE: For jdenziieel emails
+[2026-04-19 22:32:35.903] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:39.862] [PRINT]  OK [1] gpt-4 | tier_1_full_analysis | in=1191 out=138 | $0.0440 | 3859ms | cumulative: in=3245 out=184 total=3429 $0.0448
+[2026-04-19 22:32:39.918] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "search_emails", "missing_fields": ["max_results"], "clarification_question": "How many emails from 'jdenziieel' would you like me to retrieve?", "execution_ready": false, "reasoning": "The user wants to search for emails from 'jdenziieel', but did not specify the maximum number of results they want.", "extracted_info": {"query": "jdenziieel"}}
+[2026-04-19 22:32:39.935] [INFO] [-]   ANALYSIS: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False  | {"missing_fields": ["max_results"]}
+[2026-04-19 22:32:39.943] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.NEEDS_CLARIFICATION
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "N/A", "missing_fields": ["max_results"], "clarification_question": "How many emails from 'jdenziieel' would you like me to retrieve?", "ready_for_execution": false, "execution_summary": null, "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails"]}, "query": "jdenziieel"}}
+[2026-04-19 22:32:39.948] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 23, "total": 77, "max": 2000, "response_preview": "How many emails from 'jdenziieel' would you like me to retrieve?\n\n"}
+[2026-04-19 22:32:39.995] [INFO] [req_20260419143231_bb4abb9d] [T:c31c66f9]   BOT RESP: "How many emails from 'jdenziieel' would you like me to retrieve?
+
+"
+[2026-04-19 22:32:40.033] [PRINT] 
+[2026-04-19 22:32:40.033] [PRINT] ============================================================
+[2026-04-19 22:32:40.088] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-19 22:32:40.125] [PRINT] ============================================================
+[2026-04-19 22:32:40.167] [PRINT]   LLM calls:        3
+[2026-04-19 22:32:40.244] [PRINT]   Total input:      3,245 tokens
+[2026-04-19 22:32:40.280] [PRINT]   Total output:     184 tokens
+[2026-04-19 22:32:40.296] [PRINT]   Total tokens:     3,429 tokens
+[2026-04-19 22:32:40.312] [PRINT]   Estimated cost:   $0.0448
+[2026-04-19 22:32:40.331] [PRINT]   Total duration:   8320ms (8.3s)
+[2026-04-19 22:32:40.347] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-19 22:32:40.384] [PRINT]   Breakdown by call:
+[2026-04-19 22:32:40.407] [PRINT]     1. gpt-4o-mini      in=776    out=35    $0.0001 1749ms
+[2026-04-19 22:32:40.454] [PRINT]     2. gpt-3.5-turbo    in=1278   out=11    $0.0007 877ms
+[2026-04-19 22:32:40.476] [PRINT]     3. gpt-4            in=1191   out=138   $0.0440 3859ms
+[2026-04-19 22:32:40.497] [PRINT] ============================================================
+[2026-04-19 22:32:40.530] [INFO] [req_20260419143231_bb4abb9d] [T:c31c66f9] ← RESPONSE: 200 (8859ms)
+[2026-04-19 22:32:40.534] [INFO] [req_20260419143231_bb4abb9d] [T:c31c66f9] ─────────: ──────────────────────────────────────────────────
+[2026-04-19 22:32:40.541] [PRINT] WebSocket disconnected for thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 22:32:43.644] [INFO] [req_20260419143231_bb4abb9d] [T:c31c66f9] → REQUEST: POST /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9/messages  | {"query": null}
+[2026-04-19 22:32:43.701] [INFO] [req_20260419143243_54b66c2f] [T:c31c66f9]   USER MSG: "3"
+[2026-04-19 22:32:43.799] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:32:43.843] [PRINT]   NEW MESSAGE  |  thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 22:32:43.874] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:32:43.908] [PRINT]   User: 3
+[2026-04-19 22:32:43.941] [PRINT] WebSocket connected for thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 22:32:43.945] [PRINT]   ConversationState:
+[2026-04-19 22:32:43.960] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_emails"]}, "query": "jdenziieel"}
+[2026-04-19 22:32:43.985] [PRINT]     missing_fields: ["max_results"]
+[2026-04-19 22:32:44.005] [PRINT]     intent: "needs_clarification"
+[2026-04-19 22:32:44.029] [PRINT]     clarification_question: "How many emails from 'jdenziieel' would you like me to retrieve?"
+[2026-04-19 22:32:44.047] [PRINT]     ready_for_execution: false
+[2026-04-19 22:32:44.064] [PRINT]     execution_summary: null
+[2026-04-19 22:32:44.085] [PRINT]     execution_mode: "standard"
+[2026-04-19 22:32:44.117] [PRINT]     execution_history: []
+[2026-04-19 22:32:44.141] [PRINT]     completed_tasks: []
+[2026-04-19 22:32:44.163] [PRINT]     has_executed: false
+[2026-04-19 22:32:44.180] [PRINT]     last_executed_at: null
+[2026-04-19 22:32:44.204] [PRINT]     last_execution_status: null
+[2026-04-19 22:32:44.228] [PRINT]     last_execution_message: null
+[2026-04-19 22:32:44.249] [PRINT]     executing: false
+[2026-04-19 22:32:44.270] [PRINT]     pending_actions: []
+[2026-04-19 22:32:44.288] [PRINT]     workflow_paused: false
+[2026-04-19 22:32:44.316] [PRINT]     remaining_steps: []
+[2026-04-19 22:32:44.341] [PRINT]     workflow_context: null
+[2026-04-19 22:32:44.358] [PRINT]     disambiguation_options: []
+[2026-04-19 22:32:44.383] [PRINT]     disambiguation_variable: null
+[2026-04-19 22:32:44.398] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:32:44.414] [INFO] [-]   STEP [new_message]: thread=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9, msg=3
+[2026-04-19 22:32:44.415] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 83, "max": 2000}
+[2026-04-19 22:32:44.430] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check
+    ↳ {"extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails"]}, "query": "jdenziieel"}, "missing_fields": ["max_results"], "first_missing_field": "max_results", "awaiting_confirmation": false, "awaiting_clarification": true}
+[2026-04-19 22:32:44.431] [PRINT] 
+[2026-04-19 22:32:44.431] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:44.447] [PRINT] TIER 0.5 — Building prompt
+[2026-04-19 22:32:44.467] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:44.485] [PRINT]    bot_signal : PHASE: Awaiting answer — bot asked: "How many emails from 'jdenziieel' would you like me to retrieve?"
+[2026-04-19 22:32:44.506] [PRINT]    state_block: TASK FIELDS: [_cached_tool_filter, query] — missing: [max_results]
+[2026-04-19 22:32:44.538] [PRINT]    file_context: (none)
+[2026-04-19 22:32:44.561] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:45.984] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=772 out=43 | $0.0001 | 1328ms | cumulative: in=772 out=43 total=815 $0.0001
+[2026-04-19 22:32:46.008] [INFO] [-]   STEP [tier0.5]: category: FOLLOWUP_ANSWER, confidence: high
+    ↳ {"reasoning": "The user provided a direct answer to the bot's question about the number of emails to retrieve.", "raw_response": "{\n    \"category\": \"followup_answer\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user provided a direct answer to the bot's question about the number of emails to retrieve.\"\n}"}
+[2026-04-19 22:32:46.010] [INFO] [-]   STEP [tier0.5]: complex followup answer — proceeding to full analysis
+[2026-04-19 22:32:46.012] [PRINT] 
+[2026-04-19 22:32:46.012] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:46.027] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-19 22:32:46.053] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:46.071] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-19 22:32:46.074] [PRINT] 
+[2026-04-19 22:32:46.074] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-19 22:32:46.090] [PRINT] BUILDING LLM CONTEXT
+[2026-04-19 22:32:46.105] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-19 22:32:46.125] [PRINT]    Summary: none
+[2026-04-19 22:32:46.157] [PRINT]    Recent messages: 5
+[2026-04-19 22:32:46.180] [PRINT]       USER: Search my email
+[2026-04-19 22:32:46.200] [PRINT]       ASSISTANT: Could you please specify what you're looking for in your emails? For example, yo...
+[2026-04-19 22:32:46.220] [PRINT]       USER: For jdenziieel emails
+[2026-04-19 22:32:46.239] [PRINT]       ASSISTANT: How many emails from 'jdenziieel' would you like me to retrieve?
+[2026-04-19 22:32:46.262] [PRINT]       USER: 3
+[2026-04-19 22:32:46.282] [PRINT] 
+[2026-04-19 22:32:46.282] [PRINT]    Final context: 301 chars (~75 tokens)
+[2026-04-19 22:32:46.300] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-19 22:32:46.322] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=5, ~75 tokens  | {"has_summary": false, "recent_messages": 5, "context_chars": 301, "context_tokens_est": 75}
+[2026-04-19 22:32:46.323] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-19 22:32:47.488] [PRINT]  OK [classifier] gpt-3.5-turbo | agent_tool_classification | in=1272 out=22 | $0.0007 | 1009ms | cumulative: in=2044 out=65 total=2109 $0.0008
+[2026-04-19 22:32:47.530] [PRINT]    relevant_agents: ['gmail_agent']
+[2026-04-19 22:32:47.552] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**']
+[2026-04-19 22:32:47.588] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent"]}
+[2026-04-19 22:32:47.592] [PRINT]    user_prompt (326 chars):
+[2026-04-19 22:32:47.612] [PRINT]      RECENT CONVERSATION:
+[2026-04-19 22:32:47.634] [PRINT]      USER: Search my email
+[2026-04-19 22:32:47.655] [PRINT]      ASSISTANT: Could you please specify what you're looking for in your emails? For example, you can provide a keyword, sender's name, or subject.
+[2026-04-19 22:32:47.674] [PRINT]      
+[2026-04-19 22:32:47.698] [PRINT]      
+[2026-04-19 22:32:47.715] [PRINT]      USER: For jdenziieel emails
+[2026-04-19 22:32:47.742] [PRINT]      ASSISTANT: How many emails from 'jdenziieel' would you like me to retrieve?
+[2026-04-19 22:32:47.770] [PRINT]      
+[2026-04-19 22:32:47.818] [PRINT]      
+[2026-04-19 22:32:47.842] [PRINT]      USER: 3
+[2026-04-19 22:32:47.855] [PRINT]      
+[2026-04-19 22:32:47.875] [PRINT]      CURRENT USER MESSAGE: 3
+[2026-04-19 22:32:47.896] [PRINT] ──────────────────────────────────────────────────
+[2026-04-19 22:32:52.318] [PRINT]  OK [1] gpt-4 | tier_1_full_analysis | in=1213 out=140 | $0.0448 | 4362ms | cumulative: in=3257 out=205 total=3462 $0.0456
+[2026-04-19 22:32:52.387] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "search_emails", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user wants to search for emails from 'jdenziieel'. The number of emails to retrieve is specified as 3.", "extracted_info": {"query": "from:jdenziieel", "max_results": 3}}
+[2026-04-19 22:32:52.406] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-19 22:32:52.410] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Search for the latest 3 emails from 'jdenziieel'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_drafts", "create_draft_email", "search_emails", "send_draft_email"]}, "query": "from:jdenziieel", "max_results": 3}}
+[2026-04-19 22:32:53.524] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=193 out=26 | $0.0000 | 1037ms | cumulative: in=3450 out=231 total=3681 $0.0456
+[2026-04-19 22:32:53.618] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 56, "total": 139, "max": 2000, "response_preview": "**Ready to execute!**\n\n- Search for the latest 3 emails from: jdenziieel\n- Results will include emails sent directly from this address.\n\n---\nReply **\"yes\"** to proceed or **\"cancel\"** to stop."}
+[2026-04-19 22:32:53.672] [INFO] [req_20260419143243_54b66c2f] [T:c31c66f9]   BOT RESP: "**Ready to execute!**
+
+- Search for the latest 3 emails from: jdenziieel
+- Results will include emai..."
+[2026-04-19 22:32:53.692] [PRINT] 
+[2026-04-19 22:32:53.692] [PRINT] ============================================================
+[2026-04-19 22:32:53.753] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-19 22:32:53.789] [PRINT] ============================================================
+[2026-04-19 22:32:53.811] [PRINT]   LLM calls:        4
+[2026-04-19 22:32:53.824] [PRINT]   Total input:      3,450 tokens
+[2026-04-19 22:32:53.842] [PRINT]   Total output:     231 tokens
+[2026-04-19 22:32:53.864] [PRINT]   Total tokens:     3,681 tokens
+[2026-04-19 22:32:53.886] [PRINT]   Estimated cost:   $0.0456
+[2026-04-19 22:32:53.931] [PRINT]   Total duration:   10028ms (10.0s)
+[2026-04-19 22:32:53.965] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-19 22:32:53.984] [PRINT]   Breakdown by call:
+[2026-04-19 22:32:54.015] [PRINT]     1. gpt-4o-mini      in=772    out=43    $0.0001 1328ms
+[2026-04-19 22:32:54.037] [PRINT]     2. gpt-3.5-turbo    in=1272   out=22    $0.0007 1009ms
+[2026-04-19 22:32:54.061] [PRINT]     3. gpt-4            in=1213   out=140   $0.0448 4362ms
+[2026-04-19 22:32:54.090] [PRINT]     4. gpt-4o-mini      in=193    out=26    $0.0000 1037ms
+[2026-04-19 22:32:54.126] [PRINT] ============================================================
+[2026-04-19 22:32:54.192] [INFO] [req_20260419143243_54b66c2f] [T:c31c66f9] ← RESPONSE: 200 (10549ms)
+[2026-04-19 22:32:54.194] [INFO] [req_20260419143243_54b66c2f] [T:c31c66f9] ─────────: ──────────────────────────────────────────────────
+[2026-04-19 22:32:54.204] [PRINT] WebSocket disconnected for thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 22:33:13.865] [INFO] [req_20260419143243_54b66c2f] [T:c31c66f9] → REQUEST: POST /threads/69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9/messages  | {"query": null}
+[2026-04-19 22:33:13.901] [INFO] [req_20260419143313_86960c13] [T:c31c66f9]   USER MSG: "yes"
+[2026-04-19 22:33:13.950] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:33:14.042] [PRINT]   NEW MESSAGE  |  thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 22:33:14.073] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:33:14.129] [PRINT]   User: yes
+[2026-04-19 22:33:14.149] [PRINT] WebSocket connected for thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 22:33:14.186] [PRINT]   ConversationState:
+[2026-04-19 22:33:14.213] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_drafts", "create_draft_email", "search_emails", "send_draft_email"]}, "query": "from:jdenziieel", "max_results": 3}
+[2026-04-19 22:33:14.231] [PRINT]     missing_fields: []
+[2026-04-19 22:33:14.245] [PRINT]     intent: "ready_to_execute"
+[2026-04-19 22:33:14.271] [PRINT]     clarification_question: null
+[2026-04-19 22:33:14.291] [PRINT]     ready_for_execution: false
+[2026-04-19 22:33:14.330] [PRINT]     execution_summary: "Search for the latest 3 emails from 'jdenziieel'"
+[2026-04-19 22:33:14.357] [PRINT]     execution_mode: "standard"
+[2026-04-19 22:33:14.377] [PRINT]     execution_history: []
+[2026-04-19 22:33:14.402] [PRINT]     completed_tasks: []
+[2026-04-19 22:33:14.417] [PRINT]     has_executed: false
+[2026-04-19 22:33:14.432] [PRINT]     last_executed_at: null
+[2026-04-19 22:33:14.459] [PRINT]     last_execution_status: null
+[2026-04-19 22:33:14.482] [PRINT]     last_execution_message: null
+[2026-04-19 22:33:14.501] [PRINT]     executing: false
+[2026-04-19 22:33:14.527] [PRINT]     pending_actions: []
+[2026-04-19 22:33:14.618] [PRINT]     workflow_paused: false
+[2026-04-19 22:33:14.653] [PRINT]     remaining_steps: []
+[2026-04-19 22:33:14.689] [PRINT]     workflow_context: null
+[2026-04-19 22:33:14.740] [PRINT]     disambiguation_options: []
+[2026-04-19 22:33:14.787] [PRINT]     disambiguation_variable: null
+[2026-04-19 22:33:14.843] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-19 22:33:14.914] [INFO] [-]   STEP [new_message]: thread=69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9, msg=yes
+[2026-04-19 22:33:14.916] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 145, "max": 2000}
+[2026-04-19 22:33:14.937] [INFO] [-]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-19 22:33:14.965] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-19 22:33:14.966] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Search for the latest 3 emails from 'jdenziieel'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["create_draft_email", "send_draft_email", "search_emails", "search_drafts"]}, "query": "from:jdenziieel", "max_results": 3}}
+[2026-04-19 22:33:16.136] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=193 out=16 | $0.0000 | 1133ms | cumulative: in=193 out=16 total=209 $0.0000
+[2026-04-19 22:33:16.179] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 47, "total": 192, "max": 2000, "response_preview": "**Ready to execute!**\n\n- Search for the latest 3 emails\n- Sender: jdenziieel\n\n---\nReply **\"yes\"** to proceed or **\"cancel\"** to stop."}
+[2026-04-19 22:33:16.247] [INFO] [req_20260419143313_86960c13] [T:c31c66f9]   BOT RESP [READY TO EXECUTE]: "**Ready to execute!**
+
+- Search for the latest 3 emails
+- Sender: jdenziieel
+
+---
+Reply **"yes"** to..."
+[2026-04-19 22:33:16.248] [PRINT] Thread 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9 ready - executing workflow...
+[2026-04-19 22:33:16.259] [INFO] [req_20260419143313_86960c13] [T:c31c66f9]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-19 22:33:16.287] [INFO] [req_20260419143313_86960c13] [T:c31c66f9]   WORKFLOW START: "Search for the latest 3 emails from 'jdenziieel'
+
+Parameters:
+- query: from:jden..." (0 steps)
+[2026-04-19 22:33:16.289] [PRINT]  Date context: today=2026-04-19
+[2026-04-19 22:33:16.303] [PRINT]  Starting workflow execution (mode=standard)...
+[2026-04-19 22:33:16.313] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-19 22:33:16.329] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-19 22:33:16.376] [PRINT] 
+[2026-04-19 22:33:16.376] [PRINT] ============================================================
+[2026-04-19 22:33:16.422] [PRINT] SUPERVISOR NODE - Planning Phase
+[2026-04-19 22:33:16.465] [PRINT] ============================================================
+[2026-04-19 22:33:16.495] [PRINT] User Input: Search for the latest 3 emails from 'jdenziieel'
+[2026-04-19 22:33:16.495] [PRINT] 
+[2026-04-19 22:33:16.495] [PRINT] Parameters:
+[2026-04-19 22:33:16.495] [PRINT] - query: from:jdenziieel
+[2026-04-19 22:33:16.495] [PRINT] - max_results: 3
+[2026-04-19 22:33:16.514] [INFO] [-]   STEP [supervisor_node]: Planning for: Search for the latest 3 emails from 'jdenziieel'
+
+Parameters:
+- query: from:jden
+[2026-04-19 22:33:16.515] [PRINT] Context dates: today=2026-04-19
+[2026-04-19 22:33:16.553] [PRINT] Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-19 22:33:16.577] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['gmail_agent']
+[2026-04-19 22:33:16.578] [PRINT] Relevant agents: ['gmail_agent', 'llm_tool']
+[2026-04-19 22:33:16.591] [PRINT] Filtered tools: {'gmail_agent': ['create_draft_email', 'send_draft_email', 'search_emails', 'search_drafts']}
+[2026-04-19 22:33:16.612] [PRINT] Calling LLM to generate multi-step plan...
+[2026-04-19 22:33:16.629] [PRINT] Token optimization:
+[2026-04-19 22:33:16.653] [PRINT]    Agents: 2/7
+[2026-04-19 22:33:16.672] [PRINT]    Tools: 4/54
+[2026-04-19 22:33:16.699] [PRINT]    Context size: 3,630 chars (~907 tokens)
+[2026-04-19 22:33:16.732] [INFO] [-]   STEP [plan_generation_start]: agents=2/7, tools=4/54, context_tokens~907
+[2026-04-19 22:33:19.707] [PRINT]  OK [supervisor] gpt-4 | plan_generation | in=1826 out=92 | $0.0603 | 2885ms | cumulative: in=2019 out=108 total=2127 $0.0603
+[2026-04-19 22:33:19.814] [PRINT] Plan generated successfully!
+[2026-04-19 22:33:19.850] [PRINT] 
+[2026-04-19 22:33:19.850] [PRINT] Generated Plan:
+[2026-04-19 22:33:19.850] [PRINT] {
+[2026-04-19 22:33:19.850] [PRINT]   "steps": [
+[2026-04-19 22:33:19.850] [PRINT]     {
+[2026-04-19 22:33:19.850] [PRINT]       "agent": "gmail_agent",
+[2026-04-19 22:33:19.850] [PRINT]       "tool": "search_emails",
+[2026-04-19 22:33:19.850] [PRINT]       "inputs": {
+[2026-04-19 22:33:19.850] [PRINT]         "query": "from:jdenziieel",
+[2026-04-19 22:33:19.850] [PRINT]         "max_results": 3
+[2026-04-19 22:33:19.850] [PRINT]       },
+[2026-04-19 22:33:19.850] [PRINT]       "output_variables": {
+[2026-04-19 22:33:19.850] [PRINT]         "latest_emails": "emails"
+[2026-04-19 22:33:19.850] [PRINT]       },
+[2026-04-19 22:33:19.850] [PRINT]       "description": "Search for the latest 3 emails from 'jdenziieel'"
+[2026-04-19 22:33:19.850] [PRINT]     }
+[2026-04-19 22:33:19.850] [PRINT]   ]
+[2026-04-19 22:33:19.850] [PRINT] }
+[2026-04-19 22:33:19.874] [INFO] [-]   STEP [plan_generated]: 1 steps: gmail_agent.search_emails
+[2026-04-19 22:33:19.886] [PRINT] 
+[2026-04-19 22:33:19.886] [PRINT] Plan saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-19 22:33:19.952] [PRINT] ============================================================
+[2026-04-19 22:33:19.975] [PRINT] 
+[2026-04-19 22:33:19.975] [PRINT] ============================================================
+[2026-04-19 22:33:19.993] [PRINT] ORCHESTRATOR NODE - Execution Phase
+[2026-04-19 22:33:20.007] [PRINT] ============================================================
+[2026-04-19 22:33:20.023] [PRINT] Found 1 steps to execute
+[2026-04-19 22:33:20.043] [INFO] [-]   STEP [orchestrator_node]: 1 steps to execute
+[2026-04-19 22:33:20.044] [PRINT] 
+[2026-04-19 22:33:20.044] [PRINT] INITIAL CONTEXT:
+[2026-04-19 22:33:20.059] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-19 22:33:20.071] [PRINT]    today_date: 2026-04-19
+[2026-04-19 22:33:20.086] [PRINT]    _cached_tool_filter: dict (length: 1)
+[2026-04-19 22:33:20.104] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-19 22:33:20.132] [PRINT] Pre-flight credential check passed (5 fields)
+[2026-04-19 22:33:20.168] [PRINT] 
+[2026-04-19 22:33:20.168] [PRINT] ============================================================
+[2026-04-19 22:33:20.184] [PRINT] Step 1/1: gmail_agent.search_emails
+[2026-04-19 22:33:20.204] [PRINT] Description: Search for the latest 3 emails from 'jdenziieel'
+[2026-04-19 22:33:20.221] [PRINT] ============================================================
+[2026-04-19 22:33:20.272] [PRINT] Risk Level: safe
+[2026-04-19 22:33:20.291] [PRINT] 
+[2026-04-19 22:33:20.291] [PRINT] Substituting variables in inputs...
+[2026-04-19 22:33:20.325] [PRINT]    Original inputs: {
+[2026-04-19 22:33:20.325] [PRINT]       "query": "from:jdenziieel",
+[2026-04-19 22:33:20.325] [PRINT]       "max_results": 3
+[2026-04-19 22:33:20.325] [PRINT] }
+[2026-04-19 22:33:20.354] [PRINT]    Substituted inputs: {
+[2026-04-19 22:33:20.354] [PRINT]       "query": "from:jdenziieel",
+[2026-04-19 22:33:20.354] [PRINT]       "max_results": 3
+[2026-04-19 22:33:20.354] [PRINT] }
+[2026-04-19 22:33:20.395] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-19 22:33:20.425] [INFO] [-]   STEP [variable_substitution]: step 1: gmail_agent.search_emails  | {"inputs": {"query": "from:jdenziieel", "max_results": 3}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-19 22:33:20.427] [PRINT] 
+[2026-04-19 22:33:20.427] [PRINT] Calling agent microservice: http://localhost:8000/execute_task
+[2026-04-19 22:33:20.443] [PRINT] 
+[2026-04-19 22:33:20.443] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-19 22:33:20.466] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-19 22:33:20.479] [PRINT]    Tool: search_emails
+[2026-04-19 22:33:20.510] [PRINT]    Inputs keys: ['query', 'max_results']
+[2026-04-19 22:33:20.550] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-19 22:33:20.576] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-19 22:33:20.591] [PRINT]    Payload size: 699 bytes
+[2026-04-19 22:33:20.621] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-19 22:33:20.645] [PRINT] 
+[2026-04-19 22:33:20.645] [PRINT] Sending request to agent...
+[2026-04-19 22:33:20.674] [PRINT]    URL: http://localhost:8000/execute_task
+[2026-04-19 22:33:20.709] [PRINT]    Timeout: 320 seconds
+[2026-04-19 22:33:20.788] [PRINT]    Max retries: 3
+[2026-04-19 22:33:20.833] [PRINT] Attempt 1/3 calling http://localhost:8000/execute_task
+[2026-04-19 22:33:20.858] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-19 22:33:28.242] [PRINT] Agent call succeeded on attempt 1
+[2026-04-19 22:33:28.290] [PRINT] ⏱ Agent call completed in 7645.44ms
+[2026-04-19 22:33:28.322] [PRINT] Agent response received
+[2026-04-19 22:33:28.410] [AGENT] [-]   AGENT:  gmail_agent.search_emails (7645ms)  | {"query": "from:jdenziieel", "max_results": "3"}
+[2026-04-19 22:33:28.417] [PRINT] 
+[2026-04-19 22:33:28.417] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-19 22:33:28.463] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-19 22:33:28.510] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-19 22:33:28.535] [PRINT] {
+[2026-04-19 22:33:28.535] [PRINT]   "success": true,
+[2026-04-19 22:33:28.535] [PRINT]   "emails": [
+[2026-04-19 22:33:28.535] [PRINT]     {
+[2026-04-19 22:33:28.535] [PRINT]       "message_id": "18dc833e73101107",
+[2026-04-19 22:33:28.535] [PRINT]       "thread_id": "18dc833e73101107",
+[2026-04-19 22:33:28.535] [PRINT]       "from": "Josh Denziel Joves <jdenziieel@gmail.com>",
+[2026-04-19 22:33:28.535] [PRINT]       "subject": "",
+[2026-04-19 22:33:28.535] [PRINT]       "date": "Wed, 21 Feb 2024 04:27:27 +0800",
+[2026-04-19 22:33:28.535] [PRINT]       "internal_date": "1708460847000",
+[2026-04-19 22:33:28.535] [PRINT]       "label_ids": [
+[2026-04-19 22:33:28.535] [PRINT]         "IMPORTANT",
+[2026-04-19 22:33:28.535] [PRINT]         "CATEGORY_PERSONAL",
+[2026-04-19 22:33:28.535] [PRINT]         "INBOX"
+[2026-04-19 22:33:28.535] [PRINT]       ],
+[2026-04-19 22:33:28.535] [PRINT]       "body": "",
+[2026-04-19 22:33:28.535] [PRINT]       "has_attachments": true,
+[2026-04-19 22:33:28.535] [PRINT]       "attachments": [
+[2026-04-19 22:33:28.535] [PRINT]         {
+[2026-04-19 22:33:28.535] [PRINT]           "filename": "Activity2B_Joves_Josh.pka",
+[2026-04-19 22:33:28.535] [PRINT]           "attachment_id": "ANGjdJ-cUd1_WY9tSoh2XqlllZUaR90mQuIJ-PEXH7OdY_fEHwbrg9R5ZkfA2F6aQsIbIn61vHDFbi5czcSGuJ2QGsLa5_H435dpPNr2SMMMFYJaqtBAaPMYZDsgtGCNpVGwtQIgozxse_OZXG-KNgVzl2g3G2AyxFAccGu8hOiUD5-hgXdLepKscravEEEUlWAQo8kz7BxxmuEmvWt0TIOdJOCkFyS5qYyryXCnNp5k3S_2u1KhqdtPCYGiC3D0UJm877CUWBbE1M04M_p1Kb2cyIW4VYbbtvc2SiE31dJS1HF6L72iKVq2qGuX4ChgubuovtSlzgd-9FLYye7AqgF_UIeKLFSzo0Mrls73R3K6yeGa6UEF7M7ZniC5BmrNbnvmUWoF5giEDW5eB8Mx",
+[2026-04-19 22:33:28.535] [PRINT]           "mime_type": "application/octet-stream",
+[2026-04-19 22:33:28.535] [PRINT]           "size": 649516
+[2026-04-19 22:33:28.535] [PRINT]         },
+[2026-04-19 22:33:28.535] [PRINT]         {
+[2026-04-19 22:33:28.535] [PRINT]           "filename": "Activity2A_Joves_Josh.pka",
+[2026-04-19 22:33:28.535] [PRINT]           "attachment_id": "ANGjdJ9CmcmAf3jmhL75WxhTzQTiH88trNfeGjECRHpkLeWGh9zfYuQm6YXzezKqRjPAg4WbcqeJw2uO9v1jbd8VQsCdQQqaEIzU1BokFu1wtN-fMpZn3BCzTWgmZNqCEV04ceW011ausM1Zec0NkIvX3iNF24yx9-mVvvzJ52K6aRLa0zriGjhN2pR9MxV0gq1xthSRjBrg5lsMXuElPCIHPNWbEltAXKkmPK5mECRsGtYeQgeSwTiTEOnuK_-QgeAKqxDIGaAoOd369OnC27lQ3AsGJ4T35L6_twSRkL_PIzo0m1l4LG_nhNAlXM-tAPCUcZdBAoz2dUOjK204MjmHJPNywhzlRKjTIjjMhu3haUrnJnuSE68-8JrcCwscx7lU44qLjAOXnD1Sv8VC",
+[2026-04-19 22:33:28.535] [PRINT]           "mime_type": "application/octet-stream",
+[2026-04-19 22:33:28.535] [PRINT]           "size": 850716
+[2026-04-19 22:33:28.535] [PRINT]         }
+[2026-04-19 22:33:28.535] [PRINT]       ]
+[2026-04-19 22:33:28.535] [PRINT]     }
+[2026-04-19 22:33:28.535] [PRINT]   ],
+[2026-04-19 22:33:28.535] [PRINT]   "count": 1,
+[2026-04-19 22:33:28.535] [PRINT]   "query": "from:jdenziieel",
+[2026-04-19 22:33:28.535] [PRINT]   "error": null
+[2026-04-19 22:33:28.535] [PRINT] }
+[2026-04-19 22:33:28.565] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-19 22:33:28.583] [PRINT] 
+[2026-04-19 22:33:28.583] [PRINT] Variables added to context:
+[2026-04-19 22:33:28.609] [PRINT]    latest_emails = [{'message_id': '18dc833e73101107', 'thread_id': '18dc833e73101107', 'from': 'Josh Denziel Joves <jdenziieel@gmail.com>', 'subject': '', 'date': 'Wed, 21 Feb 2024 04:27:27 +0800', 'internal_date': '1708460847000', 'label_ids': ['IMPORTANT', 'CATEGORY_PERSONAL', 'INBOX'], 'body': '', 'has_attachments': True, 'attachments': [{'filename': 'Activity2B_Joves_Josh.pka', 'attachment_id': 'ANGjdJ-cUd1_WY9tSoh2XqlllZUaR90mQuIJ-PEXH7OdY_fEHwbrg9R5ZkfA2F6aQsIbIn61vHDFbi5czcSGuJ2QGsLa5_H435dpPNr2SMMMFYJaqtBAaPMYZDsgtGCNpVGwtQIgozxse_OZXG-KNgVzl2g3G2AyxFAccGu8hOiUD5-hgXdLepKscravEEEUlWAQo8kz7BxxmuEmvWt0TIOdJOCkFyS5qYyryXCnNp5k3S_2u1KhqdtPCYGiC3D0UJm877CUWBbE1M04M_p1Kb2cyIW4VYbbtvc2SiE31dJS1HF6L72iKVq2qGuX4ChgubuovtSlzgd-9FLYye7AqgF_UIeKLFSzo0Mrls73R3K6yeGa6UEF7M7ZniC5BmrNbnvmUWoF5giEDW5eB8Mx', 'mime_type': 'application/octet-stream', 'size': 649516}, {'filename': 'Activity2A_Joves_Josh.pka', 'attachment_id': 'ANGjdJ9CmcmAf3jmhL75WxhTzQTiH88trNfeGjECRHpkLeWGh9zfYuQm6YXzezKqRjPAg4WbcqeJw2uO9v1jbd8VQsCdQQqaEIzU1BokFu1wtN-fMpZn3BCzTWgmZNqCEV04ceW011ausM1Zec0NkIvX3iNF24yx9-mVvvzJ52K6aRLa0zriGjhN2pR9MxV0gq1xthSRjBrg5lsMXuElPCIHPNWbEltAXKkmPK5mECRsGtYeQgeSwTiTEOnuK_-QgeAKqxDIGaAoOd369OnC27lQ3AsGJ4T35L6_twSRkL_PIzo0m1l4LG_nhNAlXM-tAPCUcZdBAoz2dUOjK204MjmHJPNywhzlRKjTIjjMhu3haUrnJnuSE68-8JrcCwscx7lU44qLjAOXnD1Sv8VC', 'mime_type': 'application/octet-stream', 'size': 850716}]}] (from emails)
+[2026-04-19 22:33:28.626] [PRINT] 
+[2026-04-19 22:33:28.626] [PRINT] CONTEXT AFTER STEP 1:
+[2026-04-19 22:33:28.641] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-19 22:33:28.661] [PRINT]    today_date: 2026-04-19
+[2026-04-19 22:33:28.686] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent']
+[2026-04-19 22:33:28.703] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails', 'count', 'query']
+[2026-04-19 22:33:28.720] [PRINT]    latest_emails: Array[1 items]
+[2026-04-19 22:33:28.747] [PRINT]       └─ First item keys: ['message_id', 'thread_id', 'from', 'subject', 'date', 'internal_date', 'label_ids', 'body', 'has_attachments', 'attachments']
+[2026-04-19 22:33:28.771] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-19 22:33:28.811] [PRINT] 
+[2026-04-19 22:33:28.811] [PRINT] ============================================================
+[2026-04-19 22:33:28.825] [PRINT] ORCHESTRATOR COMPLETED
+[2026-04-19 22:33:28.843] [PRINT] ============================================================
+[2026-04-19 22:33:28.860] [PRINT] Total steps: 1
+[2026-04-19 22:33:28.888] [PRINT] Successful: 1
+[2026-04-19 22:33:28.910] [PRINT] No Results: 0
+[2026-04-19 22:33:28.940] [PRINT] Failed: 0
+[2026-04-19 22:33:28.966] [PRINT] ============================================================
+[2026-04-19 22:33:28.983] [INFO] [-]   STEP [orchestrator_complete]: steps=1, success=1, no_results=0, errors=0
+[2026-04-19 22:33:28.990] [PRINT] 
+[2026-04-19 22:33:28.990] [PRINT]  Workflow completed successfully
+[2026-04-19 22:33:29.006] [INFO] [-]   WORKFLOW END: success (1/1 steps)
+[2026-04-19 22:33:29.010] [PRINT] 
+[2026-04-19 22:33:29.010] [PRINT]  Generated Plan:
+[2026-04-19 22:33:29.010] [PRINT] {
+[2026-04-19 22:33:29.010] [PRINT]   "steps": [
+[2026-04-19 22:33:29.010] [PRINT]     {
+[2026-04-19 22:33:29.010] [PRINT]       "agent": "gmail_agent",
+[2026-04-19 22:33:29.010] [PRINT]       "tool": "search_emails",
+[2026-04-19 22:33:29.010] [PRINT]       "inputs": {
+[2026-04-19 22:33:29.010] [PRINT]         "query": "from:jdenziieel",
+[2026-04-19 22:33:29.010] [PRINT]         "max_results": 3
+[2026-04-19 22:33:29.010] [PRINT]       },
+[2026-04-19 22:33:29.010] [PRINT]       "output_variables": {
+[2026-04-19 22:33:29.010] [PRINT]         "latest_emails": "emails"
+[2026-04-19 22:33:29.010] [PRINT]       },
+[2026-04-19 22:33:29.010] [PRINT]       "description": "Search for the latest 3 emails from 'jdenziieel'"
+[2026-04-19 22:33:29.010] [PRINT]     }
+[2026-04-19 22:33:29.010] [PRINT]   ]
+[2026-04-19 22:33:29.010] [PRINT] }
+[2026-04-19 22:33:29.031] [PRINT] 
+[2026-04-19 22:33:29.031] [PRINT]  Final Context: {
+[2026-04-19 22:33:29.031] [PRINT]   "today_date": "2026-04-19",
+[2026-04-19 22:33:29.031] [PRINT]   "_cached_tool_filter": {
+[2026-04-19 22:33:29.031] [PRINT]     "gmail_agent": [
+[2026-04-19 22:33:29.031] [PRINT]       "create_draft_email",
+[2026-04-19 22:33:29.031] [PRINT]       "send_draft_email",
+[2026-04-19 22:33:29.031] [PRINT]       "search_emails",
+[2026-04-19 22:33:29.031] [PRINT]       "search_drafts"
+[2026-04-19 22:33:29.031] [PRINT]     ]
+[2026-04-19 22:33:29.031] [PRINT]   },
+[2026-04-19 22:33:29.031] [PRINT]   "step_1_gmail_agent": {
+[2026-04-19 22:33:29.031] [PRINT]     "emails": [
+[2026-04-19 22:33:29.031] [PRINT]       {
+[2026-04-19 22:33:29.031] [PRINT]         "message_id": "18dc833e73101107",
+[2026-04-19 22:33:29.031] [PRINT]         "thread_id": "18dc833e73101107",
+[2026-04-19 22:33:29.031] [PRINT]         "from": "Josh Denziel Joves <jdenziieel@gmail.com>",
+[2026-04-19 22:33:29.031] [PRINT]         "subject": "",
+[2026-04-19 22:33:29.031] [PRINT]         "date": "Wed, 21 Feb 2024 04:27:27 +0800",
+[2026-04-19 22:33:29.031] [PRINT]         "internal_date": "1708460847000",
+[2026-04-19 22:33:29.031] [PRINT]         "label_ids": [
+[2026-04-19 22:33:29.031] [PRINT]           "IMPORTANT",
+[2026-04-19 22:33:29.031] [PRINT]           "CATEGORY_PERSONAL",
+[2026-04-19 22:33:29.031] [PRINT]           "INBOX"
+[2026-04-19 22:33:29.031] [PRINT]         ],
+[2026-04-19 22:33:29.031] [PRINT]         "body": "",
+[2026-04-19 22:33:29.031] [PRINT]         "has_attachments": true,
+[2026-04-19 22:33:29.031] [PRINT]         "attachments": [
+[2026-04-19 22:33:29.031] [PRINT]           {
+[2026-04-19 22:33:29.031] [PRINT]             "filename": "Activity2B_Joves_Josh.pka",
+[2026-04-19 22:33:29.031] [PRINT]             "attachment_id": "ANGjdJ-cUd1_WY9tSoh2XqlllZUaR90mQuIJ-PEXH7OdY_fEHwbrg9R5ZkfA2F6aQsIbIn61vHDFbi5czcSGuJ2QGsLa5_H435dpPNr2SMMMFYJaqtBAaPMYZDsgtGCNpVGwtQIgozxse_OZXG-KNgVzl2g3G2AyxFAccGu8hOiUD5-hgXdLepKscravEEEUlWAQo8kz7BxxmuEmvWt0TIOdJOCkFyS5qYyryXCnNp5k3S_2u1KhqdtPCYGiC3D0UJm877CUWBbE1M04M_p1Kb2cyIW4VYbbtvc2SiE31dJS1HF6L72iKVq2qGuX4ChgubuovtSlzgd-9FLYye7AqgF_UIeKLFSzo0Mrls73R3K6yeGa6UEF7M7ZniC5BmrNbnvmUWoF5giEDW5eB8Mx",
+[2026-04-19 22:33:29.031] [PRINT]             "mime_type": "application/octet-stream",
+[2026-04-19 22:33:29.031] [PRINT]             "size": 649516
+[2026-04-19 22:33:29.031] [PRINT]           },
+[2026-04-19 22:33:29.031] [PRINT]           {
+[2026-04-19 22:33:29.031] [PRINT]             "filename": "Activity2A_Joves_Josh.pka",
+[2026-04-19 22:33:29.031] [PRINT]             "attachment_id": "ANGjdJ9CmcmAf3jmhL75WxhTzQTiH88trNfeGjECRHpkLeWGh9zfYuQm6YXzezKqRjPAg4WbcqeJw2uO9v1jbd8VQsCdQQqaEIzU1BokFu1wtN-fMpZn3BCzTWgmZNqCEV04ceW011ausM1Zec0NkIvX3iNF24yx9-mVvvzJ52K6aRLa0zriGjhN2pR9MxV0gq1xthSRjBrg5lsMXuElPCIHPNWbEltAXKkmPK5mECRsGtYeQgeSwTiTEOnuK_-QgeAKqxDIGaAoOd369OnC27lQ3AsGJ4T35L6_twSRkL_PIzo0m1l4LG_nhNAlXM-tAPCUcZdBAoz2dUOjK204MjmHJPNywhzlRKjTIjjMhu3haUrnJnuSE68-8JrcCwscx7lU44qLjAOXnD1Sv8VC",
+[2026-04-19 22:33:29.031] [PRINT]             "mime_type": "application/octet-stream",
+[2026-04-19 22:33:29.031] [PRINT]             "size": 850716
+[2026-04-19 22:33:29.031] [PRINT]           }
+[2026-04-19 22:33:29.031] [PRINT]         ]
+[2026-04-19 22:33:29.031] [PRINT]       }
+[2026-04-19 22:33:29.031] [PRINT]     ],
+[2026-04-19 22:33:29.031] [PRINT]     "count": 1,
+[2026-04-19 22:33:29.031] [PRINT]     "query": "from:jdenziieel"
+[2026-04-19 22:33:29.031] [PRINT]   },
+[2026-04-19 22:33:29.031] [PRINT]   "latest_emails": [
+[2026-04-19 22:33:29.031] [PRINT]     {
+[2026-04-19 22:33:29.031] [PRINT]       "message_id": "18dc833e73101107",
+[2026-04-19 22:33:29.031] [PRINT]       "thread_id": "18dc833e73101107",
+[2026-04-19 22:33:29.031] [PRINT]       "from": "Josh Denziel Joves <jdenziieel@gmail.com>",
+[2026-04-19 22:33:29.031] [PRINT]       "subject": "",
+[2026-04-19 22:33:29.031] [PRINT]       "date": "Wed, 21 Feb 2024 04:27:27 +0800",
+[2026-04-19 22:33:29.031] [PRINT]       "internal_date": "1708460847000",
+[2026-04-19 22:33:29.031] [PRINT]       "label_ids": [
+[2026-04-19 22:33:29.031] [PRINT]         "IMPORTANT",
+[2026-04-19 22:33:29.031] [PRINT]         "CATEGORY_PERSONAL",
+[2026-04-19 22:33:29.031] [PRINT]         "INBOX"
+[2026-04-19 22:33:29.031] [PRINT]       ],
+[2026-04-19 22:33:29.031] [PRINT]       "body": "",
+[2026-04-19 22:33:29.031] [PRINT]       "has_attachments": true,
+[2026-04-19 22:33:29.031] [PRINT]       "attachments": [
+[2026-04-19 22:33:29.031] [PRINT]         {
+[2026-04-19 22:33:29.031] [PRINT]           "filename": "Activity2B_Joves_Josh.pka",
+[2026-04-19 22:33:29.031] [PRINT]           "attachment_id": "ANGjdJ-cUd1_WY9tSoh2XqlllZUaR90mQuIJ-PEXH7OdY_fEHwbrg9R5ZkfA2F6aQsIbIn61vHDFbi5czcSGuJ2QGsLa5_H435dpPNr2SMMMFYJaqtBAaPMYZDsgtGCNpVGwtQIgozxse_OZXG-KNgVzl2g3G2AyxFAccGu8hOiUD5-hgXdLepKscravEEEUlWAQo8kz7BxxmuEmvWt0TIOdJOCkFyS5qYyryXCnNp5k3S_2u1KhqdtPCYGiC3D0UJm877CUWBbE1M04M_p1Kb2cyIW4VYbbtvc2SiE31dJS1HF6L72iKVq2qGuX4ChgubuovtSlzgd-9FLYye7AqgF_UIeKLFSzo0Mrls73R3K6yeGa6UEF7M7ZniC5BmrNbnvmUWoF5giEDW5eB8Mx",
+[2026-04-19 22:33:29.031] [PRINT]           "mime_type": "application/octet-stream",
+[2026-04-19 22:33:29.031] [PRINT]           "size": 649516
+[2026-04-19 22:33:29.031] [PRINT]         },
+[2026-04-19 22:33:29.031] [PRINT]         {
+[2026-04-19 22:33:29.031] [PRINT]           "filename": "Activity2A_Joves_Josh.pka",
+[2026-04-19 22:33:29.031] [PRINT]           "attachment_id": "ANGjdJ9CmcmAf3jmhL75WxhTzQTiH88trNfeGjECRHpkLeWGh9zfYuQm6YXzezKqRjPAg4WbcqeJw2uO9v1jbd8VQsCdQQqaEIzU1BokFu1wtN-fMpZn3BCzTWgmZNqCEV04ceW011ausM1Zec0NkIvX3iNF24yx9-mVvvzJ52K6aRLa0zriGjhN2pR9MxV0gq1xthSRjBrg5lsMXuElPCIHPNWbEltAXKkmPK5mECRsGtYeQgeSwTiTEOnuK_-QgeAKqxDIGaAoOd369OnC27lQ3AsGJ4T35L6_twSRkL_PIzo0m1l4LG_nhNAlXM-tAPCUcZdBAoz2dUOjK204MjmHJPNywhzlRKjTIjjMhu3haUrnJnuSE68-8JrcCwscx7lU44qLjAOXnD1Sv8VC",
+[2026-04-19 22:33:29.031] [PRINT]           "mime_type": "application/octet-stream",
+[2026-04-19 22:33:29.031] [PRINT]           "size": 850716
+[2026-04-19 22:33:29.031] [PRINT]         }
+[2026-04-19 22:33:29.031] [PRINT]       ]
+[2026-04-19 22:33:29.031] [PRINT]     }
+[2026-04-19 22:33:29.031] [PRINT]   ],
+[2026-04-19 22:33:29.031] [PRINT]   "results": [
+[2026-04-19 22:33:29.031] [PRINT]     {
+[2026-04-19 22:33:29.031] [PRINT]       "step": 1,
+[2026-04-19 22:33:29.031] [PRINT]       "agent": "gmail_agent",
+[2026-04-19 22:33:29.031] [PRINT]       "tool": "search_emails",
+[2026-04-19 22:33:29.031] [PRINT]       "description": "Search for the latest 3 emails from 'jdenziieel'",
+[2026-04-19 22:33:29.031] [PRINT]       "inputs": {
+[2026-04-19 22:33:29.031] [PRINT]         "query": "from:jdenziieel",
+[2026-04-19 22:33:29.031] [PRINT]         "max_results": 3
+[2026-04-19 22:33:29.031] [PRINT]       },
+[2026-04-19 22:33:29.031] [PRINT]       "output": {
+[2026-04-19 22:33:29.031] [PRINT]         "success": true,
+[2026-04-19 22:33:29.031] [PRINT]         "emails": [
+[2026-04-19 22:33:29.031] [PRINT]           {
+[2026-04-19 22:33:29.031] [PRINT]             "message_id": "18dc833e73101107",
+[2026-04-19 22:33:29.031] [PRINT]             "thread_id": "18dc833e73101107",
+[2026-04-19 22:33:29.031] [PRINT]             "from": "Josh Denziel Joves <jdenziieel@gmail.com>",
+[2026-04-19 22:33:29.031] [PRINT]             "subject": "",
+[2026-04-19 22:33:29.031] [PRINT]             "date": "Wed, 21 Feb 2024 04:27:27 +0800",
+[2026-04-19 22:33:29.031] [PRINT]             "internal_date": "1708460847000",
+[2026-04-19 22:33:29.031] [PRINT]             "label_ids": [
+[2026-04-19 22:33:29.031] [PRINT]               "IMPORTANT",
+[2026-04-19 22:33:29.031] [PRINT]               "CATEGORY_PERSONAL",
+[2026-04-19 22:33:29.031] [PRINT]               "INBOX"
+[2026-04-19 22:33:29.031] [PRINT]             ],
+[2026-04-19 22:33:29.031] [PRINT]             "body": "",
+[2026-04-19 22:33:29.031] [PRINT]             "has_attachments": true,
+[2026-04-19 22:33:29.031] [PRINT]             "attachments": [
+[2026-04-19 22:33:29.031] [PRINT]               {
+[2026-04-19 22:33:29.031] [PRINT]                 "filename": "Activity2B_Joves_Josh.pka",
+[2026-04-19 22:33:29.031] [PRINT]                 "attachment_id": "ANGjdJ-cUd1_WY9tSoh2XqlllZUaR90mQuIJ-PEXH7OdY_fEHwbrg9R5ZkfA2F6aQsIbIn61vHDFbi5czcSGuJ2QGsLa5_H435dpPNr2SMMMFYJaqtBAaPMYZDsgtGCNpVGwtQIgozxse_OZXG-KNgVzl2g3G2AyxFAccGu8hOiUD5-hgXdLepKscravEEEUlWAQo8kz7BxxmuEmvWt0TIOdJOCkFyS5qYyryXCnNp5k3S_2u1KhqdtPCYGiC3D0UJm877CUWBbE1M04M_p1Kb2cyIW4VYbbtvc2SiE31dJS1HF6L72iKVq2qGuX4ChgubuovtSlzgd-9FLYye7AqgF_UIeKLFSzo0Mrls73R3K6yeGa6UEF7M7ZniC5BmrNbnvmUWoF5giEDW5eB8Mx",
+[2026-04-19 22:33:29.031] [PRINT]                 "mime_type": "application/octet-stream",
+[2026-04-19 22:33:29.031] [PRINT]                 "size": 649516
+[2026-04-19 22:33:29.031] [PRINT]               },
+[2026-04-19 22:33:29.031] [PRINT]               {
+[2026-04-19 22:33:29.031] [PRINT]                 "filename": "Activity2A_Joves_Josh.pka",
+[2026-04-19 22:33:29.031] [PRINT]                 "attachment_id": "ANGjdJ9CmcmAf3jmhL75WxhTzQTiH88trNfeGjECRHpkLeWGh9zfYuQm6YXzezKqRjPAg4WbcqeJw2uO9v1jbd8VQsCdQQqaEIzU1BokFu1wtN-fMpZn3BCzTWgmZNqCEV04ceW011ausM1Zec0NkIvX3iNF24yx9-mVvvzJ52K6aRLa0zriGjhN2pR9MxV0gq1xthSRjBrg5lsMXuElPCIHPNWbEltAXKkmPK5mECRsGtYeQgeSwTiTEOnuK_-QgeAKqxDIGaAoOd369OnC27lQ3AsGJ4T35L6_twSRkL_PIzo0m1l4LG_nhNAlXM-tAPCUcZdBAoz2dUOjK204MjmHJPNywhzlRKjTIjjMhu3haUrnJnuSE68-8JrcCwscx7lU44qLjAOXnD1Sv8VC",
+[2026-04-19 22:33:29.031] [PRINT]                 "mime_type": "application/octet-stream",
+[2026-04-19 22:33:29.031] [PRINT]                 "size": 850716
+[2026-04-19 22:33:29.031] [PRINT]               }
+[2026-04-19 22:33:29.031] [PRINT]             ]
+[2026-04-19 22:33:29.031] [PRINT]           }
+[2026-04-19 22:33:29.031] [PRINT]         ],
+[2026-04-19 22:33:29.031] [PRINT]         "count": 1,
+[2026-04-19 22:33:29.031] [PRINT]         "query": "from:jdenziieel",
+[2026-04-19 22:33:29.031] [PRINT]         "error": null
+[2026-04-19 22:33:29.031] [PRINT]       },
+[2026-04-19 22:33:29.031] [PRINT]       "status": "success"
+[2026-04-19 22:33:29.031] [PRINT]     }
+[2026-04-19 22:33:29.031] [PRINT]   ]
+[2026-04-19 22:33:29.031] [PRINT] }
+[2026-04-19 22:33:29.059] [INFO] [req_20260419143313_86960c13] [T:c31c66f9]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-19 22:33:29.061] [INFO] [req_20260419143313_86960c13] [T:c31c66f9]   INFO: Memory: added assistant message
+    ↳ {"tokens": 81, "total": 273, "max": 2000, "response_preview": "Found 1 email(s):\n  1. From: Josh Denziel Joves <jdenziieel@gmail.com> | Date: Wed, 21 Feb 2024 04:27:27 +0800 | Attachments: Activity2B_Joves_Josh.pka (634KB), Activity2A_Joves_Josh.pka (831KB)"}
+[2026-04-19 22:33:29.169] [PRINT] 
+[2026-04-19 22:33:29.169] [PRINT] ============================================================
+[2026-04-19 22:33:29.199] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-19 22:33:29.232] [PRINT] ============================================================
+[2026-04-19 22:33:29.251] [PRINT]   LLM calls:        2
+[2026-04-19 22:33:29.276] [PRINT]   Total input:      2,019 tokens
+[2026-04-19 22:33:29.291] [PRINT]   Total output:     108 tokens
+[2026-04-19 22:33:29.311] [PRINT]   Total tokens:     2,127 tokens
+[2026-04-19 22:33:29.330] [PRINT]   Estimated cost:   $0.0603
+[2026-04-19 22:33:29.375] [PRINT]   Total duration:   15271ms (15.3s)
+[2026-04-19 22:33:29.401] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-19 22:33:29.415] [PRINT]   Breakdown by call:
+[2026-04-19 22:33:29.428] [PRINT]     1. gpt-4o-mini      in=193    out=16    $0.0000 1133ms
+[2026-04-19 22:33:29.461] [PRINT]     2. gpt-4            in=1826   out=92    $0.0603 2885ms
+[2026-04-19 22:33:29.480] [PRINT] ============================================================
+[2026-04-19 22:33:29.519] [INFO] [req_20260419143313_86960c13] [T:c31c66f9] ← RESPONSE: 200 (15654ms)
+[2026-04-19 22:33:29.520] [INFO] [req_20260419143313_86960c13] [T:c31c66f9] ─────────: ──────────────────────────────────────────────────
+[2026-04-19 22:33:29.532] [PRINT] WebSocket disconnected for thread: 69a0c9d4-2d0b-4bd1-a9b6-5475f79d9f03_c31c66f9
+[2026-04-19 23:29:53.597] [PRINT] === SINGLE EMAIL (exact data from your log) ===
+[2026-04-19 23:29:53.715] [PRINT] Found 1 email:
+[2026-04-19 23:29:53.715] [PRINT] 
+[2026-04-19 23:29:53.715] [PRINT] **1.** **From:** Josh Denziel Joves <jdenziieel@gmail.com>
+[2026-04-19 23:29:53.715] [PRINT]    - **Subject:** _(no subject)_
+[2026-04-19 23:29:53.715] [PRINT]    - **Date:** Wed, 21 Feb 2024, 04:27
+[2026-04-19 23:29:53.715] [PRINT]    - **Attachments:** Activity2B_Joves_Josh.pka (634KB), Activity2A_Joves_Josh.pka (831KB)
+[2026-04-19 23:29:53.723] [PRINT] === 3 EMAILS (with mixed data) ===
+[2026-04-19 23:29:53.735] [PRINT] Found 3 emails:
+[2026-04-19 23:29:53.735] [PRINT] 
+[2026-04-19 23:29:53.735] [PRINT] **1.** **From:** Alice <a@ex.com>
+[2026-04-19 23:29:53.735] [PRINT]    - **Subject:** Meeting tomorrow
+[2026-04-19 23:29:53.735] [PRINT]    - **Date:** Wed, 21 Feb 2024, 04:27
+[2026-04-19 23:29:53.735] [PRINT]    - **Preview:** Hey team, quick reminder about the 3pm sync to review the Q1 numbers.
+[2026-04-19 23:29:53.735] [PRINT] 
+[2026-04-19 23:29:53.735] [PRINT] **2.** **From:** Bob <b@ex.com>
+[2026-04-19 23:29:53.735] [PRINT]    - **Subject:** Report ready
+[2026-04-19 23:29:53.735] [PRINT]    - **Date:** Thu, 22 Feb 2024, 09:15
+[2026-04-19 23:29:53.735] [PRINT] 
+[2026-04-19 23:29:53.735] [PRINT] **3.** **From:** Carol <c@ex.com>
+[2026-04-19 23:29:53.735] [PRINT]    - **Subject:** _(no subject)_
+[2026-04-19 23:29:53.735] [PRINT]    - **Date:** Fri, 23 Feb 2024, 14:00
+[2026-04-19 23:29:53.735] [PRINT]    - **Attachments:** invoice.pdf (24KB)
+[2026-04-19 23:29:53.745] [PRINT] === 0 EMAILS ===
+[2026-04-19 23:29:53.756] [PRINT] No emails found.
+[2026-04-19 23:51:55.974] [PRINT] === list_events ===
+[2026-04-19 23:51:56.001] [PRINT] Found 2 upcoming events:
+[2026-04-19 23:51:56.001] [PRINT] 
+[2026-04-19 23:51:56.001] [PRINT] **1.** **Summary:** Sprint planning
+[2026-04-19 23:51:56.001] [PRINT]    - **Start:** Wed, 22 Apr 2026, 10:00
+[2026-04-19 23:51:56.001] [PRINT]    - **End:** Wed, 22 Apr 2026, 11:00
+[2026-04-19 23:51:56.001] [PRINT]    - **Location:** Zoom
+[2026-04-19 23:51:56.001] [PRINT]    - **Attendees:** 2
+[2026-04-19 23:51:56.001] [PRINT] 
+[2026-04-19 23:51:56.001] [PRINT] **2.** **Summary:** _(no title)_
+[2026-04-19 23:51:56.001] [PRINT]    - **Start:** Thu, 23 Apr 2026, 14:00
+[2026-04-19 23:51:56.001] [PRINT]    - **End:** Thu, 23 Apr 2026, 15:00
+[2026-04-19 23:51:56.001] [PRINT]    - **Attendees:** 0
+[2026-04-19 23:51:56.013] [PRINT] === list_files ===
+[2026-04-19 23:51:56.022] [PRINT] Found 3 files:
+[2026-04-19 23:51:56.022] [PRINT] 
+[2026-04-19 23:51:56.022] [PRINT] **1.** **Name:** Q1 Report
+[2026-04-19 23:51:56.022] [PRINT]    - **Type:** Google Doc
+[2026-04-19 23:51:56.022] [PRINT]    - **Created:** Sun, 01 Mar 2026, 12:00
+[2026-04-19 23:51:56.022] [PRINT]    - **Open:** [link](https://docs.google.com/doc1)
+[2026-04-19 23:51:56.022] [PRINT] 
+[2026-04-19 23:51:56.022] [PRINT] **2.** **Name:** expenses.csv
+[2026-04-19 23:51:56.022] [PRINT]    - **Type:** CSV
+[2026-04-19 23:51:56.022] [PRINT]    - **Size:** 28KB
+[2026-04-19 23:51:56.022] [PRINT]    - **Created:** Sun, 15 Mar 2026, 08:30
+[2026-04-19 23:51:56.022] [PRINT]    - **Open:** [link](https://drive.google.com/file/d/x)
+[2026-04-19 23:51:56.022] [PRINT] 
+[2026-04-19 23:51:56.022] [PRINT] **3.** **Name:** photo.png
+[2026-04-19 23:51:56.022] [PRINT]    - **Type:** PNG image
+[2026-04-19 23:51:56.022] [PRINT]    - **Size:** 2.3MB
+[2026-04-19 23:51:56.032] [PRINT] === search_files (1 result) ===
+[2026-04-19 23:51:56.042] [PRINT] Found 1 file:
+[2026-04-19 23:51:56.042] [PRINT] 
+[2026-04-19 23:51:56.042] [PRINT] **1.** **Name:** Delivery_Order_001.pdf
+[2026-04-19 23:51:56.042] [PRINT]    - **Type:** PDF
+[2026-04-19 23:51:56.042] [PRINT]    - **Size:** 1.2MB
+[2026-04-19 23:51:56.042] [PRINT]    - **Created:** Tue, 10 Feb 2026, 09:00
+[2026-04-19 23:51:56.042] [PRINT]    - **Open:** [link](https://drive.google.com/x1)
+[2026-04-19 23:51:56.051] [PRINT] === list_events (0 results) ===
+[2026-04-19 23:51:56.063] [PRINT] No upcoming events found.
+[2026-04-19 23:52:16.694] [PRINT] Found 1 email:
+[2026-04-19 23:52:16.694] [PRINT] 
+[2026-04-19 23:52:16.694] [PRINT] **1.** **From:** Josh Denziel Joves <jdenziieel@gmail.com>
+[2026-04-19 23:52:16.694] [PRINT]    - **Subject:** _(no subject)_
+[2026-04-19 23:52:16.694] [PRINT]    - **Date:** Wed, 21 Feb 2024, 04:27
+[2026-04-19 23:52:16.694] [PRINT]    - **Attachments:** Activity2B_Joves_Josh.pka (634KB), Activity2A_Joves_Josh.pka (831KB)
+[2026-04-19 23:53:14.410] [PRINT] gmail_agent.search_emails  in={'query': 'from:x', 'max_results': 1000}  ->  out={'query': 'from:x', 'max_results': 50}
+[2026-04-19 23:53:14.442] [PRINT]    !
+[2026-04-19 23:53:14.450] [PRINT]  
+[2026-04-19 23:53:14.457] [PRINT] gmail_agent.search_emails: `max_results` requested 1000, clamped to hard cap of 50.
+[2026-04-19 23:53:14.466] [PRINT] gmail_agent.search_emails  in={'query': 'from:x', 'max_results': 'all'}  ->  out={'query': 'from:x', 'max_results': 10}
+[2026-04-19 23:53:14.473] [PRINT]    !
+[2026-04-19 23:53:14.481] [PRINT]  
+[2026-04-19 23:53:14.493] [PRINT] gmail_agent.search_emails: `max_results` was 'all' (missing/invalid/unbounded) -- defaulted to 10.
+[2026-04-19 23:53:14.501] [PRINT] gmail_agent.search_emails  in={'query': 'from:x', 'max_results': 'everything'}  ->  out={'query': 'from:x', 'max_results': 10}
+[2026-04-19 23:53:14.511] [PRINT]    !
+[2026-04-19 23:53:14.519] [PRINT]  
+[2026-04-19 23:53:14.529] [PRINT] gmail_agent.search_emails: `max_results` was 'everything' (missing/invalid/unbounded) -- defaulted to 10.
+[2026-04-19 23:53:14.537] [PRINT] gmail_agent.search_emails  in={'query': 'from:x', 'max_results': 0}  ->  out={'query': 'from:x', 'max_results': 10}
+[2026-04-19 23:53:14.547] [PRINT]    !
+[2026-04-19 23:53:14.556] [PRINT]  
+[2026-04-19 23:53:14.563] [PRINT] gmail_agent.search_emails: `max_results` was 0 (missing/invalid/unbounded) -- defaulted to 10.
+[2026-04-19 23:53:14.572] [PRINT] gmail_agent.search_emails  in={'query': 'from:x', 'max_results': -5}  ->  out={'query': 'from:x', 'max_results': 10}
+[2026-04-19 23:53:14.580] [PRINT]    !
+[2026-04-19 23:53:14.588] [PRINT]  
+[2026-04-19 23:53:14.597] [PRINT] gmail_agent.search_emails: `max_results` was -5 (missing/invalid/unbounded) -- defaulted to 10.
+[2026-04-19 23:53:14.607] [PRINT] gmail_agent.search_emails  in={'query': 'from:x', 'max_results': 'twenty'}  ->  out={'query': 'from:x', 'max_results': 10}
+[2026-04-19 23:53:14.617] [PRINT]    !
+[2026-04-19 23:53:14.626] [PRINT]  
+[2026-04-19 23:53:14.634] [PRINT] gmail_agent.search_emails: `max_results` was 'twenty' (missing/invalid/unbounded) -- defaulted to 10.
+[2026-04-19 23:53:14.645] [PRINT] gmail_agent.search_emails  in={'query': 'from:x', 'max_results': '5'}  ->  out={'query': 'from:x', 'max_results': 5}
+[2026-04-19 23:53:14.653] [PRINT] gmail_agent.search_emails  in={'query': 'from:x', 'max_results': 5}  ->  out={'query': 'from:x', 'max_results': 5}
+[2026-04-19 23:53:14.661] [PRINT] gmail_agent.search_emails  in={'query': 'from:x'}  ->  out={'query': 'from:x'}
+[2026-04-19 23:53:14.671] [PRINT] calendar_agent.list_events  in={'max_results': 1000}  ->  out={'max_results': 50}
+[2026-04-19 23:53:14.682] [PRINT]    !
+[2026-04-19 23:53:14.689] [PRINT]  
+[2026-04-19 23:53:14.701] [PRINT] calendar_agent.list_events: `max_results` requested 1000, clamped to hard cap of 50.
+[2026-04-19 23:53:14.712] [PRINT] drive_agent.list_folders  in={'max_results': 10000}  ->  out={'max_results': 200}
+[2026-04-19 23:53:14.721] [PRINT]    !
+[2026-04-19 23:53:14.730] [PRINT]  
+[2026-04-19 23:53:14.738] [PRINT] drive_agent.list_folders: `max_results` requested 10000, clamped to hard cap of 200.
+[2026-04-19 23:53:14.748] [PRINT] sheets_agent.create_sheet  in={'title': 'X', 'max_results': 5000}  ->  out={'title': 'X', 'max_results': 5000}
+[2026-04-19 23:53:14.757] [PRINT] gmail_agent.process_delivery_order_workflow  in={'max_results': 500}  ->  out={'max_results': 25}
+[2026-04-19 23:53:14.766] [PRINT]    !
+[2026-04-19 23:53:14.774] [PRINT]  
+[2026-04-19 23:53:14.782] [PRINT] gmail_agent.process_delivery_order_workflow: `max_results` requested 500, clamped to hard cap of 25.
+[2026-04-19 23:54:55.224] [PRINT] --- list_files with 0 results ---
+[2026-04-19 23:54:55.253] [PRINT] No files found.
+[2026-04-19 23:54:55.264] [PRINT] --- search_files with 0 results ---
+[2026-04-19 23:54:55.273] [PRINT] No files found.
+[2026-04-19 23:54:55.284] [PRINT] --- create_event (use_message) ---
+[2026-04-19 23:54:55.292] [PRINT] Event created: Sprint planning at 10am.
+[2026-04-20 01:04:40.682] [PRINT] ========================================================================
+[2026-04-20 01:04:40.711] [PRINT] SIMULATION 1: list_events (the follow-up "delete the 2pm one" flow)
+[2026-04-20 01:04:40.721] [PRINT] ========================================================================
+[2026-04-20 01:04:40.732] [PRINT] Found 3 upcoming events:
+[2026-04-20 01:04:40.732] [PRINT] 
+[2026-04-20 01:04:40.732] [PRINT] **1.** **Summary:** Sprint planning
+[2026-04-20 01:04:40.732] [PRINT]    - **Start:** Wed, 22 Apr 2026, 10:00
+[2026-04-20 01:04:40.732] [PRINT]    - **End:** Wed, 22 Apr 2026, 11:00
+[2026-04-20 01:04:40.732] [PRINT]    - **Location:** Zoom
+[2026-04-20 01:04:40.732] [PRINT]    - **Attendees:** 5
+[2026-04-20 01:04:40.732] [PRINT]    - **ID:** `evt_abc123xyz`
+[2026-04-20 01:04:40.732] [PRINT] 
+[2026-04-20 01:04:40.732] [PRINT] **2.** **Summary:** Lunch with Bob
+[2026-04-20 01:04:40.732] [PRINT]    - **Start:** Wed, 22 Apr 2026, 14:00
+[2026-04-20 01:04:40.732] [PRINT]    - **End:** Wed, 22 Apr 2026, 15:00
+[2026-04-20 01:04:40.732] [PRINT]    - **Attendees:** 2
+[2026-04-20 01:04:40.732] [PRINT]    - **ID:** `evt_def456uvw`
+[2026-04-20 01:04:40.732] [PRINT] 
+[2026-04-20 01:04:40.732] [PRINT] **3.** **Summary:** _(no title)_
+[2026-04-20 01:04:40.732] [PRINT]    - **Start:** Wed, 22 Apr 2026, 16:00
+[2026-04-20 01:04:40.732] [PRINT]    - **End:** Wed, 22 Apr 2026, 17:00
+[2026-04-20 01:04:40.732] [PRINT]    - **Location:** Room 3
+[2026-04-20 01:04:40.732] [PRINT]    - **Attendees:** 0
+[2026-04-20 01:04:40.732] [PRINT]    - **ID:** `evt_ghi789rst`
+[2026-04-20 01:04:40.741] [PRINT] ========================================================================
+[2026-04-20 01:04:40.748] [PRINT] SIMULATION 2: search_emails (user asks "find 3 emails from X")
+[2026-04-20 01:04:40.758] [PRINT] ========================================================================
+[2026-04-20 01:04:40.777] [PRINT] Found 2 emails:
+[2026-04-20 01:04:40.777] [PRINT] 
+[2026-04-20 01:04:40.777] [PRINT] **1.** **From:** jdenziieel@gmail.com
+[2026-04-20 01:04:40.777] [PRINT]    - **Subject:** Meeting notes
+[2026-04-20 01:04:40.777] [PRINT]    - **Date:** Wed, 15 Apr 2026, 10:30
+[2026-04-20 01:04:40.777] [PRINT]    - **Preview:** Hey! Let us meet at 2pm.
+[2026-04-20 01:04:40.777] [PRINT]    - **ID:** `msg_ABC`
+[2026-04-20 01:04:40.777] [PRINT] 
+[2026-04-20 01:04:40.777] [PRINT] **2.** **From:** jdenziieel@gmail.com
+[2026-04-20 01:04:40.777] [PRINT]    - **Subject:** _(no subject)_
+[2026-04-20 01:04:40.777] [PRINT]    - **Date:** Tue, 14 Apr 2026, 09:15
+[2026-04-20 01:04:40.777] [PRINT]    - **Attachments:** report.pdf
+[2026-04-20 01:04:40.777] [PRINT]    - **ID:** `msg_DEF`
+[2026-04-20 01:04:40.788] [PRINT] ========================================================================
+[2026-04-20 01:04:40.796] [PRINT] SIMULATION 3: list_files (Drive)
+[2026-04-20 01:04:40.805] [PRINT] ========================================================================
+[2026-04-20 01:04:40.816] [PRINT] Found 2 files:
+[2026-04-20 01:04:40.816] [PRINT] 
+[2026-04-20 01:04:40.816] [PRINT] **1.** **Name:** Q1 Report
+[2026-04-20 01:04:40.816] [PRINT]    - **Type:** Google Doc
+[2026-04-20 01:04:40.816] [PRINT]    - **Created:** Sun, 01 Mar 2026, 12:00
+[2026-04-20 01:04:40.816] [PRINT]    - **Open:** [link](https://docs.google.com/doc1)
+[2026-04-20 01:04:40.816] [PRINT]    - **ID:** `drv_xxx111`
+[2026-04-20 01:04:40.816] [PRINT] 
+[2026-04-20 01:04:40.816] [PRINT] **2.** **Name:** expenses.csv
+[2026-04-20 01:04:40.816] [PRINT]    - **Type:** CSV
+[2026-04-20 01:04:40.816] [PRINT]    - **Size:** 28KB
+[2026-04-20 01:04:40.816] [PRINT]    - **Created:** Sun, 15 Mar 2026, 08:30
+[2026-04-20 01:04:40.816] [PRINT]    - **Open:** [link](https://drive.google.com/file/d/x)
+[2026-04-20 01:04:40.816] [PRINT]    - **ID:** `drv_yyy222`
+[2026-04-20 01:04:40.826] [PRINT] ========================================================================
+[2026-04-20 01:04:40.834] [PRINT] SIMULATION 4: input_limits clamp (outrageous request)
+[2026-04-20 01:04:40.844] [PRINT] ========================================================================
+[2026-04-20 01:04:40.853] [PRINT] in={'query': 'from:jdenziieel', 'max_results': 1000}  ->  out={'query': 'from:jdenziieel', 'max_results': 50}   notes=['gmail_agent.search_emails: `max_results` requested 1000, clamped to hard cap of 50.']
+[2026-04-20 01:04:40.862] [PRINT] in={'query': 'x', 'max_results': 'all'}  ->  out={'query': 'x', 'max_results': 10}   notes=["gmail_agent.search_emails: `max_results` was 'all' (missing/invalid/unbounded) -- defaulted to 10."]
+[2026-04-20 01:04:40.871] [PRINT] in={'query': 'x', 'max_results': 'everything'}  ->  out={'query': 'x', 'max_results': 10}   notes=["gmail_agent.search_emails: `max_results` was 'everything' (missing/invalid/unbounded) -- defaulted to 10."]
+[2026-04-20 01:04:40.880] [PRINT] in={'query': 'x', 'max_results': -5}  ->  out={'query': 'x', 'max_results': 10}   notes=['gmail_agent.search_emails: `max_results` was -5 (missing/invalid/unbounded) -- defaulted to 10.']
+[2026-04-20 01:04:40.890] [PRINT] in={'query': 'x', 'max_results': '5'}  ->  out={'query': 'x', 'max_results': 5}   notes=[]
+[2026-04-20 01:04:40.899] [PRINT] in={'query': 'x', 'max_results': 10}  ->  out={'query': 'x', 'max_results': 10}   notes=[]
+[2026-04-20 01:11:46.697] [PRINT] ========================================================================
+[2026-04-20 01:11:46.721] [PRINT] WITH IDs (current state)
+[2026-04-20 01:11:46.731] [PRINT] ========================================================================
+[2026-04-20 01:11:46.742] [PRINT] Found 3 upcoming events:
+[2026-04-20 01:11:46.742] [PRINT] 
+[2026-04-20 01:11:46.742] [PRINT] **1.** **Summary:** Sprint planning
+[2026-04-20 01:11:46.742] [PRINT]    - **Start:** Wed, 22 Apr 2026, 10:00
+[2026-04-20 01:11:46.742] [PRINT]    - **End:** Wed, 22 Apr 2026, 11:00
+[2026-04-20 01:11:46.742] [PRINT]    - **Location:** Zoom
+[2026-04-20 01:11:46.742] [PRINT]    - **Attendees:** 5
+[2026-04-20 01:11:46.742] [PRINT]    - **ID:** `q0m6d146pg4ligoaddgeu7ocpc`
+[2026-04-20 01:11:46.742] [PRINT] 
+[2026-04-20 01:11:46.742] [PRINT] **2.** **Summary:** Lunch with Bob
+[2026-04-20 01:11:46.742] [PRINT]    - **Start:** Wed, 22 Apr 2026, 14:00
+[2026-04-20 01:11:46.742] [PRINT]    - **End:** Wed, 22 Apr 2026, 15:00
+[2026-04-20 01:11:46.742] [PRINT]    - **Attendees:** 2
+[2026-04-20 01:11:46.742] [PRINT]    - **ID:** `a9kvaa1r5q9rqac2skr64qkibg`
+[2026-04-20 01:11:46.742] [PRINT] 
+[2026-04-20 01:11:46.742] [PRINT] **3.** **Summary:** 1:1 with Sarah
+[2026-04-20 01:11:46.742] [PRINT]    - **Start:** Wed, 22 Apr 2026, 16:00
+[2026-04-20 01:11:46.742] [PRINT]    - **End:** Wed, 22 Apr 2026, 17:00
+[2026-04-20 01:11:46.742] [PRINT]    - **Location:** Room 3
+[2026-04-20 01:11:46.742] [PRINT]    - **Attendees:** 2
+[2026-04-20 01:11:46.742] [PRINT]    - **ID:** `7fpq4b3xx2htd9hue9k8dmlrr0`
+[2026-04-20 01:11:46.753] [PRINT] ========================================================================
+[2026-04-20 01:11:46.762] [PRINT] WITHOUT IDs (proposed clean revert)
+[2026-04-20 01:11:46.776] [PRINT] ========================================================================
+[2026-04-20 01:11:46.787] [PRINT] Found 3 upcoming events:
+[2026-04-20 01:11:46.787] [PRINT] 
+[2026-04-20 01:11:46.787] [PRINT] **1.** **Summary:** Sprint planning
+[2026-04-20 01:11:46.787] [PRINT]    - **Start:** Wed, 22 Apr 2026, 10:00
+[2026-04-20 01:11:46.787] [PRINT]    - **End:** Wed, 22 Apr 2026, 11:00
+[2026-04-20 01:11:46.787] [PRINT]    - **Location:** Zoom
+[2026-04-20 01:11:46.787] [PRINT]    - **Attendees:** 5
+[2026-04-20 01:11:46.787] [PRINT] 
+[2026-04-20 01:11:46.787] [PRINT] **2.** **Summary:** Lunch with Bob
+[2026-04-20 01:11:46.787] [PRINT]    - **Start:** Wed, 22 Apr 2026, 14:00
+[2026-04-20 01:11:46.787] [PRINT]    - **End:** Wed, 22 Apr 2026, 15:00
+[2026-04-20 01:11:46.787] [PRINT]    - **Attendees:** 2
+[2026-04-20 01:11:46.787] [PRINT] 
+[2026-04-20 01:11:46.787] [PRINT] **3.** **Summary:** 1:1 with Sarah
+[2026-04-20 01:11:46.787] [PRINT]    - **Start:** Wed, 22 Apr 2026, 16:00
+[2026-04-20 01:11:46.787] [PRINT]    - **End:** Wed, 22 Apr 2026, 17:00
+[2026-04-20 01:11:46.787] [PRINT]    - **Location:** Room 3
+[2026-04-20 01:11:46.787] [PRINT]    - **Attendees:** 2
+[2026-04-20 01:11:46.798] [PRINT] ========================================================================
+[2026-04-20 01:11:46.808] [PRINT] What the PLANNER actually sees on a follow-up turn
+[2026-04-20 01:11:46.817] [PRINT] ========================================================================
+[2026-04-20 01:11:46.828] [PRINT] user_input = "Delete the meeting at 2pm tomorrow"
+[2026-04-20 01:11:46.839] [PRINT] extracted_info = {
+[2026-04-20 01:11:46.848] [PRINT]     "event_id": {"query": "meeting at 2pm tomorrow"},
+[2026-04-20 01:11:46.860] [PRINT]     "confirmed": true,
+[2026-04-20 01:11:46.872] [PRINT] }
+[2026-04-20 01:11:46.880] [PRINT] # Note: the rendered markdown above is stored in memory but the
+[2026-04-20 01:11:46.889] [PRINT] # planner doesn't read memory. It sees ONLY the execution_summary
+[2026-04-20 01:11:46.899] [PRINT] # + extracted_info. So whether IDs were displayed in Turn 1 is
+[2026-04-20 01:11:46.909] [PRINT] # irrelevant to the planner's Turn 2 behavior.
+[2026-04-20 01:15:34.598] [PRINT] ========================================================================
+[2026-04-20 01:15:34.612] [PRINT] FINAL DISPLAY (no IDs -- clean for users, LLM doesn't need them)
+[2026-04-20 01:15:34.631] [PRINT] ========================================================================
+[2026-04-20 01:15:34.638] [PRINT] list_events:
+[2026-04-20 01:15:34.646] [PRINT] Found 3 upcoming events:
+[2026-04-20 01:15:34.646] [PRINT] 
+[2026-04-20 01:15:34.646] [PRINT] **1.** **Summary:** Sprint planning
+[2026-04-20 01:15:34.646] [PRINT]    - **Start:** Wed, 22 Apr 2026, 10:00
+[2026-04-20 01:15:34.646] [PRINT]    - **End:** Wed, 22 Apr 2026, 11:00
+[2026-04-20 01:15:34.646] [PRINT]    - **Location:** Zoom
+[2026-04-20 01:15:34.646] [PRINT]    - **Attendees:** 5
+[2026-04-20 01:15:34.646] [PRINT] 
+[2026-04-20 01:15:34.646] [PRINT] **2.** **Summary:** Lunch with Bob
+[2026-04-20 01:15:34.646] [PRINT]    - **Start:** Wed, 22 Apr 2026, 14:00
+[2026-04-20 01:15:34.646] [PRINT]    - **End:** Wed, 22 Apr 2026, 15:00
+[2026-04-20 01:15:34.646] [PRINT]    - **Attendees:** 2
+[2026-04-20 01:15:34.646] [PRINT] 
+[2026-04-20 01:15:34.646] [PRINT] **3.** **Summary:** 1:1 with Sarah
+[2026-04-20 01:15:34.646] [PRINT]    - **Start:** Wed, 22 Apr 2026, 16:00
+[2026-04-20 01:15:34.646] [PRINT]    - **End:** Wed, 22 Apr 2026, 17:00
+[2026-04-20 01:15:34.646] [PRINT]    - **Location:** Room 3
+[2026-04-20 01:15:34.646] [PRINT]    - **Attendees:** 2
+[2026-04-20 01:15:34.657] [PRINT] search_emails:
+[2026-04-20 01:15:34.667] [PRINT] Found 2 emails:
+[2026-04-20 01:15:34.667] [PRINT] 
+[2026-04-20 01:15:34.667] [PRINT] **1.** **From:** jdenziieel@gmail.com
+[2026-04-20 01:15:34.667] [PRINT]    - **Subject:** Meeting notes
+[2026-04-20 01:15:34.667] [PRINT]    - **Date:** Wed, 15 Apr 2026, 10:30
+[2026-04-20 01:15:34.667] [PRINT]    - **Preview:** Let us meet at 2pm.
+[2026-04-20 01:15:34.667] [PRINT] 
+[2026-04-20 01:15:34.667] [PRINT] **2.** **From:** jdenziieel@gmail.com
+[2026-04-20 01:15:34.667] [PRINT]    - **Subject:** _(no subject)_
+[2026-04-20 01:15:34.667] [PRINT]    - **Date:** Tue, 14 Apr 2026, 09:15
+[2026-04-20 01:15:34.667] [PRINT]    - **Attachments:** report.pdf
+[2026-04-20 01:15:34.688] [PRINT] ========================================================================
+[2026-04-20 01:15:34.701] [PRINT] CLAMP (the actual safety net -- still works silently)
+[2026-04-20 01:15:34.728] [PRINT] ========================================================================
+[2026-04-20 01:15:34.747] [PRINT]         1000  ->  50    gmail_agent.search_emails: `max_results` requested 1000, clamped to hard cap of 50.
+[2026-04-20 01:15:34.758] [PRINT]        'all'  ->  10    gmail_agent.search_emails: `max_results` was 'all' (missing/invalid/unbounded) -- defaulted to 10.
+[2026-04-20 01:15:34.770] [PRINT] 'everything'  ->  10    gmail_agent.search_emails: `max_results` was 'everything' (missing/invalid/unbounded) -- defaulted to 10.
+[2026-04-20 01:15:34.781] [PRINT]           10  ->  10    (pass-through)
+[2026-04-20 13:15:52.992] [PRINT] ======================================================================
+[2026-04-20 13:15:53.612] [PRINT] PART A: pause-gating scenarios
+[2026-04-20 13:15:53.634] [PRINT] ======================================================================
+[2026-04-20 13:15:53.642] [PRINT] 
+[2026-04-20 13:15:53.642] [PRINT] [PASS] A | search_emails(2) + create_event (independent) -> NO PAUSE
+[2026-04-20 13:15:53.666] [PRINT]    expected : no_pause
+[2026-04-20 13:15:53.675] [PRINT]    got      : no_pause  (no downstream step references {{ latest_emails }})
+[2026-04-20 13:15:53.686] [PRINT] 
+[2026-04-20 13:15:53.686] [PRINT] [PASS] B | search_emails(2) + forward_email consumes latest_emails[0].message_id -> PAUSE
+[2026-04-20 13:15:53.695] [PRINT]    expected : pause
+[2026-04-20 13:15:53.703] [PRINT]    got      : pause  (downstream uses {{ latest_emails }})
+[2026-04-20 13:15:53.711] [PRINT] 
+[2026-04-20 13:15:53.711] [PRINT] [PASS] C | search_emails(2) + reply with {{ selected_email.message_id }} -> PAUSE
+[2026-04-20 13:15:53.719] [PRINT]    expected : pause
+[2026-04-20 13:15:53.727] [PRINT]    got      : pause  (downstream uses {{ selected_email }})
+[2026-04-20 13:15:53.740] [PRINT] 
+[2026-04-20 13:15:53.740] [PRINT] [PASS] D | search_emails(1) + forward -> NO PAUSE (only 1 item)
+[2026-04-20 13:15:53.748] [PRINT]    expected : no_pause
+[2026-04-20 13:15:53.756] [PRINT]    got      : no_pause  (len(items)=1)
+[2026-04-20 13:15:53.763] [PRINT] 
+[2026-04-20 13:15:53.763] [PRINT] [PASS] E | search_files(3) + rename with indexed output {results[0].id} -> NO PAUSE (indexed path)
+[2026-04-20 13:15:53.772] [PRINT]    expected : no_pause
+[2026-04-20 13:15:53.778] [PRINT]    got      : no_pause  (output-var-not-direct-field (indexed path))
+[2026-04-20 13:15:53.784] [PRINT] 
+[2026-04-20 13:15:53.784] [PRINT] [PASS] F | search_files(3) + rename with old-style {files: results} -> PAUSE
+[2026-04-20 13:15:53.789] [PRINT]    expected : pause
+[2026-04-20 13:15:53.795] [PRINT]    got      : pause  (downstream uses {{ files }})
+[2026-04-20 13:15:53.801] [PRINT] 
+[2026-04-20 13:15:53.801] [PRINT] [PASS] G | list_my_docs(5) terminal step -> NO PAUSE (is_last_step)
+[2026-04-20 13:15:53.806] [PRINT]    expected : no_pause
+[2026-04-20 13:15:53.823] [PRINT]    got      : no_pause  (not-a-disambig-tool-or-last-step)
+[2026-04-20 13:15:53.832] [PRINT] 
+[2026-04-20 13:15:53.832] [PRINT] [PASS] J | var name collision: latest_emails vs latest_emails_extra -> NO PAUSE
+[2026-04-20 13:15:53.842] [PRINT]    expected : no_pause
+[2026-04-20 13:15:53.849] [PRINT]    got      : no_pause  (no downstream step references {{ latest_emails }})
+[2026-04-20 13:15:53.855] [PRINT] 
+[2026-04-20 13:15:53.855] [PRINT] [PASS] K | var used inside a filter expression {{ emails | length }} -> PAUSE
+[2026-04-20 13:15:53.862] [PRINT]    expected : pause
+[2026-04-20 13:15:53.895] [PRINT]    got      : pause  (downstream uses {{ emails }})
+[2026-04-20 13:15:53.910] [PRINT] 
+[2026-04-20 13:15:53.910] [PRINT] [PASS] L | nested attribute {{ emails[0].subject }} -> PAUSE
+[2026-04-20 13:15:53.919] [PRINT]    expected : pause
+[2026-04-20 13:15:53.929] [PRINT]    got      : pause  (downstream uses {{ emails }})
+[2026-04-20 13:15:53.940] [PRINT] 
+[2026-04-20 13:15:53.940] [PRINT] [PASS] M | no whitespace {{emails}} -> PAUSE
+[2026-04-20 13:15:53.955] [PRINT]    expected : pause
+[2026-04-20 13:15:53.966] [PRINT]    got      : pause  (downstream uses {{ emails }})
+[2026-04-20 13:15:54.019] [PRINT] 
+[2026-04-20 13:15:54.019] [PRINT] ----------------------------------------------------------------------
+[2026-04-20 13:15:54.026] [PRINT] Part A: 11/11 passed
+[2026-04-20 13:15:54.032] [PRINT] 
+[2026-04-20 13:15:54.032] [PRINT] ======================================================================
+[2026-04-20 13:15:54.038] [PRINT] PART B: disambiguation message rendering
+[2026-04-20 13:15:54.044] [PRINT] ======================================================================
+[2026-04-20 13:15:54.049] [PRINT] 
+[2026-04-20 13:15:54.049] [PRINT] [H] Rendering email options from search_emails:
+[2026-04-20 13:15:54.055] [PRINT] ----------------------------------------------------------------------
+[2026-04-20 13:15:54.061] [PRINT] **Multiple results found** — please select one:
+[2026-04-20 13:15:54.061] [PRINT] 
+[2026-04-20 13:15:54.061] [PRINT] **1.** Rabbit Delivery
+[2026-04-20 13:15:54.061] [PRINT]    From: delivery@shop.com
+[2026-04-20 13:15:54.061] [PRINT]    Date: Fri, 10 Apr 2026 07:11 +0800
+[2026-04-20 13:15:54.061] [PRINT]    Preview: Your rabbit has been delivered. Please confirm receipt at your convenience. Thank you for choosing us!
+[2026-04-20 13:15:54.061] [PRINT] 
+[2026-04-20 13:15:54.061] [PRINT] **2.** BAG Order Confirmation
+[2026-04-20 13:15:54.061] [PRINT]    From: orders@bag.io
+[2026-04-20 13:15:54.061] [PRINT]    Date: Fri, 10 Apr 2026 06:40 +0800
+[2026-04-20 13:15:54.061] [PRINT]    Preview: Thanks for your order #12345. Expected delivery Monday.
+[2026-04-20 13:15:54.061] [PRINT] 
+[2026-04-20 13:15:54.061] [PRINT] ---
+[2026-04-20 13:15:54.061] [PRINT] Reply with the **number** (e.g. "1") or the **name** of the item you want.
+[2026-04-20 13:15:54.061] [PRINT] Reply **"cancel"** to stop.
+[2026-04-20 13:15:54.067] [PRINT] 
+[2026-04-20 13:15:54.067] [PRINT] [H2] Rendering draft options from search_drafts:
+[2026-04-20 13:15:54.102] [PRINT] ----------------------------------------------------------------------
+[2026-04-20 13:15:54.117] [PRINT] **Multiple results found** — please select one:
+[2026-04-20 13:15:54.117] [PRINT] 
+[2026-04-20 13:15:54.117] [PRINT] **1.** (draft) Re: Project
+[2026-04-20 13:15:54.117] [PRINT]    From: me@x.com
+[2026-04-20 13:15:54.117] [PRINT]    Date: 2026-04-10
+[2026-04-20 13:15:54.117] [PRINT]    Preview: Hi team, attaching the deck...
+[2026-04-20 13:15:54.117] [PRINT] 
+[2026-04-20 13:15:54.117] [PRINT] **2.** (draft) Quick note
+[2026-04-20 13:15:54.117] [PRINT]    From: me@x.com
+[2026-04-20 13:15:54.117] [PRINT]    Date: 2026-04-09
+[2026-04-20 13:15:54.117] [PRINT] 
+[2026-04-20 13:15:54.117] [PRINT] ---
+[2026-04-20 13:15:54.117] [PRINT] Reply with the **number** (e.g. "1") or the **name** of the item you want.
+[2026-04-20 13:15:54.117] [PRINT] Reply **"cancel"** to stop.
+[2026-04-20 13:15:54.130] [PRINT] 
+[2026-04-20 13:15:54.130] [PRINT] [I] Rendering doc options from list_my_docs (legacy shape preserved):
+[2026-04-20 13:15:54.138] [PRINT] ----------------------------------------------------------------------
+[2026-04-20 13:15:54.146] [PRINT] **Multiple results found** — please select one:
+[2026-04-20 13:15:54.146] [PRINT] 
+[2026-04-20 13:15:54.146] [PRINT] **1.** Project Brief
+[2026-04-20 13:15:54.146] [PRINT]    ID: `d1`
+[2026-04-20 13:15:54.146] [PRINT]    Modified: 2026-04-01
+[2026-04-20 13:15:54.146] [PRINT] 
+[2026-04-20 13:15:54.146] [PRINT] **2.** Project Brief v2
+[2026-04-20 13:15:54.146] [PRINT]    ID: `d2`
+[2026-04-20 13:15:54.146] [PRINT]    Modified: 2026-04-02
+[2026-04-20 13:15:54.146] [PRINT] 
+[2026-04-20 13:15:54.146] [PRINT] ---
+[2026-04-20 13:15:54.146] [PRINT] Reply with the **number** (e.g. "1") or the **name** of the item you want.
+[2026-04-20 13:15:54.146] [PRINT] Reply **"cancel"** to stop.

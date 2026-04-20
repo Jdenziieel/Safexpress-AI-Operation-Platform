@@ -1,0 +1,269 @@
+---
+description: Authoritative mental model of the multi-agent supervisor system. Read this before assuming any cross-turn / memory / planner behavior.
+alwaysApply: true
+---
+
+# Supervisor Agent Architecture — Source of Truth
+
+All references below are `file:line` in `supervisor-agent/` unless noted.
+When the code moves, update this rule. Do not trust your memory of "how it usually works" over the citations here.
+
+## 1. Request lifecycle (one user message)
+
+```
+HTTP POST /threads/{id}/messages              routes/threads.py:1196
+    │
+    ▼  load_thread_from_db (SQLite thread_states + memory_states)
+ConversationalAgent.process_message           conversational_agent.py:298
+    │
+    ├─ Tier 0  quick pending-action check     tier0_checks.py:63          (regex only, no LLM)
+    │          short-circuits if workflow paused
+    │
+    ├─ Tier 0.5  unified_quick_check          conversational_agent.py:1237
+    │          LLM = quick_llm  (gpt-4o-mini)
+    │          classify: chat | clarification | task_request | cancel | approve | …
+    │          (NO memory summary, NO completed_tasks)
+    │
+    ├─ Tier 1  analyze_request                conversational_agent.py:851
+    │          LLM = self.llm   (LLM_MODEL, default gpt-4 — config.py:73)
+    │          SEES: history_text (memory.get_context_for_llm) + last 5 completed_tasks
+    │                + capabilities_to_show + uploaded_file + enriched user message
+    │          OUTPUTS: ConversationAnalysis {intent, task_type, extracted_info, execution_summary, …}
+    │          Side-effect: caches tool filter into extracted_info["_cached_tool_filter"]
+    │
+    ▼ if ready_for_execution:
+build_supervisor_input(state)                 conversational_agent.py:1795
+    → single string: execution_summary + "Parameters:" block (keys starting with "_" are stripped)
+
+run_workflow(user_input, context_overrides)   routes/workflow.py:56
+    context_overrides = {uploaded_file, _cached_tool_filter, _enrichment_context fields}
+    │
+    ▼
+supervisor_node (PLANNER)                     supervisor_agent.py:343
+    LLM = llm (LLM_MODEL). STRUCTURED OUTPUT via function_calling → ExecutionPlan
+    SEES: system_prompt (rules + today_date + filtered_capabilities JSON + context_var hints)
+          user message = state["input"] ONLY  (supervisor_agent.py:467)
+    DOES NOT SEE: conversation memory, completed_tasks, raw chat history, extracted_info dict
+    │
+    ▼
+orchestrator_node                             supervisor_agent.py:779
+    variable_context = state["context"]       supervisor_agent.py:795
+    per step: substitute inputs (Jinja2) → clamp_inputs → POST sub-agent → merge output
+    pauses on approval / disambiguation (sets pending_action + remaining_steps, early return)
+        — disambiguation pause is gated: only fires when a search/list tool returns >1 items
+          AND a remaining step's Jinja inputs actually reference the output variable (supervisor_agent.py ~1300)
+    │
+    ▼
+_run_workflow_and_update_state                routes/threads.py:_run_workflow_and_update_state
+    populates completed_tasks from final_context["results"]   routes/threads.py:488
+    _clear_workflow_state (wipes extracted_info!)             routes/threads.py:549
+    SummarizationService.summarize_execution → friendly_summary
+    memory.add_message("assistant", friendly_summary)         routes/threads.py:518
+    save_thread_to_db (in finally block)                      routes/threads.py:589
+```
+
+## 2. What each LLM call sees — never assume otherwise
+
+| Input                                  | Tier 0 | Tier 0.5 | Tier 1 | Planner |
+|----------------------------------------|:------:|:--------:|:------:|:-------:|
+| Raw user message                       | yes    | yes      | yes    | no (only `execution_summary + params`) |
+| Conversation memory (summary + recent) | no     | no       | **yes** (`analyze_request` line 693) | **no** |
+| `completed_tasks` (last 5)             | no     | no       | **yes** (line 700) | **no** |
+| `extracted_info` full dict             | state  | partial (when clarifying) | yes via state | only non-`_` keys appear as `Parameters:` bullets in the supervisor string |
+| Capabilities JSON                      | no     | no       | yes (`capabilities_to_show`) | yes (`filtered_capabilities`) |
+| `uploaded_file` metadata               | no     | yes      | yes    | yes (as context var) |
+| `today_date`                           | no     | no       | yes    | yes |
+| `variable_context` (prior-step outputs)| —      | —        | —      | **no — it is always empty at planner time, populated only during orchestrator execution** |
+
+Critical rule: **The planner is stateless across turns.** It cannot reference IDs, emails, events, or anything from a previous workflow. If a follow-up needs a prior entity, either (a) Tier 1 must put it into `extracted_info` as a parameter, or (b) the plan must include a fresh lookup step.
+
+## 3. State & persistence
+
+SQLite file: `supervisor-agent/threads.db`. Tables created at `thread_manager.py:66–117`.
+
+| Table                 | Stores                                                  | Written by |
+|-----------------------|---------------------------------------------------------|------------|
+| `threads`             | `ThreadMetadata` (title, counts, timestamps)            | `create_thread`, `save_thread_to_db` |
+| `thread_states`       | full `ConversationState.model_dump()` as JSON           | `save_thread_state` (every turn) |
+| `memory_states`       | `ConversationMemoryManager.export_memory()` dict        | `save_memory_state` (every turn if memory mgr exists) |
+| `messages`            | individual {role, content} rows                         | `add_message` (user + assistant) |
+| `conversation_states` | standalone `CONVERSATIONS` dict backup                  | **only on thread create**, not hot path |
+
+**`ConversationState` fields that cross turns** (`models/models.py:104–133`):
+
+- `extracted_info` — CLEARED on successful workflow completion (`_clear_workflow_state`, routes/threads.py:556)
+- `execution_summary`, `execution_mode` — cleared with extracted_info
+- `completed_tasks` — FIFO, capped at 10 entries (`routes/threads.py:501`)
+- `has_executed`, `last_executed_at`, `last_execution_status`, `last_execution_message`
+- `pending_actions`, `workflow_paused`, `remaining_steps`, `workflow_context` — only populated when paused; cleared on resume completion
+- `memory_state` — serialized `ConversationMemory`
+
+**`completed_tasks` entry shape** (populated at `routes/threads.py:488`):
+
+```python
+{
+    "task_type": f"{agent}.{tool}",        # e.g. "calendar_agent.list_events"
+    "params_summary": str,                  # _summarize_params: top-level scalar inputs only
+    "status": "success" | "no_results",
+    "result_summary": str,                  # _summarize_result: top-level scalar outputs only
+    "timestamp": iso,
+}
+```
+
+`_summarize_result` (`routes/threads.py:311`) ONLY extracts top-level scalar keys from the tool output. **It never captures per-item IDs from list tools** (e.g. individual `events[i].event_id` after `list_events`). Those IDs die with `variable_context` when the workflow ends.
+
+## 4. Variable context is ephemeral
+
+- `variable_context = state["context"]` at orchestrator start (`supervisor_agent.py:795`).
+- Seeded by `run_workflow` with `{today_date}` + `context_overrides` only (`routes/workflow.py:56`).
+- Grows per-step with `step_{N}_{agent}` namespaces and any `output_variables` renames.
+- Persisted ONLY when the workflow pauses (`workflow_context`, routes/threads.py:411–420).
+- **Wiped on successful completion** (`_clear_workflow_state`).
+- Therefore: a second turn's orchestrator starts with an empty-ish context again. Prior step outputs are gone.
+
+## 5. Variable substitution
+
+- Uses **Jinja2 `Template`** — not a custom regex (`supervisor_agent.py:12, 974–988`).
+- Dotted and indexed paths (`{{ events[0].event_id }}`, `{{ user.email }}`) resolved by Jinja2 against the flat `variable_context` dict.
+- Missing variable → `jinja2.UndefinedError` caught at `supervisor_agent.py:989`; orchestrator marks the step skipped and returns with an error.
+- `output_variables` uses a custom `extract_nested_value` helper (`supervisor_agent.py:637–685`) that splits on `.` and parses `field[index]` via regex.
+
+## 6. Tool filter — what it auto-includes
+
+`tool_filter.identify_agents_and_tools` makes ONE classifier LLM call (`CLASSIFIER_MODEL`, default `gpt-3.5-turbo`). It returns `{agent: [tools]}`. Safety nets extend that (`tool_filter.py:118–181`):
+
+| Trigger                                            | Auto-adds |
+|----------------------------------------------------|-----------|
+| email keywords but no `gmail_agent`                | `create_draft_email`, `send_draft_email` |
+| gmail send tool selected                           | `create_draft_email` + `send_draft_email` pair |
+| `send_draft_email` but no `search_drafts`          | `search_drafts` |
+| `docs_agent` selected                              | `list_my_docs` |
+| docs agent + edit keywords (fix/edit/update/…)     | `read_doc`, `edit_doc`, `update_doc` |
+| calendar event mutation selected (`update_event`, `delete_event`, `confirm_delete_event`) | `list_events` |
+| `rename_file` selected                             | `search_files` |
+| delivery-order keywords                            | full DO tool bundle across gmail/mapping/sheets |
+
+`sheets_agent` and other agents without a mutation-tool → lookup-tool pattern have no generic safety net. If you add a mutation tool whose ID must be resolved via a lookup tool, add a matching safety net block so the planner never gets the mutation in isolation.
+
+Tier 1 merges `_cached_tool_filter` from prior turn (union), then persists the result back (`conversational_agent.py:737–753`). Cache is wiped when `extracted_info` is cleared after successful workflow.
+
+## 7. Approval / pause / resume
+
+- Risk levels: `SAFE`, `MODERATE`, `DANGEROUS`, `CRITICAL` (`models/models.py:63–85`).
+- `requires_approval(tool_name)` defaults `auto_approve_moderate=True` → `MODERATE` tools (e.g. `update_event`, `create_event`) **do NOT pause**. Only `DANGEROUS`/`CRITICAL` pause.
+- On pause: orchestrator substitutes only placeholder-bearing inputs (`supervisor_agent.py:883–887`), stores pending action in `logs.db`, sets `paused_for_approval`/`pending_action`/`remaining_steps` in `variable_context`, and returns early.
+- `_run_workflow_and_update_state` copies those into `ConversationState.pending_actions` / `remaining_steps` / `workflow_context` (routes/threads.py:404–420).
+- Resume (chat approve): Tier 0 catches approve/reject patterns → `_handle_pending_action_decision` → `execute_single_action` → `_resume_remaining_steps` (routes/threads.py:605–682).
+- Resume path does NOT append to `completed_tasks` (population loop is only in `_run_workflow_and_update_state`).
+
+## 8. Sub-agent protocol
+
+| Agent             | Default URL                               | Env override |
+|-------------------|-------------------------------------------|--------------|
+| `gmail_agent`     | `http://localhost:8000/execute_task`      | `GMAIL_AGENT_URL` |
+| `docs_agent`      | `http://localhost:8002/execute_task`      | `DOCS_AGENT_URL` |
+| `sheets_agent`    | `http://localhost:8003/execute_task`      | `SHEETS_AGENT_URL` |
+| `mapping_agent`   | `http://localhost:8004/execute_task`      | `MAPPING_AGENT_URL` |
+| `calendar_agent`  | `http://localhost:8005/execute_task`      | `CALENDAR_AGENT_URL` |
+| `drive_agent`     | `http://localhost:8006/execute_task`      | `DRIVE_AGENT_URL` |
+
+Registry at `config.py:14–27`. No `flight_agent` exists. Request body (`supervisor_agent.py:1160`):
+
+```python
+{"tool": tool_name, "inputs": substituted_inputs, "credentials_dict": creds}
+```
+
+Credentials built from `.env` via `get_google_credentials()` (`config.py:51–69`): `access_token`, `refresh_token`, `token_uri`, `client_id`, `client_secret`. All four must be non-empty or orchestrator bails (`supervisor_agent.py:833–836`).
+
+## 9. Return path
+
+`SummarizationService.summarize_execution` (`services/summarization_service.py:109`) loops successful step results and calls `response_templates.format_step(agent, tool, output)` (`services/response_templates.py:479`). Falls back to an LLM composer (`_llm_compose`, `gpt-4o-mini`) if any step lacks a registered template.
+
+The assistant message added to memory is this rendered `friendly_summary` — **NOT** the raw `final_context` JSON. The next turn's Tier 1 sees only that natural-language text plus the `completed_tasks` line.
+
+## 10. Invariants to never violate in assumptions
+
+1. **Planner is stateless across turns.** No memory, no `completed_tasks`, no prior `variable_context`. Only `execution_summary + params` + capabilities + `today_date`.
+2. **`variable_context` dies at the end of a completed workflow.** Per-item list IDs (message_id, event_id in `events[i]`) are gone.
+3. **`_clear_workflow_state` runs BEFORE `summarize_execution`**, wiping `extracted_info`. So `original_message` is usually unavailable to the summarizer (routes/threads.py:486 then 508).
+4. **`MODERATE` tools (update_event, create_event) don't pause by default.** Only `DANGEROUS`/`CRITICAL` do.
+5. **Tool filter companion-lookup safety nets cover: gmail drafts, docs, delivery-order, calendar event mutations (→ `list_events`), and drive `rename_file` (→ `search_files`).** Anything else (e.g. sheets mutations, future calendar tools that aren't `update_event`/`delete_event`/`confirm_delete_event`) is NOT auto-paired — add a new block in `tool_filter.py` when you introduce such a tool.
+6. **Cross-turn ID resolution relies on either (a) user typing the name for a fresh lookup, or (b) Tier 1 surfacing the ID into `extracted_info` as a top-level key.** The planner cannot "remember" an ID from last turn.
+7. **ReAct mode is disabled.** `react_workflow = None` (`supervisor_agent.py:1671`), `run_workflow` forces `execution_mode="standard"` (`routes/workflow.py:78`).
+8. **`completed_tasks` is the only structured artifact that crosses turns to an LLM** — and only to Tier 1, truncated to last 5, with scalar-only summaries.
+9. **`entity_memory` field on `ConversationMemory` exists but is never populated.** Don't assume entities survive via that path.
+10. **Planning Rule 13 forbids Jinja references to non-existent variables.** The planner must only template variables listed in AVAILABLE CONTEXT VARIABLES or declared as `output_variables` in an earlier step; task parameters from `extracted_info` are inlined as literal values, NOT as `{{ var }}` references.
+
+## 11. Gmail agent — sub-tool behavior worth knowing
+
+File references are `gmail-agent/tools.py` unless noted.
+
+### `search_emails` (`_search_emails_impl`, line 268)
+
+- Top-level body extraction prefers `text/plain`, falls back to `text/html` (line 348) — but does NOT recurse into nested `multipart/*` parts. If the message is structured as `multipart/mixed → multipart/alternative → {plain, html}`, this top-level-only loop can miss the body entirely; in practice Gmail messages from modern senders tend to expose `text/html` at the top level, so the fallback catches them.
+- `format_email_object` (`email_formatter.py:274`) then post-processes: if the body is real HTML, it cleans to plain text via `EmailHTMLParser`, stores the cleaned text as `body`, and stashes the raw HTML as both `body_full` and `body_html`. Plain-text bodies get a different cleaner (`clean_plain_text_body`) that strips tracking links, footers, and zero-width Unicode.
+- Output shape the planner can rely on: `emails[i].{message_id, thread_id, from, subject, date, internal_date, label_ids, body, body_full, body_html?, body_links, body_images?, body_has_tables?, has_attachments, attachments[]}`.
+
+### `forward_email` (`_forward_email_impl`, line 606+)
+
+- Fetches the original message with `format="full"`, walks its payload via the recursive helper `_walk_mime_parts` to collect `plain_body`, `html_body`, and the full attachments list — regardless of nesting depth.
+- If the original has only HTML, a plain-text alternative is auto-generated via `email_formatter.clean_email_body`. If both are empty, falls back to `message.snippet`.
+- Builds the outgoing MIME structure based on what it found:
+  - `has_attachments and has_html` → `multipart/mixed` wrapping a `multipart/alternative` (plain+html) + attachment parts.
+  - `has_attachments and not has_html` → `multipart/mixed` with plain + attachments.
+  - `not has_attachments and has_html` → `multipart/alternative` with plain + html.
+  - `not has_attachments and not has_html` → a single `text/plain` MIMEText.
+- Attachments are re-downloaded via `users().messages().attachments().get()` and re-attached with the original MIME type and filename. A failed fetch is logged and skipped but does not abort the forward.
+- Forwarded-message header (`---------- Forwarded message ---------`, From/Date/Subject) is prepended to both the plain and the HTML versions.
+- `forward_message` (optional user note) is prepended above the header in both versions (HTML-escaped in the HTML part).
+- Return shape: `{success, original_message_id, forwarded_message_id, thread_id, to, subject, original_from, forward_message, attachments_forwarded, error}`. `attachments_forwarded` lists the filenames actually re-attached (not just discovered).
+
+### `reply_to_email` (`_reply_to_email_impl`, line 515)
+
+- Sends a plain-text-only reply. Does NOT carry over original HTML or attachments (by design — a reply is new content, not a forward).
+- Sets `In-Reply-To` / `References` to the original `Message-ID` header and includes `threadId` on send so Gmail threads it correctly.
+
+### `api.py` body-signature injection
+
+`api.py:109–143` routes calls for `send_draft_email`, `reply_to_email`, `forward_email`, `send_email`, `create_draft_email` through an `llm.invoke` pass that appends `"This is written by Assistant Agent"` to the user-supplied `body` / `reply_body` / `forward_message` — **but only when that field is present**. For a plain forward (no `forward_message`), no LLM call is made and no signature is added.
+
+## 12. Previously-known bugs (FIXED)
+
+### Bug A — cross-turn ID resolution fails when lookup tool is omitted
+
+**Symptom (EditEventName.log):** when the classifier picked only a mutating calendar tool (e.g. `update_event`) without `list_events`, Tier 1 emitted a malformed placeholder `event_id: {"query": "..."}` and the planner hallucinated `{{ event_id.query }}` — causing `jinja2.UndefinedError: 'event_id' is undefined` at orchestrator substitution time.
+
+**Fix (three-layer):**
+1. `tool_filter.py` — calendar-mutation safety net injects `list_events`; drive `rename_file` safety net injects `search_files` (see §6 table).
+2. `supervisor_agent.py` — Rule 9 expanded to cover calendar events + drive files alongside docs; Rule 13 forbids hallucinated Jinja variable references.
+3. `conversational_agent.py` — DERIVABLE FIELDS rule sharpened to ban nested-dict ID placeholders like `event_id: {"query": "..."}`.
+
+Net behavior: even if Tier 1 still emits a malformed placeholder (Layer 3 soft-guard), the planner now has the lookup tool available (Layer 1) and is instructed not to hallucinate templates (Layer 2). The plan becomes `list_events → update_event` with a real output variable reference.
+
+### Bug B.5 — disambiguation paused on plans that did not depend on the list
+
+**Symptom (FetchEmail+Calendar.log):** a user asked "fetch me 2 of my latest emails and schedule an event at 12PM". Tier 1 produced a 2-step plan: `search_emails → create_event`. Because `search_emails` returned 2 items and it wasn't the last step, the old orchestrator hit its disambiguation branch and paused for the user to "pick one" — even though `create_event`'s inputs were entirely independent (only `{{ today_date }}`). The UI then showed a terse "Subject / ID" line per option, stripping out the sender/date/body that `_format_query_result` would normally render. If the user answered "1", `routes/threads.py` overwrote `variable_context[latest_emails]` with a single-item list, deliberately dropping the second email even though the user never wanted to discard it.
+
+**Root cause (three compounding bugs):**
+1. Pause trigger too eager: `supervisor_agent.py` tested only `is_last_step` + `len(items) > 1`, not whether any remaining step actually referenced the output variable.
+2. Disambiguation UI stripped data: `_build_disambiguation_message` in `checks/tier0_checks.py` rendered only `name|title|subject` + `id/modified`, so for emails the user saw just the subject.
+3. Selection parser is single-pick only: `_quick_disambiguation_check` handles numeric, ordinal, or name-based single selection; no "all" / "1,2" multi-select. This is correct for true pick-one workflows (forward THIS email) but makes bug #1's false-positive pauses destructive.
+
+**Fix (two surgical edits):**
+1. `supervisor_agent.py` pause branch now gates on downstream Jinja reference — after finding `disambig_var`, it scans `json.dumps(future_step.get("inputs"))` for each remaining step with the regex `r"\{\{\s*" + re.escape(disambig_var) + r"(?=\s|\}|\.|\[|\|)"`. Lookahead avoids false-positives like `latest_emails_extra`. If nothing downstream references the variable, emits `trace.step("disambiguation_skipped", …)` and falls through to the next step (no early return, no pause).
+2. `checks/tier0_checks.py:_build_disambiguation_message` takes a shape-aware branch when `source_tool in ("search_emails", "search_drafts")`: renders Subject / From / Date / 1-line body preview (collapsed + truncated to 140 chars). Docs/files keep the legacy `name + id + modified` rendering. No parser changes — Part C (multi-select) was deliberately deferred because Part A eliminates the false pauses that made Part C urgent.
+
+**Net behavior:** Rule-9-compliant chains (indexed output `results[0].id`) still bypass disambiguation as before (output_var check returns None). Legacy `{var: resultsField}` + `{{ var[0].id }}` chains still pause correctly. Independent list + unrelated-action plans no longer pause. Verified offline via 11 scenarios (A/B/C/D/E/F/G/J/K/L/M) covering the regression case, legitimate pick-one flows, variable-name collisions, Jinja filter/attribute/whitespace variants, and terminal-step lists.
+
+### Bug B — `forward_email` delivered an empty body (no HTML, no attachments)
+
+**Symptom (CM-TEST-GMAIL-3.log):** when `forward_email` was called on a Gmail message whose top-level MIME has `text/html` (no sibling `text/plain`) — the common shape for template-generated transactional emails (orders, invoices, notifications) — the recipient received only the "Forwarded message" header with no body. Attachments on the original were also silently dropped.
+
+**Root cause:** `_forward_email_impl` iterated `payload.parts` and looked for `text/plain` only; it had no `text/html` fallback, did not recurse into nested `multipart/*`, and never re-attached original attachments. It also emitted a single `MIMEText(body, "plain")` even when the source was HTML, losing all formatting.
+
+**Fix (single file, `gmail-agent/tools.py`):**
+1. New helper `_walk_mime_parts(payload)` recursively extracts `plain_body`, `html_body`, and the full attachments list across any nested `multipart/*` structure.
+2. `_forward_email_impl` rebuilt to emit `multipart/mixed → multipart/alternative → {plain, html}` + attachment parts — mirroring the Gmail web UI's Forward. HTML is preserved; a plain-text alternative is auto-derived via `clean_email_body` when the source is HTML-only; attachments are re-fetched and re-attached with their original MIME types.
+3. `agent_capabilities_v3.py` — `forward_email.returns` extended with `original_from`, `forward_message`, and `attachments_forwarded` so the planner and response templates know about the new fields.
+
+Verified offline via a MIME-level simulation (3 scenarios: nested alt + attachment, top-level html + attachment, plain-only) that round-trips the raw sent MIME through `email.BytesParser` and asserts the expected multipart structure + content. No behavior change for plain-text-only messages.

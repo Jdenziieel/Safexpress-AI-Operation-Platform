@@ -159,6 +159,34 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                     if t not in docs_tools and t in docs_caps:
                         docs_tools.append(t)
 
+        # Calendar agent safety net: whenever a calendar event mutation tool
+        # is selected, also include list_events as a fallback lookup path.
+        # update_event / delete_event / confirm_delete_event accept event_name
+        # for internal auto-lookup, but that only works when the user refers
+        # to the event by its exact title. When the reference is by date/time,
+        # attendees, or other attributes, the planner needs list_events to
+        # resolve the event_id before the mutation.
+        _CALENDAR_EVENT_MUTATION_TOOLS = {
+            "update_event", "delete_event", "confirm_delete_event",
+        }
+        if "calendar_agent" in validated:
+            cal_tools = validated["calendar_agent"]
+            cal_caps = agent_capabilities.get("calendar_agent", {}).get("tools", {})
+            if any(t in _CALENDAR_EVENT_MUTATION_TOOLS for t in cal_tools):
+                if "list_events" not in cal_tools and "list_events" in cal_caps:
+                    cal_tools.append("list_events")
+
+        # Drive agent safety net: drive_agent.rename_file accepts file_id
+        # only (no name-based auto-lookup). When rename_file is selected,
+        # include search_files so the planner can resolve file names to IDs
+        # via its can_be_derived_from hint (see agent_capabilities_v3.py).
+        if "drive_agent" in validated:
+            drive_tools = validated["drive_agent"]
+            drive_caps = agent_capabilities.get("drive_agent", {}).get("tools", {})
+            if "rename_file" in drive_tools:
+                if "search_files" not in drive_tools and "search_files" in drive_caps:
+                    drive_tools.append("search_files")
+
         # Delivery order workflow: ensure all three agents and their
         # specialised tools are present when the request involves
         # delivery/purchase orders.

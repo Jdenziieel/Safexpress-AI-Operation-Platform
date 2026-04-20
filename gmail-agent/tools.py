@@ -10,7 +10,8 @@ from email.mime.base import MIMEBase
 from email import encoders
 import mimetypes
 import base64
-from email_formatter import format_email_list
+import html
+from email_formatter import format_email_list, clean_email_body
 import sqlite3
 import json
 import tempfile
@@ -603,25 +604,77 @@ def _reply_to_email_impl(
         }
 
 
+def _walk_mime_parts(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Recursively walk a Gmail API message payload and extract body + attachment
+    references. Handles arbitrarily nested multipart/* structures (mixed,
+    alternative, related), which the previous top-level-only loop missed.
+
+    Returns:
+        {
+          "plain_body": str,   # first text/plain content found, decoded UTF-8
+          "html_body":  str,   # first text/html  content found, decoded UTF-8
+          "attachments": [{"filename", "attachment_id", "mime_type", "size"}]
+        }
+    """
+    result = {"plain_body": "", "html_body": "", "attachments": []}
+
+    def _walk(part: Dict[str, Any]) -> None:
+        mime = (part.get("mimeType") or "").lower()
+        body = part.get("body") or {}
+        filename = part.get("filename") or ""
+
+        if mime.startswith("multipart/"):
+            for sub in (part.get("parts") or []):
+                _walk(sub)
+            return
+
+        if filename and body.get("attachmentId"):
+            result["attachments"].append({
+                "filename": filename,
+                "attachment_id": body["attachmentId"],
+                "mime_type": part.get("mimeType") or "application/octet-stream",
+                "size": body.get("size", 0),
+            })
+            return
+
+        data = body.get("data")
+        if not data:
+            return
+        try:
+            decoded = base64.urlsafe_b64decode(data).decode("utf-8", errors="replace")
+        except Exception:
+            return
+        if mime == "text/plain" and not result["plain_body"]:
+            result["plain_body"] = decoded
+        elif mime == "text/html" and not result["html_body"]:
+            result["html_body"] = decoded
+
+    _walk(payload)
+    return result
+
+
 def _forward_email_impl(
     message_id: str, to: str, forward_message: str = "", credentials_dict: Dict = None
 ) -> Dict[str, Any]:
-    """Forward an email to another recipient via Gmail API
-    
+    """Forward an email verbatim (HTML body + attachments) via Gmail API.
+
+    Mirrors "Forward" in the Gmail web UI: the forwarded message contains the
+    original HTML rendering AND a plain-text alternative, plus any original
+    attachments re-attached in a multipart/mixed envelope.
+
     Args:
         message_id: The ID of the email message to forward
         to: Recipient email address to forward to
-        forward_message: Optional message to add before the forwarded content
+        forward_message: Optional note prepended before the forwarded content
         credentials_dict: Gmail OAuth credentials
-        
+
     Returns:
-        Dictionary with success status and forwarded email details
+        Dictionary with success status and forwarded email details.
     """
     try:
-        # get gmail service
         gmail_service = get_google_service("gmail", "v1", credentials_dict)
 
-        # get original email
         original_message = (
             gmail_service.users()
             .messages()
@@ -629,60 +682,121 @@ def _forward_email_impl(
             .execute()
         )
 
-        # Extract headers
-        headers = original_message["payload"]["headers"]
+        payload = original_message.get("payload") or {}
+        headers = payload.get("headers") or []
         original_subject = ""
         original_from = ""
         original_date = ""
-        
+
         for header in headers:
-            if header["name"] == "Subject":
-                original_subject = header["value"]
-            elif header["name"] == "From":
-                original_from = header["value"]
-            elif header["name"] == "Date":
-                original_date = header["value"]
+            name = header.get("name", "")
+            value = header.get("value", "")
+            if name == "Subject":
+                original_subject = value
+            elif name == "From":
+                original_from = value
+            elif name == "Date":
+                original_date = value
 
-        # Get original body
-        original_body = ""
-        if "parts" in original_message["payload"]:
-            for part in original_message["payload"]["parts"]:
-                if part["mimeType"] == "text/plain":
-                    if "data" in part["body"]:
-                        original_body = base64.urlsafe_b64decode(
-                            part["body"]["data"]
-                        ).decode("utf-8")
-                    break
-        else:
-            if "body" in original_message["payload"] and "data" in original_message["payload"]["body"]:
-                original_body = base64.urlsafe_b64decode(
-                    original_message["payload"]["body"]["data"]
-                ).decode("utf-8")
+        extracted = _walk_mime_parts(payload)
+        original_plain = extracted["plain_body"]
+        original_html = extracted["html_body"]
+        original_attachments = extracted["attachments"]
 
-        # Build forwarded message
-        forward_subject = f"Fwd: {original_subject}" if not original_subject.startswith("Fwd:") else original_subject
-        
-        # Create multipart message
-        message = MIMEMultipart()
-        message["to"] = to
-        message["subject"] = forward_subject
-        
-        # Build forward body
-        forward_body = ""
+        if not original_plain and original_html:
+            try:
+                original_plain = clean_email_body(original_html).get("clean_text", "") or ""
+            except Exception:
+                original_plain = ""
+
+        if not original_plain and not original_html:
+            original_plain = original_message.get("snippet", "") or ""
+
+        forward_subject = (
+            f"Fwd: {original_subject}"
+            if not original_subject.startswith("Fwd:")
+            else original_subject
+        )
+
+        plain_header = (
+            "---------- Forwarded message ---------\n"
+            f"From: {original_from}\n"
+            f"Date: {original_date}\n"
+            f"Subject: {original_subject}\n\n"
+        )
+        forward_plain_body = ""
         if forward_message:
-            forward_body = f"{forward_message}\n\n"
-        
-        forward_body += f"---------- Forwarded message ---------\n"
-        forward_body += f"From: {original_from}\n"
-        forward_body += f"Date: {original_date}\n"
-        forward_body += f"Subject: {original_subject}\n\n"
-        forward_body += original_body
-        
-        message.attach(MIMEText(forward_body, "plain"))
+            forward_plain_body += f"{forward_message}\n\n"
+        forward_plain_body += plain_header + (original_plain or "")
 
-        # Encode and send
-        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-        
+        forward_html_body = None
+        if original_html:
+            html_header = (
+                "<br><div>---------- Forwarded message ---------<br>"
+                f"<b>From:</b> {html.escape(original_from)}<br>"
+                f"<b>Date:</b> {html.escape(original_date)}<br>"
+                f"<b>Subject:</b> {html.escape(original_subject)}<br>"
+                "</div><br>"
+            )
+            html_intro = ""
+            if forward_message:
+                escaped_note = html.escape(forward_message).replace("\n", "<br>")
+                html_intro = f"<div>{escaped_note}</div><br>"
+            forward_html_body = html_intro + html_header + original_html
+
+        has_html = forward_html_body is not None
+        has_attachments = bool(original_attachments)
+
+        if has_attachments:
+            root = MIMEMultipart("mixed")
+            if has_html:
+                alt = MIMEMultipart("alternative")
+                alt.attach(MIMEText(forward_plain_body, "plain", "utf-8"))
+                alt.attach(MIMEText(forward_html_body, "html", "utf-8"))
+                root.attach(alt)
+            else:
+                root.attach(MIMEText(forward_plain_body, "plain", "utf-8"))
+        elif has_html:
+            root = MIMEMultipart("alternative")
+            root.attach(MIMEText(forward_plain_body, "plain", "utf-8"))
+            root.attach(MIMEText(forward_html_body, "html", "utf-8"))
+        else:
+            root = MIMEText(forward_plain_body, "plain", "utf-8")
+
+        root["to"] = to
+        root["subject"] = forward_subject
+
+        forwarded_attachment_names = []
+        for att in original_attachments:
+            try:
+                att_blob = (
+                    gmail_service.users()
+                    .messages()
+                    .attachments()
+                    .get(userId="me", messageId=message_id, id=att["attachment_id"])
+                    .execute()
+                )
+                att_bytes = base64.urlsafe_b64decode(att_blob["data"])
+            except Exception as att_err:
+                print(f"[forward_email] Skipping attachment '{att['filename']}' — fetch failed: {att_err}")
+                continue
+
+            mime_type = att.get("mime_type") or "application/octet-stream"
+            maintype, _, subtype = mime_type.partition("/")
+            if not subtype:
+                maintype, subtype = "application", "octet-stream"
+            att_part = MIMEBase(maintype, subtype)
+            att_part.set_payload(att_bytes)
+            encoders.encode_base64(att_part)
+            att_part.add_header(
+                "Content-Disposition",
+                f'attachment; filename="{att["filename"]}"',
+            )
+            root.attach(att_part)
+            forwarded_attachment_names.append(att["filename"])
+
+        raw_message = base64.urlsafe_b64encode(root.as_bytes()).decode()
+
         send_result = (
             gmail_service.users()
             .messages()
@@ -702,6 +816,7 @@ def _forward_email_impl(
             "subject": forward_subject,
             "original_from": original_from,
             "forward_message": forward_message,
+            "attachments_forwarded": forwarded_attachment_names,
             "error": None
         }
 
@@ -715,6 +830,7 @@ def _forward_email_impl(
             "subject": None,
             "original_from": None,
             "forward_message": forward_message,
+            "attachments_forwarded": [],
             "error": f"Gmail API error: {str(error)}"
         }
     except Exception as error:
@@ -727,6 +843,7 @@ def _forward_email_impl(
             "subject": None,
             "original_from": None,
             "forward_message": forward_message,
+            "attachments_forwarded": [],
             "error": f"Unexpected error: {str(error)}"
         }
 

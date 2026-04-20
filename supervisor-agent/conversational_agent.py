@@ -782,6 +782,7 @@ When user wants to find an existing file and create a new document from it:
 
 DERIVABLE FIELDS: Fields marked [via tool: criteria] are derived at execution time. Extract the search criteria instead — do NOT ask the user for the derived field.
 Example: forward_email(message_id [via search_emails: query], to) → extract {{"query": "...", "to": "..."}}
+NEVER emit a derivable ID (event_id, message_id, file_id, document_id, draft_id) as a nested dict such as {{"query": "..."}} — that is NOT a valid extraction shape. Either (a) if the tool accepts a name parameter (event_name, file_name, draft subject), extract the user's reference as that name at TOP LEVEL of extracted_info, or (b) omit the ID field entirely and let the supervisor insert a lookup step. Any search criteria (query strings, time windows, keywords, date ranges) belong at the TOP LEVEL of extracted_info, not nested under a derived-field name.
 When a file is attached (noted in the user message), file_path is provided by the upload system — do NOT list it as missing_fields. The default filename is the uploaded file's original name, but if the user specifies a custom name (e.g. "name it X", "save as Y"), extract that as "filename" in extracted_info.
 
 CONTEXT RULES:

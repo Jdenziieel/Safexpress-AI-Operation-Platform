@@ -885,17 +885,44 @@ def _build_disambiguation_message(options, source_tool):
     """
     Build a user-friendly markdown message presenting multiple search results.
     No LLM call — purely formatting.
+
+    Renders shape-aware detail per option:
+      - emails/drafts (search_emails, search_drafts): Subject, From, Date, body preview
+      - docs/files (list_my_docs, search_files, list_files): Name, ID, Modified
     """
     msg = "**Multiple results found** — please select one:\n\n"
 
+    is_email_shape = source_tool in ("search_emails", "search_drafts")
+
     for i, option in enumerate(options, 1):
-        name = option.get("name") or option.get("title") or option.get("subject") or f"Item {i}"
-        msg += f"**{i}.** {name}\n"
-        if option.get("id"):
-            msg += f"   ID: `{option['id']}`\n"
-        if option.get("modified"):
-            msg += f"   Modified: {option['modified']}\n"
-        msg += "\n"
+        if is_email_shape:
+            subject = option.get("subject") or "(no subject)"
+            sender = option.get("from") or option.get("sender") or "(unknown sender)"
+            date = option.get("date") or option.get("modified") or ""
+            raw_body = option.get("body") or option.get("snippet") or ""
+
+            body_preview = ""
+            if raw_body:
+                collapsed = " ".join(str(raw_body).split())
+                body_preview = collapsed[:140]
+                if len(collapsed) > 140:
+                    body_preview += "..."
+
+            msg += f"**{i}.** {subject}\n"
+            msg += f"   From: {sender}\n"
+            if date:
+                msg += f"   Date: {date}\n"
+            if body_preview:
+                msg += f"   Preview: {body_preview}\n"
+            msg += "\n"
+        else:
+            name = option.get("name") or option.get("title") or option.get("subject") or f"Item {i}"
+            msg += f"**{i}.** {name}\n"
+            if option.get("id"):
+                msg += f"   ID: `{option['id']}`\n"
+            if option.get("modified"):
+                msg += f"   Modified: {option['modified']}\n"
+            msg += "\n"
 
     msg += "---\n"
     msg += "Reply with the **number** (e.g. \"1\") or the **name** of the item you want.\n"
