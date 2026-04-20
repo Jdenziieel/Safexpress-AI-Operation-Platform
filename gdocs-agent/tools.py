@@ -77,26 +77,61 @@ def get_google_service(service_name: str, version: str, credentials_dict: Dict):
 
 
 # Plain function without decorator - can be used directly or wrapped
-def _create_google_doc_impl(title: str, credentials_dict: Dict) -> str:
-    """Implementation of Google Doc creation logic"""
-    # create a google docs document
+def _create_google_doc_impl(
+    title: str,
+    credentials_dict: Dict,
+    folder_id: str = None,
+) -> str:
+    """Create a new Google Doc, optionally moved into a target Drive folder.
+
+    folder_id: Drive folder ID to place the doc in. The Docs API does not
+    accept a parent at creation time, so we create at the Drive root and
+    then reparent via the Drive API. If the move fails, the doc still exists
+    at root and the failure is surfaced via a 'folder_moved: no' marker in
+    the returned string (parser picks it up for the structured response).
+    """
     try:
-        # This connects to the google docs api
         docs_service = get_google_service("docs", "v1", credentials_dict)
-        # creates document structure
         doc = {"title": title}
 
-        # sends request to Google to create the document
         document = docs_service.documents().create(body=doc).execute()
 
-        # extracts document id from google's response
         doc_id = document.get("documentId")
-
-        # build the url for users
         doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
 
-        # return success message
-        return f"Document created successfully!\nTitle: {title}\nID: {doc_id}\nURL: {doc_url}"
+        folder_moved = False
+        folder_error = None
+        if folder_id:
+            try:
+                drive_service = get_google_service("drive", "v3", credentials_dict)
+                current = (
+                    drive_service.files()
+                    .get(fileId=doc_id, fields="parents")
+                    .execute()
+                )
+                current_parents = ",".join(current.get("parents") or [])
+                drive_service.files().update(
+                    fileId=doc_id,
+                    addParents=folder_id,
+                    removeParents=current_parents or None,
+                    fields="id, parents",
+                ).execute()
+                folder_moved = True
+            except Exception as move_err:
+                folder_error = str(move_err)
+
+        lines = [
+            "Document created successfully!",
+            f"Title: {title}",
+            f"ID: {doc_id}",
+            f"URL: {doc_url}",
+        ]
+        if folder_id:
+            lines.append(f"Folder ID: {folder_id}")
+            lines.append(f"Folder moved: {'yes' if folder_moved else 'no'}")
+            if folder_error:
+                lines.append(f"Folder move error: {folder_error}")
+        return "\n".join(lines)
 
     except HttpError as error:
         return f"error in creating document: {error}"
@@ -1393,12 +1428,16 @@ def _create_doc_with_content_impl(
     credentials_dict: Dict,
     text: str = None,
     file_path: str = None,
+    folder_id: str = None,
 ) -> Dict[str, Any]:
     """
     Create a new Google Doc and populate it with content in a single operation.
 
     Accepts either `text` (inline string) or `file_path` (local file to read).
     If both are provided, `file_path` takes precedence.
+
+    folder_id: Optional Drive folder ID to place the new doc in. Passed through
+    to `_create_google_doc_impl` which reparents via the Drive API after creation.
 
     Returns a structured dict (not a string) for direct-dispatch consumption.
     """
@@ -1410,7 +1449,6 @@ def _create_doc_with_content_impl(
             "error": "Either 'text' or 'file_path' must be provided",
         }
 
-    # Resolve content from file if file_path is given
     content = text or ""
     if file_path:
         try:
@@ -1419,8 +1457,7 @@ def _create_doc_with_content_impl(
         except Exception as e:
             return {"success": False, "error": f"Failed to read file: {e}"}
 
-    # Step 1: Create the document
-    create_result = _create_google_doc_impl(title, credentials_dict)
+    create_result = _create_google_doc_impl(title, credentials_dict, folder_id=folder_id)
 
     if "error" in create_result.lower() and "successfully" not in create_result.lower():
         return {"success": False, "error": create_result}
@@ -1432,7 +1469,13 @@ def _create_doc_with_content_impl(
     doc_id = doc_id_match.group(1)
     doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
 
-    # Step 2: Add content to the document
+    folder_moved = "Folder moved: yes" in create_result
+    folder_move_error = None
+    if folder_id and not folder_moved:
+        err_match = re.search(r"Folder move error: (.+)", create_result)
+        if err_match:
+            folder_move_error = err_match.group(1).strip()
+
     add_result = _add_text_to_doc_impl(doc_id, content, credentials_dict)
 
     if "error" in add_result.lower() and "successfully" not in add_result.lower():
@@ -1441,6 +1484,8 @@ def _create_doc_with_content_impl(
             "error": f"Document created (ID: {doc_id}) but failed to add content: {add_result}",
             "document_id": doc_id,
             "document_url": doc_url,
+            "folder_id": folder_id,
+            "folder_moved": folder_moved,
         }
 
     return {
@@ -1449,6 +1494,9 @@ def _create_doc_with_content_impl(
         "document_url": doc_url,
         "title": title,
         "text_length": len(content),
+        "folder_id": folder_id,
+        "folder_moved": folder_moved,
+        "folder_move_error": folder_move_error,
     }
 
 

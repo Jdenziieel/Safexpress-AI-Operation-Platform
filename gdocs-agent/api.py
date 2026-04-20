@@ -73,11 +73,17 @@ def _parse_tool_result(tool_name: str, raw: str, inputs: Dict[str, Any]) -> Dict
     doc_url = url_match.group(1) if url_match else ""
 
     if tool_name == "create_doc":
+        folder_id_match = re.search(r"Folder ID: ([a-zA-Z0-9_-]+)", raw)
+        folder_moved_match = re.search(r"Folder moved: (yes|no)", raw)
+        folder_err_match = re.search(r"Folder move error: (.+)", raw)
         return {
             "success": True,
             "document_id": doc_id,
             "document_url": doc_url,
             "title": title_match.group(1).strip() if title_match else inputs.get("title", ""),
+            "folder_id": folder_id_match.group(1) if folder_id_match else inputs.get("folder_id"),
+            "folder_moved": folder_moved_match.group(1) == "yes" if folder_moved_match else None,
+            "folder_move_error": folder_err_match.group(1).strip() if folder_err_match else None,
         }
 
     if tool_name == "add_text":

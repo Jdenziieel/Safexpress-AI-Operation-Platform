@@ -56,27 +56,48 @@ class ToolResponse(BaseModel):
 # ============================================================
 
 
+def _build_google_credentials(credentials_dict: CredentialsDict) -> Credentials:
+    """Build a Credentials object from the request payload + env fallbacks."""
+    from google.auth.transport.requests import Request as AuthRequest
+
+    creds = Credentials(
+        token=credentials_dict.access_token or os.getenv("GOOGLE_ACCESS_TOKEN"),
+        refresh_token=credentials_dict.refresh_token
+        or os.getenv("GOOGLE_REFRESH_TOKEN"),
+        client_id=credentials_dict.client_id or os.getenv("GOOGLE_CLIENT_ID"),
+        client_secret=credentials_dict.client_secret
+        or os.getenv("GOOGLE_CLIENT_SECRET"),
+        token_uri="https://oauth2.googleapis.com/token",
+    )
+    if creds.refresh_token:
+        try:
+            creds.refresh(AuthRequest())
+        except Exception:
+            pass
+    return creds
+
+
 def create_sheets_service(credentials_dict: CredentialsDict):
     """Create authenticated Google Sheets service"""
     try:
-        from google.auth.transport.requests import Request as AuthRequest
-        creds = Credentials(
-            token=credentials_dict.access_token or os.getenv("GOOGLE_ACCESS_TOKEN"),
-            refresh_token=credentials_dict.refresh_token
-            or os.getenv("GOOGLE_REFRESH_TOKEN"),
-            client_id=credentials_dict.client_id or os.getenv("GOOGLE_CLIENT_ID"),
-            client_secret=credentials_dict.client_secret
-            or os.getenv("GOOGLE_CLIENT_SECRET"),
-            token_uri="https://oauth2.googleapis.com/token",
-        )
-        if creds.refresh_token:
-            try:
-                creds.refresh(AuthRequest())
-            except Exception:
-                pass
+        creds = _build_google_credentials(credentials_dict)
         return build("sheets", "v4", credentials=creds)
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+
+
+def create_drive_service(credentials_dict: CredentialsDict):
+    """Create an authenticated Google Drive service reusing the sheets creds.
+
+    The same OAuth token is used to move newly-created sheets into a target
+    folder via Drive's files().update (add/remove parents). Requires the
+    consent flow to have included the `drive` scope.
+    """
+    try:
+        creds = _build_google_credentials(credentials_dict)
+        return build("drive", "v3", credentials=creds)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Drive auth failed: {str(e)}")
 
 
 # ============================================================
@@ -88,19 +109,27 @@ def create_sheet(
     title: str,
     sheet_names: Optional[List[str]] = None,
     initial_data: Optional[List[List[Any]]] = None,
+    folder_id: Optional[str] = None,
     credentials_dict: Optional[CredentialsDict] = None,
 ) -> Dict[str, Any]:
     """
-    Create a new Google Spreadsheet
+    Create a new Google Spreadsheet, optionally inside a specific Drive folder.
 
     Args:
         title: Name of the spreadsheet
         sheet_names: Optional list of sheet tab names (default: ["Sheet1"])
         initial_data: Optional 2D list of data to populate first sheet
+        folder_id: Optional Drive folder ID to place the new sheet in. The
+                   sheet is first created at the Drive root (Sheets API does
+                   not accept a parent at creation time), then reparented via
+                   Drive API. If omitted, the sheet stays in My Drive root.
+                   Planners should resolve a folder_path to folder_id with
+                   drive_agent.get_folder_info (strict) or
+                   drive_agent.create_folder (explicit create) beforehand.
         credentials_dict: Google OAuth credentials
 
     Returns:
-        Dictionary with new sheet details
+        Dictionary with new sheet details (includes folder_id + folder_moved flag)
     """
     try:
         if not credentials_dict:
@@ -108,7 +137,6 @@ def create_sheet(
 
         service = create_sheets_service(credentials_dict)
 
-        # Prepare sheets configuration
         sheets = []
         if sheet_names:
             for name in sheet_names:
@@ -116,14 +144,12 @@ def create_sheet(
         else:
             sheets.append({"properties": {"title": "Sheet1"}})
 
-        # Create spreadsheet
         spreadsheet = {"properties": {"title": title}, "sheets": sheets}
 
         result = service.spreadsheets().create(body=spreadsheet).execute()
         sheet_id = result.get("spreadsheetId")
         sheet_url = result.get("spreadsheetUrl")
 
-        # Add initial data if provided
         if initial_data and len(initial_data) > 0:
             first_sheet_name = sheet_names[0] if sheet_names else "Sheet1"
             service.spreadsheets().values().update(
@@ -133,12 +159,47 @@ def create_sheet(
                 body={"values": initial_data},
             ).execute()
 
+        # Reparent into the target folder if requested. We do NOT fail the
+        # whole creation if the move fails — the sheet still exists at root,
+        # so we return success + a warning field instead.
+        folder_moved = False
+        move_warning: Optional[str] = None
+        if folder_id:
+            try:
+                drive = create_drive_service(credentials_dict)
+                current = (
+                    drive.files()
+                    .get(fileId=sheet_id, fields="parents")
+                    .execute()
+                )
+                current_parents = ",".join(current.get("parents") or [])
+                drive.files().update(
+                    fileId=sheet_id,
+                    addParents=folder_id,
+                    removeParents=current_parents or None,
+                    fields="id, parents",
+                ).execute()
+                folder_moved = True
+            except Exception as move_err:
+                move_warning = (
+                    f"Sheet created but move to folder '{folder_id}' failed: {move_err}"
+                )
+
+        message = f"Created spreadsheet: {title}"
+        if folder_moved:
+            message += f" (in folder {folder_id})"
+        elif move_warning:
+            message += f" — {move_warning}"
+
         return {
             "success": True,
             "sheet_id": sheet_id,
             "sheet_url": sheet_url,
             "title": title,
-            "message": f"Created spreadsheet: {title}",
+            "folder_id": folder_id,
+            "folder_moved": folder_moved,
+            "warning": move_warning,
+            "message": message,
         }
 
     except HttpError as e:

@@ -176,16 +176,77 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                 if "list_events" not in cal_tools and "list_events" in cal_caps:
                     cal_tools.append("list_events")
 
-        # Drive agent safety net: drive_agent.rename_file accepts file_id
-        # only (no name-based auto-lookup). When rename_file is selected,
-        # include search_files so the planner can resolve file names to IDs
-        # via its can_be_derived_from hint (see agent_capabilities_v3.py).
+        # Drive agent safety net: drive_agent.rename_file and
+        # drive_agent.move_file accept file_id only (no name-based auto-lookup).
+        # When either is selected, include search_files so the planner can
+        # resolve file names to IDs (see their can_be_derived_from hint in
+        # agent_capabilities_v3.py).
+        _DRIVE_FILE_ID_MUTATIONS = {"rename_file", "move_file"}
         if "drive_agent" in validated:
             drive_tools = validated["drive_agent"]
             drive_caps = agent_capabilities.get("drive_agent", {}).get("tools", {})
-            if "rename_file" in drive_tools:
+            if any(t in _DRIVE_FILE_ID_MUTATIONS for t in drive_tools):
                 if "search_files" not in drive_tools and "search_files" in drive_caps:
                     drive_tools.append("search_files")
+
+        # "Put X in folder Y" safety net: when the user asks to create a
+        # sheet or doc AND references a folder, the planner needs a way to
+        # resolve the folder name to a folder_id. Without this, Tier 1 may
+        # emit folder_id: {"query": "Y"} or the planner may hallucinate a
+        # Jinja template that doesn't exist. We always include
+        # drive_agent.get_folder_info (STRICT lookup, fails on missing folders
+        # — by design, to avoid silently creating typo folders). If the user
+        # explicitly asks to create the folder, we also include create_folder.
+        _FOLDER_PLACEMENT_KEYWORDS = (
+            " in folder ", " inside folder ", " into folder ", " to folder ",
+            " in the folder ", " into the folder ", " inside the folder ",
+            " in my folder ", " under folder ", " to the folder ",
+        )
+        _EXPLICIT_FOLDER_CREATE = (
+            "create a folder", "create folder", "make a folder",
+            "make a new folder", "new folder named", "new folder called",
+            "make folder",
+        )
+        # Patterns like "create a <Name> folder", "make a Q1 budget folder",
+        # "create new Finance folder" — the noun "folder" is preceded by a
+        # folder-name token rather than the literal word "a folder". A
+        # narrow regex keeps this off chatter like "create a file in folder".
+        # Allows up to 3 intervening name tokens so "create a 2026 Q1 budget
+        # folder" still registers as an explicit creation request.
+        import re as _re
+        _EXPLICIT_FOLDER_CREATE_PATTERNS = [
+            _re.compile(r"\b(?:create|make)\s+(?:a|an|new|another)\s+(?:\S+\s+){0,3}folder\b"),
+            _re.compile(r"\b(?:create|make)\s+new\s+folder\b"),
+        ]
+        _FILE_CREATION_TOOLS_IN_FOLDER = {
+            ("sheets_agent", "create_sheet"),
+            ("docs_agent", "create_doc"),
+            ("docs_agent", "create_doc_with_content"),
+            ("drive_agent", "upload_file"),
+        }
+        mentions_folder_placement = any(
+            kw in input_lower for kw in _FOLDER_PLACEMENT_KEYWORDS
+        ) or " folder " in input_lower or " folder." in input_lower or input_lower.endswith(" folder")
+        asks_explicit_folder_create = any(
+            kw in input_lower for kw in _EXPLICIT_FOLDER_CREATE
+        ) or any(p.search(input_lower) for p in _EXPLICIT_FOLDER_CREATE_PATTERNS)
+        has_file_creation_in_folder = any(
+            tool in validated.get(agent_name, [])
+            for agent_name, tool in _FILE_CREATION_TOOLS_IN_FOLDER
+        )
+        if has_file_creation_in_folder and (mentions_folder_placement or asks_explicit_folder_create):
+            drive_caps = agent_capabilities.get("drive_agent", {}).get("tools", {})
+            if "drive_agent" not in validated:
+                validated["drive_agent"] = []
+            drive_tools = validated["drive_agent"]
+            # Strict lookup so the planner can resolve "Finance" → folder_id
+            # and fail loudly if it doesn't exist (user never asked to create).
+            if "get_folder_info" not in drive_tools and "get_folder_info" in drive_caps:
+                drive_tools.append("get_folder_info")
+            # Only offer create_folder when the user explicitly asked for it.
+            if asks_explicit_folder_create:
+                if "create_folder" not in drive_tools and "create_folder" in drive_caps:
+                    drive_tools.append("create_folder")
 
         # Delivery order workflow: ensure all three agents and their
         # specialised tools are present when the request involves

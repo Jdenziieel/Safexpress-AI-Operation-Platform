@@ -407,11 +407,16 @@ PLANNING RULES:
    - CALENDAR events (two paths):
      (a) TITLE keyword: if the user named the event (e.g. "my Sprint Review meeting", "delete the Standup"), pass event_name directly to update_event / delete_event / confirm_delete_event — the calendar agent does a case-insensitive substring match on upcoming events. It fails on zero matches or multiple matches, so only use this path when the user gave a clear, likely-unique title keyword.
      (b) TIME/ATTRIBUTE reference: if the user referred by date/time/attendees/location (e.g. "my meeting on April 9 7-9am", "the 2pm tomorrow"), call calendar_agent.list_events first with a narrow time window → declare output_variables {{"event_id": "events[0].event_id"}} → reference {{{{ event_id }}}} in the mutation step.
-   - DRIVE files: drive_agent.search_files → declare output_variables {{"file_id": "results[0].id"}} → reference {{{{ file_id }}}} in rename_file. Honor the `can_be_derived_from` hint on the tool capability.
+   - DRIVE files: drive_agent.search_files → declare output_variables {{"file_id": "results[0].id"}} → reference {{{{ file_id }}}} in rename_file or move_file. Honor the `can_be_derived_from` hint on the tool capability.
+   - DRIVE folders: when the user wants a file created/placed inside a named folder, resolve the folder_id FIRST. Use drive_agent.get_folder_info (STRICT lookup — fails if folder missing) when the user only referenced the folder. Use drive_agent.create_folder ONLY if the user explicitly asked to create a new folder. Declare output_variables {{"folder_id": "folder_id"}} → reference {{{{ folder_id }}}} in the subsequent create_sheet / create_doc / create_doc_with_content / upload_file / move_file step. NEVER emit folder_id as {{"query": "..."}}, a name, or any nested dict — it must be a real Drive ID resolved from a prior step.
 10. LLM TRANSFORM: llm_tool.transform_text can transform ANY text between a read step and a write step — not limited to docs. Pattern: (1) read content from any source (read_doc, search_emails, get_thread_conversation, etc.), (2) llm_tool.transform_text with the content variable and an instruction, (3) write the result to any destination (update_doc, edit_doc, create_draft_email, add_text, create_doc_with_content, reply_to_email, etc.). Examples: fix grammar in a doc, summarize an email into a doc, rewrite a draft before sending, translate document content. The llm_tool runs locally — no agent endpoint needed.
 11. DRIVE FILE LIMITATION: There is NO tool to download or read file contents from Google Drive. drive_agent.search_files returns file metadata (id, name) only — NOT the file content. You CANNOT pass a Drive file ID to mapping_agent.parse_file or sheets_agent.upload_mapped_data. The mapping_agent can only process LOCAL files (user uploads, email attachment downloads). If a task requires reading a Drive-hosted CSV/Excel file, the plan is NOT feasible — return an empty steps array.
 12. USER-INTENT COVERAGE: If the user's request mentions an action that has NO matching tool in the capabilities above, DO NOT silently drop it and DO NOT invent a tool. Plan steps for the feasible actions only, then APPEND one final llm_tool.transform_text step with inputs {{"instruction": "Return this text verbatim.", "content": "Note: I was unable to <short description of skipped action(s)>."}}. This surfaces the gap to the user in the final response.
-13. VARIABLE REFERENCES: Only use {{{{ var }}}} syntax for variables that are (a) listed in AVAILABLE CONTEXT VARIABLES above, or (b) declared via output_variables in an EARLIER step of the plan you are producing. Task parameters passed inline (from the user's request / extracted info) are NOT templatable — use their literal values directly in inputs, not as {{{{ var }}}} references. If you need a value that isn't yet available (e.g. an event_id, file_id, or document_id), insert a lookup step (list_events, search_files, list_my_docs, etc.) first — see Rule 9. Never emit a template like {{{{ field.query }}}} or {{{{ field.some_attr }}}} unless `field` is a real variable produced by a prior step.
+13. VARIABLE REFERENCES: Only use {{{{ var }}}} syntax for variables that are (a) listed in AVAILABLE CONTEXT VARIABLES above, or (b) declared via output_variables in an EARLIER step of the plan you are producing. Task parameters passed inline (from the user's request / extracted info) are NOT templatable — use their literal values directly in inputs, not as {{{{ var }}}} references. If you need a value that isn't yet available (e.g. an event_id, file_id, or document_id, folder_id), insert a lookup step (list_events, search_files, list_my_docs, get_folder_info, etc.) first — see Rule 9. Never emit a template like {{{{ field.query }}}} or {{{{ field.some_attr }}}} unless `field` is a real variable produced by a prior step.
+14. FOLDER PLACEMENT: To create a sheet/doc inside a folder, DO NOT rely on the file ending up at Drive root — pass a resolved folder_id. The correct chain is:
+   (a) User gave a folder name and did NOT ask to create it → step 1: drive_agent.get_folder_info(folder_path="X"). If it does not exist, this step errors out — surface that to the user via Rule 12's transform_text fallback; never fall back to create_folder silently.
+   (b) User explicitly asked to create a new folder ("create a Finance folder and put X in it") → step 1: drive_agent.create_folder(folder_path="Finance") (idempotent find-or-create).
+   In both cases, step 2 consumes {{{{ folder_id }}}} via output_variables {{"folder_id": "folder_id"}}. The same pattern applies to drive_agent.upload_file (folder_id) and drive_agent.move_file (folder_id) — always resolve the folder_id in a separate prior step, never pass a folder name into a mutation tool.
 
 EXAMPLE:
 User: "Find the latest email from john@example.com and reply saying thanks"
@@ -582,23 +587,90 @@ Available agents and tools:
 # ============================================================================
 
 
+# Suppressed-warning cache so we only log an "unregistered tool" warning
+# once per tool_name per process (otherwise a multi-step plan would spam
+# the log). Name-based heuristics below catch common naming patterns for
+# DANGEROUS and CRITICAL tools as a defence-in-depth layer; the explicit
+# ACTION_RISK_LEVELS map in models/models.py is the source of truth.
+_UNREGISTERED_TOOL_WARNED: set = set()
+
+_DANGEROUS_NAME_HINTS = (
+    "send_", "forward_", "reply_", "update_", "edit_", "append_",
+    "write_", "share_", "replace_", "publish_",
+)
+_CRITICAL_NAME_HINTS = (
+    "delete_", "purge_", "destroy_", "clear_", "wipe_", "empty_",
+    "remove_all_", "drop_",
+)
+
+
 def get_action_risk_level(tool_name: str) -> ActionRiskLevel:
-    """Get risk level for a tool"""
-    return ACTION_RISK_LEVELS.get(tool_name, ActionRiskLevel.MODERATE)
+    """Look up the risk tier for a tool.
+
+    Source of truth: ACTION_RISK_LEVELS in models/models.py. When a tool
+    is not registered there, we fall back to a heuristic:
+
+      1. If the name starts with a CRITICAL hint (delete_, purge_, clear_…)
+         → treat as CRITICAL and warn once.
+      2. Else if the name starts with a DANGEROUS hint (send_, update_,
+         edit_, append_…) → treat as DANGEROUS and warn once.
+      3. Otherwise → MODERATE (same as the prior default).
+
+    This means a new mutation tool that someone forgot to register will
+    STILL pause for approval instead of silently auto-approving. The
+    warning surfaces the missing registration to the operator without
+    breaking the runtime.
+    """
+    explicit = ACTION_RISK_LEVELS.get(tool_name)
+    if explicit is not None:
+        return explicit
+
+    # Name-based fallback
+    lowered = (tool_name or "").lower()
+    fallback_level = ActionRiskLevel.MODERATE
+    for hint in _CRITICAL_NAME_HINTS:
+        if lowered.startswith(hint):
+            fallback_level = ActionRiskLevel.CRITICAL
+            break
+    else:
+        for hint in _DANGEROUS_NAME_HINTS:
+            if lowered.startswith(hint):
+                fallback_level = ActionRiskLevel.DANGEROUS
+                break
+
+    if tool_name and tool_name not in _UNREGISTERED_TOOL_WARNED:
+        _UNREGISTERED_TOOL_WARNED.add(tool_name)
+        try:
+            logger.warning(
+                f"Tool '{tool_name}' is not registered in ACTION_RISK_LEVELS. "
+                f"Falling back to {fallback_level.value.upper()} via name heuristic. "
+                f"Add an explicit entry in supervisor-agent/models/models.py."
+            )
+        except Exception:
+            pass
+
+    return fallback_level
 
 
 def requires_approval(tool_name: str, auto_approve_moderate: bool = True) -> bool:
-    """Check if action requires approval based on risk level"""
+    """Decide whether a tool call must pause for approval.
+
+    SAFE       → never pause.
+    MODERATE   → pause only if caller disables auto-approve (default: no pause).
+    DANGEROUS  → always pause.
+    CRITICAL   → always pause (+ the caller typically requires a second
+                 confirmation step in the approval UI).
+    """
     risk = get_action_risk_level(tool_name)
 
     if risk == ActionRiskLevel.SAFE:
         return False
     elif risk == ActionRiskLevel.MODERATE:
-        return not auto_approve_moderate  # Configurable
-    elif risk in [ActionRiskLevel.DANGEROUS, ActionRiskLevel.CRITICAL]:
+        return not auto_approve_moderate
+    elif risk in (ActionRiskLevel.DANGEROUS, ActionRiskLevel.CRITICAL):
         return True
 
-    return True  # Default to requiring approval
+    return True  # fail-safe: unknown risk tier → require approval
 
 
 class PendingAction:

@@ -144,11 +144,13 @@ agent_capabilities = {
         "description": "Create, edit, and read Google Docs documents. Supports template-based document creation.",
         "tools": {
             "create_doc": {
-                "description": "Create a new Google Doc.",
+                "description": "Create a new Google Doc, optionally inside a specific Drive folder. If folder_id is given, the doc is reparented via Drive API after creation.",
                 "args": {
                     "title": "str (required) — document name",
+                    "folder_id": "str (optional) — Drive folder ID to place the doc in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step.",
                 },
-                "returns": ["success", "document_id", "document_url", "title", "error"],
+                "returns": ["success", "document_id", "document_url", "title", "folder_id", "folder_moved", "folder_move_error", "error"],
+                "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info|drive_agent.create_folder"},
             },
             "list_my_docs": {
                 "description": "Search user's Google Docs by name. ALWAYS use this first to resolve a document name/title to its ID before calling read_doc, edit_doc, update_doc, or add_text. Returns a list of matching documents with their IDs.",
@@ -186,14 +188,16 @@ agent_capabilities = {
                 "can_be_derived_from": {"document_id": "list_my_docs"},
             },
             "create_doc_with_content": {
-                "description": "Create a new Google Doc and populate it with content in one step. Accepts text directly or reads from a local file (PDF, txt). Prefer this over separate create_doc + add_text when content is available.",
+                "description": "Create a new Google Doc and populate it with content in one step. Accepts text directly or reads from a local file (PDF, txt). Prefer this over separate create_doc + add_text when content is available. Supports folder_id to place the doc in a specific Drive folder.",
                 "args": {
                     "title": "str (required) — document name",
                     "text": "str (optional) — text content to add to the document",
                     "file_path": "str (optional) — local file path to read content from (PDF, txt). Use {{ uploaded_file.temp_path }} when user uploads a file.",
+                    "folder_id": "str (optional) — Drive folder ID to place the doc in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step.",
                 },
-                "returns": ["success", "document_id", "document_url", "title", "text_length", "error"],
+                "returns": ["success", "document_id", "document_url", "title", "text_length", "folder_id", "folder_moved", "folder_move_error", "error"],
                 "note": "At least one of 'text' or 'file_path' must be provided. file_path takes precedence if both given.",
+                "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info|drive_agent.create_folder"},
             },
             "add_text_from_file": {
                 "description": "Read a local file (PDF, txt) and add its content to an existing Google Doc.",
@@ -383,11 +387,15 @@ agent_capabilities = {
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "create_sheet": {
-                "description": "Create new Google Spreadsheet.",
+                "description": "Create a new Google Spreadsheet, optionally inside a specific Drive folder. If folder_id is given, the sheet is reparented via Drive API after creation.",
                 "args": {
-                    "title": "str (required)",
+                    "title": "str (required) — spreadsheet name",
+                    "sheet_names": "List[str] (optional) — tab names (default: ['Sheet1'])",
+                    "initial_data": "List[List[Any]] (optional) — 2D rows to populate the first sheet",
+                    "folder_id": "str (optional) — Drive folder ID to place the sheet in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step.",
                 },
-                "returns": ["success", "sheet_id", "sheet_url"],
+                "returns": ["success", "sheet_id", "sheet_url", "title", "folder_id", "folder_moved", "warning", "message"],
+                "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info|drive_agent.create_folder"},
             },
             "validate_delivery_sheet": {
                 "description": "Validate that a Google Sheet matches the Production Materials Requisition List template. Checks headers (Date, Order Reference, Item Code, Item Description, QTY, UOM, CB Date, Requested by) and tabs (Food, non-food) with case-insensitive tab matching. Also verifies the caller has Editor (write) access. Returns specific errors for: sheet not found, no access, read-only access, or template mismatch.",
@@ -516,55 +524,77 @@ agent_capabilities = {
         },
     },
     "drive_agent": {
-        "description": "Google Drive: upload files, create folders, list/search files. All operations scoped to SafeExpress root folder.",
+        "description": "Google Drive: upload, create folders, list/search/move/rename files across the user's entire Drive (My Drive root by default). Full `auth/drive` scope — no sandboxing.",
         "tools": {
             "upload_file": {
-                "description": "Upload file to Google Drive.",
+                "description": "Upload a LOCAL file to Google Drive. Accepts either folder_id (preferred when known) or folder_path (find-or-created at Drive root). Defaults to My Drive root.",
                 "args": {
-                    "file_path": "str (required) — local file path",
+                    "file_path": "str (required) — local file path on disk (NOT a Drive file ID). Use {{ uploaded_file.temp_path }} for user-uploaded files.",
                     "filename": "str (required) — name for uploaded file",
-                    "folder_path": "str (optional) — target folder (e.g., 'Operations/2024')",
+                    "folder_id": "str (optional) — destination folder Drive ID (preferred when known from a prior step)",
+                    "folder_path": "str (optional) — destination folder path (e.g., 'Operations/2024'). Find-or-created.",
                     "mime_type": "str (optional)",
                 },
-                "returns": ["success", "file_id", "file_url", "filename", "folder_path", "message", "error"],
+                "returns": ["success", "file_id", "file_url", "filename", "folder_id", "folder_path", "message", "error"],
+                "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info|drive_agent.create_folder"},
             },
             "create_folder": {
-                "description": "Create folder or nested folder structure. Auto-creates parent folders.",
+                "description": "Find-or-create a folder (or nested folder chain) anywhere in the user's Drive. Idempotent — repeated calls with the same path return the same folder ID instead of duplicating. Use this ONLY when the user explicitly asks to create a folder, OR when a creation flow implies folder creation (e.g., 'upload X to NewFolder' and NewFolder doesn't exist yet and user consents).",
                 "args": {
                     "folder_path": "str (required) — path to create (e.g., 'Operations/2024/Reports')",
+                    "parent_folder_id": "str (optional) — anchor the chain under this folder ID instead of Drive root",
                 },
                 "returns": ["success", "folder_id", "folder_url", "folder_path", "message", "error"],
+                "can_be_derived_from": {"parent_folder_id": "drive_agent.get_folder_info"},
             },
             "list_folders": {
-                "description": "List all folders with tree structure.",
+                "description": "List folders under a parent (defaults to My Drive root).",
                 "args": {
+                    "parent_folder_id": "str (optional) — folder ID to list under (default: Drive root)",
                     "max_results": "int (optional) — limit number of folders returned",
+                    "max_depth": "int (optional) — tree depth (default 3)",
                 },
                 "returns": ["success", "folders", "count", "tree", "message", "error"],
-                "returns_detail": "folders is an array; each folder has: id, name, createdTime",
+                "returns_detail": "folders is an array; each folder has: id, name, createdTime, parents",
             },
             "list_files": {
-                "description": "List files in a folder.",
+                "description": "List files inside a Drive folder (by folder_id or folder_path). Defaults to My Drive root when neither is provided.",
                 "args": {
-                    "folder_path": "str (optional) — folder to list (default: root)",
+                    "folder_id": "str (optional) — folder Drive ID (preferred when known)",
+                    "folder_path": "str (optional) — folder path relative to Drive root (resolved to ID)",
                 },
-                "returns": ["success", "files", "count", "folder_path", "message", "error"],
+                "returns": ["success", "files", "count", "folder_id", "folder_path", "message", "error"],
                 "returns_detail": "files is array of {id, name, mimeType, size, createdTime, webViewLink}",
+                "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info"},
             },
             "search_files": {
-                "description": "Search files by name/keywords.",
+                "description": "Search files by name across the user's whole Drive (all folders). Returns files the user has access to.",
                 "args": {
                     "search_term": "str (required) — keywords to search",
                 },
                 "returns": ["success", "results", "count", "search_term", "message", "error"],
-                "returns_detail": "results is an array; each result has: id, name, mimeType, size, createdTime, webViewLink",
+                "returns_detail": "results is an array; each result has: id, name, mimeType, size, createdTime, webViewLink, parents",
             },
             "get_folder_info": {
-                "description": "Get folder details (file count, subfolder count).",
+                "description": "STRICT folder lookup by path — resolves a folder_path (e.g. 'Finance/Q1') to its ID and returns summary stats. Does NOT create missing folders; returns an error if the folder is not found. Use this BEFORE any create/upload/move step when the user specified a folder but did not explicitly ask to create it.",
                 "args": {
                     "folder_path": "str (required)",
                 },
-                "returns": ["success", "folder_id", "folder_name", "file_count", "subfolder_count", "message", "error"],
+                "returns": ["success", "folder_id", "folder_name", "folder_path", "file_count", "subfolder_count", "message", "error"],
+            },
+            "move_file": {
+                "description": "Move (reparent) a Drive file or folder to another folder. Reparents cleanly — removes all existing parents and adds the destination. Requires the file/folder ID (use search_files or list_files to resolve a name → ID first). By default, fails fast if the destination folder_path does not exist — call create_folder first when folder creation is intended.",
+                "args": {
+                    "file_id": "str (required) — Drive file or folder ID to move [via search_files: search_term]",
+                    "folder_id": "str (optional) — destination folder Drive ID (preferred when known)",
+                    "folder_path": "str (optional) — destination folder path, e.g. 'Finance/Q1'",
+                    "create_if_missing": "bool (optional, default false) — when folder_path is used, auto-create missing segments. Leave false so typos fail loud; use create_folder explicitly when new folders are intended.",
+                },
+                "returns": ["success", "file_id", "file_name", "file_url", "destination_folder_id", "destination_folder_path", "new_parents", "message", "error"],
+                "can_be_derived_from": {
+                    "file_id": "drive_agent.search_files|drive_agent.list_files",
+                    "folder_id": "drive_agent.get_folder_info|drive_agent.create_folder",
+                },
             },
             "search_template_and_data": {
                 "description": "Search Drive for BOTH a template file and a data file by name. Required before docs_agent.create_from_template_and_data_ids.",

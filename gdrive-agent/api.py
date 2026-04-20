@@ -27,6 +27,8 @@ from tools import (
     get_folder_info_impl,
     get_safeexpress_folder_id,
     find_folder,
+    resolve_folder_path_to_id,
+    move_file_impl,
     # Legacy compatibility
     create_nested_folder,
     upload_stream_to_folder,
@@ -116,15 +118,15 @@ def get_service_from_creds(credentials_dict: CredentialsDict):
 def format_folder_tree(folders: list) -> str:
     """Format folder structure as a readable tree"""
     if not folders:
-        return "No folders found in SafeExpress."
-    
-    lines = ["SafeExpress/"]
+        return "No folders found."
+
+    lines = ["My Drive/"]
     for folder in folders:
         lines.append(folder["display"])
     return "\n".join(lines)
 
 
-def format_file_list(files: list, location: str = "SafeExpress") -> str:
+def format_file_list(files: list, location: str = "My Drive") -> str:
     """Format file list as readable text"""
     if not files:
         return f"No files in {location}"
@@ -148,56 +150,80 @@ def format_file_list(files: list, location: str = "SafeExpress") -> str:
 
 def upload_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
-    Upload a file to Google Drive (SafeExpress folder or specific path)
-    
+    Upload a LOCAL file to Google Drive.
+
     Inputs:
         file_path: str (required) - Local file path to upload
         filename: str (required) - Name for the uploaded file
-        folder_path: str (optional) - Target folder path (e.g., 'Operations/2024')
+        folder_id: str (optional) - Target folder Drive ID (preferred when known)
+        folder_path: str (optional) - Target folder path, e.g. 'Operations/2024'
+                     (find-or-created at Drive root)
         mime_type: str (optional) - MIME type of the file
-    
+
     Returns:
         success: bool
         file_id: str - Google Drive file ID
         file_url: str - Direct link to file
-        folder_path: str - Where file was uploaded
+        folder_id: str - Resolved destination folder ID
+        folder_path: str - Human-readable destination label
         message: str
     """
     try:
         service = get_service_from_creds(credentials_dict)
-        
+
         file_path = inputs.get("file_path")
         filename = inputs.get("filename")
         folder_path = inputs.get("folder_path")
+        folder_id = inputs.get("folder_id")
         mime_type = inputs.get("mime_type", "application/octet-stream")
-        
+
         if not file_path:
             return {"success": False, "error": "file_path is required"}
         if not filename:
             return {"success": False, "error": "filename is required"}
-        
+
         if not os.path.exists(file_path):
             return {"success": False, "error": f"File not found: {file_path}"}
-        
-        # Upload file
+
+        # Resolve target folder
+        if folder_id:
+            target_folder_id = folder_id
+            location = folder_path or "(existing folder)"
+        elif folder_path:
+            resolved = resolve_folder_path_to_id(service, folder_path, create_if_missing=True)
+            if not resolved:
+                return {"success": False, "error": f"Could not resolve folder '{folder_path}'"}
+            target_folder_id = resolved
+            location = folder_path
+        else:
+            target_folder_id = "root"
+            location = "My Drive"
+
+        # Target folder is already resolved above (whether from folder_id,
+        # resolved folder_path, or the 'root' default). Hand the resolved ID
+        # straight to the raw-stream helper — it still handles .doc/.docx
+        # auto-conversion. Calling upload_stream_to_folder_impl here would
+        # re-resolve folder_path a second time and ignore a caller-supplied
+        # folder_id.
         with open(file_path, 'rb') as f:
-            file_id = upload_stream_to_folder(
-                service, f, filename, mime_type, folder_path
+            upload_result = _raw_stream_upload_to_folder_id(
+                service, f, filename, mime_type, target_folder_id
             )
-        
-        location = f"SafeExpress/{folder_path}" if folder_path else "SafeExpress"
-        file_url = f"https://drive.google.com/file/d/{file_id}/view"
-        
+
+        if not upload_result.get("success"):
+            return upload_result
+
         return {
             "success": True,
-            "file_id": file_id,
-            "file_url": file_url,
+            "file_id": upload_result.get("file_id"),
+            "file_url": upload_result.get("file_url"),
             "filename": filename,
+            "folder_id": target_folder_id,
             "folder_path": location,
             "message": f"Uploaded '{filename}' to {location}",
-            "error": None
+            "error": None,
         }
-        
+
     except Exception as e:
         return {
             "success": False,
@@ -207,13 +233,51 @@ def upload_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
         }
 
 
+def _raw_stream_upload_to_folder_id(service, file_stream, filename: str, mimetype: str, folder_id: str) -> dict:
+    """Upload a raw stream directly to folder_id without find-or-create logic.
+
+    Used by upload_file_tool when the caller provides folder_id directly (from
+    a prior list_folders / create_folder step) instead of folder_path. Keeps
+    .doc/.docx auto-conversion behaviour consistent with upload_stream_to_folder_impl.
+    """
+    try:
+        metadata = {'name': filename, 'parents': [folder_id]}
+
+        if mimetype in [
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword',
+        ]:
+            metadata['mimeType'] = 'application/vnd.google-apps.document'
+            media = MediaIoBaseUpload(file_stream, mimetype=mimetype, resumable=True)
+        else:
+            media = MediaIoBaseUpload(file_stream, mimetype=mimetype)
+
+        file = service.files().create(body=metadata, media_body=media, fields='id').execute()
+        file_id = file.get('id')
+        file_url = f"https://drive.google.com/file/d/{file_id}/view"
+
+        return {
+            "success": True,
+            "file_id": file_id,
+            "file_url": file_url,
+            "folder_id": folder_id,
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 def create_folder_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
-    Create a folder or nested folder structure in SafeExpress
-    
+    Find-or-create a folder (or nested folder chain) in the user's Google Drive.
+
     Inputs:
         folder_path: str (required) - Folder path (e.g., 'Operations/2024/Reports')
-    
+        parent_folder_id: str (optional) - Parent folder ID to anchor the chain.
+                          Defaults to the user's My Drive root.
+
+    Idempotent: if the folder already exists at the specified path, its ID is
+    returned without creating duplicates.
+
     Returns:
         success: bool
         folder_id: str - Google Drive folder ID
@@ -223,24 +287,15 @@ def create_folder_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
     try:
         service = get_service_from_creds(credentials_dict)
-        
+
         folder_path = inputs.get("folder_path")
+        parent_folder_id = inputs.get("parent_folder_id")
         if not folder_path:
             return {"success": False, "error": "folder_path is required"}
-        
-        # Create nested folders
-        folder_id = create_nested_folder(service, folder_path)
-        folder_url = f"https://drive.google.com/drive/folders/{folder_id}"
-        
-        return {
-            "success": True,
-            "folder_id": folder_id,
-            "folder_url": folder_url,
-            "folder_path": f"SafeExpress/{folder_path}",
-            "message": f"Created folder: SafeExpress/{folder_path}",
-            "error": None
-        }
-        
+
+        result = create_nested_folder_impl(service, folder_path, parent_folder_id=parent_folder_id)
+        return result
+
     except Exception as e:
         return {
             "success": False,
@@ -252,11 +307,13 @@ def create_folder_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
 
 def list_folders_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
-    List all folders in SafeExpress with tree structure
-    
+    List folders in the user's Google Drive (tree structure).
+
     Inputs:
+        parent_folder_id: str (optional) - Folder ID to list under. Defaults to Drive root.
         max_results: int (optional) - Limit number of folders returned
-    
+        max_depth: int (optional) - Tree depth (default 3)
+
     Returns:
         success: bool
         folders: list - Array of folder objects with id, name, display, level
@@ -267,23 +324,31 @@ def list_folders_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     try:
         service = get_service_from_creds(credentials_dict)
         max_results = inputs.get("max_results")
-        
-        structure = get_folder_structure(service)
-        
+        max_depth = inputs.get("max_depth", 3)
+        parent_folder_id = inputs.get("parent_folder_id")
+
+        structure_result = get_folder_structure_impl(
+            service, folder_id=parent_folder_id, level=0, max_level=max_depth
+        )
+        if not structure_result.get("success"):
+            return structure_result
+
+        structure = structure_result.get("folders", [])
+
         if max_results and isinstance(max_results, int) and max_results > 0:
             structure = structure[:max_results]
-        
+
         tree = format_folder_tree(structure)
-        
+
         return {
             "success": True,
             "folders": structure,
             "count": len(structure),
             "tree": tree,
-            "message": f"Found {len(structure)} folder(s) in SafeExpress",
+            "message": f"Found {len(structure)} folder(s) in Drive",
             "error": None
         }
-        
+
     except Exception as e:
         return {
             "success": False,
@@ -296,36 +361,42 @@ def list_folders_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
 
 def list_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
-    List files in SafeExpress root or specific folder
-    
+    List files in a Drive folder (or Drive root if no folder is specified).
+
     Inputs:
-        folder_path: str (optional) - Folder path to list files from
-    
+        folder_id: str (optional) - Folder Drive ID (preferred when known)
+        folder_path: str (optional) - Folder path relative to Drive root,
+                     e.g. 'Operations/2024'. Resolved to an ID.
+
     Returns:
         success: bool
         files: list - Array of file objects with id, name, mimeType, size, createdTime
         count: int - Number of files
-        folder_path: str - Location where files were listed
+        folder_id: str - Resolved folder ID
+        folder_path: str - Location label
         message: str
     """
     try:
         service = get_service_from_creds(credentials_dict)
-        
+
+        folder_id = inputs.get("folder_id")
         folder_path = inputs.get("folder_path")
-        safeexpress_id = get_safeexpress_folder_id(service)
-        
-        # Find folder if path specified
-        if folder_path:
-            folder_id = find_folder(service, folder_path, safeexpress_id)
-            
-            # Try nested search if not found
-            if not folder_id:
-                folders = get_folder_structure(service)
-                matching = [f for f in folders if folder_path.lower() in f['name'].lower()]
-                if matching:
-                    folder_id = matching[0]['id']
-            
-            if not folder_id:
+
+        if folder_id:
+            target_id = folder_id
+            location = folder_path or "(specified folder)"
+        elif folder_path:
+            target_id = resolve_folder_path_to_id(service, folder_path, create_if_missing=False)
+            if not target_id:
+                # Fuzzy fallback: look for a loose match in the full tree
+                structure_result = get_folder_structure_impl(service)
+                if structure_result.get("success"):
+                    folders = structure_result.get("folders", [])
+                    matching = [f for f in folders if folder_path.lower() in f['name'].lower()]
+                    if matching:
+                        target_id = matching[0]['id']
+
+            if not target_id:
                 return {
                     "success": False,
                     "files": [],
@@ -333,24 +404,24 @@ def list_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
                     "error": f"Folder '{folder_path}' not found",
                     "message": f"Folder '{folder_path}' not found"
                 }
-            
+
             location = folder_path
         else:
-            folder_id = safeexpress_id
-            location = "SafeExpress"
-        
-        # List files
-        files = list_files_in_folder(service, folder_id)
-        
+            target_id = "root"
+            location = "My Drive"
+
+        files = list_files_in_folder(service, target_id)
+
         return {
             "success": True,
             "files": files,
             "count": len(files),
+            "folder_id": target_id,
             "folder_path": location,
             "message": format_file_list(files, location),
             "error": None
         }
-        
+
     except Exception as e:
         return {
             "success": False,
@@ -363,11 +434,11 @@ def list_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
 
 def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
-    Search for files in SafeExpress
-    
+    Search files by name across the user's whole Drive.
+
     Inputs:
         search_term: str (required) - Keywords to search for
-    
+
     Returns:
         success: bool
         results: list - Array of matching file objects
@@ -377,12 +448,11 @@ def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
     try:
         service = get_service_from_creds(credentials_dict)
-        
+
         search_term = inputs.get("search_term")
         if not search_term:
             return {"success": False, "error": "search_term is required"}
-        
-        # Search files
+
         results = search_files_in_safeexpress(service, search_term)
         
         if not results:
@@ -607,8 +677,8 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
             "original_format": detected_format,
             "current_format": "Google Docs" if should_convert else detected_format,
             "is_editable": should_convert,
-            "folder_path": "SafeExpress/Templates",
-            "message": f"Template '{template_name}' uploaded to SafeExpress/Templates. {conversion_note}",
+            "folder_path": "Templates",
+            "message": f"Template '{template_name}' uploaded to Templates. {conversion_note}",
             "error": None
         }
         
@@ -624,11 +694,15 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
 
 def get_folder_info_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
-    Get detailed information about a specific folder
-    
+    Resolve a folder by path and return its ID + summary stats.
+
+    Does NOT create missing folders — returns an error instead. Use this when
+    you need to look up an existing folder's ID to pass into downstream tools
+    like sheets_agent.create_sheet or drive_agent.move_file.
+
     Inputs:
-        folder_path: str (required) - Folder path to get info for
-    
+        folder_path: str (required) - Folder path to resolve, e.g. 'Finance' or 'Work/2026'
+
     Returns:
         success: bool
         folder_id: str
@@ -640,48 +714,72 @@ def get_folder_info_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
     """
     try:
         service = get_service_from_creds(credentials_dict)
-        
+
         folder_path = inputs.get("folder_path")
         if not folder_path:
             return {"success": False, "error": "folder_path is required"}
-        
-        safeexpress_id = get_safeexpress_folder_id(service)
-        folder_id = find_folder(service, folder_path, safeexpress_id)
-        
-        # Try nested search if not found
-        if not folder_id:
-            folders = get_folder_structure(service)
-            matching = [f for f in folders if folder_path.lower() in f['name'].lower()]
-            if matching:
-                folder_id = matching[0]['id']
-        
-        if not folder_id:
-            return {
-                "success": False,
-                "error": f"Folder '{folder_path}' not found",
-                "message": f"Folder '{folder_path}' not found"
-            }
-        
-        # Get files and subfolders
-        files = list_files_in_folder(service, folder_id)
-        subfolders = list_folders_in_safeexpress(service, folder_id)
-        
-        return {
-            "success": True,
-            "folder_id": folder_id,
-            "folder_name": folder_path.split('/')[-1],
-            "folder_path": f"SafeExpress/{folder_path}",
-            "file_count": len(files),
-            "subfolder_count": len(subfolders),
-            "message": f"{folder_path}: {len(files)} file(s), {len(subfolders)} subfolder(s)",
-            "error": None
-        }
-        
+
+        return get_folder_info_impl(service, folder_path)
+
     except Exception as e:
         return {
             "success": False,
             "error": str(e),
             "message": f"Failed to get folder info: {str(e)}"
+        }
+
+
+def move_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Move (reparent) a Drive file or folder to a target folder.
+
+    Provide EITHER:
+      - folder_id: destination folder's Drive ID (preferred when known from a prior step)
+      - folder_path: destination folder path, e.g. 'Finance/Q1'
+        (resolved strictly by default — set create_if_missing=True to auto-create)
+
+    Inputs:
+        file_id: str (required) - The file or folder to move
+        folder_id: str (optional)
+        folder_path: str (optional)
+        create_if_missing: bool (optional, default False) - When True, missing
+                          folder segments in folder_path are auto-created.
+                          Keeping this False prevents silent folder creation
+                          from a typo (e.g. 'Fiance' → would create a new
+                          'Fiance' folder instead of moving to 'Finance').
+                          The planner should explicitly use create_folder
+                          first when folder creation is actually intended.
+
+    Returns:
+        success, file_id, file_name, file_url, destination_folder_id,
+        destination_folder_path, new_parents, message
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+
+        file_id = inputs.get("file_id")
+        folder_id = inputs.get("folder_id")
+        folder_path = inputs.get("folder_path")
+        create_if_missing = inputs.get("create_if_missing", False)
+
+        if not file_id:
+            return {"success": False, "error": "file_id is required"}
+        if not folder_id and not folder_path:
+            return {"success": False, "error": "Provide folder_id or folder_path"}
+
+        return move_file_impl(
+            service,
+            file_id=file_id,
+            folder_id=folder_id,
+            folder_path=folder_path,
+            create_if_missing=create_if_missing,
+        )
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": f"Move failed: {str(e)}"
         }
 
 def read_file_content_impl(service, file_id: str) -> Dict:
@@ -736,81 +834,69 @@ def read_file_content_impl(service, file_id: str) -> Dict:
 
 def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
-    Read content from a file in Google Drive
-    
+    Read content from a file in Google Drive.
+
     Inputs:
         file_id: str (required) - Google Drive file ID
         OR
-        file_path: str (required) - Path to file in SafeExpress (e.g., 'Data/customer_info.txt')
-    
+        file_path: str (required) - Path to file in Drive (e.g. 'Data/customer_info.txt').
+                   The final segment is the filename; leading segments are folders
+                   resolved from the Drive root.
+
     Returns:
-        success: bool
-        file_id: str
-        file_name: str
-        mime_type: str
-        content: str - File content as text
-        content_length: int
-        message: str
+        success, file_id, file_name, mime_type, content, content_length, message
     """
     try:
         service = get_service_from_creds(credentials_dict)
-        
+
         file_id = inputs.get("file_id")
         file_path = inputs.get("file_path")
-        
-        # If file_path provided, search for the file
+
         if not file_id and file_path:
-            safeexpress_id = get_safeexpress_folder_id(service)
-            
-            # Split path to get folder and filename
             path_parts = file_path.split('/')
             filename = path_parts[-1]
             folder_path = '/'.join(path_parts[:-1]) if len(path_parts) > 1 else None
-            
-            # Find the folder
+
             if folder_path:
-                folder_id = find_folder(service, folder_path, safeexpress_id)
+                folder_id = resolve_folder_path_to_id(service, folder_path, create_if_missing=False)
                 if not folder_id:
-                    # Try nested search
                     folders = get_folder_structure(service)
                     matching = [f for f in folders if folder_path.lower() in f['name'].lower()]
                     if matching:
                         folder_id = matching[0]['id']
             else:
-                folder_id = safeexpress_id
-            
+                folder_id = "root"
+
             if not folder_id:
                 return {
                     "success": False,
                     "error": f"Folder not found: {folder_path}",
                     "message": f"Could not find folder '{folder_path}'"
                 }
-            
-            # Search for file in folder
-            query = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
+
+            safe_name = filename.replace("'", "\\'")
+            query = f"name='{safe_name}' and '{folder_id}' in parents and trashed=false"
             results = service.files().list(q=query, fields="files(id)").execute()
             files = results.get('files', [])
-            
+
             if not files:
                 return {
                     "success": False,
                     "error": f"File not found: {filename}",
-                    "message": f"Could not find file '{filename}' in {folder_path or 'SafeExpress'}"
+                    "message": f"Could not find file '{filename}' in {folder_path or 'My Drive'}"
                 }
-            
+
             file_id = files[0]['id']
-        
+
         if not file_id:
             return {
                 "success": False,
                 "error": "file_id or file_path is required",
                 "message": "Must provide either file_id or file_path"
             }
-        
-        # Read file content
-        result = read_file_content_impl(service, file_id)
-        return result
-        
+
+        return read_file_content_impl(service, file_id)
+
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -870,10 +956,11 @@ DRIVE_TOOLS = {
     "list_files": list_files_tool,
     "search_files": search_files_tool,
     "get_folder_info": get_folder_info_tool,
-    "upload_template": upload_template_tool, 
+    "upload_template": upload_template_tool,
     "read_file_content": read_file_content_tool,
     "search_template_and_data": search_template_and_data_tool,
     "rename_file": rename_file_tool,
+    "move_file": move_file_tool,
 }
 
 
@@ -938,142 +1025,10 @@ async def execute_task(request: TaskRequest):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-def read_file_content_impl(service, file_id: str) -> Dict:
-    """
-    Read content from a file in Google Drive - RETURNS DICT
-    Supports text files, Google Docs, and CSVs
-    """
-    try:
-        # Get file metadata
-        file_metadata = service.files().get(fileId=file_id, fields='name, mimeType').execute()
-        mime_type = file_metadata.get('mimeType')
-        file_name = file_metadata.get('name')
-        
-        content = ""
-        
-        # Handle different file types
-        if mime_type == 'application/vnd.google-apps.document':
-            # Google Docs - export as plain text
-            content = service.files().export(fileId=file_id, mimeType='text/plain').execute().decode('utf-8')
-        elif mime_type == 'text/plain' or mime_type == 'text/csv':
-            # Plain text or CSV
-            content = service.files().get_media(fileId=file_id).execute().decode('utf-8')
-        elif mime_type == 'application/vnd.google-apps.spreadsheet':
-            # Google Sheets - export as CSV
-            content = service.files().export(fileId=file_id, mimeType='text/csv').execute().decode('utf-8')
-        else:
-            return {
-                "success": False,
-                "content": None,
-                "error": f"Unsupported file type: {mime_type}",
-                "message": f"Cannot read content from {mime_type} files"
-            }
-        
-        return {
-            "success": True,
-            "file_id": file_id,
-            "file_name": file_name,
-            "mime_type": mime_type,
-            "content": content,
-            "content_length": len(content),
-            "message": f"Read {len(content)} characters from '{file_name}'",
-            "error": None
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "content": None,
-            "error": str(e),
-            "message": f"Failed to read file content: {str(e)}"
-        }
-
-
-def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
-    """
-    Read content from a file in Google Drive
-    
-    Inputs:
-        file_id: str (required) - Google Drive file ID
-        OR
-        file_path: str (required) - Path to file in SafeExpress (e.g., 'Data/customer_info.txt')
-    
-    Returns:
-        success: bool
-        file_id: str
-        file_name: str
-        mime_type: str
-        content: str - File content as text
-        content_length: int
-        message: str
-    """
-    try:
-        service = get_service_from_creds(credentials_dict)
-        
-        file_id = inputs.get("file_id")
-        file_path = inputs.get("file_path")
-        
-        # If file_path provided, search for the file
-        if not file_id and file_path:
-            safeexpress_id = get_safeexpress_folder_id(service)
-            
-            # Split path to get folder and filename
-            path_parts = file_path.split('/')
-            filename = path_parts[-1]
-            folder_path = '/'.join(path_parts[:-1]) if len(path_parts) > 1 else None
-            
-            # Find the folder
-            if folder_path:
-                folder_id = find_folder(service, folder_path, safeexpress_id)
-                if not folder_id:
-                    # Try nested search
-                    folders = get_folder_structure(service)
-                    matching = [f for f in folders if folder_path.lower() in f['name'].lower()]
-                    if matching:
-                        folder_id = matching[0]['id']
-            else:
-                folder_id = safeexpress_id
-            
-            if not folder_id:
-                return {
-                    "success": False,
-                    "error": f"Folder not found: {folder_path}",
-                    "message": f"Could not find folder '{folder_path}'"
-                }
-            
-            # Search for file in folder
-            query = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
-            results = service.files().list(q=query, fields="files(id)").execute()
-            files = results.get('files', [])
-            
-            if not files:
-                return {
-                    "success": False,
-                    "error": f"File not found: {filename}",
-                    "message": f"Could not find file '{filename}' in {folder_path or 'SafeExpress'}"
-                }
-            
-            file_id = files[0]['id']
-        
-        if not file_id:
-            return {
-                "success": False,
-                "error": "file_id or file_path is required",
-                "message": "Must provide either file_id or file_path"
-            }
-        
-        # Read file content
-        result = read_file_content_impl(service, file_id)
-        return result
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {
-            "success": False,
-            "content": None,
-            "error": str(e),
-            "message": f"Failed to read file: {str(e)}"
-        }
+# NOTE: Dead-code duplicates of read_file_content_impl and read_file_content_tool
+# used to live here (below the @app.post route). They were shadowed by the real
+# definitions above and never reachable via DRIVE_TOOLS, so they were removed as
+# part of the SafeExpress removal cleanup.
 
 
 @app.get("/health")
@@ -1094,12 +1049,17 @@ async def root():
         "version": "2.0.0",
         "available_tools": list(DRIVE_TOOLS.keys()),
         "tool_descriptions": {
-            "upload_file": "Upload a file to SafeExpress or specific folder path",
-            "create_folder": "Create folder or nested folder structure",
-            "list_folders": "List all folders in SafeExpress with tree structure",
-            "list_files": "List files in SafeExpress root or specific folder",
-            "search_files": "Search for files in SafeExpress",
-            "get_folder_info": "Get detailed info about a specific folder"
+            "upload_file": "Upload a LOCAL file to a Google Drive folder (by folder_id or folder_path)",
+            "create_folder": "Find-or-create a folder (or nested chain) anywhere in Drive",
+            "list_folders": "List folders under a parent (defaults to My Drive root)",
+            "list_files": "List files in a Drive folder (by folder_id or folder_path)",
+            "search_files": "Search files by name across the user's whole Drive",
+            "get_folder_info": "Resolve a folder path to its ID (does NOT create missing folders)",
+            "move_file": "Move (reparent) a file or folder to another folder",
+            "rename_file": "Rename a file or folder in Drive",
+            "read_file_content": "Read text content of a Drive file (Docs, Sheets→CSV, text, CSV)",
+            "upload_template": "Upload a template into the Templates folder",
+            "search_template_and_data": "Search for a template + matching data file together"
         },
         "improvements": [
             "Supervisor-compatible /execute_task endpoint",

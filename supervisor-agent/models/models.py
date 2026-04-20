@@ -43,46 +43,145 @@ class ActionApprovalResponse(BaseModel):
     timeout_seconds: int = 300  # 5 minutes default
 
 
-# Categorize all actions by risk level
+# Risk classification decision tree — USE THIS when adding a new tool:
+#
+#   SAFE        → Read-only external API calls, in-memory transforms, or
+#                 local-only side effects (downloading an attachment to a
+#                 temp dir, writing to a local SQLite metadata DB). No
+#                 visible change to the user's Google account state.
+#
+#   MODERATE    → Creates a NEW artifact in the user's account that is
+#                 easy to reverse by the user (a new folder, a new draft,
+#                 a new sheet, a new calendar event, a rename, a move).
+#                 Also: adding a label, creating a doc from a template.
+#                 MODERATE tools DO NOT pause by default
+#                 (auto_approve_moderate=True in requires_approval).
+#
+#   DANGEROUS   → Sends data OUTWARD (email to another party) OR rewrites
+#                 EXISTING shared/collaborative content in place (edit_doc,
+#                 update_doc, append to sheet, update sheet, write delivery
+#                 order data). Always pauses for approval.
+#
+#   CRITICAL    → Permanent, irreversible data loss (delete_*, clear_sheet,
+#                 permanent-trash remove). Pauses for approval + explicit
+#                 confirmation flow.
+#
+# When in doubt, choose the MORE conservative tier. Any tool not listed here
+# falls back to get_action_risk_level() in supervisor_agent.py, which applies
+# name-based heuristics (tools starting with 'delete_'/'purge_'/'wipe_'
+# escalate to CRITICAL; 'send_'/'forward_'/'update_'/'edit_'/'append_'/
+# 'write_'/'share_'/'replace_'/'publish_' escalate to DANGEROUS) before
+# defaulting to MODERATE. Those heuristics are a safety net only — you
+# should still register new DANGEROUS/CRITICAL tools here explicitly so the
+# classification is deterministic and auditable.
 ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
-    # SAFE - Read-only operations
+    # ===============================================================
+    # SAFE — read-only + local-only mutations
+    # ===============================================================
+    # Gmail (read-only)
     "read_recent_emails": ActionRiskLevel.SAFE,
     "search_emails": ActionRiskLevel.SAFE,
+    "search_drafts": ActionRiskLevel.SAFE,
     "get_thread_conversation": ActionRiskLevel.SAFE,
+    "download_attachment": ActionRiskLevel.SAFE,            # writes to local temp
+    "save_attachment_metadata": ActionRiskLevel.SAFE,       # local SQLite write
+    "search_emails_with_delivery_order_attachments": ActionRiskLevel.SAFE,  # search + local downloads
+    # Docs (read-only)
     "read_doc": ActionRiskLevel.SAFE,
+    "list_my_docs": ActionRiskLevel.SAFE,
+    "extract_template_format": ActionRiskLevel.SAFE,
+    # Drive (read-only)
     "list_files": ActionRiskLevel.SAFE,
+    "list_folders": ActionRiskLevel.SAFE,
     "search_files": ActionRiskLevel.SAFE,
+    "search_template_and_data": ActionRiskLevel.SAFE,
+    "get_folder_info": ActionRiskLevel.SAFE,
     "get_file_metadata": ActionRiskLevel.SAFE,
+    "read_file_content": ActionRiskLevel.SAFE,
+    # Sheets (read-only)
+    "read_sheet": ActionRiskLevel.SAFE,
+    "get_sheet_metadata": ActionRiskLevel.SAFE,
+    "get_sheet_headers": ActionRiskLevel.SAFE,
+    "validate_delivery_sheet": ActionRiskLevel.SAFE,
+    "preview_delivery_order_insertion": ActionRiskLevel.SAFE,
+    # Calendar (read-only)
     "list_events": ActionRiskLevel.SAFE,
     "get_event": ActionRiskLevel.SAFE,
+    "list_calendars": ActionRiskLevel.SAFE,
+    # Mapping (pure transforms on local data)
+    "parse_file": ActionRiskLevel.SAFE,
+    "parse_delivery_order_pdfs": ActionRiskLevel.SAFE,
+    "smart_column_mapping": ActionRiskLevel.SAFE,
+    "transform_data": ActionRiskLevel.SAFE,
+    "extract_dates_from_all_rows": ActionRiskLevel.SAFE,
+    "extract_date_from_data": ActionRiskLevel.SAFE,
+    # LLM + KB
     "search_knowledge_base": ActionRiskLevel.SAFE,
-    "list_my_docs": ActionRiskLevel.SAFE,
     "transform_text": ActionRiskLevel.SAFE,
-    
-    # MODERATE - Modifies internal state
-    "create_draft_email": ActionRiskLevel.MODERATE,  # Draft only, not sent
-    "add_label": ActionRiskLevel.MODERATE,           # Just labels
+
+    # ===============================================================
+    # MODERATE — new artifact in user's account (reversible)
+    # ===============================================================
+    # Gmail
+    "create_draft_email": ActionRiskLevel.MODERATE,  # draft, not sent
+    "add_label": ActionRiskLevel.MODERATE,
     "remove_label": ActionRiskLevel.MODERATE,
-    "create_doc": ActionRiskLevel.MODERATE,          # Creates but doesn't share
+    # Docs (new doc; content additions to a NEW doc are still MODERATE)
+    "create_doc": ActionRiskLevel.MODERATE,
+    "create_doc_with_content": ActionRiskLevel.MODERATE,
+    "create_from_my_template": ActionRiskLevel.MODERATE,
+    "create_from_template_and_data_ids": ActionRiskLevel.MODERATE,
+    "create_from_uploaded_template": ActionRiskLevel.MODERATE,
+    # Drive (new artifact or reversible reparenting/rename)
+    "upload_file": ActionRiskLevel.MODERATE,
+    "upload_template": ActionRiskLevel.MODERATE,
+    "create_folder": ActionRiskLevel.MODERATE,
+    "rename_file": ActionRiskLevel.MODERATE,
+    "move_file": ActionRiskLevel.MODERATE,
+    # Sheets (new spreadsheet)
+    "create_sheet": ActionRiskLevel.MODERATE,
+    # Calendar (new or modified event; update_event rewrites but events
+    # have change history and attendee notifications can be recalled)
     "create_event": ActionRiskLevel.MODERATE,
     "update_event": ActionRiskLevel.MODERATE,
-    "upload_file": ActionRiskLevel.MODERATE,
-    
-    # DANGEROUS - Sends data externally
+    "create_calendar": ActionRiskLevel.MODERATE,
+    "rename_calendar": ActionRiskLevel.MODERATE,
+    "resolve_conflict": ActionRiskLevel.MODERATE,
+
+    # ===============================================================
+    # DANGEROUS — sends outward or rewrites existing shared content
+    # ===============================================================
+    # Gmail (outbound email)
     "send_draft_email": ActionRiskLevel.DANGEROUS,
     "reply_to_email": ActionRiskLevel.DANGEROUS,
+    "forward_email": ActionRiskLevel.DANGEROUS,
     "send_email_with_attachment": ActionRiskLevel.DANGEROUS,
-    "add_text": ActionRiskLevel.DANGEROUS,           # Modifies shared doc
-    "edit_doc": ActionRiskLevel.DANGEROUS,           # Targeted text replacement in doc
-    "update_doc": ActionRiskLevel.DANGEROUS,         # Full doc content replacement
+    "send_email": ActionRiskLevel.DANGEROUS,
+    # Docs (in-place content mutation)
+    "add_text": ActionRiskLevel.DANGEROUS,
+    "add_text_from_file": ActionRiskLevel.DANGEROUS,
+    "edit_doc": ActionRiskLevel.DANGEROUS,
+    "update_doc": ActionRiskLevel.DANGEROUS,
+    # Sheets (in-place row mutation)
+    "update_sheet": ActionRiskLevel.DANGEROUS,
+    "append_rows": ActionRiskLevel.DANGEROUS,
+    "upload_mapped_data": ActionRiskLevel.DANGEROUS,
+    "update_by_date_match": ActionRiskLevel.DANGEROUS,
+    "write_delivery_order_data": ActionRiskLevel.DANGEROUS,
+    # Drive (outbound sharing)
     "share_file": ActionRiskLevel.DANGEROUS,
-    "write_delivery_order_data": ActionRiskLevel.DANGEROUS,  # Writes rows to user sheet
-    
-    # CRITICAL - Irreversible actions
+    # Compound end-to-end workflow that touches downloads + sheets + docs
+    "process_delivery_order_workflow": ActionRiskLevel.DANGEROUS,
+
+    # ===============================================================
+    # CRITICAL — permanent data loss
+    # ===============================================================
     "delete_email": ActionRiskLevel.CRITICAL,
     "delete_file": ActionRiskLevel.CRITICAL,
     "delete_event": ActionRiskLevel.CRITICAL,
-    "remove_label_TRASH": ActionRiskLevel.CRITICAL,  # Permanently delete
+    "confirm_delete_event": ActionRiskLevel.CRITICAL,
+    "clear_sheet": ActionRiskLevel.CRITICAL,
+    "remove_label_TRASH": ActionRiskLevel.CRITICAL,
 }
 
 
