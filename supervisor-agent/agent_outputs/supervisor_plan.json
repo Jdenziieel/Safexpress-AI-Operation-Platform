@@ -4,13 +4,11 @@
       "agent": "gmail_agent",
       "tool": "search_emails",
       "inputs": {
-        "query": "from:jdenziieel",
-        "max_results": 3
+        "query": "Order to Starbucks and Co.",
+        "max_results": 5
       },
-      "output_variables": {
-        "latest_emails": "emails"
-      },
-      "description": "Search for the latest 3 emails from 'jdenziieel'"
+      "output_variables": {},
+      "description": "Search for emails with the subject 'Order to Starbucks and Co.'"
     }
   ]
 }

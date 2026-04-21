@@ -29,7 +29,7 @@ class DeliveryOrderService:
 
     def is_delivery_order_request(self, user_message: str) -> bool:
         """
-        Quick pattern check to detect if user is asking about delivery orders.
+        Quick pattern check to detect if user is asking about delivery orders or PDF extraction to sheets.
         
         Args:
             user_message: User message to check
@@ -40,7 +40,9 @@ class DeliveryOrderService:
         delivery_keywords = [
             "delivery order", "delivery orders", "purchase order", "purchase orders",
             "po ", "pos ", "orders from", "search for", "find orders", "find delivery",
-            "orders to", "batangas", "supplier", "vendor order"
+            "orders to", "batangas", "supplier", "vendor order",
+            "product requisition", "extract", "place data", "put", ".pdf", 
+            "extract data", "pdf to sheet"
         ]
         
         user_lower = user_message.lower()

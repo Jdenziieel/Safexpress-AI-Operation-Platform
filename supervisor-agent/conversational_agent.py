@@ -51,7 +51,6 @@ from checks import Tier0ChecksMixin
 
 # Import services
 from services.thread_service import ThreadService
-from services.delivery_order_service import DeliveryOrderService
 from services.summarization_service import SummarizationService
 
 
@@ -105,9 +104,6 @@ class ConversationalAgent(Tier0ChecksMixin):
             process_message_fn=self.process_message,
             get_memory_manager_fn=self._get_memory_manager,
         )
-        
-        # Delivery order workflow service
-        self.delivery_order_service = DeliveryOrderService()
         
         # Summarization service for post-execution result summaries
         self.summarization_service = SummarizationService(llm=self.quick_llm)
@@ -266,13 +262,7 @@ class ConversationalAgent(Tier0ChecksMixin):
                 }
             self.thread_manager.add_message(state_id, "user", user_message, **file_kwargs)
         
-        # === DELIVERY ORDER ADAPTER (DISABLED) ===
-        # Replaced by tool-based workflow through supervisor/orchestrator.
-        # See: mapping_agent.parse_delivery_order_pdfs, sheets_agent.validate_delivery_sheet,
-        #      sheets_agent.preview_delivery_order_insertion, sheets_agent.write_delivery_order_data
-        # === END DELIVERY ORDER ADAPTER ===
-        
-        # 3. Continue with standard message analysis for non-delivery-order requests
+        # 3. Continue with standard message analysis
         analysis = self.analyze_request(user_message, conversation_state, state_id, uploaded_file=uploaded_file)
 
         # === PROGRESS: Understanding ===
