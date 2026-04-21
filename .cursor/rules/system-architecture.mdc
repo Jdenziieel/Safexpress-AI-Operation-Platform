@@ -130,22 +130,27 @@ SQLite file: `supervisor-agent/threads.db`. Tables created at `thread_manager.py
 
 ## 6. Tool filter — what it auto-includes
 
-`tool_filter.identify_agents_and_tools` makes ONE classifier LLM call (`CLASSIFIER_MODEL`, default `gpt-3.5-turbo`). It returns `{agent: [tools]}`. Safety nets extend that (`tool_filter.py:118–181`):
+`tool_filter.identify_agents_and_tools` makes ONE classifier LLM call (`CLASSIFIER_MODEL`, default `gpt-4o-mini` — flipped from `gpt-3.5-turbo` in the fix-sheets-crash-cascade plan because gpt-4o-mini is ~3x cheaper AND measurably better at tool-classification). It returns `{agent: [tools]}`. Safety nets extend that (Blocks A–I in `tool_filter.py`):
 
-| Trigger                                            | Auto-adds |
-|----------------------------------------------------|-----------|
-| email keywords but no `gmail_agent`                | `create_draft_email`, `send_draft_email` |
-| gmail send tool selected                           | `create_draft_email` + `send_draft_email` pair |
-| `send_draft_email` but no `search_drafts`          | `search_drafts` |
-| `docs_agent` selected                              | `list_my_docs` |
-| docs agent + edit keywords (fix/edit/update/…)     | `read_doc`, `edit_doc`, `update_doc` |
-| calendar event mutation selected (`update_event`, `delete_event`, `confirm_delete_event`) | `list_events` |
-| `rename_file` selected                             | `search_files` |
-| delivery-order keywords                            | full DO tool bundle across gmail/mapping/sheets |
-
-`sheets_agent` and other agents without a mutation-tool → lookup-tool pattern have no generic safety net. If you add a mutation tool whose ID must be resolved via a lookup tool, add a matching safety net block so the planner never gets the mutation in isolation.
+| Block | Trigger                                            | Auto-adds |
+|-------|----------------------------------------------------|-----------|
+| A | email keywords but no `gmail_agent`                | `create_draft_email`, `send_draft_email` |
+| B | gmail send tool selected                           | `create_draft_email` + `send_draft_email` pair |
+| B | `send_draft_email` but no `search_drafts`          | `search_drafts` |
+| C | `docs_agent` selected                              | `list_my_docs` |
+| C | docs agent + edit keywords (fix/edit/update/…)     | `read_doc`, `edit_doc`, `update_doc` |
+| C (ext) | `create_doc` selected + content-phrase keywords (`"with content"`, `"with text"`, `"containing"`, `"that says"`, `"saying"`, `"with the following"`, `"with body"`) | `create_doc_with_content` (added ALONGSIDE `create_doc` — planner chooses) |
+| D | calendar event mutation selected (`update_event`, `delete_event`, `confirm_delete_event`) | `list_events` |
+| E | `rename_file` or `move_file` selected              | `search_files` |
+| E (ext) | any sheet-id-consuming tool (`read_sheet`, `update_sheet`, `append_rows`, `get_sheet_metadata`, `clear_sheet`, `get_sheet_headers`, `upload_mapped_data`, `update_by_date_match`) OR `drive_agent.read_file_content` selected | `drive_agent.search_files` (lets Rule 9 do name→ID lookup when no URL is pasted) |
+| F | docs/sheets creation + folder-placement keywords   | `drive_agent.get_folder_info` (+ diagnostic trace of `has_file_creation_in_folder`, `mentions_folder_placement`, `asks_explicit_folder_create`) |
+| G | delivery-order keywords                            | full DO tool bundle across gmail/mapping/sheets |
+| H | sheets/spreadsheet keywords (`"google sheet"`, `"spreadsheet"`, `"tabs"`, `"sheet titled|named|called"`, `"create a sheet"`, `"new sheet"`) AND `sheets_agent` not yet in validated | `sheets_agent.create_sheet` (placed BEFORE Block F so folder_id pairing works). Deliberately NOT triggered by bare `" sheet "` to avoid false positives on "cheat sheet" / "datasheet" |
+| I | `drive_agent` already in validated AND move-phrase keywords (`"move the file"`, `"move file "`, `"move it to"`, `" move "` + `" into "`/`" to folder "`/`" to the "`) | `drive_agent.move_file` (placed BEFORE Block E ext so its `search_files` pairing composes) |
 
 Tier 1 merges `_cached_tool_filter` from prior turn (union), then persists the result back (`conversational_agent.py:737–753`). Cache is wiped when `extracted_info` is cleared after successful workflow.
+
+Run-order matters: Blocks A–D operate per-agent, Block E reads the output of H+I before pairing with `search_files`, Block F reads `validated[docs_agent]`/`validated[sheets_agent]` so H must run before F, and Block G is a narrow keyword net that always runs last. If you add a mutation-tool whose ID must be resolved via a lookup tool, add a matching safety net block so the planner never gets the mutation in isolation (see invariant 5 below).
 
 ## 7. Approval / pause / resume
 
@@ -186,13 +191,17 @@ The assistant message added to memory is this rendered `friendly_summary` — **
 1. **Planner is stateless across turns.** No memory, no `completed_tasks`, no prior `variable_context`. Only `execution_summary + params` + capabilities + `today_date`.
 2. **`variable_context` dies at the end of a completed workflow.** Per-item list IDs (message_id, event_id in `events[i]`) are gone.
 3. **`_clear_workflow_state` runs BEFORE `summarize_execution`**, wiping `extracted_info`. So `original_message` is usually unavailable to the summarizer (routes/threads.py:486 then 508).
-4. **`MODERATE` tools (update_event, create_event) don't pause by default.** Only `DANGEROUS`/`CRITICAL` do.
-5. **Tool filter companion-lookup safety nets cover: gmail drafts, docs, delivery-order, calendar event mutations (→ `list_events`), and drive `rename_file` (→ `search_files`).** Anything else (e.g. sheets mutations, future calendar tools that aren't `update_event`/`delete_event`/`confirm_delete_event`) is NOT auto-paired — add a new block in `tool_filter.py` when you introduce such a tool.
+4. **`MODERATE` tools (update_event, create_event, `copy_file`) don't pause by default.** Only `DANGEROUS`/`CRITICAL` do. `copy_file` was added at MODERATE in the fix-sheets-crash-cascade plan — same tier as its `move_file` / `upload_file` siblings.
+5. **Tool filter companion-lookup safety nets cover: gmail drafts, docs, delivery-order, calendar event mutations (→ `list_events`), drive `rename_file`/`move_file` (→ `search_files`), sheets-id consumers (→ `drive_agent.search_files`), and `drive_agent.read_file_content` (→ `drive_agent.search_files`).** Anything else (e.g. future calendar tools that aren't `update_event`/`delete_event`/`confirm_delete_event`) is NOT auto-paired — add a new block in `tool_filter.py` when you introduce such a tool.
 6. **Cross-turn ID resolution relies on either (a) user typing the name for a fresh lookup, or (b) Tier 1 surfacing the ID into `extracted_info` as a top-level key.** The planner cannot "remember" an ID from last turn.
 7. **ReAct mode is disabled.** `react_workflow = None` (`supervisor_agent.py:1671`), `run_workflow` forces `execution_mode="standard"` (`routes/workflow.py:78`).
 8. **`completed_tasks` is the only structured artifact that crosses turns to an LLM** — and only to Tier 1, truncated to last 5, with scalar-only summaries.
 9. **`entity_memory` field on `ConversationMemory` exists but is never populated.** Don't assume entities survive via that path.
 10. **Planning Rule 13 forbids Jinja references to non-existent variables.** The planner must only template variables listed in AVAILABLE CONTEXT VARIABLES or declared as `output_variables` in an earlier step; task parameters from `extracted_info` are inlined as literal values, NOT as `{{ var }}` references.
+11. **Planning Rule 15 forbids inventing tool names or argument names.** Only (agent, tool) pairs in the filtered capabilities and only argument names declared in that tool's `args` dict may appear in a generated plan. Common hallucinations Rule 15 explicitly calls out: `folder_path` (real name is `folder_id`), `tabs` (real name is `sheet_names`), `rows` (real name is `initial_data`), `content` on `create_doc`/`create_doc_with_content` (real name is `text`). If a needed tool is absent, the planner MUST fall back to Rule 12's `transform_text` instead of fabricating.
+12. **Capability-registry completeness is a hard invariant.** Every tool in any sub-agent's `TOOL_REGISTRY` / `TOOL_MAP` / `DRIVE_TOOLS` / dispatch must have a matching declaration in `supervisor-agent/agent_capabilities_v3.py`, and every declaration in `agent_capabilities_v3.py` must have a dispatch entry in the sub-agent. Drift in either direction is a crash: a dispatch-only tool is invisible to the planner; a declaration-only "ghost" tool crashes when the planner picks it. Enforcement is manual today (re-audit whenever you touch sub-agent tool registration); a smoke-test loop could be added later.
+13. **URL normalization: every tool that takes a Google-side ID MUST accept either the raw ID or the matching Google URL.** Helpers are `_extract_sheet_id` in `Sheets-agent/sheets_agent_api.py`, `_extract_document_id` in `gdocs-agent/tools.py`, and `_extract_drive_file_id` in `gdrive-agent/api.py`. All three are no-ops for already-clean IDs, so they are safe to call unconditionally at the top of a tool implementation.
+14. **`drive_path` vs `file_path` disambiguation.** `file_path` ALWAYS means a LOCAL OS path (e.g. `upload_file.file_path`, `parse_file.file_content` when used in path mode). `drive_path` ALWAYS means a Drive LOGICAL path (e.g. `read_file_content.drive_path`, `download_file.drive_path`). A deprecated `file_path` alias is still accepted by `drive_agent.read_file_content` for one release cycle, emitting a deprecation log line when used.
 
 ## 11. Gmail agent — sub-tool behavior worth knowing
 
@@ -267,3 +276,33 @@ Net behavior: even if Tier 1 still emits a malformed placeholder (Layer 3 soft-g
 3. `agent_capabilities_v3.py` — `forward_email.returns` extended with `original_from`, `forward_message`, and `attachments_forwarded` so the planner and response templates know about the new fields.
 
 Verified offline via a MIME-level simulation (3 scenarios: nested alt + attachment, top-level html + attachment, plain-only) that round-trips the raw sent MIME through `email.BytesParser` and asserts the expected multipart structure + content. No behavior change for plain-text-only messages.
+
+### Bug C — Sheets creation crashed planner at step 2 (`folder_path` phantom arg) and dragged in a cascade of capability-registry + URL-normalization gaps
+
+**Symptom (`supervisor-agent/execution_logs/CM/Run-this-end-to-end-test-in-one-go.log`):** a user asked "Run this end-to-end test in one go" with six sub-tasks (create folder, create sheet, create doc with content, create archive folder, rename + move a file, list files). The workflow aborted at step 2 of 9 with `create_sheet() got an unexpected keyword argument 'folder_path'`. Three compounding bugs were responsible.
+
+**Root cause (three layers):**
+1. Classifier coverage gap: `tool_filter.py` had no safety net for sheets/spreadsheet keywords, no auto-injection of `move_file`, and no `create_doc` → `create_doc_with_content` upgrade when the user supplies content at creation time. The classifier (then `gpt-3.5-turbo`) silently dropped all three tools from the filter.
+2. Planner hallucination on missing tools AND on missing argument names: `PlanStep.agent/tool` are plain `str` (no Literal constraint to the filtered set), and the 14 existing prompt rules did not explicitly ban inventing argument names. The planner filled in gaps with names borrowed from sibling Drive tools: `folder_path`, `tabs`, `rows`.
+3. Capability-registry drift: `sheets_agent.tools` declared only 3 of the 9 real tools; `drive_agent` was missing `upload_template` and `read_file_content` declarations; `docs_agent` had two ghost tools (`extract_template_format`, `create_from_my_template`) declared but not dispatched. The planner's world model disagreed with sub-agent reality in both directions.
+
+**Fix (eight-phase plan — see plan file `fix-sheets-crash-cascade_4fe5cec4.plan.md`):**
+1. Phase 0 — flip `CLASSIFIER_MODEL` default to `gpt-4o-mini` (cheaper AND smarter than `gpt-3.5-turbo`).
+2. Phase 1 — add Blocks H (sheets keywords → `create_sheet`) and I (move keywords gated on `drive_agent` → `move_file`); extend Block C with `create_doc_with_content` on content-phrase; extend Block E with `search_files` injection for sheet-id consumers and `read_file_content`; add diagnostic trace inside Block F. All placed in order so Block E can see the output of H and I.
+3. Phase 2 — DELIBERATELY DROPPED. A post-plan args-match-capability runtime validator was proposed and audited; the audit surfaced documented aliases the sub-agent code accepts but capability does not declare (`start`/`end`/`emails` on `create_event`; `summary`/`name` on event mutations; `content` on `edit_doc`). Strict runtime validation would regress those currently-working flows. Enforcement is therefore pushed into the classifier (Phase 0 + Phase 1) and the planner prompt (Phase 3) instead.
+4. Phase 3 — add Rule 15 (strict tool/arg adherence, explicit no-invent list); extend the planner EXAMPLE block with a `create_folder → create_sheet` chain wiring `folder_id` via `output_variables` + `{{ folder_id }}`; append "DO NOT use folder_path" notes to `folder_id` on the three sibling tools (`sheets_agent.create_sheet`, `docs_agent.create_doc`, `docs_agent.create_doc_with_content`) that were victims of the same Drive-precedent confusion.
+5. Phase 4 — delete the two ghost docs tools; register the six missing sheets tools (`read_sheet`, `update_sheet`, `append_rows`, `get_sheet_metadata`, `clear_sheet`, `get_sheet_headers`); register `drive_agent.upload_template`, `drive_agent.read_file_content`, `docs_agent.analyze_uploaded_template`.
+6. Phase 5 — add/wire URL-to-ID helpers in all three places: `_extract_sheet_id` into 8 sheets tools, new `_extract_document_id` into 6 docs impls, new `_extract_drive_file_id` into `read_file_content_tool`. Users can now paste full Google URLs anywhere an ID is accepted.
+7. Phase 6 — rename `read_file_content.file_path` → `drive_path` with a backwards-compat alias and deprecation log line, resolving the `file_path` collision with `upload_file.file_path` (which means a local OS path).
+8. Phase 7 — add `drive_agent.download_file` (unblocks Drive-file → `mapping_agent.parse_file` chains via a server-side tempfile) and `drive_agent.copy_file` (Drive API copy, native files stay native). Both are registered in `DRIVE_TOOLS` and in capabilities.
+9. Phase 8 — capability-description cleanup: `mapping_agent.parse_file.file_content` (documents the path-vs-inline heuristic), `docs_agent.create_from_uploaded_template.placeholders` (accepts JSON string OR dict), `drive_agent.search_files.search_term` (uses Drive `name contains`, case-insensitive, name-only not body).
+
+**Net behavior after the fix:**
+- The failing scenario now produces a valid 9-step plan (`create_folder → create_sheet → create_doc_with_content → create_folder → search_files → rename_file → search_files → move_file → list_files`) with `folder_id` wired via `output_variables` + `{{ folder_id }}` in every step that needs the parent folder.
+- If the planner still hallucinates despite Phase 0 + Phase 1 + Phase 3, the sub-agent raises `TypeError` at runtime (gmail/docs/sheets use `tool_impl(**inputs)` dispatch); this is the same hard-stop behavior as before — no silent coercion.
+- Users pasting full Google URLs (`/spreadsheets/d/<id>/edit`, `/document/d/<id>/edit`, `/file/d/<id>/view`) now succeed without an explicit `search_files` / `list_my_docs` / `list_events` step.
+- The Drive-file → `mapping_agent.parse_file` chain (previously impossible via capabilities alone) is unblocked by `drive_agent.download_file`.
+
+### Deferred — `drive_agent.import_from_url`
+
+Not implemented in the fix-sheets-crash-cascade plan. Fetching arbitrary HTTP(S) URLs from a server-side agent raises SSRF concerns (internal IPs, cloud metadata endpoints), binary-size limits, and malware-scanning policy decisions. Its own design plan is required before implementation.

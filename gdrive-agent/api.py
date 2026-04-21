@@ -8,10 +8,36 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 import os
+import re
 import json
 import uvicorn
 from google.oauth2.credentials import Credentials
-from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload, MediaIoBaseDownload
+import io
+import tempfile
+
+
+_DRIVE_FILE_URL_RE = re.compile(r"/file/d/([A-Za-z0-9_-]+)")
+_DRIVE_DOC_URL_RE = re.compile(r"/document/d/([A-Za-z0-9_-]+)")
+_DRIVE_SHEET_URL_RE = re.compile(r"/spreadsheets/d/([A-Za-z0-9_-]+)")
+
+
+def _extract_drive_file_id(file_id_or_url: str) -> str:
+    """Extract a Drive file ID from a URL or return the input as-is.
+
+    Handles Drive view links (/file/d/<id>/view), Docs URLs (/document/d/<id>),
+    and Sheets URLs (/spreadsheets/d/<id>) so a planner or user who pasted a
+    full URL into a file_id slot will not break the call. No-op for strings
+    that already look like a bare ID, so it is safe to call at the top of a
+    tool that accepts file_id.
+    """
+    if not file_id_or_url:
+        return file_id_or_url
+    for pattern in (_DRIVE_FILE_URL_RE, _DRIVE_DOC_URL_RE, _DRIVE_SHEET_URL_RE):
+        match = pattern.search(file_id_or_url)
+        if match:
+            return match.group(1)
+    return file_id_or_url.strip()
 
 # Import your existing tools (supervisor-compatible versions)
 from tools import (
@@ -837,11 +863,19 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
     Read content from a file in Google Drive.
 
     Inputs:
-        file_id: str (required) - Google Drive file ID
-        OR
-        file_path: str (required) - Path to file in Drive (e.g. 'Data/customer_info.txt').
-                   The final segment is the filename; leading segments are folders
-                   resolved from the Drive root.
+        file_id: str (optional) - Google Drive file ID, or a full Drive/Docs/Sheets
+                 URL (e.g. https://drive.google.com/file/d/<id>/view) which is
+                 auto-normalized to the bare ID.
+        drive_path: str (optional) - DRIVE logical path (e.g. 'Data/customer_info.txt').
+                    The final segment is the filename; leading segments are
+                    folders resolved from the Drive root. Note: this is NOT a
+                    local OS path — for local files use drive_agent.upload_file.
+        file_path: str (DEPRECATED) - Backwards-compatible alias for drive_path.
+                   Retained for one release cycle; emits a deprecation log line
+                   when used. Renamed to drive_path to disambiguate from
+                   upload_file.file_path which means a LOCAL OS path.
+
+    Exactly one of file_id or drive_path must be provided.
 
     Returns:
         success, file_id, file_name, mime_type, content, content_length, message
@@ -850,10 +884,20 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
         service = get_service_from_creds(credentials_dict)
 
         file_id = inputs.get("file_id")
-        file_path = inputs.get("file_path")
+        drive_path = inputs.get("drive_path") or inputs.get("file_path")
 
-        if not file_id and file_path:
-            path_parts = file_path.split('/')
+        if inputs.get("file_path") and not inputs.get("drive_path"):
+            print(
+                "[DEPRECATION] drive_agent.read_file_content: argument 'file_path' "
+                "is renamed to 'drive_path' to disambiguate from upload_file.file_path "
+                "(local OS path). Still accepting it for backwards-compat."
+            )
+
+        if file_id:
+            file_id = _extract_drive_file_id(file_id)
+
+        if not file_id and drive_path:
+            path_parts = drive_path.split('/')
             filename = path_parts[-1]
             folder_path = '/'.join(path_parts[:-1]) if len(path_parts) > 1 else None
 
@@ -891,8 +935,8 @@ def read_file_content_tool(inputs: dict, credentials_dict: CredentialsDict) -> d
         if not file_id:
             return {
                 "success": False,
-                "error": "file_id or file_path is required",
-                "message": "Must provide either file_id or file_path"
+                "error": "file_id or drive_path is required",
+                "message": "Must provide either file_id or drive_path"
             }
 
         return read_file_content_impl(service, file_id)
@@ -945,6 +989,263 @@ def rename_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
         }
 
 
+# Google-native MIME types and their preferred local export format.
+# Order matters: export mime on the LEFT is what we ask Drive for, extension
+# on the RIGHT is the tempfile suffix we write to disk.
+_GOOGLE_NATIVE_EXPORTS = {
+    "application/vnd.google-apps.document": (
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".docx",
+    ),
+    "application/vnd.google-apps.spreadsheet": (
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".xlsx",
+    ),
+    "application/vnd.google-apps.presentation": (
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        ".pptx",
+    ),
+    "application/vnd.google-apps.drawing": ("image/png", ".png"),
+}
+
+
+def _resolve_drive_file_id_from_path(service, drive_path: str) -> Optional[str]:
+    """Resolve a Drive logical path (e.g. 'Data/customer_info.txt') to a file ID.
+
+    Mirrors the path-resolution logic in read_file_content_tool so download_file
+    can accept drive_path with identical semantics. Returns None when any
+    segment is unresolved.
+    """
+    path_parts = drive_path.split('/')
+    filename = path_parts[-1]
+    folder_path = '/'.join(path_parts[:-1]) if len(path_parts) > 1 else None
+
+    if folder_path:
+        folder_id = resolve_folder_path_to_id(service, folder_path, create_if_missing=False)
+        if not folder_id:
+            folders = get_folder_structure(service)
+            matching = [f for f in folders if folder_path.lower() in f['name'].lower()]
+            if matching:
+                folder_id = matching[0]['id']
+        if not folder_id:
+            return None
+    else:
+        folder_id = "root"
+
+    safe_name = filename.replace("'", "\\'")
+    query = f"name='{safe_name}' and '{folder_id}' in parents and trashed=false"
+    results = service.files().list(q=query, fields="files(id)").execute()
+    files = results.get('files', [])
+    return files[0]['id'] if files else None
+
+
+def download_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Download a file from Google Drive to a server-side temp path.
+
+    Native Google files (Docs/Sheets/Slides/Drawings) are exported to their
+    Office equivalents (docx/xlsx/pptx) or PNG; everything else is streamed
+    as-is via MediaIoBaseDownload.
+
+    Inputs:
+        file_id: str (preferred) - Drive file ID, or a Drive/Docs/Sheets URL
+                 (auto-normalized to the bare ID).
+        drive_path: str (optional) - Drive logical path (e.g. 'Data/customer_info.txt').
+                    Resolved like drive_agent.read_file_content.
+
+    Exactly one of file_id or drive_path must be provided.
+
+    Returns:
+        success: bool
+        local_path: str - Absolute path on the sub-agent host (safe to pass to
+                    mapping_agent.parse_file). Caller is responsible for lifecycle
+                    of the temp directory (tempfile.mkdtemp is used per call).
+        file_id: str
+        file_name: str
+        mime_type: str - The ORIGINAL Drive mimeType (even when exported)
+        exported_as: str or None - Export mimeType used for Google-native files
+        size_bytes: int
+        message: str
+        error: str or None
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+
+        file_id = inputs.get("file_id")
+        drive_path = inputs.get("drive_path")
+
+        if file_id:
+            file_id = _extract_drive_file_id(file_id)
+        elif drive_path:
+            file_id = _resolve_drive_file_id_from_path(service, drive_path)
+            if not file_id:
+                return {
+                    "success": False,
+                    "error": f"File not found at drive_path: {drive_path}",
+                    "message": f"Could not resolve '{drive_path}' to a Drive file ID",
+                }
+
+        if not file_id:
+            return {
+                "success": False,
+                "error": "file_id or drive_path is required",
+                "message": "Must provide either file_id or drive_path",
+            }
+
+        file_metadata = service.files().get(
+            fileId=file_id, fields="name, mimeType"
+        ).execute()
+        mime_type = file_metadata.get("mimeType")
+        file_name = file_metadata.get("name", "download")
+
+        temp_dir = tempfile.mkdtemp(prefix="drive_download_")
+
+        exported_as = None
+        if mime_type in _GOOGLE_NATIVE_EXPORTS:
+            export_mime, ext = _GOOGLE_NATIVE_EXPORTS[mime_type]
+            exported_as = export_mime
+            local_name = file_name if file_name.lower().endswith(ext) else f"{file_name}{ext}"
+            local_path = os.path.join(temp_dir, local_name)
+            request = service.files().export_media(fileId=file_id, mimeType=export_mime)
+            with io.FileIO(local_path, "wb") as fh:
+                downloader = MediaIoBaseDownload(fh, request)
+                done = False
+                while not done:
+                    _, done = downloader.next_chunk()
+        else:
+            local_path = os.path.join(temp_dir, file_name)
+            request = service.files().get_media(fileId=file_id)
+            with io.FileIO(local_path, "wb") as fh:
+                downloader = MediaIoBaseDownload(fh, request)
+                done = False
+                while not done:
+                    _, done = downloader.next_chunk()
+
+        size_bytes = os.path.getsize(local_path)
+
+        return {
+            "success": True,
+            "local_path": local_path,
+            "file_id": file_id,
+            "file_name": file_name,
+            "mime_type": mime_type,
+            "exported_as": exported_as,
+            "size_bytes": size_bytes,
+            "message": f"Downloaded '{file_name}' to {local_path} ({size_bytes} bytes)",
+            "error": None,
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "local_path": None,
+            "error": str(e),
+            "message": f"Download failed: {str(e)}",
+        }
+
+
+def copy_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
+    """
+    Copy an existing Drive file to a new name (and optional destination folder).
+
+    Uses service.files().copy() under the hood — native Google files
+    (Docs/Sheets/Slides) remain native on the copy side, binary files stay
+    binary. No local disk round-trip.
+
+    Inputs:
+        source_file_id: str (required) - Drive ID or URL of the file to copy.
+                        URL form is auto-normalized to the bare ID.
+        new_name: str (required) - Name for the copied file.
+        folder_id: str (optional) - Destination folder Drive ID (preferred
+                   when known from a prior step).
+        folder_path: str (optional) - Destination folder path (e.g.
+                     'Operations/2024'). Find-or-created at Drive root.
+                     Ignored when folder_id is supplied.
+
+    When neither folder_id nor folder_path is provided, the copy lands next to
+    the source in its existing parent folder (Drive API default).
+
+    Returns:
+        success: bool
+        file_id: str - New file ID of the copy
+        file_url: str - webViewLink of the copy
+        new_name: str
+        folder_id: str or None - Resolved destination folder ID (None => same as source)
+        folder_path: str or None - Human-readable destination label
+        message: str
+        error: str or None
+    """
+    try:
+        service = get_service_from_creds(credentials_dict)
+
+        source_file_id = inputs.get("source_file_id")
+        new_name = inputs.get("new_name")
+        folder_id = inputs.get("folder_id")
+        folder_path = inputs.get("folder_path")
+
+        if not source_file_id:
+            return {"success": False, "error": "source_file_id is required"}
+        if not new_name:
+            return {"success": False, "error": "new_name is required"}
+
+        source_file_id = _extract_drive_file_id(source_file_id)
+
+        target_folder_id = None
+        location_label = None
+        if folder_id:
+            target_folder_id = folder_id
+            location_label = folder_path or "(existing folder)"
+        elif folder_path:
+            resolved = resolve_folder_path_to_id(
+                service, folder_path, create_if_missing=True
+            )
+            if not resolved:
+                return {
+                    "success": False,
+                    "error": f"Could not resolve folder '{folder_path}'",
+                    "message": f"Could not find or create destination folder '{folder_path}'",
+                }
+            target_folder_id = resolved
+            location_label = folder_path
+
+        body = {"name": new_name}
+        if target_folder_id:
+            body["parents"] = [target_folder_id]
+
+        copied = service.files().copy(
+            fileId=source_file_id,
+            body=body,
+            fields="id, name, webViewLink",
+        ).execute()
+
+        return {
+            "success": True,
+            "file_id": copied.get("id"),
+            "file_url": copied.get("webViewLink"),
+            "new_name": copied.get("name", new_name),
+            "folder_id": target_folder_id,
+            "folder_path": location_label,
+            "message": (
+                f"Copied source file to '{new_name}'"
+                + (f" in {location_label}" if location_label else " in source folder")
+            ),
+            "error": None,
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "file_id": None,
+            "file_url": None,
+            "error": str(e),
+            "message": f"Copy failed: {str(e)}",
+        }
+
+
 # ============================================================
 # TOOL REGISTRY (Maps tool names to functions)
 # ============================================================
@@ -958,6 +1259,8 @@ DRIVE_TOOLS = {
     "get_folder_info": get_folder_info_tool,
     "upload_template": upload_template_tool,
     "read_file_content": read_file_content_tool,
+    "download_file": download_file_tool,
+    "copy_file": copy_file_tool,
     "search_template_and_data": search_template_and_data_tool,
     "rename_file": rename_file_tool,
     "move_file": move_file_tool,

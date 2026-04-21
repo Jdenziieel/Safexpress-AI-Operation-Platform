@@ -147,7 +147,7 @@ agent_capabilities = {
                 "description": "Create a new Google Doc, optionally inside a specific Drive folder. If folder_id is given, the doc is reparented via Drive API after creation.",
                 "args": {
                     "title": "str (required) — document name",
-                    "folder_id": "str (optional) — Drive folder ID to place the doc in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step.",
+                    "folder_id": "str (optional) — Drive folder ID to place the doc in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step. DO NOT use 'folder_path' — this tool does not accept that argument. If you only have a folder path, resolve it first via drive_agent.get_folder_info or drive_agent.create_folder and wire the folder_id output here via {{ folder_id }}.",
                 },
                 "returns": ["success", "document_id", "document_url", "title", "folder_id", "folder_moved", "folder_move_error", "error"],
                 "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info|drive_agent.create_folder"},
@@ -159,24 +159,6 @@ agent_capabilities = {
                 },
                 "returns": ["success", "documents", "error"],
                 "returns_detail": "documents is array of {id, name}",
-            },
-            "extract_template_format": {
-                "description": "Analyze a template document to find placeholders.",
-                "args": {
-                    "template_document_id": "str (required)",
-                },
-                "returns": ["success", "placeholders", "error"],
-                "can_be_derived_from": {"template_document_id": "list_my_docs"},
-            },
-            "create_from_my_template": {
-                "description": "Create document from template with placeholder replacement. Keys must EXACTLY match placeholder names without brackets.",
-                "args": {
-                    "template_document_id": "str (required)",
-                    "new_title": "str (required)",
-                    "placeholders": "str (required) — JSON string of {PLACEHOLDER_NAME: value}",
-                },
-                "returns": ["success", "document_id", "url", "error"],
-                "can_be_derived_from": {"template_document_id": "list_my_docs"},
             },
             "add_text": {
                 "description": "Add text to an existing Google Doc.",
@@ -191,9 +173,9 @@ agent_capabilities = {
                 "description": "Create a new Google Doc and populate it with content in one step. Accepts text directly or reads from a local file (PDF, txt). Prefer this over separate create_doc + add_text when content is available. Supports folder_id to place the doc in a specific Drive folder.",
                 "args": {
                     "title": "str (required) — document name",
-                    "text": "str (optional) — text content to add to the document",
+                    "text": "str (optional) — text content to add to the document. DO NOT use 'content' — the argument name is 'text'.",
                     "file_path": "str (optional) — local file path to read content from (PDF, txt). Use {{ uploaded_file.temp_path }} when user uploads a file.",
-                    "folder_id": "str (optional) — Drive folder ID to place the doc in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step.",
+                    "folder_id": "str (optional) — Drive folder ID to place the doc in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step. DO NOT use 'folder_path' — this tool does not accept that argument. If you only have a folder path, resolve it first via drive_agent.get_folder_info or drive_agent.create_folder and wire the folder_id output here via {{ folder_id }}.",
                 },
                 "returns": ["success", "document_id", "document_url", "title", "text_length", "folder_id", "folder_moved", "folder_move_error", "error"],
                 "note": "At least one of 'text' or 'file_path' must be provided. file_path takes precedence if both given.",
@@ -256,11 +238,20 @@ agent_capabilities = {
                 "args": {
                     "template_file_id": "str (required) — Drive file ID of the source file",
                     "new_title": "str (required) — title for new document",
-                    "placeholders": "str (optional) — JSON string of placeholder replacements",
+                    "placeholders": "str (optional) — JSON string OR dict mapping placeholder → replacement value, e.g. '{\"[NAME]\": \"Acme Corp\"}'. A JSON string is parsed automatically by the impl; a dict is accepted as-is.",
                     "output_format": "str (optional) — 'google_docs' (default) or 'pdf'",
                 },
                 "returns": ["success", "document_id", "document_url", "title", "error"],
                 "can_be_derived_from": {"template_file_id": "drive_agent.search_files"},
+            },
+            "analyze_uploaded_template": {
+                "description": "Analyze a Google Doc template in Drive to extract its structure and detected placeholders (e.g. [NAME], {DATE}, <<COMPANY>>). Use this after drive_agent.upload_template / drive_agent.search_files to preview placeholders before calling create_from_uploaded_template.",
+                "args": {
+                    "template_file_id": "str (required) — Google Drive file ID of the uploaded template. Resolve via drive_agent.upload_template or drive_agent.search_files in a prior step.",
+                },
+                "returns": ["success", "template_id", "title", "content_blocks", "placeholders", "has_placeholders", "structure_type", "ready_for_use", "error"],
+                "returns_detail": "placeholders is a list of detected placeholder names (strings). structure_type is 'structured' when placeholders are present, else 'unstructured'.",
+                "can_be_derived_from": {"template_file_id": "drive_agent.upload_template|drive_agent.search_files"},
             },
         },
         "template_with_data_workflow": {
@@ -307,9 +298,9 @@ agent_capabilities = {
         "description": "Parse LOCAL files (CSV/Excel/JSON), intelligently map columns, transform data structure. LIMITATION: Can only process files already on disk (user uploads, email attachments). Cannot download or read files from Google Drive — there is no Drive download tool.",
         "tools": {
             "parse_file": {
-                "description": "Parse a LOCAL CSV/Excel/JSON file into structured data. Requires a local file path (e.g. from user upload or email attachment download). CANNOT read files from Google Drive by file ID.",
+                "description": "Parse a LOCAL CSV/Excel/JSON file into structured data. Requires a local file path (e.g. from user upload, email attachment download, or drive_agent.download_file). CANNOT read files from Google Drive by file ID — download first via drive_agent.download_file and pass local_path here.",
                 "args": {
-                    "file_content": "str (required) — local file path or raw content string (NOT a Google Drive file ID)",
+                    "file_content": "str (required) — LOCAL file path (e.g. '/tmp/foo.csv', 'C:\\\\Users\\\\...'). The tool auto-detects path-vs-inline using a heuristic: starts with '/' or a Windows drive letter ('C:\\\\') → treated as a path; otherwise treated as raw content. Prefer pass-a-path (from attachment download or drive_agent.download_file). NOT a Google Drive file ID and NOT a Drive logical path.",
                     "file_type": "str (required) — csv, xlsx, xls, excel, or json",
                 },
                 "returns": ["success", "columns", "row_count", "full_data", "sample_data"],
@@ -390,12 +381,70 @@ agent_capabilities = {
                 "description": "Create a new Google Spreadsheet, optionally inside a specific Drive folder. If folder_id is given, the sheet is reparented via Drive API after creation.",
                 "args": {
                     "title": "str (required) — spreadsheet name",
-                    "sheet_names": "List[str] (optional) — tab names (default: ['Sheet1'])",
-                    "initial_data": "List[List[Any]] (optional) — 2D rows to populate the first sheet",
-                    "folder_id": "str (optional) — Drive folder ID to place the sheet in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step.",
+                    "sheet_names": "List[str] (optional) — tab names (default: ['Sheet1']). DO NOT use 'tabs' — the argument name is 'sheet_names'.",
+                    "initial_data": "List[List[Any]] (optional) — 2D rows to populate the first sheet. DO NOT use 'rows' — the argument name is 'initial_data'.",
+                    "folder_id": "str (optional) — Drive folder ID to place the sheet in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step. DO NOT use 'folder_path' — this tool does not accept that argument. If you only have a folder path, resolve it first via drive_agent.get_folder_info or drive_agent.create_folder and wire the folder_id output here via {{ folder_id }}.",
                 },
                 "returns": ["success", "sheet_id", "sheet_url", "title", "folder_id", "folder_moved", "warning", "message"],
                 "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info|drive_agent.create_folder"},
+            },
+            "read_sheet": {
+                "description": "Read cell values from a Google Sheet. Accepts the spreadsheet ID OR a full spreadsheet URL — URLs are auto-parsed to extract the ID.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID or URL (https://docs.google.com/spreadsheets/d/<id>/edit)",
+                    "range_name": "str (optional) — A1 notation range (e.g. 'Sheet1', 'Sheet1!A1:D10'). Default 'Sheet1'.",
+                },
+                "returns": ["success", "data", "row_count", "column_count", "range", "message", "error"],
+                "returns_detail": "data is a 2D list of cell values (strings).",
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
+            },
+            "update_sheet": {
+                "description": "Overwrite a specific range in a Google Sheet with a 2D array of values. Accepts the spreadsheet ID OR a full spreadsheet URL.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID or URL",
+                    "range_name": "str (required) — A1 notation range to overwrite (e.g. 'Sheet1!A1:D10')",
+                    "data": "List[List[Any]] (required) — 2D rows to write. DO NOT use 'values' — the argument name is 'data'.",
+                },
+                "returns": ["success", "updated_cells", "updated_range", "error"],
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
+            },
+            "append_rows": {
+                "description": "Append rows to the END of a sheet tab (does not overwrite existing rows). Use update_sheet or update_by_date_match for in-place edits. Accepts the spreadsheet ID OR a full spreadsheet URL.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID or URL",
+                    "data": "List[List[Any]] (required) — 2D rows to append. DO NOT use 'values' or 'rows' — the argument name is 'data'.",
+                    "sheet_name": "str (optional) — tab name to append to (default 'Sheet1')",
+                },
+                "returns": ["success", "rows_added", "range_updated", "updated_cells", "message", "error"],
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
+            },
+            "get_sheet_metadata": {
+                "description": "Introspect a spreadsheet — returns title, tab names, row/column counts per tab. Use before read_sheet/update_sheet when the tab name or size is unknown. Accepts the spreadsheet ID OR a full spreadsheet URL.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID or URL",
+                },
+                "returns": ["success", "spreadsheet_id", "title", "sheets", "sheet_count", "error"],
+                "returns_detail": "sheets is an array of {sheet_id, title, index, row_count, column_count}.",
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
+            },
+            "get_sheet_headers": {
+                "description": "Return the header row (row 1) of a specific tab. Useful before column-mapping or before update_sheet to align incoming data. Accepts the spreadsheet ID OR a full spreadsheet URL.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID or URL",
+                    "sheet_name": "str (optional) — tab name (default 'Sheet1')",
+                },
+                "returns": ["success", "headers", "column_count", "sheet_name", "error"],
+                "returns_detail": "headers is a list of header strings from row 1.",
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
+            },
+            "clear_sheet": {
+                "description": "Clear cell values in a range (structure/formatting preserved — only values are wiped). Destructive for data. Accepts the spreadsheet ID OR a full spreadsheet URL.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID or URL",
+                    "range_name": "str (optional) — A1 notation range to clear (default 'Sheet1')",
+                },
+                "returns": ["success", "cleared_range", "message", "error"],
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "validate_delivery_sheet": {
                 "description": "Validate that a Google Sheet matches the Production Materials Requisition List template. Checks headers (Date, Order Reference, Item Code, Item Description, QTY, UOM, CB Date, Requested by) and tabs (Food, non-food) with case-insensitive tab matching. Also verifies the caller has Editor (write) access. Returns specific errors for: sheet not found, no access, read-only access, or template mismatch.",
@@ -529,7 +578,7 @@ agent_capabilities = {
             "upload_file": {
                 "description": "Upload a LOCAL file to Google Drive. Accepts either folder_id (preferred when known) or folder_path (find-or-created at Drive root). Defaults to My Drive root.",
                 "args": {
-                    "file_path": "str (required) — local file path on disk (NOT a Drive file ID). Use {{ uploaded_file.temp_path }} for user-uploaded files.",
+                    "file_path": "str (required) — LOCAL file path on disk (e.g. '/tmp/foo.csv', 'C:\\\\Users\\\\...'). NOT a Drive file ID and NOT a Drive logical path. Use {{ uploaded_file.temp_path }} for user-uploaded files.",
                     "filename": "str (required) — name for uploaded file",
                     "folder_id": "str (optional) — destination folder Drive ID (preferred when known from a prior step)",
                     "folder_path": "str (optional) — destination folder path (e.g., 'Operations/2024'). Find-or-created.",
@@ -537,6 +586,26 @@ agent_capabilities = {
                 },
                 "returns": ["success", "file_id", "file_url", "filename", "folder_id", "folder_path", "message", "error"],
                 "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info|drive_agent.create_folder"},
+            },
+            "upload_template": {
+                "description": "Upload a template file (PDF, DOCX, DOC, TXT) from local disk to the 'Templates' folder in Google Drive. PDFs/DOCs/DOCX are auto-converted to editable Google Docs format unless preserve_format=True. Returns the new Drive file_id so a follow-up docs_agent.analyze_uploaded_template / create_from_uploaded_template step can consume it.",
+                "args": {
+                    "file_path": "str (required) — LOCAL file path on disk (use {{ uploaded_file.temp_path }} when the user uploaded a file)",
+                    "template_name": "str (required) — name for the template in Drive",
+                    "file_type": "str (optional) — MIME type override; auto-detected from extension when omitted",
+                    "preserve_format": "bool (optional, default false) — keep original PDF/DOCX format instead of converting to Google Docs",
+                },
+                "returns": ["success", "file_id", "file_url", "template_name", "original_format", "current_format", "is_editable", "folder_path", "message", "error"],
+            },
+            "read_file_content": {
+                "description": "Read text content from a Drive file. Accepts (a) file_id (preferred when known — resolve via drive_agent.search_files), or (b) drive_path (a Drive logical path like 'Data/customer_info.txt' — NOT a local OS path, and NOT a full Drive URL). Supports text, PDFs (extracted via PyPDF2), Google Docs (exported as text), and spreadsheets (exported as CSV).",
+                "args": {
+                    "file_id": "str (optional) — Google Drive file ID. Preferred when available from a prior search_files step.",
+                    "drive_path": "str (optional) — Drive logical path, e.g. 'Data/customer_info.txt'. Final segment is the filename; leading segments are folders resolved from Drive root. Provide this OR file_id (not both).",
+                },
+                "returns": ["success", "file_id", "file_name", "mime_type", "content", "content_length", "message", "error"],
+                "note": "Exactly one of file_id or drive_path must be provided. drive_path is a LOGICAL path inside Drive, NOT a local OS file path — for local files, use drive_agent.upload_file or mapping_agent.parse_file instead.",
+                "can_be_derived_from": {"file_id": "drive_agent.search_files"},
             },
             "create_folder": {
                 "description": "Find-or-create a folder (or nested folder chain) anywhere in the user's Drive. Idempotent — repeated calls with the same path return the same folder ID instead of duplicating. Use this ONLY when the user explicitly asks to create a folder, OR when a creation flow implies folder creation (e.g., 'upload X to NewFolder' and NewFolder doesn't exist yet and user consents).",
@@ -570,7 +639,7 @@ agent_capabilities = {
             "search_files": {
                 "description": "Search files by name across the user's whole Drive (all folders). Returns files the user has access to.",
                 "args": {
-                    "search_term": "str (required) — keywords to search",
+                    "search_term": "str (required) — keywords to match against file NAMES (uses Drive `name contains` semantics, case-insensitive). Does NOT match inside file bodies/content. Partial matches are OK, e.g. search_term='Q1' matches 'Q1 Budget.xlsx'.",
                 },
                 "returns": ["success", "results", "count", "search_term", "message", "error"],
                 "returns_detail": "results is an array; each result has: id, name, mimeType, size, createdTime, webViewLink, parents",
@@ -612,6 +681,31 @@ agent_capabilities = {
                 },
                 "returns": ["success", "file_id", "new_name", "message", "error"],
                 "can_be_derived_from": {"file_id": "search_files"},
+            },
+            "download_file": {
+                "description": "Download a Google Drive file to a SERVER-SIDE temp path and return its local_path. Unblocks chains like 'Drive file → mapping_agent.parse_file'. Native Google files (Docs/Sheets/Slides/Drawings) are auto-exported to docx/xlsx/pptx/png; binary files are streamed as-is.",
+                "args": {
+                    "file_id": "str (optional) — Drive file ID (or a Drive/Docs/Sheets URL, auto-normalized). Prefer this when known from a prior search_files step.",
+                    "drive_path": "str (optional) — Drive LOGICAL path (e.g. 'Data/customer_info.txt'). Resolved like drive_agent.read_file_content. NOT a local OS path.",
+                },
+                "returns": ["success", "local_path", "file_id", "file_name", "mime_type", "exported_as", "size_bytes", "message", "error"],
+                "note": "Exactly one of file_id or drive_path must be provided. Caller (next step) consumes local_path directly; temp dir lifecycle is per-call.",
+                "can_be_derived_from": {"file_id": "drive_agent.search_files"},
+            },
+            "copy_file": {
+                "description": "Duplicate an existing Drive file under a new name (and optional destination folder). Uses the Drive copy API — no local round-trip. Native Google files stay native; binary files stay binary. Use for 'duplicate this template' flows before edits.",
+                "args": {
+                    "source_file_id": "str (required) — Drive ID (or URL) of the file to copy [via drive_agent.search_files: search_term]",
+                    "new_name": "str (required) — name for the copied file",
+                    "folder_id": "str (optional) — destination folder Drive ID (preferred when known). (DO NOT use folder_path when a folder_id is available from a prior create_folder / get_folder_info step; wire the ID via output_variables + {{ folder_id }}.)",
+                    "folder_path": "str (optional) — destination folder path, e.g. 'Operations/2024'. Find-or-created. Ignored when folder_id is supplied.",
+                },
+                "returns": ["success", "file_id", "file_url", "new_name", "folder_id", "folder_path", "message", "error"],
+                "note": "When neither folder_id nor folder_path is provided, the copy lands in the source file's existing parent folder.",
+                "can_be_derived_from": {
+                    "source_file_id": "drive_agent.search_files",
+                    "folder_id": "drive_agent.get_folder_info|drive_agent.create_folder",
+                },
             },
         },
     },

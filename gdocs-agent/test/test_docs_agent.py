@@ -247,34 +247,6 @@ class TestToolBasedRequests:
         assert data["result"]["document_id"] == "doc123"
     
     @patch('api.create_docs_agent')
-    def test_share_doc_tool_success(self, mock_create_agent, mock_credentials):
-        """Test sharing document using tool format"""
-        mock_agent = Mock()
-        mock_agent.invoke.return_value = {
-            "messages": [
-                Mock(content='{"success": true, "document_id": "doc123", "shared_with": "user@example.com", "role": "reader"}')
-            ]
-        }
-        mock_create_agent.return_value = mock_agent
-        
-        request_data = {
-            "tool": "share_doc",
-            "inputs": {
-                "document_id": "doc123",
-                "email": "user@example.com",
-                "role": "reader"
-            },
-            "credentials_dict": mock_credentials
-        }
-        
-        response = client.post("/execute_task", json=request_data)
-        assert response.status_code == 200
-        data = response.json()
-        
-        assert data["success"] is True
-        assert "shared_with" in data["result"]
-    
-    @patch('api.create_docs_agent')
     def test_edit_doc_tool_success(self, mock_create_agent, mock_credentials):
         """Test editing document using tool format"""
         mock_agent = Mock()
@@ -667,73 +639,6 @@ class TestJSONParsing:
 class TestIntegration:
     """Integration tests for complete workflows"""
     
-    @patch('api.create_docs_agent')
-    def test_create_populate_and_share_workflow(self, mock_create_agent, mock_credentials):
-        """Test complete workflow: create document, add content, share"""
-        mock_agent = Mock()
-        
-        # Create document
-        mock_agent.invoke.return_value = {
-            "messages": [
-                Mock(content='{"success": true, "document_id": "doc123", "document_url": "https://docs.google.com/document/d/doc123/edit"}')
-            ]
-        }
-        mock_create_agent.return_value = mock_agent
-        
-        # Step 1: Create document
-        create_request = {
-            "tool": "create_doc",
-            "inputs": {"title": "Team Report"},
-            "credentials_dict": mock_credentials
-        }
-        
-        response1 = client.post("/execute_task", json=create_request)
-        assert response1.status_code == 200
-        assert response1.json()["success"] is True
-        doc_id = response1.json()["result"]["document_id"]
-        
-        # Step 2: Add text
-        mock_agent.invoke.return_value = {
-            "messages": [
-                Mock(content='{"success": true, "document_id": "doc123", "text_length": 50}')
-            ]
-        }
-        
-        add_text_request = {
-            "tool": "add_text",
-            "inputs": {
-                "document_id": doc_id,
-                "text": "This is the team report content."
-            },
-            "credentials_dict": mock_credentials
-        }
-        
-        response2 = client.post("/execute_task", json=add_text_request)
-        assert response2.status_code == 200
-        assert response2.json()["success"] is True
-        
-        # Step 3: Share document
-        mock_agent.invoke.return_value = {
-            "messages": [
-                Mock(content='{"success": true, "shared_with": "team@example.com"}')
-            ]
-        }
-        
-        share_request = {
-            "tool": "share_doc",
-            "inputs": {
-                "document_id": doc_id,
-                "email": "team@example.com",
-                "role": "reader"
-            },
-            "credentials_dict": mock_credentials
-        }
-        
-        response3 = client.post("/execute_task", json=share_request)
-        assert response3.status_code == 200
-        assert response3.json()["success"] is True
-
-
 # ============================================================
 # TEST TOOLS IMPLEMENTATION
 # ============================================================
@@ -1002,54 +907,6 @@ class TestInputValidation:
         response = client.post("/execute_task", json=request_data)
         assert response.status_code == 200
     
-    @patch('api.create_docs_agent')
-    def test_invalid_email_for_sharing(self, mock_create_agent, mock_credentials):
-        """Test sharing with invalid email address"""
-        mock_agent = Mock()
-        mock_agent.invoke.return_value = {
-            "messages": [
-                Mock(content='{"success": false, "error": "Invalid email address"}')
-            ]
-        }
-        mock_create_agent.return_value = mock_agent
-        
-        request_data = {
-            "tool": "share_doc",
-            "inputs": {
-                "document_id": "doc123",
-                "email": "not-an-email",
-                "role": "reader"
-            },
-            "credentials_dict": mock_credentials
-        }
-        
-        response = client.post("/execute_task", json=request_data)
-        assert response.status_code == 200
-    
-    @patch('api.create_docs_agent')
-    def test_invalid_role_for_sharing(self, mock_create_agent, mock_credentials):
-        """Test sharing with invalid role"""
-        mock_agent = Mock()
-        mock_agent.invoke.return_value = {
-            "messages": [
-                Mock(content='{"success": false, "error": "Invalid role"}')
-            ]
-        }
-        mock_create_agent.return_value = mock_agent
-        
-        request_data = {
-            "tool": "share_doc",
-            "inputs": {
-                "document_id": "doc123",
-                "email": "user@example.com",
-                "role": "admin"  # Invalid role
-            },
-            "credentials_dict": mock_credentials
-        }
-        
-        response = client.post("/execute_task", json=request_data)
-        assert response.status_code == 200
-
 
 # ============================================================
 # TEST TEMPLATE EDGE CASES
@@ -1287,46 +1144,6 @@ class TestCompleteWorkflows:
         })
         assert read_resp.status_code == 200
     
-    @patch('api.create_docs_agent')
-    def test_multi_user_sharing_workflow(self, mock_create_agent, mock_credentials):
-        """Test: Create doc → Share with multiple users → Verify permissions"""
-        mock_agent = Mock()
-        mock_create_agent.return_value = mock_agent
-        
-        # Create doc
-        mock_agent.invoke.return_value = {
-            "messages": [Mock(content='{"success": true, "document_id": "doc123"}')]
-        }
-        create_resp = client.post("/execute_task", json={
-            "tool": "create_doc",
-            "inputs": {"title": "Team Doc"},
-            "credentials_dict": mock_credentials
-        })
-        assert create_resp.status_code == 200
-        
-        # Share with user 1 (reader)
-        mock_agent.invoke.return_value = {
-            "messages": [Mock(content='{"success": true, "shared_with": "user1@example.com"}')]
-        }
-        share1_resp = client.post("/execute_task", json={
-            "tool": "share_doc",
-            "inputs": {"document_id": "doc123", "email": "user1@example.com", "role": "reader"},
-            "credentials_dict": mock_credentials
-        })
-        assert share1_resp.status_code == 200
-        
-        # Share with user 2 (writer)
-        mock_agent.invoke.return_value = {
-            "messages": [Mock(content='{"success": true, "shared_with": "user2@example.com"}')]
-        }
-        share2_resp = client.post("/execute_task", json={
-            "tool": "share_doc",
-            "inputs": {"document_id": "doc123", "email": "user2@example.com", "role": "writer"},
-            "credentials_dict": mock_credentials
-        })
-        assert share2_resp.status_code == 200
-
-
 # ============================================================
 # TEST ERROR RECOVERY
 # ============================================================

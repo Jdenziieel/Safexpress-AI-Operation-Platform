@@ -61,7 +61,6 @@ def lambda_handler(event, context):
                 "create_doc": 'Return JSON: {"success": true, "document_id": "...", "document_url": "...", "title": "..."}',
                 "add_text": 'Return JSON: {"success": true, "document_id": "...", "document_url": "...", "text_length": N}',
                 "read_doc": 'Return JSON: {"success": true, "document_id": "...", "document_url": "...", "content": "...", "title": "..."}',
-                "share_doc": 'Return JSON: {"success": true, "document_id": "...", "document_url": "...", "shared_with": "...", "role": "..."}',
             }
 
             agent_prompt = f"""Execute tool: {tool}

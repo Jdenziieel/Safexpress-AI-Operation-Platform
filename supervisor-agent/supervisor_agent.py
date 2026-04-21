@@ -410,15 +410,19 @@ PLANNING RULES:
    - DRIVE files: drive_agent.search_files → declare output_variables {{"file_id": "results[0].id"}} → reference {{{{ file_id }}}} in rename_file or move_file. Honor the `can_be_derived_from` hint on the tool capability.
    - DRIVE folders: when the user wants a file created/placed inside a named folder, resolve the folder_id FIRST. Use drive_agent.get_folder_info (STRICT lookup — fails if folder missing) when the user only referenced the folder. Use drive_agent.create_folder ONLY if the user explicitly asked to create a new folder. Declare output_variables {{"folder_id": "folder_id"}} → reference {{{{ folder_id }}}} in the subsequent create_sheet / create_doc / create_doc_with_content / upload_file / move_file step. NEVER emit folder_id as {{"query": "..."}}, a name, or any nested dict — it must be a real Drive ID resolved from a prior step.
 10. LLM TRANSFORM: llm_tool.transform_text can transform ANY text between a read step and a write step — not limited to docs. Pattern: (1) read content from any source (read_doc, search_emails, get_thread_conversation, etc.), (2) llm_tool.transform_text with the content variable and an instruction, (3) write the result to any destination (update_doc, edit_doc, create_draft_email, add_text, create_doc_with_content, reply_to_email, etc.). Examples: fix grammar in a doc, summarize an email into a doc, rewrite a draft before sending, translate document content. The llm_tool runs locally — no agent endpoint needed.
-11. DRIVE FILE LIMITATION: There is NO tool to download or read file contents from Google Drive. drive_agent.search_files returns file metadata (id, name) only — NOT the file content. You CANNOT pass a Drive file ID to mapping_agent.parse_file or sheets_agent.upload_mapped_data. The mapping_agent can only process LOCAL files (user uploads, email attachment downloads). If a task requires reading a Drive-hosted CSV/Excel file, the plan is NOT feasible — return an empty steps array.
+11. DRIVE FILE INGESTION: drive_agent.search_files returns file metadata (id, name) only — NOT the contents. mapping_agent.parse_file and sheets_agent.upload_mapped_data both require a LOCAL file_path; they CANNOT consume a Drive file ID directly. To process a Drive-hosted file:
+   (a) For text-like content (txt/csv/docx/pdf/Google Doc) where you just want the text as a string → chain drive_agent.search_files → drive_agent.read_file_content (returns `content` string).
+   (b) For binary or structured content that downstream tools need as a real file on disk (mapping_agent.parse_file on Excel/PDF, email attachments, re-uploads) → chain drive_agent.search_files → drive_agent.download_file (returns `local_path`) → consumer tool with file_path={{{{ local_path }}}}.
+   Use (a) or (b) ONLY if the tool is listed in "Available agents and tools:" below; if neither is available, fall back to Rule 12 rather than returning an empty plan.
 12. USER-INTENT COVERAGE: If the user's request mentions an action that has NO matching tool in the capabilities above, DO NOT silently drop it and DO NOT invent a tool. Plan steps for the feasible actions only, then APPEND one final llm_tool.transform_text step with inputs {{"instruction": "Return this text verbatim.", "content": "Note: I was unable to <short description of skipped action(s)>."}}. This surfaces the gap to the user in the final response.
 13. VARIABLE REFERENCES: Only use {{{{ var }}}} syntax for variables that are (a) listed in AVAILABLE CONTEXT VARIABLES above, or (b) declared via output_variables in an EARLIER step of the plan you are producing. Task parameters passed inline (from the user's request / extracted info) are NOT templatable — use their literal values directly in inputs, not as {{{{ var }}}} references. If you need a value that isn't yet available (e.g. an event_id, file_id, or document_id, folder_id), insert a lookup step (list_events, search_files, list_my_docs, get_folder_info, etc.) first — see Rule 9. Never emit a template like {{{{ field.query }}}} or {{{{ field.some_attr }}}} unless `field` is a real variable produced by a prior step.
 14. FOLDER PLACEMENT: To create a sheet/doc inside a folder, DO NOT rely on the file ending up at Drive root — pass a resolved folder_id. The correct chain is:
    (a) User gave a folder name and did NOT ask to create it → step 1: drive_agent.get_folder_info(folder_path="X"). If it does not exist, this step errors out — surface that to the user via Rule 12's transform_text fallback; never fall back to create_folder silently.
    (b) User explicitly asked to create a new folder ("create a Finance folder and put X in it") → step 1: drive_agent.create_folder(folder_path="Finance") (idempotent find-or-create).
    In both cases, step 2 consumes {{{{ folder_id }}}} via output_variables {{"folder_id": "folder_id"}}. The same pattern applies to drive_agent.upload_file (folder_id) and drive_agent.move_file (folder_id) — always resolve the folder_id in a separate prior step, never pass a folder name into a mutation tool.
+15. STRICT TOOL/ARG ADHERENCE: Only use (agent, tool) combinations listed under "Available agents and tools:" below. Only use argument names declared in that tool's "args" dict. Do NOT invent tools you know from elsewhere (e.g. sheets_agent.create_sheet is NOT available unless it appears in the list below). Do NOT invent argument names — common traps: folder_path when the schema says folder_id, tabs when it says sheet_names, rows when it says initial_data, content when it says text or new_text. If a needed tool or argument is absent from the schema, fall back to Rule 12 (append an llm_tool.transform_text step explaining the gap) rather than guessing a name that "should" exist.
 
-EXAMPLE:
+EXAMPLE 1 (ID resolution via output_variables):
 User: "Find the latest email from john@example.com and reply saying thanks"
 {{{{
   "steps": [
@@ -435,6 +439,27 @@ User: "Find the latest email from john@example.com and reply saying thanks"
       "inputs": {{"message_id": "{{{{{{ latest_email_id }}}}}}", "reply_body": "Thanks!"}},
       "output_variables": {{}},
       "description": "Reply to the email saying thanks"
+    }}}}
+  ]
+}}}}
+
+EXAMPLE 2 (folder_id wiring — shows correct arg names for create_sheet: title / sheet_names / initial_data / folder_id; NEVER folder_path / tabs / rows):
+User: "Create a Finance folder and make a Q1 Budget sheet inside it with tabs Revenue and Expenses"
+{{{{
+  "steps": [
+    {{{{
+      "agent": "drive_agent",
+      "tool": "create_folder",
+      "inputs": {{"folder_path": "Finance"}},
+      "output_variables": {{"folder_id": "folder_id"}},
+      "description": "Create or find the Finance folder (idempotent); capture its ID for the next step"
+    }}}},
+    {{{{
+      "agent": "sheets_agent",
+      "tool": "create_sheet",
+      "inputs": {{"title": "Q1 Budget", "sheet_names": ["Revenue", "Expenses"], "folder_id": "{{{{{{ folder_id }}}}}}"}},
+      "output_variables": {{}},
+      "description": "Create Q1 Budget sheet inside the Finance folder with Revenue and Expenses tabs"
     }}}}
   ]
 }}}}

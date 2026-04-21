@@ -1,5 +1,6 @@
 #GOOGLE DOCS TOOLS
 import os
+import re
 import json
 from typing import Dict, Any
 from google.oauth2.credentials import Credentials
@@ -7,6 +8,28 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from document_format_extractor import DocumentFormatExtractor
 from typing import Dict, Any, Optional
+
+
+_DOC_URL_RE = re.compile(r"/document/d/([A-Za-z0-9_-]+)")
+_FILE_URL_RE = re.compile(r"/file/d/([A-Za-z0-9_-]+)")
+
+
+def _extract_document_id(doc_id_or_url: str) -> str:
+    """Extract a Docs documentId from a full Google URL or return the input as-is.
+
+    Accepts the forms:
+      - raw documentId, e.g. "1a2B3cD...XYZ"
+      - https://docs.google.com/document/d/<id>/edit
+      - https://drive.google.com/file/d/<id>/view
+    The helper is a no-op for strings that already look like a clean ID, so it
+    is always safe to call at the top of a tool implementation.
+    """
+    if not doc_id_or_url:
+        return doc_id_or_url
+    match = _DOC_URL_RE.search(doc_id_or_url) or _FILE_URL_RE.search(doc_id_or_url)
+    if match:
+        return match.group(1)
+    return doc_id_or_url.strip()
 
 
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
@@ -144,6 +167,7 @@ def _create_google_doc_impl(
 def _add_text_to_doc_impl(document_id: str, text: str, credentials_dict: Dict) -> str:
     """Implementation of adding text to a Google Doc"""
     try:
+        document_id = _extract_document_id(document_id)
         docs_service = get_google_service("docs", "v1", credentials_dict)
         # Create the request body for inserting text
         requests = [{"insertText": {"location": {"index": 1}, "text": text}}]
@@ -165,6 +189,7 @@ def _add_text_to_doc_impl(document_id: str, text: str, credentials_dict: Dict) -
 def _read_google_doc_impl(document_id: str, credentials_dict: Dict) -> str:
     """Implementation of reading text from a Google Doc"""
     try:
+        document_id = _extract_document_id(document_id)
         docs_service = get_google_service("docs", "v1", credentials_dict)
         document = docs_service.documents().get(documentId=document_id).execute()
         # initilize empty string to collect text
@@ -200,45 +225,6 @@ def _read_google_doc_impl(document_id: str, credentials_dict: Dict) -> str:
         return f"Unexpected error: {error}"
 
 
-def _share_google_docs_impl(
-    document_id: str, email: str, role: str, credentials_dict: Dict
-) -> str:
-    """Implementation of sharing a Google Doc with a user via email
-
-    Args:
-        document_id: The ID of the document to share
-        email: Email address of the person to share with
-        role: Permission level - 'reader', 'commenter', 'writer'
-        credentials_dict: Google OAuth credentials
-
-    Returns:
-        Success message with sharing details
-    """
-    try:
-        drive_service = get_google_service("drive", "v3", credentials_dict)
-        # Define the permission body
-        permission = {
-            "type": "user",
-            "role": role,  # 'reader', 'commenter', 'writer'
-            "emailAddress": email,
-        }
-
-        # Create the permission
-        drive_service.permissions().create(
-            fileId=document_id,
-            body=permission,
-            fields="id",
-        ).execute()
-        # return success message
-        doc_url = f"https://docs.google.com/document/d/{document_id}/edit"
-        return f"Document shared successfully!\nShared with: {email}\nPermission: {role}\nURL: {doc_url}"
-
-    except HttpError as error:
-        return f"error sharing document: {error}"
-    except Exception as error:
-        return f"unexpected error: {error}"
-
-
 def _edit_google_doc_impl(
     document_id: str,
     old_text: str = None,
@@ -269,6 +255,7 @@ def _edit_google_doc_impl(
         )
 
     try:
+        document_id = _extract_document_id(document_id)
         docs_service = get_google_service("docs", "v1", credentials_dict)
 
         # First, read the document to find the old text
@@ -343,6 +330,7 @@ def _update_entire_doc_impl(
         Success message with update details
     """
     try:
+        document_id = _extract_document_id(document_id)
         docs_service = get_google_service("docs", "v1", credentials_dict)
 
         # First, get the document to find the end index
@@ -1510,6 +1498,7 @@ def _add_text_from_file_impl(
 
     Returns a structured dict (not a string) for direct-dispatch consumption.
     """
+    document_id = _extract_document_id(document_id)
     try:
         content = _read_file_content(file_path)
         print(f"Read {len(content)} characters from {file_path}")

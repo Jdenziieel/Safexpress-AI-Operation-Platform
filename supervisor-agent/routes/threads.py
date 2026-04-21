@@ -659,9 +659,6 @@ async def _handle_pending_action_decision(conversation_state, thread_id: str, re
                     summary = inputs.get("summary") or inputs.get("title", "")
                     if summary:
                         detail_parts.append(f"Event: **{summary}**")
-                elif tool_name == "share_file":
-                    if inputs.get("email"):
-                        detail_parts.append(f"Shared with **{inputs['email']}**")
                 elif tool_name in ("delete_email", "delete_file", "delete_event"):
                     detail_parts.append("Deleted successfully")
                 elif tool_name == "upload_file":

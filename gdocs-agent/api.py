@@ -11,7 +11,6 @@ from tools import (
     _create_google_doc_impl,
     _add_text_to_doc_impl,
     _read_google_doc_impl,
-    _share_google_docs_impl,
     _edit_google_doc_impl,
     _update_entire_doc_impl,
     _create_doc_with_content_impl,
@@ -105,17 +104,6 @@ def _parse_tool_result(tool_name: str, raw: str, inputs: Dict[str, Any]) -> Dict
             "document_url": doc_url,
             "content": content,
             "title": title_match.group(1).strip() if title_match else "",
-        }
-
-    if tool_name == "share_doc":
-        email_match = re.search(r"Shared with: ([^\n]+)", raw)
-        role_match = re.search(r"Permission: ([^\n]+)", raw)
-        return {
-            "success": True,
-            "document_id": doc_id,
-            "document_url": doc_url,
-            "shared_with": email_match.group(1).strip() if email_match else inputs.get("email", ""),
-            "role": role_match.group(1).strip() if role_match else inputs.get("role", ""),
         }
 
     if tool_name == "edit_doc":
@@ -445,7 +433,6 @@ async def execute_task(request: AgentTaskRequest):
             "create_doc": _create_google_doc_impl,
             "add_text": _add_text_to_doc_impl,
             "read_doc": _read_google_doc_impl,
-            "share_doc": _share_google_docs_impl,
             "edit_doc": _edit_google_doc_impl,
             "update_doc": _update_entire_doc_impl,
             "create_doc_with_content": _create_doc_with_content_impl,

@@ -73,8 +73,12 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4")
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0"))
 
-# Classifier LLM for agent identification (cheaper model)
-CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "gpt-3.5-turbo")
+# Classifier LLM for agent identification (cheaper AND smarter model).
+# Flipped from gpt-3.5-turbo to gpt-4o-mini in Phase 0 of the
+# fix-sheets-crash-cascade plan: gpt-4o-mini is ~3x cheaper per input
+# token ($0.15 vs $0.50 per 1M) AND measurably better at classification
+# tasks. Env-var override preserved for instant rollback.
+CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "gpt-4o-mini")
 
 # Lightweight model for quick checks, memory summarization, result summarization
 QUICK_MODEL = os.getenv("QUICK_MODEL", "gpt-4o-mini")

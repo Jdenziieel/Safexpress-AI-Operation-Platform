@@ -12,7 +12,6 @@ from tools import (
     _create_google_doc_impl,
     _add_text_to_doc_impl,
     _read_google_doc_impl,
-    _share_google_docs_impl,
     _edit_google_doc_impl,
     _update_entire_doc_impl,
     _create_doc_with_content_impl,
@@ -150,18 +149,6 @@ def create_docs_agent(credentials_dict: Dict):
         result = _read_google_doc_impl(document_id, credentials_dict)
         return result
 
-    @tool
-    def share_doc(document_id: str, email: str, role: str = "reader") -> str:
-        """Shares a Google Doc with a specified email address.
-
-        Args:
-            document_id: The ID of the document to share
-            email: The email address to share the document with
-            role: The access role ("reader", "commenter", "writer")
-        """
-        result = _share_google_docs_impl(document_id, email, role, credentials_dict)
-        return result
-
     # NEW: Edit/replace specific text in document
     @tool
     def edit_doc(document_id: str, old_text: str, new_text: str) -> str:
@@ -273,7 +260,6 @@ def create_docs_agent(credentials_dict: Dict):
         create_doc,
         add_text,
         read_doc,
-        share_doc,
         edit_doc,
         update_doc,
         create_doc_with_content,
@@ -399,9 +385,8 @@ When the supervisor agent routes a request to you:
 3. Use read_doc to read content from documents
 4. Use edit_doc to find and replace specific text
 5. Use update_doc to replace entire document content
-6. Use share_doc to share documents with users
-7. Provide clear confirmation with the document URL
-8. Report back to the supervisor with the result
+6. Provide clear confirmation with the document URL
+7. Report back to the supervisor with the result
 
 Be concise and professional. Focus only on Google Docs tasks."""
 

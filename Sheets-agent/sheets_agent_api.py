@@ -228,6 +228,8 @@ def read_sheet(
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
 
+        sheet_id = _extract_sheet_id(sheet_id)
+
         service = create_sheets_service(credentials_dict)
 
         result = (
@@ -285,6 +287,8 @@ def update_sheet(
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
 
+        sheet_id = _extract_sheet_id(sheet_id)
+
         service = create_sheets_service(credentials_dict)
 
         result = (
@@ -335,6 +339,8 @@ def append_rows(
     try:
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
+
+        sheet_id = _extract_sheet_id(sheet_id)
 
         service = create_sheets_service(credentials_dict)
 
@@ -391,6 +397,8 @@ def upload_mapped_data(
     try:
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
+
+        sheet_id = _extract_sheet_id(sheet_id)
 
         service = create_sheets_service(credentials_dict)
 
@@ -480,6 +488,8 @@ def get_sheet_metadata(
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
 
+        sheet_id = _extract_sheet_id(sheet_id)
+
         service = create_sheets_service(credentials_dict)
 
         spreadsheet = service.spreadsheets().get(spreadsheetId=sheet_id).execute()
@@ -533,6 +543,8 @@ def clear_sheet(
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
 
+        sheet_id = _extract_sheet_id(sheet_id)
+
         service = create_sheets_service(credentials_dict)
 
         result = (
@@ -561,6 +573,7 @@ def get_sheet_headers(
 ) -> Dict[str, Any]:
     """Get the header row of an existing sheet — needed for column mapping"""
     try:
+        sheet_id = _extract_sheet_id(sheet_id)
         service = create_sheets_service(credentials_dict)
         result = service.spreadsheets().values().get(
             spreadsheetId=sheet_id,
@@ -606,6 +619,8 @@ def update_by_date_match(
 
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
+
+        sheet_id = _extract_sheet_id(sheet_id)
 
         # ✅ BULLETPROOF PARSING - Handle any format
         print(f"\n🔍 Parsing rows_with_dates...")

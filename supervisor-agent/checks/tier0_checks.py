@@ -832,15 +832,6 @@ def _build_rich_approval_message(pending_action: dict) -> str:
                 text_preview += "..."
             msg += f"- **Text preview:**\n  > {text_preview}\n"
     
-    elif tool == "share_file":
-        msg += "**Sharing File**\n"
-        if inputs.get("file_id"):
-            msg += f"- **File ID:** {inputs['file_id']}\n"
-        if inputs.get("email"):
-            msg += f"- **Share with:** {inputs['email']}\n"
-        if inputs.get("role"):
-            msg += f"- **Permission:** {inputs['role']}\n"
-    
     elif tool in ("delete_email", "delete_file", "delete_event"):
         msg += "**Deleting Resource**\n"
         for key, value in inputs.items():

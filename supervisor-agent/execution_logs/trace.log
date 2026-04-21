@@ -4737,3 +4737,4 @@ Parameters:
 [2026-04-21 18:00:44.340] [INFO] [req_20260421100039_89448b00] [T:351a3edd] ← RESPONSE: 200 (9794ms)
 [2026-04-21 18:00:44.341] [INFO] [req_20260421100039_89448b00] [T:351a3edd] ─────────: ──────────────────────────────────────────────────
 [2026-04-21 18:00:44.348] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_351a3edd
+[2026-04-22 02:07:22.665] [PRINT] [OK] tier0_checks pause-message functions still importable
