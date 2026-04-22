@@ -4738,3 +4738,533 @@ Parameters:
 [2026-04-21 18:00:44.341] [INFO] [req_20260421100039_89448b00] [T:351a3edd] ─────────: ──────────────────────────────────────────────────
 [2026-04-21 18:00:44.348] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_351a3edd
 [2026-04-22 02:07:22.665] [PRINT] [OK] tier0_checks pause-message functions still importable
+[2026-04-22 02:34:06.017] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-22 02:34:06.051] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check
+    ↳ {"extracted_info": {"_cached_tool_filter": {"sheets_agent": ["upload_mapped_data", "validate_delivery_sheet", "preview_delivery_order_insertion", "write_delivery_order_data"], "gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"], "mapping_agent": ["parse_delivery_order_pdfs"]}, "sheet_name": "Product Requisition List"}, "missing_fields": ["transformed_data"], "first_missing_field": "transformed_data", "awaiting_confirmation": false, "awaiting_clarification": true}
+[2026-04-22 02:34:29.322] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-22 02:34:29.342] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check
+    ↳ {"extracted_info": {"_cached_tool_filter": {"sheets_agent": ["upload_mapped_data", "validate_delivery_sheet", "preview_delivery_order_insertion", "write_delivery_order_data"], "gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"], "mapping_agent": ["parse_delivery_order_pdfs"]}, "sheet_name": "Product Requisition List"}, "missing_fields": ["transformed_data"], "first_missing_field": "transformed_data", "awaiting_confirmation": false, "awaiting_clarification": true}
+[2026-04-22 02:34:29.343] [PRINT] 
+[2026-04-22 02:34:29.343] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:34:29.350] [PRINT] TIER 0.5 — Building prompt
+[2026-04-22 02:34:29.360] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:34:29.368] [PRINT]    bot_signal : PHASE: Awaiting answer — bot asked: "Could you please provide the transformed data and mappings..."
+[2026-04-22 02:34:29.378] [PRINT]    state_block: TASK FIELDS: [_cached_tool_filter, sheet_name] — missing: [transformed_data]
+[2026-04-22 02:34:29.388] [PRINT]    file_context: (none)
+[2026-04-22 02:34:29.397] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:34:29.413] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 02:34:29.438] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=100 out=20 | $0.0000 | 0ms
+[2026-04-22 02:34:29.446] [INFO] [-]   STEP [tier0.5]: category: FILE_QUERY, confidence: high  | {"reasoning": "The user mentions a PDF file attachment.", "raw_response": "{\"category\": \"file_query\", \"confidence\": \"high\", \"reasoning\": \"The user mentions a PDF file attachment.\"}"}
+[2026-04-22 02:34:29.447] [INFO] [-]   STEP [tier0.5]: file_query suppressed — awaiting_clarification takes priority, deferring to Tier 1  | {"missing_field": "transformed_data", "extracted_keys": ["_cached_tool_filter", "sheet_name"]}
+[2026-04-22 02:34:29.447] [PRINT]   OK [awaiting_clar] — file_query correctly deflected to Tier 1
+[2026-04-22 02:34:29.456] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-22 02:34:29.456] [PRINT] 
+[2026-04-22 02:34:29.456] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:34:29.465] [PRINT] TIER 0.5 — Building prompt
+[2026-04-22 02:34:29.473] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:34:29.481] [PRINT]    bot_signal : (none)
+[2026-04-22 02:34:29.491] [PRINT]    state_block: (none)
+[2026-04-22 02:34:29.503] [PRINT]    file_context: yes — report.pdf
+[2026-04-22 02:34:29.513] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:34:29.520] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 02:34:29.545] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=100 out=20 | $0.0000 | 0ms
+[2026-04-22 02:34:29.555] [INFO] [-]   STEP [tier0.5]: category: FILE_QUERY, confidence: high  | {"reasoning": "The user mentions a PDF file attachment.", "raw_response": "{\"category\": \"file_query\", \"confidence\": \"high\", \"reasoning\": \"The user mentions a PDF file attachment.\"}"}
+[2026-04-22 02:34:29.556] [INFO] [-]   STEP [tier0.5]: file_query — redirecting to actionable options  | {"filename": "report.pdf"}
+[2026-04-22 02:34:29.558] [PRINT]   OK [open_state] — file_query correctly emitted canned redirect (guard didn't over-fire)
+[2026-04-22 02:34:29.569] [PRINT] 
+[2026-04-22 02:34:29.569] [PRINT] ========================================================================
+[2026-04-22 02:34:29.579] [PRINT] SUMMARY
+[2026-04-22 02:34:29.588] [PRINT] ========================================================================
+[2026-04-22 02:34:29.597] [PRINT]   [PASS] Issue 2a: Tier 1 prompt workflow section
+[2026-04-22 02:34:29.606] [PRINT]   [PASS] Issue 2b: capabilities declare sheet_id derivation
+[2026-04-22 02:34:29.612] [PRINT]   [PASS] Issue 3: file_query guard
+[2026-04-22 02:34:29.621] [PRINT] ========================================================================
+[2026-04-22 02:34:29.629] [PRINT] All 3 checks passed.
+[2026-04-22 02:44:14.027] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-22 02:44:14.051] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check
+    ↳ {"extracted_info": {"_cached_tool_filter": {"sheets_agent": ["upload_mapped_data", "validate_delivery_sheet", "preview_delivery_order_insertion", "write_delivery_order_data"], "gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"], "mapping_agent": ["parse_delivery_order_pdfs"]}, "sheet_name": "Product Requisition List"}, "missing_fields": ["transformed_data"], "first_missing_field": "transformed_data", "awaiting_confirmation": false, "awaiting_clarification": true}
+[2026-04-22 02:44:14.052] [PRINT] 
+[2026-04-22 02:44:14.052] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:44:14.061] [PRINT] TIER 0.5 — Building prompt
+[2026-04-22 02:44:14.072] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:44:14.081] [PRINT]    bot_signal : PHASE: Awaiting answer — bot asked: "Could you please provide the transformed data and mappings..."
+[2026-04-22 02:44:14.089] [PRINT]    state_block: TASK FIELDS: [_cached_tool_filter, sheet_name] — missing: [transformed_data]
+[2026-04-22 02:44:14.099] [PRINT]    file_context: (none)
+[2026-04-22 02:44:14.107] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:44:14.120] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 02:44:14.143] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=100 out=20 | $0.0000 | 0ms
+[2026-04-22 02:44:14.150] [INFO] [-]   STEP [tier0.5]: category: FILE_QUERY, confidence: high  | {"reasoning": "The user mentions a PDF file attachment.", "raw_response": "{\"category\": \"file_query\", \"confidence\": \"high\", \"reasoning\": \"The user mentions a PDF file attachment.\"}"}
+[2026-04-22 02:44:14.150] [INFO] [-]   STEP [tier0.5]: file_query suppressed — awaiting_clarification takes priority, deferring to Tier 1  | {"missing_field": "transformed_data", "extracted_keys": ["_cached_tool_filter", "sheet_name"]}
+[2026-04-22 02:44:14.151] [PRINT]   OK [awaiting_clar] — file_query correctly deflected to Tier 1
+[2026-04-22 02:44:14.159] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-22 02:44:14.160] [PRINT] 
+[2026-04-22 02:44:14.160] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:44:14.168] [PRINT] TIER 0.5 — Building prompt
+[2026-04-22 02:44:14.175] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:44:14.183] [PRINT]    bot_signal : (none)
+[2026-04-22 02:44:14.190] [PRINT]    state_block: (none)
+[2026-04-22 02:44:14.198] [PRINT]    file_context: yes — report.pdf
+[2026-04-22 02:44:14.205] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 02:44:14.213] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 02:44:14.244] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=100 out=20 | $0.0000 | 0ms
+[2026-04-22 02:44:14.253] [INFO] [-]   STEP [tier0.5]: category: FILE_QUERY, confidence: high  | {"reasoning": "The user mentions a PDF file attachment.", "raw_response": "{\"category\": \"file_query\", \"confidence\": \"high\", \"reasoning\": \"The user mentions a PDF file attachment.\"}"}
+[2026-04-22 02:44:14.254] [INFO] [-]   STEP [tier0.5]: file_query — redirecting to actionable options  | {"filename": "report.pdf"}
+[2026-04-22 02:44:14.255] [PRINT]   OK [open_state] — file_query correctly emitted canned redirect (guard didn't over-fire)
+[2026-04-22 02:44:14.263] [PRINT] 
+[2026-04-22 02:44:14.263] [PRINT] ========================================================================
+[2026-04-22 02:44:14.270] [PRINT] SUMMARY
+[2026-04-22 02:44:14.280] [PRINT] ========================================================================
+[2026-04-22 02:44:14.288] [PRINT]   [PASS] Issue 2a: Tier 1 prompt workflow section
+[2026-04-22 02:44:14.296] [PRINT]   [PASS] Issue 2b: capabilities declare sheet_id derivation
+[2026-04-22 02:44:14.305] [PRINT]   [PASS] Issue 3: file_query guard
+[2026-04-22 02:44:14.316] [PRINT] ========================================================================
+[2026-04-22 02:44:14.324] [PRINT] All 3 checks passed.
+[2026-04-22 03:26:28.718] [PRINT] [FAIL] templates: delivery-order summary template removed - ImportError("cannot import name 'RESPONSE_TEMPLATES' from 'services.response_templates' (C:\\Users\\Denz\\Documents\\tigers\\Ai-Agents\\supervisor-agent\\services\\response_templates.py)")
+[2026-04-22 03:26:28.742] [PRINT] [ OK ] tools.py: _process_delivery_order_workflow_impl removed
+[2026-04-22 03:26:28.752] [PRINT] [ OK ] tools.py: dead helpers removed (G12)
+[2026-04-22 03:26:28.762] [PRINT] [ OK ] api.py: TOOL_MAP no longer dispatches the broken tool
+[2026-04-22 03:26:28.771] [PRINT] ============================================================================
+[2026-04-22 03:26:28.781] [PRINT] Scenario 2 - G2: dead delivery_order_service is deleted
+[2026-04-22 03:26:28.791] [PRINT] ============================================================================
+[2026-04-22 03:26:28.802] [PRINT] [ OK ] __init__.py no longer imports DeliveryOrderService
+[2026-04-22 03:26:28.812] [PRINT] [ OK ] delivery_order_service.py file deleted
+[2026-04-22 03:26:28.824] [PRINT] [ OK ] services package still imports cleanly
+[2026-04-22 03:26:28.834] [PRINT] ============================================================================
+[2026-04-22 03:26:28.844] [PRINT] Scenario 3 - Block G safety net with realistic classifier misses
+[2026-04-22 03:26:28.854] [PRINT] ============================================================================
+[2026-04-22 03:26:32.981] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:26:33.009] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:26:33.018] [PRINT] [ OK ] Block G A: spaced 'delivery order'
+[2026-04-22 03:26:33.027] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:26:33.055] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:26:33.064] [PRINT] [ OK ] Block G B: hyphenated 'delivery-order'
+[2026-04-22 03:26:33.074] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:26:33.102] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:26:33.111] [PRINT] [ OK ] Block G C: bare 'requisition'
+[2026-04-22 03:26:33.121] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:26:33.146] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:26:33.156] [PRINT] [ OK ] Block G D: 'purchase-order'
+[2026-04-22 03:26:33.165] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:26:33.191] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:26:33.199] [PRINT] [ OK ] Block G E: 'po pdf' phrase
+[2026-04-22 03:26:33.208] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:26:33.234] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:26:33.243] [PRINT] [ OK ] Block G F: 'order list'
+[2026-04-22 03:26:33.253] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:26:33.282] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:26:33.292] [PRINT] [ OK ] Block G negative control (no injection for non-delivery)
+[2026-04-22 03:26:33.305] [PRINT] ============================================================================
+[2026-04-22 03:26:33.316] [PRINT] Scenario 4 - Planner prompt exposes Rule 16 + Example 3
+[2026-04-22 03:26:33.325] [PRINT] ============================================================================
+[2026-04-22 03:26:33.333] [PRINT] [ OK ] planner prompt includes Rule 16 + Example 3 + all steering
+[2026-04-22 03:26:33.343] [PRINT] ============================================================================
+[2026-04-22 03:26:33.352] [PRINT] Scenario 5 - get_filtered_capabilities_v2 hides upload_mapped_data
+[2026-04-22 03:26:33.363] [PRINT] ============================================================================
+[2026-04-22 03:26:33.370] [PRINT] [ OK ] filtered caps shape is correct
+[2026-04-22 03:26:33.379] [PRINT] ============================================================================
+[2026-04-22 03:26:33.391] [PRINT] Scenario 6 - variable substitution round-trips list values correctly
+[2026-04-22 03:26:33.400] [PRINT] ============================================================================
+[2026-04-22 03:26:33.840] [PRINT] [FAIL] mapping_agent._flatten_file_paths decodes Jinja-stringified list - No module named 'pandas'
+[2026-04-22 03:26:33.840] [PRINT] Traceback (most recent call last):
+[2026-04-22 03:26:33.840] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\_sim_e2e.py", line 437, in <module>
+[2026-04-22 03:26:33.840] [PRINT]     from mapping_agent_api import _flatten_file_paths as mapping_flatten  # type: ignore
+[2026-04-22 03:26:33.840] [PRINT]     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-04-22 03:26:33.840] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\Mapping-agent\mapping_agent_api.py", line 13, in <module>
+[2026-04-22 03:26:33.840] [PRINT]     import pandas as pd
+[2026-04-22 03:26:33.840] [PRINT] ModuleNotFoundError: No module named 'pandas'
+[2026-04-22 03:26:33.883] [PRINT] [FAIL] sheets_agent._parse_orders_input decodes full Python repr (None/True/apostrophe) - No module named 'google.oauth2'
+[2026-04-22 03:26:33.883] [PRINT] Traceback (most recent call last):
+[2026-04-22 03:26:33.883] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\_sim_e2e.py", line 461, in <module>
+[2026-04-22 03:26:33.883] [PRINT]     spec.loader.exec_module(sheets_api)  # type: ignore
+[2026-04-22 03:26:33.883] [PRINT]     ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+[2026-04-22 03:26:33.883] [PRINT]   File "<frozen importlib._bootstrap_external>", line 1026, in exec_module
+[2026-04-22 03:26:33.883] [PRINT]   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+[2026-04-22 03:26:33.883] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\Sheets-agent\sheets_agent_api.py", line 13, in <module>
+[2026-04-22 03:26:33.883] [PRINT]     from google.oauth2.credentials import Credentials
+[2026-04-22 03:26:33.883] [PRINT] ModuleNotFoundError: No module named 'google.oauth2'
+[2026-04-22 03:26:33.894] [PRINT] ============================================================================
+[2026-04-22 03:26:33.903] [PRINT] Scenario 7 - approval-branch substitution round-trips Python literals
+[2026-04-22 03:26:33.910] [PRINT] ============================================================================
+[2026-04-22 03:26:33.920] [PRINT] [ OK ] approval substitution (G6) round-trips Python list cleanly
+[2026-04-22 03:26:33.931] [PRINT] [ OK ] legacy approval substitution is demonstrably broken (as expected) - old code left parsed_orders as a raw string — G6 fix required
+[2026-04-22 03:26:33.939] [PRINT] ============================================================================
+[2026-04-22 03:26:33.947] [PRINT] Scenario 8 - G7 rich approval message renders readable summary
+[2026-04-22 03:26:33.955] [PRINT] ============================================================================
+[2026-04-22 03:26:33.968] [PRINT] [ OK ] approval message is readable, not a raw dump
+[2026-04-22 03:26:33.976] [PRINT] 
+[2026-04-22 03:26:33.976] [PRINT] --- approval message preview ---
+[2026-04-22 03:26:33.983] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-22 03:26:33.983] [PRINT] 
+[2026-04-22 03:26:33.983] [PRINT] Step 6 of 6
+[2026-04-22 03:26:33.983] [PRINT] 
+[2026-04-22 03:26:33.983] [PRINT] **Append the parsed delivery-order rows into the DO Tracker sheet**
+[2026-04-22 03:26:33.983] [PRINT] 
+[2026-04-22 03:26:33.983] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-22 03:26:33.983] [PRINT] - **Sheet ID:** 1A2B3C4D5E6F7G8H9I0J_real_sheet_id
+[2026-04-22 03:26:33.983] [PRINT] - **Orders to write:** 2
+[2026-04-22 03:26:33.983] [PRINT] - **Total line items:** 3
+[2026-04-22 03:26:33.983] [PRINT] - **Source files:** DO-2026-0417.pdf, requisition_april.pdf
+[2026-04-22 03:26:33.983] [PRINT] - **Sample header (order 1):** order_reference=DO-2026-0417, order_date=2026-04-17, vendor=Supplier's Co., urgent=True
+[2026-04-22 03:26:33.983] [PRINT] 
+[2026-04-22 03:26:33.983] [PRINT] ---
+[2026-04-22 03:26:33.983] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-22 03:26:33.992] [PRINT] --- end preview ---
+[2026-04-22 03:26:34.003] [PRINT] ============================================================================
+[2026-04-22 03:26:34.012] [PRINT] Scenario 9 - Full pipeline walkthrough across 3 user inputs
+[2026-04-22 03:26:34.021] [PRINT] ============================================================================
+[2026-04-22 03:26:36.547] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-22 03:26:36.657] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-22 03:26:36.669] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-22 03:26:36.680] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-22 03:26:36.695] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-22 03:26:36.716] [PRINT] [FAIL] Scenario A (sheet-by-name): all 6 steps wire cleanly - No module named 'pandas'
+[2026-04-22 03:26:36.716] [PRINT] Traceback (most recent call last):
+[2026-04-22 03:26:36.716] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\_sim_e2e.py", line 771, in <module>
+[2026-04-22 03:26:36.716] [PRINT]     from mapping_agent_api import _flatten_file_paths  # type: ignore
+[2026-04-22 03:26:36.716] [PRINT]     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-04-22 03:26:36.716] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\Mapping-agent\mapping_agent_api.py", line 13, in <module>
+[2026-04-22 03:26:36.716] [PRINT]     import pandas as pd
+[2026-04-22 03:26:36.716] [PRINT] ModuleNotFoundError: No module named 'pandas'
+[2026-04-22 03:26:36.733] [PRINT] [ OK ] Scenario B (uploaded file): 4-step chain wires cleanly
+[2026-04-22 03:26:36.748] [PRINT] [FAIL] Scenario C (sheet URL pasted): 5-step chain skips drive lookup - module 'sheets_agent_api_sim' has no attribute '_parse_orders_input'
+[2026-04-22 03:26:36.748] [PRINT] Traceback (most recent call last):
+[2026-04-22 03:26:36.748] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\_sim_e2e.py", line 842, in <module>
+[2026-04-22 03:26:36.748] [PRINT]     reparsed = sheets_api._parse_orders_input(preview_orders_str)
+[2026-04-22 03:26:36.748] [PRINT]                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-04-22 03:26:36.748] [PRINT] AttributeError: module 'sheets_agent_api_sim' has no attribute '_parse_orders_input'
+[2026-04-22 03:26:36.759] [PRINT] ============================================================================
+[2026-04-22 03:26:36.767] [PRINT] FINAL REPORT
+[2026-04-22 03:26:36.777] [PRINT] ============================================================================
+[2026-04-22 03:26:36.787] [PRINT] TOTAL: 26 checks — PASS: 21, FAIL: 5, INFO: 0
+[2026-04-22 03:26:36.796] [PRINT] FAILURES:
+[2026-04-22 03:26:36.805] [PRINT]   * templates: delivery-order summary template removed
+[2026-04-22 03:26:36.815] [PRINT]       ImportError("cannot import name 'RESPONSE_TEMPLATES' from 'services.response_templates' (C:\\Users\\Denz\\Documents\\tigers\\Ai-Agents\\supervisor-agent\\services\\response_templates.py)")
+[2026-04-22 03:26:36.824] [PRINT]   * mapping_agent._flatten_file_paths decodes Jinja-stringified list
+[2026-04-22 03:26:36.834] [PRINT]       No module named 'pandas'
+[2026-04-22 03:26:36.834] [PRINT] Traceback (most recent call last):
+[2026-04-22 03:26:36.834] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\_sim_e2e.py", line 437, in <module>
+[2026-04-22 03:26:36.834] [PRINT]     from mapping_agent_api import _flatten_file_paths as mapping_flatten  # type: ignore
+[2026-04-22 03:26:36.834] [PRINT]     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-04-22 03:26:36.834] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\Mapping-agent\mapping_agent_api.py", line 13, in <module>
+[2026-04-22 03:26:36.834] [PRINT]     import pandas as pd
+[2026-04-22 03:26:36.834] [PRINT] ModuleNotFoundError: No module named 'pandas'
+[2026-04-22 03:26:36.843] [PRINT]   * sheets_agent._parse_orders_input decodes full Python repr (None/True/apostrophe)
+[2026-04-22 03:26:36.850] [PRINT]       No module named 'google.oauth2'
+[2026-04-22 03:26:36.850] [PRINT] Traceback (most recent call last):
+[2026-04-22 03:26:36.850] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\_sim_e2e.py", line 461, in <module>
+[2026-04-22 03:26:36.850] [PRINT]     spec.loader.exec_module(sheets_api)  # type: ignore
+[2026-04-22 03:26:36.850] [PRINT]     ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+[2026-04-22 03:26:36.850] [PRINT]   File "<frozen importlib._bootstrap_external>", line 1026, in exec_module
+[2026-04-22 03:26:36.850] [PRINT]   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+[2026-04-22 03:26:36.850] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\Sheets-agent\sheets_agent_api.py", line 13, in <module>
+[2026-04-22 03:26:36.850] [PRINT]     from google.oauth2.credentials import Credentials
+[2026-04-22 03:26:36.850] [PRINT] ModuleNotFoundError: No module named 'google.oauth2'
+[2026-04-22 03:26:36.859] [PRINT]   * Scenario A (sheet-by-name): all 6 steps wire cleanly
+[2026-04-22 03:26:36.869] [PRINT]       No module named 'pandas'
+[2026-04-22 03:26:36.869] [PRINT] Traceback (most recent call last):
+[2026-04-22 03:26:36.869] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\_sim_e2e.py", line 771, in <module>
+[2026-04-22 03:26:36.869] [PRINT]     from mapping_agent_api import _flatten_file_paths  # type: ignore
+[2026-04-22 03:26:36.869] [PRINT]     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-04-22 03:26:36.869] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\Mapping-agent\mapping_agent_api.py", line 13, in <module>
+[2026-04-22 03:26:36.869] [PRINT]     import pandas as pd
+[2026-04-22 03:26:36.869] [PRINT] ModuleNotFoundError: No module named 'pandas'
+[2026-04-22 03:26:36.878] [PRINT]   * Scenario C (sheet URL pasted): 5-step chain skips drive lookup
+[2026-04-22 03:26:36.887] [PRINT]       module 'sheets_agent_api_sim' has no attribute '_parse_orders_input'
+[2026-04-22 03:26:36.887] [PRINT] Traceback (most recent call last):
+[2026-04-22 03:26:36.887] [PRINT]   File "C:\Users\Denz\Documents\tigers\Ai-Agents\_sim_e2e.py", line 842, in <module>
+[2026-04-22 03:26:36.887] [PRINT]     reparsed = sheets_api._parse_orders_input(preview_orders_str)
+[2026-04-22 03:26:36.887] [PRINT]                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-04-22 03:26:36.887] [PRINT] AttributeError: module 'sheets_agent_api_sim' has no attribute '_parse_orders_input'
+[2026-04-22 03:27:38.852] [PRINT] [ OK ] templates: delivery-order summary template removed
+[2026-04-22 03:27:38.868] [PRINT] [ OK ] tools.py: _process_delivery_order_workflow_impl removed
+[2026-04-22 03:27:38.877] [PRINT] [ OK ] tools.py: dead helpers removed (G12)
+[2026-04-22 03:27:38.886] [PRINT] [ OK ] api.py: TOOL_MAP no longer dispatches the broken tool
+[2026-04-22 03:27:38.894] [PRINT] ============================================================================
+[2026-04-22 03:27:38.902] [PRINT] Scenario 2 - G2: dead delivery_order_service is deleted
+[2026-04-22 03:27:38.911] [PRINT] ============================================================================
+[2026-04-22 03:27:38.920] [PRINT] [ OK ] __init__.py no longer imports DeliveryOrderService
+[2026-04-22 03:27:38.929] [PRINT] [ OK ] delivery_order_service.py file deleted
+[2026-04-22 03:27:38.940] [PRINT] [ OK ] services package still imports cleanly
+[2026-04-22 03:27:38.949] [PRINT] ============================================================================
+[2026-04-22 03:27:38.958] [PRINT] Scenario 3 - Block G safety net with realistic classifier misses
+[2026-04-22 03:27:38.967] [PRINT] ============================================================================
+[2026-04-22 03:27:42.012] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:27:42.036] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:27:42.046] [PRINT] [ OK ] Block G A: spaced 'delivery order'
+[2026-04-22 03:27:42.055] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:27:42.081] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:27:42.092] [PRINT] [ OK ] Block G B: hyphenated 'delivery-order'
+[2026-04-22 03:27:42.100] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:27:42.128] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:27:42.139] [PRINT] [ OK ] Block G C: bare 'requisition'
+[2026-04-22 03:27:42.152] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:27:42.182] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:27:42.193] [PRINT] [ OK ] Block G D: 'purchase-order'
+[2026-04-22 03:27:42.204] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:27:42.230] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:27:42.238] [PRINT] [ OK ] Block G E: 'po pdf' phrase
+[2026-04-22 03:27:42.248] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:27:42.271] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:27:42.280] [PRINT] [ OK ] Block G F: 'order list'
+[2026-04-22 03:27:42.291] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:27:42.319] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:27:42.328] [PRINT] [ OK ] Block G negative control (no injection for non-delivery)
+[2026-04-22 03:27:42.338] [PRINT] ============================================================================
+[2026-04-22 03:27:42.347] [PRINT] Scenario 4 - Planner prompt exposes Rule 16 + Example 3
+[2026-04-22 03:27:42.357] [PRINT] ============================================================================
+[2026-04-22 03:27:42.366] [PRINT] [ OK ] planner prompt includes Rule 16 + Example 3 + all steering
+[2026-04-22 03:27:42.375] [PRINT] ============================================================================
+[2026-04-22 03:27:42.384] [PRINT] Scenario 5 - get_filtered_capabilities_v2 hides upload_mapped_data
+[2026-04-22 03:27:42.392] [PRINT] ============================================================================
+[2026-04-22 03:27:42.399] [PRINT] [ OK ] filtered caps shape is correct
+[2026-04-22 03:27:42.408] [PRINT] ============================================================================
+[2026-04-22 03:27:42.416] [PRINT] Scenario 6 - variable substitution round-trips list values correctly
+[2026-04-22 03:27:42.424] [PRINT] ============================================================================
+[2026-04-22 03:27:44.303] [PRINT] ⚠️ Warning: SmartMappingEngine not found. Smart mapping will use fallback logic.
+[2026-04-22 03:27:44.319] [PRINT] [ OK ] mapping_agent._flatten_file_paths decodes Jinja-stringified list
+[2026-04-22 03:27:44.339] [PRINT] [ OK ] sheets_agent._parse_orders_input decodes full Python repr (None/True/apostrophe)
+[2026-04-22 03:27:44.349] [PRINT] ============================================================================
+[2026-04-22 03:27:44.358] [PRINT] Scenario 7 - approval-branch substitution round-trips Python literals
+[2026-04-22 03:27:44.369] [PRINT] ============================================================================
+[2026-04-22 03:27:44.387] [PRINT] [ OK ] approval substitution (G6) round-trips Python list cleanly
+[2026-04-22 03:27:44.415] [PRINT] [ OK ] legacy approval substitution is demonstrably broken (as expected) - old code left parsed_orders as a raw string — G6 fix required
+[2026-04-22 03:27:44.435] [PRINT] ============================================================================
+[2026-04-22 03:27:44.455] [PRINT] Scenario 8 - G7 rich approval message renders readable summary
+[2026-04-22 03:27:44.474] [PRINT] ============================================================================
+[2026-04-22 03:27:44.491] [PRINT] [ OK ] approval message is readable, not a raw dump
+[2026-04-22 03:27:44.501] [PRINT] 
+[2026-04-22 03:27:44.501] [PRINT] --- approval message preview ---
+[2026-04-22 03:27:44.508] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-22 03:27:44.508] [PRINT] 
+[2026-04-22 03:27:44.508] [PRINT] Step 6 of 6
+[2026-04-22 03:27:44.508] [PRINT] 
+[2026-04-22 03:27:44.508] [PRINT] **Append the parsed delivery-order rows into the DO Tracker sheet**
+[2026-04-22 03:27:44.508] [PRINT] 
+[2026-04-22 03:27:44.508] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-22 03:27:44.508] [PRINT] - **Sheet ID:** 1A2B3C4D5E6F7G8H9I0J_real_sheet_id
+[2026-04-22 03:27:44.508] [PRINT] - **Orders to write:** 2
+[2026-04-22 03:27:44.508] [PRINT] - **Total line items:** 3
+[2026-04-22 03:27:44.508] [PRINT] - **Source files:** DO-2026-0417.pdf, requisition_april.pdf
+[2026-04-22 03:27:44.508] [PRINT] - **Sample header (order 1):** order_reference=DO-2026-0417, order_date=2026-04-17, vendor=Supplier's Co., urgent=True
+[2026-04-22 03:27:44.508] [PRINT] 
+[2026-04-22 03:27:44.508] [PRINT] ---
+[2026-04-22 03:27:44.508] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-22 03:27:44.515] [PRINT] --- end preview ---
+[2026-04-22 03:27:44.522] [PRINT] ============================================================================
+[2026-04-22 03:27:44.530] [PRINT] Scenario 9 - Full pipeline walkthrough across 3 user inputs
+[2026-04-22 03:27:44.537] [PRINT] ============================================================================
+[2026-04-22 03:27:46.959] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-22 03:27:47.065] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-22 03:27:47.143] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-22 03:27:47.152] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-22 03:27:47.161] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-22 03:27:47.175] [PRINT] [ OK ] Scenario A (sheet-by-name): all 6 steps wire cleanly
+[2026-04-22 03:27:47.188] [PRINT] [ OK ] Scenario B (uploaded file): 4-step chain wires cleanly
+[2026-04-22 03:27:47.202] [PRINT] [ OK ] Scenario C (sheet URL pasted): 5-step chain skips drive lookup
+[2026-04-22 03:27:47.210] [PRINT] ============================================================================
+[2026-04-22 03:27:47.219] [PRINT] FINAL REPORT
+[2026-04-22 03:27:47.228] [PRINT] ============================================================================
+[2026-04-22 03:27:47.237] [PRINT] TOTAL: 26 checks — PASS: 26, FAIL: 0, INFO: 0
+[2026-04-22 03:45:51.622] [PRINT] [ OK ] templates: delivery-order summary template removed
+[2026-04-22 03:45:51.644] [PRINT] [ OK ] tools.py: _process_delivery_order_workflow_impl removed
+[2026-04-22 03:45:51.653] [PRINT] [ OK ] tools.py: dead helpers removed (G12)
+[2026-04-22 03:45:51.663] [PRINT] [ OK ] api.py: TOOL_MAP no longer dispatches the broken tool
+[2026-04-22 03:45:51.672] [PRINT] ============================================================================
+[2026-04-22 03:45:51.681] [PRINT] Scenario 2 - G2: dead delivery_order_service is deleted
+[2026-04-22 03:45:51.690] [PRINT] ============================================================================
+[2026-04-22 03:45:51.700] [PRINT] [ OK ] __init__.py no longer imports DeliveryOrderService
+[2026-04-22 03:45:51.709] [PRINT] [ OK ] delivery_order_service.py file deleted
+[2026-04-22 03:45:51.719] [PRINT] [ OK ] services package still imports cleanly
+[2026-04-22 03:45:51.727] [PRINT] ============================================================================
+[2026-04-22 03:45:51.734] [PRINT] Scenario 3 - Block G safety net with realistic classifier misses
+[2026-04-22 03:45:51.741] [PRINT] ============================================================================
+[2026-04-22 03:45:56.142] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:45:56.165] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:45:56.174] [PRINT] [ OK ] Block G A: spaced 'delivery order'
+[2026-04-22 03:45:56.183] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:45:56.208] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:45:56.220] [PRINT] [ OK ] Block G B: hyphenated 'delivery-order'
+[2026-04-22 03:45:56.227] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:45:56.251] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:45:56.259] [PRINT] [ OK ] Block G C: bare 'requisition'
+[2026-04-22 03:45:56.268] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:45:56.292] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:45:56.301] [PRINT] [ OK ] Block G D: 'purchase-order'
+[2026-04-22 03:45:56.311] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:45:56.337] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:45:56.346] [PRINT] [ OK ] Block G E: 'po pdf' phrase
+[2026-04-22 03:45:56.356] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:45:56.383] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:45:56.393] [PRINT] [ OK ] Block G F: 'order list'
+[2026-04-22 03:45:56.404] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:45:56.430] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:45:56.439] [PRINT] [ OK ] Block G negative control (no injection for non-delivery)
+[2026-04-22 03:45:56.448] [PRINT] ============================================================================
+[2026-04-22 03:45:56.456] [PRINT] Scenario 4 - Planner prompt exposes Rule 16 + Example 3
+[2026-04-22 03:45:56.466] [PRINT] ============================================================================
+[2026-04-22 03:45:56.475] [PRINT] [ OK ] planner prompt includes Rule 16 + Example 3 + all steering
+[2026-04-22 03:45:56.485] [PRINT] ============================================================================
+[2026-04-22 03:45:56.493] [PRINT] Scenario 5 - get_filtered_capabilities_v2 hides upload_mapped_data
+[2026-04-22 03:45:56.503] [PRINT] ============================================================================
+[2026-04-22 03:45:56.511] [PRINT] [ OK ] filtered caps shape is correct
+[2026-04-22 03:45:56.520] [PRINT] ============================================================================
+[2026-04-22 03:45:56.528] [PRINT] Scenario 6 - variable substitution round-trips list values correctly
+[2026-04-22 03:45:56.539] [PRINT] ============================================================================
+[2026-04-22 03:45:58.098] [PRINT] ⚠️ Warning: SmartMappingEngine not found. Smart mapping will use fallback logic.
+[2026-04-22 03:45:58.123] [PRINT] [ OK ] mapping_agent._flatten_file_paths decodes Jinja-stringified list
+[2026-04-22 03:45:58.148] [PRINT] [ OK ] sheets_agent._parse_orders_input decodes full Python repr (None/True/apostrophe)
+[2026-04-22 03:45:58.158] [PRINT] ============================================================================
+[2026-04-22 03:45:58.166] [PRINT] Scenario 7 - approval-branch substitution round-trips Python literals
+[2026-04-22 03:45:58.175] [PRINT] ============================================================================
+[2026-04-22 03:45:58.185] [PRINT] [ OK ] approval substitution (G6) round-trips Python list cleanly
+[2026-04-22 03:45:58.194] [PRINT] [ OK ] legacy approval substitution is demonstrably broken (as expected) - old code left parsed_orders as a raw string — G6 fix required
+[2026-04-22 03:45:58.202] [PRINT] ============================================================================
+[2026-04-22 03:45:58.209] [PRINT] Scenario 8 - G7 rich approval message renders readable summary
+[2026-04-22 03:45:58.219] [PRINT] ============================================================================
+[2026-04-22 03:45:58.229] [PRINT] [ OK ] approval message is readable, not a raw dump
+[2026-04-22 03:45:58.236] [PRINT] 
+[2026-04-22 03:45:58.236] [PRINT] --- approval message preview ---
+[2026-04-22 03:45:58.243] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-22 03:45:58.243] [PRINT] 
+[2026-04-22 03:45:58.243] [PRINT] Step 6 of 6
+[2026-04-22 03:45:58.243] [PRINT] 
+[2026-04-22 03:45:58.243] [PRINT] **Append the parsed delivery-order rows into the DO Tracker sheet**
+[2026-04-22 03:45:58.243] [PRINT] 
+[2026-04-22 03:45:58.243] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-22 03:45:58.243] [PRINT] - **Sheet ID:** 1A2B3C4D5E6F7G8H9I0J_real_sheet_id
+[2026-04-22 03:45:58.243] [PRINT] - **Orders to write:** 2
+[2026-04-22 03:45:58.243] [PRINT] - **Total line items:** 3
+[2026-04-22 03:45:58.243] [PRINT] - **Source files:** DO-2026-0417.pdf, requisition_april.pdf
+[2026-04-22 03:45:58.243] [PRINT] - **Sample header (order 1):** order_reference=DO-2026-0417, order_date=2026-04-17, vendor=Supplier's Co., urgent=True
+[2026-04-22 03:45:58.243] [PRINT] 
+[2026-04-22 03:45:58.243] [PRINT] ---
+[2026-04-22 03:45:58.243] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-22 03:45:58.251] [PRINT] --- end preview ---
+[2026-04-22 03:45:58.259] [PRINT] ============================================================================
+[2026-04-22 03:45:58.267] [PRINT] Scenario 9 - Full pipeline walkthrough across 3 user inputs
+[2026-04-22 03:45:58.275] [PRINT] ============================================================================
+[2026-04-22 03:46:00.775] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-22 03:46:00.866] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-22 03:46:00.875] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-22 03:46:00.882] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-22 03:46:00.890] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-22 03:46:00.906] [PRINT] [ OK ] Scenario A (sheet-by-name): all 6 steps wire cleanly
+[2026-04-22 03:46:00.918] [PRINT] [ OK ] Scenario B (uploaded file, bare string path): 5-step chain wires cleanly
+[2026-04-22 03:46:00.931] [PRINT] [ OK ] Scenario C (sheet URL pasted): 5-step chain skips drive lookup
+[2026-04-22 03:46:00.940] [PRINT] ============================================================================
+[2026-04-22 03:46:00.948] [PRINT] Scenario 10 - capability-schema guard against arg-name drift
+[2026-04-22 03:46:00.957] [PRINT] ============================================================================
+[2026-04-22 03:46:00.965] [PRINT] [ OK ] all sim plans use only capability-declared arg names
+[2026-04-22 03:46:00.975] [PRINT] [FAIL] planner prompt Example 3 uses only capability-declared arg names - Example 3 gmail_agent.search_emails_with_delivery_order_attachments: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)) | Example 3 mapping_agent.parse_delivery_order_pdfs: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)) | Example 3 drive_agent.search_files: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)) | Example 3 sheets_agent.validate_delivery_sheet: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)) | Example 3 sheets_agent.preview_delivery_order_insertion: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)) | Example 3 sheets_agent.write_delivery_order_data: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1))
+[2026-04-22 03:46:00.984] [PRINT] ============================================================================
+[2026-04-22 03:46:00.992] [PRINT] Scenario 11 - Rule 16 text forbids wrong search_files args
+[2026-04-22 03:46:01.001] [PRINT] ============================================================================
+[2026-04-22 03:46:01.009] [PRINT] [ OK ] Rule 16 search_files line uses correct args only
+[2026-04-22 03:46:01.018] [PRINT] [ OK ] Rule 16 uploaded_file guidance uses bare-string pattern
+[2026-04-22 03:46:01.027] [PRINT] ============================================================================
+[2026-04-22 03:46:01.036] [PRINT] FINAL REPORT
+[2026-04-22 03:46:01.045] [PRINT] ============================================================================
+[2026-04-22 03:46:01.053] [PRINT] TOTAL: 30 checks — PASS: 29, FAIL: 1, INFO: 0
+[2026-04-22 03:46:01.061] [PRINT] FAILURES:
+[2026-04-22 03:46:01.069] [PRINT]   * planner prompt Example 3 uses only capability-declared arg names
+[2026-04-22 03:46:01.077] [PRINT]       Example 3 gmail_agent.search_emails_with_delivery_order_attachments: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)) | Example 3 mapping_agent.parse_delivery_order_pdfs: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)) | Example 3 drive_agent.search_files: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)) | Example 3 sheets_agent.validate_delivery_sheet: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)) | Example 3 sheets_agent.preview_delivery_order_insertion: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)) | Example 3 sheets_agent.write_delivery_order_data: inputs dict unparseable (Expecting property name enclosed in double quotes: line 1 column 2 (char 1))
+[2026-04-22 03:47:01.093] [PRINT] [ OK ] templates: delivery-order summary template removed
+[2026-04-22 03:47:01.113] [PRINT] [ OK ] tools.py: _process_delivery_order_workflow_impl removed
+[2026-04-22 03:47:01.122] [PRINT] [ OK ] tools.py: dead helpers removed (G12)
+[2026-04-22 03:47:01.130] [PRINT] [ OK ] api.py: TOOL_MAP no longer dispatches the broken tool
+[2026-04-22 03:47:01.139] [PRINT] ============================================================================
+[2026-04-22 03:47:01.149] [PRINT] Scenario 2 - G2: dead delivery_order_service is deleted
+[2026-04-22 03:47:01.157] [PRINT] ============================================================================
+[2026-04-22 03:47:01.166] [PRINT] [ OK ] __init__.py no longer imports DeliveryOrderService
+[2026-04-22 03:47:01.175] [PRINT] [ OK ] delivery_order_service.py file deleted
+[2026-04-22 03:47:01.187] [PRINT] [ OK ] services package still imports cleanly
+[2026-04-22 03:47:01.197] [PRINT] ============================================================================
+[2026-04-22 03:47:01.206] [PRINT] Scenario 3 - Block G safety net with realistic classifier misses
+[2026-04-22 03:47:01.216] [PRINT] ============================================================================
+[2026-04-22 03:47:04.346] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:47:04.373] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:47:04.381] [PRINT] [ OK ] Block G A: spaced 'delivery order'
+[2026-04-22 03:47:04.390] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:47:04.414] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:47:04.422] [PRINT] [ OK ] Block G B: hyphenated 'delivery-order'
+[2026-04-22 03:47:04.432] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:47:04.456] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:47:04.468] [PRINT] [ OK ] Block G C: bare 'requisition'
+[2026-04-22 03:47:04.477] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:47:04.504] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:47:04.515] [PRINT] [ OK ] Block G D: 'purchase-order'
+[2026-04-22 03:47:04.526] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:47:04.552] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:47:04.563] [PRINT] [ OK ] Block G E: 'po pdf' phrase
+[2026-04-22 03:47:04.572] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:47:04.599] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:47:04.608] [PRINT] [ OK ] Block G F: 'order list'
+[2026-04-22 03:47:04.617] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-22 03:47:04.643] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-22 03:47:04.651] [PRINT] [ OK ] Block G negative control (no injection for non-delivery)
+[2026-04-22 03:47:04.660] [PRINT] ============================================================================
+[2026-04-22 03:47:04.669] [PRINT] Scenario 4 - Planner prompt exposes Rule 16 + Example 3
+[2026-04-22 03:47:04.678] [PRINT] ============================================================================
+[2026-04-22 03:47:04.688] [PRINT] [ OK ] planner prompt includes Rule 16 + Example 3 + all steering
+[2026-04-22 03:47:04.697] [PRINT] ============================================================================
+[2026-04-22 03:47:04.704] [PRINT] Scenario 5 - get_filtered_capabilities_v2 hides upload_mapped_data
+[2026-04-22 03:47:04.712] [PRINT] ============================================================================
+[2026-04-22 03:47:04.720] [PRINT] [ OK ] filtered caps shape is correct
+[2026-04-22 03:47:04.731] [PRINT] ============================================================================
+[2026-04-22 03:47:04.740] [PRINT] Scenario 6 - variable substitution round-trips list values correctly
+[2026-04-22 03:47:04.750] [PRINT] ============================================================================
+[2026-04-22 03:47:05.296] [PRINT] ⚠️ Warning: SmartMappingEngine not found. Smart mapping will use fallback logic.
+[2026-04-22 03:47:05.314] [PRINT] [ OK ] mapping_agent._flatten_file_paths decodes Jinja-stringified list
+[2026-04-22 03:47:05.330] [PRINT] [ OK ] sheets_agent._parse_orders_input decodes full Python repr (None/True/apostrophe)
+[2026-04-22 03:47:05.340] [PRINT] ============================================================================
+[2026-04-22 03:47:05.348] [PRINT] Scenario 7 - approval-branch substitution round-trips Python literals
+[2026-04-22 03:47:05.358] [PRINT] ============================================================================
+[2026-04-22 03:47:05.367] [PRINT] [ OK ] approval substitution (G6) round-trips Python list cleanly
+[2026-04-22 03:47:05.378] [PRINT] [ OK ] legacy approval substitution is demonstrably broken (as expected) - old code left parsed_orders as a raw string — G6 fix required
+[2026-04-22 03:47:05.386] [PRINT] ============================================================================
+[2026-04-22 03:47:05.395] [PRINT] Scenario 8 - G7 rich approval message renders readable summary
+[2026-04-22 03:47:05.405] [PRINT] ============================================================================
+[2026-04-22 03:47:05.418] [PRINT] [ OK ] approval message is readable, not a raw dump
+[2026-04-22 03:47:05.426] [PRINT] 
+[2026-04-22 03:47:05.426] [PRINT] --- approval message preview ---
+[2026-04-22 03:47:05.435] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-22 03:47:05.435] [PRINT] 
+[2026-04-22 03:47:05.435] [PRINT] Step 6 of 6
+[2026-04-22 03:47:05.435] [PRINT] 
+[2026-04-22 03:47:05.435] [PRINT] **Append the parsed delivery-order rows into the DO Tracker sheet**
+[2026-04-22 03:47:05.435] [PRINT] 
+[2026-04-22 03:47:05.435] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-22 03:47:05.435] [PRINT] - **Sheet ID:** 1A2B3C4D5E6F7G8H9I0J_real_sheet_id
+[2026-04-22 03:47:05.435] [PRINT] - **Orders to write:** 2
+[2026-04-22 03:47:05.435] [PRINT] - **Total line items:** 3
+[2026-04-22 03:47:05.435] [PRINT] - **Source files:** DO-2026-0417.pdf, requisition_april.pdf
+[2026-04-22 03:47:05.435] [PRINT] - **Sample header (order 1):** order_reference=DO-2026-0417, order_date=2026-04-17, vendor=Supplier's Co., urgent=True
+[2026-04-22 03:47:05.435] [PRINT] 
+[2026-04-22 03:47:05.435] [PRINT] ---
+[2026-04-22 03:47:05.435] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-22 03:47:05.444] [PRINT] --- end preview ---
+[2026-04-22 03:47:05.453] [PRINT] ============================================================================
+[2026-04-22 03:47:05.462] [PRINT] Scenario 9 - Full pipeline walkthrough across 3 user inputs
+[2026-04-22 03:47:05.471] [PRINT] ============================================================================
+[2026-04-22 03:47:07.565] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-22 03:47:07.662] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-22 03:47:07.676] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-22 03:47:07.686] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-22 03:47:07.696] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-22 03:47:07.713] [PRINT] [ OK ] Scenario A (sheet-by-name): all 6 steps wire cleanly
+[2026-04-22 03:47:07.727] [PRINT] [ OK ] Scenario B (uploaded file, bare string path): 5-step chain wires cleanly
+[2026-04-22 03:47:07.743] [PRINT] [ OK ] Scenario C (sheet URL pasted): 5-step chain skips drive lookup
+[2026-04-22 03:47:07.753] [PRINT] ============================================================================
+[2026-04-22 03:47:07.761] [PRINT] Scenario 10 - capability-schema guard against arg-name drift
+[2026-04-22 03:47:07.771] [PRINT] ============================================================================
+[2026-04-22 03:47:07.779] [PRINT] [ OK ] all sim plans use only capability-declared arg names
+[2026-04-22 03:47:07.790] [PRINT] [ OK ] planner prompt Example 3 uses only capability-declared arg names (6 steps checked)
+[2026-04-22 03:47:07.799] [PRINT] ============================================================================
+[2026-04-22 03:47:07.806] [PRINT] Scenario 11 - Rule 16 text forbids wrong search_files args
+[2026-04-22 03:47:07.815] [PRINT] ============================================================================
+[2026-04-22 03:47:07.823] [PRINT] [ OK ] Rule 16 search_files line uses correct args only
+[2026-04-22 03:47:07.831] [PRINT] [ OK ] Rule 16 uploaded_file guidance uses bare-string pattern
+[2026-04-22 03:47:07.839] [PRINT] ============================================================================
+[2026-04-22 03:47:07.847] [PRINT] FINAL REPORT
+[2026-04-22 03:47:07.856] [PRINT] ============================================================================
+[2026-04-22 03:47:07.864] [PRINT] TOTAL: 30 checks — PASS: 30, FAIL: 0, INFO: 0

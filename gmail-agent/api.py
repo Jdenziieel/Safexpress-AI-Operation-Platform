@@ -70,9 +70,6 @@ async def execute_task(request: AgentTaskRequest):
             _download_attachment_impl,
             _search_emails_with_delivery_order_attachments_impl,
             _save_attachment_metadata_impl,
-            _process_delivery_order_workflow_impl,
-            _extract_attachment_data_impl,    # ADD
-            _map_columns_to_sheet_impl,       # ADD
         )
         
         # Map tool names to implementations
@@ -91,9 +88,6 @@ async def execute_task(request: AgentTaskRequest):
             "download_attachment": _download_attachment_impl,
             "search_emails_with_delivery_order_attachments": _search_emails_with_delivery_order_attachments_impl,
             "save_attachment_metadata": _save_attachment_metadata_impl,
-            "process_delivery_order_workflow": _process_delivery_order_workflow_impl,
-            "extract_attachment_data": _extract_attachment_data_impl,   # ADD
-            "map_columns_to_sheet": _map_columns_to_sheet_impl
         }
         
         tool_impl = TOOL_MAP.get(request.tool)

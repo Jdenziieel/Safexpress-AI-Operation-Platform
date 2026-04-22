@@ -168,8 +168,6 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     "upload_mapped_data": ActionRiskLevel.DANGEROUS,
     "update_by_date_match": ActionRiskLevel.DANGEROUS,
     "write_delivery_order_data": ActionRiskLevel.DANGEROUS,
-    # Compound end-to-end workflow that touches downloads + sheets + docs
-    "process_delivery_order_workflow": ActionRiskLevel.DANGEROUS,
 
     # ===============================================================
     # CRITICAL — permanent data loss

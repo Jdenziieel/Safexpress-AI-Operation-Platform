@@ -855,7 +855,49 @@ def _build_rich_approval_message(pending_action: dict) -> str:
             if len(inputs["new_content"]) > 300:
                 preview += "..."
             msg += f"- **New content preview:**\n  > {preview}\n"
-    
+
+    elif tool == "write_delivery_order_data":
+        # Delivery-order approval message — summarises what will be written,
+        # per tab, without dumping the full parsed-orders dict (which can be KBs
+        # of nested structures and renders as an unreadable truncated repr under
+        # the generic branch).
+        msg += "**Writing Delivery-Order Data to Sheet**\n"
+        if inputs.get("sheet_id"):
+            msg += f"- **Sheet ID:** {inputs['sheet_id']}\n"
+
+        parsed_orders = inputs.get("parsed_orders")
+        if isinstance(parsed_orders, list) and parsed_orders:
+            total_orders = len(parsed_orders)
+            total_line_items = 0
+            files_seen: list[str] = []
+            for order in parsed_orders:
+                if not isinstance(order, dict):
+                    continue
+                line_items = order.get("line_items") or []
+                if isinstance(line_items, list):
+                    total_line_items += len(line_items)
+                fname = order.get("file") or order.get("filename")
+                if fname and fname not in files_seen:
+                    files_seen.append(fname)
+
+            msg += f"- **Orders to write:** {total_orders}\n"
+            msg += f"- **Total line items:** {total_line_items}\n"
+            if files_seen:
+                preview_files = ", ".join(files_seen[:3])
+                if len(files_seen) > 3:
+                    preview_files += f" (+{len(files_seen) - 3} more)"
+                msg += f"- **Source files:** {preview_files}\n"
+
+            first = parsed_orders[0] if isinstance(parsed_orders[0], dict) else None
+            header = first.get("header") if first else None
+            if isinstance(header, dict) and header:
+                sample_keys = [k for k in header.keys() if header.get(k)][:4]
+                if sample_keys:
+                    sample_pairs = ", ".join(f"{k}={header[k]}" for k in sample_keys)
+                    msg += f"- **Sample header (order 1):** {sample_pairs}\n"
+        elif parsed_orders:
+            msg += "- **Parsed orders:** <unparsable payload — check plan inputs>\n"
+
     else:
         # Generic — show all non-empty inputs
         msg += f"**{tool}**\n"

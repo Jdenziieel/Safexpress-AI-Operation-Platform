@@ -227,11 +227,6 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         "type": "action",
         "template": "Attachment metadata saved (record ID: {inserted_id})",
     },
-    ("gmail_agent", "process_delivery_order_workflow"): {
-        "type": "action",
-        "template": "Delivery order workflow complete — {processed} order(s) processed",
-        "append_url": "document_url",
-    },
 
     # ========================= DOCS AGENT =========================
 

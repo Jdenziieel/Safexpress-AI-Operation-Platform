@@ -705,6 +705,13 @@ When user wants to find an existing file and create a new document from it:
 - execution_summary: "Find file '[file_name]' and create new document '[new_title]'"
 - If both file_name and new_title present → ready_to_execute; otherwise → needs_clarification
 
+DELIVERY ORDER WORKFLOW:
+When user wants delivery-order / requisition / purchase-order / PO / "order list" PDF data written into a Google Sheet:
+- Extract ONLY sheet_name (or URL). NEVER ask for parsed_orders, transformed_data, source_data, file_paths, or sheet_id — the pipeline derives them via parse_delivery_order_pdfs, search_emails_with_delivery_order_attachments, and drive_agent.search_files.
+- task_type: "process_delivery_order"; execution_summary: "Parse delivery-order PDFs and write to '[sheet_name]'".
+- Do NOT pick sheets_agent.upload_mapped_data (bypasses template validation); use write_delivery_order_data.
+- sheet_name present → ready_to_execute; else ask ONLY for the sheet name/URL.
+
 DERIVABLE FIELDS: Fields marked [via tool: criteria] are derived at execution time. Extract the search criteria instead — do NOT ask the user for the derived field.
 Example: forward_email(message_id [via search_emails: query], to) → extract {{"query": "...", "to": "..."}}
 NEVER emit a derivable ID (event_id, message_id, file_id, document_id, draft_id) as a nested dict such as {{"query": "..."}} — that is NOT a valid extraction shape. Either (a) if the tool accepts a name parameter (event_name, file_name, draft subject), extract the user's reference as that name at TOP LEVEL of extracted_info, or (b) omit the ID field entirely and let the supervisor insert a lookup step. Any search criteria (query strings, time windows, keywords, date ranges) belong at the TOP LEVEL of extracted_info, not nested under a derived-field name.
@@ -1346,6 +1353,27 @@ User: "{user_message}" """
             
             # 1b. FILE QUERY — read-only file question, redirect to actionable options
             if category == "file_query":
+                # GUARD: If the bot just asked a clarification, a terse reply
+                # that mentions a file type ("the PDF", "the file in my email")
+                # is almost certainly answering that question — NOT a generic
+                # "summarise this file" request. Defer to Tier 1 so the full
+                # context (pending task, missing_fields, extracted_info) can
+                # steer the analysis. Without this guard, Tier 0.5's canned
+                # redirect discards the in-flight delivery-order / task state
+                # and tells the user "I can't read files" — see trace.log
+                # line 4714 (awaiting_clarification=true, missing_fields=
+                # ['transformed_data'] got misclassified as file_query).
+                if is_awaiting_clarification:
+                    trace.step(
+                        "tier0.5",
+                        "file_query suppressed — awaiting_clarification takes priority, deferring to Tier 1",
+                        {
+                            "missing_field": missing_field,
+                            "extracted_keys": list(conversation_state.extracted_info.keys()),
+                        },
+                    )
+                    return None, "specific", None
+
                 filename = uploaded_file.get("filename", "this file") if uploaded_file else "the file"
                 redirect_response = (
                     f"I'm not able to read or analyze file contents directly, "

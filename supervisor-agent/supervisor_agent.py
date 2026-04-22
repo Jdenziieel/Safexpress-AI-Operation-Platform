@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
+import ast
 import json
 import httpx
 import traceback
@@ -421,6 +422,16 @@ PLANNING RULES:
    (b) User explicitly asked to create a new folder ("create a Finance folder and put X in it") → step 1: drive_agent.create_folder(folder_path="Finance") (idempotent find-or-create).
    In both cases, step 2 consumes {{{{ folder_id }}}} via output_variables {{"folder_id": "folder_id"}}. The same pattern applies to drive_agent.upload_file (folder_id) and drive_agent.move_file (folder_id) — always resolve the folder_id in a separate prior step, never pass a folder name into a mutation tool.
 15. STRICT TOOL/ARG ADHERENCE: Only use (agent, tool) combinations listed under "Available agents and tools:" below. Only use argument names declared in that tool's "args" dict. Do NOT invent tools you know from elsewhere (e.g. sheets_agent.create_sheet is NOT available unless it appears in the list below). Do NOT invent argument names — common traps: folder_path when the schema says folder_id, tabs when it says sheet_names, rows when it says initial_data, content when it says text or new_text. If a needed tool or argument is absent from the schema, fall back to Rule 12 (append an llm_tool.transform_text step explaining the gap) rather than guessing a name that "should" exist.
+16. DELIVERY-ORDER PIPELINE (task_type=process_delivery_order): chain EXACTLY these tools in order (A then B then C then D then E then F):
+   A. Source PDFs — pick ONE path:
+      - if uploaded_file is in context → SKIP this step; feed the BARE STRING "{{{{ uploaded_file.temp_path }}}}" as file_paths in step B (no brackets — the tool auto-wraps a single path into a list).
+      - else → gmail_agent.search_emails_with_delivery_order_attachments(query="delivery order OR DO OR requisition OR purchase order OR PO has:attachment", max_results=10, download_attachments=true) → output_variables {{"emails_with_attachments": "emails_with_attachments"}}.
+   B. mapping_agent.parse_delivery_order_pdfs(file_paths={{{{ emails_with_attachments }}}}  OR  file_paths={{{{ uploaded_file.temp_path }}}}) → output_variables {{"parsed_orders": "parsed_orders"}}. The parse tool accepts a flat list, the nested emails_with_attachments response, or a single bare-string path (it wraps it automatically). Emit file_paths as a STRING value ("{{{{ var }}}}"), never as a JSON list literal — list literals bypass Jinja substitution.
+   C. drive_agent.search_files(search_term="<sheet name from user>") → output_variables {{"sheet_id": "results[0].id"}}. search_files takes ONLY search_term (no query/file_type/max_results). SKIP this step ONLY if the user already provided a real Google Sheets ID/URL as sheet_id in the task parameters.
+   D. sheets_agent.validate_delivery_sheet(sheet_id={{{{ sheet_id }}}}) — no output_variables needed; the orchestrator halts here if the template is incompatible.
+   E. sheets_agent.preview_delivery_order_insertion(sheet_id={{{{ sheet_id }}}}, parsed_orders={{{{ parsed_orders }}}}) → no output_variables needed; produces the approval-message rows.
+   F. sheets_agent.write_delivery_order_data(sheet_id={{{{ sheet_id }}}}, parsed_orders={{{{ parsed_orders }}}}) — the actual mutation. DANGEROUS → orchestrator pauses for approval automatically.
+   NEVER pick sheets_agent.upload_mapped_data for this intent — it bypasses template validation. NEVER skip steps D and E; they are the guard rails that catch wrong-sheet mistakes before mutation. parsed_orders always flows as an OPAQUE variable — never interpolate its fields, never rewrite it as a literal dict in inputs.
 
 EXAMPLE 1 (ID resolution via output_variables):
 User: "Find the latest email from john@example.com and reply saying thanks"
@@ -460,6 +471,55 @@ User: "Create a Finance folder and make a Q1 Budget sheet inside it with tabs Re
       "inputs": {{"title": "Q1 Budget", "sheet_names": ["Revenue", "Expenses"], "folder_id": "{{{{{{ folder_id }}}}}}"}},
       "output_variables": {{}},
       "description": "Create Q1 Budget sheet inside the Finance folder with Revenue and Expenses tabs"
+    }}}}
+  ]
+}}}}
+
+EXAMPLE 3 (delivery-order pipeline — sheet_name only; Rule 16 path A→B→C→D→E→F):
+User: "Parse delivery-order PDFs from my inbox and write them into my 'DO Tracker' sheet"
+{{{{
+  "steps": [
+    {{{{
+      "agent": "gmail_agent",
+      "tool": "search_emails_with_delivery_order_attachments",
+      "inputs": {{"query": "delivery order OR DO OR requisition OR purchase order OR PO has:attachment", "max_results": 10, "download_attachments": true}},
+      "output_variables": {{"emails_with_attachments": "emails_with_attachments"}},
+      "description": "Fetch recent emails with delivery-order PDFs attached"
+    }}}},
+    {{{{
+      "agent": "mapping_agent",
+      "tool": "parse_delivery_order_pdfs",
+      "inputs": {{"file_paths": "{{{{{{ emails_with_attachments }}}}}}"}},
+      "output_variables": {{"parsed_orders": "parsed_orders"}},
+      "description": "Extract structured rows from each delivery-order PDF"
+    }}}},
+    {{{{
+      "agent": "drive_agent",
+      "tool": "search_files",
+      "inputs": {{"search_term": "DO Tracker"}},
+      "output_variables": {{"sheet_id": "results[0].id"}},
+      "description": "Resolve the 'DO Tracker' sheet name to its Drive ID"
+    }}}},
+    {{{{
+      "agent": "sheets_agent",
+      "tool": "validate_delivery_sheet",
+      "inputs": {{"sheet_id": "{{{{{{ sheet_id }}}}}}"}},
+      "output_variables": {{}},
+      "description": "Confirm the sheet matches the delivery-order template before writing"
+    }}}},
+    {{{{
+      "agent": "sheets_agent",
+      "tool": "preview_delivery_order_insertion",
+      "inputs": {{"sheet_id": "{{{{{{ sheet_id }}}}}}", "parsed_orders": "{{{{{{ parsed_orders }}}}}}"}},
+      "output_variables": {{}},
+      "description": "Generate a preview of rows per tab so the user can approve before writing"
+    }}}},
+    {{{{
+      "agent": "sheets_agent",
+      "tool": "write_delivery_order_data",
+      "inputs": {{"sheet_id": "{{{{{{ sheet_id }}}}}}", "parsed_orders": "{{{{{{ parsed_orders }}}}}}"}},
+      "output_variables": {{}},
+      "description": "Append the parsed delivery-order rows into the DO Tracker sheet (DANGEROUS — requires approval)"
     }}}}
   ]
 }}}}
@@ -980,18 +1040,30 @@ def orchestrator_node(state: SharedState) -> SharedState:
         print(f"Risk Level: {risk_level.value}")
         if needs_approval:
             print(f"⏸ PAUSED - Action requires approval!")
-            # Substitute variables first so user sees actual values
+            # Substitute variables first so user sees actual values.
+            # Jinja2 renders Python objects via str()/repr, so a list/dict variable
+            # comes out as its Python repr ("[{'a': 1}]") not JSON ("[{\"a\": 1}]").
+            # ast.literal_eval handles Python repr natively (None/True/False, apostrophes,
+            # nested quotes); json.loads is tried only as a secondary fallback for inputs
+            # the planner happened to hand-author as JSON. If both fail, keep the raw
+            # string so the approval message still renders something.
             substituted_inputs = {}
             for key, value in inputs.items():
                 if isinstance(value, str) and "{{" in value and "}}" in value:
                     template = Template(value)
                     rendered = template.render(**variable_context)
-                    try:
-                        if rendered.startswith("[") or rendered.startswith("{"):
-                            substituted_inputs[key] = json.loads(rendered.replace("'", '"'))
-                        else:
-                            substituted_inputs[key] = rendered
-                    except (json.JSONDecodeError, ValueError):
+                    stripped = rendered.strip()
+                    if stripped and stripped[0] in "[{":
+                        parsed: Any = None
+                        try:
+                            parsed = ast.literal_eval(stripped)
+                        except (ValueError, SyntaxError):
+                            try:
+                                parsed = json.loads(stripped)
+                            except (json.JSONDecodeError, ValueError):
+                                parsed = None
+                        substituted_inputs[key] = parsed if parsed is not None else rendered
+                    else:
                         substituted_inputs[key] = rendered
                 else:
                     substituted_inputs[key] = value

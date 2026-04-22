@@ -123,21 +123,6 @@ agent_capabilities = {
                 },
                 "returns": ["success", "inserted_id", "db_path", "error"],
             },
-            "process_delivery_order_workflow": {
-                "description": "End-to-end: search emails → download attachments → parse/transform → upload to Sheets → save metadata → create summary doc.",
-                "args": {
-                    "query": "str (optional) — Gmail search query",
-                    "max_results": "int (optional) — emails to search",
-                    "download_attachments": "bool (optional)",
-                    "temp_dir": "str (optional)",
-                    "save_to_db": "bool (optional)",
-                    "upload_to_sheets": "bool (optional)",
-                    "sheets_sheet_id": "str (optional) — Google Sheets ID",
-                    "create_summary_doc": "bool (optional)",
-                    "summary_doc_title": "str (optional)",
-                },
-                "returns": ["success", "processed", "search_summary", "document_url", "error"],
-            },
         },
     },
     "docs_agent": {
@@ -452,24 +437,31 @@ agent_capabilities = {
                     "sheet_id": "str (required) — Google Sheets ID or URL (URL is auto-parsed to extract ID)",
                 },
                 "returns": ["success", "is_valid", "headers_by_tab", "tabs_found", "matching_tabs", "mismatch_details", "error", "error_type"],
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "preview_delivery_order_insertion": {
                 "description": "Preview what will be written to the requisition sheet. Checks for duplicates (same Order Reference + Item Code), missing data, and rows that would be overridden. Returns preview for user approval.",
                 "args": {
                     "sheet_id": "str (required) — Google Sheets ID",
-                    "parsed_orders": "str (required) — JSON of parsed orders from mapping_agent.parse_delivery_order_pdfs",
+                    "parsed_orders": "list|str (required) — parsed_orders output from mapping_agent.parse_delivery_order_pdfs. Pass the variable directly ({{ parsed_orders }}); accepts a native list, JSON string, or Python repr string.",
                 },
                 "returns": ["success", "preview_rows", "total_new_rows", "duplicates", "duplicate_count", "warnings", "target_tabs", "message", "error"],
-                "can_be_derived_from": {"parsed_orders": "mapping_agent.parse_delivery_order_pdfs"},
+                "can_be_derived_from": {
+                    "parsed_orders": "mapping_agent.parse_delivery_order_pdfs",
+                    "sheet_id": "drive_agent.search_files",
+                },
             },
             "write_delivery_order_data": {
                 "description": "Write confirmed delivery order data to the requisition sheet. Appends rows to the correct tab (Food or non-food) based on category.",
                 "args": {
                     "sheet_id": "str (required) — Google Sheets ID",
-                    "parsed_orders": "str (required) — JSON of parsed orders from mapping_agent.parse_delivery_order_pdfs",
+                    "parsed_orders": "list|str (required) — parsed_orders output from mapping_agent.parse_delivery_order_pdfs. Pass the variable directly ({{ parsed_orders }}); accepts a native list, JSON string, or Python repr string.",
                 },
                 "returns": ["success", "rows_written", "tabs_used", "message", "error"],
-                "can_be_derived_from": {"parsed_orders": "mapping_agent.parse_delivery_order_pdfs"},
+                "can_be_derived_from": {
+                    "parsed_orders": "mapping_agent.parse_delivery_order_pdfs",
+                    "sheet_id": "drive_agent.search_files",
+                },
             },
         },
     },

@@ -336,12 +336,37 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
         # Delivery order workflow: ensure all three agents and their
         # specialised tools are present when the request involves
         # delivery/purchase orders.
-        _DELIVERY_KEYWORDS = {"delivery order", "purchase order", "requisition list", "po attachment", "order list"}
+        #
+        # drive_agent.search_files is included so the planner can resolve a
+        # sheet NAME to a sheet_id when the user refers to their requisition
+        # sheet by title rather than pasting a URL. All three delivery Sheet
+        # tools (validate_delivery_sheet / preview_delivery_order_insertion /
+        # write_delivery_order_data) take sheet_id only — no name-based auto-
+        # lookup exists. URL pastes are handled inside _extract_sheet_id at
+        # the Sheets agent; name-based references need this search_files hop.
+        # Block E's _SHEET_ID_CONSUMERS deliberately excludes delivery tools
+        # (Block E runs BEFORE Block G and so can't see them anyway); keeping
+        # the dependency self-contained inside Block G is cheaper and more
+        # auditable than reordering the blocks.
+        # Keywords are aligned with the Tier 1 DELIVERY ORDER WORKFLOW vocabulary
+        # in conversational_agent.py (delivery-order / requisition / purchase-order /
+        # PO / "order list"). Both hyphenated and spaced forms are matched because
+        # users write both. "PO" alone is deliberately excluded — too many false
+        # positives (post office, post-op, etc.) — but the common attachment phrasings
+        # ("po attachment", "po pdf", "po form") are included.
+        _DELIVERY_KEYWORDS = {
+            "delivery order", "delivery-order",
+            "purchase order", "purchase-order",
+            "requisition list", "requisition",
+            "po attachment", "po pdf", "po form",
+            "order list",
+        }
         if any(kw in input_lower for kw in _DELIVERY_KEYWORDS):
             _do_tool_map = {
                 "gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"],
                 "mapping_agent": ["parse_delivery_order_pdfs"],
                 "sheets_agent": ["validate_delivery_sheet", "preview_delivery_order_insertion", "write_delivery_order_data"],
+                "drive_agent": ["search_files"],
             }
             for agent_name, required_tools in _do_tool_map.items():
                 agent_caps = agent_capabilities.get(agent_name, {}).get("tools", {})
@@ -353,6 +378,16 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                     for t in required_tools:
                         if t not in validated[agent_name] and t in agent_caps:
                             validated[agent_name].append(t)
+
+            # Remove the generic upload_mapped_data from sheets_agent so the planner
+            # can't accidentally bypass validate_delivery_sheet / preview_delivery_order_insertion
+            # for this intent. The delivery-specific write_delivery_order_data does
+            # template validation, row alignment, and tab-aware routing — picking the
+            # generic tool silently skips all of that.
+            if "sheets_agent" in validated and "upload_mapped_data" in validated["sheets_agent"]:
+                validated["sheets_agent"] = [
+                    t for t in validated["sheets_agent"] if t != "upload_mapped_data"
+                ]
 
         return validated
 
