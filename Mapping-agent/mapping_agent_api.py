@@ -22,7 +22,18 @@ try:
     PDFPLUMBER_AVAILABLE = True
 except ImportError:
     PDFPLUMBER_AVAILABLE = False
-    print("Warning: pdfplumber not installed. parse_delivery_order_pdfs will not work.")
+    # Make the missing dependency loud at import time — it's easy to miss a
+    # single print line buried in uvicorn startup noise, so emit a visible
+    # banner. parse_delivery_order_pdfs will still short-circuit gracefully
+    # (returning success=false + no_results=true), but in practice nobody wants
+    # to hit that path when a `pip install pdfplumber` fixes the whole workflow.
+    _banner = "*" * 72
+    print(_banner)
+    print("*  CRITICAL DEPENDENCY MISSING: pdfplumber                            *")
+    print("*  parse_delivery_order_pdfs will reject every PDF until you run:     *")
+    print("*      pip install pdfplumber                                         *")
+    print("*  in the Mapping-agent environment, then restart this service.      *")
+    print(_banner)
 
 
 # Load environment variables from .env file
@@ -58,6 +69,11 @@ class ToolResponse(BaseModel):
     success: bool
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
+    # Top-level no_results flag so the supervisor orchestrator can distinguish
+    # a graceful empty-results outcome from a hard failure. Must be at the top
+    # level because supervisor_agent.py line 1540 reads it as
+    # `result.get("no_results")` on the raw HTTP response body.
+    no_results: Optional[bool] = None
 
 
 # In-memory storage for mapping templates (use Redis/DB in production)
@@ -947,11 +963,63 @@ _REQUISITION_MARKERS = {"PRODUCTION MATERIALS REQUISITION LIST", "REQUISITION LI
 _HEADER_PATTERNS = {
     "reference_number": re.compile(r"(?:Ref(?:erence)?\.?\s*(?:No\.?|Number|#)?|Order\s*(?:No\.?|Ref))\s*[:\-]?\s*([A-Z0-9]+)", re.IGNORECASE),
     "date": re.compile(r"(?:Date|Order\s*Date)\s*[:\-]?\s*(.+?)(?:\s{2,}|$)", re.IGNORECASE),
+    # Intentionally locked to FOOD and NON-FOOD. The requisition sheet only
+    # accepts these two categories — any other content (e.g. Tech/IT) is
+    # rejected by the category gate at the end of _parse_single_pdf. The
+    # only fallback beyond this regex is the item-code prefix inference
+    # (content-based). Filename is deliberately NOT consulted — a file named
+    # "Food_DO.pdf" with TECH items must still be rejected.
     "category": re.compile(r"(?:Category|Type)\s*[:\-]?\s*(FOOD|NON[\s\-]?FOOD)", re.IGNORECASE),
     "allergen": re.compile(r"(?:Allergen)\s*[:\-]?\s*(.+?)(?:\s{2,}|$)", re.IGNORECASE),
     "cb_date": re.compile(r"(?:CB\s*Date|Cut[\s\-]?off)\s*[:\-]?\s*(.+?)(?:\s{2,}|$)", re.IGNORECASE),
     "requested_by": re.compile(r"(?:Requested\s*(?:By|by))\s*[:\-]?\s*(.+?)(?:\s{2,}|$)", re.IGNORECASE),
 }
+
+
+# The only two categories the requisition sheet template supports. Any other
+# category string produced by regex or inference is rejected by the parser —
+# the sheet has no destination for anything else.
+_ACCEPTED_CATEGORIES = ("FOOD", "NON-FOOD")
+
+
+# Signature / footer block keywords. Any item row whose item_code, description,
+# qty-as-string, or uom equals one of these (case-insensitive, after strip) is
+# almost certainly the PDF's sign-off section, not real line-item data.
+# These are deliberately listed as full phrases — substring matching would
+# falsely reject a legitimate description like "DATE STAMPS" or "SIGNATURE
+# CARDS".
+_FOOTER_STOP_KEYWORDS = {
+    "REQUESTED BY",
+    "ASSEMBLED BY",
+    "CHECKED BY",
+    "RECEIVED BY",
+    "APPROVED BY",
+    "PREPARED BY",
+    "NOTED BY",
+    "SIGNATURE OVER PRINTED NAME",
+    "SIGNATURE",
+    "PRINTED NAME",
+    "DATE RECEIVED",
+    "DATE ISSUED",
+    "TOTAL",
+    "GRAND TOTAL",
+}
+
+
+# Item-code prefix → canonical uppercase category. Only FOOD prefixes are
+# inferred today — if we add NON-FOOD prefix patterns later, extend this
+# tuple. An unknown prefix returns "" and the category gate rejects the
+# file, which is the desired behavior per product rules.
+#
+# This is the ONLY category-inference fallback beyond the strict regex.
+# Filename is deliberately NOT consulted anywhere in the parser: the
+# product rule is that category must be derived from PDF content only
+# (explicit label or item-code signature), never from what the file
+# happens to be named.
+_ITEM_CODE_CATEGORY_PREFIXES = (
+    ("RMFD", "FOOD"),
+    ("FOOD-", "FOOD"),
+)
 
 
 def _extract_header_from_text(full_text: str) -> Dict[str, str]:
@@ -962,6 +1030,76 @@ def _extract_header_from_text(full_text: str) -> Dict[str, str]:
         if m:
             header[field] = m.group(1).strip()
     return header
+
+
+def _infer_category_from_items(line_items: List[Dict[str, Any]]) -> str:
+    """Return "FOOD", "NON-FOOD", or "" based on item-code prefix majority.
+
+    Requires a strict majority (>50%) so mixed-category orders fall through
+    to "". TECH / IT prefixes are NOT inferred because those orders should
+    be rejected, not force-routed into Food or non-food.
+    """
+    if not line_items:
+        return ""
+    tally: Dict[str, int] = {}
+    counted = 0
+    for item in line_items:
+        code = str(item.get("item_code") or "").strip().upper()
+        if not code:
+            continue
+        counted += 1
+        for prefix, category in _ITEM_CODE_CATEGORY_PREFIXES:
+            if code.startswith(prefix):
+                tally[category] = tally.get(category, 0) + 1
+                break
+    if not tally or counted == 0:
+        return ""
+    best_category, best_count = max(tally.items(), key=lambda kv: kv[1])
+    if best_count * 2 > counted:
+        return best_category
+    return ""
+
+
+def _normalise_category(raw: str) -> str:
+    """Normalise a category string so downstream comparisons don't fight
+    casing / whitespace / hyphenation. Returns "FOOD", "NON-FOOD", or "" if
+    the input is not one of the two accepted categories.
+    """
+    if not raw:
+        return ""
+    normalised = raw.strip().upper().replace(" ", "").replace("_", "-")
+    if normalised == "FOOD":
+        return "FOOD"
+    if normalised in ("NON-FOOD", "NONFOOD"):
+        return "NON-FOOD"
+    return ""
+
+
+def _is_footer_row(item: Dict[str, Any]) -> bool:
+    """Return True if this parsed item row looks like a signature/footer row
+    rather than a real delivery-order line item.
+
+    Rule 1: any of item_code / item_description / qty(string) / uom, after
+            strip+upper, exactly matches a phrase in _FOOTER_STOP_KEYWORDS.
+    Rule 2: item_code is non-empty AND contains no digits — legitimate item
+            codes always carry digits (TECH-HW-001, RMFD00810030020), so a
+            digit-free code is almost always a person name or label such as
+            "M.C FRANCO" or "Signature over printed name".
+    """
+    code = str(item.get("item_code") or "").strip()
+    desc = str(item.get("item_description") or "").strip()
+    uom = str(item.get("uom") or "").strip()
+    qty = item.get("qty")
+    qty_str = qty if isinstance(qty, str) else ""
+
+    for cell in (code, desc, qty_str, uom):
+        if cell.upper() in _FOOTER_STOP_KEYWORDS:
+            return True
+
+    if code and not any(ch.isdigit() for ch in code):
+        return True
+
+    return False
 
 
 def _is_requisition_pdf(first_page_text: str) -> bool:
@@ -1091,6 +1229,16 @@ def _parse_single_pdf(file_path: str) -> Dict[str, Any]:
                         if not item_code and not desc:
                             continue
 
+                        # Drop signature / sign-off block rows that survived
+                        # the column mapping (Bug 4). The filter below catches
+                        # the two common shapes: (a) cells that literally say
+                        # "Requested By", "Checked By", "Signature over
+                        # printed name", etc., and (b) free-text name rows
+                        # like "M.C FRANCO" that have no digits in the
+                        # item_code position.
+                        if _is_footer_row(item):
+                            continue
+
                         # Warn on missing critical fields
                         row_warnings = []
                         if not item.get("item_code"):
@@ -1102,6 +1250,49 @@ def _parse_single_pdf(file_path: str) -> Dict[str, Any]:
 
                         warnings.extend(row_warnings)
                         line_items.append(item)
+
+            # ----------------------------------------------------------------
+            # CATEGORY GATE (content-only)
+            # ----------------------------------------------------------------
+            # Product rule: the requisition sheet template has exactly two
+            # destinations — Food and non-food tabs. A PDF that matches the
+            # requisition template but whose content reads as Tech / IT /
+            # anything else MUST be rejected here. We never force-route it
+            # into Food or non-food because its item codes and descriptions
+            # don't belong in either tab.
+            #
+            # Resolution order for the category field (CONTENT ONLY):
+            #   1. Explicit "Category: FOOD" / "Category: NON-FOOD" label in
+            #      the PDF text (strict regex above).
+            #   2. Item-code prefix majority vote (e.g. RMFD* -> FOOD).
+            # Filename is NEVER consulted — a file named "Food_DO.pdf" with
+            # TECH content must still be rejected, and a file named
+            # "DO-2025-04-21.pdf" with RMFD items must still be accepted as
+            # FOOD. If both content signals fail, reject the file.
+            raw_category = header.get("category") or ""
+            normalised = _normalise_category(raw_category)
+
+            if not normalised:
+                normalised = _normalise_category(_infer_category_from_items(line_items))
+
+            if normalised not in _ACCEPTED_CATEGORIES:
+                return {
+                    "rejected": True,
+                    "file": os.path.basename(file_path),
+                    "reason": (
+                        "Category is not FOOD or NON-FOOD. The requisition "
+                        "sheet only accepts these two categories. The PDF "
+                        "content did not expose a 'Category: FOOD' or "
+                        "'Category: NON-FOOD' label, and its item codes did "
+                        "not match a known FOOD prefix. Detected category "
+                        f"label: {raw_category!r}."
+                    ),
+                }
+
+            # Stamp the canonical category back onto the header so downstream
+            # sees a consistent "FOOD" or "NON-FOOD" regardless of how we
+            # got here (explicit label, filename, or item prefix).
+            header["category"] = normalised
 
             return {
                 "rejected": False,
@@ -1186,6 +1377,31 @@ def parse_delivery_order_pdfs(file_paths: Any) -> Dict[str, Any]:
                     "line_items": result["line_items"],
                     "warnings": result["warnings"],
                 })
+
+        # Fail loudly when nothing parsed AND at least one file was attempted —
+        # prevents the orchestrator from cascading into validate / preview / write
+        # with an empty payload and asking the user to approve a 0-row write.
+        # (`no_results: true` + `success: false` triggers supervisor_agent.py's
+        # no_results halt branch at lines 1540/1550.)
+        if not parsed_orders and rejected_files:
+            reasons = sorted({rf.get("reason", "unknown") for rf in rejected_files})
+            primary_reason = reasons[0] if len(reasons) == 1 else "; ".join(reasons)
+            hint = ""
+            if "pdfplumber not installed" in primary_reason:
+                hint = " Install pdfplumber in the Mapping-agent environment (pip install pdfplumber) and restart the agent."
+            return {
+                "success": False,
+                "no_results": True,
+                "error": (
+                    f"No delivery orders could be parsed. All {len(rejected_files)} file(s) "
+                    f"rejected ({primary_reason})."
+                    f"{hint}"
+                ),
+                "parsed_orders": [],
+                "rejected_files": rejected_files,
+                "total_parsed": 0,
+                "total_rejected": len(rejected_files),
+            }
 
         return {
             "success": True,
@@ -1284,10 +1500,21 @@ async def execute_tool(request: ToolRequest):
             f"   {'✅' if result.get('success') else '❌'} Result: {result.get('success', False)}"
         )
 
+        # Propagate no_results so the supervisor orchestrator's halt branch
+        # (supervisor_agent.py:1540) can treat it as "no data to continue" rather
+        # than a hard error — important for parse_delivery_order_pdfs when every
+        # input PDF is rejected (e.g. pdfplumber not installed or unrecognised
+        # template), so we stop cleanly instead of cascading into validate/preview/write.
+        is_no_results = bool(result.get("no_results"))
         return ToolResponse(
             success=result.get("success", False),
-            result=result if result.get("success") else None,
+            # Keep the full result payload available even on soft failures so the
+            # orchestrator's `result.get("result", result)` fallback and the
+            # no_results branch at line 1585 can still namespace it under
+            # step_{N}_{agent} for downstream traceability.
+            result=result if (result.get("success") or is_no_results) else None,
             error=result.get("error") if not result.get("success") else None,
+            no_results=is_no_results or None,
         )
 
     except Exception as e:

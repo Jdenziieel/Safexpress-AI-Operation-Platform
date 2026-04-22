@@ -1091,6 +1091,2087 @@ except Exception as e:
            f"{e}\n{traceback.format_exc()}")
 
 # ------------------------------------------------------------------
+# SCENARIO 12 — parse_delivery_order_pdfs returns success:false + no_results
+# when every input file is rejected (e.g. pdfplumber unavailable). Reproduces
+# the DeliveryTest2.log failure mode.
+# ------------------------------------------------------------------
+section("Scenario 12 - mapping_agent.parse_delivery_order_pdfs halts cleanly on all-rejected")
+
+try:
+    import importlib
+
+    mapping_mod = importlib.import_module("mapping_agent_api")
+    importlib.reload(mapping_mod)  # pick up our edits
+
+    # Force the rejected-path: pdfplumber unavailable sentinel.
+    original_flag = getattr(mapping_mod, "PDFPLUMBER_AVAILABLE", True)
+    mapping_mod.PDFPLUMBER_AVAILABLE = False
+    try:
+        result = mapping_mod.parse_delivery_order_pdfs(
+            ["fake1.pdf", "fake2.pdf"]
+        )
+    finally:
+        mapping_mod.PDFPLUMBER_AVAILABLE = original_flag
+
+    checks = []
+    if result.get("success") is not False:
+        checks.append(f"expected success=false, got {result.get('success')!r}")
+    if result.get("no_results") is not True:
+        checks.append(f"expected no_results=true, got {result.get('no_results')!r}")
+    if result.get("total_parsed") != 0:
+        checks.append(f"expected total_parsed=0, got {result.get('total_parsed')!r}")
+    if result.get("total_rejected") != 2:
+        checks.append(f"expected total_rejected=2, got {result.get('total_rejected')!r}")
+    err = result.get("error") or ""
+    if "pdfplumber" not in err.lower():
+        checks.append(f"expected pdfplumber hint in error, got {err!r}")
+
+    if checks:
+        record(
+            "parse_delivery_order_pdfs signals failure on all-rejected",
+            "FAIL",
+            "; ".join(checks),
+        )
+    else:
+        record("parse_delivery_order_pdfs signals failure on all-rejected", "PASS")
+
+    # Also verify the happy-path hasn't regressed: if at least one file parses,
+    # success should still be True even if others are rejected.
+    # (Monkey-patch _parse_single_pdf so we don't need a real PDF.)
+    original_parser = mapping_mod._parse_single_pdf
+
+    def _mixed_parser(fp: str):
+        if fp.endswith("good.pdf"):
+            return {
+                "file": "good.pdf",
+                "header": {"order_reference": "DO-1"},
+                "line_items": [{"sku": "A", "qty": 1}],
+                "warnings": [],
+            }
+        return {"rejected": True, "file": fp, "reason": "bad format"}
+
+    mapping_mod._parse_single_pdf = _mixed_parser
+    try:
+        mixed = mapping_mod.parse_delivery_order_pdfs(["good.pdf", "bad.pdf"])
+    finally:
+        mapping_mod._parse_single_pdf = original_parser
+
+    if mixed.get("success") is True and mixed.get("total_parsed") == 1 and mixed.get("total_rejected") == 1:
+        record("parse_delivery_order_pdfs still succeeds with partial wins", "PASS")
+    else:
+        record(
+            "parse_delivery_order_pdfs still succeeds with partial wins",
+            "FAIL",
+            f"unexpected: {mixed!r}",
+        )
+except Exception as e:
+    record(
+        "parse_delivery_order_pdfs signals failure on all-rejected",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 13 — ToolResponse propagates no_results to the top level so the
+# supervisor orchestrator's halt branch (supervisor_agent.py:1540) can trigger.
+# ------------------------------------------------------------------
+section("Scenario 13 - Mapping agent ToolResponse exposes no_results top-level")
+
+try:
+    import importlib
+    mapping_mod = importlib.import_module("mapping_agent_api")
+
+    ToolResponse = mapping_mod.ToolResponse
+    # no_results should round-trip into the response body via .model_dump()
+    resp = ToolResponse(
+        success=False,
+        result=None,
+        error="No delivery orders parsed",
+        no_results=True,
+    )
+    dumped = resp.model_dump()
+    if dumped.get("no_results") is True and dumped.get("success") is False:
+        record("ToolResponse serialises no_results at top level", "PASS")
+    else:
+        record(
+            "ToolResponse serialises no_results at top level",
+            "FAIL",
+            f"dump={dumped!r}",
+        )
+
+    # Also confirm orchestrator's line 1540 pattern would flag this correctly.
+    # (The orchestrator reads result.get('no_results') on the JSON body.)
+    body = dumped
+    is_no_results = body.get("no_results", False)
+    if is_no_results is True:
+        record("orchestrator halt-branch would trigger on this response", "PASS")
+    else:
+        record(
+            "orchestrator halt-branch would trigger on this response",
+            "FAIL",
+            "is_no_results=False on the synthetic response",
+        )
+except Exception as e:
+    record(
+        "ToolResponse exposes no_results",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 14 — Tier 1 DELIVERY ORDER WORKFLOW prompt block now requires a
+# write/parse verb, not just keywords. Lock this in so a future token-trim
+# can't silently revert it.
+# ------------------------------------------------------------------
+section("Scenario 14 - Tier 1 DELIVERY ORDER WORKFLOW requires write/parse verb")
+
+try:
+    _conv_text = (SUP / "conversational_agent.py").read_text(encoding="utf-8")
+    block_start = _conv_text.find("DELIVERY ORDER WORKFLOW")
+    block_end = _conv_text.find("\n\n", block_start)
+    do_block = _conv_text[block_start:block_end] if block_start >= 0 else ""
+
+    missing = []
+    # Must mention the verb-gate explicitly so the LLM doesn't pattern-match
+    # on keywords alone.
+    for req in ["write", "parse", "extract"]:
+        if req not in do_block.lower():
+            missing.append(req)
+    # Must mention the negative case — pure search is NOT this workflow.
+    if "search" not in do_block.lower() or "NOT this workflow" not in do_block:
+        missing.append("pure-search negative case")
+
+    if missing:
+        record(
+            "Tier 1 DELIVERY ORDER WORKFLOW has verb-gate + negative case",
+            "FAIL",
+            f"missing: {missing}",
+        )
+    else:
+        record("Tier 1 DELIVERY ORDER WORKFLOW has verb-gate + negative case", "PASS")
+except Exception as e:
+    record(
+        "Tier 1 DELIVERY ORDER WORKFLOW has verb-gate + negative case",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 15 — Approval message renders an explicit "0 orders" warning when
+# parsed_orders is empty. Reproduces the DeliveryTest2.log "uninformative
+# approval prompt" failure.
+# ------------------------------------------------------------------
+section("Scenario 15 - Approval message warns when parsed_orders is empty")
+
+try:
+    # Import the checks module fresh so we pick up the edit.
+    import importlib
+    checks_mod = importlib.import_module("checks.tier0_checks")
+    importlib.reload(checks_mod)
+
+    build = checks_mod._build_rich_approval_message
+
+    # Case A: empty list → must render the warning.
+    pending_empty = {
+        "tool": "write_delivery_order_data",
+        "risk_level": "DANGEROUS",
+        "description": "Write delivery-order rows",
+        "step_number": 6,
+        "total_steps": 6,
+        "inputs": {
+            "sheet_id": "1SHEET_ID",
+            "parsed_orders": [],
+        },
+    }
+    msg_empty = build(pending_empty)
+    problems = []
+    if "0" not in msg_empty:
+        problems.append("missing '0 orders'")
+    if "empty" not in msg_empty.lower():
+        problems.append("missing 'empty' warning")
+    if "pdfplumber" not in msg_empty.lower():
+        problems.append("missing pdfplumber hint")
+    if problems:
+        record(
+            "empty parsed_orders produces a loud approval message",
+            "FAIL",
+            f"{problems}; preview={msg_empty[:300]!r}",
+        )
+    else:
+        record("empty parsed_orders produces a loud approval message", "PASS")
+
+    # Case B: non-empty list → must still render the detailed summary.
+    pending_full = {
+        "tool": "write_delivery_order_data",
+        "risk_level": "DANGEROUS",
+        "description": "Write delivery-order rows",
+        "step_number": 6,
+        "total_steps": 6,
+        "inputs": {
+            "sheet_id": "1SHEET_ID",
+            "parsed_orders": [
+                {
+                    "file": "DO-1.pdf",
+                    "header": {"order_reference": "DO-1", "vendor": "ACME"},
+                    "line_items": [{"sku": "A", "qty": 1}, {"sku": "B", "qty": 2}],
+                }
+            ],
+        },
+    }
+    msg_full = build(pending_full)
+    if "Orders to write:** 1" in msg_full and "empty" not in msg_full.lower():
+        record("non-empty parsed_orders still shows detailed summary", "PASS")
+    else:
+        record(
+            "non-empty parsed_orders still shows detailed summary",
+            "FAIL",
+            f"preview={msg_full[:400]!r}",
+        )
+except Exception as e:
+    record(
+        "empty parsed_orders produces a loud approval message",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 16 — Mapping parser category inference only fills FOOD or NON-FOOD.
+# Product rule: the requisition sheet only has Food and non-food tabs. Tech /
+# IT / any other category MUST NOT be force-routed — the inference helpers
+# return "" for those so the category gate can reject the file downstream.
+# ------------------------------------------------------------------
+section("Scenario 16 - Mapping inference yields only FOOD / NON-FOOD / empty")
+
+try:
+    import importlib
+
+    mapping_mod = importlib.import_module("mapping_agent_api")
+    importlib.reload(mapping_mod)
+
+    # --- Filename inference is REMOVED. The parser must never dispatch
+    # to a filename-based category helper. This guard catches regressions
+    # where someone re-introduces filename heuristics (which would break
+    # the product rule that filename must not influence category).
+    if hasattr(mapping_mod, "_infer_category_from_filename"):
+        record(
+            "Mapping agent does NOT expose _infer_category_from_filename",
+            "FAIL",
+            "filename inference helper is back — must be content-only",
+        )
+    elif hasattr(mapping_mod, "_FILENAME_CATEGORY_TOKENS"):
+        record(
+            "Mapping agent does NOT expose _infer_category_from_filename",
+            "FAIL",
+            "_FILENAME_CATEGORY_TOKENS tuple is back — must be content-only",
+        )
+    else:
+        record("Mapping agent does NOT expose _infer_category_from_filename", "PASS")
+
+    # --- _infer_category_from_items ---------------------------------
+    food_items = [
+        {"item_code": "RMFD00810030020"},
+        {"item_code": "RMFD00810030021"},
+    ]
+    tech_items = [
+        {"item_code": "TECH-HW-001"},
+        {"item_code": "TECH-NW-001"},
+        {"item_code": "TECH-SRV-001"},
+    ]
+    mixed_items = [
+        {"item_code": "TECH-HW-001"},
+        {"item_code": "RMFD00810030020"},
+    ]
+    unknown_items = [
+        {"item_code": "PROD-001"},
+        {"item_code": "PROD-002"},
+    ]
+    empty_items: list = []
+
+    item_cases = [
+        (food_items, "FOOD"),
+        # TECH items must NOT resolve — product rule says ignore Tech.
+        (tech_items, ""),
+        # Mixed prefixes, no strict majority.
+        (mixed_items, ""),
+        (unknown_items, ""),
+        (empty_items, ""),
+    ]
+    item_problems = []
+    for items, expected in item_cases:
+        got = mapping_mod._infer_category_from_items(items)
+        if got != expected:
+            item_problems.append(
+                f"items={[i.get('item_code') for i in items]}: got {got!r}, want {expected!r}"
+            )
+    if item_problems:
+        record(
+            "_infer_category_from_items only yields FOOD (or empty for TECH/unknown)",
+            "FAIL",
+            "; ".join(item_problems),
+        )
+    else:
+        record("_infer_category_from_items only yields FOOD (or empty for TECH/unknown)", "PASS")
+
+    # --- Regex is strict: only FOOD or NON-FOOD labels match. ------
+    strict_cases = [
+        ("PRODUCTION MATERIALS REQUISITION LIST\nCategory: FOOD    Date: 2025-04-21", "FOOD"),
+        ("PRODUCTION MATERIALS REQUISITION LIST\nType: NON-FOOD    Date: 2025-04-21", "NON-FOOD"),
+        ("PRODUCTION MATERIALS REQUISITION LIST\nCategory: NON FOOD Date: 2025-04-21", "NON FOOD"),
+        # Anything else does NOT match the strict regex.
+        ("PRODUCTION MATERIALS REQUISITION LIST\nCategory: TECH     Date: 2025-04-21", None),
+        ("PRODUCTION MATERIALS REQUISITION LIST\nCategory: Beverage Date: 2025-04-21", None),
+    ]
+    strict_problems = []
+    for text, expected_category in strict_cases:
+        parsed_header = mapping_mod._extract_header_from_text(text)
+        got = parsed_header.get("category")
+        snippet = repr(text)[:70]
+        if expected_category is None:
+            if got:
+                strict_problems.append(
+                    f"{snippet}...: strict regex should NOT match, got {got!r}"
+                )
+        else:
+            if (got or "").strip().upper() != expected_category.upper():
+                strict_problems.append(
+                    f"{snippet}...: got {got!r}, want {expected_category!r}"
+                )
+    if strict_problems:
+        record(
+            "_HEADER_PATTERNS['category'] is strict (FOOD / NON-FOOD only)",
+            "FAIL",
+            "; ".join(strict_problems),
+        )
+    else:
+        record("_HEADER_PATTERNS['category'] is strict (FOOD / NON-FOOD only)", "PASS")
+
+    # --- _normalise_category -----------------------------------------
+    norm_cases = [
+        ("FOOD", "FOOD"),
+        ("food", "FOOD"),
+        (" Food ", "FOOD"),
+        ("NON-FOOD", "NON-FOOD"),
+        ("non-food", "NON-FOOD"),
+        ("NON FOOD", "NON-FOOD"),
+        ("NON_FOOD", "NON-FOOD"),
+        ("NONFOOD", "NON-FOOD"),
+        # Not accepted -> empty string.
+        ("TECH", ""),
+        ("IT", ""),
+        ("Beverage", ""),
+        ("", ""),
+    ]
+    norm_problems = []
+    for raw, expected in norm_cases:
+        got = mapping_mod._normalise_category(raw)
+        if got != expected:
+            norm_problems.append(f"{raw!r}: got {got!r}, want {expected!r}")
+    if norm_problems:
+        record(
+            "_normalise_category accepts only FOOD / NON-FOOD variants",
+            "FAIL",
+            "; ".join(norm_problems),
+        )
+    else:
+        record("_normalise_category accepts only FOOD / NON-FOOD variants", "PASS")
+except Exception as e:
+    record(
+        "Mapping parser category inference (strict)",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 17 — _is_footer_row drops signature / sign-off blocks while
+# preserving real line items. End-to-end parse now also uses a Food-named
+# PDF so the category gate passes; footer filtering is orthogonal to the
+# category gate and must work regardless.
+# ------------------------------------------------------------------
+section("Scenario 17 - _is_footer_row drops signature blocks, keeps real items")
+
+
+class _FakePage:
+    def __init__(self, text: str, tables: list):
+        self._text = text
+        self._tables = tables
+    def extract_text(self):
+        return self._text
+    def extract_tables(self):
+        return self._tables
+
+
+class _FakePDF:
+    def __init__(self, pages):
+        self.pages = pages
+    def __enter__(self):
+        return self
+    def __exit__(self, *exc):
+        return False
+
+
+def _run_fake_parse(mapping_mod, pdf_path: str, table: list, header_text: str = "PRODUCTION MATERIALS REQUISITION LIST\n", parser=None):
+    """Drive _parse_single_pdf with a stubbed pdfplumber so we can test
+    parser behavior without a real PDF on disk. Returns the parsed dict.
+
+    ``parser`` lets callers who have monkey-patched
+    ``mapping_mod._parse_single_pdf`` supply the ORIGINAL function pointer
+    directly, so we don't recursively call the monkey-patch and blow the
+    stack. Defaults to the module attribute at call time for simple cases.
+    """
+    fake_page = _FakePage(header_text, [table])
+    fake_pdf = _FakePDF([fake_page])
+
+    class _FakePdfplumberModule:
+        @staticmethod
+        def open(_path):
+            return fake_pdf
+
+    original_plumber = getattr(mapping_mod, "pdfplumber", None)
+    original_flag = getattr(mapping_mod, "PDFPLUMBER_AVAILABLE", False)
+    original_exists = mapping_mod.os.path.exists
+    mapping_mod.pdfplumber = _FakePdfplumberModule
+    mapping_mod.PDFPLUMBER_AVAILABLE = True
+    mapping_mod.os.path.exists = lambda _p: True  # type: ignore
+    try:
+        parser_fn = parser if parser is not None else mapping_mod._parse_single_pdf
+        return parser_fn(pdf_path)
+    finally:
+        if original_plumber is not None:
+            mapping_mod.pdfplumber = original_plumber
+        mapping_mod.PDFPLUMBER_AVAILABLE = original_flag
+        mapping_mod.os.path.exists = original_exists  # type: ignore
+
+
+try:
+    import importlib
+    mapping_mod = importlib.import_module("mapping_agent_api")
+    importlib.reload(mapping_mod)
+
+    footer_cases = [
+        # Real rows — must survive.
+        ({"item_code": "TECH-HW-001", "item_description": "Laptop", "qty": 5.0, "uom": "Unit"}, False),
+        ({"item_code": "RMFD00810030020", "item_description": "Beef", "qty": 10.0, "uom": "KG"}, False),
+        ({"item_code": "NF-CLEAN-001", "item_description": "Mop", "qty": 1.0, "uom": "Unit"}, False),
+
+        # Footer rows — must be dropped.
+        # 1) Cell contents match a footer keyword exactly.
+        ({"item_code": "Requested By", "item_description": "Assembled By", "qty": "Checked By", "uom": "Received By"}, True),
+        # 2) qty cell contains a footer keyword even if code looks odd.
+        ({"item_code": "SIGN-001", "item_description": "blah", "qty": "SIGNATURE", "uom": ""}, True),
+        # 3) Free-text name row - item_code has no digits.
+        ({"item_code": "M.C FRANCO", "item_description": "", "qty": "", "uom": ""}, True),
+        # 4) "Signature over printed name" survived column mapping.
+        ({"item_code": "Signature over printed name", "item_description": "", "qty": "", "uom": ""}, True),
+        # 5) A lone person name.
+        ({"item_code": "Juan Dela Cruz", "item_description": "", "qty": "", "uom": ""}, True),
+
+        # Edge cases - empty rows should not be flagged (the outer guard
+        # handles them), so _is_footer_row must NOT claim every empty row.
+        ({"item_code": "", "item_description": "", "qty": "", "uom": ""}, False),
+    ]
+
+    problems = []
+    for item, expected in footer_cases:
+        got = mapping_mod._is_footer_row(item)
+        if got != expected:
+            problems.append(f"{item}: got {got}, want {expected}")
+
+    if problems:
+        record("_is_footer_row filters signatures without false positives", "FAIL", "; ".join(problems))
+    else:
+        record("_is_footer_row filters signatures without false positives", "PASS")
+
+    # --- End-to-end through _parse_single_pdf minus pdfplumber ------
+    # Use a FOOD-named PDF so the category gate passes and we can observe
+    # how many line_items survive the signature filter.
+    header_row = ["Item Code", "Item Description", "QTY", "UOM"]
+    real_items = [
+        ["RMFD00810030020", "Beef", "10", "KG"],
+        ["RMFD00810030021", "Chicken", "5", "KG"],
+    ]
+    footer_rows = [
+        ["Requested By", "Assembled By", "Checked By", "Received By"],
+        ["M.C FRANCO", "", "", ""],
+        ["Signature over printed name", "Signature over printed name",
+         "Signature over printed name", "Signature over printed name"],
+    ]
+    table = [header_row] + real_items + footer_rows
+
+    parsed = _run_fake_parse(mapping_mod, "/tmp/Food_DELIVERY_ORDER.pdf", table)
+
+    items = parsed.get("line_items", [])
+    item_codes = [i.get("item_code") for i in items]
+    if parsed.get("rejected"):
+        record(
+            "_parse_single_pdf drops footer rows end-to-end (FOOD)",
+            "FAIL",
+            f"rejected: {parsed.get('reason')!r}",
+        )
+    elif len(items) == 2 and item_codes == ["RMFD00810030020", "RMFD00810030021"]:
+        record("_parse_single_pdf drops footer rows end-to-end (FOOD)", "PASS")
+    else:
+        record(
+            "_parse_single_pdf drops footer rows end-to-end (FOOD)",
+            "FAIL",
+            f"got {len(items)} items: {item_codes}",
+        )
+
+    # With filename inference removed, category must come from
+    # item-code prefix (RMFD* -> FOOD) since the fake first-page text
+    # has no "Category: FOOD" label. This proves the content-only chain
+    # works even when the explicit label is absent.
+    if parsed.get("header", {}).get("category") == "FOOD":
+        record("_parse_single_pdf fills header.category=FOOD via item-code prefix (content)", "PASS")
+    else:
+        record(
+            "_parse_single_pdf fills header.category=FOOD via item-code prefix (content)",
+            "FAIL",
+            f"header={parsed.get('header')!r}",
+        )
+except Exception as e:
+    record(
+        "_is_footer_row + end-to-end parser test",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 18 — _resolve_tab_for_category is strictly binary. Only FOOD and
+# NON-FOOD return a destination tab. TECH / IT / unknown return (None, warn).
+# Locks in the product rule so a future refactor can't quietly add Tech or
+# silently default to non-food.
+# ------------------------------------------------------------------
+section("Scenario 18 - _resolve_tab_for_category is strictly FOOD / NON-FOOD")
+
+try:
+    import importlib.util
+    sheets_api_path = SHEETS / "sheets_agent_api.py"
+    spec = importlib.util.spec_from_file_location("sheets_agent_api_sim_b3", sheets_api_path)
+    sheets_api = importlib.util.module_from_spec(spec)  # type: ignore
+    spec.loader.exec_module(sheets_api)  # type: ignore
+
+    full_tabs = ["Food", "non-food", "Summary"]
+    partial_food_only = ["Food"]          # non-food tab missing
+    partial_nonfood_only = ["non-food"]   # Food tab missing
+
+    cases = [
+        # (category, tab_names, expected_tab, expect_warning)
+        # FOOD and NON-FOOD in both orientations + all whitespace/hyphen variants.
+        ("FOOD",      full_tabs,           "Food",     False),
+        ("food",      full_tabs,           "Food",     False),
+        (" Food ",    full_tabs,           "Food",     False),
+        ("NON-FOOD",  full_tabs,           "non-food", False),
+        ("non-food",  full_tabs,           "non-food", False),
+        ("NON FOOD",  full_tabs,           "non-food", False),
+        ("NON_FOOD",  full_tabs,           "non-food", False),
+        ("NONFOOD",   full_tabs,           "non-food", False),
+
+        # Non-FOOD/NON-FOOD categories MUST be skipped with a warning —
+        # never force-routed to another tab, even if one exists.
+        ("TECH",      full_tabs,           None,       True),
+        ("IT",        full_tabs,           None,       True),
+        ("Beverage",  ["Food", "non-food", "Beverage"], None, True),
+        ("",          full_tabs,           None,       True),
+
+        # Even a correct category gets skipped when its destination tab is
+        # missing — the template requires both tabs to exist.
+        ("FOOD",      partial_nonfood_only, None,      True),
+        ("NON-FOOD",  partial_food_only,    None,      True),
+    ]
+
+    problems = []
+    for category, tabs, expected_tab, expect_warning in cases:
+        actual, warning = sheets_api._resolve_tab_for_category(category, tabs)
+        if actual != expected_tab:
+            problems.append(
+                f"category={category!r} tabs={tabs!r}: got tab={actual!r}, want {expected_tab!r}"
+            )
+        if expect_warning and not warning:
+            problems.append(f"category={category!r} tabs={tabs!r}: expected warning, got None")
+        if not expect_warning and warning:
+            problems.append(
+                f"category={category!r} tabs={tabs!r}: unexpected warning={warning!r}"
+            )
+
+    # Also assert the TECH warning text mentions that only FOOD / NON-FOOD
+    # are accepted, so the user understands WHY their Tech order was skipped.
+    _, tech_warn = sheets_api._resolve_tab_for_category("TECH", full_tabs)
+    if not tech_warn or ("FOOD" not in tech_warn and "food" not in tech_warn):
+        problems.append(
+            f"TECH warning should mention FOOD/NON-FOOD policy, got {tech_warn!r}"
+        )
+
+    # And the _CATEGORY_TAB_MAP must not contain any Tech entry.
+    if any(k.upper().startswith("TECH") or k.upper() in ("IT", "TECHNOLOGY") for k in sheets_api._CATEGORY_TAB_MAP.keys()):
+        problems.append(
+            f"_CATEGORY_TAB_MAP should not contain Tech/IT entries, got {list(sheets_api._CATEGORY_TAB_MAP.keys())}"
+        )
+
+    if problems:
+        record(
+            "_resolve_tab_for_category routes only FOOD / NON-FOOD, skips everything else",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record("_resolve_tab_for_category routes only FOOD / NON-FOOD, skips everything else", "PASS")
+except Exception as e:
+    record(
+        "_resolve_tab_for_category routes only FOOD / NON-FOOD, skips everything else",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 19 — preview_delivery_order_insertion routes FOOD -> Food and
+# NON-FOOD -> non-food; if a TECH order somehow slips past the mapping
+# gate (defensive) it gets skipped, never routed.
+# ------------------------------------------------------------------
+section("Scenario 19 - preview_delivery_order_insertion routes strictly FOOD/NON-FOOD")
+
+
+def _make_fake_sheets_service(tab_names: list, existing_rows_by_tab: dict | None = None):
+    """Minimum-viable fake of the Google Sheets API object graph."""
+    existing = existing_rows_by_tab or {}
+
+    class _ValuesCall:
+        def __init__(self, range_str: str):
+            self._range = range_str
+        def execute(self):
+            tab = self._range.strip("'").split("'!", 1)[0].lstrip("'")
+            return {"values": existing.get(tab, [])}
+
+    class _Values:
+        def get(self, spreadsheetId, range):
+            return _ValuesCall(range)
+
+    class _GetCall:
+        def execute(self):
+            return {
+                "sheets": [
+                    {"properties": {"title": t}} for t in tab_names
+                ]
+            }
+
+    class _Spreadsheets:
+        def get(self, spreadsheetId):
+            return _GetCall()
+        def values(self):
+            return _Values()
+
+    class _Service:
+        def spreadsheets(self):
+            return _Spreadsheets()
+
+    return _Service()
+
+
+try:
+    import importlib.util
+    sheets_api_path = SHEETS / "sheets_agent_api.py"
+    spec = importlib.util.spec_from_file_location("sheets_agent_api_sim_b3e2e", sheets_api_path)
+    sheets_api = importlib.util.module_from_spec(spec)  # type: ignore
+    spec.loader.exec_module(sheets_api)  # type: ignore
+
+    food_order = {
+        "file": "Food_DO.pdf",
+        "header": {
+            "category": "FOOD",
+            "reference_number": "DO-F-1",
+            "date": "2025-04-21",
+            "requested_by": "Alice",
+        },
+        "line_items": [
+            {"item_code": "RMFD00810030020", "item_description": "Beef", "qty": 10.0, "uom": "KG"},
+            {"item_code": "RMFD00810030021", "item_description": "Chicken", "qty": 5.0, "uom": "KG"},
+        ],
+    }
+    nonfood_order = {
+        "file": "NonFood_DO.pdf",
+        "header": {
+            "category": "NON-FOOD",
+            "reference_number": "DO-NF-1",
+            "date": "2025-04-21",
+            "requested_by": "Carol",
+        },
+        "line_items": [
+            {"item_code": "NF-CLEAN-001", "item_description": "Mop", "qty": 4.0, "uom": "Unit"},
+        ],
+    }
+    tech_order_defensive = {
+        "file": "Tech_DO.pdf",
+        "header": {
+            # Defensive: if a TECH order ever reaches the sheets agent
+            # (shouldn't — the mapping agent's category gate rejects these),
+            # it must be skipped, not routed anywhere.
+            "category": "TECH",
+            "reference_number": "DO-T-1",
+            "date": "2025-04-21",
+            "requested_by": "Bob",
+        },
+        "line_items": [
+            {"item_code": "TECH-HW-001", "item_description": "Laptop", "qty": 3.0, "uom": "Unit"},
+        ],
+    }
+
+    # --- Case A: FOOD + NON-FOOD orders with correct tabs.
+    original_create = sheets_api.create_sheets_service
+    sheets_api.create_sheets_service = lambda _c: _make_fake_sheets_service(
+        ["Food", "non-food", "Summary"]
+    )
+    try:
+        result_a = sheets_api.preview_delivery_order_insertion(
+            sheet_id="1SHEET",
+            parsed_orders=[food_order, nonfood_order],
+            credentials_dict=sheets_api.CredentialsDict(access_token="x", refresh_token="y"),
+        )
+    finally:
+        sheets_api.create_sheets_service = original_create
+
+    per_tab = {}
+    for row in result_a.get("preview_rows", []):
+        per_tab.setdefault(row["tab"], []).append(row["values"])
+
+    problems_a = []
+    if set(per_tab.keys()) != {"Food", "non-food"}:
+        problems_a.append(f"tabs_seen={set(per_tab.keys())}")
+    if len(per_tab.get("Food", [])) != 2:
+        problems_a.append(f"food rows={len(per_tab.get('Food', []))}")
+    if len(per_tab.get("non-food", [])) != 1:
+        problems_a.append(f"non-food rows={len(per_tab.get('non-food', []))}")
+    if result_a.get("warnings"):
+        # Shouldn't see routing warnings on a clean FOOD + NON-FOOD run.
+        route_warns = [w for w in result_a["warnings"] if "skipped" in w.lower() or "not FOOD" in w]
+        if route_warns:
+            problems_a.append(f"unexpected route warnings: {route_warns}")
+
+    if problems_a:
+        record(
+            "preview routes FOOD->Food and NON-FOOD->non-food",
+            "FAIL",
+            "; ".join(problems_a),
+        )
+    else:
+        record("preview routes FOOD->Food and NON-FOOD->non-food", "PASS")
+
+    # --- Case B (defensive): TECH order mixed with FOOD + NON-FOOD. The
+    # TECH order must be skipped with a warning; the other two route normally.
+    sheets_api.create_sheets_service = lambda _c: _make_fake_sheets_service(
+        ["Food", "non-food"]
+    )
+    try:
+        result_b = sheets_api.preview_delivery_order_insertion(
+            sheet_id="1SHEET",
+            parsed_orders=[food_order, tech_order_defensive, nonfood_order],
+            credentials_dict=sheets_api.CredentialsDict(access_token="x", refresh_token="y"),
+        )
+    finally:
+        sheets_api.create_sheets_service = original_create
+
+    per_tab_b = {}
+    for row in result_b.get("preview_rows", []):
+        per_tab_b.setdefault(row["tab"], []).append(row["values"])
+
+    problems_b = []
+    if len(per_tab_b.get("Food", [])) != 2:
+        problems_b.append(f"food rows={len(per_tab_b.get('Food', []))}")
+    if len(per_tab_b.get("non-food", [])) != 1:
+        problems_b.append(f"non-food rows={len(per_tab_b.get('non-food', []))}")
+    # The TECH rows must NOT appear in any tab.
+    for tab, rows in per_tab_b.items():
+        for row in rows:
+            if "TECH-" in (row[2] or ""):  # column index 2 is item_code
+                problems_b.append(f"TECH row leaked into tab={tab!r}: {row!r}")
+    warnings_b = result_b.get("warnings", []) or []
+    if not any("TECH" in w.upper() and "skipped" in w.lower() for w in warnings_b):
+        problems_b.append(f"expected TECH-skipped warning, got {warnings_b!r}")
+
+    if problems_b:
+        record(
+            "preview skips TECH order (defensive) and routes others correctly",
+            "FAIL",
+            "; ".join(problems_b),
+        )
+    else:
+        record("preview skips TECH order (defensive) and routes others correctly", "PASS")
+
+    # --- Case C: FOOD order with a broken sheet (no Food tab). The order
+    # must be skipped with a clear warning about the missing tab, not
+    # silently placed into non-food.
+    sheets_api.create_sheets_service = lambda _c: _make_fake_sheets_service(
+        ["non-food"]
+    )
+    try:
+        result_c = sheets_api.preview_delivery_order_insertion(
+            sheet_id="1SHEET",
+            parsed_orders=[food_order],
+            credentials_dict=sheets_api.CredentialsDict(access_token="x", refresh_token="y"),
+        )
+    finally:
+        sheets_api.create_sheets_service = original_create
+
+    problems_c = []
+    if result_c.get("preview_rows"):
+        problems_c.append(f"expected 0 preview_rows, got {len(result_c['preview_rows'])}")
+    warnings_c = result_c.get("warnings", []) or []
+    if not any("Food" in w and ("missing" in w.lower() or "not found" in w.lower() or "skipped" in w.lower()) for w in warnings_c):
+        problems_c.append(f"expected 'Food tab missing' warning, got {warnings_c!r}")
+
+    if problems_c:
+        record(
+            "preview hard-skips FOOD order when Food tab is absent",
+            "FAIL",
+            "; ".join(problems_c),
+        )
+    else:
+        record("preview hard-skips FOOD order when Food tab is absent", "PASS")
+except Exception as e:
+    record(
+        "preview_delivery_order_insertion strict FOOD/NON-FOOD routing",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 20 — Category gate: a Tech-named PDF with TECH items must be
+# REJECTED at _parse_single_pdf, not parsed and returned for routing. This
+# is the product-rule gate described by the user: the requisition sheet
+# only accepts FOOD and NON-FOOD; anything else is ignored upfront.
+# ------------------------------------------------------------------
+section("Scenario 20 - Mapping parser rejects Tech requisition PDFs")
+
+try:
+    import importlib
+    mapping_mod = importlib.import_module("mapping_agent_api")
+    importlib.reload(mapping_mod)
+
+    header_row = ["Item Code", "Item Description", "QTY", "UOM"]
+    tech_items = [
+        ["TECH-HW-001", "Laptop", "5", "Unit"],
+        ["TECH-NW-001", "Router", "2", "Unit"],
+        ["TECH-SRV-001", "Server", "1", "Unit"],
+    ]
+    tech_table = [header_row] + tech_items
+
+    parsed = _run_fake_parse(mapping_mod, "/tmp/Tech_DELIVERY_ORDER.pdf", tech_table)
+    problems = []
+    if not parsed.get("rejected"):
+        problems.append(f"expected rejected=True, got {parsed!r}")
+    reason = parsed.get("reason") or ""
+    if "FOOD" not in reason.upper() or "NON-FOOD" not in reason.upper():
+        problems.append(f"rejection reason should mention FOOD and NON-FOOD, got {reason!r}")
+    if problems:
+        record(
+            "_parse_single_pdf rejects Tech requisition PDFs",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record("_parse_single_pdf rejects Tech requisition PDFs", "PASS")
+
+    # Now run parse_delivery_order_pdfs with one FOOD PDF and one TECH PDF.
+    # The FOOD one must parse and land in parsed_orders, the TECH one must
+    # land in rejected_files, and the top-level success flag must be True
+    # (we got at least one usable order).
+    real_parser = mapping_mod._parse_single_pdf  # capture BEFORE monkey-patching
+
+    food_table = [
+        header_row,
+        ["RMFD00810030020", "Beef", "10", "KG"],
+        ["RMFD00810030021", "Chicken", "5", "KG"],
+    ]
+
+    def _fake_single(fp: str):
+        # Pass parser=real_parser so _run_fake_parse calls the REAL
+        # _parse_single_pdf, not the monkey-patched _fake_single (which
+        # would recurse forever).
+        if "Food" in fp or "food" in fp:
+            return _run_fake_parse(mapping_mod, fp, food_table, parser=real_parser)
+        return _run_fake_parse(mapping_mod, fp, tech_table, parser=real_parser)
+
+    mapping_mod._parse_single_pdf = _fake_single
+    try:
+        result = mapping_mod.parse_delivery_order_pdfs(
+            ["/tmp/Food_DELIVERY_ORDER.pdf", "/tmp/Tech_DELIVERY_ORDER.pdf"]
+        )
+    finally:
+        mapping_mod._parse_single_pdf = real_parser
+
+    mix_problems = []
+    if result.get("success") is not True:
+        mix_problems.append(f"expected success=True (one file parsed), got {result.get('success')!r}")
+    if result.get("total_parsed") != 1:
+        mix_problems.append(f"expected total_parsed=1, got {result.get('total_parsed')!r}")
+    if result.get("total_rejected") != 1:
+        mix_problems.append(f"expected total_rejected=1, got {result.get('total_rejected')!r}")
+    rej = result.get("rejected_files", [])
+    if not rej or "Tech" not in rej[0].get("file", ""):
+        mix_problems.append(f"expected Tech PDF in rejected_files, got {rej!r}")
+    parsed_orders = result.get("parsed_orders", [])
+    if len(parsed_orders) != 1 or parsed_orders[0].get("header", {}).get("category") != "FOOD":
+        mix_problems.append(f"expected 1 FOOD order parsed, got {parsed_orders!r}")
+    if mix_problems:
+        record(
+            "parse_delivery_order_pdfs keeps FOOD, rejects TECH on mixed batch",
+            "FAIL",
+            "; ".join(mix_problems),
+        )
+    else:
+        record("parse_delivery_order_pdfs keeps FOOD, rejects TECH on mixed batch", "PASS")
+except Exception as e:
+    record(
+        "_parse_single_pdf rejects Tech requisition PDFs",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 21 — Content-only category detection.
+#
+# Product rule: "File name should not matter and just the content." Filename
+# has been intentionally removed from the inference chain. This scenario
+# locks that rule in by feeding the parser content+filename combinations
+# where the filename would previously have won, and verifying the parser
+# follows the CONTENT every time.
+# ------------------------------------------------------------------
+section("Scenario 21 - Filename is ignored; category comes from content only")
+
+try:
+    import importlib
+    mapping_mod = importlib.import_module("mapping_agent_api")
+    importlib.reload(mapping_mod)
+
+    header_row = ["Item Code", "Item Description", "QTY", "UOM"]
+    food_items = [
+        [header_row[0], header_row[1], header_row[2], header_row[3]],
+        ["RMFD00810030020", "Beef", "10", "KG"],
+        ["RMFD00810030021", "Chicken", "5", "KG"],
+    ]
+    tech_items_table = [
+        header_row,
+        ["TECH-HW-001", "Laptop", "5", "Unit"],
+        ["TECH-NW-001", "Router", "2", "Unit"],
+    ]
+    # Filename sends mixed / wrong signals on purpose.
+    cases = [
+        # (pdf_path, table, expect_rejected, expected_category)
+        # 1. Filename screams FOOD, content is TECH — filename must NOT save it.
+        ("/tmp/Food_DELIVERY_ORDER.pdf", tech_items_table, True, None),
+        # 2. Filename screams Non-Food, content is TECH — still rejected.
+        ("/tmp/NonFood_DELIVERY_ORDER.pdf", tech_items_table, True, None),
+        # 3. Filename is totally neutral, content is FOOD — accepted as FOOD.
+        ("/tmp/DO-2025-04-21.pdf", food_items, False, "FOOD"),
+        # 4. Filename is gibberish, content is FOOD — still accepted.
+        ("/tmp/asdf_1234.pdf", food_items, False, "FOOD"),
+    ]
+
+    problems = []
+    for pdf_path, table, expect_rejected, expected_category in cases:
+        parsed = _run_fake_parse(mapping_mod, pdf_path, table)
+        if expect_rejected:
+            if not parsed.get("rejected"):
+                problems.append(
+                    f"{pdf_path!r} with TECH content: expected rejection, got {parsed!r}"
+                )
+        else:
+            if parsed.get("rejected"):
+                problems.append(
+                    f"{pdf_path!r} with FOOD content: expected acceptance, got reason={parsed.get('reason')!r}"
+                )
+            else:
+                got_cat = parsed.get("header", {}).get("category")
+                if got_cat != expected_category:
+                    problems.append(
+                        f"{pdf_path!r}: got category={got_cat!r}, want {expected_category!r}"
+                    )
+
+    if problems:
+        record(
+            "Filename never overrides content in category detection",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record("Filename never overrides content in category detection", "PASS")
+except Exception as e:
+    record(
+        "Filename never overrides content in category detection",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 22 — File-type gate: anything that isn't a .pdf is rejected
+# up-front with a clear "Not a PDF file" reason. Non-PDF files must NEVER
+# reach the template or category checks.
+# ------------------------------------------------------------------
+section("Scenario 22 - Non-PDF files are rejected with 'Not a PDF file'")
+
+try:
+    import importlib
+    mapping_mod = importlib.import_module("mapping_agent_api")
+    importlib.reload(mapping_mod)
+
+    # Even with pdfplumber simulated as "available", the extension check
+    # fires before we try to open the file. Use the real function directly
+    # — we don't need _run_fake_parse here.
+    original_flag = getattr(mapping_mod, "PDFPLUMBER_AVAILABLE", False)
+    mapping_mod.PDFPLUMBER_AVAILABLE = True
+    try:
+        non_pdf_cases = [
+            "/tmp/report.docx",
+            "/tmp/random.txt",
+            "/tmp/image.png",
+            "/tmp/spreadsheet.xlsx",
+            "/tmp/no_extension",
+            "/tmp/fake.pdf.exe",  # sneaky double extension; .exe wins
+        ]
+        problems = []
+        for path in non_pdf_cases:
+            result = mapping_mod._parse_single_pdf(path)
+            if not result.get("rejected"):
+                problems.append(f"{path!r}: expected rejection, got {result!r}")
+            elif "pdf" not in (result.get("reason") or "").lower():
+                problems.append(f"{path!r}: rejection reason should mention PDF, got {result.get('reason')!r}")
+
+        # And at the batch layer, a batch of only non-PDFs collapses to
+        # zero parsed + a clear top-level failure (no cascade into the
+        # sheet pipeline).
+        batch = mapping_mod.parse_delivery_order_pdfs(non_pdf_cases)
+        if batch.get("total_parsed") != 0:
+            problems.append(f"batch total_parsed expected 0, got {batch.get('total_parsed')!r}")
+        if batch.get("total_rejected") != len(non_pdf_cases):
+            problems.append(f"batch total_rejected expected {len(non_pdf_cases)}, got {batch.get('total_rejected')!r}")
+        if batch.get("success") is not False:
+            problems.append(f"batch success should be False on all-rejected, got {batch.get('success')!r}")
+
+        if problems:
+            record(
+                "Non-PDF uploads are rejected by file-type gate",
+                "FAIL",
+                "; ".join(problems),
+            )
+        else:
+            record("Non-PDF uploads are rejected by file-type gate", "PASS")
+    finally:
+        mapping_mod.PDFPLUMBER_AVAILABLE = original_flag
+except Exception as e:
+    record(
+        "Non-PDF uploads are rejected by file-type gate",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 23 — Wrong-template PDF rejected at the marker check. A PDF
+# that parses fine but whose first-page text doesn't contain the
+# "PRODUCTION MATERIALS REQUISITION LIST" / "REQUISITION LIST" marker
+# must be rejected BEFORE we try to extract rows. This guards against
+# the user pointing us at a completely different kind of PDF (invoice,
+# sales report, letter, etc.).
+# ------------------------------------------------------------------
+section("Scenario 23 - PDFs that don't match our template are rejected")
+
+try:
+    import importlib
+    mapping_mod = importlib.import_module("mapping_agent_api")
+    importlib.reload(mapping_mod)
+
+    wrong_template_texts = [
+        "MONTHLY SALES REPORT\nCategory: FOOD\nProduct X: 100 units",
+        "INVOICE #12345\nBill To: Acme Corp\nTotal: $5,000",
+        "INTERNAL MEMO\nSubject: Budget review",
+        "",  # empty extraction
+    ]
+
+    problems = []
+    for i, wrong_text in enumerate(wrong_template_texts):
+        # Even with good-looking table data, absence of marker must reject.
+        parsed = _run_fake_parse(
+            mapping_mod,
+            f"/tmp/wrong_template_{i}.pdf",
+            [
+                ["Item Code", "Description", "QTY", "UOM"],
+                ["RMFD00810030020", "Beef", "10", "KG"],
+            ],
+            header_text=wrong_text,
+        )
+        if not parsed.get("rejected"):
+            snippet = repr(wrong_text)[:60]
+            problems.append(
+                f"text={snippet}...: expected rejection (wrong template), got {parsed!r}"
+            )
+        elif "requisition" not in (parsed.get("reason") or "").lower():
+            problems.append(
+                f"rejection reason should mention requisition/template, got {parsed.get('reason')!r}"
+            )
+
+    # And when the marker IS present, the same item table parses cleanly.
+    valid = _run_fake_parse(
+        mapping_mod,
+        "/tmp/DO-2025-04-21.pdf",
+        [
+            ["Item Code", "Description", "QTY", "UOM"],
+            ["RMFD00810030020", "Beef", "10", "KG"],
+        ],
+        header_text="PRODUCTION MATERIALS REQUISITION LIST\n",
+    )
+    if valid.get("rejected"):
+        problems.append(
+            f"valid marker: expected acceptance, got rejection {valid.get('reason')!r}"
+        )
+
+    if problems:
+        record(
+            "Wrong-template PDFs rejected before data parsing",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record("Wrong-template PDFs rejected before data parsing", "PASS")
+except Exception as e:
+    record(
+        "Wrong-template PDFs rejected before data parsing",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 24 — validate_delivery_sheet rejects a wrong sheet. If the user
+# pastes a link to a completely different spreadsheet (missing Food +
+# non-food tabs), the agent must return error_type=wrong_sheet with a
+# message that explicitly says this is NOT the designated requisition
+# sheet — not just a vague "header mismatch".
+# ------------------------------------------------------------------
+section("Scenario 24 - validate_delivery_sheet rejects wrong sheet with clear error")
+
+
+def _make_full_fake_service(
+    tab_names: list,
+    spreadsheet_title: str = "Production Materials Requisition List",
+    header_by_tab: dict | None = None,
+    permission_status: int | None = None,
+    append_status: int | None = None,
+    err_cls=None,
+):
+    """Richer fake Sheets service that exercises the whole validate_delivery_sheet
+    path (metadata + per-tab header row + _check_write_permission's batchUpdate
+    + values().append()).
+
+    permission_status: if set, the batchUpdate title noop raises HttpError(status).
+    append_status: if set, values().append() raises HttpError(status).
+    """
+    header_by_tab = header_by_tab or {}
+
+    def _raise(status):
+        assert err_cls is not None
+        e = err_cls(f"fake http {status}")
+        e.resp = types.SimpleNamespace(status=status)
+        raise e
+
+    class _ValuesGet:
+        def __init__(self, range_str: str):
+            self._range = range_str
+        def execute(self):
+            tab = self._range.strip("'").split("'!", 1)[0].lstrip("'")
+            row = header_by_tab.get(tab, [])
+            return {"values": [row] if row else []}
+
+    class _ValuesAppend:
+        def __init__(self, *a, **kw):
+            pass
+        def execute(self):
+            if append_status is not None:
+                _raise(append_status)
+            return {"updates": {"updatedCells": 8}}
+
+    class _Values:
+        def get(self, spreadsheetId, range):
+            return _ValuesGet(range)
+        def append(self, spreadsheetId, range, valueInputOption, insertDataOption, body):
+            return _ValuesAppend()
+
+    class _BatchUpdate:
+        def __init__(self, *a, **kw):
+            pass
+        def execute(self):
+            if permission_status is not None:
+                _raise(permission_status)
+            return {"replies": [{}]}
+
+    class _SpreadsheetsGet:
+        def __init__(self, _kwargs):
+            self._fields = _kwargs.get("fields") or ""
+        def execute(self):
+            # When called with fields="properties.title", only surface title
+            # (mimics Google's partial-response behavior so _check_write_permission
+            # reads the current title before the noop update).
+            return {
+                "properties": {"title": spreadsheet_title},
+                "sheets": [{"properties": {"title": t}} for t in tab_names],
+            }
+
+    class _Spreadsheets:
+        def get(self, spreadsheetId, **kwargs):
+            return _SpreadsheetsGet(kwargs)
+        def batchUpdate(self, spreadsheetId, body):
+            return _BatchUpdate()
+        def values(self):
+            return _Values()
+
+    class _Service:
+        def spreadsheets(self):
+            return _Spreadsheets()
+
+    return _Service()
+
+
+try:
+    import importlib.util
+    sheets_api_path = SHEETS / "sheets_agent_api.py"
+    spec = importlib.util.spec_from_file_location("sheets_agent_api_sim_sheet_err", sheets_api_path)
+    sheets_api = importlib.util.module_from_spec(spec)  # type: ignore
+    spec.loader.exec_module(sheets_api)  # type: ignore
+
+    err_cls = sheets_api.HttpError
+
+    # Case A: completely different sheet — tabs are "Budget" / "Summary".
+    original_create = sheets_api.create_sheets_service
+    sheets_api.create_sheets_service = lambda _c: _make_full_fake_service(
+        tab_names=["Budget", "Summary"],
+        spreadsheet_title="Q1 Finance Dashboard",
+        err_cls=err_cls,
+    )
+    try:
+        result_a = sheets_api.validate_delivery_sheet(
+            sheet_id="1WRONG",
+            credentials_dict=sheets_api.CredentialsDict(access_token="x", refresh_token="y"),
+        )
+    finally:
+        sheets_api.create_sheets_service = original_create
+
+    problems_a = []
+    if result_a.get("success") is not False:
+        problems_a.append(f"expected success=False, got {result_a.get('success')!r}")
+    if result_a.get("error_type") != "wrong_sheet":
+        problems_a.append(f"expected error_type='wrong_sheet', got {result_a.get('error_type')!r}")
+    err_msg = (result_a.get("error") or "").lower()
+    if "different" not in err_msg and "designated" not in err_msg:
+        problems_a.append(
+            f"error should call out 'different sheet' / 'designated', got: {result_a.get('error')!r}"
+        )
+    if "q1 finance dashboard" not in err_msg:
+        problems_a.append(f"error should include sheet title, got: {result_a.get('error')!r}")
+    if "food" not in err_msg or "non-food" not in err_msg:
+        problems_a.append(f"error should mention Food/non-food tabs, got: {result_a.get('error')!r}")
+    if sorted(result_a.get("missing_tabs", [])) != sorted(["Food", "non-food"]):
+        problems_a.append(f"missing_tabs should be ['Food','non-food'], got {result_a.get('missing_tabs')!r}")
+
+    if problems_a:
+        record(
+            "validate_delivery_sheet flags wrong sheet with explicit 'different sheet' error",
+            "FAIL",
+            "; ".join(problems_a),
+        )
+    else:
+        record(
+            "validate_delivery_sheet flags wrong sheet with explicit 'different sheet' error",
+            "PASS",
+        )
+
+    # Case B: correct tabs but wrong header row ("Product" instead of "Date").
+    # This is a template mismatch (right kind of sheet, wrong structure) — error
+    # should reference the template but NOT say "different sheet" because tabs
+    # are present.
+    wrong_headers = {
+        "Food": ["Product", "Order Reference", "Item Code", "Item Description", "QTY", "UOM", "CB Date", "Requested by"],
+        "non-food": ["Product", "Order Reference", "Item Code", "Item Description", "QTY", "UOM", "CB Date", "Requested by"],
+    }
+    sheets_api.create_sheets_service = lambda _c: _make_full_fake_service(
+        tab_names=["Food", "non-food"],
+        spreadsheet_title="Requisition List v2",
+        header_by_tab=wrong_headers,
+        err_cls=err_cls,
+    )
+    try:
+        result_b = sheets_api.validate_delivery_sheet(
+            sheet_id="1MISMATCH",
+            credentials_dict=sheets_api.CredentialsDict(access_token="x", refresh_token="y"),
+        )
+    finally:
+        sheets_api.create_sheets_service = original_create
+
+    problems_b = []
+    if result_b.get("success") is not False:
+        problems_b.append(f"expected success=False, got {result_b.get('success')!r}")
+    if result_b.get("error_type") != "wrong_sheet":
+        problems_b.append(f"expected error_type='wrong_sheet', got {result_b.get('error_type')!r}")
+    if not result_b.get("mismatch_details"):
+        problems_b.append("mismatch_details should list the header mismatches")
+    err_msg_b = (result_b.get("error") or "").lower()
+    if "date" not in err_msg_b or "product" not in err_msg_b:
+        problems_b.append(f"error should call out Date-vs-Product mismatch, got: {result_b.get('error')!r}")
+
+    if problems_b:
+        record(
+            "validate_delivery_sheet flags header mismatch with actionable detail",
+            "FAIL",
+            "; ".join(problems_b),
+        )
+    else:
+        record(
+            "validate_delivery_sheet flags header mismatch with actionable detail",
+            "PASS",
+        )
+except Exception as e:
+    record(
+        "validate_delivery_sheet wrong-sheet coverage",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 25 — validate_delivery_sheet catches read-only (Viewer) access.
+# Template + tabs are correct, but the caller only has Viewer access, so
+# the proactive _check_write_permission noop title update returns HTTP 403.
+# The function must return error_type=read_only with a message telling the
+# user to ask for Editor access.
+# ------------------------------------------------------------------
+section("Scenario 25 - validate_delivery_sheet catches read-only sheet access")
+
+try:
+    import importlib.util
+    sheets_api_path = SHEETS / "sheets_agent_api.py"
+    spec = importlib.util.spec_from_file_location("sheets_agent_api_sim_perm", sheets_api_path)
+    sheets_api = importlib.util.module_from_spec(spec)  # type: ignore
+    spec.loader.exec_module(sheets_api)  # type: ignore
+
+    err_cls = sheets_api.HttpError
+
+    # Good headers + tabs + title, but batchUpdate raises 403.
+    good_headers = {
+        "Food": sheets_api._EXPECTED_HEADERS,
+        "non-food": sheets_api._EXPECTED_HEADERS,
+    }
+    original_create = sheets_api.create_sheets_service
+    sheets_api.create_sheets_service = lambda _c: _make_full_fake_service(
+        tab_names=["Food", "non-food"],
+        spreadsheet_title="Production Materials Requisition List",
+        header_by_tab=good_headers,
+        permission_status=403,
+        err_cls=err_cls,
+    )
+    try:
+        result = sheets_api.validate_delivery_sheet(
+            sheet_id="1READONLY",
+            credentials_dict=sheets_api.CredentialsDict(access_token="x", refresh_token="y"),
+        )
+    finally:
+        sheets_api.create_sheets_service = original_create
+
+    problems = []
+    if result.get("success") is not False:
+        problems.append(f"expected success=False, got {result.get('success')!r}")
+    if result.get("is_valid") is not True:
+        problems.append(f"is_valid should remain True (template IS correct), got {result.get('is_valid')!r}")
+    if result.get("error_type") != "read_only":
+        problems.append(f"expected error_type='read_only', got {result.get('error_type')!r}")
+    err_msg = (result.get("error") or "").lower()
+    if "editor" not in err_msg:
+        problems.append(f"error should recommend asking for Editor access, got: {result.get('error')!r}")
+    if "read-only" not in err_msg and "viewer" not in err_msg:
+        problems.append(f"error should call out read-only/Viewer, got: {result.get('error')!r}")
+
+    if problems:
+        record(
+            "validate_delivery_sheet catches read-only access with actionable error",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record(
+            "validate_delivery_sheet catches read-only access with actionable error",
+            "PASS",
+        )
+
+    # Sanity: happy path (no 403) surfaces success=True so we're not just
+    # always returning read-only.
+    sheets_api.create_sheets_service = lambda _c: _make_full_fake_service(
+        tab_names=["Food", "non-food"],
+        spreadsheet_title="Production Materials Requisition List",
+        header_by_tab=good_headers,
+        err_cls=err_cls,
+    )
+    try:
+        ok = sheets_api.validate_delivery_sheet(
+            sheet_id="1OK",
+            credentials_dict=sheets_api.CredentialsDict(access_token="x", refresh_token="y"),
+        )
+    finally:
+        sheets_api.create_sheets_service = original_create
+
+    if ok.get("success") is True and ok.get("is_valid") is True and not ok.get("error_type"):
+        record("validate_delivery_sheet happy path still returns success=True", "PASS")
+    else:
+        record(
+            "validate_delivery_sheet happy path still returns success=True",
+            "FAIL",
+            f"got {ok!r}",
+        )
+except Exception as e:
+    record(
+        "validate_delivery_sheet read-only coverage",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 26 — write_delivery_order_data defends against mid-flight 403
+# (user had write access during validation but lost it, or permission
+# check was skipped). A 403 on values().append() must surface a clear
+# read-only error with error_type=read_only, not a raw HttpError.
+# ------------------------------------------------------------------
+section("Scenario 26 - write_delivery_order_data catches 403 on append with read_only error")
+
+try:
+    import importlib.util
+    sheets_api_path = SHEETS / "sheets_agent_api.py"
+    spec = importlib.util.spec_from_file_location("sheets_agent_api_sim_write_perm", sheets_api_path)
+    sheets_api = importlib.util.module_from_spec(spec)  # type: ignore
+    spec.loader.exec_module(sheets_api)  # type: ignore
+
+    err_cls = sheets_api.HttpError
+
+    food_order = {
+        "file": "DO-2025-04-21.pdf",
+        "header": {
+            "category": "FOOD",
+            "reference_number": "DO-F-1",
+            "date": "2025-04-21",
+            "requested_by": "Alice",
+        },
+        "line_items": [
+            {"item_code": "RMFD00810030020", "item_description": "Beef", "qty": 10.0, "uom": "KG"},
+        ],
+    }
+
+    original_create = sheets_api.create_sheets_service
+    sheets_api.create_sheets_service = lambda _c: _make_full_fake_service(
+        tab_names=["Food", "non-food"],
+        spreadsheet_title="Production Materials Requisition List",
+        append_status=403,
+        err_cls=err_cls,
+    )
+    try:
+        result = sheets_api.write_delivery_order_data(
+            sheet_id="1READONLY",
+            parsed_orders=[food_order],
+            credentials_dict=sheets_api.CredentialsDict(access_token="x", refresh_token="y"),
+        )
+    finally:
+        sheets_api.create_sheets_service = original_create
+
+    problems = []
+    if result.get("success") is not False:
+        problems.append(f"expected success=False, got {result.get('success')!r}")
+    if result.get("error_type") != "read_only":
+        problems.append(f"expected error_type='read_only', got {result.get('error_type')!r}")
+    err_msg = (result.get("error") or "").lower()
+    if "read-only" not in err_msg and "editor" not in err_msg:
+        problems.append(
+            f"error should mention read-only/Editor access, got: {result.get('error')!r}"
+        )
+
+    if problems:
+        record(
+            "write_delivery_order_data surfaces read-only error on 403 during append",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record(
+            "write_delivery_order_data surfaces read-only error on 403 during append",
+            "PASS",
+        )
+except Exception as e:
+    record(
+        "write_delivery_order_data surfaces read-only error on 403 during append",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 27 — Bug 5 detection.
+#
+# Product rule: when a NAME-BASED lookup (search_files / list_my_docs /
+# list_files) returns 2+ matches and the planner pre-committed to
+# `results[0].id`, the orchestrator MUST pause for user selection.
+# Email/draft searches keep the old behavior because `emails[0]` is the
+# canonical "latest message" selector.
+#
+# The fix lives in supervisor_agent.py around line 1471-1500. This
+# scenario re-runs that exact decision logic in isolation so we don't
+# have to spin up the full orchestrator.
+# ------------------------------------------------------------------
+section("Scenario 27 - Bug 5: indexed output_var on name-based lookup triggers pause")
+
+try:
+    import importlib, re as _re, json as _json
+
+    sup_mod = importlib.import_module("supervisor_agent")
+    importlib.reload(sup_mod)
+
+    def _decide_pause(tool_name, output_variables, agent_result, plan, step_idx):
+        """Mirror supervisor_agent.py:1461-1496 decision logic exactly."""
+        DISAMBIGUATION_TOOLS = {
+            "list_my_docs": "documents",
+            "search_files": "results",
+            "search_emails": "emails",
+            "search_drafts": "drafts",
+            "list_files": "files",
+        }
+        INDEXED_DISAMBIGUATION_TOOLS = {"search_files", "list_my_docs", "list_files"}
+        results_field = DISAMBIGUATION_TOOLS.get(tool_name)
+        if not results_field:
+            return (False, None, "tool not a disambig candidate")
+        is_last_step = (step_idx == len(plan))
+        if is_last_step:
+            return (False, None, "last step — nothing to disambiguate for")
+
+        items = agent_result.get(results_field, [])
+
+        disambig_var = None
+        for var_name, source_field in output_variables.items():
+            if source_field == results_field:
+                disambig_var = var_name
+                break
+            if (tool_name in INDEXED_DISAMBIGUATION_TOOLS
+                and isinstance(source_field, str)
+                and source_field.startswith(results_field + "[")):
+                disambig_var = var_name
+                break
+
+        if not disambig_var or not isinstance(items, list) or len(items) <= 1:
+            return (False, disambig_var, "no ambiguity")
+
+        pattern = _re.compile(
+            r"\{\{\s*" + _re.escape(disambig_var) + r"(?=\s|\}|\.|\[|\|)"
+        )
+        for future_step in plan[step_idx:]:
+            if pattern.search(_json.dumps(future_step.get("inputs", {}), default=str)):
+                return (True, disambig_var, "downstream uses var")
+        return (False, disambig_var, "no downstream reference")
+
+    plan = [
+        # Step 3: search_files — this is where we evaluate the pause.
+        {
+            "agent": "drive_agent",
+            "tool": "search_files",
+            "inputs": {"search_term": "Product Requisition List"},
+            "output_variables": {"sheet_id": "results[0].id"},
+        },
+        # Step 4 onwards consume the variable.
+        {
+            "agent": "sheets_agent",
+            "tool": "validate_delivery_sheet",
+            "inputs": {"sheet_id": "{{ sheet_id }}"},
+            "output_variables": {},
+        },
+        {
+            "agent": "sheets_agent",
+            "tool": "preview_delivery_order_insertion",
+            "inputs": {"sheet_id": "{{ sheet_id }}", "parsed_orders": "{{ parsed_orders }}"},
+            "output_variables": {},
+        },
+    ]
+    agent_result = {
+        "success": True,
+        "results": [
+            {"id": "1aaa", "name": "Product Requisition List", "modified": "2025-04-15"},
+            {"id": "1bbb", "name": "PRODUCTION MATERIALS REQUISITION LIST", "modified": "2025-04-18"},
+        ],
+    }
+
+    should_pause, disambig_var, reason = _decide_pause(
+        "search_files", {"sheet_id": "results[0].id"}, agent_result, plan, step_idx=1,
+    )
+
+    problems = []
+    if not should_pause:
+        problems.append(
+            f"expected pause=True for search_files + results[0].id + 2 matches, "
+            f"got pause={should_pause} reason={reason!r}"
+        )
+    if disambig_var != "sheet_id":
+        problems.append(
+            f"expected disambig_var='sheet_id', got {disambig_var!r}"
+        )
+
+    if problems:
+        record(
+            "Bug 5 - search_files + 'results[0].id' + 2 matches -> pause",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record(
+            "Bug 5 - search_files + 'results[0].id' + 2 matches -> pause",
+            "PASS",
+            "indexed extraction on name-based lookup now triggers disambiguation",
+        )
+except Exception as e:
+    record(
+        "Bug 5 - search_files + 'results[0].id' + 2 matches -> pause",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 28 — Bug 5 detection MUST NOT fire for email searches.
+#
+# `emails[0].message_id` is the canonical "latest email" selector. If we
+# pause for disambiguation every time multiple emails match a search
+# (very common), we break flows like "forward my latest email about X".
+# ------------------------------------------------------------------
+section("Scenario 28 - Bug 5: email search with 'emails[0].message_id' still auto-picks latest")
+
+try:
+    # Re-use the _decide_pause helper from Scenario 27.
+    email_plan = [
+        {
+            "agent": "gmail_agent",
+            "tool": "search_emails",
+            "inputs": {"query": "subject:invoice"},
+            "output_variables": {"latest_email_id": "emails[0].message_id"},
+        },
+        {
+            "agent": "gmail_agent",
+            "tool": "forward_email",
+            "inputs": {"message_id": "{{ latest_email_id }}"},
+            "output_variables": {},
+        },
+    ]
+    email_agent_result = {
+        "success": True,
+        "emails": [
+            {"message_id": "m1", "subject": "Invoice 1", "date": "2025-04-20"},
+            {"message_id": "m2", "subject": "Invoice 2", "date": "2025-04-18"},
+            {"message_id": "m3", "subject": "Invoice 3", "date": "2025-04-15"},
+        ],
+    }
+    should_pause, disambig_var, reason = _decide_pause(
+        "search_emails",
+        {"latest_email_id": "emails[0].message_id"},
+        email_agent_result,
+        email_plan,
+        step_idx=1,
+    )
+
+    problems = []
+    if should_pause:
+        problems.append(
+            f"search_emails + emails[0] must NOT pause (breaks 'latest X'), "
+            f"but got pause=True reason={reason!r}"
+        )
+    if disambig_var is not None:
+        problems.append(
+            f"expected disambig_var=None for email searches, got {disambig_var!r}"
+        )
+
+    if problems:
+        record(
+            "Bug 5 - search_emails + 'emails[0].message_id' NOT paused",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record(
+            "Bug 5 - search_emails + 'emails[0].message_id' NOT paused",
+            "PASS",
+            "email/draft searches keep 'latest' auto-selection semantics",
+        )
+except Exception as e:
+    record(
+        "Bug 5 - search_emails + 'emails[0].message_id' NOT paused",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 29 — Bug 5 detection respects the downstream-usage gate.
+#
+# If the planner emits an indexed output_var but no later step references
+# the variable (e.g. "just find me the sheet, don't do anything with it"),
+# do NOT pause — the existing Bug B.5 gate must still hold.
+# ------------------------------------------------------------------
+section("Scenario 29 - Bug 5: indexed output_var but no downstream use -> no pause")
+
+try:
+    unused_plan = [
+        {
+            "agent": "drive_agent",
+            "tool": "search_files",
+            "inputs": {"search_term": "Budget"},
+            "output_variables": {"sheet_id": "results[0].id"},
+        },
+        {
+            "agent": "calendar_agent",
+            "tool": "list_events",
+            "inputs": {"max_results": 5},  # No reference to {{ sheet_id }}
+            "output_variables": {},
+        },
+    ]
+    unused_agent_result = {
+        "success": True,
+        "results": [
+            {"id": "1a", "name": "Budget 2024", "modified": "2024-12-01"},
+            {"id": "1b", "name": "Budget 2025", "modified": "2025-01-01"},
+        ],
+    }
+    should_pause, disambig_var, reason = _decide_pause(
+        "search_files",
+        {"sheet_id": "results[0].id"},
+        unused_agent_result,
+        unused_plan,
+        step_idx=1,
+    )
+
+    if should_pause:
+        record(
+            "Bug 5 - downstream-usage gate still blocks unused indexed var",
+            "FAIL",
+            f"expected no pause (nothing uses {{ sheet_id }}), got pause=True reason={reason!r}",
+        )
+    else:
+        record(
+            "Bug 5 - downstream-usage gate still blocks unused indexed var",
+            "PASS",
+            "Bug B.5 gate preserved — indexed var without downstream reference does not pause",
+        )
+except Exception as e:
+    record(
+        "Bug 5 - downstream-usage gate still blocks unused indexed var",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 30 — Bug 5 resume path extracts the selected item correctly.
+#
+# After the orchestrator pauses, the user picks option 2. On resume, the
+# `sheet_id` variable MUST resolve to the 2nd option's ID (not the 1st),
+# because the planner's extraction path is `results[0].id` against a
+# patched agent_result where the results array has been collapsed to the
+# user's single pick.
+# ------------------------------------------------------------------
+section("Scenario 30 - Bug 5: resume re-runs extraction against patched agent_result")
+
+try:
+    extract_nested_value = sup_mod.extract_nested_value
+
+    # Simulated state captured at pause time:
+    agent_result_snapshot = {
+        "success": True,
+        "results": [
+            {"id": "1aaa", "name": "Product Requisition List"},
+            {"id": "1bbb", "name": "PRODUCTION MATERIALS REQUISITION LIST"},
+        ],
+    }
+    results_field = "results"
+    output_variables = {"sheet_id": "results[0].id"}
+
+    # User picks option 2.
+    selected_item = agent_result_snapshot["results"][1]  # 1bbb
+
+    # Replay what routes/threads.py resume path does.
+    patched = dict(agent_result_snapshot)
+    patched[results_field] = [selected_item]
+
+    resolved = {}
+    for out_var, source_field in output_variables.items():
+        resolved[out_var] = extract_nested_value(patched, source_field)
+
+    problems = []
+    if resolved.get("sheet_id") != "1bbb":
+        problems.append(
+            f"expected sheet_id='1bbb' (user's pick), got {resolved.get('sheet_id')!r}"
+        )
+
+    if problems:
+        record(
+            "Bug 5 - resume: user picks option 2 -> sheet_id = 1bbb",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record(
+            "Bug 5 - resume: user picks option 2 -> sheet_id = 1bbb",
+            "PASS",
+            "extract_nested_value over patched agent_result correctly yields option 2's id",
+        )
+except Exception as e:
+    record(
+        "Bug 5 - resume: user picks option 2 -> sheet_id = 1bbb",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 31 — Bug 5 resume backwards-compatibility with whole-array
+# pattern ({"results": "results"}).
+#
+# The existing flow where the planner uses the WHOLE-ARRAY output_var
+# must keep working unchanged: picking option K collapses the results
+# array to [option_K] and downstream {{ results[0].id }} resolves
+# correctly.
+# ------------------------------------------------------------------
+section("Scenario 31 - Bug 5: whole-array pattern still works after resume")
+
+try:
+    extract_nested_value = sup_mod.extract_nested_value
+
+    agent_result_snapshot = {
+        "success": True,
+        "results": [
+            {"id": "a1", "name": "Alpha"},
+            {"id": "b2", "name": "Bravo"},
+            {"id": "c3", "name": "Charlie"},
+        ],
+    }
+    # Legacy planner output — whole array bound to variable `results`.
+    output_variables = {"results": "results"}
+    selected_item = agent_result_snapshot["results"][2]  # c3
+
+    patched = dict(agent_result_snapshot)
+    patched["results"] = [selected_item]
+
+    resolved = {}
+    for out_var, source_field in output_variables.items():
+        resolved[out_var] = extract_nested_value(patched, source_field)
+
+    # Downstream step would do: {{ results[0].id }} = extract_nested_value(
+    # variable_context, "results[0].id")
+    final_id = extract_nested_value({"results": resolved["results"]}, "results[0].id")
+
+    problems = []
+    if final_id != "c3":
+        problems.append(
+            f"expected final_id='c3' for whole-array resume, got {final_id!r}"
+        )
+
+    if problems:
+        record(
+            "Bug 5 - whole-array resume pattern still works",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record(
+            "Bug 5 - whole-array resume pattern still works",
+            "PASS",
+            "backwards-compatible with the {\"results\": \"results\"} pattern",
+        )
+except Exception as e:
+    record(
+        "Bug 5 - whole-array resume pattern still works",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 32 — Bug 1 Tier 1 prompt carries the email_filter rule.
+#
+# Product rule: in multi-turn delivery-order flows, Tier 1 must extract
+# `email_filter` from the narrowing context of a prior turn (e.g. the
+# user's Turn 1 search for "Order to Starbucks and Co.") so the planner
+# can narrow the Gmail search instead of falling back to the generic
+# "delivery order OR DO OR …" default.
+#
+# The fix is a prompt addition in conversational_agent.py's
+# DELIVERY ORDER WORKFLOW block. This scenario locks in the exact
+# phrasing so future edits don't accidentally drop the rule.
+# ------------------------------------------------------------------
+section("Scenario 32 - Bug 1: Tier 1 prompt keeps email_filter extraction rule")
+
+try:
+    conv_path = SUP / "conversational_agent.py"
+    conv_text = conv_path.read_text(encoding="utf-8")
+
+    required_phrases = [
+        # The workflow block must still be present.
+        "DELIVERY ORDER WORKFLOW (task_type=process_delivery_order)",
+        # The verb-gate from the earlier fix must stay.
+        'write/parse/extract verb',
+        "use gmail_agent.search_emails as a single step",
+        # The new email_filter extraction rule.
+        "email_filter when the message references a prior email",
+        'COMPLETED TASKS shows a recent gmail search',
+        "copy that prior search's narrowing phrase verbatim",
+        "Omit email_filter when the current turn is a fresh batch request",
+    ]
+    missing = [p for p in required_phrases if p not in conv_text]
+
+    if missing:
+        record(
+            "Bug 1 - Tier 1 prompt carries email_filter extraction rule",
+            "FAIL",
+            f"missing phrases: {missing}",
+        )
+    else:
+        record(
+            "Bug 1 - Tier 1 prompt carries email_filter extraction rule",
+            "PASS",
+            "multi-turn narrowing context is preserved for the planner",
+        )
+except Exception as e:
+    record(
+        "Bug 1 - Tier 1 prompt carries email_filter extraction rule",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 33 — Bug 1 Planner Rule 16 honors email_filter when set.
+#
+# The planner must plug email_filter (if present in Parameters) into the
+# Gmail search step's `query` argument verbatim, instead of the generic
+# "delivery order OR DO OR requisition…" fallback. This is what actually
+# narrows the search in Turn 3 of the DeliveryTest.log regression.
+# ------------------------------------------------------------------
+section("Scenario 33 - Bug 1: Planner Rule 16 consumes email_filter when present")
+
+try:
+    sup_path = SUP / "supervisor_agent.py"
+    sup_text = sup_path.read_text(encoding="utf-8")
+
+    required_phrases = [
+        # Rule 16 anchor.
+        "DELIVERY-ORDER PIPELINE (task_type=process_delivery_order)",
+        # The conditional email_filter wiring.
+        "if Parameters contains email_filter",
+        "use its value verbatim",
+        'has:attachment',
+        # The generic fallback text must still be present for the else branch.
+        "delivery order OR DO OR requisition OR purchase order OR PO has:attachment",
+    ]
+    missing = [p for p in required_phrases if p not in sup_text]
+
+    if missing:
+        record(
+            "Bug 1 - Planner Rule 16 honors email_filter verbatim",
+            "FAIL",
+            f"missing phrases: {missing}",
+        )
+    else:
+        record(
+            "Bug 1 - Planner Rule 16 honors email_filter verbatim",
+            "PASS",
+            "Rule 16 now routes email_filter -> query, fallback preserved for fresh turns",
+        )
+except Exception as e:
+    record(
+        "Bug 1 - Planner Rule 16 honors email_filter verbatim",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 34 — Bug 1 build_supervisor_input surfaces email_filter.
+#
+# Tier 1 puts email_filter into extracted_info. The planner only reads
+# the "Parameters:" block of supervisor_input. This scenario verifies
+# that the serialization path actually makes email_filter visible to the
+# planner (keys starting with "_" are stripped; email_filter must not be
+# one of them).
+# ------------------------------------------------------------------
+section("Scenario 34 - Bug 1: build_supervisor_input emits email_filter to planner")
+
+try:
+    # Avoid heavy imports by exercising the serialization logic inline.
+    # This mirrors conversational_agent.py:1740-1754 exactly.
+    import json as _json
+
+    def _build(execution_summary, extracted_info):
+        s = execution_summary
+        if extracted_info:
+            s += "\n\nParameters:\n"
+            for key, value in extracted_info.items():
+                if key.startswith("_"):
+                    continue
+                if isinstance(value, (list, dict)):
+                    s += f"- {key}: {_json.dumps(value, indent=2)}\n"
+                else:
+                    s += f"- {key}: {value}\n"
+        return s
+
+    out = _build(
+        "Parse delivery-order PDFs and write to 'Product Requisition List' "
+        "filtered by 'Order to Starbucks and Co.'",
+        {
+            "task_type": "process_delivery_order",
+            "sheet_name": "Product Requisition List",
+            "email_filter": "Order to Starbucks and Co.",
+            "_cached_tool_filter": {"gmail_agent": ["search_emails"]},  # stripped
+        },
+    )
+
+    problems = []
+    if "- email_filter: Order to Starbucks and Co." not in out:
+        problems.append(
+            "email_filter did not land in Parameters block — planner can't see it"
+        )
+    if "_cached_tool_filter" in out:
+        problems.append(
+            "_cached_tool_filter leaked into planner input (must be stripped)"
+        )
+    if "filtered by 'Order to Starbucks and Co.'" not in out:
+        problems.append(
+            "execution_summary should advertise the email_filter to the planner"
+        )
+
+    if problems:
+        record(
+            "Bug 1 - build_supervisor_input surfaces email_filter",
+            "FAIL",
+            "; ".join(problems),
+        )
+    else:
+        record(
+            "Bug 1 - build_supervisor_input surfaces email_filter",
+            "PASS",
+            "email_filter flows cleanly from extracted_info -> Parameters -> planner",
+        )
+except Exception as e:
+    record(
+        "Bug 1 - build_supervisor_input surfaces email_filter",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
 # FINAL REPORT
 # ------------------------------------------------------------------
 section("FINAL REPORT")

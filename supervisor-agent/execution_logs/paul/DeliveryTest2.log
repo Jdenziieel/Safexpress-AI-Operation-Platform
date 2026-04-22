@@ -1,0 +1,1216 @@
+[2026-04-22 16:28:51.423] [INFO] [req_20260422082753_66aa64eb] [T:new] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-22 16:28:51.518] [INFO] [req_20260422082753_66aa64eb] [T:new] ← RESPONSE: 200 (101ms)
+[2026-04-22 16:28:51.521] [INFO] [req_20260422082753_66aa64eb] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-22 16:29:35.942] [INFO] [req_20260422082753_66aa64eb] [T:new] → REQUEST: POST /threads  | {"query": null}
+[2026-04-22 16:29:36.018] [INFO] [req_20260422082753_66aa64eb] [T:new]   STEP [create_thread]: user=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a, has_message=True
+[2026-04-22 16:29:41.031] [PRINT]  Created thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100 for user: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a
+[2026-04-22 16:29:41.073] [PRINT]  Created new thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100 for user: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a with title: None
+[2026-04-22 16:29:41.102] [PRINT] Saved conversation state to SQLite: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100
+[2026-04-22 16:29:41.135] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-22 16:29:41.154] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100
+[2026-04-22 16:29:41.169] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-22 16:29:41.182] [PRINT]   User: Hi can you search a delivery order named Order to Starbucks and Co. within my email? and then extract the data from the ...
+[2026-04-22 16:29:41.191] [PRINT]   ConversationState:
+[2026-04-22 16:29:41.206] [PRINT]     extracted_info: {}
+[2026-04-22 16:29:41.223] [PRINT]     missing_fields: []
+[2026-04-22 16:29:41.235] [PRINT]     intent: null
+[2026-04-22 16:29:41.248] [PRINT]     clarification_question: null
+[2026-04-22 16:29:41.259] [PRINT]     ready_for_execution: false
+[2026-04-22 16:29:41.275] [PRINT]     execution_summary: null
+[2026-04-22 16:29:41.290] [PRINT]     execution_mode: "standard"
+[2026-04-22 16:29:41.305] [PRINT]     execution_history: []
+[2026-04-22 16:29:41.316] [PRINT]     completed_tasks: []
+[2026-04-22 16:29:41.325] [PRINT]     has_executed: false
+[2026-04-22 16:29:41.337] [PRINT]     last_executed_at: null
+[2026-04-22 16:29:41.348] [PRINT]     last_execution_status: null
+[2026-04-22 16:29:41.358] [PRINT]     last_execution_message: null
+[2026-04-22 16:29:41.369] [PRINT]     executing: false
+[2026-04-22 16:29:41.384] [PRINT]     pending_actions: []
+[2026-04-22 16:29:41.396] [PRINT]     workflow_paused: false
+[2026-04-22 16:29:41.408] [PRINT]     remaining_steps: []
+[2026-04-22 16:29:41.422] [PRINT]     workflow_context: null
+[2026-04-22 16:29:41.434] [PRINT]     disambiguation_options: []
+[2026-04-22 16:29:41.450] [PRINT]     disambiguation_variable: null
+[2026-04-22 16:29:41.463] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-22 16:29:41.472] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100, msg=Hi can you search a delivery order named Order to Starbucks and Co. within my em
+[2026-04-22 16:29:41.572] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 43, "total": 43, "max": 2000}
+[2026-04-22 16:29:41.591] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-22 16:29:41.593] [PRINT] 
+[2026-04-22 16:29:41.593] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 16:29:41.606] [PRINT] TIER 0.5 — Building prompt
+[2026-04-22 16:29:41.621] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 16:29:41.635] [PRINT]    bot_signal : (none)
+[2026-04-22 16:29:41.646] [PRINT]    state_block: (none)
+[2026-04-22 16:29:41.655] [PRINT]    file_context: (none)
+[2026-04-22 16:29:41.666] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 16:29:44.223] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=733 out=51 | $0.0001 | 2513ms | cumulative: in=733 out=51 total=784 $0.0001
+[2026-04-22 16:29:44.236] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting a specific action to search for an order in their email and extract data from a PDF to plot it in a sheet.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting a specific action to search for an order in their email and extract data from a PDF to plot it in a sheet.\"\n}"}
+[2026-04-22 16:29:44.237] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-04-22 16:29:44.237] [PRINT] 
+[2026-04-22 16:29:44.237] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 16:29:44.251] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-22 16:29:44.263] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 16:29:44.271] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-22 16:29:44.273] [PRINT] 
+[2026-04-22 16:29:44.273] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-22 16:29:44.285] [PRINT] BUILDING LLM CONTEXT
+[2026-04-22 16:29:44.296] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-22 16:29:44.305] [PRINT]    Summary: none
+[2026-04-22 16:29:44.316] [PRINT]    Recent messages: 1
+[2026-04-22 16:29:44.327] [PRINT]       USER: Hi can you search a delivery order named Order to Starbucks and Co. within my em...
+[2026-04-22 16:29:44.336] [PRINT] 
+[2026-04-22 16:29:44.336] [PRINT]    Final context: 206 chars (~51 tokens)
+[2026-04-22 16:29:44.348] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-22 16:29:44.356] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=1, ~51 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 206, "context_tokens_est": 51}
+[2026-04-22 16:29:44.357] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-22 16:29:45.699] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1655 out=41, cached=1536 | $0.0002 | 1304ms | cumulative: in=2388 out=92 total=2480 $0.0003
+[2026-04-22 16:29:45.720] [PRINT]    relevant_agents: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent', 'llm_tool']
+[2026-04-22 16:29:45.734] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**', '**MAPPING_AGENT:**', '**SHEETS_AGENT:**', '**DRIVE_AGENT:**', '**LLM_TOOL:**']
+[2026-04-22 16:29:45.748] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent", "mapping_agent", "sheets_agent", "drive_agent", "llm_tool"]}
+[2026-04-22 16:29:45.750] [PRINT]    user_prompt (409 chars):
+[2026-04-22 16:29:45.766] [PRINT]      RECENT CONVERSATION:
+[2026-04-22 16:29:45.780] [PRINT]      USER: Hi can you search a delivery order named Order to Starbucks and Co. within my email? and then extract the data from the PDF and plot the data in my Product Requisition List sheet.
+[2026-04-22 16:29:45.800] [PRINT]      
+[2026-04-22 16:29:45.815] [PRINT]      CURRENT USER MESSAGE: Hi can you search a delivery order named Order to Starbucks and Co. within my email? and then extract the data from the PDF and plot the data in my Product Requisition List sheet.
+[2026-04-22 16:29:45.828] [PRINT] ──────────────────────────────────────────────────
+[2026-04-22 16:29:54.138] [PRINT]  OK [1] gpt-4 | tier_1_full_analysis | in=2000 out=223 | $0.0734 | 8252ms | cumulative: in=4388 out=315 total=4703 $0.0737
+[2026-04-22 16:29:54.154] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "process_delivery_order", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user has provided all the necessary information for the task: the name of the delivery order to search for in the email and the name of the Google Sheet to write the data to.", "extracted_info": {"query": "Order to Starbucks and Co.", "sheet_name": "Product Requisition List"}}
+[2026-04-22 16:29:54.178] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-22 16:29:54.179] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Parse 'Order to Starbucks and Co.' delivery-order PDFs and write to 'Product Requisition List'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["write
+[2026-04-22 16:29:55.170] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=202 out=27 | $0.0000 | 937ms | cumulative: in=4590 out=342 total=4932 $0.0737
+[2026-04-22 16:29:55.195] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 58, "total": 101, "max": 2000, "response_preview": "**Ready to execute!**\n\n- Task: Parse 'Order to Starbucks and Co.' delivery-order PDFs\n- Output: Write to 'Product Requisition List' sheet\n\n---\nReply **\"yes\"** to proceed or **\"cancel\"** to stop."}
+[2026-04-22 16:29:55.244] [PRINT] 
+[2026-04-22 16:29:55.244] [PRINT] ============================================================
+[2026-04-22 16:29:55.256] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-22 16:29:55.267] [PRINT] ============================================================
+[2026-04-22 16:29:55.276] [PRINT]   LLM calls:        4
+[2026-04-22 16:29:55.288] [PRINT]   Total input:      4,590 tokens
+[2026-04-22 16:29:55.301] [PRINT]   Total output:     342 tokens
+[2026-04-22 16:29:55.310] [PRINT]   Total tokens:     4,932 tokens
+[2026-04-22 16:29:55.321] [PRINT]   Cached tokens:    1,536 (33.5% of input)
+[2026-04-22 16:29:55.333] [PRINT]   Estimated cost:   $0.0737
+[2026-04-22 16:29:55.342] [PRINT]   Total duration:   14147ms (14.1s)
+[2026-04-22 16:29:55.354] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-22 16:29:55.362] [PRINT]   Breakdown by call:
+[2026-04-22 16:29:55.374] [PRINT]     1. gpt-4o-mini      in=733    out=51    $0.0001 2513ms
+[2026-04-22 16:29:55.385] [PRINT]     2. gpt-4o-mini      in=1655   out=41    (cached=1536) $0.0002 1304ms
+[2026-04-22 16:29:55.394] [PRINT]     3. gpt-4            in=2000   out=223   $0.0734 8252ms
+[2026-04-22 16:29:55.407] [PRINT]     4. gpt-4o-mini      in=202    out=27    $0.0000 937ms
+[2026-04-22 16:29:55.420] [PRINT] ============================================================
+[2026-04-22 16:29:59.198] [INFO] [req_20260422082940_1fa1db5e] [T:new] ← RESPONSE: 200 (23259ms)
+[2026-04-22 16:29:59.200] [INFO] [req_20260422082940_1fa1db5e] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-22 16:30:11.571] [PRINT] WebSocket connected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100
+[2026-04-22 16:30:11.594] [INFO] [req_20260422082940_1fa1db5e] [T:new] → REQUEST: POST /threads/65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100/messages  | {"query": null}
+[2026-04-22 16:30:16.396] [INFO] [req_20260422083016_f8cc7d3c] [T:ccf2f100]   USER MSG: "Yes"
+[2026-04-22 16:30:16.403] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-22 16:30:16.419] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100
+[2026-04-22 16:30:16.431] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-22 16:30:16.438] [PRINT]   User: Yes
+[2026-04-22 16:30:16.452] [PRINT]   ConversationState:
+[2026-04-22 16:30:16.462] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["write_delivery_order_data", "validate_delivery_sheet", "preview_delivery_order_insertion"], "drive_agent": ["search_files"]}, "query": "Order to Starbucks and Co.", "sheet_name": "Product Requisition List"}
+[2026-04-22 16:30:16.470] [PRINT]     missing_fields: []
+[2026-04-22 16:30:16.480] [PRINT]     intent: "ready_to_execute"
+[2026-04-22 16:30:16.487] [PRINT]     clarification_question: null
+[2026-04-22 16:30:16.497] [PRINT]     ready_for_execution: false
+[2026-04-22 16:30:16.505] [PRINT]     execution_summary: "Parse 'Order to Starbucks and Co.' delivery-order PDFs and write to 'Product Requisition List'"
+[2026-04-22 16:30:16.515] [PRINT]     execution_mode: "standard"
+[2026-04-22 16:30:16.526] [PRINT]     execution_history: []
+[2026-04-22 16:30:16.535] [PRINT]     completed_tasks: []
+[2026-04-22 16:30:16.546] [PRINT]     has_executed: false
+[2026-04-22 16:30:16.553] [PRINT]     last_executed_at: null
+[2026-04-22 16:30:16.564] [PRINT]     last_execution_status: null
+[2026-04-22 16:30:16.571] [PRINT]     last_execution_message: null
+[2026-04-22 16:30:16.589] [PRINT]     executing: false
+[2026-04-22 16:30:16.616] [PRINT]     pending_actions: []
+[2026-04-22 16:30:16.631] [PRINT]     workflow_paused: false
+[2026-04-22 16:30:16.641] [PRINT]     remaining_steps: []
+[2026-04-22 16:30:16.654] [PRINT]     workflow_context: null
+[2026-04-22 16:30:16.667] [PRINT]     disambiguation_options: []
+[2026-04-22 16:30:16.679] [PRINT]     disambiguation_variable: null
+[2026-04-22 16:30:16.688] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-22 16:30:16.700] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100, msg=Yes
+[2026-04-22 16:30:16.701] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 107, "max": 2000}
+[2026-04-22 16:30:16.707] [INFO] [-]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-22 16:30:16.714] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-22 16:30:16.715] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Parse 'Order to Starbucks and Co.' delivery-order PDFs and write to 'Product Requisition List'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["write_
+[2026-04-22 16:30:17.846] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=202 out=27 | $0.0000 | 1085ms | cumulative: in=202 out=27 total=229 $0.0000
+[2026-04-22 16:30:17.857] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 58, "total": 165, "max": 2000, "response_preview": "**Ready to execute!**\n\n- Task: Parse delivery-order PDFs for \"Order to Starbucks and Co.\"\n- Output: Write to \"Product Requisition List\" sheet\n\n---\nReply **\"yes\"** to proceed or **\"cancel\"** to stop."}
+[2026-04-22 16:30:17.888] [INFO] [req_20260422083016_f8cc7d3c] [T:ccf2f100]   BOT RESP [READY TO EXECUTE]: "**Ready to execute!**
+
+- Task: Parse delivery-order PDFs for "Order to Starbucks and Co."
+- Output: ..."
+[2026-04-22 16:30:17.889] [PRINT] Thread 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100 ready - executing workflow...
+[2026-04-22 16:30:17.901] [INFO] [req_20260422083016_f8cc7d3c] [T:ccf2f100]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-22 16:30:17.927] [INFO] [req_20260422083016_f8cc7d3c] [T:ccf2f100]   WORKFLOW START: "Parse 'Order to Starbucks and Co.' delivery-order PDFs and write to 'Product Req..." (0 steps)
+[2026-04-22 16:30:17.929] [PRINT]  Date context: today=2026-04-22
+[2026-04-22 16:30:17.939] [PRINT]  Starting workflow execution (mode=standard)...
+[2026-04-22 16:30:17.951] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-22 16:30:17.981] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-22 16:30:17.990] [PRINT] 
+[2026-04-22 16:30:17.990] [PRINT] ============================================================
+[2026-04-22 16:30:18.005] [PRINT] SUPERVISOR NODE - Planning Phase
+[2026-04-22 16:30:18.028] [PRINT] ============================================================
+[2026-04-22 16:30:18.044] [PRINT] User Input: Parse 'Order to Starbucks and Co.' delivery-order PDFs and write to 'Product Requisition List'
+[2026-04-22 16:30:18.044] [PRINT] 
+[2026-04-22 16:30:18.044] [PRINT] Parameters:
+[2026-04-22 16:30:18.044] [PRINT] - query: Order to Starbucks and Co.
+[2026-04-22 16:30:18.044] [PRINT] - sheet_name: Product Requisition List
+[2026-04-22 16:30:18.057] [INFO] [-]   STEP [supervisor_node]: Planning for: Parse 'Order to Starbucks and Co.' delivery-order PDFs and write to 'Product Req
+[2026-04-22 16:30:18.057] [PRINT] Context dates: today=2026-04-22
+[2026-04-22 16:30:18.083] [PRINT] Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-22 16:30:18.112] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-22 16:30:18.114] [PRINT] Relevant agents: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent', 'llm_tool']
+[2026-04-22 16:30:18.132] [PRINT] Filtered tools: {'gmail_agent': ['search_emails_with_delivery_order_attachments', 'search_emails'], 'mapping_agent': ['parse_delivery_order_pdfs'], 'sheets_agent': ['write_delivery_order_data', 'preview_delivery_order_insertion', 'validate_delivery_sheet'], 'drive_agent': ['search_files']}
+[2026-04-22 16:30:18.154] [PRINT] Calling LLM to generate multi-step plan...
+[2026-04-22 16:30:18.180] [PRINT] Token optimization:
+[2026-04-22 16:30:18.202] [PRINT]    Agents: 5/7
+[2026-04-22 16:30:18.223] [PRINT]    Tools: 7/63
+[2026-04-22 16:30:18.248] [PRINT]    Context size: 7,990 chars (~1,997 tokens)
+[2026-04-22 16:30:18.266] [INFO] [-]   STEP [plan_generation_start]: agents=5/7, tools=7/63, context_tokens~1997
+[2026-04-22 16:30:34.470] [PRINT]  OK [supervisor] gpt-4 | plan_generation | in=5030 out=462 | $0.1786 | 16130ms | cumulative: in=5232 out=489 total=5721 $0.1787
+[2026-04-22 16:30:34.482] [PRINT] Plan generated successfully!
+[2026-04-22 16:30:34.493] [PRINT] 
+[2026-04-22 16:30:34.493] [PRINT] Generated Plan:
+[2026-04-22 16:30:34.493] [PRINT] {
+[2026-04-22 16:30:34.493] [PRINT]   "steps": [
+[2026-04-22 16:30:34.493] [PRINT]     {
+[2026-04-22 16:30:34.493] [PRINT]       "agent": "gmail_agent",
+[2026-04-22 16:30:34.493] [PRINT]       "tool": "search_emails_with_delivery_order_attachments",
+[2026-04-22 16:30:34.493] [PRINT]       "inputs": {
+[2026-04-22 16:30:34.493] [PRINT]         "query": "Order to Starbucks and Co.",
+[2026-04-22 16:30:34.493] [PRINT]         "max_results": 10,
+[2026-04-22 16:30:34.493] [PRINT]         "download_attachments": true
+[2026-04-22 16:30:34.493] [PRINT]       },
+[2026-04-22 16:30:34.493] [PRINT]       "output_variables": {
+[2026-04-22 16:30:34.493] [PRINT]         "emails_with_attachments": "emails_with_attachments"
+[2026-04-22 16:30:34.493] [PRINT]       },
+[2026-04-22 16:30:34.493] [PRINT]       "description": "Fetch recent emails with 'Order to Starbucks and Co.' delivery-order PDFs attached"
+[2026-04-22 16:30:34.493] [PRINT]     },
+[2026-04-22 16:30:34.493] [PRINT]     {
+[2026-04-22 16:30:34.493] [PRINT]       "agent": "mapping_agent",
+[2026-04-22 16:30:34.493] [PRINT]       "tool": "parse_delivery_order_pdfs",
+[2026-04-22 16:30:34.493] [PRINT]       "inputs": {
+[2026-04-22 16:30:34.493] [PRINT]         "file_paths": "{{ emails_with_attachments }}"
+[2026-04-22 16:30:34.493] [PRINT]       },
+[2026-04-22 16:30:34.493] [PRINT]       "output_variables": {
+[2026-04-22 16:30:34.493] [PRINT]         "parsed_orders": "parsed_orders"
+[2026-04-22 16:30:34.493] [PRINT]       },
+[2026-04-22 16:30:34.493] [PRINT]       "description": "Extract structured rows from each 'Order to Starbucks and Co.' delivery-order PDF"
+[2026-04-22 16:30:34.493] [PRINT]     },
+[2026-04-22 16:30:34.493] [PRINT]     {
+[2026-04-22 16:30:34.493] [PRINT]       "agent": "drive_agent",
+[2026-04-22 16:30:34.493] [PRINT]       "tool": "search_files",
+[2026-04-22 16:30:34.493] [PRINT]       "inputs": {
+[2026-04-22 16:30:34.493] [PRINT]         "search_term": "Product Requisition List"
+[2026-04-22 16:30:34.493] [PRINT]       },
+[2026-04-22 16:30:34.493] [PRINT]       "output_variables": {
+[2026-04-22 16:30:34.493] [PRINT]         "sheet_id": "results[0].id"
+[2026-04-22 16:30:34.493] [PRINT]       },
+[2026-04-22 16:30:34.493] [PRINT]       "description": "Resolve the 'Product Requisition List' sheet name to its Drive ID"
+[2026-04-22 16:30:34.493] [PRINT]     },
+[2026-04-22 16:30:34.493] [PRINT]     {
+[2026-04-22 16:30:34.493] [PRINT]       "agent": "sheets_agent",
+[2026-04-22 16:30:34.493] [PRINT]       "tool": "validate_delivery_sheet",
+[2026-04-22 16:30:34.493] [PRINT]       "inputs": {
+[2026-04-22 16:30:34.493] [PRINT]         "sheet_id": "{{ sheet_id }}"
+[2026-04-22 16:30:34.493] [PRINT]       },
+[2026-04-22 16:30:34.493] [PRINT]       "output_variables": {},
+[2026-04-22 16:30:34.493] [PRINT]       "description": "Confirm the sheet matches the delivery-order template before writing"
+[2026-04-22 16:30:34.493] [PRINT]     },
+[2026-04-22 16:30:34.493] [PRINT]     {
+[2026-04-22 16:30:34.493] [PRINT]       "agent": "sheets_agent",
+[2026-04-22 16:30:34.493] [PRINT]       "tool": "preview_delivery_order_insertion",
+[2026-04-22 16:30:34.493] [PRINT]       "inputs": {
+[2026-04-22 16:30:34.493] [PRINT]         "sheet_id": "{{ sheet_id }}",
+[2026-04-22 16:30:34.493] [PRINT]         "parsed_orders": "{{ parsed_orders }}"
+[2026-04-22 16:30:34.493] [PRINT]       },
+[2026-04-22 16:30:34.493] [PRINT]       "output_variables": {},
+[2026-04-22 16:30:34.493] [PRINT]       "description": "Generate a preview of rows per tab so the user can approve before writing"
+[2026-04-22 16:30:34.493] [PRINT]     },
+[2026-04-22 16:30:34.493] [PRINT]     {
+[2026-04-22 16:30:34.493] [PRINT]       "agent": "sheets_agent",
+[2026-04-22 16:30:34.493] [PRINT]       "tool": "write_delivery_order_data",
+[2026-04-22 16:30:34.493] [PRINT]       "inputs": {
+[2026-04-22 16:30:34.493] [PRINT]         "sheet_id": "{{ sheet_id }}",
+[2026-04-22 16:30:34.493] [PRINT]         "parsed_orders": "{{ parsed_orders }}"
+[2026-04-22 16:30:34.493] [PRINT]       },
+[2026-04-22 16:30:34.493] [PRINT]       "output_variables": {},
+[2026-04-22 16:30:34.493] [PRINT]       "description": "Append the parsed delivery-order rows into the 'Product Requisition List' sheet (DANGEROUS \u2014 requires approval)"
+[2026-04-22 16:30:34.493] [PRINT]     }
+[2026-04-22 16:30:34.493] [PRINT]   ]
+[2026-04-22 16:30:34.493] [PRINT] }
+[2026-04-22 16:30:34.505] [INFO] [-]   STEP [plan_generated]: 6 steps: gmail_agent.search_emails_with_delivery_order_attachments, mapping_agent.parse_delivery_order_pdfs, drive_agent.search_files, sheets_agent.validate_delivery_sheet, sheets_agent.preview_delivery_order_insertion, sheets_agent.write_delivery_order_data
+[2026-04-22 16:30:34.513] [PRINT] 
+[2026-04-22 16:30:34.513] [PRINT] Plan saved to: C:\Users\pchua\Downloads\jojojo\Gucci\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-22 16:30:34.522] [PRINT] ============================================================
+[2026-04-22 16:30:34.536] [PRINT] 
+[2026-04-22 16:30:34.536] [PRINT] ============================================================
+[2026-04-22 16:30:34.546] [PRINT] ORCHESTRATOR NODE - Execution Phase
+[2026-04-22 16:30:34.554] [PRINT] ============================================================
+[2026-04-22 16:30:34.564] [PRINT] Found 6 steps to execute
+[2026-04-22 16:30:34.571] [INFO] [-]   STEP [orchestrator_node]: 6 steps to execute
+[2026-04-22 16:30:34.573] [PRINT] 
+[2026-04-22 16:30:34.573] [PRINT] INITIAL CONTEXT:
+[2026-04-22 16:30:34.583] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:34.591] [PRINT]    today_date: 2026-04-22
+[2026-04-22 16:30:34.602] [PRINT]    _cached_tool_filter: dict (length: 4)
+[2026-04-22 16:30:34.612] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:34.619] [PRINT] Pre-flight credential check passed (5 fields)
+[2026-04-22 16:30:34.629] [PRINT] 
+[2026-04-22 16:30:34.629] [PRINT] ============================================================
+[2026-04-22 16:30:34.636] [PRINT] Step 1/6: gmail_agent.search_emails_with_delivery_order_attachments
+[2026-04-22 16:30:34.646] [PRINT] Description: Fetch recent emails with 'Order to Starbucks and Co.' delivery-order PDFs attached
+[2026-04-22 16:30:34.654] [PRINT] ============================================================
+[2026-04-22 16:30:34.674] [PRINT] Risk Level: safe
+[2026-04-22 16:30:34.690] [PRINT] 
+[2026-04-22 16:30:34.690] [PRINT] Substituting variables in inputs...
+[2026-04-22 16:30:34.711] [PRINT]    Original inputs: {
+[2026-04-22 16:30:34.711] [PRINT]       "query": "Order to Starbucks and Co.",
+[2026-04-22 16:30:34.711] [PRINT]       "max_results": 10,
+[2026-04-22 16:30:34.711] [PRINT]       "download_attachments": true
+[2026-04-22 16:30:34.711] [PRINT] }
+[2026-04-22 16:30:34.735] [PRINT]    Substituted inputs: {
+[2026-04-22 16:30:34.735] [PRINT]       "query": "Order to Starbucks and Co.",
+[2026-04-22 16:30:34.735] [PRINT]       "max_results": 10,
+[2026-04-22 16:30:34.735] [PRINT]       "download_attachments": true
+[2026-04-22 16:30:34.735] [PRINT] }
+[2026-04-22 16:30:34.747] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-22 16:30:34.754] [INFO] [-]   STEP [variable_substitution]: step 1: gmail_agent.search_emails_with_delivery_order_attachments  | {"inputs": {"query": "Order to Starbucks and Co.", "max_results": 10, "download_attachments": true}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-22 16:30:34.756] [PRINT] 
+[2026-04-22 16:30:34.756] [PRINT] Calling agent microservice: http://localhost:8000/execute_task
+[2026-04-22 16:30:34.768] [PRINT] 
+[2026-04-22 16:30:34.768] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-22 16:30:34.783] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:34.790] [PRINT]    Tool: search_emails_with_delivery_order_attachments
+[2026-04-22 16:30:34.802] [PRINT]    Inputs keys: ['query', 'max_results', 'download_attachments']
+[2026-04-22 16:30:34.814] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-22 16:30:34.821] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-22 16:30:34.833] [PRINT]    Payload size: 775 bytes
+[2026-04-22 16:30:34.840] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:34.852] [PRINT] 
+[2026-04-22 16:30:34.852] [PRINT] Sending request to agent...
+[2026-04-22 16:30:34.863] [PRINT]    URL: http://localhost:8000/execute_task
+[2026-04-22 16:30:34.871] [PRINT]    Timeout: 320 seconds
+[2026-04-22 16:30:34.883] [PRINT]    Max retries: 3
+[2026-04-22 16:30:34.890] [PRINT] Attempt 1/3 calling http://localhost:8000/execute_task
+[2026-04-22 16:30:34.902] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-22 16:30:41.574] [PRINT] Agent call succeeded on attempt 1
+[2026-04-22 16:30:41.592] [PRINT] ⏱ Agent call completed in 6740.06ms
+[2026-04-22 16:30:41.606] [PRINT] Agent response received
+[2026-04-22 16:30:41.615] [AGENT] [-]   AGENT:  gmail_agent.search_emails_with_delivery_order_attachments (6740ms)  | {"query": "Order to Starbucks and Co.", "max_results": "10", "download_attachments": "True"}
+[2026-04-22 16:30:41.616] [PRINT] 
+[2026-04-22 16:30:41.616] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:41.627] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-22 16:30:41.640] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:41.647] [PRINT] {
+[2026-04-22 16:30:41.647] [PRINT]   "success": true,
+[2026-04-22 16:30:41.647] [PRINT]   "emails_with_attachments": [
+[2026-04-22 16:30:41.647] [PRINT]     {
+[2026-04-22 16:30:41.647] [PRINT]       "message_id": "19daf5cef9ed71d5",
+[2026-04-22 16:30:41.647] [PRINT]       "from": "Kita <pchua5644@gmail.com>",
+[2026-04-22 16:30:41.647] [PRINT]       "subject": "Order to Starbucks and Co.",
+[2026-04-22 16:30:41.647] [PRINT]       "date": "Tue, 21 Apr 2026 17:26:21 +0800",
+[2026-04-22 16:30:41.647] [PRINT]       "timestamp": "2026-04-21T17:26:21",
+[2026-04-22 16:30:41.647] [PRINT]       "internal_date_ms": "1776763581000",
+[2026-04-22 16:30:41.647] [PRINT]       "attachments": [
+[2026-04-22 16:30:41.647] [PRINT]         {
+[2026-04-22 16:30:41.647] [PRINT]           "filename": "Order List.pdf",
+[2026-04-22 16:30:41.647] [PRINT]           "attachment_id": "ANGjdJ82bYgtdoQiN34FrMwV90rWrqBfG8yg5rvpgcMRPseU6qkOABahshYZ6YAPMa_oCY-_RogTT9xn3m8vnGTJET2_OQlf47e5GAiyhpEgHkXkDQ33HH0-98P5Sv1P6uv05oV1KvRI9ZgJ6Rll24jUXlGnq_rb3qTYTcwuLn-d8_Iw_qIhfMLU56ew6lIO5igQAfwLDB0jtxw7jvUXX4GYMmNxZTZoS3ZfjECG3Ss7B2joIx5VMD7LGgWSM4igA7cyTubMuH8peMYJQoveGgsMqCWKg1YJNakG0vCp1qdr58wWWfrPMwHDIVyaTFrqFEBPDbVr2kmFs80va_0xo69FPqRbaxXj519kUtQsH_iRhkWe4p2jTLLyGJFKLBRqsdCuTzXFIGV3CgXkn6fY",
+[2026-04-22 16:30:41.647] [PRINT]           "mime_type": "application/pdf",
+[2026-04-22 16:30:41.647] [PRINT]           "size": 90330,
+[2026-04-22 16:30:41.647] [PRINT]           "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x\\19daf5cef9ed71d5\\Order List.pdf"
+[2026-04-22 16:30:41.647] [PRINT]         }
+[2026-04-22 16:30:41.647] [PRINT]       ],
+[2026-04-22 16:30:41.647] [PRINT]       "attachment_count": 1
+[2026-04-22 16:30:41.647] [PRINT]     }
+[2026-04-22 16:30:41.647] [PRINT]   ],
+[2026-04-22 16:30:41.647] [PRINT]   "total_emails_found": 1,
+[2026-04-22 16:30:41.647] [PRINT]   "total_attachments_downloaded": 1,
+[2026-04-22 16:30:41.647] [PRINT]   "temp_directory": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x",
+[2026-04-22 16:30:41.647] [PRINT]   "query": "Order to Starbucks and Co.",
+[2026-04-22 16:30:41.647] [PRINT]   "download_attachments": true,
+[2026-04-22 16:30:41.647] [PRINT]   "error": null
+[2026-04-22 16:30:41.647] [PRINT] }
+[2026-04-22 16:30:41.657] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:41.667] [PRINT] 
+[2026-04-22 16:30:41.667] [PRINT] Variables added to context:
+[2026-04-22 16:30:41.679] [PRINT]    emails_with_attachments = [{'message_id': '19daf5cef9ed71d5', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Order to Starbucks and Co.', 'date': 'Tue, 21 Apr 2026 17:26:21 +0800', 'timestamp': '2026-04-21T17:26:21', 'internal_date_ms': '1776763581000', 'attachments': [{'filename': 'Order List.pdf', 'attachment_id': 'ANGjdJ82bYgtdoQiN34FrMwV90rWrqBfG8yg5rvpgcMRPseU6qkOABahshYZ6YAPMa_oCY-_RogTT9xn3m8vnGTJET2_OQlf47e5GAiyhpEgHkXkDQ33HH0-98P5Sv1P6uv05oV1KvRI9ZgJ6Rll24jUXlGnq_rb3qTYTcwuLn-d8_Iw_qIhfMLU56ew6lIO5igQAfwLDB0jtxw7jvUXX4GYMmNxZTZoS3ZfjECG3Ss7B2joIx5VMD7LGgWSM4igA7cyTubMuH8peMYJQoveGgsMqCWKg1YJNakG0vCp1qdr58wWWfrPMwHDIVyaTFrqFEBPDbVr2kmFs80va_0xo69FPqRbaxXj519kUtQsH_iRhkWe4p2jTLLyGJFKLBRqsdCuTzXFIGV3CgXkn6fY', 'mime_type': 'application/pdf', 'size': 90330, 'file_path': 'C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x\\19daf5cef9ed71d5\\Order List.pdf'}], 'attachment_count': 1}] (from emails_with_attachments)
+[2026-04-22 16:30:41.690] [PRINT] 
+[2026-04-22 16:30:41.690] [PRINT] CONTEXT AFTER STEP 1:
+[2026-04-22 16:30:41.697] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:41.707] [PRINT]    today_date: 2026-04-22
+[2026-04-22 16:30:41.715] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-22 16:30:41.726] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-22 16:30:41.737] [PRINT]    emails_with_attachments: Array[1 items]
+[2026-04-22 16:30:41.745] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-22 16:30:41.756] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:41.780] [PRINT] 
+[2026-04-22 16:30:41.780] [PRINT] ============================================================
+[2026-04-22 16:30:41.796] [PRINT] Step 2/6: mapping_agent.parse_delivery_order_pdfs
+[2026-04-22 16:30:41.807] [PRINT] Description: Extract structured rows from each 'Order to Starbucks and Co.' delivery-order PDF
+[2026-04-22 16:30:41.815] [PRINT] ============================================================
+[2026-04-22 16:30:41.833] [PRINT] Risk Level: safe
+[2026-04-22 16:30:41.845] [PRINT] 
+[2026-04-22 16:30:41.845] [PRINT] Substituting variables in inputs...
+[2026-04-22 16:30:41.858] [PRINT]    Original inputs: {
+[2026-04-22 16:30:41.858] [PRINT]       "file_paths": "{{ emails_with_attachments }}"
+[2026-04-22 16:30:41.858] [PRINT] }
+[2026-04-22 16:30:41.871] [PRINT]    Substituted inputs: {
+[2026-04-22 16:30:41.871] [PRINT]       "file_paths": "[{'message_id': '19daf5cef9ed71d5', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Order to Starbucks and Co.', 'date': 'Tue, 21 Apr 2026 17:26:21 +0800', 'timestamp': '2026-04-21T17:26:21', 'internal_date_ms': '1776763581000', 'attachments': [{'filename': 'Order List.pdf', 'attachment_id': 'ANGjdJ82bYgtdoQiN34FrMwV90rWrqBfG8yg5rvpgcMRPseU6qkOABahshYZ6YAPMa_oCY-_RogTT9xn3m8vnGTJET2_OQlf47e5GAiyhpEgHkXkDQ33HH0-98P5Sv1P6uv05oV1KvRI9ZgJ6Rll24jUXlGnq_rb3qTYTcwuLn-d8_Iw_qIhfMLU56ew6lIO5igQAfwLDB0jtxw7jvUXX4GYMmNxZTZoS3ZfjECG3Ss7B2joIx5VMD7LGgWSM4igA7cyTubMuH8peMYJQoveGgsMqCWKg1YJNakG0vCp1qdr58wWWfrPMwHDIVyaTFrqFEBPDbVr2kmFs80va_0xo69FPqRbaxXj519kUtQsH_iRhkWe4p2jTLLyGJFKLBRqsdCuTzXFIGV3CgXkn6fY', 'mime_type': 'application/pdf', 'size': 90330, 'file_path': 'C:\\\\Users\\\\pchua\\\\AppData\\\\Local\\\\Temp\\\\gmail_delivery_orders_2t1kqz3x\\\\19daf5cef9ed71d5\\\\Order List.pdf'}], 'attachment_count': 1}]"
+[2026-04-22 16:30:41.871] [PRINT] }
+[2026-04-22 16:30:41.880] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_gmail_agent', 'emails_with_attachments']
+[2026-04-22 16:30:41.891] [INFO] [-]   STEP [variable_substitution]: step 2: mapping_agent.parse_delivery_order_pdfs
+    ↳ {"inputs": {"file_paths": "[{'message_id': '19daf5cef9ed71d5', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Order to Starbucks and Co.', 'date': 'Tue, 21 Apr 2026 17:26:21 +0800', 'timestamp': '2026-04-21T17:26:21', 'internal_date_ms': '1776763581000', 'attachments': [{'filename': 'Order List.pdf', 'attachment_id': 'ANGjdJ82bYgtdoQiN34FrMwV90rWrqBfG8yg5rvpgcMRPseU6qkOABahshYZ6YAPMa_oCY-_RogTT9xn3m8vnGTJET2_OQlf47e5GAiyhpEgHkXkDQ33HH0-98P5Sv1P6uv05oV1KvRI9ZgJ6Rll24jUXlGnq_rb3qTYTcwuLn-d8_Iw_
+[2026-04-22 16:30:41.892] [PRINT] 
+[2026-04-22 16:30:41.892] [PRINT] Calling agent microservice: http://localhost:8004/execute_task
+[2026-04-22 16:30:41.899] [PRINT] 
+[2026-04-22 16:30:41.899] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-22 16:30:41.911] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:41.921] [PRINT]    Tool: parse_delivery_order_pdfs
+[2026-04-22 16:30:41.930] [PRINT]    Inputs keys: ['file_paths']
+[2026-04-22 16:30:41.940] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-22 16:30:41.947] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-22 16:30:41.961] [PRINT]    Payload size: 1597 bytes
+[2026-04-22 16:30:41.968] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:41.979] [PRINT] 
+[2026-04-22 16:30:41.979] [PRINT] Sending request to agent...
+[2026-04-22 16:30:41.990] [PRINT]    URL: http://localhost:8004/execute_task
+[2026-04-22 16:30:41.999] [PRINT]    Timeout: 320 seconds
+[2026-04-22 16:30:42.009] [PRINT]    Max retries: 3
+[2026-04-22 16:30:42.016] [PRINT] Attempt 1/3 calling http://localhost:8004/execute_task
+[2026-04-22 16:30:42.026] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-22 16:30:44.718] [PRINT] Agent call succeeded on attempt 1
+[2026-04-22 16:30:44.736] [PRINT] ⏱ Agent call completed in 2757.38ms
+[2026-04-22 16:30:44.744] [PRINT] Agent response received
+[2026-04-22 16:30:44.756] [AGENT] [-]   AGENT:  mapping_agent.parse_delivery_order_pdfs (2757ms)  | {"file_paths": "[{'message_id': '19daf5cef9ed71d5', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Order to Starb..."}
+[2026-04-22 16:30:44.757] [PRINT] 
+[2026-04-22 16:30:44.757] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:44.768] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-22 16:30:44.778] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:44.790] [PRINT] {
+[2026-04-22 16:30:44.790] [PRINT]   "success": true,
+[2026-04-22 16:30:44.790] [PRINT]   "result": {
+[2026-04-22 16:30:44.790] [PRINT]     "success": true,
+[2026-04-22 16:30:44.790] [PRINT]     "parsed_orders": [],
+[2026-04-22 16:30:44.790] [PRINT]     "rejected_files": [
+[2026-04-22 16:30:44.790] [PRINT]       {
+[2026-04-22 16:30:44.790] [PRINT]         "file": "Order List.pdf",
+[2026-04-22 16:30:44.790] [PRINT]         "reason": "pdfplumber not installed"
+[2026-04-22 16:30:44.790] [PRINT]       }
+[2026-04-22 16:30:44.790] [PRINT]     ],
+[2026-04-22 16:30:44.790] [PRINT]     "total_parsed": 0,
+[2026-04-22 16:30:44.790] [PRINT]     "total_rejected": 1
+[2026-04-22 16:30:44.790] [PRINT]   },
+[2026-04-22 16:30:44.790] [PRINT]   "error": null
+[2026-04-22 16:30:44.790] [PRINT] }
+[2026-04-22 16:30:44.799] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:44.810] [PRINT] 
+[2026-04-22 16:30:44.810] [PRINT] Variables added to context:
+[2026-04-22 16:30:44.821] [PRINT]    parsed_orders = [] (from parsed_orders)
+[2026-04-22 16:30:44.830] [PRINT] 
+[2026-04-22 16:30:44.830] [PRINT] CONTEXT AFTER STEP 2:
+[2026-04-22 16:30:44.844] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:44.854] [PRINT]    today_date: 2026-04-22
+[2026-04-22 16:30:44.861] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-22 16:30:44.871] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-22 16:30:44.879] [PRINT]    emails_with_attachments: Array[1 items]
+[2026-04-22 16:30:44.889] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-22 16:30:44.896] [PRINT]    step_2_mapping_agent: Dict with keys: ['parsed_orders', 'rejected_files', 'total_parsed', 'total_rejected']
+[2026-04-22 16:30:44.906] [PRINT]    parsed_orders: []
+[2026-04-22 16:30:44.913] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:44.938] [PRINT] 
+[2026-04-22 16:30:44.938] [PRINT] ============================================================
+[2026-04-22 16:30:44.945] [PRINT] Step 3/6: drive_agent.search_files
+[2026-04-22 16:30:44.954] [PRINT] Description: Resolve the 'Product Requisition List' sheet name to its Drive ID
+[2026-04-22 16:30:44.961] [PRINT] ============================================================
+[2026-04-22 16:30:44.980] [PRINT] Risk Level: safe
+[2026-04-22 16:30:44.993] [PRINT] 
+[2026-04-22 16:30:44.993] [PRINT] Substituting variables in inputs...
+[2026-04-22 16:30:45.009] [PRINT]    Original inputs: {
+[2026-04-22 16:30:45.009] [PRINT]       "search_term": "Product Requisition List"
+[2026-04-22 16:30:45.009] [PRINT] }
+[2026-04-22 16:30:45.022] [PRINT]    Substituted inputs: {
+[2026-04-22 16:30:45.022] [PRINT]       "search_term": "Product Requisition List"
+[2026-04-22 16:30:45.022] [PRINT] }
+[2026-04-22 16:30:45.043] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_gmail_agent', 'emails_with_attachments', 'step_2_mapping_agent', 'parsed_orders']
+[2026-04-22 16:30:45.057] [INFO] [-]   STEP [variable_substitution]: step 3: drive_agent.search_files
+    ↳ {"inputs": {"search_term": "Product Requisition List"}, "context_keys": ["today_date", "_cached_tool_filter", "step_1_gmail_agent", "emails_with_attachments", "step_2_mapping_agent", "parsed_orders"]}
+[2026-04-22 16:30:45.058] [PRINT] 
+[2026-04-22 16:30:45.058] [PRINT] Calling agent microservice: http://localhost:8006/execute_task
+[2026-04-22 16:30:45.070] [PRINT] 
+[2026-04-22 16:30:45.070] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-22 16:30:45.080] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:45.091] [PRINT]    Tool: search_files
+[2026-04-22 16:30:45.103] [PRINT]    Inputs keys: ['search_term']
+[2026-04-22 16:30:45.111] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-22 16:30:45.124] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-22 16:30:45.131] [PRINT]    Payload size: 697 bytes
+[2026-04-22 16:30:45.142] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:45.153] [PRINT] 
+[2026-04-22 16:30:45.153] [PRINT] Sending request to agent...
+[2026-04-22 16:30:45.161] [PRINT]    URL: http://localhost:8006/execute_task
+[2026-04-22 16:30:45.173] [PRINT]    Timeout: 320 seconds
+[2026-04-22 16:30:45.180] [PRINT]    Max retries: 3
+[2026-04-22 16:30:45.192] [PRINT] Attempt 1/3 calling http://localhost:8006/execute_task
+[2026-04-22 16:30:45.203] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-22 16:30:50.698] [PRINT] Agent call succeeded on attempt 1
+[2026-04-22 16:30:50.717] [PRINT] ⏱ Agent call completed in 5564.44ms
+[2026-04-22 16:30:50.754] [PRINT] Agent response received
+[2026-04-22 16:30:50.770] [AGENT] [-]   AGENT:  drive_agent.search_files (5564ms)  | {"search_term": "Product Requisition List"}
+[2026-04-22 16:30:50.771] [PRINT] 
+[2026-04-22 16:30:50.771] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:50.785] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-22 16:30:50.798] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:50.813] [PRINT] {
+[2026-04-22 16:30:50.813] [PRINT]   "success": true,
+[2026-04-22 16:30:50.813] [PRINT]   "results": [
+[2026-04-22 16:30:50.813] [PRINT]     {
+[2026-04-22 16:30:50.813] [PRINT]       "parents": [
+[2026-04-22 16:30:50.813] [PRINT]         "1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"
+[2026-04-22 16:30:50.813] [PRINT]       ],
+[2026-04-22 16:30:50.813] [PRINT]       "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:30:50.813] [PRINT]       "name": "Product Requisition List",
+[2026-04-22 16:30:50.813] [PRINT]       "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-22 16:30:50.813] [PRINT]       "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk",
+[2026-04-22 16:30:50.813] [PRINT]       "createdTime": "2026-04-21T09:32:16.447Z",
+[2026-04-22 16:30:50.813] [PRINT]       "size": "1024"
+[2026-04-22 16:30:50.813] [PRINT]     },
+[2026-04-22 16:30:50.813] [PRINT]     {
+[2026-04-22 16:30:50.813] [PRINT]       "id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-22 16:30:50.813] [PRINT]       "name": "PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-22 16:30:50.813] [PRINT]       "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-22 16:30:50.813] [PRINT]       "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk",
+[2026-04-22 16:30:50.813] [PRINT]       "createdTime": "2026-04-04T19:06:32.433Z",
+[2026-04-22 16:30:50.813] [PRINT]       "size": "1024"
+[2026-04-22 16:30:50.813] [PRINT]     }
+[2026-04-22 16:30:50.813] [PRINT]   ],
+[2026-04-22 16:30:50.813] [PRINT]   "count": 2,
+[2026-04-22 16:30:50.813] [PRINT]   "search_term": "Product Requisition List",
+[2026-04-22 16:30:50.813] [PRINT]   "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-22 16:30:50.813] [PRINT]   "error": null
+[2026-04-22 16:30:50.813] [PRINT] }
+[2026-04-22 16:30:50.836] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:50.853] [PRINT] 
+[2026-04-22 16:30:50.853] [PRINT] Variables added to context:
+[2026-04-22 16:30:50.865] [PRINT]    sheet_id = 1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU (from results[0].id)
+[2026-04-22 16:30:50.875] [PRINT] 
+[2026-04-22 16:30:50.875] [PRINT] CONTEXT AFTER STEP 3:
+[2026-04-22 16:30:50.885] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:50.896] [PRINT]    today_date: 2026-04-22
+[2026-04-22 16:30:50.904] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-22 16:30:50.914] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-22 16:30:50.921] [PRINT]    emails_with_attachments: Array[1 items]
+[2026-04-22 16:30:50.932] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-22 16:30:50.939] [PRINT]    step_2_mapping_agent: Dict with keys: ['parsed_orders', 'rejected_files', 'total_parsed', 'total_rejected']
+[2026-04-22 16:30:50.949] [PRINT]    parsed_orders: []
+[2026-04-22 16:30:50.956] [PRINT]    step_3_drive_agent: Dict with keys: ['results', 'count', 'search_term', 'message']
+[2026-04-22 16:30:50.966] [PRINT]    sheet_id: 1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU
+[2026-04-22 16:30:50.974] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:51.000] [PRINT] 
+[2026-04-22 16:30:51.000] [PRINT] ============================================================
+[2026-04-22 16:30:51.007] [PRINT] Step 4/6: sheets_agent.validate_delivery_sheet
+[2026-04-22 16:30:51.017] [PRINT] Description: Confirm the sheet matches the delivery-order template before writing
+[2026-04-22 16:30:51.024] [PRINT] ============================================================
+[2026-04-22 16:30:51.046] [PRINT] Risk Level: safe
+[2026-04-22 16:30:51.057] [PRINT] 
+[2026-04-22 16:30:51.057] [PRINT] Substituting variables in inputs...
+[2026-04-22 16:30:51.069] [PRINT]    Original inputs: {
+[2026-04-22 16:30:51.069] [PRINT]       "sheet_id": "{{ sheet_id }}"
+[2026-04-22 16:30:51.069] [PRINT] }
+[2026-04-22 16:30:51.085] [PRINT]    Substituted inputs: {
+[2026-04-22 16:30:51.085] [PRINT]       "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU"
+[2026-04-22 16:30:51.085] [PRINT] }
+[2026-04-22 16:30:51.095] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_gmail_agent', 'emails_with_attachments', 'step_2_mapping_agent', 'parsed_orders', 'step_3_drive_agent', 'sheet_id']
+[2026-04-22 16:30:51.104] [INFO] [-]   STEP [variable_substitution]: step 4: sheets_agent.validate_delivery_sheet
+    ↳ {"inputs": {"sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU"}, "context_keys": ["today_date", "_cached_tool_filter", "step_1_gmail_agent", "emails_with_attachments", "step_2_mapping_agent", "parsed_orders", "step_3_drive_agent", "sheet_id"]}
+[2026-04-22 16:30:51.104] [PRINT] 
+[2026-04-22 16:30:51.104] [PRINT] Calling agent microservice: http://localhost:8003/execute_task
+[2026-04-22 16:30:51.121] [PRINT] 
+[2026-04-22 16:30:51.121] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-22 16:30:51.132] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:51.139] [PRINT]    Tool: validate_delivery_sheet
+[2026-04-22 16:30:51.151] [PRINT]    Inputs keys: ['sheet_id']
+[2026-04-22 16:30:51.158] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-22 16:30:51.169] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-22 16:30:51.179] [PRINT]    Payload size: 725 bytes
+[2026-04-22 16:30:51.187] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:51.198] [PRINT] 
+[2026-04-22 16:30:51.198] [PRINT] Sending request to agent...
+[2026-04-22 16:30:51.207] [PRINT]    URL: http://localhost:8003/execute_task
+[2026-04-22 16:30:51.220] [PRINT]    Timeout: 320 seconds
+[2026-04-22 16:30:51.231] [PRINT]    Max retries: 3
+[2026-04-22 16:30:51.241] [PRINT] Attempt 1/3 calling http://localhost:8003/execute_task
+[2026-04-22 16:30:51.255] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-22 16:30:59.342] [PRINT] Agent call succeeded on attempt 1
+[2026-04-22 16:30:59.356] [PRINT] ⏱ Agent call completed in 8158.34ms
+[2026-04-22 16:30:59.366] [PRINT] Agent response received
+[2026-04-22 16:30:59.377] [AGENT] [-]   AGENT:  sheets_agent.validate_delivery_sheet (8158ms)  | {"sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU"}
+[2026-04-22 16:30:59.378] [PRINT] 
+[2026-04-22 16:30:59.378] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:59.387] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-22 16:30:59.394] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:59.404] [PRINT] {
+[2026-04-22 16:30:59.404] [PRINT]   "success": true,
+[2026-04-22 16:30:59.404] [PRINT]   "result": {
+[2026-04-22 16:30:59.404] [PRINT]     "success": true,
+[2026-04-22 16:30:59.404] [PRINT]     "is_valid": true,
+[2026-04-22 16:30:59.404] [PRINT]     "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:30:59.404] [PRINT]     "headers_by_tab": {
+[2026-04-22 16:30:59.404] [PRINT]       "Food": [
+[2026-04-22 16:30:59.404] [PRINT]         "Date",
+[2026-04-22 16:30:59.404] [PRINT]         "Order Reference",
+[2026-04-22 16:30:59.404] [PRINT]         "Item Code",
+[2026-04-22 16:30:59.404] [PRINT]         "Item Description",
+[2026-04-22 16:30:59.404] [PRINT]         "QTY",
+[2026-04-22 16:30:59.404] [PRINT]         "UOM",
+[2026-04-22 16:30:59.404] [PRINT]         "CB Date",
+[2026-04-22 16:30:59.404] [PRINT]         "Requested by"
+[2026-04-22 16:30:59.404] [PRINT]       ],
+[2026-04-22 16:30:59.404] [PRINT]       "non-food": [
+[2026-04-22 16:30:59.404] [PRINT]         "Date",
+[2026-04-22 16:30:59.404] [PRINT]         "Order Reference",
+[2026-04-22 16:30:59.404] [PRINT]         "Item Code",
+[2026-04-22 16:30:59.404] [PRINT]         "Item Description",
+[2026-04-22 16:30:59.404] [PRINT]         "QTY",
+[2026-04-22 16:30:59.404] [PRINT]         "UOM",
+[2026-04-22 16:30:59.404] [PRINT]         "CB Date",
+[2026-04-22 16:30:59.404] [PRINT]         "Requested by"
+[2026-04-22 16:30:59.404] [PRINT]       ]
+[2026-04-22 16:30:59.404] [PRINT]     },
+[2026-04-22 16:30:59.404] [PRINT]     "tabs_found": [
+[2026-04-22 16:30:59.404] [PRINT]       "Food",
+[2026-04-22 16:30:59.404] [PRINT]       "non-food"
+[2026-04-22 16:30:59.404] [PRINT]     ],
+[2026-04-22 16:30:59.404] [PRINT]     "matching_tabs": [
+[2026-04-22 16:30:59.404] [PRINT]       "Food",
+[2026-04-22 16:30:59.404] [PRINT]       "non-food"
+[2026-04-22 16:30:59.404] [PRINT]     ],
+[2026-04-22 16:30:59.404] [PRINT]     "message": "Sheet is a valid requisition list template with write access confirmed"
+[2026-04-22 16:30:59.404] [PRINT]   },
+[2026-04-22 16:30:59.404] [PRINT]   "error": null,
+[2026-04-22 16:30:59.404] [PRINT]   "error_type": null
+[2026-04-22 16:30:59.404] [PRINT] }
+[2026-04-22 16:30:59.412] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:59.423] [PRINT] 
+[2026-04-22 16:30:59.423] [PRINT] Variables added to context:
+[2026-04-22 16:30:59.430] [PRINT] 
+[2026-04-22 16:30:59.430] [PRINT] CONTEXT AFTER STEP 4:
+[2026-04-22 16:30:59.441] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:59.448] [PRINT]    today_date: 2026-04-22
+[2026-04-22 16:30:59.458] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-22 16:30:59.464] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-22 16:30:59.475] [PRINT]    emails_with_attachments: Array[1 items]
+[2026-04-22 16:30:59.482] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-22 16:30:59.493] [PRINT]    step_2_mapping_agent: Dict with keys: ['parsed_orders', 'rejected_files', 'total_parsed', 'total_rejected']
+[2026-04-22 16:30:59.500] [PRINT]    parsed_orders: []
+[2026-04-22 16:30:59.513] [PRINT]    step_3_drive_agent: Dict with keys: ['results', 'count', 'search_term', 'message']
+[2026-04-22 16:30:59.532] [PRINT]    sheet_id: 1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU
+[2026-04-22 16:30:59.555] [PRINT]    step_4_sheets_agent: Dict with keys: ['is_valid', 'sheet_id', 'headers_by_tab', 'tabs_found', 'matching_tabs', 'message']
+[2026-04-22 16:30:59.581] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:59.657] [PRINT] 
+[2026-04-22 16:30:59.657] [PRINT] ============================================================
+[2026-04-22 16:30:59.676] [PRINT] Step 5/6: sheets_agent.preview_delivery_order_insertion
+[2026-04-22 16:30:59.696] [PRINT] Description: Generate a preview of rows per tab so the user can approve before writing
+[2026-04-22 16:30:59.716] [PRINT] ============================================================
+[2026-04-22 16:30:59.749] [PRINT] Risk Level: safe
+[2026-04-22 16:30:59.783] [PRINT] 
+[2026-04-22 16:30:59.783] [PRINT] Substituting variables in inputs...
+[2026-04-22 16:30:59.799] [PRINT]    Original inputs: {
+[2026-04-22 16:30:59.799] [PRINT]       "sheet_id": "{{ sheet_id }}",
+[2026-04-22 16:30:59.799] [PRINT]       "parsed_orders": "{{ parsed_orders }}"
+[2026-04-22 16:30:59.799] [PRINT] }
+[2026-04-22 16:30:59.815] [PRINT]    Substituted inputs: {
+[2026-04-22 16:30:59.815] [PRINT]       "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:30:59.815] [PRINT]       "parsed_orders": "[]"
+[2026-04-22 16:30:59.815] [PRINT] }
+[2026-04-22 16:30:59.832] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_gmail_agent', 'emails_with_attachments', 'step_2_mapping_agent', 'parsed_orders', 'step_3_drive_agent', 'sheet_id', 'step_4_sheets_agent']
+[2026-04-22 16:30:59.848] [INFO] [-]   STEP [variable_substitution]: step 5: sheets_agent.preview_delivery_order_insertion
+    ↳ {"inputs": {"sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "parsed_orders": "[]"}, "context_keys": ["today_date", "_cached_tool_filter", "step_1_gmail_agent", "emails_with_attachments", "step_2_mapping_agent", "parsed_orders", "step_3_drive_agent", "sheet_id", "step_4_sheets_agent"]}
+[2026-04-22 16:30:59.849] [PRINT] 
+[2026-04-22 16:30:59.849] [PRINT] Calling agent microservice: http://localhost:8003/execute_task
+[2026-04-22 16:30:59.861] [PRINT] 
+[2026-04-22 16:30:59.861] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-22 16:30:59.873] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:59.882] [PRINT]    Tool: preview_delivery_order_insertion
+[2026-04-22 16:30:59.895] [PRINT]    Inputs keys: ['sheet_id', 'parsed_orders']
+[2026-04-22 16:30:59.907] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-22 16:30:59.917] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-22 16:30:59.933] [PRINT]    Payload size: 757 bytes
+[2026-04-22 16:30:59.950] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:30:59.991] [PRINT] 
+[2026-04-22 16:30:59.991] [PRINT] Sending request to agent...
+[2026-04-22 16:31:00.006] [PRINT]    URL: http://localhost:8003/execute_task
+[2026-04-22 16:31:00.030] [PRINT]    Timeout: 320 seconds
+[2026-04-22 16:31:00.050] [PRINT]    Max retries: 3
+[2026-04-22 16:31:00.071] [PRINT] Attempt 1/3 calling http://localhost:8003/execute_task
+[2026-04-22 16:31:00.084] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-22 16:31:04.805] [PRINT] Agent call succeeded on attempt 1
+[2026-04-22 16:31:04.819] [PRINT] ⏱ Agent call completed in 4827.42ms
+[2026-04-22 16:31:04.831] [PRINT] Agent response received
+[2026-04-22 16:31:04.843] [AGENT] [-]   AGENT:  sheets_agent.preview_delivery_order_insertion (4827ms)  | {"sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "parsed_orders": "[]"}
+[2026-04-22 16:31:04.844] [PRINT] 
+[2026-04-22 16:31:04.844] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:31:04.856] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-22 16:31:04.869] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:31:04.882] [PRINT] {
+[2026-04-22 16:31:04.882] [PRINT]   "success": true,
+[2026-04-22 16:31:04.882] [PRINT]   "result": {
+[2026-04-22 16:31:04.882] [PRINT]     "success": true,
+[2026-04-22 16:31:04.882] [PRINT]     "preview_rows": [],
+[2026-04-22 16:31:04.882] [PRINT]     "total_new_rows": 0,
+[2026-04-22 16:31:04.882] [PRINT]     "duplicates": [],
+[2026-04-22 16:31:04.882] [PRINT]     "duplicate_count": 0,
+[2026-04-22 16:31:04.882] [PRINT]     "warnings": [],
+[2026-04-22 16:31:04.882] [PRINT]     "target_tabs": [],
+[2026-04-22 16:31:04.882] [PRINT]     "message": "0 row(s) ready to insert across 0 tab(s). No duplicates detected."
+[2026-04-22 16:31:04.882] [PRINT]   },
+[2026-04-22 16:31:04.882] [PRINT]   "error": null,
+[2026-04-22 16:31:04.882] [PRINT]   "error_type": null
+[2026-04-22 16:31:04.882] [PRINT] }
+[2026-04-22 16:31:04.893] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:31:04.906] [PRINT] 
+[2026-04-22 16:31:04.906] [PRINT] Variables added to context:
+[2026-04-22 16:31:04.919] [PRINT] 
+[2026-04-22 16:31:04.919] [PRINT] CONTEXT AFTER STEP 5:
+[2026-04-22 16:31:04.927] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:31:04.940] [PRINT]    today_date: 2026-04-22
+[2026-04-22 16:31:04.951] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-22 16:31:04.958] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-22 16:31:04.969] [PRINT]    emails_with_attachments: Array[1 items]
+[2026-04-22 16:31:04.975] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-22 16:31:04.986] [PRINT]    step_2_mapping_agent: Dict with keys: ['parsed_orders', 'rejected_files', 'total_parsed', 'total_rejected']
+[2026-04-22 16:31:04.994] [PRINT]    parsed_orders: []
+[2026-04-22 16:31:05.004] [PRINT]    step_3_drive_agent: Dict with keys: ['results', 'count', 'search_term', 'message']
+[2026-04-22 16:31:05.011] [PRINT]    sheet_id: 1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU
+[2026-04-22 16:31:05.022] [PRINT]    step_4_sheets_agent: Dict with keys: ['is_valid', 'sheet_id', 'headers_by_tab', 'tabs_found', 'matching_tabs', 'message']
+[2026-04-22 16:31:05.032] [PRINT]    step_5_sheets_agent: Dict with keys: ['preview_rows', 'total_new_rows', 'duplicates', 'duplicate_count', 'warnings', 'target_tabs', 'message']
+[2026-04-22 16:31:05.039] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-22 16:31:05.066] [PRINT] 
+[2026-04-22 16:31:05.066] [PRINT] ============================================================
+[2026-04-22 16:31:05.073] [PRINT] Step 6/6: sheets_agent.write_delivery_order_data
+[2026-04-22 16:31:05.084] [PRINT] Description: Append the parsed delivery-order rows into the 'Product Requisition List' sheet (DANGEROUS — requires approval)
+[2026-04-22 16:31:05.091] [PRINT] ============================================================
+[2026-04-22 16:31:05.110] [PRINT] Risk Level: dangerous
+[2026-04-22 16:31:05.121] [PRINT] ⏸ PAUSED - Action requires approval!
+[2026-04-22 16:31:05.157] [PRINT] Stored pending action: action_61610c00 (sheets_agent.write_delivery_order_data)
+[2026-04-22 16:31:05.175] [PRINT] Approval required for action: action_61610c00
+[2026-04-22 16:31:05.185] [PRINT]    Details: {
+[2026-04-22 16:31:05.185] [PRINT]     "step_number": 6,
+[2026-04-22 16:31:05.185] [PRINT]     "total_steps": 6,
+[2026-04-22 16:31:05.185] [PRINT]     "agent": "sheets_agent",
+[2026-04-22 16:31:05.185] [PRINT]     "tool": "write_delivery_order_data",
+[2026-04-22 16:31:05.185] [PRINT]     "description": "Append the parsed delivery-order rows into the 'Product Requisition List' sheet (DANGEROUS \u2014 requires approval)",
+[2026-04-22 16:31:05.185] [PRINT]     "inputs": {
+[2026-04-22 16:31:05.185] [PRINT]         "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:31:05.185] [PRINT]         "parsed_orders": []
+[2026-04-22 16:31:05.185] [PRINT]     },
+[2026-04-22 16:31:05.185] [PRINT]     "output_variables": {},
+[2026-04-22 16:31:05.185] [PRINT]     "risk_level": "dangerous"
+[2026-04-22 16:31:05.185] [PRINT] }
+[2026-04-22 16:31:05.193] [PRINT] ⏸ WORKFLOW PAUSED — waiting for chat-based approval
+[2026-04-22 16:31:05.207] [PRINT] 
+[2026-04-22 16:31:05.207] [PRINT]  Workflow paused: Workflow paused — action requires approval
+[2026-04-22 16:31:05.218] [INFO] [-]   WORKFLOW END: paused_for_approval (5/6 steps)
+[2026-04-22 16:31:05.220] [PRINT] 
+[2026-04-22 16:31:05.220] [PRINT]  Generated Plan:
+[2026-04-22 16:31:05.220] [PRINT] {
+[2026-04-22 16:31:05.220] [PRINT]   "steps": [
+[2026-04-22 16:31:05.220] [PRINT]     {
+[2026-04-22 16:31:05.220] [PRINT]       "agent": "gmail_agent",
+[2026-04-22 16:31:05.220] [PRINT]       "tool": "search_emails_with_delivery_order_attachments",
+[2026-04-22 16:31:05.220] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.220] [PRINT]         "query": "Order to Starbucks and Co.",
+[2026-04-22 16:31:05.220] [PRINT]         "max_results": 10,
+[2026-04-22 16:31:05.220] [PRINT]         "download_attachments": true
+[2026-04-22 16:31:05.220] [PRINT]       },
+[2026-04-22 16:31:05.220] [PRINT]       "output_variables": {
+[2026-04-22 16:31:05.220] [PRINT]         "emails_with_attachments": "emails_with_attachments"
+[2026-04-22 16:31:05.220] [PRINT]       },
+[2026-04-22 16:31:05.220] [PRINT]       "description": "Fetch recent emails with 'Order to Starbucks and Co.' delivery-order PDFs attached"
+[2026-04-22 16:31:05.220] [PRINT]     },
+[2026-04-22 16:31:05.220] [PRINT]     {
+[2026-04-22 16:31:05.220] [PRINT]       "agent": "mapping_agent",
+[2026-04-22 16:31:05.220] [PRINT]       "tool": "parse_delivery_order_pdfs",
+[2026-04-22 16:31:05.220] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.220] [PRINT]         "file_paths": "{{ emails_with_attachments }}"
+[2026-04-22 16:31:05.220] [PRINT]       },
+[2026-04-22 16:31:05.220] [PRINT]       "output_variables": {
+[2026-04-22 16:31:05.220] [PRINT]         "parsed_orders": "parsed_orders"
+[2026-04-22 16:31:05.220] [PRINT]       },
+[2026-04-22 16:31:05.220] [PRINT]       "description": "Extract structured rows from each 'Order to Starbucks and Co.' delivery-order PDF"
+[2026-04-22 16:31:05.220] [PRINT]     },
+[2026-04-22 16:31:05.220] [PRINT]     {
+[2026-04-22 16:31:05.220] [PRINT]       "agent": "drive_agent",
+[2026-04-22 16:31:05.220] [PRINT]       "tool": "search_files",
+[2026-04-22 16:31:05.220] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.220] [PRINT]         "search_term": "Product Requisition List"
+[2026-04-22 16:31:05.220] [PRINT]       },
+[2026-04-22 16:31:05.220] [PRINT]       "output_variables": {
+[2026-04-22 16:31:05.220] [PRINT]         "sheet_id": "results[0].id"
+[2026-04-22 16:31:05.220] [PRINT]       },
+[2026-04-22 16:31:05.220] [PRINT]       "description": "Resolve the 'Product Requisition List' sheet name to its Drive ID"
+[2026-04-22 16:31:05.220] [PRINT]     },
+[2026-04-22 16:31:05.220] [PRINT]     {
+[2026-04-22 16:31:05.220] [PRINT]       "agent": "sheets_agent",
+[2026-04-22 16:31:05.220] [PRINT]       "tool": "validate_delivery_sheet",
+[2026-04-22 16:31:05.220] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.220] [PRINT]         "sheet_id": "{{ sheet_id }}"
+[2026-04-22 16:31:05.220] [PRINT]       },
+[2026-04-22 16:31:05.220] [PRINT]       "output_variables": {},
+[2026-04-22 16:31:05.220] [PRINT]       "description": "Confirm the sheet matches the delivery-order template before writing"
+[2026-04-22 16:31:05.220] [PRINT]     },
+[2026-04-22 16:31:05.220] [PRINT]     {
+[2026-04-22 16:31:05.220] [PRINT]       "agent": "sheets_agent",
+[2026-04-22 16:31:05.220] [PRINT]       "tool": "preview_delivery_order_insertion",
+[2026-04-22 16:31:05.220] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.220] [PRINT]         "sheet_id": "{{ sheet_id }}",
+[2026-04-22 16:31:05.220] [PRINT]         "parsed_orders": "{{ parsed_orders }}"
+[2026-04-22 16:31:05.220] [PRINT]       },
+[2026-04-22 16:31:05.220] [PRINT]       "output_variables": {},
+[2026-04-22 16:31:05.220] [PRINT]       "description": "Generate a preview of rows per tab so the user can approve before writing"
+[2026-04-22 16:31:05.220] [PRINT]     },
+[2026-04-22 16:31:05.220] [PRINT]     {
+[2026-04-22 16:31:05.220] [PRINT]       "agent": "sheets_agent",
+[2026-04-22 16:31:05.220] [PRINT]       "tool": "write_delivery_order_data",
+[2026-04-22 16:31:05.220] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.220] [PRINT]         "sheet_id": "{{ sheet_id }}",
+[2026-04-22 16:31:05.220] [PRINT]         "parsed_orders": "{{ parsed_orders }}"
+[2026-04-22 16:31:05.220] [PRINT]       },
+[2026-04-22 16:31:05.220] [PRINT]       "output_variables": {},
+[2026-04-22 16:31:05.220] [PRINT]       "description": "Append the parsed delivery-order rows into the 'Product Requisition List' sheet (DANGEROUS \u2014 requires approval)"
+[2026-04-22 16:31:05.220] [PRINT]     }
+[2026-04-22 16:31:05.220] [PRINT]   ]
+[2026-04-22 16:31:05.220] [PRINT] }
+[2026-04-22 16:31:05.239] [PRINT] 
+[2026-04-22 16:31:05.239] [PRINT]  Final Context: {
+[2026-04-22 16:31:05.239] [PRINT]   "today_date": "2026-04-22",
+[2026-04-22 16:31:05.239] [PRINT]   "_cached_tool_filter": {
+[2026-04-22 16:31:05.239] [PRINT]     "gmail_agent": [
+[2026-04-22 16:31:05.239] [PRINT]       "search_emails_with_delivery_order_attachments",
+[2026-04-22 16:31:05.239] [PRINT]       "search_emails"
+[2026-04-22 16:31:05.239] [PRINT]     ],
+[2026-04-22 16:31:05.239] [PRINT]     "mapping_agent": [
+[2026-04-22 16:31:05.239] [PRINT]       "parse_delivery_order_pdfs"
+[2026-04-22 16:31:05.239] [PRINT]     ],
+[2026-04-22 16:31:05.239] [PRINT]     "sheets_agent": [
+[2026-04-22 16:31:05.239] [PRINT]       "write_delivery_order_data",
+[2026-04-22 16:31:05.239] [PRINT]       "preview_delivery_order_insertion",
+[2026-04-22 16:31:05.239] [PRINT]       "validate_delivery_sheet"
+[2026-04-22 16:31:05.239] [PRINT]     ],
+[2026-04-22 16:31:05.239] [PRINT]     "drive_agent": [
+[2026-04-22 16:31:05.239] [PRINT]       "search_files"
+[2026-04-22 16:31:05.239] [PRINT]     ]
+[2026-04-22 16:31:05.239] [PRINT]   },
+[2026-04-22 16:31:05.239] [PRINT]   "step_1_gmail_agent": {
+[2026-04-22 16:31:05.239] [PRINT]     "emails_with_attachments": [
+[2026-04-22 16:31:05.239] [PRINT]       {
+[2026-04-22 16:31:05.239] [PRINT]         "message_id": "19daf5cef9ed71d5",
+[2026-04-22 16:31:05.239] [PRINT]         "from": "Kita <pchua5644@gmail.com>",
+[2026-04-22 16:31:05.239] [PRINT]         "subject": "Order to Starbucks and Co.",
+[2026-04-22 16:31:05.239] [PRINT]         "date": "Tue, 21 Apr 2026 17:26:21 +0800",
+[2026-04-22 16:31:05.239] [PRINT]         "timestamp": "2026-04-21T17:26:21",
+[2026-04-22 16:31:05.239] [PRINT]         "internal_date_ms": "1776763581000",
+[2026-04-22 16:31:05.239] [PRINT]         "attachments": [
+[2026-04-22 16:31:05.239] [PRINT]           {
+[2026-04-22 16:31:05.239] [PRINT]             "filename": "Order List.pdf",
+[2026-04-22 16:31:05.239] [PRINT]             "attachment_id": "ANGjdJ82bYgtdoQiN34FrMwV90rWrqBfG8yg5rvpgcMRPseU6qkOABahshYZ6YAPMa_oCY-_RogTT9xn3m8vnGTJET2_OQlf47e5GAiyhpEgHkXkDQ33HH0-98P5Sv1P6uv05oV1KvRI9ZgJ6Rll24jUXlGnq_rb3qTYTcwuLn-d8_Iw_qIhfMLU56ew6lIO5igQAfwLDB0jtxw7jvUXX4GYMmNxZTZoS3ZfjECG3Ss7B2joIx5VMD7LGgWSM4igA7cyTubMuH8peMYJQoveGgsMqCWKg1YJNakG0vCp1qdr58wWWfrPMwHDIVyaTFrqFEBPDbVr2kmFs80va_0xo69FPqRbaxXj519kUtQsH_iRhkWe4p2jTLLyGJFKLBRqsdCuTzXFIGV3CgXkn6fY",
+[2026-04-22 16:31:05.239] [PRINT]             "mime_type": "application/pdf",
+[2026-04-22 16:31:05.239] [PRINT]             "size": 90330,
+[2026-04-22 16:31:05.239] [PRINT]             "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x\\19daf5cef9ed71d5\\Order List.pdf"
+[2026-04-22 16:31:05.239] [PRINT]           }
+[2026-04-22 16:31:05.239] [PRINT]         ],
+[2026-04-22 16:31:05.239] [PRINT]         "attachment_count": 1
+[2026-04-22 16:31:05.239] [PRINT]       }
+[2026-04-22 16:31:05.239] [PRINT]     ],
+[2026-04-22 16:31:05.239] [PRINT]     "total_emails_found": 1,
+[2026-04-22 16:31:05.239] [PRINT]     "total_attachments_downloaded": 1,
+[2026-04-22 16:31:05.239] [PRINT]     "temp_directory": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x",
+[2026-04-22 16:31:05.239] [PRINT]     "query": "Order to Starbucks and Co.",
+[2026-04-22 16:31:05.239] [PRINT]     "download_attachments": true
+[2026-04-22 16:31:05.239] [PRINT]   },
+[2026-04-22 16:31:05.239] [PRINT]   "emails_with_attachments": [
+[2026-04-22 16:31:05.239] [PRINT]     {
+[2026-04-22 16:31:05.239] [PRINT]       "message_id": "19daf5cef9ed71d5",
+[2026-04-22 16:31:05.239] [PRINT]       "from": "Kita <pchua5644@gmail.com>",
+[2026-04-22 16:31:05.239] [PRINT]       "subject": "Order to Starbucks and Co.",
+[2026-04-22 16:31:05.239] [PRINT]       "date": "Tue, 21 Apr 2026 17:26:21 +0800",
+[2026-04-22 16:31:05.239] [PRINT]       "timestamp": "2026-04-21T17:26:21",
+[2026-04-22 16:31:05.239] [PRINT]       "internal_date_ms": "1776763581000",
+[2026-04-22 16:31:05.239] [PRINT]       "attachments": [
+[2026-04-22 16:31:05.239] [PRINT]         {
+[2026-04-22 16:31:05.239] [PRINT]           "filename": "Order List.pdf",
+[2026-04-22 16:31:05.239] [PRINT]           "attachment_id": "ANGjdJ82bYgtdoQiN34FrMwV90rWrqBfG8yg5rvpgcMRPseU6qkOABahshYZ6YAPMa_oCY-_RogTT9xn3m8vnGTJET2_OQlf47e5GAiyhpEgHkXkDQ33HH0-98P5Sv1P6uv05oV1KvRI9ZgJ6Rll24jUXlGnq_rb3qTYTcwuLn-d8_Iw_qIhfMLU56ew6lIO5igQAfwLDB0jtxw7jvUXX4GYMmNxZTZoS3ZfjECG3Ss7B2joIx5VMD7LGgWSM4igA7cyTubMuH8peMYJQoveGgsMqCWKg1YJNakG0vCp1qdr58wWWfrPMwHDIVyaTFrqFEBPDbVr2kmFs80va_0xo69FPqRbaxXj519kUtQsH_iRhkWe4p2jTLLyGJFKLBRqsdCuTzXFIGV3CgXkn6fY",
+[2026-04-22 16:31:05.239] [PRINT]           "mime_type": "application/pdf",
+[2026-04-22 16:31:05.239] [PRINT]           "size": 90330,
+[2026-04-22 16:31:05.239] [PRINT]           "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x\\19daf5cef9ed71d5\\Order List.pdf"
+[2026-04-22 16:31:05.239] [PRINT]         }
+[2026-04-22 16:31:05.239] [PRINT]       ],
+[2026-04-22 16:31:05.239] [PRINT]       "attachment_count": 1
+[2026-04-22 16:31:05.239] [PRINT]     }
+[2026-04-22 16:31:05.239] [PRINT]   ],
+[2026-04-22 16:31:05.239] [PRINT]   "step_2_mapping_agent": {
+[2026-04-22 16:31:05.239] [PRINT]     "parsed_orders": [],
+[2026-04-22 16:31:05.239] [PRINT]     "rejected_files": [
+[2026-04-22 16:31:05.239] [PRINT]       {
+[2026-04-22 16:31:05.239] [PRINT]         "file": "Order List.pdf",
+[2026-04-22 16:31:05.239] [PRINT]         "reason": "pdfplumber not installed"
+[2026-04-22 16:31:05.239] [PRINT]       }
+[2026-04-22 16:31:05.239] [PRINT]     ],
+[2026-04-22 16:31:05.239] [PRINT]     "total_parsed": 0,
+[2026-04-22 16:31:05.239] [PRINT]     "total_rejected": 1
+[2026-04-22 16:31:05.239] [PRINT]   },
+[2026-04-22 16:31:05.239] [PRINT]   "parsed_orders": [],
+[2026-04-22 16:31:05.239] [PRINT]   "step_3_drive_agent": {
+[2026-04-22 16:31:05.239] [PRINT]     "results": [
+[2026-04-22 16:31:05.239] [PRINT]       {
+[2026-04-22 16:31:05.239] [PRINT]         "parents": [
+[2026-04-22 16:31:05.239] [PRINT]           "1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"
+[2026-04-22 16:31:05.239] [PRINT]         ],
+[2026-04-22 16:31:05.239] [PRINT]         "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:31:05.239] [PRINT]         "name": "Product Requisition List",
+[2026-04-22 16:31:05.239] [PRINT]         "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-22 16:31:05.239] [PRINT]         "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk",
+[2026-04-22 16:31:05.239] [PRINT]         "createdTime": "2026-04-21T09:32:16.447Z",
+[2026-04-22 16:31:05.239] [PRINT]         "size": "1024"
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       {
+[2026-04-22 16:31:05.239] [PRINT]         "id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-22 16:31:05.239] [PRINT]         "name": "PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-22 16:31:05.239] [PRINT]         "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-22 16:31:05.239] [PRINT]         "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk",
+[2026-04-22 16:31:05.239] [PRINT]         "createdTime": "2026-04-04T19:06:32.433Z",
+[2026-04-22 16:31:05.239] [PRINT]         "size": "1024"
+[2026-04-22 16:31:05.239] [PRINT]       }
+[2026-04-22 16:31:05.239] [PRINT]     ],
+[2026-04-22 16:31:05.239] [PRINT]     "count": 2,
+[2026-04-22 16:31:05.239] [PRINT]     "search_term": "Product Requisition List",
+[2026-04-22 16:31:05.239] [PRINT]     "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST"
+[2026-04-22 16:31:05.239] [PRINT]   },
+[2026-04-22 16:31:05.239] [PRINT]   "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:31:05.239] [PRINT]   "step_4_sheets_agent": {
+[2026-04-22 16:31:05.239] [PRINT]     "is_valid": true,
+[2026-04-22 16:31:05.239] [PRINT]     "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:31:05.239] [PRINT]     "headers_by_tab": {
+[2026-04-22 16:31:05.239] [PRINT]       "Food": [
+[2026-04-22 16:31:05.239] [PRINT]         "Date",
+[2026-04-22 16:31:05.239] [PRINT]         "Order Reference",
+[2026-04-22 16:31:05.239] [PRINT]         "Item Code",
+[2026-04-22 16:31:05.239] [PRINT]         "Item Description",
+[2026-04-22 16:31:05.239] [PRINT]         "QTY",
+[2026-04-22 16:31:05.239] [PRINT]         "UOM",
+[2026-04-22 16:31:05.239] [PRINT]         "CB Date",
+[2026-04-22 16:31:05.239] [PRINT]         "Requested by"
+[2026-04-22 16:31:05.239] [PRINT]       ],
+[2026-04-22 16:31:05.239] [PRINT]       "non-food": [
+[2026-04-22 16:31:05.239] [PRINT]         "Date",
+[2026-04-22 16:31:05.239] [PRINT]         "Order Reference",
+[2026-04-22 16:31:05.239] [PRINT]         "Item Code",
+[2026-04-22 16:31:05.239] [PRINT]         "Item Description",
+[2026-04-22 16:31:05.239] [PRINT]         "QTY",
+[2026-04-22 16:31:05.239] [PRINT]         "UOM",
+[2026-04-22 16:31:05.239] [PRINT]         "CB Date",
+[2026-04-22 16:31:05.239] [PRINT]         "Requested by"
+[2026-04-22 16:31:05.239] [PRINT]       ]
+[2026-04-22 16:31:05.239] [PRINT]     },
+[2026-04-22 16:31:05.239] [PRINT]     "tabs_found": [
+[2026-04-22 16:31:05.239] [PRINT]       "Food",
+[2026-04-22 16:31:05.239] [PRINT]       "non-food"
+[2026-04-22 16:31:05.239] [PRINT]     ],
+[2026-04-22 16:31:05.239] [PRINT]     "matching_tabs": [
+[2026-04-22 16:31:05.239] [PRINT]       "Food",
+[2026-04-22 16:31:05.239] [PRINT]       "non-food"
+[2026-04-22 16:31:05.239] [PRINT]     ],
+[2026-04-22 16:31:05.239] [PRINT]     "message": "Sheet is a valid requisition list template with write access confirmed"
+[2026-04-22 16:31:05.239] [PRINT]   },
+[2026-04-22 16:31:05.239] [PRINT]   "step_5_sheets_agent": {
+[2026-04-22 16:31:05.239] [PRINT]     "preview_rows": [],
+[2026-04-22 16:31:05.239] [PRINT]     "total_new_rows": 0,
+[2026-04-22 16:31:05.239] [PRINT]     "duplicates": [],
+[2026-04-22 16:31:05.239] [PRINT]     "duplicate_count": 0,
+[2026-04-22 16:31:05.239] [PRINT]     "warnings": [],
+[2026-04-22 16:31:05.239] [PRINT]     "target_tabs": [],
+[2026-04-22 16:31:05.239] [PRINT]     "message": "0 row(s) ready to insert across 0 tab(s). No duplicates detected."
+[2026-04-22 16:31:05.239] [PRINT]   },
+[2026-04-22 16:31:05.239] [PRINT]   "results": [
+[2026-04-22 16:31:05.239] [PRINT]     {
+[2026-04-22 16:31:05.239] [PRINT]       "step": 1,
+[2026-04-22 16:31:05.239] [PRINT]       "agent": "gmail_agent",
+[2026-04-22 16:31:05.239] [PRINT]       "tool": "search_emails_with_delivery_order_attachments",
+[2026-04-22 16:31:05.239] [PRINT]       "description": "Fetch recent emails with 'Order to Starbucks and Co.' delivery-order PDFs attached",
+[2026-04-22 16:31:05.239] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.239] [PRINT]         "query": "Order to Starbucks and Co.",
+[2026-04-22 16:31:05.239] [PRINT]         "max_results": 10,
+[2026-04-22 16:31:05.239] [PRINT]         "download_attachments": true
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       "output": {
+[2026-04-22 16:31:05.239] [PRINT]         "success": true,
+[2026-04-22 16:31:05.239] [PRINT]         "emails_with_attachments": [
+[2026-04-22 16:31:05.239] [PRINT]           {
+[2026-04-22 16:31:05.239] [PRINT]             "message_id": "19daf5cef9ed71d5",
+[2026-04-22 16:31:05.239] [PRINT]             "from": "Kita <pchua5644@gmail.com>",
+[2026-04-22 16:31:05.239] [PRINT]             "subject": "Order to Starbucks and Co.",
+[2026-04-22 16:31:05.239] [PRINT]             "date": "Tue, 21 Apr 2026 17:26:21 +0800",
+[2026-04-22 16:31:05.239] [PRINT]             "timestamp": "2026-04-21T17:26:21",
+[2026-04-22 16:31:05.239] [PRINT]             "internal_date_ms": "1776763581000",
+[2026-04-22 16:31:05.239] [PRINT]             "attachments": [
+[2026-04-22 16:31:05.239] [PRINT]               {
+[2026-04-22 16:31:05.239] [PRINT]                 "filename": "Order List.pdf",
+[2026-04-22 16:31:05.239] [PRINT]                 "attachment_id": "ANGjdJ82bYgtdoQiN34FrMwV90rWrqBfG8yg5rvpgcMRPseU6qkOABahshYZ6YAPMa_oCY-_RogTT9xn3m8vnGTJET2_OQlf47e5GAiyhpEgHkXkDQ33HH0-98P5Sv1P6uv05oV1KvRI9ZgJ6Rll24jUXlGnq_rb3qTYTcwuLn-d8_Iw_qIhfMLU56ew6lIO5igQAfwLDB0jtxw7jvUXX4GYMmNxZTZoS3ZfjECG3Ss7B2joIx5VMD7LGgWSM4igA7cyTubMuH8peMYJQoveGgsMqCWKg1YJNakG0vCp1qdr58wWWfrPMwHDIVyaTFrqFEBPDbVr2kmFs80va_0xo69FPqRbaxXj519kUtQsH_iRhkWe4p2jTLLyGJFKLBRqsdCuTzXFIGV3CgXkn6fY",
+[2026-04-22 16:31:05.239] [PRINT]                 "mime_type": "application/pdf",
+[2026-04-22 16:31:05.239] [PRINT]                 "size": 90330,
+[2026-04-22 16:31:05.239] [PRINT]                 "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x\\19daf5cef9ed71d5\\Order List.pdf"
+[2026-04-22 16:31:05.239] [PRINT]               }
+[2026-04-22 16:31:05.239] [PRINT]             ],
+[2026-04-22 16:31:05.239] [PRINT]             "attachment_count": 1
+[2026-04-22 16:31:05.239] [PRINT]           }
+[2026-04-22 16:31:05.239] [PRINT]         ],
+[2026-04-22 16:31:05.239] [PRINT]         "total_emails_found": 1,
+[2026-04-22 16:31:05.239] [PRINT]         "total_attachments_downloaded": 1,
+[2026-04-22 16:31:05.239] [PRINT]         "temp_directory": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x",
+[2026-04-22 16:31:05.239] [PRINT]         "query": "Order to Starbucks and Co.",
+[2026-04-22 16:31:05.239] [PRINT]         "download_attachments": true,
+[2026-04-22 16:31:05.239] [PRINT]         "error": null
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       "status": "success"
+[2026-04-22 16:31:05.239] [PRINT]     },
+[2026-04-22 16:31:05.239] [PRINT]     {
+[2026-04-22 16:31:05.239] [PRINT]       "step": 2,
+[2026-04-22 16:31:05.239] [PRINT]       "agent": "mapping_agent",
+[2026-04-22 16:31:05.239] [PRINT]       "tool": "parse_delivery_order_pdfs",
+[2026-04-22 16:31:05.239] [PRINT]       "description": "Extract structured rows from each 'Order to Starbucks and Co.' delivery-order PDF",
+[2026-04-22 16:31:05.239] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.239] [PRINT]         "file_paths": "[{'message_id': '19daf5cef9ed71d5', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Order to Starbucks and Co.', 'date': 'Tue, 21 Apr 2026 17:26:21 +0800', 'timestamp': '2026-04-21T17:26:21', 'internal_date_ms': '1776763581000', 'attachments': [{'filename': 'Order List.pdf', 'attachment_id': 'ANGjdJ82bYgtdoQiN34FrMwV90rWrqBfG8yg5rvpgcMRPseU6qkOABahshYZ6YAPMa_oCY-_RogTT9xn3m8vnGTJET2_OQlf47e5GAiyhpEgHkXkDQ33HH0-98P5Sv1P6uv05oV1KvRI9ZgJ6Rll24jUXlGnq_rb3qTYTcwuLn-d8_Iw_qIhfMLU56ew6lIO5igQAfwLDB0jtxw7jvUXX4GYMmNxZTZoS3ZfjECG3Ss7B2joIx5VMD7LGgWSM4igA7cyTubMuH8peMYJQoveGgsMqCWKg1YJNakG0vCp1qdr58wWWfrPMwHDIVyaTFrqFEBPDbVr2kmFs80va_0xo69FPqRbaxXj519kUtQsH_iRhkWe4p2jTLLyGJFKLBRqsdCuTzXFIGV3CgXkn6fY', 'mime_type': 'application/pdf', 'size': 90330, 'file_path': 'C:\\\\Users\\\\pchua\\\\AppData\\\\Local\\\\Temp\\\\gmail_delivery_orders_2t1kqz3x\\\\19daf5cef9ed71d5\\\\Order List.pdf'}], 'attachment_count': 1}]"
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       "output": {
+[2026-04-22 16:31:05.239] [PRINT]         "success": true,
+[2026-04-22 16:31:05.239] [PRINT]         "parsed_orders": [],
+[2026-04-22 16:31:05.239] [PRINT]         "rejected_files": [
+[2026-04-22 16:31:05.239] [PRINT]           {
+[2026-04-22 16:31:05.239] [PRINT]             "file": "Order List.pdf",
+[2026-04-22 16:31:05.239] [PRINT]             "reason": "pdfplumber not installed"
+[2026-04-22 16:31:05.239] [PRINT]           }
+[2026-04-22 16:31:05.239] [PRINT]         ],
+[2026-04-22 16:31:05.239] [PRINT]         "total_parsed": 0,
+[2026-04-22 16:31:05.239] [PRINT]         "total_rejected": 1
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       "status": "success"
+[2026-04-22 16:31:05.239] [PRINT]     },
+[2026-04-22 16:31:05.239] [PRINT]     {
+[2026-04-22 16:31:05.239] [PRINT]       "step": 3,
+[2026-04-22 16:31:05.239] [PRINT]       "agent": "drive_agent",
+[2026-04-22 16:31:05.239] [PRINT]       "tool": "search_files",
+[2026-04-22 16:31:05.239] [PRINT]       "description": "Resolve the 'Product Requisition List' sheet name to its Drive ID",
+[2026-04-22 16:31:05.239] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.239] [PRINT]         "search_term": "Product Requisition List"
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       "output": {
+[2026-04-22 16:31:05.239] [PRINT]         "success": true,
+[2026-04-22 16:31:05.239] [PRINT]         "results": [
+[2026-04-22 16:31:05.239] [PRINT]           {
+[2026-04-22 16:31:05.239] [PRINT]             "parents": [
+[2026-04-22 16:31:05.239] [PRINT]               "1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"
+[2026-04-22 16:31:05.239] [PRINT]             ],
+[2026-04-22 16:31:05.239] [PRINT]             "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:31:05.239] [PRINT]             "name": "Product Requisition List",
+[2026-04-22 16:31:05.239] [PRINT]             "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-22 16:31:05.239] [PRINT]             "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk",
+[2026-04-22 16:31:05.239] [PRINT]             "createdTime": "2026-04-21T09:32:16.447Z",
+[2026-04-22 16:31:05.239] [PRINT]             "size": "1024"
+[2026-04-22 16:31:05.239] [PRINT]           },
+[2026-04-22 16:31:05.239] [PRINT]           {
+[2026-04-22 16:31:05.239] [PRINT]             "id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-22 16:31:05.239] [PRINT]             "name": "PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-22 16:31:05.239] [PRINT]             "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-22 16:31:05.239] [PRINT]             "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk",
+[2026-04-22 16:31:05.239] [PRINT]             "createdTime": "2026-04-04T19:06:32.433Z",
+[2026-04-22 16:31:05.239] [PRINT]             "size": "1024"
+[2026-04-22 16:31:05.239] [PRINT]           }
+[2026-04-22 16:31:05.239] [PRINT]         ],
+[2026-04-22 16:31:05.239] [PRINT]         "count": 2,
+[2026-04-22 16:31:05.239] [PRINT]         "search_term": "Product Requisition List",
+[2026-04-22 16:31:05.239] [PRINT]         "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-22 16:31:05.239] [PRINT]         "error": null
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       "status": "success"
+[2026-04-22 16:31:05.239] [PRINT]     },
+[2026-04-22 16:31:05.239] [PRINT]     {
+[2026-04-22 16:31:05.239] [PRINT]       "step": 4,
+[2026-04-22 16:31:05.239] [PRINT]       "agent": "sheets_agent",
+[2026-04-22 16:31:05.239] [PRINT]       "tool": "validate_delivery_sheet",
+[2026-04-22 16:31:05.239] [PRINT]       "description": "Confirm the sheet matches the delivery-order template before writing",
+[2026-04-22 16:31:05.239] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.239] [PRINT]         "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU"
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       "output": {
+[2026-04-22 16:31:05.239] [PRINT]         "success": true,
+[2026-04-22 16:31:05.239] [PRINT]         "is_valid": true,
+[2026-04-22 16:31:05.239] [PRINT]         "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:31:05.239] [PRINT]         "headers_by_tab": {
+[2026-04-22 16:31:05.239] [PRINT]           "Food": [
+[2026-04-22 16:31:05.239] [PRINT]             "Date",
+[2026-04-22 16:31:05.239] [PRINT]             "Order Reference",
+[2026-04-22 16:31:05.239] [PRINT]             "Item Code",
+[2026-04-22 16:31:05.239] [PRINT]             "Item Description",
+[2026-04-22 16:31:05.239] [PRINT]             "QTY",
+[2026-04-22 16:31:05.239] [PRINT]             "UOM",
+[2026-04-22 16:31:05.239] [PRINT]             "CB Date",
+[2026-04-22 16:31:05.239] [PRINT]             "Requested by"
+[2026-04-22 16:31:05.239] [PRINT]           ],
+[2026-04-22 16:31:05.239] [PRINT]           "non-food": [
+[2026-04-22 16:31:05.239] [PRINT]             "Date",
+[2026-04-22 16:31:05.239] [PRINT]             "Order Reference",
+[2026-04-22 16:31:05.239] [PRINT]             "Item Code",
+[2026-04-22 16:31:05.239] [PRINT]             "Item Description",
+[2026-04-22 16:31:05.239] [PRINT]             "QTY",
+[2026-04-22 16:31:05.239] [PRINT]             "UOM",
+[2026-04-22 16:31:05.239] [PRINT]             "CB Date",
+[2026-04-22 16:31:05.239] [PRINT]             "Requested by"
+[2026-04-22 16:31:05.239] [PRINT]           ]
+[2026-04-22 16:31:05.239] [PRINT]         },
+[2026-04-22 16:31:05.239] [PRINT]         "tabs_found": [
+[2026-04-22 16:31:05.239] [PRINT]           "Food",
+[2026-04-22 16:31:05.239] [PRINT]           "non-food"
+[2026-04-22 16:31:05.239] [PRINT]         ],
+[2026-04-22 16:31:05.239] [PRINT]         "matching_tabs": [
+[2026-04-22 16:31:05.239] [PRINT]           "Food",
+[2026-04-22 16:31:05.239] [PRINT]           "non-food"
+[2026-04-22 16:31:05.239] [PRINT]         ],
+[2026-04-22 16:31:05.239] [PRINT]         "message": "Sheet is a valid requisition list template with write access confirmed"
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       "status": "success"
+[2026-04-22 16:31:05.239] [PRINT]     },
+[2026-04-22 16:31:05.239] [PRINT]     {
+[2026-04-22 16:31:05.239] [PRINT]       "step": 5,
+[2026-04-22 16:31:05.239] [PRINT]       "agent": "sheets_agent",
+[2026-04-22 16:31:05.239] [PRINT]       "tool": "preview_delivery_order_insertion",
+[2026-04-22 16:31:05.239] [PRINT]       "description": "Generate a preview of rows per tab so the user can approve before writing",
+[2026-04-22 16:31:05.239] [PRINT]       "inputs": {
+[2026-04-22 16:31:05.239] [PRINT]         "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:31:05.239] [PRINT]         "parsed_orders": "[]"
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       "output": {
+[2026-04-22 16:31:05.239] [PRINT]         "success": true,
+[2026-04-22 16:31:05.239] [PRINT]         "preview_rows": [],
+[2026-04-22 16:31:05.239] [PRINT]         "total_new_rows": 0,
+[2026-04-22 16:31:05.239] [PRINT]         "duplicates": [],
+[2026-04-22 16:31:05.239] [PRINT]         "duplicate_count": 0,
+[2026-04-22 16:31:05.239] [PRINT]         "warnings": [],
+[2026-04-22 16:31:05.239] [PRINT]         "target_tabs": [],
+[2026-04-22 16:31:05.239] [PRINT]         "message": "0 row(s) ready to insert across 0 tab(s). No duplicates detected."
+[2026-04-22 16:31:05.239] [PRINT]       },
+[2026-04-22 16:31:05.239] [PRINT]       "status": "success"
+[2026-04-22 16:31:05.239] [PRINT]     },
+[2026-04-22 16:31:05.239] [PRINT]     {
+[2026-04-22 16:31:05.239] [PRINT]       "step": 6,
+[2026-04-22 16:31:05.239] [PRINT]       "agent": "sheets_agent",
+[2026-04-22 16:31:05.239] [PRINT]       "tool": "write_delivery_order_data",
+[2026-04-22 16:31:05.239] [PRINT]       "status": "pending_approval",
+[2026-04-22 16:31:05.239] [PRINT]       "action_id": "action_61610c00",
+[2026-04-22 16:31:05.239] [PRINT]       "description": "Append the parsed delivery-order rows into the 'Product Requisition List' sheet (DANGEROUS \u2014 requires approval)"
+[2026-04-22 16:31:05.239] [PRINT]     }
+[2026-04-22 16:31:05.239] [PRINT]   ],
+[2026-04-22 16:31:05.239] [PRINT]   "paused_for_approval": true,
+[2026-04-22 16:31:05.239] [PRINT]   "pending_action": {
+[2026-04-22 16:31:05.239] [PRINT]     "step_number": 6,
+[2026-04-22 16:31:05.239] [PRINT]     "total_steps": 6,
+[2026-04-22 16:31:05.239] [PRINT]     "agent": "sheets_agent",
+[2026-04-22 16:31:05.239] [PRINT]     "tool": "write_delivery_order_data",
+[2026-04-22 16:31:05.239] [PRINT]     "description": "Append the parsed delivery-order rows into the 'Product Requisition List' sheet (DANGEROUS \u2014 requires approval)",
+[2026-04-22 16:31:05.239] [PRINT]     "inputs": {
+[2026-04-22 16:31:05.239] [PRINT]       "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-22 16:31:05.239] [PRINT]       "parsed_orders": []
+[2026-04-22 16:31:05.239] [PRINT]     },
+[2026-04-22 16:31:05.239] [PRINT]     "output_variables": {},
+[2026-04-22 16:31:05.239] [PRINT]     "risk_level": "dangerous"
+[2026-04-22 16:31:05.239] [PRINT]   },
+[2026-04-22 16:31:05.239] [PRINT]   "pending_action_id": "action_61610c00",
+[2026-04-22 16:31:05.239] [PRINT]   "remaining_steps": []
+[2026-04-22 16:31:05.239] [PRINT] }
+[2026-04-22 16:31:05.254] [INFO] [req_20260422083016_f8cc7d3c] [T:ccf2f100]   STEP [workflow_paused]: Workflow paused — action requires chat approval
+[2026-04-22 16:31:05.306] [PRINT] 
+[2026-04-22 16:31:05.306] [PRINT] ============================================================
+[2026-04-22 16:31:05.320] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-22 16:31:05.334] [PRINT] ============================================================
+[2026-04-22 16:31:05.344] [PRINT]   LLM calls:        2
+[2026-04-22 16:31:05.358] [PRINT]   Total input:      5,232 tokens
+[2026-04-22 16:31:05.372] [PRINT]   Total output:     489 tokens
+[2026-04-22 16:31:05.387] [PRINT]   Total tokens:     5,721 tokens
+[2026-04-22 16:31:05.402] [PRINT]   Estimated cost:   $0.1787
+[2026-04-22 16:31:05.418] [PRINT]   Total duration:   48937ms (48.9s)
+[2026-04-22 16:31:05.431] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-22 16:31:05.442] [PRINT]   Breakdown by call:
+[2026-04-22 16:31:05.457] [PRINT]     1. gpt-4o-mini      in=202    out=27    $0.0000 1085ms
+[2026-04-22 16:31:05.473] [PRINT]     2. gpt-4            in=5030   out=462   $0.1786 16130ms
+[2026-04-22 16:31:05.487] [PRINT] ============================================================
+[2026-04-22 16:31:05.514] [INFO] [req_20260422083016_f8cc7d3c] [T:ccf2f100] ← RESPONSE: 200 (53920ms)
+[2026-04-22 16:31:05.515] [INFO] [req_20260422083016_f8cc7d3c] [T:ccf2f100] ─────────: ──────────────────────────────────────────────────
+[2026-04-22 16:31:05.524] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100
+[2026-04-22 16:31:15.010] [PRINT] WebSocket connected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100
+[2026-04-22 16:31:15.032] [INFO] [req_20260422083016_f8cc7d3c] [T:ccf2f100] → REQUEST: POST /threads/65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100/messages  | {"query": null}
+[2026-04-22 16:31:19.687] [INFO] [req_20260422083119_693dbf97] [T:ccf2f100]   USER MSG: "Yes"
+[2026-04-22 16:31:19.724] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-22 16:31:19.745] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100
+[2026-04-22 16:31:19.760] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-22 16:31:19.782] [PRINT]   User: Yes
+[2026-04-22 16:31:19.820] [PRINT]   ConversationState:
+[2026-04-22 16:31:19.846] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["write_delivery_order_data", "preview_delivery_order_insertion", "validate_delivery_sheet"], "drive_agent": ["search_files"]}, "query": "Order to Starbucks and Co.", "sheet_name": "Product Requisition List"}
+[2026-04-22 16:31:19.879] [PRINT]     missing_fields: []
+[2026-04-22 16:31:19.895] [PRINT]     intent: "ready_to_execute"
+[2026-04-22 16:31:19.906] [PRINT]     clarification_question: null
+[2026-04-22 16:31:19.920] [PRINT]     ready_for_execution: false
+[2026-04-22 16:31:19.936] [PRINT]     execution_summary: "Parse 'Order to Starbucks and Co.' delivery-order PDFs and write to 'Product Requisition List'"
+[2026-04-22 16:31:19.950] [PRINT]     execution_mode: "standard"
+[2026-04-22 16:31:19.968] [PRINT]     execution_history: []
+[2026-04-22 16:31:19.983] [PRINT]     completed_tasks: []
+[2026-04-22 16:31:19.998] [PRINT]     has_executed: false
+[2026-04-22 16:31:20.016] [PRINT]     last_executed_at: null
+[2026-04-22 16:31:20.030] [PRINT]     last_execution_status: null
+[2026-04-22 16:31:20.045] [PRINT]     last_execution_message: null
+[2026-04-22 16:31:20.177] [PRINT]     executing: false
+[2026-04-22 16:31:20.270] [PRINT]     pending_actions: [{"action_id": "action_61610c00", "step_number": 6, "total_steps": 6, "agent": "sheets_agent", "tool": "write_delivery_order_data", "description": "Append the parsed delivery-order rows into the 'Product Requisition List' sheet (DANGEROUS \u2014 requires approval)", "inputs": {"sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "parsed_orders": []}, "output_variables": {}, "risk_level": "dangerous"}]
+[2026-04-22 16:31:20.296] [PRINT]     workflow_paused: true
+[2026-04-22 16:31:20.324] [PRINT]     remaining_steps: []
+[2026-04-22 16:31:20.353] [PRINT]     workflow_context: {"today_date": "2026-04-22", "_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["write_delivery_order_data", "preview_delivery_order_insertion", "validate_delivery_sheet"], "drive_agent": ["search_files"]}, "step_1_gmail_agent": {"emails_with_attachments": [{"message_id": "19daf5cef9ed71d5", "from": "Kita <pchua5644@gmail.com>", "subject": "Order to Starbucks and Co.", "date": "Tue, 21 Apr 2026 17:26:21 +0800", "timestamp": "2026-04-21T17:26:21", "internal_date_ms": "1776763581000", "attachments": [{"filename": "Order List.pdf", "attachment_id": "ANGjdJ82bYgtdoQiN34FrMwV90rWrqBfG8yg5rvpgcMRPseU6qkOABahshYZ6YAPMa_oCY-_RogTT9xn3m8vnGTJET2_OQlf47e5GAiyhpEgHkXkDQ33HH0-98P5Sv1P6uv05oV1KvRI9ZgJ6Rll24jUXlGnq_rb3qTYTcwuLn-d8_Iw_qIhfMLU56ew6lIO5igQAfwLDB0jtxw7jvUXX4GYMmNxZTZoS3ZfjECG3Ss7B2joIx5VMD7LGgWSM4igA7cyTubMuH8peMYJQoveGgsMqCWKg1YJNakG0vCp1qdr58wWWfrPMwHDIVyaTFrqFEBPDbVr2kmFs80va_0xo69FPqRbaxXj519kUtQsH_iRhkWe4p2jTLLyGJFKLBRqsdCuTzXFIGV3CgXkn6fY", "mime_type": "application/pdf", "size": 90330, "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x\\19daf5cef9ed71d5\\Order List.pdf"}], "attachment_count": 1}], "total_emails_found": 1, "total_attachments_downloaded": 1, "temp_directory": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x", "query": "Order to Starbucks and Co.", "download_attachments": true}, "emails_with_attachments": [{"message_id": "19daf5cef9ed71d5", "from": "Kita <pchua5644@gmail.com>", "subject": "Order to Starbucks and Co.", "date": "Tue, 21 Apr 2026 17:26:21 +0800", "timestamp": "2026-04-21T17:26:21", "internal_date_ms": "1776763581000", "attachments": [{"filename": "Order List.pdf", "attachment_id": "ANGjdJ82bYgtdoQiN34FrMwV90rWrqBfG8yg5rvpgcMRPseU6qkOABahshYZ6YAPMa_oCY-_RogTT9xn3m8vnGTJET2_OQlf47e5GAiyhpEgHkXkDQ33HH0-98P5Sv1P6uv05oV1KvRI9ZgJ6Rll24jUXlGnq_rb3qTYTcwuLn-d8_Iw_qIhfMLU56ew6lIO5igQAfwLDB0jtxw7jvUXX4GYMmNxZTZoS3ZfjECG3Ss7B2joIx5VMD7LGgWSM4igA7cyTubMuH8peMYJQoveGgsMqCWKg1YJNakG0vCp1qdr58wWWfrPMwHDIVyaTFrqFEBPDbVr2kmFs80va_0xo69FPqRbaxXj519kUtQsH_iRhkWe4p2jTLLyGJFKLBRqsdCuTzXFIGV3CgXkn6fY", "mime_type": "application/pdf", "size": 90330, "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_2t1kqz3x\\19daf5cef9ed71d5\\Order List.pdf"}], "attachment_count": 1}], "step_2_mapping_agent": {"parsed_orders": [], "rejected_files": [{"file": "Order List.pdf", "reason": "pdfplumber not installed"}], "total_parsed": 0, "total_rejected": 1}, "parsed_orders": [], "step_3_drive_agent": {"results": [{"parents": ["1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"], "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "name": "Product Requisition List", "mimeType": "application/vnd.google-apps.spreadsheet", "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk", "createdTime": "2026-04-21T09:32:16.447Z", "size": "1024"}, {"id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA", "name": "PRODUCTION MATERIALS REQUISITION LIST", "mimeType": "application/vnd.google-apps.spreadsheet", "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk", "createdTime": "2026-04-04T19:06:32.433Z", "size": "1024"}], "count": 2, "search_term": "Product Requisition List", "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST"}, "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "step_4_sheets_agent": {"is_valid": true, "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "headers_by_tab": {"Food": ["Date", "Order Reference", "Item Code", "Item Description", "QTY", "UOM", "CB Date", "Requested by"], "non-food": ["Date", "Order Reference", "Item Code", "Item Description", "QTY", "UOM", "CB Date", "Requested by"]}, "tabs_found": ["Food", "non-food"], "matching_tabs": ["Food", "non-food"], "message": "Sheet is a valid requisition list template with write access confirmed"}, "step_5_sheets_agent": {"preview_rows": [], "total_new_rows": 0, "duplicates": [], "duplicate_count": 0, "warnings": [], "target_tabs": [], "message": "0 row(s) ready to insert across 0 tab(s). No duplicates detected."}, "_execution_mode": "standard"}
+[2026-04-22 16:31:20.373] [PRINT]     disambiguation_options: []
+[2026-04-22 16:31:20.386] [PRINT]     disambiguation_variable: null
+[2026-04-22 16:31:20.398] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-22 16:31:20.409] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100, msg=Yes
+[2026-04-22 16:31:20.411] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 171, "max": 2000}
+[2026-04-22 16:31:20.421] [INFO] [-]   STEP [tier0]: pending action APPROVED via chat: action_61610c00
+[2026-04-22 16:31:20.424] [INFO] [-]   ANALYSIS: intent=ConversationIntent.SMALL_TALK, ready=False  | {"missing_fields": []}
+[2026-04-22 16:31:20.425] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.SMALL_TALK
+    ↳ {"intent": "ConversationIntent.SMALL_TALK", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": null, "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["write_delivery_order_data", "preview_delivery_order_insertion", "validate_delivery_sheet"], "drive_agen
+[2026-04-22 16:31:20.428] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 9, "total": 180, "max": 2000, "response_preview": "Executing approved action..."}
+[2026-04-22 16:31:20.461] [INFO] [req_20260422083119_693dbf97] [T:ccf2f100]   BOT RESP: "Executing approved action..."
+[2026-04-22 16:31:20.462] [PRINT] Chat-based approval for action action_61610c00
+[2026-04-22 16:31:20.474] [INFO] [req_20260422083119_693dbf97] [T:ccf2f100]   STEP [chat_approval]: Executing approved action: action_61610c00
+[2026-04-22 16:31:20.498] [PRINT] Attempt 1/3 calling http://localhost:8003/execute_task
+[2026-04-22 16:31:20.510] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-22 16:31:25.231] [PRINT] Agent reported error: No rows to write. parsed_orders may be empty.
+[2026-04-22 16:31:25.245] [PRINT]    Retrying in 1.0s...
+[2026-04-22 16:31:26.260] [PRINT] Attempt 2/3 calling http://localhost:8003/execute_task
+[2026-04-22 16:31:26.274] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-22 16:31:30.698] [PRINT] Agent reported error: No rows to write. parsed_orders may be empty.
+[2026-04-22 16:31:30.711] [PRINT]    Retrying in 2.0s...
+[2026-04-22 16:31:32.723] [PRINT] Attempt 3/3 calling http://localhost:8003/execute_task
+[2026-04-22 16:31:32.732] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-22 16:31:37.837] [PRINT] Agent reported error: No rows to write. parsed_orders may be empty.
+[2026-04-22 16:31:37.862] [PRINT] Action executed: False
+[2026-04-22 16:31:37.977] [PRINT] 
+[2026-04-22 16:31:37.977] [PRINT] ============================================================
+[2026-04-22 16:31:37.994] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-22 16:31:38.391] [PRINT] ============================================================
+[2026-04-22 16:31:38.443] [PRINT]   No LLM calls made in this request.
+[2026-04-22 16:31:38.490] [PRINT] ============================================================
+[2026-04-22 16:31:38.528] [INFO] [req_20260422083119_693dbf97] [T:ccf2f100] ← RESPONSE: 200 (23496ms)
+[2026-04-22 16:31:38.528] [INFO] [req_20260422083119_693dbf97] [T:ccf2f100] ─────────: ──────────────────────────────────────────────────
+[2026-04-22 16:31:38.660] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_ccf2f100
+[2026-04-22 16:33:10.747] [INFO] [req_20260422083119_693dbf97] [T:ccf2f100] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-22 16:33:10.894] [INFO] [req_20260422083119_693dbf97] [T:ccf2f100] ← RESPONSE: 200 (154ms)
+[2026-04-22 16:33:10.895] [INFO] [req_20260422083119_693dbf97] [T:ccf2f100] ─────────: ──────────────────────────────────────────────────

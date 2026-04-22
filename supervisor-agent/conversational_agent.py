@@ -705,10 +705,10 @@ When user wants to find an existing file and create a new document from it:
 - execution_summary: "Find file '[file_name]' and create new document '[new_title]'"
 - If both file_name and new_title present → ready_to_execute; otherwise → needs_clarification
 
-DELIVERY ORDER WORKFLOW:
-When user wants delivery-order / requisition / purchase-order / PO / "order list" PDF data written into a Google Sheet:
-- Extract ONLY sheet_name (or URL). NEVER ask for parsed_orders, transformed_data, source_data, file_paths, or sheet_id — the pipeline derives them via parse_delivery_order_pdfs, search_emails_with_delivery_order_attachments, and drive_agent.search_files.
-- task_type: "process_delivery_order"; execution_summary: "Parse delivery-order PDFs and write to '[sheet_name]'".
+DELIVERY ORDER WORKFLOW (task_type=process_delivery_order):
+Trigger ONLY when the message has delivery-order/requisition/purchase-order/PO/"order list" keywords AND an explicit write/parse/extract verb (write, save, insert, add, log, record, populate, put…into sheet; parse, extract, process). Pure search/find/read ("find my DO email", "show the PO") is NOT this workflow — use gmail_agent.search_emails as a single step.
+- Extract sheet_name (or URL). ALSO extract email_filter when the message references a prior email ("that PDF", "the [X] order/email", "the one I found") AND COMPLETED TASKS shows a recent gmail search — copy that prior search's narrowing phrase verbatim into email_filter (e.g. "Order to Starbucks and Co."). Omit email_filter when the current turn is a fresh batch request with no prior narrowing. NEVER ask for parsed_orders/transformed_data/source_data/file_paths/sheet_id — the pipeline derives them.
+- execution_summary: "Parse delivery-order PDFs and write to '[sheet_name]'" (append " filtered by '[email_filter]'" when set).
 - Do NOT pick sheets_agent.upload_mapped_data (bypasses template validation); use write_delivery_order_data.
 - sheet_name present → ready_to_execute; else ask ONLY for the sheet name/URL.
 

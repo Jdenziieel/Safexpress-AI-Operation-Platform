@@ -148,6 +148,10 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
                    if k not in ("paused_for_disambiguation", "disambiguation_options",
                                 "disambiguation_variable", "disambiguation_source_tool",
                                 "remaining_steps", "results")}
+            # Bug 5 resume metadata is preserved in ctx (it lives alongside
+            # workflow_context) so the resume handler in
+            # _handle_pending_action_decision can re-run extract_nested_value
+            # against the patched agent_result on the user's selection.
             conversation_state.workflow_context = ctx
 
             disambig_msg = _build_disambiguation_message(options, source_tool)
@@ -448,6 +452,10 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
                        if k not in ("paused_for_disambiguation", "disambiguation_options",
                                     "disambiguation_variable", "disambiguation_source_tool",
                                     "remaining_steps", "results")}
+        # Bug 5 resume metadata (disambiguation_output_variables,
+        # disambiguation_results_field, disambiguation_agent_result) is
+        # preserved here by design — the resume handler consumes and scrubs
+        # these keys after the user's selection is applied.
         workflow_ctx["_execution_mode"] = execution_mode
         conversation_state.workflow_context = workflow_ctx
         conversation_state.ready_for_execution = False
@@ -749,10 +757,50 @@ async def _handle_disambiguation_selection(conversation_state, thread_id: str, r
 
         trace.step("disambiguation_select", f"User selected: {selected_item.get('name', selected_item.get('id', ''))}")
 
-        # Rebuild context with the selected item injected
+        # Rebuild context with the selected item injected.
         variable_context = conversation_state.workflow_context or {}
 
-        if variable_name:
+        # Bug 5 resume: when the orchestrator paused because the planner's
+        # output_variables used an indexed pattern like `results[0].id`, we
+        # can't just stuff the raw selected_item into `sheet_id` — the
+        # variable is supposed to be a scalar ID, not a dict or list. We
+        # replay the original extraction path against a patched
+        # agent_result whose results array now contains only the user's
+        # pick. That same replay also handles the legacy whole-array
+        # pattern cleanly (source_field == "results" resolves the entire
+        # list back to `[selected_item]` with zero behavior change).
+        output_vars_map = (
+            conversation_state.workflow_context or {}
+        ).get("disambiguation_output_variables") or {}
+        results_field_name = (
+            conversation_state.workflow_context or {}
+        ).get("disambiguation_results_field")
+        agent_result_snapshot = (
+            conversation_state.workflow_context or {}
+        ).get("disambiguation_agent_result") or {}
+
+        if output_vars_map and results_field_name:
+            try:
+                from supervisor_agent import extract_nested_value
+            except ImportError:
+                extract_nested_value = None  # type: ignore
+
+            patched = dict(agent_result_snapshot)
+            patched[results_field_name] = [selected_item]
+
+            for out_var, source_field in output_vars_map.items():
+                value = None
+                if extract_nested_value is not None and isinstance(source_field, str):
+                    try:
+                        value = extract_nested_value(patched, source_field)
+                    except Exception:
+                        value = None
+                if value is None and isinstance(source_field, str):
+                    value = patched.get(source_field)
+                if value is None:
+                    value = [selected_item]
+                variable_context[out_var] = value
+        elif variable_name:
             variable_context[variable_name] = [selected_item]
 
         selected_name = selected_item.get("name") or selected_item.get("title") or "selected item"
@@ -764,6 +812,18 @@ async def _handle_disambiguation_selection(conversation_state, thread_id: str, r
         conversation_state.extracted_info.pop("decision", None)
         conversation_state.extracted_info.pop("selected_item", None)
         conversation_state.extracted_info.pop("selected_index", None)
+        # Scrub the resume-metadata blobs so they don't leak into a later
+        # workflow. These are tied to THIS pause/resume cycle only.
+        if isinstance(conversation_state.workflow_context, dict):
+            for k in (
+                "disambiguation_output_variables",
+                "disambiguation_results_field",
+                "disambiguation_agent_result",
+            ):
+                conversation_state.workflow_context.pop(k, None)
+            variable_context.pop("disambiguation_output_variables", None)
+            variable_context.pop("disambiguation_results_field", None)
+            variable_context.pop("disambiguation_agent_result", None)
 
         if not remaining:
             _clear_workflow_state(conversation_state)

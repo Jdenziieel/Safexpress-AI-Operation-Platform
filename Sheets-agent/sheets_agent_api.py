@@ -1056,6 +1056,57 @@ def _find_tab(tab_names: List[str], target: str) -> Optional[str]:
     return None
 
 
+# The only two categories the requisition sheet template accepts. Keys cover
+# every normalisation form that `_resolve_tab_for_category` might see after
+# `.upper().replace(" ", "")` / underscore handling. Tech / IT / other
+# categories are NOT in this map — a PDF with that content should have been
+# rejected at the Mapping agent's category gate before reaching this
+# function, and if it somehow slips through we skip + warn rather than
+# force-routing into the wrong tab.
+_CATEGORY_TAB_MAP: Dict[str, str] = {
+    "FOOD": "Food",
+    "NON-FOOD": "non-food",
+    "NONFOOD": "non-food",
+    "NON_FOOD": "non-food",
+}
+
+
+def _resolve_tab_for_category(
+    category: str, tab_names: List[str]
+) -> tuple[Optional[str], Optional[str]]:
+    """Return ``(actual_tab, warning_or_none)`` for a given category string.
+
+    Strictly binary: only FOOD and NON-FOOD resolve to a tab. Any other
+    category returns ``(None, <warning>)`` so the calling code skips the
+    order. This is the defensive layer behind the Mapping agent's category
+    gate; in steady state the Mapping agent rejects non-FOOD/NON-FOOD PDFs
+    before they ever reach the Sheets agent, but this function remains the
+    source of truth for routing so we never silently mis-route.
+
+    This is a pure function of ``category`` and ``tab_names`` — no I/O.
+    """
+    raw = (category or "").strip()
+    normalised = raw.upper().replace(" ", "").replace("_", "-")
+
+    preferred = _CATEGORY_TAB_MAP.get(normalised)
+    if not preferred:
+        return None, (
+            f"Category {raw!r} is not FOOD or NON-FOOD — order skipped. "
+            "Only the two requisition categories have a destination in the "
+            "Food / non-food sheet template."
+        )
+
+    actual = _find_tab(tab_names, preferred)
+    if actual:
+        return actual, None
+
+    return None, (
+        f"Tab '{preferred}' is missing from the spreadsheet — order skipped. "
+        "The requisition template requires both 'Food' and 'non-food' tabs. "
+        f"Available tabs: {tab_names!r}."
+    )
+
+
 def _check_write_permission(service, sheet_id: str) -> Optional[str]:
     """Attempt a no-op write that only editors can perform.
     Returns an error string if write is not possible, or None if OK.
@@ -1176,15 +1227,40 @@ def validate_delivery_sheet(
                 ))
             if missing_expected:
                 details.append(f"Missing tabs: {', '.join(missing_expected)}")
+
+            spreadsheet_title = spreadsheet.get("properties", {}).get("title", "")
+
+            # A completely-missing tab set almost always means the user
+            # pointed us at a DIFFERENT spreadsheet entirely (not the
+            # requisition template). Call that out explicitly — it's a
+            # much more actionable message than "header mismatch".
+            if len(missing_expected) == len(_EXPECTED_TABS):
+                error_msg = (
+                    f"This is not the designated requisition sheet. The "
+                    f"spreadsheet {spreadsheet_title!r} does not have the "
+                    f"required 'Food' and 'non-food' tabs — it looks like a "
+                    f"different sheet. Its tabs are: {tab_names!r}. The "
+                    f"Production Materials Requisition List template is "
+                    f"required."
+                )
+            else:
+                error_msg = (
+                    f"The spreadsheet {spreadsheet_title!r} does not match "
+                    f"the Production Materials Requisition List template. "
+                    + "; ".join(details)
+                )
+
             return {
                 "success": False,
                 "is_valid": False,
                 "sheet_id": real_id,
+                "sheet_title": spreadsheet_title,
                 "headers_by_tab": all_headers,
                 "tabs_found": tab_names,
                 "mismatch_details": mismatches,
                 "missing_tabs": missing_expected,
-                "error": "The provided sheet does not match the requisition list template. " + "; ".join(details),
+                "error_type": "wrong_sheet",
+                "error": error_msg,
             }
 
         # --- 4. Proactive write-permission check ----------------------------
@@ -1264,12 +1340,15 @@ def preview_delivery_order_insertion(
 
         for order in parsed_orders:
             header = order.get("header", {})
-            category = (header.get("category") or "").strip().upper()
-            desired_tab = "Food" if category == "FOOD" else "non-food"
-            actual_tab = _find_tab(tab_names, desired_tab)
+            category = header.get("category") or ""
+            actual_tab, route_warning = _resolve_tab_for_category(category, tab_names)
 
             if not actual_tab:
-                warnings.append(f"Tab '{desired_tab}' not found in sheet for order {header.get('reference_number', '?')}")
+                # Non-FOOD/NON-FOOD category, or a missing destination tab.
+                # Either way this order is skipped — don't force it anywhere.
+                warnings.append(
+                    f"{route_warning} (order {header.get('reference_number', '?')})"
+                )
                 continue
 
             date_val = header.get("date", "")
@@ -1391,13 +1470,15 @@ def write_delivery_order_data(
 
         for order in parsed_orders:
             header = order.get("header", {})
-            category = (header.get("category") or "").strip().upper()
-            desired_tab = "Food" if category == "FOOD" else "non-food"
-            actual_tab = _find_tab(tab_names, desired_tab)
+            category = header.get("category") or ""
+            actual_tab, route_warning = _resolve_tab_for_category(category, tab_names)
 
             if not actual_tab:
+                # Non-FOOD/NON-FOOD category, or a missing destination tab.
+                # Skip — the requisition template only has homes for FOOD
+                # and NON-FOOD, never Tech / IT / anything else.
                 skipped_warnings.append(
-                    f"Tab '{desired_tab}' not found for order {header.get('reference_number', '?')}"
+                    f"{route_warning} (order {header.get('reference_number', '?')})"
                 )
                 continue
 
@@ -1464,6 +1545,10 @@ def write_delivery_order_data(
             "rows_written": total_written,
             "tabs_used": tabs_used,
             "errors": errors if errors else None,
+            # Surface routing fallbacks (e.g. Tech items that landed in
+            # non-food because the sheet has no Tech tab) so the user knows
+            # WHY their rows ended up where they did.
+            "warnings": skipped_warnings if skipped_warnings else None,
             "message": f"Successfully wrote {total_written} row(s) to {len(tabs_used)} tab(s)",
         }
 

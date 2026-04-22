@@ -425,7 +425,7 @@ PLANNING RULES:
 16. DELIVERY-ORDER PIPELINE (task_type=process_delivery_order): chain EXACTLY these tools in order (A then B then C then D then E then F):
    A. Source PDFs — pick ONE path:
       - if uploaded_file is in context → SKIP this step; feed the BARE STRING "{{{{ uploaded_file.temp_path }}}}" as file_paths in step B (no brackets — the tool auto-wraps a single path into a list).
-      - else → gmail_agent.search_emails_with_delivery_order_attachments(query="delivery order OR DO OR requisition OR purchase order OR PO has:attachment", max_results=10, download_attachments=true) → output_variables {{"emails_with_attachments": "emails_with_attachments"}}.
+      - else → gmail_agent.search_emails_with_delivery_order_attachments(query=<if Parameters contains email_filter, use its value verbatim PLUS " has:attachment"; else use "delivery order OR DO OR requisition OR purchase order OR PO has:attachment">, max_results=10, download_attachments=true) → output_variables {{"emails_with_attachments": "emails_with_attachments"}}.
    B. mapping_agent.parse_delivery_order_pdfs(file_paths={{{{ emails_with_attachments }}}}  OR  file_paths={{{{ uploaded_file.temp_path }}}}) → output_variables {{"parsed_orders": "parsed_orders"}}. The parse tool accepts a flat list, the nested emails_with_attachments response, or a single bare-string path (it wraps it automatically). Emit file_paths as a STRING value ("{{{{ var }}}}"), never as a JSON list literal — list literals bypass Jinja substitution.
    C. drive_agent.search_files(search_term="<sheet name from user>") → output_variables {{"sheet_id": "results[0].id"}}. search_files takes ONLY search_term (no query/file_type/max_results). SKIP this step ONLY if the user already provided a real Google Sheets ID/URL as sheet_id in the task parameters.
    D. sheets_agent.validate_delivery_sheet(sheet_id={{{{ sheet_id }}}}) — no output_variables needed; the orchestrator halts here if the template is incompatible.
@@ -1465,16 +1465,42 @@ def orchestrator_node(state: SharedState) -> SharedState:
                     "search_drafts": "drafts",
                     "list_files": "files",
                 }
+                # Name-based lookup tools — for these, the planner's
+                # `output_variables: {"sheet_id": "results[0].id"}` pattern
+                # is NOT a legitimate "pick the latest" shortcut; it's a
+                # silent auto-pick of a 2+-match result. We must treat the
+                # indexed form as a disambiguation trigger too (Bug 5).
+                # Email/draft searches keep the old behavior because
+                # `emails[0]` is the canonical "latest message" selector.
+                INDEXED_DISAMBIGUATION_TOOLS = {
+                    "search_files",
+                    "list_my_docs",
+                    "list_files",
+                }
                 results_field = DISAMBIGUATION_TOOLS.get(tool_name)
                 is_last_step = (step_num == len(plan))
 
                 if results_field and not is_last_step:
                     items = agent_result.get(results_field, [])
-                    # Find which output variable maps to the results array
+                    # Find which output variable maps to the results array.
+                    # Two patterns trigger disambiguation:
+                    #   (a) whole-array: source_field == "results"
+                    #   (b) pre-indexed from name-based lookup tool:
+                    #       source_field starts with "results[" AND
+                    #       tool is a name-based lookup (search_files etc.)
                     disambig_var = None
+                    indexed_source_field = None
                     for var_name, source_field in output_variables.items():
                         if source_field == results_field:
                             disambig_var = var_name
+                            break
+                        if (
+                            tool_name in INDEXED_DISAMBIGUATION_TOOLS
+                            and isinstance(source_field, str)
+                            and source_field.startswith(results_field + "[")
+                        ):
+                            disambig_var = var_name
+                            indexed_source_field = source_field
                             break
 
                     if disambig_var and isinstance(items, list) and len(items) > 1:
@@ -1524,6 +1550,15 @@ def orchestrator_node(state: SharedState) -> SharedState:
                             variable_context["disambiguation_options"] = items
                             variable_context["disambiguation_variable"] = disambig_var
                             variable_context["disambiguation_source_tool"] = tool_name
+                            # Bug 5 resume support: persist enough metadata that
+                            # the resume path can re-run every output_variables
+                            # extraction against a patched agent_result where
+                            # the results array has been collapsed to the user's
+                            # selected item. This lets indexed patterns like
+                            # `results[0].id` resolve correctly on resume.
+                            variable_context["disambiguation_output_variables"] = dict(output_variables)
+                            variable_context["disambiguation_results_field"] = results_field
+                            variable_context["disambiguation_agent_result"] = agent_result
                             variable_context["remaining_steps"] = remaining_steps
 
                             trace.step("disambiguation_pause", f"step {step_num}: {tool_name} returned {len(items)} results, pausing")

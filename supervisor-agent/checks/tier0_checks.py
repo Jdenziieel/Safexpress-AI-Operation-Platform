@@ -897,6 +897,18 @@ def _build_rich_approval_message(pending_action: dict) -> str:
                     msg += f"- **Sample header (order 1):** {sample_pairs}\n"
         elif parsed_orders:
             msg += "- **Parsed orders:** <unparsable payload — check plan inputs>\n"
+        else:
+            # Empty list (or None/missing). Make this loud so the user knows
+            # approving this will do nothing — and more importantly, so the
+            # user can reject and the upstream parse step can be fixed (e.g.
+            # install pdfplumber, point at different source emails).
+            msg += "- **Orders to write:** 0\n"
+            msg += (
+                "- **Warning:** parsed_orders is empty — nothing will be written. "
+                "The upstream parse step likely returned no usable rows (check whether "
+                "pdfplumber is installed or whether the source emails contained valid "
+                "delivery-order PDFs).\n"
+            )
 
     else:
         # Generic — show all non-empty inputs
