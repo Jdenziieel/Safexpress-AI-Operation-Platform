@@ -105,8 +105,10 @@ _DEFAULT_MODEL_PRICING = {
     "gpt-4":         {"input": 0.03,     "cached_input": 0.03,     "output": 0.06},
     "gpt-4-turbo":   {"input": 0.01,     "cached_input": 0.01,     "output": 0.03},
     "gpt-3.5-turbo": {"input": 0.0005,   "cached_input": 0.0005,   "output": 0.0015},
-    # Fallback for unknown models — use gpt-5 rates (current default planner model)
-    "default":       {"input": 0.00125,  "cached_input": 0.000125, "output": 0.01},
+    # Fallback for unknown models — use gpt-4.1 rates (current default planner model).
+    # Keep this in sync with LLM_MODEL's default in config.py so unknown-model cost
+    # estimates track what's actually being billed in production.
+    "default":       {"input": 0.002,    "cached_input": 0.0005,   "output": 0.008},
 }
 
 # Keep the old name around so any existing import of MODEL_PRICING still works.
@@ -161,7 +163,7 @@ def get_model_pricing(model: str) -> Dict[str, float]:
       1. In-memory cache populated from the admin-editable `model_pricing`
          SQLite table (60s TTL; force-refreshed after PUT /admin/pricing).
       2. Hardcoded _DEFAULT_MODEL_PRICING (authoritative rate card).
-      3. The "default" fallback (currently gpt-5 rates) for unknown models.
+      3. The "default" fallback (currently gpt-4.1 rates) for unknown models.
 
     Any admin edit via PUT /admin/pricing/{model} is what wins — the hardcoded
     table is only consulted when the DB has no row or the DB is unreachable.

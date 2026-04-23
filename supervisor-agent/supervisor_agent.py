@@ -232,9 +232,10 @@ llm = ChatOpenAI(
 )
 
 # Initialize Conversational Agent
-# Tier 1 uses TIER1_MODEL (default gpt-5-mini) — 5x cheaper than the planner's
-# LLM_MODEL on both input and output, with comparable instruction-following
-# quality for the classification / parameter-extraction workload.
+# Tier 1 uses TIER1_MODEL (default gpt-4.1-mini) — cheaper than the planner's
+# LLM_MODEL on output ($1.60/M vs $8/M), with comparable instruction-following
+# quality for the classification / parameter-extraction workload, and WITHOUT
+# the reasoning-token output inflation that made gpt-5-mini 30s+ per call.
 conversational_agent = ConversationalAgent(
     openai_api_key=OPENAI_API_KEY,
     model=TIER1_MODEL,

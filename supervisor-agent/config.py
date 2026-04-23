@@ -70,18 +70,34 @@ def get_google_credentials() -> dict:
 
 # OpenAI API configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-# Planner / primary reasoning model. Flipped from gpt-4 to gpt-5 for cost:
-# gpt-5 input is $1.25/M (vs gpt-4's $30/M — 24x cheaper) and supports
-# automatic prompt caching at a 90% discount (vs gpt-4's no caching),
-# so the ~3k-token static planner system prompt is nearly free on cache hits.
-# Env override preserved for instant rollback to gpt-4 / gpt-4.1 / gpt-4o.
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5")
+# Planner / primary reasoning model. Flipped from gpt-5 to gpt-4.1 after
+# DEMO8.9 exposed two problems with gpt-5 as a structured-output planner:
+#   1. gpt-5 emitted PlanSteps WITHOUT the required `inputs` field when it
+#      "reasoned" the field would come from prior step outputs — Pydantic
+#      rejected the whole ExecutionPlan (5/5 steps invalid). gpt-4 / gpt-4.1
+#      do not exhibit this; they populate every declared field.
+#   2. gpt-5's reasoning tokens are billed as output ($10/M). For this workload
+#      the planner emits ~2-3x more output than a non-reasoning model for the
+#      same task, so gpt-5's input-price advantage ($1.25/M vs $2/M + 90% vs
+#      75% cache discount) is erased by output-token inflation. See DEMO8.9
+#      analysis: a single failed planner call cost $0.0339 and took 35.7s.
+#
+# gpt-4.1 still supports automatic prompt caching at 75% discount (cached
+# input $0.50/M), so the ~3k-token static planner system prompt stays cheap
+# on cache hits. Env override preserved for experimentation with gpt-5 /
+# gpt-4o / gpt-4 once the `inputs`-default-dict + `method=json_schema` fixes
+# ship.
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4.1")
 
-# Tier 1 conversational analysis model. gpt-5-mini is ~5x cheaper than gpt-5
-# on input ($0.25/M vs $1.25/M) and 5x cheaper on output ($2/M vs $10/M),
-# with similar instruction-following quality for the classification / parameter
-# extraction workload Tier 1 runs. Env override preserved.
-TIER1_MODEL = os.getenv("TIER1_MODEL", "gpt-5-mini")
+# Tier 1 conversational analysis model. Flipped from gpt-5-mini to gpt-4.1-mini
+# for the same two reasons as the planner: gpt-5-mini burned 2398-3006 output
+# tokens per Tier 1 call in DEMO8.9 (28-34s each) because of reasoning-token
+# inflation, versus ~800-1200 expected for the same classification /
+# parameter-extraction work. gpt-4.1-mini input is $0.40/M (vs $0.25/M on
+# gpt-5-mini) but output is $1.60/M (vs $2/M), and with 60% fewer output
+# tokens the per-call cost drops ~45% AND latency drops from ~30s to ~5s.
+# Env override preserved.
+TIER1_MODEL = os.getenv("TIER1_MODEL", "gpt-4.1-mini")
 
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0"))
 
