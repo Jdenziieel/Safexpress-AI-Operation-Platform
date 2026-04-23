@@ -1421,7 +1421,12 @@ User: "{user_message}" """
                 if conversation_state.missing_fields:
                     trace.step("tier0.5", "confirmation blocked — missing fields still pending, routing to Tier 1",
                                {"missing_fields": conversation_state.missing_fields})
-                    return None, query_scope, None
+                    # NOTE: `query_scope` is only bound inside the `task_request`
+                    # branch (see `if category == "task_request":` above). In the
+                    # confirmation-blocked path the user is answering a pending
+                    # clarification — Tier 1 must do full analysis with the
+                    # already-filtered tool set, which is what "specific" signals.
+                    return None, "specific", None
                 trace.step("tier0.5", "confirmation — user confirmed action")
                 return ConversationAnalysis(
                         intent=ConversationIntent.READY_TO_EXECUTE,

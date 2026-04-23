@@ -321,6 +321,15 @@ class SummarizationService:
             lines.append(
                 "**Suggestion:** Your access may have expired. Please try reconnecting your account.\n"
             )
+        elif error_category == "internal_template":
+            # Caused when the planner's multi-step plan has a malformed Jinja
+            # reference (e.g. `{{{ var }}}` instead of `{{ var }}`) — this is
+            # a bug in the plan, not a problem with the user's request.
+            lines.append("**Issue:** Internal plan generation error — an invalid variable reference was produced.")
+            lines.append(f"**Details:** `{error_msg}`")
+            lines.append(
+                "**Suggestion:** Please try again. If the problem persists, rephrase your request and re-run.\n"
+            )
         elif error_category == "not_found":
             lines.append("**Issue:** The requested resource could not be found.")
             lines.append(
@@ -450,11 +459,35 @@ class SummarizationService:
     def _categorize_error(self, error_msg: str) -> str:
         error_lower = (error_msg or "").lower()
 
+        # Classify Jinja parser errors FIRST. Strings like
+        # "TemplateSyntaxError: expected token ':', got '}'" would otherwise
+        # substring-match the auth keyword list (via the bare "token" entry)
+        # and surface a misleading "reconnect your account" message to the
+        # user (see DEMO8.12.log). Runtime UndefinedError ("X is undefined")
+        # is intentionally left to the "dependency" branch below — that one is
+        # semantically "upstream step didn't produce the expected output",
+        # not a parser-level bug.
         if any(
             term in error_lower
             for term in [
-                "auth", "token", "credential", "unauthorized", "401", "403",
-                "scope", "invalid_scope",
+                "templatesyntaxerror",
+                "template syntax",
+                "jinja2.exceptions",
+                "jinja2 template",
+            ]
+        ):
+            return "internal_template"
+
+        if any(
+            term in error_lower
+            for term in [
+                "auth", "credential", "unauthorized", "401", "403",
+                # OAuth — compound phrases only. Bare "token" and "scope" were
+                # removed because "expected token ':'" (Jinja) and "out of
+                # scope" / "scope of work" (benign prose) both matched them.
+                "access token", "refresh token", "id token",
+                "oauth token", "bearer token", "api token",
+                "invalid_scope", "invalid scope", "insufficient scope",
             ]
         ):
             return "auth"

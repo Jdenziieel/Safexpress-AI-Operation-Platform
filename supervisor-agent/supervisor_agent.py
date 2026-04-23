@@ -452,7 +452,7 @@ User: "Find the latest email from john@example.com and reply saying thanks"
     {{{{
       "agent": "gmail_agent",
       "tool": "reply_to_email",
-      "inputs": {{"message_id": "{{{{{{ latest_email_id }}}}}}", "reply_body": "Thanks!"}},
+      "inputs": {{"message_id": "{{{{ latest_email_id }}}}", "reply_body": "Thanks!"}},
       "output_variables": {{}},
       "description": "Reply to the email saying thanks"
     }}}}
@@ -473,7 +473,7 @@ User: "Create a Finance folder and make a Q1 Budget sheet inside it with tabs Re
     {{{{
       "agent": "sheets_agent",
       "tool": "create_sheet",
-      "inputs": {{"title": "Q1 Budget", "sheet_names": ["Revenue", "Expenses"], "folder_id": "{{{{{{ folder_id }}}}}}"}},
+      "inputs": {{"title": "Q1 Budget", "sheet_names": ["Revenue", "Expenses"], "folder_id": "{{{{ folder_id }}}}"}},
       "output_variables": {{}},
       "description": "Create Q1 Budget sheet inside the Finance folder with Revenue and Expenses tabs"
     }}}}
@@ -494,7 +494,7 @@ User: "Parse delivery-order PDFs from my inbox and write them into my 'DO Tracke
     {{{{
       "agent": "mapping_agent",
       "tool": "parse_delivery_order_pdfs",
-      "inputs": {{"file_paths": "{{{{{{ emails_with_attachments }}}}}}"}},
+      "inputs": {{"file_paths": "{{{{ emails_with_attachments }}}}"}},
       "output_variables": {{"parsed_orders": "parsed_orders"}},
       "description": "Extract structured rows from each delivery-order PDF"
     }}}},
@@ -508,21 +508,21 @@ User: "Parse delivery-order PDFs from my inbox and write them into my 'DO Tracke
     {{{{
       "agent": "sheets_agent",
       "tool": "validate_delivery_sheet",
-      "inputs": {{"sheet_id": "{{{{{{ sheet_id }}}}}}"}},
+      "inputs": {{"sheet_id": "{{{{ sheet_id }}}}"}},
       "output_variables": {{}},
       "description": "Confirm the sheet matches the delivery-order template before writing"
     }}}},
     {{{{
       "agent": "sheets_agent",
       "tool": "preview_delivery_order_insertion",
-      "inputs": {{"sheet_id": "{{{{{{ sheet_id }}}}}}", "parsed_orders": "{{{{{{ parsed_orders }}}}}}"}},
+      "inputs": {{"sheet_id": "{{{{ sheet_id }}}}", "parsed_orders": "{{{{ parsed_orders }}}}"}},
       "output_variables": {{}},
       "description": "Generate a preview of rows per tab so the user can approve before writing"
     }}}},
     {{{{
       "agent": "sheets_agent",
       "tool": "write_delivery_order_data",
-      "inputs": {{"sheet_id": "{{{{{{ sheet_id }}}}}}", "parsed_orders": "{{{{{{ parsed_orders }}}}}}"}},
+      "inputs": {{"sheet_id": "{{{{ sheet_id }}}}", "parsed_orders": "{{{{ parsed_orders }}}}"}},
       "output_variables": {{}},
       "description": "Append the parsed delivery-order rows into the DO Tracker sheet (DANGEROUS — requires approval)"
     }}}}

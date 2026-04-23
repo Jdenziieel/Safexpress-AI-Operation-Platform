@@ -7071,3 +7071,23 @@ Parameters:
 [2026-04-23 13:28:14.258] [PRINT]   FAIL: 0
 [2026-04-23 13:28:14.269] [PRINT]   INFO: 0
 [2026-04-23 13:28:14.280] [PRINT]   All Flaws A-E that were observable in the old log are now blocked by the implemented fixes (Bug 5 included).
+[2026-04-23 23:03:07.717] [PRINT]   FAIL [Bug 3 / template != auth]: DEMO8.12 Jinja error still categorized as 'auth' (got 'auth'). This is the bug: the substring 'token' in 'expected token' triggers the auth keyword match.
+[2026-04-23 23:03:07.762] [PRINT]   Bug 3 OK: real auth errors still categorize as 'auth'
+[2026-04-23 23:03:07.772] [PRINT]   Bug 3 OK: non-auth categories unaffected by the fix
+[2026-04-23 23:03:07.778] [PRINT] ====================================================================
+[2026-04-23 23:03:07.785] [PRINT] 4 of 7 checks failed
+[2026-04-23 23:04:47.466] [PRINT]   Bug 3 OK: Jinja template error categorized as 'internal_template' (not 'auth')
+[2026-04-23 23:04:47.493] [PRINT]   Bug 3 OK: real auth errors still categorize as 'auth'
+[2026-04-23 23:04:47.506] [PRINT]   Bug 3 OK: non-auth categories unaffected by the fix
+[2026-04-23 23:04:47.517] [PRINT] ====================================================================
+[2026-04-23 23:04:47.532] [PRINT] All 7 checks passed
+[2026-04-23 23:05:42.827] [PRINT]   Bug 3 OK: Jinja template error categorized as 'internal_template' (not 'auth')
+[2026-04-23 23:05:42.843] [PRINT]   Bug 3 OK: real auth errors still categorize as 'auth'
+[2026-04-23 23:05:42.852] [PRINT]   Bug 3 OK: non-auth categories unaffected by the fix
+[2026-04-23 23:05:42.860] [PRINT] ====================================================================
+[2026-04-23 23:05:42.867] [PRINT] All 8 checks passed
+[2026-04-23 23:06:31.714] [PRINT]   Bug 3 OK: Jinja template error categorized as 'internal_template' (not 'auth')
+[2026-04-23 23:06:31.750] [PRINT]   Bug 3 OK: real auth errors still categorize as 'auth'
+[2026-04-23 23:06:31.759] [PRINT]   Bug 3 OK: non-auth categories unaffected by the fix
+[2026-04-23 23:06:31.766] [PRINT] ====================================================================
+[2026-04-23 23:06:31.777] [PRINT] All 9 checks passed
