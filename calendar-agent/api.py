@@ -266,14 +266,33 @@ def update_event(inputs: dict, credentials_dict: dict = None) -> dict:
         if err:
             return err
 
+        # Bare-name aliases for the `new_*` mutation args. The canonical args
+        # use a `new_` prefix to distinguish from create_event's read-side
+        # names, but the planner sometimes borrows create_event's naming
+        # (especially when the user says "update the description" and the
+        # word "description" flows straight into inputs). Without these
+        # aliases the unknown keys are silently dropped and the event
+        # updates with zero changes — a silent failure that looks successful
+        # (see execution_logs/CM/DEMO8.3.log). Canonical `new_*` names still
+        # win when both are present.
+        def _pick(*keys):
+            for k in keys:
+                v = inputs.get(k)
+                if v is None:
+                    continue
+                if isinstance(v, (str, list, dict, tuple)) and not v:
+                    continue
+                return v
+            return None
+
         return update_event_impl(
             event_id=event_id,
-            new_summary=inputs.get("new_summary"),
-            new_start=inputs.get("new_start"),
-            new_end=inputs.get("new_end"),
-            new_description=inputs.get("new_description"),
-            new_location=inputs.get("new_location"),
-            new_attendees=inputs.get("new_attendees"),
+            new_summary=_pick("new_summary", "summary"),
+            new_start=_pick("new_start", "start_time", "start"),
+            new_end=_pick("new_end", "end_time", "end"),
+            new_description=_pick("new_description", "description"),
+            new_location=_pick("new_location", "location"),
+            new_attendees=_pick("new_attendees", "attendees", "emails"),
             calendar_id=calendar_id,
             credentials_dict=credentials_dict,
         )
