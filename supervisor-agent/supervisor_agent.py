@@ -1071,6 +1071,33 @@ def orchestrator_node(state: SharedState) -> SharedState:
             # Create action approval request
             action_id = generate_action_id()
 
+            # Surface upstream PDF-rejection info so the approval UI can warn
+            # the user that some attachments were intentionally skipped by the
+            # mapping agent's category gate before they approve the write.
+            # Scanning `variable_context` (which is persisted across the
+            # approval pause) avoids adding any new plumbing to sub-agents.
+            # Dedupe by filename in case the same file appears under multiple
+            # step namespaces (unusual, but cheap to defend against).
+            upstream_rejected_files: List[Dict[str, Any]] = []
+            _seen_rejected_files: set = set()
+            for _ctx_key, _ctx_val in variable_context.items():
+                if not isinstance(_ctx_key, str) or not _ctx_key.startswith("step_"):
+                    continue
+                if not isinstance(_ctx_val, dict):
+                    continue
+                _rf = _ctx_val.get("rejected_files")
+                if not isinstance(_rf, list) or not _rf:
+                    continue
+                for _item in _rf:
+                    if not isinstance(_item, dict):
+                        continue
+                    _fname = _item.get("file") or _item.get("filename")
+                    if _fname and _fname in _seen_rejected_files:
+                        continue
+                    upstream_rejected_files.append(_item)
+                    if _fname:
+                        _seen_rejected_files.add(_fname)
+
             step_info = {
                 "step_number": step_num,
                 "total_steps": len(plan),
@@ -1081,6 +1108,8 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 "output_variables": output_variables,
                 "risk_level": risk_level.value,
             }
+            if upstream_rejected_files:
+                step_info["upstream_rejected_files"] = upstream_rejected_files
 
             pending_action = PendingAction(
                 action_id=action_id,

@@ -152,6 +152,47 @@ def _body_display(body: str, single_item: bool) -> str:
     return preview
 
 
+def _format_parse_delivery_order_pdfs(output: dict) -> str:
+    """Deterministic summary for mapping_agent.parse_delivery_order_pdfs.
+
+    On top of the legacy "Parsed X, Y rejected" headline this now lists the
+    rejected filenames with a short reason whenever total_rejected > 0. This
+    matters for the partial-success case (e.g. 1 FOOD PDF accepted + 1 Tech
+    PDF rejected by the category gate): the write step proceeds on the
+    accepted orders, so the user must be told which files were skipped and
+    why — otherwise the skip happens silently behind the scenes.
+    """
+    total_parsed = output.get("total_parsed")
+    if total_parsed is None:
+        total_parsed = len(output.get("parsed_orders") or [])
+    total_rejected = output.get("total_rejected")
+    if total_rejected is None:
+        total_rejected = len(output.get("rejected_files") or [])
+
+    text = f"Parsed {total_parsed} delivery order(s), {total_rejected} file(s) rejected"
+
+    rejected_files = output.get("rejected_files") or []
+    if total_rejected and isinstance(rejected_files, list) and rejected_files:
+        text += "\n\n**Skipped files:**"
+        rendered = 0
+        for rf in rejected_files:
+            if not isinstance(rf, dict):
+                continue
+            fname = rf.get("file") or rf.get("filename") or "(unknown file)"
+            reason = rf.get("reason") or "no reason provided"
+            short = reason.split(". ")[0] if ". " in reason else reason
+            if len(short) > 160:
+                short = short[:157] + "..."
+            text += f"\n- `{fname}` — {short}"
+            rendered += 1
+            if rendered >= 5:
+                break
+        if len(rejected_files) > rendered:
+            text += f"\n_…and {len(rejected_files) - rendered} more._"
+
+    return text
+
+
 # ---------------------------------------------------------------------------
 # TOOL_TEMPLATES registry
 # ---------------------------------------------------------------------------
@@ -409,7 +450,10 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
     },
     ("mapping_agent", "parse_delivery_order_pdfs"): {
         "type": "action",
-        "template": "Parsed {total_parsed} delivery order(s), {total_rejected} file(s) rejected",
+        # Callable so the template can list rejected filenames + reasons
+        # when total_rejected > 0. Static-string templates still work for
+        # every other tool — see _format_action's isinstance(callable) branch.
+        "template": _format_parse_delivery_order_pdfs,
     },
 
     # ========================= SHEETS AGENT =========================
@@ -494,13 +538,21 @@ def _format_action(template_def: dict, output: dict) -> str:
     if template_def.get("use_message") and output.get("message"):
         text = output["message"]
     elif template_def.get("template"):
-        out = dict(output)
-        content_field = template_def.get("content_field")
-        max_len = template_def.get("content_max_length")
-        if content_field and max_len and isinstance(out.get(content_field), str):
-            if len(out[content_field]) > max_len:
-                out[content_field] = out[content_field][:max_len] + "\n...[truncated]"
-        text = _safe_format(template_def["template"], out)
+        template_spec = template_def["template"]
+        # Callable templates get the full output dict so they can do
+        # multi-field rendering (e.g. list per-file rejections alongside
+        # totals). Static-string templates keep the legacy format-string
+        # behaviour so nothing else has to change.
+        if callable(template_spec):
+            text = template_spec(output)
+        else:
+            out = dict(output)
+            content_field = template_def.get("content_field")
+            max_len = template_def.get("content_max_length")
+            if content_field and max_len and isinstance(out.get(content_field), str):
+                if len(out[content_field]) > max_len:
+                    out[content_field] = out[content_field][:max_len] + "\n...[truncated]"
+            text = _safe_format(template_spec, out)
     else:
         text = "Action completed"
 

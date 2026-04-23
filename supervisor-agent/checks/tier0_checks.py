@@ -910,6 +910,35 @@ def _build_rich_approval_message(pending_action: dict) -> str:
                 "delivery-order PDFs).\n"
             )
 
+        # Surface upstream PDF rejections so the user is not silently unaware
+        # that some attachments were intentionally skipped by the mapping
+        # agent's category gate before approving the write. This is purely
+        # informational — the write itself only operates on parsed_orders
+        # (which already excludes these files). Partial-success is an
+        # intended outcome: "1 good PDF + 1 Tech PDF" should still write the
+        # good one, but the user must be told about the Tech one.
+        rejected_files = pending_action.get("upstream_rejected_files") or []
+        if isinstance(rejected_files, list) and rejected_files:
+            msg += "\n**Note — some attachments were skipped and will NOT be written:**\n"
+            rendered = 0
+            for rf in rejected_files:
+                if not isinstance(rf, dict):
+                    continue
+                fname = rf.get("file") or rf.get("filename") or "(unknown file)"
+                reason = rf.get("reason") or "no reason provided"
+                # Trim long multi-sentence reasons down to the first sentence
+                # so the approval prompt stays scannable. Keep the full reason
+                # available in the final execution summary.
+                short = reason.split(". ")[0] if ". " in reason else reason
+                if len(short) > 160:
+                    short = short[:157] + "..."
+                msg += f"- `{fname}` — {short}\n"
+                rendered += 1
+                if rendered >= 5:
+                    break
+            if len(rejected_files) > rendered:
+                msg += f"_…and {len(rejected_files) - rendered} more skipped._\n"
+
     else:
         # Generic — show all non-empty inputs
         msg += f"**{tool}**\n"

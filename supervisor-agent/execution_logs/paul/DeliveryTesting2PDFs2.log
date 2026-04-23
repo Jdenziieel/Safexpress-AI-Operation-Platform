@@ -1,0 +1,2064 @@
+[2026-04-23 01:57:46.079] [INFO] [req_20260422175636_d25a2dac] [T:27ed4796] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-23 01:57:46.084] [INFO] [req_20260422175636_d25a2dac] [T:27ed4796] ← RESPONSE: 200 (5ms)
+[2026-04-23 01:57:46.084] [INFO] [req_20260422175636_d25a2dac] [T:27ed4796] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 01:57:48.788] [INFO] [req_20260422175636_d25a2dac] [T:27ed4796] → REQUEST: POST /threads  | {"query": null}
+[2026-04-23 01:57:48.790] [INFO] [req_20260422175636_d25a2dac] [T:new]   STEP [create_thread]: user=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a, has_message=True
+[2026-04-23 01:57:53.203] [PRINT]  Created thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67 for user: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a
+[2026-04-23 01:57:53.212] [PRINT]  Created new thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67 for user: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a with title: None
+[2026-04-23 01:57:53.223] [PRINT] Saved conversation state to SQLite: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67
+[2026-04-23 01:57:53.236] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 01:57:53.242] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67
+[2026-04-23 01:57:53.247] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 01:57:53.253] [PRINT]   User: Hi can you search a delivery order named Deliver Order to Genshin Impact in my email? after that I want you to extract t...
+[2026-04-23 01:57:53.259] [PRINT]   ConversationState:
+[2026-04-23 01:57:53.265] [PRINT]     extracted_info: {}
+[2026-04-23 01:57:53.271] [PRINT]     missing_fields: []
+[2026-04-23 01:57:53.276] [PRINT]     intent: null
+[2026-04-23 01:57:53.282] [PRINT]     clarification_question: null
+[2026-04-23 01:57:53.288] [PRINT]     ready_for_execution: false
+[2026-04-23 01:57:53.294] [PRINT]     execution_summary: null
+[2026-04-23 01:57:53.300] [PRINT]     execution_mode: "standard"
+[2026-04-23 01:57:53.306] [PRINT]     execution_history: []
+[2026-04-23 01:57:53.312] [PRINT]     completed_tasks: []
+[2026-04-23 01:57:53.318] [PRINT]     has_executed: false
+[2026-04-23 01:57:53.325] [PRINT]     last_executed_at: null
+[2026-04-23 01:57:53.330] [PRINT]     last_execution_status: null
+[2026-04-23 01:57:53.336] [PRINT]     last_execution_message: null
+[2026-04-23 01:57:53.342] [PRINT]     executing: false
+[2026-04-23 01:57:53.348] [PRINT]     pending_actions: []
+[2026-04-23 01:57:53.355] [PRINT]     workflow_paused: false
+[2026-04-23 01:57:53.361] [PRINT]     remaining_steps: []
+[2026-04-23 01:57:53.367] [PRINT]     workflow_context: null
+[2026-04-23 01:57:53.373] [PRINT]     disambiguation_options: []
+[2026-04-23 01:57:53.378] [PRINT]     disambiguation_variable: null
+[2026-04-23 01:57:53.385] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 01:57:53.391] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67, msg=Hi can you search a delivery order named Deliver Order to Genshin Impact in my e
+[2026-04-23 01:57:53.392] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 52, "total": 52, "max": 2000}
+[2026-04-23 01:57:53.397] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-23 01:57:53.397] [PRINT] 
+[2026-04-23 01:57:53.397] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 01:57:53.403] [PRINT] TIER 0.5 — Building prompt
+[2026-04-23 01:57:53.410] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 01:57:53.415] [PRINT]    bot_signal : (none)
+[2026-04-23 01:57:53.421] [PRINT]    state_block: (none)
+[2026-04-23 01:57:53.427] [PRINT]    file_context: (none)
+[2026-04-23 01:57:53.432] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 01:57:56.178] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=741 out=92 | $0.0002 | 2728ms | cumulative: in=741 out=92 total=833 $0.0002
+[2026-04-23 01:57:56.185] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting a specific action to search for an email and extract data from attached PDFs to update a Google Sheet.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting a specific action to search for an email and extract data from attached PDFs to update a Google Sheet.\",\n    \"query_scope\": \"specific\",\n    \"enrichment\": {\n        \"needs_enrichment\": true,\n        \""}
+[2026-04-23 01:57:56.185] [INFO] [-]   STEP [tier0.5]: enrichment detected  | {"tasks": ["use_file_content"], "file_context_needed": true}
+[2026-04-23 01:57:56.185] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": true}
+[2026-04-23 01:57:56.187] [PRINT] 
+[2026-04-23 01:57:56.187] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 01:57:56.192] [PRINT] ENRICHMENT PHASE — Generating/transforming content
+[2026-04-23 01:57:56.198] [PRINT]    Tasks: ['use_file_content']
+[2026-04-23 01:57:56.204] [PRINT]    File context needed: True
+[2026-04-23 01:57:56.209] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 01:57:56.215] [INFO] [-]   STEP [enrichment]: starting enrichment phase  | {"tasks": ["use_file_content"]}
+[2026-04-23 01:57:57.594] [PRINT]  OK [enrichment] gpt-4o-mini | content_enrichment | in=273 out=52 | $0.0001 | 1355ms | cumulative: in=1014 out=144 total=1158 $0.0002
+[2026-04-23 01:57:57.600] [INFO] [-]   STEP [enrichment]: LLM enrichment complete  | {"tasks": ["use_file_content"], "original_len": 217, "enriched_len": 229, "duration_ms": 1354.71, "has_passthrough_vars": false}
+[2026-04-23 01:57:57.601] [PRINT]    Enriched: Hi, can you search for a delivery order named "Deliver Order to Genshin Impact" in my email? After that, I want you to extract the data from the attached PDFs and put that data in my Google Sheet name...
+[2026-04-23 01:57:57.607] [PRINT] 
+[2026-04-23 01:57:57.607] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 01:57:57.613] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-23 01:57:57.620] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 01:57:57.625] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-23 01:57:57.626] [PRINT] 
+[2026-04-23 01:57:57.626] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 01:57:57.631] [PRINT] BUILDING LLM CONTEXT
+[2026-04-23 01:57:57.637] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 01:57:57.644] [PRINT]    Summary: none
+[2026-04-23 01:57:57.651] [PRINT]    Recent messages: 1
+[2026-04-23 01:57:57.659] [PRINT]       USER: Hi can you search a delivery order named Deliver Order to Genshin Impact in my e...
+[2026-04-23 01:57:57.665] [PRINT] 
+[2026-04-23 01:57:57.665] [PRINT]    Final context: 244 chars (~61 tokens)
+[2026-04-23 01:57:57.672] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 01:57:57.679] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=1, ~61 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 244, "context_tokens_est": 61}
+[2026-04-23 01:57:57.679] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-23 01:57:59.406] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1663 out=41, cached=1536 | $0.0002 | 1704ms | cumulative: in=2677 out=185 total=2862 $0.0004
+[2026-04-23 01:57:59.411] [PRINT]    relevant_agents: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent', 'llm_tool']
+[2026-04-23 01:57:59.416] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**', '**MAPPING_AGENT:**', '**SHEETS_AGENT:**', '**DRIVE_AGENT:**', '**LLM_TOOL:**']
+[2026-04-23 01:57:59.422] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent", "mapping_agent", "sheets_agent", "drive_agent", "llm_tool"]}
+[2026-04-23 01:57:59.423] [PRINT]    user_prompt (497 chars):
+[2026-04-23 01:57:59.428] [PRINT]      RECENT CONVERSATION:
+[2026-04-23 01:57:59.434] [PRINT]      USER: Hi can you search a delivery order named Deliver Order to Genshin Impact in my email? after that I want you to extract the data of the attached PDFs and put that data in my google sheet named Product Requisition List.
+[2026-04-23 01:57:59.440] [PRINT]      
+[2026-04-23 01:57:59.446] [PRINT]      CURRENT USER MESSAGE: Hi, can you search for a delivery order named "Deliver Order to Genshin Impact" in my email? After that, I want you to extract the data from the attached PDFs and put that data in my Google Sheet named "Product Requisition List."
+[2026-04-23 01:57:59.451] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 01:58:04.683] [PRINT]  OK [1] gpt-4 | tier_1_full_analysis | in=2154 out=174 | $0.0751 | 5215ms | cumulative: in=4831 out=359 total=5190 $0.0755
+[2026-04-23 01:58:04.690] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "process_delivery_order", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user wants to search for a delivery order in their email and then extract the data from the attached PDFs to a Google Sheet. All required information is provided.", "extracted_info": {"query": "Deliver Order to Genshin Impact", "sheet_name": "Product Requisition List"}}
+[2026-04-23 01:58:04.691] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-23 01:58:04.692] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Search for emails with 'Deliver Order to Genshin Impact', extract data from the attached PDFs, and write this data to the 'Product Requisition List' Google Sheet.", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "ma
+[2026-04-23 01:58:06.970] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=219 out=53 | $0.0001 | 2266ms | cumulative: in=5050 out=412 total=5462 $0.0755
+[2026-04-23 01:58:06.976] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 84, "total": 136, "max": 2000, "response_preview": "**Ready to execute!**\n\n- Task: Search for emails with \"Deliver Order to Genshin Impact\"\n- Action: Extract data from attached PDFs\n- Destination: Write data to the \"Product Requisition List\" Google She..."}
+[2026-04-23 01:58:07.000] [PRINT] 
+[2026-04-23 01:58:07.000] [PRINT] ============================================================
+[2026-04-23 01:58:07.006] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 01:58:07.016] [PRINT] ============================================================
+[2026-04-23 01:58:07.022] [PRINT]   LLM calls:        5
+[2026-04-23 01:58:07.028] [PRINT]   Total input:      5,050 tokens
+[2026-04-23 01:58:07.035] [PRINT]   Total output:     412 tokens
+[2026-04-23 01:58:07.042] [PRINT]   Total tokens:     5,462 tokens
+[2026-04-23 01:58:07.049] [PRINT]   Cached tokens:    1,536 (30.4% of input)
+[2026-04-23 01:58:07.054] [PRINT]   Estimated cost:   $0.0755
+[2026-04-23 01:58:07.060] [PRINT]   Total duration:   13775ms (13.8s)
+[2026-04-23 01:58:07.065] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-23 01:58:07.071] [PRINT]   Breakdown by call:
+[2026-04-23 01:58:07.077] [PRINT]     1. gpt-4o-mini      in=741    out=92    $0.0002 2728ms
+[2026-04-23 01:58:07.082] [PRINT]     2. gpt-4o-mini      in=273    out=52    $0.0001 1355ms
+[2026-04-23 01:58:07.088] [PRINT]     3. gpt-4o-mini      in=1663   out=41    (cached=1536) $0.0002 1704ms
+[2026-04-23 01:58:07.094] [PRINT]     4. gpt-4            in=2154   out=174   $0.0751 5215ms
+[2026-04-23 01:58:07.099] [PRINT]     5. gpt-4o-mini      in=219    out=53    $0.0001 2266ms
+[2026-04-23 01:58:07.105] [PRINT] ============================================================
+[2026-04-23 01:58:11.033] [INFO] [req_20260422175753_1187c8f3] [T:new] ← RESPONSE: 200 (22245ms)
+[2026-04-23 01:58:11.033] [INFO] [req_20260422175753_1187c8f3] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 01:58:36.968] [INFO] [req_20260422175753_1187c8f3] [T:new] → REQUEST: POST /threads/65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67/messages  | {"query": null}
+[2026-04-23 01:58:41.359] [INFO] [req_20260422175841_84de7215] [T:76eeda67]   USER MSG: "yes"
+[2026-04-23 01:58:41.360] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 01:58:41.362] [PRINT] WebSocket connected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67
+[2026-04-23 01:58:41.368] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67
+[2026-04-23 01:58:41.375] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 01:58:41.381] [PRINT]   User: yes
+[2026-04-23 01:58:41.388] [PRINT]   ConversationState:
+[2026-04-23 01:58:41.395] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["validate_delivery_sheet", "preview_delivery_order_insertion", "write_delivery_order_data"], "drive_agent": ["search_files"]}, "query": "Deliver Order to Genshin Impact", "sheet_name": "Product Requisition List"}
+[2026-04-23 01:58:41.402] [PRINT]     missing_fields: []
+[2026-04-23 01:58:41.414] [PRINT]     intent: "ready_to_execute"
+[2026-04-23 01:58:41.420] [PRINT]     clarification_question: null
+[2026-04-23 01:58:41.427] [PRINT]     ready_for_execution: false
+[2026-04-23 01:58:41.434] [PRINT]     execution_summary: "Search for emails with 'Deliver Order to Genshin Impact', extract data from the attached PDFs, and write this data to the 'Product Requisition List' Google Sheet."
+[2026-04-23 01:58:41.442] [PRINT]     execution_mode: "standard"
+[2026-04-23 01:58:41.448] [PRINT]     execution_history: []
+[2026-04-23 01:58:41.459] [PRINT]     completed_tasks: []
+[2026-04-23 01:58:41.466] [PRINT]     has_executed: false
+[2026-04-23 01:58:41.472] [PRINT]     last_executed_at: null
+[2026-04-23 01:58:41.478] [PRINT]     last_execution_status: null
+[2026-04-23 01:58:41.485] [PRINT]     last_execution_message: null
+[2026-04-23 01:58:41.491] [PRINT]     executing: false
+[2026-04-23 01:58:41.496] [PRINT]     pending_actions: []
+[2026-04-23 01:58:41.503] [PRINT]     workflow_paused: false
+[2026-04-23 01:58:41.510] [PRINT]     remaining_steps: []
+[2026-04-23 01:58:41.516] [PRINT]     workflow_context: null
+[2026-04-23 01:58:41.522] [PRINT]     disambiguation_options: []
+[2026-04-23 01:58:41.528] [PRINT]     disambiguation_variable: null
+[2026-04-23 01:58:41.537] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 01:58:41.543] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67, msg=yes
+[2026-04-23 01:58:41.543] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 142, "max": 2000}
+[2026-04-23 01:58:41.547] [INFO] [-]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-23 01:58:41.549] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-23 01:58:41.550] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Search for emails with 'Deliver Order to Genshin Impact', extract data from the attached PDFs, and write this data to the 'Product Requisition List' Google Sheet.", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"], "map
+[2026-04-23 01:58:42.851] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=219 out=46 | $0.0001 | 1287ms | cumulative: in=219 out=46 total=265 $0.0001
+[2026-04-23 01:58:42.857] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 76, "total": 218, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- Search for emails containing: Deliver Order to Genshin Impact\n- Extract data from attached PDFs\n- Write data to: Product Requisition List Google Sheet\n\nPle..."}
+[2026-04-23 01:58:42.876] [INFO] [req_20260422175841_84de7215] [T:76eeda67]   BOT RESP [READY TO EXECUTE]: "**Ready to execute!**
+
+Task Confirmation:
+
+- Search for emails containing: Deliver Order to Genshin ..."
+[2026-04-23 01:58:42.877] [PRINT] Thread 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67 ready - executing workflow...
+[2026-04-23 01:58:42.883] [INFO] [req_20260422175841_84de7215] [T:76eeda67]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-23 01:58:42.897] [INFO] [req_20260422175841_84de7215] [T:76eeda67]   WORKFLOW START: "Search for emails with 'Deliver Order to Genshin Impact', extract data from the ..." (0 steps)
+[2026-04-23 01:58:42.898] [PRINT]  Date context: today=2026-04-23
+[2026-04-23 01:58:42.904] [PRINT]  Starting workflow execution (mode=standard)...
+[2026-04-23 01:58:42.910] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-23 01:58:42.913] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-23 01:58:42.921] [PRINT] 
+[2026-04-23 01:58:42.921] [PRINT] ============================================================
+[2026-04-23 01:58:42.927] [PRINT] SUPERVISOR NODE - Planning Phase
+[2026-04-23 01:58:42.936] [PRINT] ============================================================
+[2026-04-23 01:58:42.942] [PRINT] User Input: Search for emails with 'Deliver Order to Genshin Impact', extract data from the attached PDFs, and write this data to the 'Product Requisition List' Google Sheet.
+[2026-04-23 01:58:42.942] [PRINT] 
+[2026-04-23 01:58:42.942] [PRINT] Parameters:
+[2026-04-23 01:58:42.942] [PRINT] - query: Deliver Order to Genshin Impact
+[2026-04-23 01:58:42.942] [PRINT] - sheet_name: Product Requisition List
+[2026-04-23 01:58:42.951] [INFO] [-]   STEP [supervisor_node]: Planning for: Search for emails with 'Deliver Order to Genshin Impact', extract data from the 
+[2026-04-23 01:58:42.951] [PRINT] Context dates: today=2026-04-23
+[2026-04-23 01:58:42.961] [PRINT] Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-23 01:58:42.969] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-23 01:58:42.970] [PRINT] Relevant agents: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent', 'llm_tool']
+[2026-04-23 01:58:42.976] [PRINT] Filtered tools: {'gmail_agent': ['search_emails', 'search_emails_with_delivery_order_attachments'], 'mapping_agent': ['parse_delivery_order_pdfs'], 'sheets_agent': ['validate_delivery_sheet', 'write_delivery_order_data', 'preview_delivery_order_insertion'], 'drive_agent': ['search_files']}
+[2026-04-23 01:58:42.988] [PRINT] Calling LLM to generate multi-step plan...
+[2026-04-23 01:58:42.998] [PRINT] Token optimization:
+[2026-04-23 01:58:43.006] [PRINT]    Agents: 5/7
+[2026-04-23 01:58:43.016] [PRINT]    Tools: 7/63
+[2026-04-23 01:58:43.023] [PRINT]    Context size: 7,990 chars (~1,997 tokens)
+[2026-04-23 01:58:43.032] [INFO] [-]   STEP [plan_generation_start]: agents=5/7, tools=7/63, context_tokens~1997
+[2026-04-23 01:59:08.528] [PRINT]  OK [supervisor] gpt-4 | plan_generation | in=5069 out=446 | $0.1788 | 25466ms | cumulative: in=5288 out=492 total=5780 $0.1789
+[2026-04-23 01:59:08.535] [PRINT] Plan generated successfully!
+[2026-04-23 01:59:08.541] [PRINT] 
+[2026-04-23 01:59:08.541] [PRINT] Generated Plan:
+[2026-04-23 01:59:08.541] [PRINT] {
+[2026-04-23 01:59:08.541] [PRINT]   "steps": [
+[2026-04-23 01:59:08.541] [PRINT]     {
+[2026-04-23 01:59:08.541] [PRINT]       "agent": "gmail_agent",
+[2026-04-23 01:59:08.541] [PRINT]       "tool": "search_emails_with_delivery_order_attachments",
+[2026-04-23 01:59:08.541] [PRINT]       "inputs": {
+[2026-04-23 01:59:08.541] [PRINT]         "query": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:08.541] [PRINT]         "max_results": 10,
+[2026-04-23 01:59:08.541] [PRINT]         "download_attachments": true
+[2026-04-23 01:59:08.541] [PRINT]       },
+[2026-04-23 01:59:08.541] [PRINT]       "output_variables": {
+[2026-04-23 01:59:08.541] [PRINT]         "emails_with_attachments": "emails_with_attachments"
+[2026-04-23 01:59:08.541] [PRINT]       },
+[2026-04-23 01:59:08.541] [PRINT]       "description": "Search for emails with 'Deliver Order to Genshin Impact' and download the attached PDFs"
+[2026-04-23 01:59:08.541] [PRINT]     },
+[2026-04-23 01:59:08.541] [PRINT]     {
+[2026-04-23 01:59:08.541] [PRINT]       "agent": "mapping_agent",
+[2026-04-23 01:59:08.541] [PRINT]       "tool": "parse_delivery_order_pdfs",
+[2026-04-23 01:59:08.541] [PRINT]       "inputs": {
+[2026-04-23 01:59:08.541] [PRINT]         "file_paths": "{{ emails_with_attachments }}"
+[2026-04-23 01:59:08.541] [PRINT]       },
+[2026-04-23 01:59:08.541] [PRINT]       "output_variables": {
+[2026-04-23 01:59:08.541] [PRINT]         "parsed_orders": "parsed_orders"
+[2026-04-23 01:59:08.541] [PRINT]       },
+[2026-04-23 01:59:08.541] [PRINT]       "description": "Extract data from the downloaded PDFs"
+[2026-04-23 01:59:08.541] [PRINT]     },
+[2026-04-23 01:59:08.541] [PRINT]     {
+[2026-04-23 01:59:08.541] [PRINT]       "agent": "drive_agent",
+[2026-04-23 01:59:08.541] [PRINT]       "tool": "search_files",
+[2026-04-23 01:59:08.541] [PRINT]       "inputs": {
+[2026-04-23 01:59:08.541] [PRINT]         "search_term": "Product Requisition List"
+[2026-04-23 01:59:08.541] [PRINT]       },
+[2026-04-23 01:59:08.541] [PRINT]       "output_variables": {
+[2026-04-23 01:59:08.541] [PRINT]         "sheet_id": "results[0].id"
+[2026-04-23 01:59:08.541] [PRINT]       },
+[2026-04-23 01:59:08.541] [PRINT]       "description": "Find the 'Product Requisition List' Google Sheet"
+[2026-04-23 01:59:08.541] [PRINT]     },
+[2026-04-23 01:59:08.541] [PRINT]     {
+[2026-04-23 01:59:08.541] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 01:59:08.541] [PRINT]       "tool": "validate_delivery_sheet",
+[2026-04-23 01:59:08.541] [PRINT]       "inputs": {
+[2026-04-23 01:59:08.541] [PRINT]         "sheet_id": "{{ sheet_id }}"
+[2026-04-23 01:59:08.541] [PRINT]       },
+[2026-04-23 01:59:08.541] [PRINT]       "output_variables": {},
+[2026-04-23 01:59:08.541] [PRINT]       "description": "Validate the Google Sheet to ensure it matches the required template"
+[2026-04-23 01:59:08.541] [PRINT]     },
+[2026-04-23 01:59:08.541] [PRINT]     {
+[2026-04-23 01:59:08.541] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 01:59:08.541] [PRINT]       "tool": "preview_delivery_order_insertion",
+[2026-04-23 01:59:08.541] [PRINT]       "inputs": {
+[2026-04-23 01:59:08.541] [PRINT]         "sheet_id": "{{ sheet_id }}",
+[2026-04-23 01:59:08.541] [PRINT]         "parsed_orders": "{{ parsed_orders }}"
+[2026-04-23 01:59:08.541] [PRINT]       },
+[2026-04-23 01:59:08.541] [PRINT]       "output_variables": {},
+[2026-04-23 01:59:08.541] [PRINT]       "description": "Preview the data that will be written to the Google Sheet"
+[2026-04-23 01:59:08.541] [PRINT]     },
+[2026-04-23 01:59:08.541] [PRINT]     {
+[2026-04-23 01:59:08.541] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 01:59:08.541] [PRINT]       "tool": "write_delivery_order_data",
+[2026-04-23 01:59:08.541] [PRINT]       "inputs": {
+[2026-04-23 01:59:08.541] [PRINT]         "sheet_id": "{{ sheet_id }}",
+[2026-04-23 01:59:08.541] [PRINT]         "parsed_orders": "{{ parsed_orders }}"
+[2026-04-23 01:59:08.541] [PRINT]       },
+[2026-04-23 01:59:08.541] [PRINT]       "output_variables": {},
+[2026-04-23 01:59:08.541] [PRINT]       "description": "Write the extracted data to the 'Product Requisition List' Google Sheet"
+[2026-04-23 01:59:08.541] [PRINT]     }
+[2026-04-23 01:59:08.541] [PRINT]   ]
+[2026-04-23 01:59:08.541] [PRINT] }
+[2026-04-23 01:59:08.546] [INFO] [-]   STEP [plan_generated]: 6 steps: gmail_agent.search_emails_with_delivery_order_attachments, mapping_agent.parse_delivery_order_pdfs, drive_agent.search_files, sheets_agent.validate_delivery_sheet, sheets_agent.preview_delivery_order_insertion, sheets_agent.write_delivery_order_data
+[2026-04-23 01:59:08.547] [PRINT] 
+[2026-04-23 01:59:08.547] [PRINT] Plan saved to: E:\capstone\New folder\Ham\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-23 01:59:08.554] [PRINT] ============================================================
+[2026-04-23 01:59:08.561] [PRINT] 
+[2026-04-23 01:59:08.561] [PRINT] ============================================================
+[2026-04-23 01:59:08.566] [PRINT] ORCHESTRATOR NODE - Execution Phase
+[2026-04-23 01:59:08.572] [PRINT] ============================================================
+[2026-04-23 01:59:08.577] [PRINT] Found 6 steps to execute
+[2026-04-23 01:59:08.583] [INFO] [-]   STEP [orchestrator_node]: 6 steps to execute
+[2026-04-23 01:59:08.584] [PRINT] 
+[2026-04-23 01:59:08.584] [PRINT] INITIAL CONTEXT:
+[2026-04-23 01:59:08.589] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:08.594] [PRINT]    today_date: 2026-04-23
+[2026-04-23 01:59:08.600] [PRINT]    _cached_tool_filter: dict (length: 4)
+[2026-04-23 01:59:08.606] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:08.612] [PRINT] Pre-flight credential check passed (5 fields)
+[2026-04-23 01:59:08.617] [PRINT] 
+[2026-04-23 01:59:08.617] [PRINT] ============================================================
+[2026-04-23 01:59:08.623] [PRINT] Step 1/6: gmail_agent.search_emails_with_delivery_order_attachments
+[2026-04-23 01:59:08.629] [PRINT] Description: Search for emails with 'Deliver Order to Genshin Impact' and download the attached PDFs
+[2026-04-23 01:59:08.635] [PRINT] ============================================================
+[2026-04-23 01:59:08.649] [PRINT] Risk Level: safe
+[2026-04-23 01:59:08.655] [PRINT] 
+[2026-04-23 01:59:08.655] [PRINT] Substituting variables in inputs...
+[2026-04-23 01:59:08.662] [PRINT]    Original inputs: {
+[2026-04-23 01:59:08.662] [PRINT]       "query": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:08.662] [PRINT]       "max_results": 10,
+[2026-04-23 01:59:08.662] [PRINT]       "download_attachments": true
+[2026-04-23 01:59:08.662] [PRINT] }
+[2026-04-23 01:59:08.669] [PRINT]    Substituted inputs: {
+[2026-04-23 01:59:08.669] [PRINT]       "query": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:08.669] [PRINT]       "max_results": 10,
+[2026-04-23 01:59:08.669] [PRINT]       "download_attachments": true
+[2026-04-23 01:59:08.669] [PRINT] }
+[2026-04-23 01:59:08.675] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-23 01:59:08.681] [INFO] [-]   STEP [variable_substitution]: step 1: gmail_agent.search_emails_with_delivery_order_attachments  | {"inputs": {"query": "Deliver Order to Genshin Impact", "max_results": 10, "download_attachments": true}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-23 01:59:08.681] [PRINT] 
+[2026-04-23 01:59:08.681] [PRINT] Calling agent microservice: http://localhost:8000/execute_task
+[2026-04-23 01:59:08.688] [PRINT] 
+[2026-04-23 01:59:08.688] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-23 01:59:08.695] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:08.700] [PRINT]    Tool: search_emails_with_delivery_order_attachments
+[2026-04-23 01:59:08.706] [PRINT]    Inputs keys: ['query', 'max_results', 'download_attachments']
+[2026-04-23 01:59:08.712] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-23 01:59:08.718] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-23 01:59:08.724] [PRINT]    Payload size: 780 bytes
+[2026-04-23 01:59:08.729] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:08.735] [PRINT] 
+[2026-04-23 01:59:08.735] [PRINT] Sending request to agent...
+[2026-04-23 01:59:08.740] [PRINT]    URL: http://localhost:8000/execute_task
+[2026-04-23 01:59:08.746] [PRINT]    Timeout: 320 seconds
+[2026-04-23 01:59:08.752] [PRINT]    Max retries: 3
+[2026-04-23 01:59:08.757] [PRINT] Attempt 1/3 calling http://localhost:8000/execute_task
+[2026-04-23 01:59:08.764] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 01:59:14.120] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 01:59:14.140] [PRINT] ⏱ Agent call completed in 5405.57ms
+[2026-04-23 01:59:14.146] [PRINT] Agent response received
+[2026-04-23 01:59:14.152] [AGENT] [-]   AGENT:  gmail_agent.search_emails_with_delivery_order_attachments (5406ms)  | {"query": "Deliver Order to Genshin Impact", "max_results": "10", "download_attachments": "True"}
+[2026-04-23 01:59:14.152] [PRINT] 
+[2026-04-23 01:59:14.152] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:14.158] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-23 01:59:14.164] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:14.169] [PRINT] {
+[2026-04-23 01:59:14.169] [PRINT]   "success": true,
+[2026-04-23 01:59:14.169] [PRINT]   "emails_with_attachments": [
+[2026-04-23 01:59:14.169] [PRINT]     {
+[2026-04-23 01:59:14.169] [PRINT]       "message_id": "19db57c51bdf0b0f",
+[2026-04-23 01:59:14.169] [PRINT]       "from": "Kita <pchua5644@gmail.com>",
+[2026-04-23 01:59:14.169] [PRINT]       "subject": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:14.169] [PRINT]       "date": "Wed, 22 Apr 2026 21:58:25 +0800",
+[2026-04-23 01:59:14.169] [PRINT]       "timestamp": "2026-04-22T21:58:25",
+[2026-04-23 01:59:14.169] [PRINT]       "internal_date_ms": "1776866305000",
+[2026-04-23 01:59:14.169] [PRINT]       "attachments": [
+[2026-04-23 01:59:14.169] [PRINT]         {
+[2026-04-23 01:59:14.169] [PRINT]           "filename": "Tech_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:14.169] [PRINT]           "attachment_id": "ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi",
+[2026-04-23 01:59:14.169] [PRINT]           "mime_type": "application/pdf",
+[2026-04-23 01:59:14.169] [PRINT]           "size": 85791,
+[2026-04-23 01:59:14.169] [PRINT]           "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Tech_DELIVERY_ORDER (1).pdf"
+[2026-04-23 01:59:14.169] [PRINT]         },
+[2026-04-23 01:59:14.169] [PRINT]         {
+[2026-04-23 01:59:14.169] [PRINT]           "filename": "Food_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:14.169] [PRINT]           "attachment_id": "ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA",
+[2026-04-23 01:59:14.169] [PRINT]           "mime_type": "application/pdf",
+[2026-04-23 01:59:14.169] [PRINT]           "size": 84650,
+[2026-04-23 01:59:14.169] [PRINT]           "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Food_DELIVERY_ORDER (1).pdf"
+[2026-04-23 01:59:14.169] [PRINT]         }
+[2026-04-23 01:59:14.169] [PRINT]       ],
+[2026-04-23 01:59:14.169] [PRINT]       "attachment_count": 2
+[2026-04-23 01:59:14.169] [PRINT]     }
+[2026-04-23 01:59:14.169] [PRINT]   ],
+[2026-04-23 01:59:14.169] [PRINT]   "total_emails_found": 1,
+[2026-04-23 01:59:14.169] [PRINT]   "total_attachments_downloaded": 2,
+[2026-04-23 01:59:14.169] [PRINT]   "temp_directory": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o",
+[2026-04-23 01:59:14.169] [PRINT]   "query": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:14.169] [PRINT]   "download_attachments": true,
+[2026-04-23 01:59:14.169] [PRINT]   "error": null
+[2026-04-23 01:59:14.169] [PRINT] }
+[2026-04-23 01:59:14.175] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:14.180] [PRINT] 
+[2026-04-23 01:59:14.180] [PRINT] Variables added to context:
+[2026-04-23 01:59:14.186] [PRINT]    emails_with_attachments = [{'message_id': '19db57c51bdf0b0f', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Deliver Order to Genshin Impact', 'date': 'Wed, 22 Apr 2026 21:58:25 +0800', 'timestamp': '2026-04-22T21:58:25', 'internal_date_ms': '1776866305000', 'attachments': [{'filename': 'Tech_DELIVERY_ORDER (1).pdf', 'attachment_id': 'ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi', 'mime_type': 'application/pdf', 'size': 85791, 'file_path': 'C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Tech_DELIVERY_ORDER (1).pdf'}, {'filename': 'Food_DELIVERY_ORDER (1).pdf', 'attachment_id': 'ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA', 'mime_type': 'application/pdf', 'size': 84650, 'file_path': 'C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Food_DELIVERY_ORDER (1).pdf'}], 'attachment_count': 2}] (from emails_with_attachments)
+[2026-04-23 01:59:14.192] [PRINT] 
+[2026-04-23 01:59:14.192] [PRINT] CONTEXT AFTER STEP 1:
+[2026-04-23 01:59:14.199] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:14.205] [PRINT]    today_date: 2026-04-23
+[2026-04-23 01:59:14.212] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-23 01:59:14.218] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-23 01:59:14.225] [PRINT]    emails_with_attachments: Array[1 items]
+[2026-04-23 01:59:14.232] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-23 01:59:14.239] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:14.257] [PRINT] 
+[2026-04-23 01:59:14.257] [PRINT] ============================================================
+[2026-04-23 01:59:14.263] [PRINT] Step 2/6: mapping_agent.parse_delivery_order_pdfs
+[2026-04-23 01:59:14.269] [PRINT] Description: Extract data from the downloaded PDFs
+[2026-04-23 01:59:14.275] [PRINT] ============================================================
+[2026-04-23 01:59:14.288] [PRINT] Risk Level: safe
+[2026-04-23 01:59:14.294] [PRINT] 
+[2026-04-23 01:59:14.294] [PRINT] Substituting variables in inputs...
+[2026-04-23 01:59:14.301] [PRINT]    Original inputs: {
+[2026-04-23 01:59:14.301] [PRINT]       "file_paths": "{{ emails_with_attachments }}"
+[2026-04-23 01:59:14.301] [PRINT] }
+[2026-04-23 01:59:14.309] [PRINT]    Substituted inputs: {
+[2026-04-23 01:59:14.309] [PRINT]       "file_paths": "[{'message_id': '19db57c51bdf0b0f', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Deliver Order to Genshin Impact', 'date': 'Wed, 22 Apr 2026 21:58:25 +0800', 'timestamp': '2026-04-22T21:58:25', 'internal_date_ms': '1776866305000', 'attachments': [{'filename': 'Tech_DELIVERY_ORDER (1).pdf', 'attachment_id': 'ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi', 'mime_type': 'application/pdf', 'size': 85791, 'file_path': 'C:\\\\Users\\\\pchua\\\\AppData\\\\Local\\\\Temp\\\\gmail_delivery_orders_svesjz7o\\\\19db57c51bdf0b0f\\\\Tech_DELIVERY_ORDER (1).pdf'}, {'filename': 'Food_DELIVERY_ORDER (1).pdf', 'attachment_id': 'ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA', 'mime_type': 'application/pdf', 'size': 84650, 'file_path': 'C:\\\\Users\\\\pchua\\\\AppData\\\\Local\\\\Temp\\\\gmail_delivery_orders_svesjz7o\\\\19db57c51bdf0b0f\\\\Food_DELIVERY_ORDER (1).pdf'}], 'attachment_count': 2}]"
+[2026-04-23 01:59:14.309] [PRINT] }
+[2026-04-23 01:59:14.317] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_gmail_agent', 'emails_with_attachments']
+[2026-04-23 01:59:14.324] [INFO] [-]   STEP [variable_substitution]: step 2: mapping_agent.parse_delivery_order_pdfs
+    ↳ {"inputs": {"file_paths": "[{'message_id': '19db57c51bdf0b0f', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Deliver Order to Genshin Impact', 'date': 'Wed, 22 Apr 2026 21:58:25 +0800', 'timestamp': '2026-04-22T21:58:25', 'internal_date_ms': '1776866305000', 'attachments': [{'filename': 'Tech_DELIVERY_ORDER (1).pdf', 'attachment_id': 'ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8P
+[2026-04-23 01:59:14.325] [PRINT] 
+[2026-04-23 01:59:14.325] [PRINT] Calling agent microservice: http://localhost:8004/execute_task
+[2026-04-23 01:59:14.331] [PRINT] 
+[2026-04-23 01:59:14.331] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-23 01:59:14.337] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:14.344] [PRINT]    Tool: parse_delivery_order_pdfs
+[2026-04-23 01:59:14.357] [PRINT]    Inputs keys: ['file_paths']
+[2026-04-23 01:59:14.368] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-23 01:59:14.377] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-23 01:59:14.386] [PRINT]    Payload size: 2317 bytes
+[2026-04-23 01:59:14.401] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:14.409] [PRINT] 
+[2026-04-23 01:59:14.409] [PRINT] Sending request to agent...
+[2026-04-23 01:59:14.418] [PRINT]    URL: http://localhost:8004/execute_task
+[2026-04-23 01:59:14.426] [PRINT]    Timeout: 320 seconds
+[2026-04-23 01:59:14.433] [PRINT]    Max retries: 3
+[2026-04-23 01:59:14.439] [PRINT] Attempt 1/3 calling http://localhost:8004/execute_task
+[2026-04-23 01:59:14.446] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 01:59:17.234] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 01:59:17.270] [PRINT] ⏱ Agent call completed in 2861.16ms
+[2026-04-23 01:59:17.275] [PRINT] Agent response received
+[2026-04-23 01:59:17.283] [AGENT] [-]   AGENT:  mapping_agent.parse_delivery_order_pdfs (2861ms)  | {"file_paths": "[{'message_id': '19db57c51bdf0b0f', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Deliver Order ..."}
+[2026-04-23 01:59:17.283] [PRINT] 
+[2026-04-23 01:59:17.283] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:17.289] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-23 01:59:17.296] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:17.302] [PRINT] {
+[2026-04-23 01:59:17.302] [PRINT]   "success": true,
+[2026-04-23 01:59:17.302] [PRINT]   "result": {
+[2026-04-23 01:59:17.302] [PRINT]     "success": true,
+[2026-04-23 01:59:17.302] [PRINT]     "parsed_orders": [
+[2026-04-23 01:59:17.302] [PRINT]       {
+[2026-04-23 01:59:17.302] [PRINT]         "file": "Food_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:17.302] [PRINT]         "header": {
+[2026-04-23 01:59:17.302] [PRINT]           "category": "FOOD"
+[2026-04-23 01:59:17.302] [PRINT]         },
+[2026-04-23 01:59:17.302] [PRINT]         "line_items": [
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD00810030020",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 10.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD00810270002",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD00710020049",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 72.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD01810040003",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Case"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD01810040007",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD00710100002",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 192.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Can"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD01010010007",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 24.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD01010010053",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 14.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD01810060008",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 24.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Bottle"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD00910130004",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Pickle Relish \u2013 RAM \u2013 1 Gal / Container",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 4.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Container"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD00810190003",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 4.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Container"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD01110080001",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Bottle"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD00810200004",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 180.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Can"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD01110090001",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Bottle"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD01110090002",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 4.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Gal"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD02010090002",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Wine White \u2013 Quargentan \u2013 1 L / Tetra",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 2.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Tetra"
+[2026-04-23 01:59:17.302] [PRINT]           },
+[2026-04-23 01:59:17.302] [PRINT]           {
+[2026-04-23 01:59:17.302] [PRINT]             "item_code": "RMFD00610060006",
+[2026-04-23 01:59:17.302] [PRINT]             "item_description": "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle",
+[2026-04-23 01:59:17.302] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:17.302] [PRINT]             "uom": "Bottle"
+[2026-04-23 01:59:17.302] [PRINT]           }
+[2026-04-23 01:59:17.302] [PRINT]         ],
+[2026-04-23 01:59:17.302] [PRINT]         "warnings": []
+[2026-04-23 01:59:17.302] [PRINT]       }
+[2026-04-23 01:59:17.302] [PRINT]     ],
+[2026-04-23 01:59:17.302] [PRINT]     "rejected_files": [
+[2026-04-23 01:59:17.302] [PRINT]       {
+[2026-04-23 01:59:17.302] [PRINT]         "file": "Tech_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:17.302] [PRINT]         "reason": "Category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. The PDF content did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."
+[2026-04-23 01:59:17.302] [PRINT]       }
+[2026-04-23 01:59:17.302] [PRINT]     ],
+[2026-04-23 01:59:17.302] [PRINT]     "total_parsed": 1,
+[2026-04-23 01:59:17.302] [PRINT]     "total_rejected": 1
+[2026-04-23 01:59:17.302] [PRINT]   },
+[2026-04-23 01:59:17.302] [PRINT]   "error": null,
+[2026-04-23 01:59:17.302] [PRINT]   "no_results": null
+[2026-04-23 01:59:17.302] [PRINT] }
+[2026-04-23 01:59:17.309] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:17.316] [PRINT] 
+[2026-04-23 01:59:17.316] [PRINT] Variables added to context:
+[2026-04-23 01:59:17.322] [PRINT]    parsed_orders = [{'file': 'Food_DELIVERY_ORDER (1).pdf', 'header': {'category': 'FOOD'}, 'line_items': [{'item_code': 'RMFD00810030020', 'item_description': 'Bread Crumbs – Village Gourmet – 1 Kg /\nPack', 'qty': 10.0, 'uom': 'Pack'}, {'item_code': 'RMFD00810270002', 'item_description': 'Broth Powder Chicken – Knorr – 1 KG /\nPack', 'qty': 12.0, 'uom': 'Pack'}, {'item_code': 'RMFD00710020049', 'item_description': 'Cheese Filled – Kraft Eden – 430G / Pack', 'qty': 72.0, 'uom': 'Pack'}, {'item_code': 'RMFD01810040003', 'item_description': "Mayonnaise – Lady's Choice – 5.5L – 2 Gal\n/ Case", 'qty': 12.0, 'uom': 'Case'}, {'item_code': 'RMFD01810040007', 'item_description': 'Mayonnaise – Kewpie – 1KG / Pack', 'qty': 12.0, 'uom': 'Pack'}, {'item_code': 'RMFD00710100002', 'item_description': 'Milk Evaporated – Alaska – 370 ML / Can', 'qty': 192.0, 'uom': 'Can'}, {'item_code': 'RMFD01010010007', 'item_description': 'Noodles Elbow Macaroni – Royal – 1 KG /\nPack', 'qty': 24.0, 'uom': 'Pack'}, {'item_code': 'RMFD01010010053', 'item_description': 'Noodles Lasagna – HOL – 450g / 6-Pack', 'qty': 14.0, 'uom': 'Pack'}, {'item_code': 'RMFD01810060008', 'item_description': "Classic Peanut Butter – Lily's – 504g / Bottle", 'qty': 24.0, 'uom': 'Bottle'}, {'item_code': 'RMFD00910130004', 'item_description': 'Pickle Relish – RAM – 1 Gal / Container', 'qty': 4.0, 'uom': 'Container'}, {'item_code': 'RMFD00810190003', 'item_description': 'Seasoning Liquid – Knorr – 3.8 L / Container', 'qty': 4.0, 'uom': 'Container'}, {'item_code': 'RMFD01110080001', 'item_description': 'Sesame Oil – Yuen Yick – 750 ML / Bottle', 'qty': 12.0, 'uom': 'Bottle'}, {'item_code': 'RMFD00810200004', 'item_description': "Soup Cream of Mushroom – Campbell's –\n640g / Can", 'qty': 180.0, 'uom': 'Can'}, {'item_code': 'RMFD01110090001', 'item_description': 'Soy Sauce – Kikkoman – 1 L / Bottle', 'qty': 12.0, 'uom': 'Bottle'}, {'item_code': 'RMFD01110090002', 'item_description': 'Soy Sauce – Silver Swan – 3.785 L / Gal', 'qty': 4.0, 'uom': 'Gal'}, {'item_code': 'RMFD02010090002', 'item_description': 'Wine White – Quargentan – 1 L / Tetra', 'qty': 2.0, 'uom': 'Tetra'}, {'item_code': 'RMFD00610060006', 'item_description': 'Cream Black Truffle – Mazza – 500 G /\nBottle', 'qty': 12.0, 'uom': 'Bottle'}], 'warnings': []}] (from parsed_orders)
+[2026-04-23 01:59:17.328] [PRINT] 
+[2026-04-23 01:59:17.328] [PRINT] CONTEXT AFTER STEP 2:
+[2026-04-23 01:59:17.336] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:17.343] [PRINT]    today_date: 2026-04-23
+[2026-04-23 01:59:17.349] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-23 01:59:17.355] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-23 01:59:17.361] [PRINT]    emails_with_attachments: Array[1 items]
+[2026-04-23 01:59:17.368] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-23 01:59:17.375] [PRINT]    step_2_mapping_agent: Dict with keys: ['parsed_orders', 'rejected_files', 'total_parsed', 'total_rejected']
+[2026-04-23 01:59:17.381] [PRINT]    parsed_orders: Array[1 items]
+[2026-04-23 01:59:17.388] [PRINT]       └─ First item keys: ['file', 'header', 'line_items', 'warnings']
+[2026-04-23 01:59:17.394] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:17.411] [PRINT] 
+[2026-04-23 01:59:17.411] [PRINT] ============================================================
+[2026-04-23 01:59:17.417] [PRINT] Step 3/6: drive_agent.search_files
+[2026-04-23 01:59:17.425] [PRINT] Description: Find the 'Product Requisition List' Google Sheet
+[2026-04-23 01:59:17.432] [PRINT] ============================================================
+[2026-04-23 01:59:17.447] [PRINT] Risk Level: safe
+[2026-04-23 01:59:17.456] [PRINT] 
+[2026-04-23 01:59:17.456] [PRINT] Substituting variables in inputs...
+[2026-04-23 01:59:17.463] [PRINT]    Original inputs: {
+[2026-04-23 01:59:17.463] [PRINT]       "search_term": "Product Requisition List"
+[2026-04-23 01:59:17.463] [PRINT] }
+[2026-04-23 01:59:17.474] [PRINT]    Substituted inputs: {
+[2026-04-23 01:59:17.474] [PRINT]       "search_term": "Product Requisition List"
+[2026-04-23 01:59:17.474] [PRINT] }
+[2026-04-23 01:59:17.482] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_gmail_agent', 'emails_with_attachments', 'step_2_mapping_agent', 'parsed_orders']
+[2026-04-23 01:59:17.489] [INFO] [-]   STEP [variable_substitution]: step 3: drive_agent.search_files
+    ↳ {"inputs": {"search_term": "Product Requisition List"}, "context_keys": ["today_date", "_cached_tool_filter", "step_1_gmail_agent", "emails_with_attachments", "step_2_mapping_agent", "parsed_orders"]}
+[2026-04-23 01:59:17.490] [PRINT] 
+[2026-04-23 01:59:17.490] [PRINT] Calling agent microservice: http://localhost:8006/execute_task
+[2026-04-23 01:59:17.499] [PRINT] 
+[2026-04-23 01:59:17.499] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-23 01:59:17.506] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:17.512] [PRINT]    Tool: search_files
+[2026-04-23 01:59:17.518] [PRINT]    Inputs keys: ['search_term']
+[2026-04-23 01:59:17.524] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-23 01:59:17.530] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-23 01:59:17.536] [PRINT]    Payload size: 697 bytes
+[2026-04-23 01:59:17.542] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:17.548] [PRINT] 
+[2026-04-23 01:59:17.548] [PRINT] Sending request to agent...
+[2026-04-23 01:59:17.555] [PRINT]    URL: http://localhost:8006/execute_task
+[2026-04-23 01:59:17.562] [PRINT]    Timeout: 320 seconds
+[2026-04-23 01:59:17.567] [PRINT]    Max retries: 3
+[2026-04-23 01:59:17.574] [PRINT] Attempt 1/3 calling http://localhost:8006/execute_task
+[2026-04-23 01:59:17.580] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 01:59:21.571] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 01:59:21.610] [PRINT] ⏱ Agent call completed in 4061.65ms
+[2026-04-23 01:59:21.615] [PRINT] Agent response received
+[2026-04-23 01:59:21.621] [AGENT] [-]   AGENT:  drive_agent.search_files (4062ms)  | {"search_term": "Product Requisition List"}
+[2026-04-23 01:59:21.622] [PRINT] 
+[2026-04-23 01:59:21.622] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:21.627] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-23 01:59:21.632] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:21.637] [PRINT] {
+[2026-04-23 01:59:21.637] [PRINT]   "success": true,
+[2026-04-23 01:59:21.637] [PRINT]   "results": [
+[2026-04-23 01:59:21.637] [PRINT]     {
+[2026-04-23 01:59:21.637] [PRINT]       "parents": [
+[2026-04-23 01:59:21.637] [PRINT]         "1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"
+[2026-04-23 01:59:21.637] [PRINT]       ],
+[2026-04-23 01:59:21.637] [PRINT]       "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-23 01:59:21.637] [PRINT]       "name": "Product Requisition List",
+[2026-04-23 01:59:21.637] [PRINT]       "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-23 01:59:21.637] [PRINT]       "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk",
+[2026-04-23 01:59:21.637] [PRINT]       "createdTime": "2026-04-21T09:32:16.447Z",
+[2026-04-23 01:59:21.637] [PRINT]       "size": "1337"
+[2026-04-23 01:59:21.637] [PRINT]     },
+[2026-04-23 01:59:21.637] [PRINT]     {
+[2026-04-23 01:59:21.637] [PRINT]       "id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-23 01:59:21.637] [PRINT]       "name": "PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-23 01:59:21.637] [PRINT]       "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-23 01:59:21.637] [PRINT]       "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk",
+[2026-04-23 01:59:21.637] [PRINT]       "createdTime": "2026-04-04T19:06:32.433Z",
+[2026-04-23 01:59:21.637] [PRINT]       "size": "1024"
+[2026-04-23 01:59:21.637] [PRINT]     }
+[2026-04-23 01:59:21.637] [PRINT]   ],
+[2026-04-23 01:59:21.637] [PRINT]   "count": 2,
+[2026-04-23 01:59:21.637] [PRINT]   "search_term": "Product Requisition List",
+[2026-04-23 01:59:21.637] [PRINT]   "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-23 01:59:21.637] [PRINT]   "error": null
+[2026-04-23 01:59:21.637] [PRINT] }
+[2026-04-23 01:59:21.644] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:21.649] [PRINT] 
+[2026-04-23 01:59:21.649] [PRINT] Variables added to context:
+[2026-04-23 01:59:21.656] [PRINT]    sheet_id = 1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU (from results[0].id)
+[2026-04-23 01:59:21.662] [PRINT] 
+[2026-04-23 01:59:21.662] [PRINT] CONTEXT AFTER STEP 3:
+[2026-04-23 01:59:21.669] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:21.675] [PRINT]    today_date: 2026-04-23
+[2026-04-23 01:59:21.681] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-23 01:59:21.689] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-23 01:59:21.695] [PRINT]    emails_with_attachments: Array[1 items]
+[2026-04-23 01:59:21.701] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-23 01:59:21.708] [PRINT]    step_2_mapping_agent: Dict with keys: ['parsed_orders', 'rejected_files', 'total_parsed', 'total_rejected']
+[2026-04-23 01:59:21.714] [PRINT]    parsed_orders: Array[1 items]
+[2026-04-23 01:59:21.720] [PRINT]       └─ First item keys: ['file', 'header', 'line_items', 'warnings']
+[2026-04-23 01:59:21.726] [PRINT]    step_3_drive_agent: Dict with keys: ['results', 'count', 'search_term', 'message']
+[2026-04-23 01:59:21.733] [PRINT]    sheet_id: 1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU
+[2026-04-23 01:59:21.739] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 01:59:21.757] [PRINT] 
+[2026-04-23 01:59:21.757] [PRINT]  DISAMBIGUATION: search_files returned 2 results — pausing for user selection
+[2026-04-23 01:59:21.763] [INFO] [-]   STEP [disambiguation_pause]: step 3: search_files returned 2 results, pausing
+[2026-04-23 01:59:21.767] [PRINT] 
+[2026-04-23 01:59:21.767] [PRINT]  Workflow paused: Workflow paused — multiple results need user selection
+[2026-04-23 01:59:21.774] [INFO] [-]   WORKFLOW END: paused_for_disambiguation (3/6 steps)
+[2026-04-23 01:59:21.775] [PRINT] 
+[2026-04-23 01:59:21.775] [PRINT]  Generated Plan:
+[2026-04-23 01:59:21.775] [PRINT] {
+[2026-04-23 01:59:21.775] [PRINT]   "steps": [
+[2026-04-23 01:59:21.775] [PRINT]     {
+[2026-04-23 01:59:21.775] [PRINT]       "agent": "gmail_agent",
+[2026-04-23 01:59:21.775] [PRINT]       "tool": "search_emails_with_delivery_order_attachments",
+[2026-04-23 01:59:21.775] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.775] [PRINT]         "query": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:21.775] [PRINT]         "max_results": 10,
+[2026-04-23 01:59:21.775] [PRINT]         "download_attachments": true
+[2026-04-23 01:59:21.775] [PRINT]       },
+[2026-04-23 01:59:21.775] [PRINT]       "output_variables": {
+[2026-04-23 01:59:21.775] [PRINT]         "emails_with_attachments": "emails_with_attachments"
+[2026-04-23 01:59:21.775] [PRINT]       },
+[2026-04-23 01:59:21.775] [PRINT]       "description": "Search for emails with 'Deliver Order to Genshin Impact' and download the attached PDFs"
+[2026-04-23 01:59:21.775] [PRINT]     },
+[2026-04-23 01:59:21.775] [PRINT]     {
+[2026-04-23 01:59:21.775] [PRINT]       "agent": "mapping_agent",
+[2026-04-23 01:59:21.775] [PRINT]       "tool": "parse_delivery_order_pdfs",
+[2026-04-23 01:59:21.775] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.775] [PRINT]         "file_paths": "{{ emails_with_attachments }}"
+[2026-04-23 01:59:21.775] [PRINT]       },
+[2026-04-23 01:59:21.775] [PRINT]       "output_variables": {
+[2026-04-23 01:59:21.775] [PRINT]         "parsed_orders": "parsed_orders"
+[2026-04-23 01:59:21.775] [PRINT]       },
+[2026-04-23 01:59:21.775] [PRINT]       "description": "Extract data from the downloaded PDFs"
+[2026-04-23 01:59:21.775] [PRINT]     },
+[2026-04-23 01:59:21.775] [PRINT]     {
+[2026-04-23 01:59:21.775] [PRINT]       "agent": "drive_agent",
+[2026-04-23 01:59:21.775] [PRINT]       "tool": "search_files",
+[2026-04-23 01:59:21.775] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.775] [PRINT]         "search_term": "Product Requisition List"
+[2026-04-23 01:59:21.775] [PRINT]       },
+[2026-04-23 01:59:21.775] [PRINT]       "output_variables": {
+[2026-04-23 01:59:21.775] [PRINT]         "sheet_id": "results[0].id"
+[2026-04-23 01:59:21.775] [PRINT]       },
+[2026-04-23 01:59:21.775] [PRINT]       "description": "Find the 'Product Requisition List' Google Sheet"
+[2026-04-23 01:59:21.775] [PRINT]     },
+[2026-04-23 01:59:21.775] [PRINT]     {
+[2026-04-23 01:59:21.775] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 01:59:21.775] [PRINT]       "tool": "validate_delivery_sheet",
+[2026-04-23 01:59:21.775] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.775] [PRINT]         "sheet_id": "{{ sheet_id }}"
+[2026-04-23 01:59:21.775] [PRINT]       },
+[2026-04-23 01:59:21.775] [PRINT]       "output_variables": {},
+[2026-04-23 01:59:21.775] [PRINT]       "description": "Validate the Google Sheet to ensure it matches the required template"
+[2026-04-23 01:59:21.775] [PRINT]     },
+[2026-04-23 01:59:21.775] [PRINT]     {
+[2026-04-23 01:59:21.775] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 01:59:21.775] [PRINT]       "tool": "preview_delivery_order_insertion",
+[2026-04-23 01:59:21.775] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.775] [PRINT]         "sheet_id": "{{ sheet_id }}",
+[2026-04-23 01:59:21.775] [PRINT]         "parsed_orders": "{{ parsed_orders }}"
+[2026-04-23 01:59:21.775] [PRINT]       },
+[2026-04-23 01:59:21.775] [PRINT]       "output_variables": {},
+[2026-04-23 01:59:21.775] [PRINT]       "description": "Preview the data that will be written to the Google Sheet"
+[2026-04-23 01:59:21.775] [PRINT]     },
+[2026-04-23 01:59:21.775] [PRINT]     {
+[2026-04-23 01:59:21.775] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 01:59:21.775] [PRINT]       "tool": "write_delivery_order_data",
+[2026-04-23 01:59:21.775] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.775] [PRINT]         "sheet_id": "{{ sheet_id }}",
+[2026-04-23 01:59:21.775] [PRINT]         "parsed_orders": "{{ parsed_orders }}"
+[2026-04-23 01:59:21.775] [PRINT]       },
+[2026-04-23 01:59:21.775] [PRINT]       "output_variables": {},
+[2026-04-23 01:59:21.775] [PRINT]       "description": "Write the extracted data to the 'Product Requisition List' Google Sheet"
+[2026-04-23 01:59:21.775] [PRINT]     }
+[2026-04-23 01:59:21.775] [PRINT]   ]
+[2026-04-23 01:59:21.775] [PRINT] }
+[2026-04-23 01:59:21.782] [PRINT] 
+[2026-04-23 01:59:21.782] [PRINT]  Final Context: {
+[2026-04-23 01:59:21.782] [PRINT]   "today_date": "2026-04-23",
+[2026-04-23 01:59:21.782] [PRINT]   "_cached_tool_filter": {
+[2026-04-23 01:59:21.782] [PRINT]     "gmail_agent": [
+[2026-04-23 01:59:21.782] [PRINT]       "search_emails",
+[2026-04-23 01:59:21.782] [PRINT]       "search_emails_with_delivery_order_attachments"
+[2026-04-23 01:59:21.782] [PRINT]     ],
+[2026-04-23 01:59:21.782] [PRINT]     "mapping_agent": [
+[2026-04-23 01:59:21.782] [PRINT]       "parse_delivery_order_pdfs"
+[2026-04-23 01:59:21.782] [PRINT]     ],
+[2026-04-23 01:59:21.782] [PRINT]     "sheets_agent": [
+[2026-04-23 01:59:21.782] [PRINT]       "validate_delivery_sheet",
+[2026-04-23 01:59:21.782] [PRINT]       "write_delivery_order_data",
+[2026-04-23 01:59:21.782] [PRINT]       "preview_delivery_order_insertion"
+[2026-04-23 01:59:21.782] [PRINT]     ],
+[2026-04-23 01:59:21.782] [PRINT]     "drive_agent": [
+[2026-04-23 01:59:21.782] [PRINT]       "search_files"
+[2026-04-23 01:59:21.782] [PRINT]     ]
+[2026-04-23 01:59:21.782] [PRINT]   },
+[2026-04-23 01:59:21.782] [PRINT]   "step_1_gmail_agent": {
+[2026-04-23 01:59:21.782] [PRINT]     "emails_with_attachments": [
+[2026-04-23 01:59:21.782] [PRINT]       {
+[2026-04-23 01:59:21.782] [PRINT]         "message_id": "19db57c51bdf0b0f",
+[2026-04-23 01:59:21.782] [PRINT]         "from": "Kita <pchua5644@gmail.com>",
+[2026-04-23 01:59:21.782] [PRINT]         "subject": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:21.782] [PRINT]         "date": "Wed, 22 Apr 2026 21:58:25 +0800",
+[2026-04-23 01:59:21.782] [PRINT]         "timestamp": "2026-04-22T21:58:25",
+[2026-04-23 01:59:21.782] [PRINT]         "internal_date_ms": "1776866305000",
+[2026-04-23 01:59:21.782] [PRINT]         "attachments": [
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "filename": "Tech_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]             "attachment_id": "ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi",
+[2026-04-23 01:59:21.782] [PRINT]             "mime_type": "application/pdf",
+[2026-04-23 01:59:21.782] [PRINT]             "size": 85791,
+[2026-04-23 01:59:21.782] [PRINT]             "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Tech_DELIVERY_ORDER (1).pdf"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "filename": "Food_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]             "attachment_id": "ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA",
+[2026-04-23 01:59:21.782] [PRINT]             "mime_type": "application/pdf",
+[2026-04-23 01:59:21.782] [PRINT]             "size": 84650,
+[2026-04-23 01:59:21.782] [PRINT]             "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Food_DELIVERY_ORDER (1).pdf"
+[2026-04-23 01:59:21.782] [PRINT]           }
+[2026-04-23 01:59:21.782] [PRINT]         ],
+[2026-04-23 01:59:21.782] [PRINT]         "attachment_count": 2
+[2026-04-23 01:59:21.782] [PRINT]       }
+[2026-04-23 01:59:21.782] [PRINT]     ],
+[2026-04-23 01:59:21.782] [PRINT]     "total_emails_found": 1,
+[2026-04-23 01:59:21.782] [PRINT]     "total_attachments_downloaded": 2,
+[2026-04-23 01:59:21.782] [PRINT]     "temp_directory": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o",
+[2026-04-23 01:59:21.782] [PRINT]     "query": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:21.782] [PRINT]     "download_attachments": true
+[2026-04-23 01:59:21.782] [PRINT]   },
+[2026-04-23 01:59:21.782] [PRINT]   "emails_with_attachments": [
+[2026-04-23 01:59:21.782] [PRINT]     {
+[2026-04-23 01:59:21.782] [PRINT]       "message_id": "19db57c51bdf0b0f",
+[2026-04-23 01:59:21.782] [PRINT]       "from": "Kita <pchua5644@gmail.com>",
+[2026-04-23 01:59:21.782] [PRINT]       "subject": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:21.782] [PRINT]       "date": "Wed, 22 Apr 2026 21:58:25 +0800",
+[2026-04-23 01:59:21.782] [PRINT]       "timestamp": "2026-04-22T21:58:25",
+[2026-04-23 01:59:21.782] [PRINT]       "internal_date_ms": "1776866305000",
+[2026-04-23 01:59:21.782] [PRINT]       "attachments": [
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "filename": "Tech_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]           "attachment_id": "ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi",
+[2026-04-23 01:59:21.782] [PRINT]           "mime_type": "application/pdf",
+[2026-04-23 01:59:21.782] [PRINT]           "size": 85791,
+[2026-04-23 01:59:21.782] [PRINT]           "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Tech_DELIVERY_ORDER (1).pdf"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "filename": "Food_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]           "attachment_id": "ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA",
+[2026-04-23 01:59:21.782] [PRINT]           "mime_type": "application/pdf",
+[2026-04-23 01:59:21.782] [PRINT]           "size": 84650,
+[2026-04-23 01:59:21.782] [PRINT]           "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Food_DELIVERY_ORDER (1).pdf"
+[2026-04-23 01:59:21.782] [PRINT]         }
+[2026-04-23 01:59:21.782] [PRINT]       ],
+[2026-04-23 01:59:21.782] [PRINT]       "attachment_count": 2
+[2026-04-23 01:59:21.782] [PRINT]     }
+[2026-04-23 01:59:21.782] [PRINT]   ],
+[2026-04-23 01:59:21.782] [PRINT]   "step_2_mapping_agent": {
+[2026-04-23 01:59:21.782] [PRINT]     "parsed_orders": [
+[2026-04-23 01:59:21.782] [PRINT]       {
+[2026-04-23 01:59:21.782] [PRINT]         "file": "Food_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]         "header": {
+[2026-04-23 01:59:21.782] [PRINT]           "category": "FOOD"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         "line_items": [
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD00810030020",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 10.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD00810270002",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD00710020049",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 72.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD01810040003",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Case"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD01810040007",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD00710100002",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 192.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Can"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD01010010007",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 24.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD01010010053",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 14.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD01810060008",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 24.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD00910130004",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Pickle Relish \u2013 RAM \u2013 1 Gal / Container",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 4.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Container"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD00810190003",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 4.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Container"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD01110080001",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD00810200004",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 180.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Can"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD01110090001",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD01110090002",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 4.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Gal"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD02010090002",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Wine White \u2013 Quargentan \u2013 1 L / Tetra",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 2.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Tetra"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "item_code": "RMFD00610060006",
+[2026-04-23 01:59:21.782] [PRINT]             "item_description": "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle",
+[2026-04-23 01:59:21.782] [PRINT]             "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]             "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]           }
+[2026-04-23 01:59:21.782] [PRINT]         ],
+[2026-04-23 01:59:21.782] [PRINT]         "warnings": []
+[2026-04-23 01:59:21.782] [PRINT]       }
+[2026-04-23 01:59:21.782] [PRINT]     ],
+[2026-04-23 01:59:21.782] [PRINT]     "rejected_files": [
+[2026-04-23 01:59:21.782] [PRINT]       {
+[2026-04-23 01:59:21.782] [PRINT]         "file": "Tech_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]         "reason": "Category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. The PDF content did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."
+[2026-04-23 01:59:21.782] [PRINT]       }
+[2026-04-23 01:59:21.782] [PRINT]     ],
+[2026-04-23 01:59:21.782] [PRINT]     "total_parsed": 1,
+[2026-04-23 01:59:21.782] [PRINT]     "total_rejected": 1
+[2026-04-23 01:59:21.782] [PRINT]   },
+[2026-04-23 01:59:21.782] [PRINT]   "parsed_orders": [
+[2026-04-23 01:59:21.782] [PRINT]     {
+[2026-04-23 01:59:21.782] [PRINT]       "file": "Food_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]       "header": {
+[2026-04-23 01:59:21.782] [PRINT]         "category": "FOOD"
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       "line_items": [
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD00810030020",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 10.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD00810270002",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD00710020049",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 72.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD01810040003",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Case"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD01810040007",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD00710100002",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 192.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Can"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD01010010007",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 24.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD01010010053",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 14.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD01810060008",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 24.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD00910130004",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Pickle Relish \u2013 RAM \u2013 1 Gal / Container",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 4.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Container"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD00810190003",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 4.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Container"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD01110080001",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD00810200004",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 180.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Can"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD01110090001",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD01110090002",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 4.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Gal"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD02010090002",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Wine White \u2013 Quargentan \u2013 1 L / Tetra",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 2.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Tetra"
+[2026-04-23 01:59:21.782] [PRINT]         },
+[2026-04-23 01:59:21.782] [PRINT]         {
+[2026-04-23 01:59:21.782] [PRINT]           "item_code": "RMFD00610060006",
+[2026-04-23 01:59:21.782] [PRINT]           "item_description": "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle",
+[2026-04-23 01:59:21.782] [PRINT]           "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]           "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]         }
+[2026-04-23 01:59:21.782] [PRINT]       ],
+[2026-04-23 01:59:21.782] [PRINT]       "warnings": []
+[2026-04-23 01:59:21.782] [PRINT]     }
+[2026-04-23 01:59:21.782] [PRINT]   ],
+[2026-04-23 01:59:21.782] [PRINT]   "step_3_drive_agent": {
+[2026-04-23 01:59:21.782] [PRINT]     "results": [
+[2026-04-23 01:59:21.782] [PRINT]       {
+[2026-04-23 01:59:21.782] [PRINT]         "parents": [
+[2026-04-23 01:59:21.782] [PRINT]           "1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"
+[2026-04-23 01:59:21.782] [PRINT]         ],
+[2026-04-23 01:59:21.782] [PRINT]         "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-23 01:59:21.782] [PRINT]         "name": "Product Requisition List",
+[2026-04-23 01:59:21.782] [PRINT]         "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-23 01:59:21.782] [PRINT]         "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk",
+[2026-04-23 01:59:21.782] [PRINT]         "createdTime": "2026-04-21T09:32:16.447Z",
+[2026-04-23 01:59:21.782] [PRINT]         "size": "1337"
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       {
+[2026-04-23 01:59:21.782] [PRINT]         "id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-23 01:59:21.782] [PRINT]         "name": "PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-23 01:59:21.782] [PRINT]         "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-23 01:59:21.782] [PRINT]         "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk",
+[2026-04-23 01:59:21.782] [PRINT]         "createdTime": "2026-04-04T19:06:32.433Z",
+[2026-04-23 01:59:21.782] [PRINT]         "size": "1024"
+[2026-04-23 01:59:21.782] [PRINT]       }
+[2026-04-23 01:59:21.782] [PRINT]     ],
+[2026-04-23 01:59:21.782] [PRINT]     "count": 2,
+[2026-04-23 01:59:21.782] [PRINT]     "search_term": "Product Requisition List",
+[2026-04-23 01:59:21.782] [PRINT]     "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST"
+[2026-04-23 01:59:21.782] [PRINT]   },
+[2026-04-23 01:59:21.782] [PRINT]   "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-23 01:59:21.782] [PRINT]   "results": [
+[2026-04-23 01:59:21.782] [PRINT]     {
+[2026-04-23 01:59:21.782] [PRINT]       "step": 1,
+[2026-04-23 01:59:21.782] [PRINT]       "agent": "gmail_agent",
+[2026-04-23 01:59:21.782] [PRINT]       "tool": "search_emails_with_delivery_order_attachments",
+[2026-04-23 01:59:21.782] [PRINT]       "description": "Search for emails with 'Deliver Order to Genshin Impact' and download the attached PDFs",
+[2026-04-23 01:59:21.782] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.782] [PRINT]         "query": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:21.782] [PRINT]         "max_results": 10,
+[2026-04-23 01:59:21.782] [PRINT]         "download_attachments": true
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       "output": {
+[2026-04-23 01:59:21.782] [PRINT]         "success": true,
+[2026-04-23 01:59:21.782] [PRINT]         "emails_with_attachments": [
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "message_id": "19db57c51bdf0b0f",
+[2026-04-23 01:59:21.782] [PRINT]             "from": "Kita <pchua5644@gmail.com>",
+[2026-04-23 01:59:21.782] [PRINT]             "subject": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:21.782] [PRINT]             "date": "Wed, 22 Apr 2026 21:58:25 +0800",
+[2026-04-23 01:59:21.782] [PRINT]             "timestamp": "2026-04-22T21:58:25",
+[2026-04-23 01:59:21.782] [PRINT]             "internal_date_ms": "1776866305000",
+[2026-04-23 01:59:21.782] [PRINT]             "attachments": [
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "filename": "Tech_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]                 "attachment_id": "ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi",
+[2026-04-23 01:59:21.782] [PRINT]                 "mime_type": "application/pdf",
+[2026-04-23 01:59:21.782] [PRINT]                 "size": 85791,
+[2026-04-23 01:59:21.782] [PRINT]                 "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Tech_DELIVERY_ORDER (1).pdf"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "filename": "Food_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]                 "attachment_id": "ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA",
+[2026-04-23 01:59:21.782] [PRINT]                 "mime_type": "application/pdf",
+[2026-04-23 01:59:21.782] [PRINT]                 "size": 84650,
+[2026-04-23 01:59:21.782] [PRINT]                 "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Food_DELIVERY_ORDER (1).pdf"
+[2026-04-23 01:59:21.782] [PRINT]               }
+[2026-04-23 01:59:21.782] [PRINT]             ],
+[2026-04-23 01:59:21.782] [PRINT]             "attachment_count": 2
+[2026-04-23 01:59:21.782] [PRINT]           }
+[2026-04-23 01:59:21.782] [PRINT]         ],
+[2026-04-23 01:59:21.782] [PRINT]         "total_emails_found": 1,
+[2026-04-23 01:59:21.782] [PRINT]         "total_attachments_downloaded": 2,
+[2026-04-23 01:59:21.782] [PRINT]         "temp_directory": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o",
+[2026-04-23 01:59:21.782] [PRINT]         "query": "Deliver Order to Genshin Impact",
+[2026-04-23 01:59:21.782] [PRINT]         "download_attachments": true,
+[2026-04-23 01:59:21.782] [PRINT]         "error": null
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       "status": "success"
+[2026-04-23 01:59:21.782] [PRINT]     },
+[2026-04-23 01:59:21.782] [PRINT]     {
+[2026-04-23 01:59:21.782] [PRINT]       "step": 2,
+[2026-04-23 01:59:21.782] [PRINT]       "agent": "mapping_agent",
+[2026-04-23 01:59:21.782] [PRINT]       "tool": "parse_delivery_order_pdfs",
+[2026-04-23 01:59:21.782] [PRINT]       "description": "Extract data from the downloaded PDFs",
+[2026-04-23 01:59:21.782] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.782] [PRINT]         "file_paths": "[{'message_id': '19db57c51bdf0b0f', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Deliver Order to Genshin Impact', 'date': 'Wed, 22 Apr 2026 21:58:25 +0800', 'timestamp': '2026-04-22T21:58:25', 'internal_date_ms': '1776866305000', 'attachments': [{'filename': 'Tech_DELIVERY_ORDER (1).pdf', 'attachment_id': 'ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi', 'mime_type': 'application/pdf', 'size': 85791, 'file_path': 'C:\\\\Users\\\\pchua\\\\AppData\\\\Local\\\\Temp\\\\gmail_delivery_orders_svesjz7o\\\\19db57c51bdf0b0f\\\\Tech_DELIVERY_ORDER (1).pdf'}, {'filename': 'Food_DELIVERY_ORDER (1).pdf', 'attachment_id': 'ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA', 'mime_type': 'application/pdf', 'size': 84650, 'file_path': 'C:\\\\Users\\\\pchua\\\\AppData\\\\Local\\\\Temp\\\\gmail_delivery_orders_svesjz7o\\\\19db57c51bdf0b0f\\\\Food_DELIVERY_ORDER (1).pdf'}], 'attachment_count': 2}]"
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       "output": {
+[2026-04-23 01:59:21.782] [PRINT]         "success": true,
+[2026-04-23 01:59:21.782] [PRINT]         "parsed_orders": [
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "file": "Food_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]             "header": {
+[2026-04-23 01:59:21.782] [PRINT]               "category": "FOOD"
+[2026-04-23 01:59:21.782] [PRINT]             },
+[2026-04-23 01:59:21.782] [PRINT]             "line_items": [
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD00810030020",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 10.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD00810270002",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD00710020049",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 72.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD01810040003",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Case"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD01810040007",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD00710100002",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 192.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Can"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD01010010007",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 24.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD01010010053",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 14.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Pack"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD01810060008",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 24.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD00910130004",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Pickle Relish \u2013 RAM \u2013 1 Gal / Container",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 4.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Container"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD00810190003",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 4.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Container"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD01110080001",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD00810200004",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 180.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Can"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD01110090001",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD01110090002",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 4.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Gal"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD02010090002",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Wine White \u2013 Quargentan \u2013 1 L / Tetra",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 2.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Tetra"
+[2026-04-23 01:59:21.782] [PRINT]               },
+[2026-04-23 01:59:21.782] [PRINT]               {
+[2026-04-23 01:59:21.782] [PRINT]                 "item_code": "RMFD00610060006",
+[2026-04-23 01:59:21.782] [PRINT]                 "item_description": "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle",
+[2026-04-23 01:59:21.782] [PRINT]                 "qty": 12.0,
+[2026-04-23 01:59:21.782] [PRINT]                 "uom": "Bottle"
+[2026-04-23 01:59:21.782] [PRINT]               }
+[2026-04-23 01:59:21.782] [PRINT]             ],
+[2026-04-23 01:59:21.782] [PRINT]             "warnings": []
+[2026-04-23 01:59:21.782] [PRINT]           }
+[2026-04-23 01:59:21.782] [PRINT]         ],
+[2026-04-23 01:59:21.782] [PRINT]         "rejected_files": [
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "file": "Tech_DELIVERY_ORDER (1).pdf",
+[2026-04-23 01:59:21.782] [PRINT]             "reason": "Category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. The PDF content did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."
+[2026-04-23 01:59:21.782] [PRINT]           }
+[2026-04-23 01:59:21.782] [PRINT]         ],
+[2026-04-23 01:59:21.782] [PRINT]         "total_parsed": 1,
+[2026-04-23 01:59:21.782] [PRINT]         "total_rejected": 1
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       "status": "success"
+[2026-04-23 01:59:21.782] [PRINT]     },
+[2026-04-23 01:59:21.782] [PRINT]     {
+[2026-04-23 01:59:21.782] [PRINT]       "step": 3,
+[2026-04-23 01:59:21.782] [PRINT]       "agent": "drive_agent",
+[2026-04-23 01:59:21.782] [PRINT]       "tool": "search_files",
+[2026-04-23 01:59:21.782] [PRINT]       "description": "Find the 'Product Requisition List' Google Sheet",
+[2026-04-23 01:59:21.782] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.782] [PRINT]         "search_term": "Product Requisition List"
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       "output": {
+[2026-04-23 01:59:21.782] [PRINT]         "success": true,
+[2026-04-23 01:59:21.782] [PRINT]         "results": [
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "parents": [
+[2026-04-23 01:59:21.782] [PRINT]               "1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"
+[2026-04-23 01:59:21.782] [PRINT]             ],
+[2026-04-23 01:59:21.782] [PRINT]             "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-23 01:59:21.782] [PRINT]             "name": "Product Requisition List",
+[2026-04-23 01:59:21.782] [PRINT]             "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-23 01:59:21.782] [PRINT]             "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk",
+[2026-04-23 01:59:21.782] [PRINT]             "createdTime": "2026-04-21T09:32:16.447Z",
+[2026-04-23 01:59:21.782] [PRINT]             "size": "1337"
+[2026-04-23 01:59:21.782] [PRINT]           },
+[2026-04-23 01:59:21.782] [PRINT]           {
+[2026-04-23 01:59:21.782] [PRINT]             "id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-23 01:59:21.782] [PRINT]             "name": "PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-23 01:59:21.782] [PRINT]             "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-23 01:59:21.782] [PRINT]             "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk",
+[2026-04-23 01:59:21.782] [PRINT]             "createdTime": "2026-04-04T19:06:32.433Z",
+[2026-04-23 01:59:21.782] [PRINT]             "size": "1024"
+[2026-04-23 01:59:21.782] [PRINT]           }
+[2026-04-23 01:59:21.782] [PRINT]         ],
+[2026-04-23 01:59:21.782] [PRINT]         "count": 2,
+[2026-04-23 01:59:21.782] [PRINT]         "search_term": "Product Requisition List",
+[2026-04-23 01:59:21.782] [PRINT]         "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-23 01:59:21.782] [PRINT]         "error": null
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       "status": "success"
+[2026-04-23 01:59:21.782] [PRINT]     }
+[2026-04-23 01:59:21.782] [PRINT]   ],
+[2026-04-23 01:59:21.782] [PRINT]   "paused_for_disambiguation": true,
+[2026-04-23 01:59:21.782] [PRINT]   "disambiguation_options": [
+[2026-04-23 01:59:21.782] [PRINT]     {
+[2026-04-23 01:59:21.782] [PRINT]       "parents": [
+[2026-04-23 01:59:21.782] [PRINT]         "1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"
+[2026-04-23 01:59:21.782] [PRINT]       ],
+[2026-04-23 01:59:21.782] [PRINT]       "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-23 01:59:21.782] [PRINT]       "name": "Product Requisition List",
+[2026-04-23 01:59:21.782] [PRINT]       "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-23 01:59:21.782] [PRINT]       "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk",
+[2026-04-23 01:59:21.782] [PRINT]       "createdTime": "2026-04-21T09:32:16.447Z",
+[2026-04-23 01:59:21.782] [PRINT]       "size": "1337"
+[2026-04-23 01:59:21.782] [PRINT]     },
+[2026-04-23 01:59:21.782] [PRINT]     {
+[2026-04-23 01:59:21.782] [PRINT]       "id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-23 01:59:21.782] [PRINT]       "name": "PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-23 01:59:21.782] [PRINT]       "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-23 01:59:21.782] [PRINT]       "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk",
+[2026-04-23 01:59:21.782] [PRINT]       "createdTime": "2026-04-04T19:06:32.433Z",
+[2026-04-23 01:59:21.782] [PRINT]       "size": "1024"
+[2026-04-23 01:59:21.782] [PRINT]     }
+[2026-04-23 01:59:21.782] [PRINT]   ],
+[2026-04-23 01:59:21.782] [PRINT]   "disambiguation_variable": "sheet_id",
+[2026-04-23 01:59:21.782] [PRINT]   "disambiguation_source_tool": "search_files",
+[2026-04-23 01:59:21.782] [PRINT]   "disambiguation_output_variables": {
+[2026-04-23 01:59:21.782] [PRINT]     "sheet_id": "results[0].id"
+[2026-04-23 01:59:21.782] [PRINT]   },
+[2026-04-23 01:59:21.782] [PRINT]   "disambiguation_results_field": "results",
+[2026-04-23 01:59:21.782] [PRINT]   "disambiguation_agent_result": {
+[2026-04-23 01:59:21.782] [PRINT]     "success": true,
+[2026-04-23 01:59:21.782] [PRINT]     "results": [
+[2026-04-23 01:59:21.782] [PRINT]       {
+[2026-04-23 01:59:21.782] [PRINT]         "parents": [
+[2026-04-23 01:59:21.782] [PRINT]           "1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"
+[2026-04-23 01:59:21.782] [PRINT]         ],
+[2026-04-23 01:59:21.782] [PRINT]         "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-23 01:59:21.782] [PRINT]         "name": "Product Requisition List",
+[2026-04-23 01:59:21.782] [PRINT]         "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-23 01:59:21.782] [PRINT]         "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk",
+[2026-04-23 01:59:21.782] [PRINT]         "createdTime": "2026-04-21T09:32:16.447Z",
+[2026-04-23 01:59:21.782] [PRINT]         "size": "1337"
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       {
+[2026-04-23 01:59:21.782] [PRINT]         "id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-23 01:59:21.782] [PRINT]         "name": "PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-23 01:59:21.782] [PRINT]         "mimeType": "application/vnd.google-apps.spreadsheet",
+[2026-04-23 01:59:21.782] [PRINT]         "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk",
+[2026-04-23 01:59:21.782] [PRINT]         "createdTime": "2026-04-04T19:06:32.433Z",
+[2026-04-23 01:59:21.782] [PRINT]         "size": "1024"
+[2026-04-23 01:59:21.782] [PRINT]       }
+[2026-04-23 01:59:21.782] [PRINT]     ],
+[2026-04-23 01:59:21.782] [PRINT]     "count": 2,
+[2026-04-23 01:59:21.782] [PRINT]     "search_term": "Product Requisition List",
+[2026-04-23 01:59:21.782] [PRINT]     "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST",
+[2026-04-23 01:59:21.782] [PRINT]     "error": null
+[2026-04-23 01:59:21.782] [PRINT]   },
+[2026-04-23 01:59:21.782] [PRINT]   "remaining_steps": [
+[2026-04-23 01:59:21.782] [PRINT]     {
+[2026-04-23 01:59:21.782] [PRINT]       "step_number": 4,
+[2026-04-23 01:59:21.782] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 01:59:21.782] [PRINT]       "tool": "validate_delivery_sheet",
+[2026-04-23 01:59:21.782] [PRINT]       "description": "Validate the Google Sheet to ensure it matches the required template",
+[2026-04-23 01:59:21.782] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.782] [PRINT]         "sheet_id": "{{ sheet_id }}"
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       "output_variables": {}
+[2026-04-23 01:59:21.782] [PRINT]     },
+[2026-04-23 01:59:21.782] [PRINT]     {
+[2026-04-23 01:59:21.782] [PRINT]       "step_number": 5,
+[2026-04-23 01:59:21.782] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 01:59:21.782] [PRINT]       "tool": "preview_delivery_order_insertion",
+[2026-04-23 01:59:21.782] [PRINT]       "description": "Preview the data that will be written to the Google Sheet",
+[2026-04-23 01:59:21.782] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.782] [PRINT]         "sheet_id": "{{ sheet_id }}",
+[2026-04-23 01:59:21.782] [PRINT]         "parsed_orders": "{{ parsed_orders }}"
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       "output_variables": {}
+[2026-04-23 01:59:21.782] [PRINT]     },
+[2026-04-23 01:59:21.782] [PRINT]     {
+[2026-04-23 01:59:21.782] [PRINT]       "step_number": 6,
+[2026-04-23 01:59:21.782] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 01:59:21.782] [PRINT]       "tool": "write_delivery_order_data",
+[2026-04-23 01:59:21.782] [PRINT]       "description": "Write the extracted data to the 'Product Requisition List' Google Sheet",
+[2026-04-23 01:59:21.782] [PRINT]       "inputs": {
+[2026-04-23 01:59:21.782] [PRINT]         "sheet_id": "{{ sheet_id }}",
+[2026-04-23 01:59:21.782] [PRINT]         "parsed_orders": "{{ parsed_orders }}"
+[2026-04-23 01:59:21.782] [PRINT]       },
+[2026-04-23 01:59:21.782] [PRINT]       "output_variables": {}
+[2026-04-23 01:59:21.782] [PRINT]     }
+[2026-04-23 01:59:21.782] [PRINT]   ]
+[2026-04-23 01:59:21.782] [PRINT] }
+[2026-04-23 01:59:21.790] [INFO] [req_20260422175841_84de7215] [T:76eeda67]   STEP [workflow_paused]: Workflow paused — disambiguation needed
+[2026-04-23 01:59:21.815] [PRINT] 
+[2026-04-23 01:59:21.815] [PRINT] ============================================================
+[2026-04-23 01:59:21.821] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 01:59:21.827] [PRINT] ============================================================
+[2026-04-23 01:59:21.833] [PRINT]   LLM calls:        2
+[2026-04-23 01:59:21.840] [PRINT]   Total input:      5,288 tokens
+[2026-04-23 01:59:21.846] [PRINT]   Total output:     492 tokens
+[2026-04-23 01:59:21.853] [PRINT]   Total tokens:     5,780 tokens
+[2026-04-23 01:59:21.859] [PRINT]   Estimated cost:   $0.1789
+[2026-04-23 01:59:21.865] [PRINT]   Total duration:   40457ms (40.5s)
+[2026-04-23 01:59:21.876] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-23 01:59:21.882] [PRINT]   Breakdown by call:
+[2026-04-23 01:59:21.889] [PRINT]     1. gpt-4o-mini      in=219    out=46    $0.0001 1287ms
+[2026-04-23 01:59:21.895] [PRINT]     2. gpt-4            in=5069   out=446   $0.1788 25466ms
+[2026-04-23 01:59:21.902] [PRINT] ============================================================
+[2026-04-23 01:59:21.915] [INFO] [req_20260422175841_84de7215] [T:76eeda67] ← RESPONSE: 200 (44946ms)
+[2026-04-23 01:59:21.915] [INFO] [req_20260422175841_84de7215] [T:76eeda67] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 01:59:21.919] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67
+[2026-04-23 02:00:07.978] [PRINT] WebSocket connected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67
+[2026-04-23 02:00:08.017] [INFO] [req_20260422175841_84de7215] [T:76eeda67] → REQUEST: POST /threads/65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67/messages  | {"query": null}
+[2026-04-23 02:00:12.394] [INFO] [req_20260422180012_60b98eab] [T:76eeda67]   USER MSG: "1"
+[2026-04-23 02:00:12.396] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 02:00:12.403] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67
+[2026-04-23 02:00:12.408] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 02:00:12.414] [PRINT]   User: 1
+[2026-04-23 02:00:12.420] [PRINT]   ConversationState:
+[2026-04-23 02:00:12.426] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["validate_delivery_sheet", "write_delivery_order_data", "preview_delivery_order_insertion"], "drive_agent": ["search_files"]}, "query": "Deliver Order to Genshin Impact", "sheet_name": "Product Requisition List"}
+[2026-04-23 02:00:12.432] [PRINT]     missing_fields: []
+[2026-04-23 02:00:12.437] [PRINT]     intent: "ready_to_execute"
+[2026-04-23 02:00:12.443] [PRINT]     clarification_question: null
+[2026-04-23 02:00:12.448] [PRINT]     ready_for_execution: false
+[2026-04-23 02:00:12.455] [PRINT]     execution_summary: "Search for emails with 'Deliver Order to Genshin Impact', extract data from the attached PDFs, and write this data to the 'Product Requisition List' Google Sheet."
+[2026-04-23 02:00:12.460] [PRINT]     execution_mode: "standard"
+[2026-04-23 02:00:12.466] [PRINT]     execution_history: []
+[2026-04-23 02:00:12.472] [PRINT]     completed_tasks: []
+[2026-04-23 02:00:12.477] [PRINT]     has_executed: false
+[2026-04-23 02:00:12.483] [PRINT]     last_executed_at: null
+[2026-04-23 02:00:12.489] [PRINT]     last_execution_status: null
+[2026-04-23 02:00:12.494] [PRINT]     last_execution_message: null
+[2026-04-23 02:00:12.500] [PRINT]     executing: false
+[2026-04-23 02:00:12.505] [PRINT]     pending_actions: []
+[2026-04-23 02:00:12.511] [PRINT]     workflow_paused: false
+[2026-04-23 02:00:12.517] [PRINT]     remaining_steps: [{"step_number": 4, "agent": "sheets_agent", "tool": "validate_delivery_sheet", "description": "Validate the Google Sheet to ensure it matches the required template", "inputs": {"sheet_id": "{{ sheet_id }}"}, "output_variables": {}}, {"step_number": 5, "agent": "sheets_agent", "tool": "preview_delivery_order_insertion", "description": "Preview the data that will be written to the Google Sheet", "inputs": {"sheet_id": "{{ sheet_id }}", "parsed_orders": "{{ parsed_orders }}"}, "output_variables": {}}, {"step_number": 6, "agent": "sheets_agent", "tool": "write_delivery_order_data", "description": "Write the extracted data to the 'Product Requisition List' Google Sheet", "inputs": {"sheet_id": "{{ sheet_id }}", "parsed_orders": "{{ parsed_orders }}"}, "output_variables": {}}]
+[2026-04-23 02:00:12.523] [PRINT]     workflow_context: {"today_date": "2026-04-23", "_cached_tool_filter": {"gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["validate_delivery_sheet", "write_delivery_order_data", "preview_delivery_order_insertion"], "drive_agent": ["search_files"]}, "step_1_gmail_agent": {"emails_with_attachments": [{"message_id": "19db57c51bdf0b0f", "from": "Kita <pchua5644@gmail.com>", "subject": "Deliver Order to Genshin Impact", "date": "Wed, 22 Apr 2026 21:58:25 +0800", "timestamp": "2026-04-22T21:58:25", "internal_date_ms": "1776866305000", "attachments": [{"filename": "Tech_DELIVERY_ORDER (1).pdf", "attachment_id": "ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi", "mime_type": "application/pdf", "size": 85791, "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Tech_DELIVERY_ORDER (1).pdf"}, {"filename": "Food_DELIVERY_ORDER (1).pdf", "attachment_id": "ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA", "mime_type": "application/pdf", "size": 84650, "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Food_DELIVERY_ORDER (1).pdf"}], "attachment_count": 2}], "total_emails_found": 1, "total_attachments_downloaded": 2, "temp_directory": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o", "query": "Deliver Order to Genshin Impact", "download_attachments": true}, "emails_with_attachments": [{"message_id": "19db57c51bdf0b0f", "from": "Kita <pchua5644@gmail.com>", "subject": "Deliver Order to Genshin Impact", "date": "Wed, 22 Apr 2026 21:58:25 +0800", "timestamp": "2026-04-22T21:58:25", "internal_date_ms": "1776866305000", "attachments": [{"filename": "Tech_DELIVERY_ORDER (1).pdf", "attachment_id": "ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi", "mime_type": "application/pdf", "size": 85791, "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Tech_DELIVERY_ORDER (1).pdf"}, {"filename": "Food_DELIVERY_ORDER (1).pdf", "attachment_id": "ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA", "mime_type": "application/pdf", "size": 84650, "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Food_DELIVERY_ORDER (1).pdf"}], "attachment_count": 2}], "step_2_mapping_agent": {"parsed_orders": [{"file": "Food_DELIVERY_ORDER (1).pdf", "header": {"category": "FOOD"}, "line_items": [{"item_code": "RMFD00810030020", "item_description": "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack", "qty": 10.0, "uom": "Pack"}, {"item_code": "RMFD00810270002", "item_description": "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack", "qty": 12.0, "uom": "Pack"}, {"item_code": "RMFD00710020049", "item_description": "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack", "qty": 72.0, "uom": "Pack"}, {"item_code": "RMFD01810040003", "item_description": "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case", "qty": 12.0, "uom": "Case"}, {"item_code": "RMFD01810040007", "item_description": "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack", "qty": 12.0, "uom": "Pack"}, {"item_code": "RMFD00710100002", "item_description": "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can", "qty": 192.0, "uom": "Can"}, {"item_code": "RMFD01010010007", "item_description": "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack", "qty": 24.0, "uom": "Pack"}, {"item_code": "RMFD01010010053", "item_description": "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack", "qty": 14.0, "uom": "Pack"}, {"item_code": "RMFD01810060008", "item_description": "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle", "qty": 24.0, "uom": "Bottle"}, {"item_code": "RMFD00910130004", "item_description": "Pickle Relish \u2013 RAM \u2013 1 Gal / Container", "qty": 4.0, "uom": "Container"}, {"item_code": "RMFD00810190003", "item_description": "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container", "qty": 4.0, "uom": "Container"}, {"item_code": "RMFD01110080001", "item_description": "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle", "qty": 12.0, "uom": "Bottle"}, {"item_code": "RMFD00810200004", "item_description": "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can", "qty": 180.0, "uom": "Can"}, {"item_code": "RMFD01110090001", "item_description": "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle", "qty": 12.0, "uom": "Bottle"}, {"item_code": "RMFD01110090002", "item_description": "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal", "qty": 4.0, "uom": "Gal"}, {"item_code": "RMFD02010090002", "item_description": "Wine White \u2013 Quargentan \u2013 1 L / Tetra", "qty": 2.0, "uom": "Tetra"}, {"item_code": "RMFD00610060006", "item_description": "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle", "qty": 12.0, "uom": "Bottle"}], "warnings": []}], "rejected_files": [{"file": "Tech_DELIVERY_ORDER (1).pdf", "reason": "Category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. The PDF content did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."}], "total_parsed": 1, "total_rejected": 1}, "parsed_orders": [{"file": "Food_DELIVERY_ORDER (1).pdf", "header": {"category": "FOOD"}, "line_items": [{"item_code": "RMFD00810030020", "item_description": "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack", "qty": 10.0, "uom": "Pack"}, {"item_code": "RMFD00810270002", "item_description": "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack", "qty": 12.0, "uom": "Pack"}, {"item_code": "RMFD00710020049", "item_description": "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack", "qty": 72.0, "uom": "Pack"}, {"item_code": "RMFD01810040003", "item_description": "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case", "qty": 12.0, "uom": "Case"}, {"item_code": "RMFD01810040007", "item_description": "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack", "qty": 12.0, "uom": "Pack"}, {"item_code": "RMFD00710100002", "item_description": "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can", "qty": 192.0, "uom": "Can"}, {"item_code": "RMFD01010010007", "item_description": "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack", "qty": 24.0, "uom": "Pack"}, {"item_code": "RMFD01010010053", "item_description": "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack", "qty": 14.0, "uom": "Pack"}, {"item_code": "RMFD01810060008", "item_description": "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle", "qty": 24.0, "uom": "Bottle"}, {"item_code": "RMFD00910130004", "item_description": "Pickle Relish \u2013 RAM \u2013 1 Gal / Container", "qty": 4.0, "uom": "Container"}, {"item_code": "RMFD00810190003", "item_description": "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container", "qty": 4.0, "uom": "Container"}, {"item_code": "RMFD01110080001", "item_description": "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle", "qty": 12.0, "uom": "Bottle"}, {"item_code": "RMFD00810200004", "item_description": "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can", "qty": 180.0, "uom": "Can"}, {"item_code": "RMFD01110090001", "item_description": "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle", "qty": 12.0, "uom": "Bottle"}, {"item_code": "RMFD01110090002", "item_description": "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal", "qty": 4.0, "uom": "Gal"}, {"item_code": "RMFD02010090002", "item_description": "Wine White \u2013 Quargentan \u2013 1 L / Tetra", "qty": 2.0, "uom": "Tetra"}, {"item_code": "RMFD00610060006", "item_description": "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle", "qty": 12.0, "uom": "Bottle"}], "warnings": []}], "step_3_drive_agent": {"results": [{"parents": ["1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"], "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "name": "Product Requisition List", "mimeType": "application/vnd.google-apps.spreadsheet", "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk", "createdTime": "2026-04-21T09:32:16.447Z", "size": "1337"}, {"id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA", "name": "PRODUCTION MATERIALS REQUISITION LIST", "mimeType": "application/vnd.google-apps.spreadsheet", "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk", "createdTime": "2026-04-04T19:06:32.433Z", "size": "1024"}], "count": 2, "search_term": "Product Requisition List", "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST"}, "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "disambiguation_output_variables": {"sheet_id": "results[0].id"}, "disambiguation_results_field": "results", "disambiguation_agent_result": {"success": true, "results": [{"parents": ["1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"], "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "name": "Product Requisition List", "mimeType": "application/vnd.google-apps.spreadsheet", "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk", "createdTime": "2026-04-21T09:32:16.447Z", "size": "1337"}, {"id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA", "name": "PRODUCTION MATERIALS REQUISITION LIST", "mimeType": "application/vnd.google-apps.spreadsheet", "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk", "createdTime": "2026-04-04T19:06:32.433Z", "size": "1024"}], "count": 2, "search_term": "Product Requisition List", "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST", "error": null}, "_execution_mode": "standard"}
+[2026-04-23 02:00:12.529] [PRINT]     disambiguation_options: [{"parents": ["1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"], "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "name": "Product Requisition List", "mimeType": "application/vnd.google-apps.spreadsheet", "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk", "createdTime": "2026-04-21T09:32:16.447Z", "size": "1337"}, {"id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA", "name": "PRODUCTION MATERIALS REQUISITION LIST", "mimeType": "application/vnd.google-apps.spreadsheet", "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk", "createdTime": "2026-04-04T19:06:32.433Z", "size": "1024"}]
+[2026-04-23 02:00:12.535] [PRINT]     disambiguation_variable: "sheet_id"
+[2026-04-23 02:00:12.540] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 02:00:12.546] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67, msg=1
+[2026-04-23 02:00:12.546] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 224, "max": 2000}
+[2026-04-23 02:00:12.550] [INFO] [-]   STEP [tier0]: disambiguation resolved: selected 'Product Requisition List' (index 0)
+[2026-04-23 02:00:12.551] [INFO] [-]   ANALYSIS: intent=ConversationIntent.SMALL_TALK, ready=False  | {"missing_fields": []}
+[2026-04-23 02:00:12.552] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.SMALL_TALK
+    ↳ {"intent": "ConversationIntent.SMALL_TALK", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": null, "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["validate_delivery_sheet", "write_delivery_order_data", "preview_delivery_order_insertion"], "drive_agen
+[2026-04-23 02:00:12.553] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 16, "total": 240, "max": 2000, "response_preview": "Selected **Product Requisition List** — continuing workflow..."}
+[2026-04-23 02:00:12.570] [INFO] [req_20260422180012_60b98eab] [T:76eeda67]   BOT RESP: "Selected **Product Requisition List** — continuing workflow..."
+[2026-04-23 02:00:12.571] [INFO] [req_20260422180012_60b98eab] [T:76eeda67]   STEP [disambiguation_select]: User selected: Product Requisition List
+[2026-04-23 02:00:12.584] [PRINT] 
+[2026-04-23 02:00:12.584] [PRINT] ============================================================
+[2026-04-23 02:00:12.589] [PRINT] ORCHESTRATOR NODE - Execution Phase
+[2026-04-23 02:00:12.595] [PRINT] ============================================================
+[2026-04-23 02:00:12.600] [PRINT] Found 3 steps to execute
+[2026-04-23 02:00:12.606] [INFO] [-]   STEP [orchestrator_node]: 3 steps to execute
+[2026-04-23 02:00:12.607] [PRINT] 
+[2026-04-23 02:00:12.607] [PRINT] INITIAL CONTEXT:
+[2026-04-23 02:00:12.613] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:12.618] [PRINT]    today_date: 2026-04-23
+[2026-04-23 02:00:12.627] [PRINT]    _cached_tool_filter: dict (length: 4)
+[2026-04-23 02:00:12.633] [PRINT]    step_1_gmail_agent: dict (length: 6)
+[2026-04-23 02:00:12.639] [PRINT]    emails_with_attachments: list (length: 1)
+[2026-04-23 02:00:12.645] [PRINT]    step_2_mapping_agent: dict (length: 4)
+[2026-04-23 02:00:12.650] [PRINT]    parsed_orders: list (length: 1)
+[2026-04-23 02:00:12.656] [PRINT]    step_3_drive_agent: dict (length: 4)
+[2026-04-23 02:00:12.662] [PRINT]    sheet_id: 1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU
+[2026-04-23 02:00:12.668] [PRINT]    _execution_mode: standard
+[2026-04-23 02:00:12.674] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:12.679] [PRINT] Pre-flight credential check passed (5 fields)
+[2026-04-23 02:00:12.685] [PRINT] 
+[2026-04-23 02:00:12.685] [PRINT] ============================================================
+[2026-04-23 02:00:12.691] [PRINT] Step 1/3: sheets_agent.validate_delivery_sheet
+[2026-04-23 02:00:12.697] [PRINT] Description: Validate the Google Sheet to ensure it matches the required template
+[2026-04-23 02:00:12.703] [PRINT] ============================================================
+[2026-04-23 02:00:12.716] [PRINT] Risk Level: safe
+[2026-04-23 02:00:12.723] [PRINT] 
+[2026-04-23 02:00:12.723] [PRINT] Substituting variables in inputs...
+[2026-04-23 02:00:12.728] [PRINT]    Original inputs: {
+[2026-04-23 02:00:12.728] [PRINT]       "sheet_id": "{{ sheet_id }}"
+[2026-04-23 02:00:12.728] [PRINT] }
+[2026-04-23 02:00:12.735] [PRINT]    Substituted inputs: {
+[2026-04-23 02:00:12.735] [PRINT]       "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU"
+[2026-04-23 02:00:12.735] [PRINT] }
+[2026-04-23 02:00:12.741] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_gmail_agent', 'emails_with_attachments', 'step_2_mapping_agent', 'parsed_orders', 'step_3_drive_agent', 'sheet_id', '_execution_mode']
+[2026-04-23 02:00:12.747] [INFO] [-]   STEP [variable_substitution]: step 1: sheets_agent.validate_delivery_sheet
+    ↳ {"inputs": {"sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU"}, "context_keys": ["today_date", "_cached_tool_filter", "step_1_gmail_agent", "emails_with_attachments", "step_2_mapping_agent", "parsed_orders", "step_3_drive_agent", "sheet_id", "_execution_mode"]}
+[2026-04-23 02:00:12.748] [PRINT] 
+[2026-04-23 02:00:12.748] [PRINT] Calling agent microservice: http://localhost:8003/execute_task
+[2026-04-23 02:00:12.753] [PRINT] 
+[2026-04-23 02:00:12.753] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-23 02:00:12.759] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:12.765] [PRINT]    Tool: validate_delivery_sheet
+[2026-04-23 02:00:12.771] [PRINT]    Inputs keys: ['sheet_id']
+[2026-04-23 02:00:12.777] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-23 02:00:12.782] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-23 02:00:12.789] [PRINT]    Payload size: 725 bytes
+[2026-04-23 02:00:12.794] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:12.800] [PRINT] 
+[2026-04-23 02:00:12.800] [PRINT] Sending request to agent...
+[2026-04-23 02:00:12.806] [PRINT]    URL: http://localhost:8003/execute_task
+[2026-04-23 02:00:12.812] [PRINT]    Timeout: 320 seconds
+[2026-04-23 02:00:12.818] [PRINT]    Max retries: 3
+[2026-04-23 02:00:12.825] [PRINT] Attempt 1/3 calling http://localhost:8003/execute_task
+[2026-04-23 02:00:12.830] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 02:00:18.672] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 02:00:18.694] [PRINT] ⏱ Agent call completed in 5893.78ms
+[2026-04-23 02:00:18.699] [PRINT] Agent response received
+[2026-04-23 02:00:18.705] [AGENT] [-]   AGENT:  sheets_agent.validate_delivery_sheet (5894ms)  | {"sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU"}
+[2026-04-23 02:00:18.705] [PRINT] 
+[2026-04-23 02:00:18.705] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:18.710] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-23 02:00:18.716] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:18.721] [PRINT] {
+[2026-04-23 02:00:18.721] [PRINT]   "success": true,
+[2026-04-23 02:00:18.721] [PRINT]   "result": {
+[2026-04-23 02:00:18.721] [PRINT]     "success": true,
+[2026-04-23 02:00:18.721] [PRINT]     "is_valid": true,
+[2026-04-23 02:00:18.721] [PRINT]     "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-23 02:00:18.721] [PRINT]     "headers_by_tab": {
+[2026-04-23 02:00:18.721] [PRINT]       "non-food": [
+[2026-04-23 02:00:18.721] [PRINT]         "Date",
+[2026-04-23 02:00:18.721] [PRINT]         "Order Reference",
+[2026-04-23 02:00:18.721] [PRINT]         "Item Code",
+[2026-04-23 02:00:18.721] [PRINT]         "Item Description",
+[2026-04-23 02:00:18.721] [PRINT]         "QTY",
+[2026-04-23 02:00:18.721] [PRINT]         "UOM",
+[2026-04-23 02:00:18.721] [PRINT]         "CB Date",
+[2026-04-23 02:00:18.721] [PRINT]         "Requested by"
+[2026-04-23 02:00:18.721] [PRINT]       ],
+[2026-04-23 02:00:18.721] [PRINT]       "Food": [
+[2026-04-23 02:00:18.721] [PRINT]         "Date",
+[2026-04-23 02:00:18.721] [PRINT]         "Order Reference",
+[2026-04-23 02:00:18.721] [PRINT]         "Item Code",
+[2026-04-23 02:00:18.721] [PRINT]         "Item Description",
+[2026-04-23 02:00:18.721] [PRINT]         "QTY",
+[2026-04-23 02:00:18.721] [PRINT]         "UOM",
+[2026-04-23 02:00:18.721] [PRINT]         "CB Date",
+[2026-04-23 02:00:18.721] [PRINT]         "Requested by",
+[2026-04-23 02:00:18.721] [PRINT]         "NOTES"
+[2026-04-23 02:00:18.721] [PRINT]       ]
+[2026-04-23 02:00:18.721] [PRINT]     },
+[2026-04-23 02:00:18.721] [PRINT]     "tabs_found": [
+[2026-04-23 02:00:18.721] [PRINT]       "Food",
+[2026-04-23 02:00:18.721] [PRINT]       "Tech",
+[2026-04-23 02:00:18.721] [PRINT]       "non-food"
+[2026-04-23 02:00:18.721] [PRINT]     ],
+[2026-04-23 02:00:18.721] [PRINT]     "matching_tabs": [
+[2026-04-23 02:00:18.721] [PRINT]       "non-food",
+[2026-04-23 02:00:18.721] [PRINT]       "Food"
+[2026-04-23 02:00:18.721] [PRINT]     ],
+[2026-04-23 02:00:18.721] [PRINT]     "message": "Sheet is a valid requisition list template with write access confirmed"
+[2026-04-23 02:00:18.721] [PRINT]   },
+[2026-04-23 02:00:18.721] [PRINT]   "error": null,
+[2026-04-23 02:00:18.721] [PRINT]   "error_type": null
+[2026-04-23 02:00:18.721] [PRINT] }
+[2026-04-23 02:00:18.727] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:18.732] [PRINT] 
+[2026-04-23 02:00:18.732] [PRINT] Variables added to context:
+[2026-04-23 02:00:18.738] [PRINT] 
+[2026-04-23 02:00:18.738] [PRINT] CONTEXT AFTER STEP 1:
+[2026-04-23 02:00:18.743] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:18.748] [PRINT]    today_date: 2026-04-23
+[2026-04-23 02:00:18.753] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-23 02:00:18.759] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-23 02:00:18.764] [PRINT]    emails_with_attachments: Array[1 items]
+[2026-04-23 02:00:18.770] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-23 02:00:18.776] [PRINT]    step_2_mapping_agent: Dict with keys: ['parsed_orders', 'rejected_files', 'total_parsed', 'total_rejected']
+[2026-04-23 02:00:18.784] [PRINT]    parsed_orders: Array[1 items]
+[2026-04-23 02:00:18.790] [PRINT]       └─ First item keys: ['file', 'header', 'line_items', 'warnings']
+[2026-04-23 02:00:18.796] [PRINT]    step_3_drive_agent: Dict with keys: ['results', 'count', 'search_term', 'message']
+[2026-04-23 02:00:18.802] [PRINT]    sheet_id: 1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU
+[2026-04-23 02:00:18.808] [PRINT]    _execution_mode: standard
+[2026-04-23 02:00:18.814] [PRINT]    step_1_sheets_agent: Dict with keys: ['is_valid', 'sheet_id', 'headers_by_tab', 'tabs_found', 'matching_tabs', 'message']
+[2026-04-23 02:00:18.820] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:18.837] [PRINT] 
+[2026-04-23 02:00:18.837] [PRINT] ============================================================
+[2026-04-23 02:00:18.843] [PRINT] Step 2/3: sheets_agent.preview_delivery_order_insertion
+[2026-04-23 02:00:18.849] [PRINT] Description: Preview the data that will be written to the Google Sheet
+[2026-04-23 02:00:18.856] [PRINT] ============================================================
+[2026-04-23 02:00:18.870] [PRINT] Risk Level: safe
+[2026-04-23 02:00:18.876] [PRINT] 
+[2026-04-23 02:00:18.876] [PRINT] Substituting variables in inputs...
+[2026-04-23 02:00:18.883] [PRINT]    Original inputs: {
+[2026-04-23 02:00:18.883] [PRINT]       "sheet_id": "{{ sheet_id }}",
+[2026-04-23 02:00:18.883] [PRINT]       "parsed_orders": "{{ parsed_orders }}"
+[2026-04-23 02:00:18.883] [PRINT] }
+[2026-04-23 02:00:18.891] [PRINT]    Substituted inputs: {
+[2026-04-23 02:00:18.891] [PRINT]       "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-23 02:00:18.891] [PRINT]       "parsed_orders": "[{'file': 'Food_DELIVERY_ORDER (1).pdf', 'header': {'category': 'FOOD'}, 'line_items': [{'item_code': 'RMFD00810030020', 'item_description': 'Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\\nPack', 'qty': 10.0, 'uom': 'Pack'}, {'item_code': 'RMFD00810270002', 'item_description': 'Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\\nPack', 'qty': 12.0, 'uom': 'Pack'}, {'item_code': 'RMFD00710020049', 'item_description': 'Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack', 'qty': 72.0, 'uom': 'Pack'}, {'item_code': 'RMFD01810040003', 'item_description': \"Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\\n/ Case\", 'qty': 12.0, 'uom': 'Case'}, {'item_code': 'RMFD01810040007', 'item_description': 'Mayonnaise \u2013 Kewpie \u2013 1KG / Pack', 'qty': 12.0, 'uom': 'Pack'}, {'item_code': 'RMFD00710100002', 'item_description': 'Milk Evaporated \u2013 Alaska \u2013 370 ML / Can', 'qty': 192.0, 'uom': 'Can'}, {'item_code': 'RMFD01010010007', 'item_description': 'Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\\nPack', 'qty': 24.0, 'uom': 'Pack'}, {'item_code': 'RMFD01010010053', 'item_description': 'Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack', 'qty': 14.0, 'uom': 'Pack'}, {'item_code': 'RMFD01810060008', 'item_description': \"Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle\", 'qty': 24.0, 'uom': 'Bottle'}, {'item_code': 'RMFD00910130004', 'item_description': 'Pickle Relish \u2013 RAM \u2013 1 Gal / Container', 'qty': 4.0, 'uom': 'Container'}, {'item_code': 'RMFD00810190003', 'item_description': 'Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container', 'qty': 4.0, 'uom': 'Container'}, {'item_code': 'RMFD01110080001', 'item_description': 'Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle', 'qty': 12.0, 'uom': 'Bottle'}, {'item_code': 'RMFD00810200004', 'item_description': \"Soup Cream of Mushroom \u2013 Campbell's \u2013\\n640g / Can\", 'qty': 180.0, 'uom': 'Can'}, {'item_code': 'RMFD01110090001', 'item_description': 'Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle', 'qty': 12.0, 'uom': 'Bottle'}, {'item_code': 'RMFD01110090002', 'item_description': 'Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal', 'qty': 4.0, 'uom': 'Gal'}, {'item_code': 'RMFD02010090002', 'item_description': 'Wine White \u2013 Quargentan \u2013 1 L / Tetra', 'qty': 2.0, 'uom': 'Tetra'}, {'item_code': 'RMFD00610060006', 'item_description': 'Cream Black Truffle \u2013 Mazza \u2013 500 G /\\nBottle', 'qty': 12.0, 'uom': 'Bottle'}], 'warnings': []}]"
+[2026-04-23 02:00:18.891] [PRINT] }
+[2026-04-23 02:00:18.898] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_gmail_agent', 'emails_with_attachments', 'step_2_mapping_agent', 'parsed_orders', 'step_3_drive_agent', 'sheet_id', '_execution_mode', 'step_1_sheets_agent']
+[2026-04-23 02:00:18.904] [INFO] [-]   STEP [variable_substitution]: step 2: sheets_agent.preview_delivery_order_insertion
+    ↳ {"inputs": {"sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "parsed_orders": "[{'file': 'Food_DELIVERY_ORDER (1).pdf', 'header': {'category': 'FOOD'}, 'line_items': [{'item_code': 'RMFD00810030020', 'item_description': 'Bread Crumbs – Village Gourmet – 1 Kg /\\nPack', 'qty': 10.0, 'uom': 'Pack'}, {'item_code': 'RMFD00810270002', 'item_description': 'Broth Powder Chicken – Knorr – 1 KG /\\nPack', 'qty': 12.0, 'uom': 'Pack'}, {'item_code': 'RMFD00710020049', 'item_description': 'Cheese
+[2026-04-23 02:00:18.905] [PRINT] 
+[2026-04-23 02:00:18.905] [PRINT] Calling agent microservice: http://localhost:8003/execute_task
+[2026-04-23 02:00:18.915] [PRINT] 
+[2026-04-23 02:00:18.915] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-23 02:00:18.920] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:18.926] [PRINT]    Tool: preview_delivery_order_insertion
+[2026-04-23 02:00:18.932] [PRINT]    Inputs keys: ['sheet_id', 'parsed_orders']
+[2026-04-23 02:00:18.938] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-23 02:00:18.944] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-23 02:00:18.950] [PRINT]    Payload size: 3227 bytes
+[2026-04-23 02:00:18.956] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:18.961] [PRINT] 
+[2026-04-23 02:00:18.961] [PRINT] Sending request to agent...
+[2026-04-23 02:00:18.966] [PRINT]    URL: http://localhost:8003/execute_task
+[2026-04-23 02:00:18.972] [PRINT]    Timeout: 320 seconds
+[2026-04-23 02:00:18.978] [PRINT]    Max retries: 3
+[2026-04-23 02:00:18.984] [PRINT] Attempt 1/3 calling http://localhost:8003/execute_task
+[2026-04-23 02:00:18.990] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 02:00:22.992] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 02:00:23.009] [PRINT] ⏱ Agent call completed in 4048.68ms
+[2026-04-23 02:00:23.015] [PRINT] Agent response received
+[2026-04-23 02:00:23.022] [AGENT] [-]   AGENT:  sheets_agent.preview_delivery_order_insertion (4049ms)  | {"sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "parsed_orders": "[{'file': 'Food_DELIVERY_ORDER (1).pdf', 'header': {'category': 'FOOD'}, 'line_items': [{'item_code'..."}
+[2026-04-23 02:00:23.022] [PRINT] 
+[2026-04-23 02:00:23.022] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:23.028] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-23 02:00:23.033] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:23.039] [PRINT] {
+[2026-04-23 02:00:23.039] [PRINT]   "success": true,
+[2026-04-23 02:00:23.039] [PRINT]   "result": {
+[2026-04-23 02:00:23.039] [PRINT]     "success": true,
+[2026-04-23 02:00:23.039] [PRINT]     "preview_rows": [
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD00810030020",
+[2026-04-23 02:00:23.039] [PRINT]           "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack",
+[2026-04-23 02:00:23.039] [PRINT]           "10.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Pack",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD00810270002",
+[2026-04-23 02:00:23.039] [PRINT]           "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack",
+[2026-04-23 02:00:23.039] [PRINT]           "12.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Pack",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD00710020049",
+[2026-04-23 02:00:23.039] [PRINT]           "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack",
+[2026-04-23 02:00:23.039] [PRINT]           "72.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Pack",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD01810040003",
+[2026-04-23 02:00:23.039] [PRINT]           "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case",
+[2026-04-23 02:00:23.039] [PRINT]           "12.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Case",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD01810040007",
+[2026-04-23 02:00:23.039] [PRINT]           "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack",
+[2026-04-23 02:00:23.039] [PRINT]           "12.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Pack",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD00710100002",
+[2026-04-23 02:00:23.039] [PRINT]           "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can",
+[2026-04-23 02:00:23.039] [PRINT]           "192.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Can",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD01010010007",
+[2026-04-23 02:00:23.039] [PRINT]           "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack",
+[2026-04-23 02:00:23.039] [PRINT]           "24.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Pack",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD01010010053",
+[2026-04-23 02:00:23.039] [PRINT]           "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack",
+[2026-04-23 02:00:23.039] [PRINT]           "14.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Pack",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD01810060008",
+[2026-04-23 02:00:23.039] [PRINT]           "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle",
+[2026-04-23 02:00:23.039] [PRINT]           "24.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Bottle",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD00910130004",
+[2026-04-23 02:00:23.039] [PRINT]           "Pickle Relish \u2013 RAM \u2013 1 Gal / Container",
+[2026-04-23 02:00:23.039] [PRINT]           "4.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Container",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD00810190003",
+[2026-04-23 02:00:23.039] [PRINT]           "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container",
+[2026-04-23 02:00:23.039] [PRINT]           "4.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Container",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD01110080001",
+[2026-04-23 02:00:23.039] [PRINT]           "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle",
+[2026-04-23 02:00:23.039] [PRINT]           "12.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Bottle",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD00810200004",
+[2026-04-23 02:00:23.039] [PRINT]           "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can",
+[2026-04-23 02:00:23.039] [PRINT]           "180.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Can",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD01110090001",
+[2026-04-23 02:00:23.039] [PRINT]           "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle",
+[2026-04-23 02:00:23.039] [PRINT]           "12.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Bottle",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD01110090002",
+[2026-04-23 02:00:23.039] [PRINT]           "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal",
+[2026-04-23 02:00:23.039] [PRINT]           "4.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Gal",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD02010090002",
+[2026-04-23 02:00:23.039] [PRINT]           "Wine White \u2013 Quargentan \u2013 1 L / Tetra",
+[2026-04-23 02:00:23.039] [PRINT]           "2.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Tetra",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       },
+[2026-04-23 02:00:23.039] [PRINT]       {
+[2026-04-23 02:00:23.039] [PRINT]         "tab": "Food",
+[2026-04-23 02:00:23.039] [PRINT]         "values": [
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           "RMFD00610060006",
+[2026-04-23 02:00:23.039] [PRINT]           "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle",
+[2026-04-23 02:00:23.039] [PRINT]           "12.0",
+[2026-04-23 02:00:23.039] [PRINT]           "Bottle",
+[2026-04-23 02:00:23.039] [PRINT]           "",
+[2026-04-23 02:00:23.039] [PRINT]           ""
+[2026-04-23 02:00:23.039] [PRINT]         ]
+[2026-04-23 02:00:23.039] [PRINT]       }
+[2026-04-23 02:00:23.039] [PRINT]     ],
+[2026-04-23 02:00:23.039] [PRINT]     "total_new_rows": 17,
+[2026-04-23 02:00:23.039] [PRINT]     "duplicates": [],
+[2026-04-23 02:00:23.039] [PRINT]     "duplicate_count": 0,
+[2026-04-23 02:00:23.039] [PRINT]     "warnings": [],
+[2026-04-23 02:00:23.039] [PRINT]     "target_tabs": [
+[2026-04-23 02:00:23.039] [PRINT]       "Food"
+[2026-04-23 02:00:23.039] [PRINT]     ],
+[2026-04-23 02:00:23.039] [PRINT]     "message": "17 row(s) ready to insert across 1 tab(s). No duplicates detected."
+[2026-04-23 02:00:23.039] [PRINT]   },
+[2026-04-23 02:00:23.039] [PRINT]   "error": null,
+[2026-04-23 02:00:23.039] [PRINT]   "error_type": null
+[2026-04-23 02:00:23.039] [PRINT] }
+[2026-04-23 02:00:23.045] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:23.050] [PRINT] 
+[2026-04-23 02:00:23.050] [PRINT] Variables added to context:
+[2026-04-23 02:00:23.057] [PRINT] 
+[2026-04-23 02:00:23.057] [PRINT] CONTEXT AFTER STEP 2:
+[2026-04-23 02:00:23.062] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:23.068] [PRINT]    today_date: 2026-04-23
+[2026-04-23 02:00:23.074] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent']
+[2026-04-23 02:00:23.079] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-23 02:00:23.085] [PRINT]    emails_with_attachments: Array[1 items]
+[2026-04-23 02:00:23.094] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-23 02:00:23.100] [PRINT]    step_2_mapping_agent: Dict with keys: ['parsed_orders', 'rejected_files', 'total_parsed', 'total_rejected']
+[2026-04-23 02:00:23.105] [PRINT]    parsed_orders: Array[1 items]
+[2026-04-23 02:00:23.111] [PRINT]       └─ First item keys: ['file', 'header', 'line_items', 'warnings']
+[2026-04-23 02:00:23.116] [PRINT]    step_3_drive_agent: Dict with keys: ['results', 'count', 'search_term', 'message']
+[2026-04-23 02:00:23.122] [PRINT]    sheet_id: 1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU
+[2026-04-23 02:00:23.129] [PRINT]    _execution_mode: standard
+[2026-04-23 02:00:23.135] [PRINT]    step_1_sheets_agent: Dict with keys: ['is_valid', 'sheet_id', 'headers_by_tab', 'tabs_found', 'matching_tabs', 'message']
+[2026-04-23 02:00:23.141] [PRINT]    step_2_sheets_agent: Dict with keys: ['preview_rows', 'total_new_rows', 'duplicates', 'duplicate_count', 'warnings', 'target_tabs', 'message']
+[2026-04-23 02:00:23.147] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 02:00:23.166] [PRINT] 
+[2026-04-23 02:00:23.166] [PRINT] ============================================================
+[2026-04-23 02:00:23.171] [PRINT] Step 3/3: sheets_agent.write_delivery_order_data
+[2026-04-23 02:00:23.177] [PRINT] Description: Write the extracted data to the 'Product Requisition List' Google Sheet
+[2026-04-23 02:00:23.183] [PRINT] ============================================================
+[2026-04-23 02:00:23.197] [PRINT] Risk Level: dangerous
+[2026-04-23 02:00:23.204] [PRINT] ⏸ PAUSED - Action requires approval!
+[2026-04-23 02:00:23.218] [PRINT] Stored pending action: action_e2b7dfff (sheets_agent.write_delivery_order_data)
+[2026-04-23 02:00:23.232] [PRINT] Approval required for action: action_e2b7dfff
+[2026-04-23 02:00:23.240] [PRINT]    Details: {
+[2026-04-23 02:00:23.240] [PRINT]     "step_number": 3,
+[2026-04-23 02:00:23.240] [PRINT]     "total_steps": 3,
+[2026-04-23 02:00:23.240] [PRINT]     "agent": "sheets_agent",
+[2026-04-23 02:00:23.240] [PRINT]     "tool": "write_delivery_order_data",
+[2026-04-23 02:00:23.240] [PRINT]     "description": "Write the extracted data to the 'Product Requisition List' Google Sheet",
+[2026-04-23 02:00:23.240] [PRINT]     "inputs": {
+[2026-04-23 02:00:23.240] [PRINT]         "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU",
+[2026-04-23 02:00:23.240] [PRINT]         "parsed_orders": [
+[2026-04-23 02:00:23.240] [PRINT]             {
+[2026-04-23 02:00:23.240] [PRINT]                 "file": "Food_DELIVERY_ORDER (1).pdf",
+[2026-04-23 02:00:23.240] [PRINT]                 "header": {
+[2026-04-23 02:00:23.240] [PRINT]                     "category": "FOOD"
+[2026-04-23 02:00:23.240] [PRINT]                 },
+[2026-04-23 02:00:23.240] [PRINT]                 "line_items": [
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD00810030020",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 10.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Pack"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD00810270002",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 12.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Pack"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD00710020049",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 72.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Pack"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD01810040003",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 12.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Case"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD01810040007",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 12.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Pack"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD00710100002",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 192.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Can"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD01010010007",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 24.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Pack"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD01010010053",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 14.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Pack"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD01810060008",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 24.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Bottle"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD00910130004",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Pickle Relish \u2013 RAM \u2013 1 Gal / Container",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 4.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Container"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD00810190003",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 4.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Container"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD01110080001",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 12.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Bottle"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD00810200004",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 180.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Can"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD01110090001",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 12.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Bottle"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD01110090002",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 4.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Gal"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD02010090002",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Wine White \u2013 Quargentan \u2013 1 L / Tetra",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 2.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Tetra"
+[2026-04-23 02:00:23.240] [PRINT]                     },
+[2026-04-23 02:00:23.240] [PRINT]                     {
+[2026-04-23 02:00:23.240] [PRINT]                         "item_code": "RMFD00610060006",
+[2026-04-23 02:00:23.240] [PRINT]                         "item_description": "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle",
+[2026-04-23 02:00:23.240] [PRINT]                         "qty": 12.0,
+[2026-04-23 02:00:23.240] [PRINT]                         "uom": "Bottle"
+[2026-04-23 02:00:23.240] [PRINT]                     }
+[2026-04-23 02:00:23.240] [PRINT]                 ],
+[2026-04-23 02:00:23.240] [PRINT]                 "warnings": []
+[2026-04-23 02:00:23.240] [PRINT]             }
+[2026-04-23 02:00:23.240] [PRINT]         ]
+[2026-04-23 02:00:23.240] [PRINT]     },
+[2026-04-23 02:00:23.240] [PRINT]     "output_variables": {},
+[2026-04-23 02:00:23.240] [PRINT]     "risk_level": "dangerous"
+[2026-04-23 02:00:23.240] [PRINT] }
+[2026-04-23 02:00:23.250] [PRINT] ⏸ WORKFLOW PAUSED — waiting for chat-based approval
+[2026-04-23 02:00:23.281] [PRINT] 
+[2026-04-23 02:00:23.281] [PRINT] ============================================================
+[2026-04-23 02:00:23.287] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 02:00:23.293] [PRINT] ============================================================
+[2026-04-23 02:00:23.299] [PRINT]   No LLM calls made in this request.
+[2026-04-23 02:00:23.305] [PRINT] ============================================================
+[2026-04-23 02:00:23.315] [INFO] [req_20260422180012_60b98eab] [T:76eeda67] ← RESPONSE: 200 (15298ms)
+[2026-04-23 02:00:23.315] [INFO] [req_20260422180012_60b98eab] [T:76eeda67] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 02:00:23.319] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67
+[2026-04-23 02:00:39.410] [INFO] [req_20260422180012_60b98eab] [T:76eeda67] → REQUEST: POST /threads/65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67/messages  | {"query": null}
+[2026-04-23 02:00:43.825] [INFO] [req_20260422180043_074d4d2e] [T:76eeda67]   USER MSG: "Yes"
+[2026-04-23 02:00:43.827] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 02:00:43.828] [PRINT] WebSocket connected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67
+[2026-04-23 02:00:43.834] [PRINT]   NEW MESSAGE  |  thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67
+[2026-04-23 02:00:43.841] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 02:00:43.846] [PRINT]   User: Yes
+[2026-04-23 02:00:43.852] [PRINT]   ConversationState:
+[2026-04-23 02:00:43.858] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["validate_delivery_sheet", "write_delivery_order_data", "preview_delivery_order_insertion"], "drive_agent": ["search_files"]}, "query": "Deliver Order to Genshin Impact", "sheet_name": "Product Requisition List"}
+[2026-04-23 02:00:43.864] [PRINT]     missing_fields: []
+[2026-04-23 02:00:43.869] [PRINT]     intent: "small_talk"
+[2026-04-23 02:00:43.875] [PRINT]     clarification_question: null
+[2026-04-23 02:00:43.880] [PRINT]     ready_for_execution: false
+[2026-04-23 02:00:43.885] [PRINT]     execution_summary: null
+[2026-04-23 02:00:43.891] [PRINT]     execution_mode: "standard"
+[2026-04-23 02:00:43.896] [PRINT]     execution_history: []
+[2026-04-23 02:00:43.902] [PRINT]     completed_tasks: []
+[2026-04-23 02:00:43.908] [PRINT]     has_executed: false
+[2026-04-23 02:00:43.913] [PRINT]     last_executed_at: null
+[2026-04-23 02:00:43.919] [PRINT]     last_execution_status: null
+[2026-04-23 02:00:43.925] [PRINT]     last_execution_message: null
+[2026-04-23 02:00:43.932] [PRINT]     executing: false
+[2026-04-23 02:00:43.938] [PRINT]     pending_actions: [{"action_id": "action_e2b7dfff", "step_number": 3, "total_steps": 3, "agent": "sheets_agent", "tool": "write_delivery_order_data", "description": "Write the extracted data to the 'Product Requisition List' Google Sheet", "inputs": {"sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "parsed_orders": [{"file": "Food_DELIVERY_ORDER (1).pdf", "header": {"category": "FOOD"}, "line_items": [{"item_code": "RMFD00810030020", "item_description": "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack", "qty": 10.0, "uom": "Pack"}, {"item_code": "RMFD00810270002", "item_description": "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack", "qty": 12.0, "uom": "Pack"}, {"item_code": "RMFD00710020049", "item_description": "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack", "qty": 72.0, "uom": "Pack"}, {"item_code": "RMFD01810040003", "item_description": "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case", "qty": 12.0, "uom": "Case"}, {"item_code": "RMFD01810040007", "item_description": "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack", "qty": 12.0, "uom": "Pack"}, {"item_code": "RMFD00710100002", "item_description": "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can", "qty": 192.0, "uom": "Can"}, {"item_code": "RMFD01010010007", "item_description": "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack", "qty": 24.0, "uom": "Pack"}, {"item_code": "RMFD01010010053", "item_description": "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack", "qty": 14.0, "uom": "Pack"}, {"item_code": "RMFD01810060008", "item_description": "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle", "qty": 24.0, "uom": "Bottle"}, {"item_code": "RMFD00910130004", "item_description": "Pickle Relish \u2013 RAM \u2013 1 Gal / Container", "qty": 4.0, "uom": "Container"}, {"item_code": "RMFD00810190003", "item_description": "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container", "qty": 4.0, "uom": "Container"}, {"item_code": "RMFD01110080001", "item_description": "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle", "qty": 12.0, "uom": "Bottle"}, {"item_code": "RMFD00810200004", "item_description": "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can", "qty": 180.0, "uom": "Can"}, {"item_code": "RMFD01110090001", "item_description": "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle", "qty": 12.0, "uom": "Bottle"}, {"item_code": "RMFD01110090002", "item_description": "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal", "qty": 4.0, "uom": "Gal"}, {"item_code": "RMFD02010090002", "item_description": "Wine White \u2013 Quargentan \u2013 1 L / Tetra", "qty": 2.0, "uom": "Tetra"}, {"item_code": "RMFD00610060006", "item_description": "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle", "qty": 12.0, "uom": "Bottle"}], "warnings": []}]}, "output_variables": {}, "risk_level": "dangerous"}]
+[2026-04-23 02:00:43.944] [PRINT]     workflow_paused: true
+[2026-04-23 02:00:43.950] [PRINT]     remaining_steps: []
+[2026-04-23 02:00:43.957] [PRINT]     workflow_context: {"today_date": "2026-04-23", "_cached_tool_filter": {"gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["validate_delivery_sheet", "write_delivery_order_data", "preview_delivery_order_insertion"], "drive_agent": ["search_files"]}, "step_1_gmail_agent": {"emails_with_attachments": [{"message_id": "19db57c51bdf0b0f", "from": "Kita <pchua5644@gmail.com>", "subject": "Deliver Order to Genshin Impact", "date": "Wed, 22 Apr 2026 21:58:25 +0800", "timestamp": "2026-04-22T21:58:25", "internal_date_ms": "1776866305000", "attachments": [{"filename": "Tech_DELIVERY_ORDER (1).pdf", "attachment_id": "ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi", "mime_type": "application/pdf", "size": 85791, "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Tech_DELIVERY_ORDER (1).pdf"}, {"filename": "Food_DELIVERY_ORDER (1).pdf", "attachment_id": "ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA", "mime_type": "application/pdf", "size": 84650, "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Food_DELIVERY_ORDER (1).pdf"}], "attachment_count": 2}], "total_emails_found": 1, "total_attachments_downloaded": 2, "temp_directory": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o", "query": "Deliver Order to Genshin Impact", "download_attachments": true}, "emails_with_attachments": [{"message_id": "19db57c51bdf0b0f", "from": "Kita <pchua5644@gmail.com>", "subject": "Deliver Order to Genshin Impact", "date": "Wed, 22 Apr 2026 21:58:25 +0800", "timestamp": "2026-04-22T21:58:25", "internal_date_ms": "1776866305000", "attachments": [{"filename": "Tech_DELIVERY_ORDER (1).pdf", "attachment_id": "ANGjdJ9a2-gQjt-Wgjv2zujrb3Z3aZEeAdNe3McFI1jRZ1DySpSAy9E-ip4LWgw2xTog8BCBkShj9MBscPNbUkj7xWAEfy4YIvig8pdz3jzpKEEwxlkurtCtem27pinkChvrQ4UfmKFXzxEWgP-mvcfEJAGHq8PuUV4mYeFgdWbZEmYXDjorAbEUlOTk2xKdpXOLN8n_0deb_L2W3NrqyormSlVPsgQk_XsTnC5PdynQLt6KlPCMP675ROb1IovmPrDslLnsppav5hqGyUFiCIRiPlSANeOVqiwCetKrKjwLURleyyLleRQbuDMONb1vFNLrfY9qU8D_ZQEwP3blqjOHgRj4m8n-t7gzQd2sgFQ9EP8ch4reMJKoaJJmPlnfh5k8XKIaq-Es9xbU6tIi", "mime_type": "application/pdf", "size": 85791, "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Tech_DELIVERY_ORDER (1).pdf"}, {"filename": "Food_DELIVERY_ORDER (1).pdf", "attachment_id": "ANGjdJ8LBV3rnibxamai2kmBWosM67h7Qol5I5uDpPpjzeE6NF9c22g2VxzTbFve8Z5ztCNZDau-xj-jgvxt9fzJx-rFQjXZdfzQPSypE2_s6wgn_6GIwI7UVLfQz9wSxSbNntgOAIMpljdeMWDEqL24JNr_3OnOLv2AULGCJJ7Med-KpvWArPw6GMfmP1jsXBr6My9kMp8GVxppXL5ljzwzurgEoVr3neLIHYzRrUlsz7zeHAEiYsUSbqA1_B-StdHeJdFPaBn6dxz41JUttib3AFE7A_IgJxwtZBgSjYGp90bu9DwRZtCyaPOUzL3rkCYJdZvHo9WBDjIQU6HwcdYpsRvxL0aLWn6HAGlKBZ7w6JPI_hcgtt8X9vTsskx60S5ACsc5KAdy0TM4G1rzaDYrJuq0kiriMj6H0kTlQA", "mime_type": "application/pdf", "size": 84650, "file_path": "C:\\Users\\pchua\\AppData\\Local\\Temp\\gmail_delivery_orders_svesjz7o\\19db57c51bdf0b0f\\Food_DELIVERY_ORDER (1).pdf"}], "attachment_count": 2}], "step_2_mapping_agent": {"parsed_orders": [{"file": "Food_DELIVERY_ORDER (1).pdf", "header": {"category": "FOOD"}, "line_items": [{"item_code": "RMFD00810030020", "item_description": "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack", "qty": 10.0, "uom": "Pack"}, {"item_code": "RMFD00810270002", "item_description": "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack", "qty": 12.0, "uom": "Pack"}, {"item_code": "RMFD00710020049", "item_description": "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack", "qty": 72.0, "uom": "Pack"}, {"item_code": "RMFD01810040003", "item_description": "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case", "qty": 12.0, "uom": "Case"}, {"item_code": "RMFD01810040007", "item_description": "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack", "qty": 12.0, "uom": "Pack"}, {"item_code": "RMFD00710100002", "item_description": "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can", "qty": 192.0, "uom": "Can"}, {"item_code": "RMFD01010010007", "item_description": "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack", "qty": 24.0, "uom": "Pack"}, {"item_code": "RMFD01010010053", "item_description": "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack", "qty": 14.0, "uom": "Pack"}, {"item_code": "RMFD01810060008", "item_description": "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle", "qty": 24.0, "uom": "Bottle"}, {"item_code": "RMFD00910130004", "item_description": "Pickle Relish \u2013 RAM \u2013 1 Gal / Container", "qty": 4.0, "uom": "Container"}, {"item_code": "RMFD00810190003", "item_description": "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container", "qty": 4.0, "uom": "Container"}, {"item_code": "RMFD01110080001", "item_description": "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle", "qty": 12.0, "uom": "Bottle"}, {"item_code": "RMFD00810200004", "item_description": "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can", "qty": 180.0, "uom": "Can"}, {"item_code": "RMFD01110090001", "item_description": "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle", "qty": 12.0, "uom": "Bottle"}, {"item_code": "RMFD01110090002", "item_description": "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal", "qty": 4.0, "uom": "Gal"}, {"item_code": "RMFD02010090002", "item_description": "Wine White \u2013 Quargentan \u2013 1 L / Tetra", "qty": 2.0, "uom": "Tetra"}, {"item_code": "RMFD00610060006", "item_description": "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle", "qty": 12.0, "uom": "Bottle"}], "warnings": []}], "rejected_files": [{"file": "Tech_DELIVERY_ORDER (1).pdf", "reason": "Category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. The PDF content did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."}], "total_parsed": 1, "total_rejected": 1}, "parsed_orders": [{"file": "Food_DELIVERY_ORDER (1).pdf", "header": {"category": "FOOD"}, "line_items": [{"item_code": "RMFD00810030020", "item_description": "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack", "qty": 10.0, "uom": "Pack"}, {"item_code": "RMFD00810270002", "item_description": "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack", "qty": 12.0, "uom": "Pack"}, {"item_code": "RMFD00710020049", "item_description": "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack", "qty": 72.0, "uom": "Pack"}, {"item_code": "RMFD01810040003", "item_description": "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case", "qty": 12.0, "uom": "Case"}, {"item_code": "RMFD01810040007", "item_description": "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack", "qty": 12.0, "uom": "Pack"}, {"item_code": "RMFD00710100002", "item_description": "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can", "qty": 192.0, "uom": "Can"}, {"item_code": "RMFD01010010007", "item_description": "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack", "qty": 24.0, "uom": "Pack"}, {"item_code": "RMFD01010010053", "item_description": "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack", "qty": 14.0, "uom": "Pack"}, {"item_code": "RMFD01810060008", "item_description": "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle", "qty": 24.0, "uom": "Bottle"}, {"item_code": "RMFD00910130004", "item_description": "Pickle Relish \u2013 RAM \u2013 1 Gal / Container", "qty": 4.0, "uom": "Container"}, {"item_code": "RMFD00810190003", "item_description": "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container", "qty": 4.0, "uom": "Container"}, {"item_code": "RMFD01110080001", "item_description": "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle", "qty": 12.0, "uom": "Bottle"}, {"item_code": "RMFD00810200004", "item_description": "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can", "qty": 180.0, "uom": "Can"}, {"item_code": "RMFD01110090001", "item_description": "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle", "qty": 12.0, "uom": "Bottle"}, {"item_code": "RMFD01110090002", "item_description": "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal", "qty": 4.0, "uom": "Gal"}, {"item_code": "RMFD02010090002", "item_description": "Wine White \u2013 Quargentan \u2013 1 L / Tetra", "qty": 2.0, "uom": "Tetra"}, {"item_code": "RMFD00610060006", "item_description": "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle", "qty": 12.0, "uom": "Bottle"}], "warnings": []}], "step_3_drive_agent": {"results": [{"parents": ["1FJSHewncRXinHXJXd2cG1aAyi40hFxMU"], "id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "name": "Product Requisition List", "mimeType": "application/vnd.google-apps.spreadsheet", "webViewLink": "https://docs.google.com/spreadsheets/d/1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU/edit?usp=drivesdk", "createdTime": "2026-04-21T09:32:16.447Z", "size": "1337"}, {"id": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA", "name": "PRODUCTION MATERIALS REQUISITION LIST", "mimeType": "application/vnd.google-apps.spreadsheet", "webViewLink": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=drivesdk", "createdTime": "2026-04-04T19:06:32.433Z", "size": "1024"}], "count": 2, "search_term": "Product Requisition List", "message": "Found 2 file(s) matching 'Product Requisition List':\n  Product Requisition List\n  PRODUCTION MATERIALS REQUISITION LIST"}, "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "_execution_mode": "standard", "step_1_sheets_agent": {"is_valid": true, "sheet_id": "1hqAFTfaEdok3w6nsCDAGsuAmwh_fD2RshkyZAOWO8QU", "headers_by_tab": {"non-food": ["Date", "Order Reference", "Item Code", "Item Description", "QTY", "UOM", "CB Date", "Requested by"], "Food": ["Date", "Order Reference", "Item Code", "Item Description", "QTY", "UOM", "CB Date", "Requested by", "NOTES"]}, "tabs_found": ["Food", "Tech", "non-food"], "matching_tabs": ["non-food", "Food"], "message": "Sheet is a valid requisition list template with write access confirmed"}, "step_2_sheets_agent": {"preview_rows": [{"tab": "Food", "values": ["", "", "RMFD00810030020", "Bread Crumbs \u2013 Village Gourmet \u2013 1 Kg /\nPack", "10.0", "Pack", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD00810270002", "Broth Powder Chicken \u2013 Knorr \u2013 1 KG /\nPack", "12.0", "Pack", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD00710020049", "Cheese Filled \u2013 Kraft Eden \u2013 430G / Pack", "72.0", "Pack", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD01810040003", "Mayonnaise \u2013 Lady's Choice \u2013 5.5L \u2013 2 Gal\n/ Case", "12.0", "Case", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD01810040007", "Mayonnaise \u2013 Kewpie \u2013 1KG / Pack", "12.0", "Pack", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD00710100002", "Milk Evaporated \u2013 Alaska \u2013 370 ML / Can", "192.0", "Can", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD01010010007", "Noodles Elbow Macaroni \u2013 Royal \u2013 1 KG /\nPack", "24.0", "Pack", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD01010010053", "Noodles Lasagna \u2013 HOL \u2013 450g / 6-Pack", "14.0", "Pack", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD01810060008", "Classic Peanut Butter \u2013 Lily's \u2013 504g / Bottle", "24.0", "Bottle", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD00910130004", "Pickle Relish \u2013 RAM \u2013 1 Gal / Container", "4.0", "Container", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD00810190003", "Seasoning Liquid \u2013 Knorr \u2013 3.8 L / Container", "4.0", "Container", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD01110080001", "Sesame Oil \u2013 Yuen Yick \u2013 750 ML / Bottle", "12.0", "Bottle", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD00810200004", "Soup Cream of Mushroom \u2013 Campbell's \u2013\n640g / Can", "180.0", "Can", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD01110090001", "Soy Sauce \u2013 Kikkoman \u2013 1 L / Bottle", "12.0", "Bottle", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD01110090002", "Soy Sauce \u2013 Silver Swan \u2013 3.785 L / Gal", "4.0", "Gal", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD02010090002", "Wine White \u2013 Quargentan \u2013 1 L / Tetra", "2.0", "Tetra", "", ""]}, {"tab": "Food", "values": ["", "", "RMFD00610060006", "Cream Black Truffle \u2013 Mazza \u2013 500 G /\nBottle", "12.0", "Bottle", "", ""]}], "total_new_rows": 17, "duplicates": [], "duplicate_count": 0, "warnings": [], "target_tabs": ["Food"], "message": "17 row(s) ready to insert across 1 tab(s). No duplicates detected."}}
+[2026-04-23 02:00:43.963] [PRINT]     disambiguation_options: []
+[2026-04-23 02:00:43.970] [PRINT]     disambiguation_variable: null
+[2026-04-23 02:00:43.984] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 02:00:43.993] [INFO] [-]   STEP [new_message]: thread=65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67, msg=Yes
+[2026-04-23 02:00:43.993] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 246, "max": 2000}
+[2026-04-23 02:00:43.998] [INFO] [-]   STEP [tier0]: pending action APPROVED via chat: action_e2b7dfff
+[2026-04-23 02:00:44.000] [INFO] [-]   ANALYSIS: intent=ConversationIntent.SMALL_TALK, ready=False  | {"missing_fields": []}
+[2026-04-23 02:00:44.000] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.SMALL_TALK
+    ↳ {"intent": "ConversationIntent.SMALL_TALK", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": null, "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails", "search_emails_with_delivery_order_attachments"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["validate_delivery_sheet", "write_delivery_order_data", "preview_delivery_order_insertion"], "drive_agen
+[2026-04-23 02:00:44.001] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 9, "total": 255, "max": 2000, "response_preview": "Executing approved action..."}
+[2026-04-23 02:00:44.021] [INFO] [req_20260422180043_074d4d2e] [T:76eeda67]   BOT RESP: "Executing approved action..."
+[2026-04-23 02:00:44.021] [PRINT] Chat-based approval for action action_e2b7dfff
+[2026-04-23 02:00:44.027] [INFO] [req_20260422180043_074d4d2e] [T:76eeda67]   STEP [chat_approval]: Executing approved action: action_e2b7dfff
+[2026-04-23 02:00:44.040] [PRINT] Attempt 1/3 calling http://localhost:8003/execute_task
+[2026-04-23 02:00:44.045] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 02:00:47.984] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 02:00:48.020] [PRINT] Action executed: True
+[2026-04-23 02:00:48.060] [PRINT] 
+[2026-04-23 02:00:48.060] [PRINT] ============================================================
+[2026-04-23 02:00:48.066] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 02:00:48.074] [PRINT] ============================================================
+[2026-04-23 02:00:48.081] [PRINT]   No LLM calls made in this request.
+[2026-04-23 02:00:48.087] [PRINT] ============================================================
+[2026-04-23 02:00:48.099] [INFO] [req_20260422180043_074d4d2e] [T:76eeda67] ← RESPONSE: 200 (8689ms)
+[2026-04-23 02:00:48.099] [INFO] [req_20260422180043_074d4d2e] [T:76eeda67] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 02:00:48.102] [PRINT] WebSocket disconnected for thread: 65d9a7f0-d4fb-44ee-ab68-ca88861dfb4a_76eeda67

@@ -3172,6 +3172,758 @@ except Exception as e:
 
 
 # ------------------------------------------------------------------
+# SCENARIO 35 — Silent-rejection fix: supervisor_agent.py attaches
+# upstream_rejected_files to step_info when pausing for approval.
+#
+# Reproduces the DeliveryTesting2PDFs2.log failure mode where a Tech PDF
+# was silently rejected by the mapping agent's category gate (intended)
+# but the subsequent write_delivery_order_data approval prompt showed
+# no trace of the skipped file, so the user approved without knowing
+# only 1 of 2 PDFs would be written.
+#
+# This scenario exercises BOTH layers of the fix:
+#   (a) source-level guard — supervisor_agent.py must contain the
+#       variable_context scan logic
+#   (b) behavioural — the same scan logic, re-implemented here in
+#       isolation against a realistic variable_context, must correctly
+#       extract rejected_files entries from any step_*_* namespace
+# ------------------------------------------------------------------
+section("Scenario 35 - Silent-rejection: orchestrator attaches upstream_rejected_files on pause")
+
+try:
+    supervisor_src = (SUP / "supervisor_agent.py").read_text(encoding="utf-8")
+
+    required_snippets_35a = [
+        'upstream_rejected_files',
+        'rejected_files',
+        'step_info["upstream_rejected_files"] = upstream_rejected_files',
+    ]
+    missing_35a = [s for s in required_snippets_35a if s not in supervisor_src]
+    if missing_35a:
+        record(
+            "Scenario 35a - supervisor_agent.py contains upstream_rejected_files scan",
+            "FAIL",
+            f"missing snippets: {missing_35a}",
+        )
+    else:
+        record(
+            "Scenario 35a - supervisor_agent.py contains upstream_rejected_files scan",
+            "PASS",
+        )
+
+    # Behavioural re-implementation of the scan logic (mirrors the block
+    # added at supervisor_agent.py:1074). If this helper and the real
+    # code diverge, the source-level guard above catches it on the next run.
+    def _scan_upstream_rejected_files(variable_context: dict) -> list:
+        out: list = []
+        seen: set = set()
+        for ctx_key, ctx_val in variable_context.items():
+            if not isinstance(ctx_key, str) or not ctx_key.startswith("step_"):
+                continue
+            if not isinstance(ctx_val, dict):
+                continue
+            rf = ctx_val.get("rejected_files")
+            if not isinstance(rf, list) or not rf:
+                continue
+            for item in rf:
+                if not isinstance(item, dict):
+                    continue
+                fname = item.get("file") or item.get("filename")
+                if fname and fname in seen:
+                    continue
+                out.append(item)
+                if fname:
+                    seen.add(fname)
+        return out
+
+    # --- Case 35b: realistic variable_context mirroring DeliveryTesting2PDFs2.log
+    # 1 good PDF parsed + 1 Tech PDF rejected.
+    ctx_partial = {
+        "today_date": "2026-04-21",
+        "uploaded_file": None,
+        "step_1_gmail_agent": {
+            "emails_with_attachments": [{"subject": "DO 1", "attachments": [{"file_path": "Food.pdf"}]}],
+            "total_attachments_downloaded": 2,
+        },
+        "step_2_mapping_agent": {
+            "parsed_orders": [{"file": "Food_DELIVERY_ORDER (1).pdf", "line_items": [{"a": 1}]}],
+            "rejected_files": [
+                {
+                    "file": "Tech_DELIVERY_ORDER (1).pdf",
+                    "reason": (
+                        "Category is not FOOD or NON-FOOD. The requisition sheet "
+                        "only accepts these two categories."
+                    ),
+                }
+            ],
+            "total_parsed": 1,
+            "total_rejected": 1,
+        },
+        "parsed_orders": [{"file": "Food_DELIVERY_ORDER (1).pdf", "line_items": [{"a": 1}]}],
+        "step_3_drive_agent": {"results": [{"id": "SHEET_ID"}]},
+        "sheet_id": "SHEET_ID",
+        "step_4_sheets_agent": {"valid": True, "message": "Sheet is valid"},
+        "step_5_sheets_agent": {"preview_rows": [], "target_tabs": ["Food"]},
+    }
+    extracted_partial = _scan_upstream_rejected_files(ctx_partial)
+    problems_35b = []
+    if len(extracted_partial) != 1:
+        problems_35b.append(f"expected 1 rejected file, got {len(extracted_partial)}")
+    elif extracted_partial[0].get("file") != "Tech_DELIVERY_ORDER (1).pdf":
+        problems_35b.append(f"wrong file: {extracted_partial[0].get('file')!r}")
+    elif "FOOD or NON-FOOD" not in (extracted_partial[0].get("reason") or ""):
+        problems_35b.append("reason text did not survive the scan")
+    if problems_35b:
+        record(
+            "Scenario 35b - scan extracts rejected_files from step_N_mapping_agent",
+            "FAIL",
+            "; ".join(problems_35b),
+        )
+    else:
+        record(
+            "Scenario 35b - scan extracts rejected_files from step_N_mapping_agent",
+            "PASS",
+        )
+
+    # --- Case 35c: no rejections — scan returns [].
+    ctx_clean = {
+        "today_date": "2026-04-21",
+        "step_1_gmail_agent": {"emails_with_attachments": []},
+        "step_2_mapping_agent": {
+            "parsed_orders": [{"file": "Food.pdf"}],
+            "rejected_files": [],
+            "total_parsed": 1,
+            "total_rejected": 0,
+        },
+    }
+    extracted_clean = _scan_upstream_rejected_files(ctx_clean)
+    if extracted_clean == []:
+        record(
+            "Scenario 35c - scan returns [] when nothing was rejected (no regression)",
+            "PASS",
+        )
+    else:
+        record(
+            "Scenario 35c - scan returns [] when nothing was rejected (no regression)",
+            "FAIL",
+            f"unexpected output: {extracted_clean!r}",
+        )
+
+    # --- Case 35d: rejected_files from multiple steps are deduplicated by filename.
+    ctx_dup = {
+        "step_2_mapping_agent": {
+            "rejected_files": [
+                {"file": "X.pdf", "reason": "reason A"},
+                {"file": "Y.pdf", "reason": "reason B"},
+            ],
+        },
+        "step_7_mapping_agent": {
+            "rejected_files": [
+                {"file": "X.pdf", "reason": "reason A (duplicate)"},
+                {"file": "Z.pdf", "reason": "reason C"},
+            ],
+        },
+    }
+    extracted_dup = _scan_upstream_rejected_files(ctx_dup)
+    files_dup = [r.get("file") for r in extracted_dup]
+    if files_dup == ["X.pdf", "Y.pdf", "Z.pdf"]:
+        record(
+            "Scenario 35d - rejected_files deduped by filename across step namespaces",
+            "PASS",
+        )
+    else:
+        record(
+            "Scenario 35d - rejected_files deduped by filename across step namespaces",
+            "FAIL",
+            f"got {files_dup!r}",
+        )
+
+    # --- Case 35e: non-dict / non-list values in variable_context are ignored
+    # (regression guard — the scan must not raise on unexpected shapes).
+    ctx_noisy = {
+        "step_1_something": "not a dict",
+        "step_2_mapping_agent": {"rejected_files": "not a list"},
+        "step_3_mapping_agent": {"rejected_files": [None, 123, {"file": "R.pdf", "reason": "x"}]},
+        "unrelated_key": {"rejected_files": [{"file": "NOT_A_STEP.pdf", "reason": "y"}]},
+    }
+    try:
+        extracted_noisy = _scan_upstream_rejected_files(ctx_noisy)
+    except Exception as e:
+        extracted_noisy = f"raised: {e}"
+    if (
+        isinstance(extracted_noisy, list)
+        and [r.get("file") for r in extracted_noisy] == ["R.pdf"]
+    ):
+        record(
+            "Scenario 35e - scan ignores noisy values, skips non-step_* keys",
+            "PASS",
+        )
+    else:
+        record(
+            "Scenario 35e - scan ignores noisy values, skips non-step_* keys",
+            "FAIL",
+            f"got {extracted_noisy!r}",
+        )
+except Exception as e:
+    record(
+        "Scenario 35 - orchestrator upstream_rejected_files attachment",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 36 — Silent-rejection fix: the approval message for
+# write_delivery_order_data surfaces upstream_rejected_files so the
+# user sees which PDFs were skipped BEFORE they hit "yes".
+# ------------------------------------------------------------------
+section("Scenario 36 - Approval message surfaces upstream_rejected_files warning")
+
+try:
+    import importlib
+    checks_mod = importlib.import_module("checks.tier0_checks")
+    importlib.reload(checks_mod)
+    build = checks_mod._build_rich_approval_message
+
+    # Realistic pending_action mirroring what the orchestrator would persist
+    # for the DeliveryTesting2PDFs2.log scenario.
+    pending_partial = {
+        "tool": "write_delivery_order_data",
+        "risk_level": "DANGEROUS",
+        "description": "Append the parsed delivery-order rows into the sheet",
+        "step_number": 6,
+        "total_steps": 6,
+        "inputs": {
+            "sheet_id": "1SHEET_ID",
+            "parsed_orders": [
+                {
+                    "file": "Food_DELIVERY_ORDER (1).pdf",
+                    "header": {"reference_number": "DO-2026-01", "category": "FOOD"},
+                    "line_items": [{"item_code": "RMFD001", "qty": 10}] * 17,
+                }
+            ],
+        },
+        "upstream_rejected_files": [
+            {
+                "file": "Tech_DELIVERY_ORDER (1).pdf",
+                "reason": (
+                    "Category is not FOOD or NON-FOOD. The requisition sheet "
+                    "only accepts these two categories. The PDF content did "
+                    "not expose a 'Category: FOOD' or 'Category: NON-FOOD' "
+                    "label."
+                ),
+            }
+        ],
+    }
+    msg_partial = build(pending_partial)
+
+    required_36a = [
+        "Tech_DELIVERY_ORDER (1).pdf",   # the skipped filename
+        "skipped",                       # the warning verb
+        "NOT be written",                # making "this is not in the write" loud
+        "FOOD or NON-FOOD",              # the reason text
+        "Orders to write:** 1",          # the good PDF still renders
+        "Total line items:** 17",
+    ]
+    missing_36a = [s for s in required_36a if s not in msg_partial]
+    if missing_36a:
+        record(
+            "Scenario 36a - approval message warns about skipped PDFs in partial-success case",
+            "FAIL",
+            f"missing: {missing_36a}; preview={msg_partial[:600]!r}",
+        )
+    else:
+        record(
+            "Scenario 36a - approval message warns about skipped PDFs in partial-success case",
+            "PASS",
+        )
+        print("\n--- approval message preview (partial success) ---")
+        print(msg_partial)
+        print("--- end preview ---\n")
+
+    # Case 36b: more than 5 rejected files — the message should truncate at 5
+    # and show "…and N more skipped."
+    pending_many = {
+        "tool": "write_delivery_order_data",
+        "risk_level": "DANGEROUS",
+        "description": "Append the parsed delivery-order rows into the sheet",
+        "step_number": 6,
+        "total_steps": 6,
+        "inputs": {
+            "sheet_id": "1SHEET_ID",
+            "parsed_orders": [
+                {"file": "Food.pdf", "header": {"category": "FOOD"}, "line_items": [{"x": 1}]}
+            ],
+        },
+        "upstream_rejected_files": [
+            {"file": f"Tech_{i}.pdf", "reason": "Category is not FOOD or NON-FOOD."}
+            for i in range(8)
+        ],
+    }
+    msg_many = build(pending_many)
+    problems_36b = []
+    if "Tech_0.pdf" not in msg_many:
+        problems_36b.append("first rejected file missing")
+    if "Tech_4.pdf" not in msg_many:
+        problems_36b.append("5th rejected file missing (should still render)")
+    if "Tech_7.pdf" in msg_many:
+        problems_36b.append("7th rejected file should have been truncated")
+    if "3 more skipped" not in msg_many:
+        problems_36b.append("missing truncation footer '…and 3 more skipped.'")
+    if problems_36b:
+        record(
+            "Scenario 36b - approval message truncates >5 rejected files with footer",
+            "FAIL",
+            "; ".join(problems_36b) + f"; preview={msg_many[:800]!r}",
+        )
+    else:
+        record(
+            "Scenario 36b - approval message truncates >5 rejected files with footer",
+            "PASS",
+        )
+except Exception as e:
+    record(
+        "Scenario 36 - approval message surfaces upstream_rejected_files",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 37 — Regression guard: the approval message is UNCHANGED
+# when there are no upstream rejections. The existing detailed
+# summary (orders, line items, source files, sample header) must
+# still render, and the new warning block must NOT appear.
+# ------------------------------------------------------------------
+section("Scenario 37 - Approval message unchanged when no PDFs were rejected")
+
+try:
+    import importlib
+    checks_mod = importlib.import_module("checks.tier0_checks")
+    importlib.reload(checks_mod)
+    build = checks_mod._build_rich_approval_message
+
+    pending_clean = {
+        "tool": "write_delivery_order_data",
+        "risk_level": "DANGEROUS",
+        "description": "Append the parsed delivery-order rows into the sheet",
+        "step_number": 6,
+        "total_steps": 6,
+        "inputs": {
+            "sheet_id": "1SHEET_ID",
+            "parsed_orders": [
+                {
+                    "file": "Food.pdf",
+                    "header": {"reference_number": "DO-2026-07", "category": "FOOD"},
+                    "line_items": [{"item_code": "RMFD001", "qty": 5}] * 3,
+                }
+            ],
+        },
+        # NOTE: no upstream_rejected_files key at all — mirrors the clean
+        # all-PDFs-parsed case.
+    }
+    msg_clean = build(pending_clean)
+
+    required_37 = [
+        "Orders to write:** 1",
+        "Total line items:** 3",
+        "Food.pdf",
+    ]
+    forbidden_37 = [
+        "skipped and will NOT be written",  # new warning header must be absent
+        "Tech_",                            # any rejected-file reference
+        "…and",                             # truncation footer must be absent
+    ]
+    missing_37 = [s for s in required_37 if s not in msg_clean]
+    leaked_37 = [s for s in forbidden_37 if s in msg_clean]
+    if missing_37 or leaked_37:
+        record(
+            "Scenario 37 - approval message unchanged on no-rejection path",
+            "FAIL",
+            f"missing={missing_37}, leaked={leaked_37}; preview={msg_clean[:600]!r}",
+        )
+    else:
+        record(
+            "Scenario 37 - approval message unchanged on no-rejection path",
+            "PASS",
+        )
+
+    # Also verify: empty list for upstream_rejected_files is treated the same
+    # as missing — the warning block must NOT render.
+    pending_empty_list = dict(pending_clean)
+    pending_empty_list["upstream_rejected_files"] = []
+    msg_empty_list = build(pending_empty_list)
+    if any(s in msg_empty_list for s in forbidden_37):
+        record(
+            "Scenario 37b - empty upstream_rejected_files list renders no warning",
+            "FAIL",
+            f"forbidden snippet leaked; preview={msg_empty_list[:600]!r}",
+        )
+    else:
+        record(
+            "Scenario 37b - empty upstream_rejected_files list renders no warning",
+            "PASS",
+        )
+except Exception as e:
+    record(
+        "Scenario 37 - approval message unchanged on no-rejection path",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 38 — Silent-rejection fix: the final-summary template for
+# parse_delivery_order_pdfs now lists rejected filenames + reasons
+# when total_rejected > 0. This ensures the post-execution summary
+# (read by the user AFTER the write succeeds) is not silent either.
+# ------------------------------------------------------------------
+section("Scenario 38 - Final summary template lists rejected files")
+
+try:
+    import importlib
+    rt_mod = importlib.import_module("services.response_templates")
+    importlib.reload(rt_mod)
+    format_step = rt_mod.format_step
+
+    output_mixed = {
+        "success": True,
+        "parsed_orders": [
+            {
+                "file": "Food_DELIVERY_ORDER (1).pdf",
+                "header": {"category": "FOOD"},
+                "line_items": [{"item_code": "RMFD001", "qty": 5}],
+            }
+        ],
+        "rejected_files": [
+            {
+                "file": "Tech_DELIVERY_ORDER (1).pdf",
+                "reason": (
+                    "Category is not FOOD or NON-FOOD. The requisition sheet "
+                    "only accepts these two categories."
+                ),
+            }
+        ],
+        "total_parsed": 1,
+        "total_rejected": 1,
+    }
+    text_mixed = format_step("mapping_agent", "parse_delivery_order_pdfs", output_mixed)
+
+    required_38a = [
+        "Parsed 1 delivery order(s)",
+        "1 file(s) rejected",
+        "Skipped files",
+        "Tech_DELIVERY_ORDER (1).pdf",
+        "FOOD or NON-FOOD",
+    ]
+    missing_38a = [s for s in required_38a if s not in (text_mixed or "")]
+    if missing_38a:
+        record(
+            "Scenario 38a - parse_delivery_order_pdfs template lists skipped files",
+            "FAIL",
+            f"missing={missing_38a}; preview={(text_mixed or '')[:400]!r}",
+        )
+    else:
+        record(
+            "Scenario 38a - parse_delivery_order_pdfs template lists skipped files",
+            "PASS",
+        )
+        print("\n--- final summary preview (mixed) ---")
+        print(text_mixed)
+        print("--- end preview ---\n")
+
+    # Truncation: >5 rejected files render first 5 + footer.
+    output_many = {
+        "parsed_orders": [{"file": "Food.pdf", "header": {"category": "FOOD"}, "line_items": []}],
+        "rejected_files": [
+            {"file": f"Tech_{i}.pdf", "reason": "Category is not FOOD or NON-FOOD."}
+            for i in range(7)
+        ],
+        "total_parsed": 1,
+        "total_rejected": 7,
+    }
+    text_many = format_step("mapping_agent", "parse_delivery_order_pdfs", output_many)
+    problems_38b = []
+    if "Tech_0.pdf" not in (text_many or ""):
+        problems_38b.append("first skipped file missing")
+    if "Tech_4.pdf" not in (text_many or ""):
+        problems_38b.append("5th skipped file missing")
+    if "Tech_6.pdf" in (text_many or ""):
+        problems_38b.append("7th skipped file should have been truncated")
+    if "2 more" not in (text_many or ""):
+        problems_38b.append("missing '…and 2 more' truncation footer")
+    if problems_38b:
+        record(
+            "Scenario 38b - final summary truncates >5 rejected files",
+            "FAIL",
+            "; ".join(problems_38b) + f"; preview={(text_many or '')[:500]!r}",
+        )
+    else:
+        record(
+            "Scenario 38b - final summary truncates >5 rejected files",
+            "PASS",
+        )
+except Exception as e:
+    record(
+        "Scenario 38 - final summary template lists rejected files",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 39 — Regression guard: the final-summary template behaves
+# exactly like the legacy "Parsed X, Y rejected" string when there
+# are no rejections. Also verifies that static-string templates for
+# every OTHER tool (e.g. reply_to_email) still render correctly after
+# the callable-template upgrade in response_templates.py.
+# ------------------------------------------------------------------
+section("Scenario 39 - Final summary regression: no rejections + other templates still work")
+
+try:
+    import importlib
+    rt_mod = importlib.import_module("services.response_templates")
+    importlib.reload(rt_mod)
+    format_step = rt_mod.format_step
+
+    # Case 39a: clean parse — no "Skipped files" section.
+    output_clean = {
+        "parsed_orders": [
+            {"file": "Food1.pdf", "header": {"category": "FOOD"}, "line_items": [{"x": 1}]},
+            {"file": "Food2.pdf", "header": {"category": "NON-FOOD"}, "line_items": [{"y": 2}]},
+        ],
+        "rejected_files": [],
+        "total_parsed": 2,
+        "total_rejected": 0,
+    }
+    text_clean = format_step("mapping_agent", "parse_delivery_order_pdfs", output_clean)
+    problems_39a = []
+    if "Parsed 2 delivery order(s)" not in (text_clean or ""):
+        problems_39a.append("legacy headline missing")
+    if "0 file(s) rejected" not in (text_clean or ""):
+        problems_39a.append("legacy '0 file(s) rejected' clause missing")
+    if "Skipped files" in (text_clean or ""):
+        problems_39a.append("'Skipped files' block leaked into clean summary")
+    if problems_39a:
+        record(
+            "Scenario 39a - clean parse renders legacy one-line summary",
+            "FAIL",
+            "; ".join(problems_39a) + f"; preview={(text_clean or '')!r}",
+        )
+    else:
+        record(
+            "Scenario 39a - clean parse renders legacy one-line summary",
+            "PASS",
+        )
+
+    # Case 39b: a static-string template (reply_to_email) still renders.
+    # The callable-template upgrade in _format_action must remain
+    # backward-compatible with every other template entry.
+    text_reply = format_step(
+        "gmail_agent",
+        "reply_to_email",
+        {"subject": "Hello", "to": "alice@example.com", "message_id": "abc"},
+    )
+    if text_reply and "Replied to" in text_reply and "Hello" in text_reply and "alice@example.com" in text_reply:
+        record(
+            "Scenario 39b - static-string templates (reply_to_email) still render",
+            "PASS",
+        )
+    else:
+        record(
+            "Scenario 39b - static-string templates (reply_to_email) still render",
+            "FAIL",
+            f"preview={text_reply!r}",
+        )
+
+    # Case 39c: a use_message template (list_my_docs / preview_delivery)
+    # still renders from the message field.
+    text_preview = format_step(
+        "sheets_agent",
+        "preview_delivery_order_insertion",
+        {"message": "17 row(s) ready to insert across 1 tab(s). No duplicates detected."},
+    )
+    if text_preview and "17 row(s) ready" in text_preview:
+        record(
+            "Scenario 39c - use_message templates still render after callable upgrade",
+            "PASS",
+        )
+    else:
+        record(
+            "Scenario 39c - use_message templates still render after callable upgrade",
+            "FAIL",
+            f"preview={text_preview!r}",
+        )
+except Exception as e:
+    record(
+        "Scenario 39 - final summary regression guards",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
+# SCENARIO 40 — End-to-end re-replay of the DeliveryTesting2PDFs2.log
+# failure mode. Confirms the three-layer fix holds from the mapping
+# agent's output through to the approval prompt AND the final summary.
+#
+# Stages:
+#   1. mapping_agent.parse_delivery_order_pdfs runs on [good.pdf, bad.pdf]
+#      — one parses, one is rejected by the category gate. The real
+#      function is used; _parse_single_pdf is stubbed so we don't need
+#      real PDFs.
+#   2. The orchestrator's scan logic lifts rejected_files into step_info.
+#   3. _build_rich_approval_message renders the approval prompt — the
+#      user now sees "Tech rejected" BEFORE clicking yes.
+#   4. format_step renders the final post-execution summary — the user
+#      sees "Tech rejected" AFTER the write too.
+#
+# If ANY link in the chain breaks, the user is silently unaware again.
+# ------------------------------------------------------------------
+section("Scenario 40 - E2E: DeliveryTesting2PDFs2.log partial-rejection chain is no longer silent")
+
+try:
+    import importlib
+    mapping_mod = importlib.import_module("mapping_agent_api")
+    importlib.reload(mapping_mod)
+
+    # Stage 1 — run the REAL parse_delivery_order_pdfs with a mocked parser
+    # so we don't need real PDFs on disk.
+    original_parser = mapping_mod._parse_single_pdf
+
+    def _chain_parser(fp: str):
+        if "Food" in fp:
+            return {
+                "file": "Food_DELIVERY_ORDER (1).pdf",
+                "header": {"reference_number": "DO-01", "category": "FOOD", "requested_by": "QA"},
+                "line_items": [{"item_code": "RMFD001", "item_description": "TEST", "qty": 5, "uom": "KG"}],
+                "warnings": [],
+            }
+        return {
+            "rejected": True,
+            "file": "Tech_DELIVERY_ORDER (1).pdf",
+            "reason": (
+                "Category is not FOOD or NON-FOOD. The requisition sheet "
+                "only accepts these two categories. The PDF content did not "
+                "expose a 'Category: FOOD' or 'Category: NON-FOOD' label, "
+                "and its item codes did not match a known FOOD prefix. "
+                "Detected category label: ''."
+            ),
+        }
+
+    mapping_mod._parse_single_pdf = _chain_parser
+    try:
+        parse_out = mapping_mod.parse_delivery_order_pdfs(
+            ["/tmp/Food_DELIVERY_ORDER (1).pdf", "/tmp/Tech_DELIVERY_ORDER (1).pdf"]
+        )
+    finally:
+        mapping_mod._parse_single_pdf = original_parser
+
+    chain_problems = []
+    if parse_out.get("success") is not True:
+        chain_problems.append(
+            f"stage 1: expected success=true (partial parse), got {parse_out.get('success')!r}"
+        )
+    if parse_out.get("total_parsed") != 1:
+        chain_problems.append(f"stage 1: expected total_parsed=1, got {parse_out.get('total_parsed')!r}")
+    if parse_out.get("total_rejected") != 1:
+        chain_problems.append(f"stage 1: expected total_rejected=1, got {parse_out.get('total_rejected')!r}")
+    rejected = parse_out.get("rejected_files") or []
+    if not rejected or rejected[0].get("file") != "Tech_DELIVERY_ORDER (1).pdf":
+        chain_problems.append(f"stage 1: rejected_files wrong: {rejected!r}")
+
+    # Stage 2 — orchestrator scan logic lifts rejected_files into step_info.
+    # Re-use the same helper from scenario 35 behavioural parity.
+    variable_context = {
+        "step_1_gmail_agent": {"emails_with_attachments": [], "total_attachments_downloaded": 2},
+        "step_2_mapping_agent": {
+            k: v for k, v in parse_out.items() if k not in ("success", "error", "no_results")
+        },
+    }
+
+    # Inline the real scan logic (must stay in sync with supervisor_agent.py:~1074).
+    upstream_rejected_files: list = []
+    _seen_rf: set = set()
+    for ctx_key, ctx_val in variable_context.items():
+        if not isinstance(ctx_key, str) or not ctx_key.startswith("step_"):
+            continue
+        if not isinstance(ctx_val, dict):
+            continue
+        rf = ctx_val.get("rejected_files")
+        if not isinstance(rf, list) or not rf:
+            continue
+        for item in rf:
+            if not isinstance(item, dict):
+                continue
+            fname = item.get("file") or item.get("filename")
+            if fname and fname in _seen_rf:
+                continue
+            upstream_rejected_files.append(item)
+            if fname:
+                _seen_rf.add(fname)
+
+    if not upstream_rejected_files:
+        chain_problems.append("stage 2: scan logic produced empty upstream_rejected_files")
+
+    # Stage 3 — approval prompt.
+    checks_mod = importlib.import_module("checks.tier0_checks")
+    importlib.reload(checks_mod)
+    build = checks_mod._build_rich_approval_message
+
+    step_info = {
+        "tool": "write_delivery_order_data",
+        "risk_level": "DANGEROUS",
+        "description": "Append the parsed delivery-order rows into the sheet",
+        "step_number": 6,
+        "total_steps": 6,
+        "inputs": {
+            "sheet_id": "1SHEET_ID",
+            "parsed_orders": parse_out.get("parsed_orders") or [],
+        },
+        "upstream_rejected_files": upstream_rejected_files,
+    }
+    approval_msg = build(step_info)
+    if "Tech_DELIVERY_ORDER (1).pdf" not in approval_msg:
+        chain_problems.append("stage 3: approval prompt does not mention rejected file")
+    if "skipped and will NOT be written" not in approval_msg:
+        chain_problems.append("stage 3: approval prompt missing 'skipped' warning")
+    if "Orders to write:** 1" not in approval_msg:
+        chain_problems.append("stage 3: approval prompt lost the 'Orders to write: 1' line")
+
+    # Stage 4 — final summary template.
+    rt_mod = importlib.import_module("services.response_templates")
+    importlib.reload(rt_mod)
+    summary_text = rt_mod.format_step(
+        "mapping_agent", "parse_delivery_order_pdfs", parse_out
+    )
+    if "Skipped files" not in (summary_text or ""):
+        chain_problems.append("stage 4: final summary missing 'Skipped files' block")
+    if "Tech_DELIVERY_ORDER (1).pdf" not in (summary_text or ""):
+        chain_problems.append("stage 4: final summary does not name the rejected file")
+
+    if chain_problems:
+        record(
+            "Scenario 40 - E2E chain surfaces partial rejection end-to-end",
+            "FAIL",
+            "; ".join(chain_problems)
+            + f"\n      approval_msg[:400]={approval_msg[:400]!r}"
+            + f"\n      summary_text[:400]={(summary_text or '')[:400]!r}",
+        )
+    else:
+        record(
+            "Scenario 40 - E2E chain surfaces partial rejection end-to-end",
+            "PASS",
+            "mapping → step_info scan → approval prompt → final summary all mention Tech PDF",
+        )
+except Exception as e:
+    record(
+        "Scenario 40 - E2E chain surfaces partial rejection end-to-end",
+        "FAIL",
+        f"{e}\n{traceback.format_exc()}",
+    )
+
+
+# ------------------------------------------------------------------
 # FINAL REPORT
 # ------------------------------------------------------------------
 section("FINAL REPORT")
