@@ -160,32 +160,80 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                         docs_tools.append(t)
             # Block C extension (Phase 1): when create_doc is classified AND
             # the request carries the content inline (e.g. "with content",
-            # "that says"), offer create_doc_with_content as an alternative
-            # so the planner can do it in one step instead of the two-step
-            # create_doc + add_text_to_doc chain. create_doc stays in the
-            # filter so the planner can still pick the simpler tool when
-            # the content is added later.
+            # "that says", "with sections"), offer create_doc_with_content
+            # as an alternative so the planner can do it in one step instead
+            # of the two-step create_doc + add_text chain. create_doc stays
+            # in the filter so the planner can still pick the simpler tool
+            # when the content is added later.
+            #
+            # The structural variants ("with sections", "with headings",
+            # "with bullet") cover agenda-style requests like the DEMO8.log
+            # scenario ("Google Doc agenda with sections Yesterday's Issues,
+            # Today's Priorities, and Blockers"), where the user supplies
+            # the content inline via section titles rather than the prose
+            # "with content" phrasing. Without this, the planner is forced
+            # into create_doc + add_text, and add_text is DANGEROUS-tier
+            # (models.py:161), causing an unnecessary approval pause even
+            # for doc content the user has just specified.
             _CONTENT_PHRASE_KEYWORDS = (
                 "with content", "with text", "with the following",
                 "containing", " that says ", " saying ", " with body ",
+                "with sections", "with a section", "with headings",
+                "with a heading", "with bullet",
             )
             if "create_doc" in docs_tools and any(kw in input_lower for kw in _CONTENT_PHRASE_KEYWORDS):
                 if "create_doc_with_content" not in docs_tools and "create_doc_with_content" in docs_caps:
                     docs_tools.append("create_doc_with_content")
 
-        # Calendar agent safety net: whenever a calendar event mutation tool
-        # is selected, also include list_events as a fallback lookup path.
+        # Calendar agent safety nets.
+        _CALENDAR_EVENT_MUTATION_TOOLS = {
+            "update_event", "delete_event", "confirm_delete_event",
+        }
+        # Block J: when the classifier picks create_event but the user's
+        # phrasing also describes modifying the just-created event (e.g.
+        # "create an event ... then attach the agenda link in the event
+        # description"), inject update_event so the planner can emit a
+        # create_event -> update_event chain using the freshly captured
+        # event_id. Without this, the planner has only create_event and
+        # improvises by duplicating it with the description added, which
+        # Google Calendar's conflict detection correctly rejects as a
+        # double-booking (see execution_logs/CM/DEMO8.log).
+        #
+        # Gated narrowly on phrases that unambiguously refer to modifying
+        # an existing event: "event description" references, explicit
+        # update/modify/change-the-event verbs, and attach-the-[artifact]
+        # patterns. Bare "update" / "attach" without the event noun is
+        # deliberately excluded to avoid false positives on email / doc
+        # workflows (e.g. "attach a PDF to the email", "update the doc").
+        _EVENT_MODIFICATION_PHRASES = (
+            " event description", " event's description",
+            "update the event", "modify the event",
+            "change the event description", "change the event ",
+            " add to the event ", " add to the meeting ",
+            "attach the agenda", "attach the doc", "attach the link",
+            "attach the document", "attach the sheet",
+            " in the event description", " in the event's description",
+            " to the event description",
+        )
+        # Block D: whenever a calendar event mutation tool is selected,
+        # also include list_events as a fallback lookup path.
         # update_event / delete_event / confirm_delete_event accept event_name
         # for internal auto-lookup, but that only works when the user refers
         # to the event by its exact title. When the reference is by date/time,
         # attendees, or other attributes, the planner needs list_events to
         # resolve the event_id before the mutation.
-        _CALENDAR_EVENT_MUTATION_TOOLS = {
-            "update_event", "delete_event", "confirm_delete_event",
-        }
         if "calendar_agent" in validated:
             cal_tools = validated["calendar_agent"]
             cal_caps = agent_capabilities.get("calendar_agent", {}).get("tools", {})
+            # Block J runs first so Block D can then pair list_events
+            # with the freshly-injected update_event if needed.
+            if (
+                "create_event" in cal_tools
+                and "update_event" not in cal_tools
+                and "update_event" in cal_caps
+                and any(kw in input_lower for kw in _EVENT_MODIFICATION_PHRASES)
+            ):
+                cal_tools.append("update_event")
             if any(t in _CALENDAR_EVENT_MUTATION_TOOLS for t in cal_tools):
                 if "list_events" not in cal_tools and "list_events" in cal_caps:
                     cal_tools.append("list_events")
