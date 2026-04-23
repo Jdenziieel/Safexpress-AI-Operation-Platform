@@ -976,6 +976,66 @@ _HEADER_PATTERNS = {
 }
 
 
+# ----------------------------------------------------------------------
+# Unlabeled-header fallback patterns.
+# ----------------------------------------------------------------------
+# The Google-Docs-generated requisition template places the order reference
+# and date on positional lines WITHOUT "Reference:" / "Date:" labels, e.g.:
+#
+#     PRODUCTION MATERIALS REQUISITION LIST
+#     VRMSDSF26427                                ← reference_number
+#     Nov 05, Wed FOOD 11/4/2025 0:00             ← date · category · (creation timestamp, ignored)
+#     Item Code Item Description QTY UOM          ← items table header
+#
+# Note on line 3: the abbreviated-month form "Nov 05, Wed" is the meaningful
+# order date that the user fills into the template. The trailing
+# "11/4/2025 0:00" is the Google-Docs document-creation timestamp (the
+# `0:00` gives it away — Docs stamps midnight when it auto-inserts the
+# date). We intentionally DO NOT extract that timestamp into any header
+# field; only the abbreviated-month form becomes `header["date"]`.
+#
+# These fallbacks ONLY run when the labeled _HEADER_PATTERNS regex above
+# returned nothing — so PDFs that DO carry explicit labels (e.g.
+# "Reference No: DO-2026-01") are still parsed by the primary pass and
+# these fallbacks never fire. They are also scoped to the text ABOVE the
+# items table to avoid capturing digits inside item codes or qty values.
+
+# Order reference: user-specified product rule is "a token starting with
+# VRM" — try that first as the most specific signal.
+_REFERENCE_VRM_FALLBACK = re.compile(r"\b(VRM[A-Z0-9]+)\b")
+
+# Generic fallback: an uppercase alphanumeric token on a line by itself
+# that contains at least one digit. Excludes English template words like
+# "REQUISITION" (no digit) and matches both "VRMSDSF26427" and the legacy
+# "DO-2026-01" shape (hyphen permitted after the first letter).
+_REFERENCE_STANDALONE_FALLBACK = re.compile(
+    r"^\s*([A-Z][A-Z0-9\-]{3,}\d[A-Z0-9\-]*)\s*$",
+    re.MULTILINE,
+)
+
+# "Mon dd" or "Mon dd, Weekday" — abbreviated month form used by the
+# requisition template for the order date. Matches "Nov 05, Wed".
+# This is the ONLY date shape we extract from unlabeled templates —
+# the sibling MM/DD/YYYY numeric form in the same line is a Docs
+# auto-stamped creation timestamp, not a user-entered date, so it is
+# deliberately NOT promoted into header["date"].
+_MONTH_DAY_FALLBACK = re.compile(
+    r"\b((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}"
+    r"(?:\s*,\s*(?:Mon|Tue|Tues|Wed|Thu|Thur|Fri|Sat|Sun)[a-z]*\.?)?)\b",
+    re.IGNORECASE,
+)
+
+# The labeled requested_by regex greedily captures
+# "Assembled By Checked By Received By" from the signature-block label
+# row when the preceding "Requested By:" line is empty (common in
+# Google-Docs templates). Detect that specific false-positive so the
+# signature-table fallback in _parse_single_pdf can run.
+_REQUESTED_BY_BOGUS_CAPTURE = re.compile(
+    r"^\s*(?:Assembled|Checked|Received|Approved|Prepared|Noted)\s+By\b",
+    re.IGNORECASE,
+)
+
+
 # The only two categories the requisition sheet template supports. Any other
 # category string produced by regex or inference is rejected by the parser —
 # the sheet has no destination for anything else.
@@ -1023,13 +1083,102 @@ _ITEM_CODE_CATEGORY_PREFIXES = (
 
 
 def _extract_header_from_text(full_text: str) -> Dict[str, str]:
-    """Extract header fields from the raw text of the first page."""
+    """Extract header fields from the raw text of the first page.
+
+    Two-stage extraction:
+
+    1. Primary pass uses `_HEADER_PATTERNS` — strict regexes that require
+       explicit labels like "Reference No: <x>" or "Date: <x>". PDFs that
+       carry these labels are fully parsed here.
+
+    2. Fallback pass fills any gaps using positional/unlabeled patterns
+       designed for Google-Docs-generated requisition templates where the
+       reference number and dates float on their own lines without labels.
+       The fallback is scoped to the text ABOVE the items table so item
+       codes and qty values can't masquerade as references or dates.
+
+    The fallback also scrubs the `requested_by` field when the primary
+    regex greedily captured a signature-block label row like "Assembled
+    By Checked By Received By" — leaving it empty so the downstream
+    signature-table lookup in `_parse_single_pdf` can repopulate it with
+    the actual name (e.g. "M.C FRANCO").
+    """
     header: Dict[str, str] = {}
+
     for field, pattern in _HEADER_PATTERNS.items():
         m = pattern.search(full_text)
         if m:
             header[field] = m.group(1).strip()
+
+    requested_by = header.get("requested_by", "").strip()
+    if requested_by and _REQUESTED_BY_BOGUS_CAPTURE.match(requested_by):
+        header["requested_by"] = ""
+
+    header_section = full_text
+    items_marker = re.search(
+        r"(?:\bItem\s*Code\b|\bItem\s*Description\b|\bItemCode\b)",
+        full_text,
+        re.IGNORECASE,
+    )
+    if items_marker:
+        header_section = full_text[: items_marker.start()]
+
+    if not header.get("reference_number"):
+        m = _REFERENCE_VRM_FALLBACK.search(header_section)
+        if not m:
+            m = _REFERENCE_STANDALONE_FALLBACK.search(header_section)
+        if m:
+            header["reference_number"] = m.group(1).strip()
+
+    # Date extraction: take the abbreviated-month form ("Nov 05, Wed")
+    # and deliberately ignore any sibling MM/DD/YYYY timestamp on the
+    # same line — that numeric form is the Google-Docs creation stamp,
+    # not the user-entered order date. `cb_date` is NOT auto-populated
+    # from this template; it remains empty unless the labeled regex
+    # caught an explicit "CB Date:" field.
+    if not header.get("date"):
+        m = _MONTH_DAY_FALLBACK.search(header_section)
+        if m:
+            header["date"] = m.group(1).strip()
+
     return header
+
+
+def _extract_requested_by_from_signature_table(pdf) -> str:
+    """Scan every page's tables for a signature block whose header row
+    contains a 'Requested By' cell, and return the first non-empty,
+    non-boilerplate name in that column.
+
+    The Google-Docs requisition template places the requester name in a
+    small 4-column signature table at the bottom of the document:
+
+        ['Requested By', 'Assembled By', 'Checked By', 'Received By']
+        ['M.C FRANCO',   '',             '',           '']
+        ['Signature over printed name', ...]
+
+    Pdfplumber's table extraction preserves this structure, so we can
+    pluck the name directly from row 1, column 0 of the signature table
+    — far more reliable than regex-matching the flattened text, which
+    conflates the "Requested By:" empty line with the 4-column label row.
+    """
+    for page in pdf.pages:
+        for table in page.extract_tables() or []:
+            if not table or len(table) < 2:
+                continue
+            header_cells = [_clean_cell(c).upper() for c in table[0]]
+            if "REQUESTED BY" not in header_cells:
+                continue
+            req_col = header_cells.index("REQUESTED BY")
+            for row in table[1:]:
+                if not row or len(row) <= req_col:
+                    continue
+                candidate = _clean_cell(row[req_col])
+                if not candidate:
+                    continue
+                if candidate.upper() in _FOOTER_STOP_KEYWORDS:
+                    continue
+                return candidate
+    return ""
 
 
 def _infer_category_from_items(line_items: List[Dict[str, Any]]) -> str:
@@ -1141,12 +1290,23 @@ def _parse_single_pdf(file_path: str) -> Dict[str, Any]:
 
             header = _extract_header_from_text(all_text)
 
-            # Also look for requested_by in footer area (last page)
-            if "requested_by" not in header or not header["requested_by"]:
-                last_page_text = pdf.pages[-1].extract_text() or ""
-                m = _HEADER_PATTERNS["requested_by"].search(last_page_text)
-                if m:
-                    header["requested_by"] = m.group(1).strip()
+            # Signature-table fallback for requested_by. The flat-text
+            # regex is brittle here because pdfplumber's extract_text
+            # renders the 4-column signature block as two adjacent lines:
+            #
+            #     Requested By:                              ← empty label
+            #     Requested By Assembled By Checked By ...   ← column-header row
+            #     M.C FRANCO                                 ← actual name (col 0)
+            #
+            # The greedy `.+?` in _HEADER_PATTERNS["requested_by"] skips
+            # the empty label line and captures "Assembled By Checked By
+            # Received By" from the column-header row — which
+            # _extract_header_from_text now scrubs. Pull the real name
+            # directly from the signature table's row 1, column 0.
+            if not header.get("requested_by"):
+                name = _extract_requested_by_from_signature_table(pdf)
+                if name:
+                    header["requested_by"] = name
 
             line_items: List[Dict[str, Any]] = []
             warnings: List[str] = []
