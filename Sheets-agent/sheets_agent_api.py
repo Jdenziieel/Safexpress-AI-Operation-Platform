@@ -6,7 +6,7 @@ Works with pre-transformed data from the Mapping Agent
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 import os
 import re
 import uvicorn
@@ -980,6 +980,61 @@ _EXPECTED_HEADERS = ["Date", "Order Reference", "Item Code", "Item Description",
 _EXPECTED_TABS = {"Food", "non-food"}
 
 
+# ----------------------------------------------------------------------
+# Delivery-order duplicate detection.
+# ----------------------------------------------------------------------
+# "Same data" means a row whose (Date, Order Reference, Item Code) triple
+# already exists in the destination tab. That combination is the natural
+# identity for a requisition line item: the same PDF re-uploaded produces
+# identical triples, while legitimate re-use of a reference number on a
+# different day (e.g. a rolling monthly ref) lands on a different Date
+# and therefore writes a new row.
+#
+# Date normalization tolerates superficial formatting noise:
+# - day-of-week suffix ("Nov 05, Wed" == "Nov 05")
+# - whitespace collapsing, case folding
+# Parsing into datetime and re-formatting is deliberately avoided; Sheets
+# may round-trip dates through locale formatters and strip information
+# (e.g. the "Wed" suffix), so string-normalized comparison is the most
+# robust way to keep duplicate detection stable across that round-trip.
+
+_WEEKDAY_SUFFIX_RE = re.compile(
+    r",\s*(?:Mon|Tue|Tues|Wed|Thu|Thur|Fri|Sat|Sun)[a-z]*\.?\s*$",
+    re.IGNORECASE,
+)
+
+
+def _norm_date_for_dedup(val: Any) -> str:
+    """Normalize a date cell value for duplicate-key comparison.
+
+    Collapses "Nov 05, Wed" and "Nov 05" to the same key, folds
+    whitespace and case. Returns an empty string for empty input.
+    """
+    s = str(val or "").strip()
+    if not s:
+        return ""
+    s = _WEEKDAY_SUFFIX_RE.sub("", s)
+    s = re.sub(r"\s+", " ", s).strip().lower()
+    return s
+
+
+def _row_dedup_key(row: List[Any]) -> Tuple[str, str, str]:
+    """Build a duplicate-detection key from a requisition row's first
+    three columns (Date, Order Reference, Item Code).
+
+    Rows read back from the sheet may be shorter than 3 cells when the
+    row is empty or partial — defensively pad to three slots.
+    """
+    date_cell = row[0] if len(row) > 0 else ""
+    ref_cell = row[1] if len(row) > 1 else ""
+    code_cell = row[2] if len(row) > 2 else ""
+    return (
+        _norm_date_for_dedup(date_cell),
+        str(ref_cell or "").strip().lower(),
+        str(code_cell or "").strip().lower(),
+    )
+
+
 def _parse_orders_input(parsed_orders: Any) -> list:
     """Robustly parse the parsed_orders argument which may arrive as a
     JSON string, Python repr string (from Jinja2 rendering), dict wrapper,
@@ -1378,7 +1433,13 @@ def preview_delivery_order_insertion(
                 if not item.get("qty") and item.get("qty") != 0:
                     warnings.append(f"Missing QTY for {item.get('item_code', '?')}")
 
-        # Check for duplicates against existing sheet data
+        # Duplicate detection using the (Date, Order Reference, Item Code)
+        # key. Catches both rows that already exist in the destination tab
+        # AND rows that are duplicated WITHIN the same preview batch (e.g.
+        # the same PDF was passed to parse_delivery_order_pdfs twice in
+        # one call). The preview and the write paths share the same
+        # helper `_row_dedup_key` so the user sees exactly the rows the
+        # write will skip.
         duplicates: List[Dict[str, Any]] = []
         for tab_name, new_rows in tab_rows.items():
             try:
@@ -1389,19 +1450,29 @@ def preview_delivery_order_insertion(
                     .execute()
                 )
                 existing_values = existing.get("values", [])
-                existing_keys = set()
-                for erow in existing_values[1:]:
-                    if len(erow) >= 3:
-                        existing_keys.add((erow[1].strip() if len(erow) > 1 else "", erow[2].strip() if len(erow) > 2 else ""))
+                existing_keys = {_row_dedup_key(erow) for erow in existing_values[1:]}
 
+                batch_keys: set = set()
                 for row in new_rows:
-                    key = (row[1].strip(), row[2].strip())
+                    key = _row_dedup_key(row)
                     if key in existing_keys:
                         duplicates.append({
                             "tab": tab_name,
-                            "order_reference": key[0],
-                            "item_code": key[1],
+                            "reason": "already in sheet",
+                            "date": row[0] if len(row) > 0 else "",
+                            "order_reference": row[1] if len(row) > 1 else "",
+                            "item_code": row[2] if len(row) > 2 else "",
                         })
+                    elif key in batch_keys:
+                        duplicates.append({
+                            "tab": tab_name,
+                            "reason": "duplicate within batch",
+                            "date": row[0] if len(row) > 0 else "",
+                            "order_reference": row[1] if len(row) > 1 else "",
+                            "item_code": row[2] if len(row) > 2 else "",
+                        })
+                    else:
+                        batch_keys.add(key)
             except Exception as e:
                 warnings.append(f"Could not read existing data from tab '{tab_name}': {str(e)}")
 
@@ -1506,11 +1577,103 @@ def write_delivery_order_data(
                 "error": "No rows to write. " + (" ".join(skipped_warnings) if skipped_warnings else "parsed_orders may be empty."),
             }
 
+        # Duplicate filter — shared semantics with preview_delivery_order_insertion.
+        # For each destination tab we read what's already in the sheet
+        # and drop any incoming row whose (Date, Order Reference, Item
+        # Code) triple already exists. We also dedupe within the same
+        # batch so two uploads of the same PDF in a single call don't
+        # write identical rows twice. The Google Sheets API does not
+        # offer a native "upsert / skip-duplicate" for append calls, so
+        # this client-side filter is the only thing keeping the sheet
+        # clean when the user re-submits the same PDF.
+        filtered_tab_rows: Dict[str, List[List[str]]] = {}
+        duplicates_skipped: List[Dict[str, Any]] = []
+
+        for tab_name, rows in tab_rows.items():
+            try:
+                existing = (
+                    service.spreadsheets()
+                    .values()
+                    .get(spreadsheetId=real_id, range=f"'{tab_name}'!A:H")
+                    .execute()
+                )
+                existing_values = existing.get("values", [])
+            except HttpError as e:
+                status = e.resp.status if hasattr(e, "resp") else 0
+                if status == 403:
+                    return {
+                        "success": False,
+                        "error": (
+                            f"Failed to read existing rows from tab '{tab_name}' "
+                            "for duplicate checking: you only have read access "
+                            "permissions above what this write needs. Ask the "
+                            "sheet owner to grant you Editor permission."
+                        ),
+                        "error_type": "read_only",
+                    }
+                return _classify_http_error(e)
+            except Exception as e:
+                # A read failure shouldn't silently drop duplicate
+                # detection — surface it instead of writing blind.
+                return {
+                    "success": False,
+                    "error": f"Could not read existing rows from tab '{tab_name}' for duplicate check: {str(e)}",
+                }
+
+            existing_keys = {_row_dedup_key(erow) for erow in existing_values[1:]}
+            batch_keys: set = set()
+            kept_rows: List[List[str]] = []
+
+            for row in rows:
+                key = _row_dedup_key(row)
+                if key in existing_keys:
+                    duplicates_skipped.append({
+                        "tab": tab_name,
+                        "reason": "already in sheet",
+                        "date": row[0] if len(row) > 0 else "",
+                        "order_reference": row[1] if len(row) > 1 else "",
+                        "item_code": row[2] if len(row) > 2 else "",
+                    })
+                    continue
+                if key in batch_keys:
+                    duplicates_skipped.append({
+                        "tab": tab_name,
+                        "reason": "duplicate within batch",
+                        "date": row[0] if len(row) > 0 else "",
+                        "order_reference": row[1] if len(row) > 1 else "",
+                        "item_code": row[2] if len(row) > 2 else "",
+                    })
+                    continue
+                batch_keys.add(key)
+                kept_rows.append(row)
+
+            if kept_rows:
+                filtered_tab_rows[tab_name] = kept_rows
+
+        total_incoming = sum(len(r) for r in tab_rows.values())
+        if not filtered_tab_rows:
+            # Every incoming row was a duplicate. This is a legitimate
+            # no-op outcome (user re-submitted the same PDF) and reports
+            # as success with rows_written=0 so the caller can surface a
+            # "nothing new to add" message without treating it as error.
+            return {
+                "success": True,
+                "rows_written": 0,
+                "duplicates_skipped": len(duplicates_skipped),
+                "skipped_samples": duplicates_skipped[:10],
+                "tabs_used": [],
+                "warnings": skipped_warnings if skipped_warnings else None,
+                "message": (
+                    f"No new rows written — all {total_incoming} row(s) were "
+                    f"already present in the sheet or duplicated within the batch."
+                ),
+            }
+
         total_written = 0
         tabs_used = []
         errors = []
 
-        for tab_name, rows in tab_rows.items():
+        for tab_name, rows in filtered_tab_rows.items():
             try:
                 service.spreadsheets().values().append(
                     spreadsheetId=real_id,
@@ -1543,13 +1706,18 @@ def write_delivery_order_data(
         return {
             "success": True,
             "rows_written": total_written,
+            "duplicates_skipped": len(duplicates_skipped),
+            "skipped_samples": duplicates_skipped[:10] if duplicates_skipped else None,
             "tabs_used": tabs_used,
             "errors": errors if errors else None,
             # Surface routing fallbacks (e.g. Tech items that landed in
             # non-food because the sheet has no Tech tab) so the user knows
             # WHY their rows ended up where they did.
             "warnings": skipped_warnings if skipped_warnings else None,
-            "message": f"Successfully wrote {total_written} row(s) to {len(tabs_used)} tab(s)",
+            "message": (
+                f"Successfully wrote {total_written} row(s) to {len(tabs_used)} tab(s)"
+                + (f"; skipped {len(duplicates_skipped)} duplicate row(s) already in the sheet" if duplicates_skipped else "")
+            ),
         }
 
     except HttpError as e:
