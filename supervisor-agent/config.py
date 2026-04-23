@@ -70,7 +70,19 @@ def get_google_credentials() -> dict:
 
 # OpenAI API configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4")
+# Planner / primary reasoning model. Flipped from gpt-4 to gpt-5 for cost:
+# gpt-5 input is $1.25/M (vs gpt-4's $30/M — 24x cheaper) and supports
+# automatic prompt caching at a 90% discount (vs gpt-4's no caching),
+# so the ~3k-token static planner system prompt is nearly free on cache hits.
+# Env override preserved for instant rollback to gpt-4 / gpt-4.1 / gpt-4o.
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5")
+
+# Tier 1 conversational analysis model. gpt-5-mini is ~5x cheaper than gpt-5
+# on input ($0.25/M vs $1.25/M) and 5x cheaper on output ($2/M vs $10/M),
+# with similar instruction-following quality for the classification / parameter
+# extraction workload Tier 1 runs. Env override preserved.
+TIER1_MODEL = os.getenv("TIER1_MODEL", "gpt-5-mini")
+
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0"))
 
 # Classifier LLM for agent identification (cheaper AND smarter model).

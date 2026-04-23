@@ -8,6 +8,8 @@ import os
 import pickle
 import io
 import json
+import re
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -24,6 +26,43 @@ SCOPES = [
     'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/drive.file'
 ]
+
+
+_DRIVE_DATE_ONLY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _normalize_drive_rfc3339(value: Optional[str], field_name: str) -> Optional[str]:
+    """Normalize a date/datetime string to the RFC-3339 form Drive expects.
+
+    Drive's query language compares ``createdTime`` / ``modifiedTime`` against
+    RFC-3339 timestamps (see
+    https://developers.google.com/drive/api/guides/ref-search-terms).
+    The planner is expected to pre-compute the bounds from ``today_date`` and
+    pass them in as an ISO-8601 string; this helper is a thin sanitizer:
+
+      - empty / None -> None (caller should omit the clause entirely)
+      - 'YYYY-MM-DD' -> 'YYYY-MM-DDT00:00:00'  (bare dates become start-of-day)
+      - 'YYYY-MM-DDTHH:MM:SS'        -> passed through
+      - 'YYYY-MM-DDTHH:MM:SSZ'       -> passed through (Z is valid)
+      - 'YYYY-MM-DDTHH:MM:SS+HH:MM'  -> passed through
+
+    Raises ValueError on malformed input so the dispatcher can return a clear
+    error instead of silently building a broken query that Drive rejects with
+    an opaque 400.
+    """
+    if not value:
+        return None
+    value = value.strip()
+    if _DRIVE_DATE_ONLY_RE.match(value):
+        return f"{value}T00:00:00"
+    try:
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as ve:
+        raise ValueError(
+            f"{field_name} must be an ISO-8601 date (YYYY-MM-DD) or datetime "
+            f"(YYYY-MM-DDTHH:MM:SS[Z|+HH:MM]). Got: {value!r}"
+        ) from ve
+    return value
 
 
 
@@ -490,15 +529,38 @@ def upload_stream_to_folder_impl(service, file_stream, filename: str, mimetype: 
             "error": str(e)
         }
 
-def search_files_in_safeexpress_impl(service, search_term: str) -> Dict:
+def search_files_in_safeexpress_impl(
+    service,
+    search_term: str,
+    created_after: Optional[str] = None,
+    created_before: Optional[str] = None,
+) -> Dict:
     """LEGACY NAME — search files by name across the user's whole Drive.
 
     Escapes single quotes in the search term to avoid Drive query syntax breakage.
     Excludes trashed files. Returns matching files (any owner the user has access to).
+
+    Optional ``created_after`` / ``created_before`` scope results to a
+    ``createdTime`` window. Bounds are INCLUSIVE lower / EXCLUSIVE upper —
+    i.e. ``[after, before)`` — so ``created_after='2026-04-01'`` +
+    ``created_before='2026-05-01'`` means "created during April 2026" with
+    no double-counting at month boundaries. Values may be ``YYYY-MM-DD``
+    (treated as start-of-day) or any ISO-8601 datetime. Malformed inputs
+    raise ValueError so the dispatcher can surface the error verbatim.
     """
     try:
         safe_term = (search_term or "").replace("'", "\\'")
-        query = f"name contains '{safe_term}' and trashed=false"
+
+        after_iso = _normalize_drive_rfc3339(created_after, "created_after")
+        before_iso = _normalize_drive_rfc3339(created_before, "created_before")
+
+        clauses = [f"name contains '{safe_term}'", "trashed=false"]
+        if after_iso:
+            clauses.append(f"createdTime >= '{after_iso}'")
+        if before_iso:
+            clauses.append(f"createdTime < '{before_iso}'")
+        query = " and ".join(clauses)
+
         results = service.files().list(
             q=query,
             fields="files(id, name, mimeType, size, createdTime, webViewLink, parents)",
@@ -507,17 +569,25 @@ def search_files_in_safeexpress_impl(service, search_term: str) -> Dict:
 
         files = results.get('files', [])
 
+        window_suffix = ""
+        if after_iso and before_iso:
+            window_suffix = f" (created in [{after_iso}, {before_iso}))"
+        elif after_iso:
+            window_suffix = f" (created after {after_iso})"
+        elif before_iso:
+            window_suffix = f" (created before {before_iso})"
+
         if not files:
             return {
                 "success": True,
                 "results": [],
                 "count": 0,
                 "search_term": search_term,
-                "message": f"No files found matching '{search_term}'",
-                "error": None
+                "message": f"No files found matching '{search_term}'{window_suffix}",
+                "error": None,
             }
 
-        output = [f"Found {len(files)} file(s) matching '{search_term}':"]
+        output = [f"Found {len(files)} file(s) matching '{search_term}'{window_suffix}:"]
         for file in files:
             output.append(f"  {file['name']}")
 
@@ -527,7 +597,16 @@ def search_files_in_safeexpress_impl(service, search_term: str) -> Dict:
             "count": len(files),
             "search_term": search_term,
             "message": "\n".join(output),
-            "error": None
+            "error": None,
+        }
+    except ValueError as ve:
+        return {
+            "success": False,
+            "results": [],
+            "count": 0,
+            "search_term": search_term,
+            "message": str(ve),
+            "error": str(ve),
         }
     except Exception as e:
         return {
@@ -535,7 +614,7 @@ def search_files_in_safeexpress_impl(service, search_term: str) -> Dict:
             "results": [],
             "count": 0,
             "message": f"Failed to search files: {str(e)}",
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -704,9 +783,22 @@ def get_folder_structure(service, folder_id: Optional[str] = None, level: int = 
     return result.get("folders", [])
 
 
-def search_files_in_safeexpress(service, search_term: str) -> List[Dict]:
-    """Legacy wrapper - returns list of files or raises exception"""
-    result = search_files_in_safeexpress_impl(service, search_term)
+def search_files_in_safeexpress(
+    service,
+    search_term: str,
+    created_after: Optional[str] = None,
+    created_before: Optional[str] = None,
+) -> List[Dict]:
+    """Legacy wrapper - returns list of files or raises exception.
+
+    The date bounds are pass-throughs; callers that don't need them can keep
+    the 2-arg call shape.
+    """
+    result = search_files_in_safeexpress_impl(
+        service, search_term,
+        created_after=created_after,
+        created_before=created_before,
+    )
     if not result.get("success"):
         raise Exception(result.get("error"))
     return result.get("results", [])

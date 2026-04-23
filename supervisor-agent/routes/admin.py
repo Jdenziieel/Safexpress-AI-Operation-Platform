@@ -14,12 +14,29 @@ from collections import defaultdict
 from log_storage import LogStorage
 from pii_redactor import PIIRedactor
 
+# Seed pricing for the admin-editable model_pricing table. Mirrors
+# logging_config._DEFAULT_MODEL_PRICING (input/output only — cache discount
+# lives in logging_config because the DB schema only stores the two rates).
+# Rate card as of 2026-04.
 _SEED_PRICING = {
-    "gpt-4o": {"input": 0.0025, "output": 0.01},
-    "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},
-    "gpt-4": {"input": 0.03, "output": 0.06},
-    "gpt-4-turbo": {"input": 0.01, "output": 0.03},
-    "gpt-3.5-turbo": {"input": 0.0005, "output": 0.0015},
+    # GPT-5 family
+    "gpt-5":         {"input": 0.00125,  "output": 0.01},
+    "gpt-5-mini":    {"input": 0.00025,  "output": 0.002},
+    "gpt-5-nano":    {"input": 0.00005,  "output": 0.0004},
+    # GPT-4.1 family
+    "gpt-4.1":       {"input": 0.002,    "output": 0.008},
+    "gpt-4.1-mini":  {"input": 0.0004,   "output": 0.0016},
+    "gpt-4.1-nano":  {"input": 0.0001,   "output": 0.0004},
+    # GPT-4o family
+    "gpt-4o":        {"input": 0.0025,   "output": 0.01},
+    "gpt-4o-mini":   {"input": 0.00015,  "output": 0.0006},
+    # Reasoning models
+    "o3":            {"input": 0.002,    "output": 0.008},
+    "o4-mini":       {"input": 0.0011,   "output": 0.0044},
+    # Legacy
+    "gpt-4":         {"input": 0.03,     "output": 0.06},
+    "gpt-4-turbo":   {"input": 0.01,     "output": 0.03},
+    "gpt-3.5-turbo": {"input": 0.0005,   "output": 0.0015},
 }
 
 router = APIRouter(prefix="/admin", tags=["admin"])

@@ -460,10 +460,13 @@ def list_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
 
 def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
     """
-    Search files by name across the user's whole Drive.
+    Search files by name across the user's whole Drive, optionally scoped
+    to a createdTime window.
 
     Inputs:
-        search_term: str (required) - Keywords to search for
+        search_term: str (required) - Keywords to search for (name contains)
+        created_after: str (optional) - ISO-8601 date / datetime inclusive lower bound
+        created_before: str (optional) - ISO-8601 date / datetime exclusive upper bound
 
     Returns:
         success: bool
@@ -479,23 +482,43 @@ def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
         if not search_term:
             return {"success": False, "error": "search_term is required"}
 
-        results = search_files_in_safeexpress(service, search_term)
-        
+        created_after = inputs.get("created_after")
+        created_before = inputs.get("created_before")
+
+        # The impl normalizes / validates the bounds internally and returns a
+        # structured failure dict on ValueError — no need to pre-validate here.
+        impl_result = search_files_in_safeexpress_impl(
+            service,
+            search_term,
+            created_after=created_after,
+            created_before=created_before,
+        )
+        if not impl_result.get("success"):
+            return impl_result
+
+        results = impl_result.get("results", [])
+        window_suffix = ""
+        if created_after and created_before:
+            window_suffix = f" (created in [{created_after}, {created_before}))"
+        elif created_after:
+            window_suffix = f" (created after {created_after})"
+        elif created_before:
+            window_suffix = f" (created before {created_before})"
+
         if not results:
             return {
                 "success": True,
                 "results": [],
                 "count": 0,
                 "search_term": search_term,
-                "message": f"No files found matching '{search_term}'",
+                "message": f"No files found matching '{search_term}'{window_suffix}",
                 "error": None
             }
-        
-        # Format results
-        result_lines = [f"Found {len(results)} file(s) matching '{search_term}':"]
+
+        result_lines = [f"Found {len(results)} file(s) matching '{search_term}'{window_suffix}:"]
         for file in results:
             result_lines.append(f"  {file['name']}")
-        
+
         return {
             "success": True,
             "results": results,
@@ -1356,7 +1379,7 @@ async def root():
             "create_folder": "Find-or-create a folder (or nested chain) anywhere in Drive",
             "list_folders": "List folders under a parent (defaults to My Drive root)",
             "list_files": "List files in a Drive folder (by folder_id or folder_path)",
-            "search_files": "Search files by name across the user's whole Drive",
+            "search_files": "Search files by name across the user's whole Drive (optional created_after / created_before ISO-8601 bounds scope to a date window)",
             "get_folder_info": "Resolve a folder path to its ID (does NOT create missing folders)",
             "move_file": "Move (reparent) a file or folder to another folder",
             "rename_file": "Rename a file or folder in Drive",

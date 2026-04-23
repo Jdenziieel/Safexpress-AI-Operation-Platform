@@ -32,6 +32,7 @@ from config import (
     GOOGLE_REFRESH_TOKEN,
     OPENAI_API_KEY,
     LLM_MODEL,
+    TIER1_MODEL,
     LLM_TEMPERATURE,
     QUICK_MODEL,
     SERVER_PORT,
@@ -231,9 +232,12 @@ llm = ChatOpenAI(
 )
 
 # Initialize Conversational Agent
+# Tier 1 uses TIER1_MODEL (default gpt-5-mini) — 5x cheaper than the planner's
+# LLM_MODEL on both input and output, with comparable instruction-following
+# quality for the classification / parameter-extraction workload.
 conversational_agent = ConversationalAgent(
     openai_api_key=OPENAI_API_KEY,
-    model=LLM_MODEL,
+    model=TIER1_MODEL,
     quick_model=QUICK_MODEL,
     temperature=0.2,  # Lower temperature for more consistent clarifications
 )

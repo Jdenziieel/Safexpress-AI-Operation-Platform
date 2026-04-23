@@ -55,18 +55,37 @@ QUOTA_ENABLED = os.getenv("QUOTA_ENABLED", "true").lower() in ("true", "1", "yes
 
 
 # ============================================================================
-# TOKEN PRICING (per 1K tokens) - Updated for GPT-4o
+# TOKEN PRICING (per 1K tokens) — rate card as of 2026-04
 # Hardcoded defaults used as seed values and fallback when DB is unavailable.
-# Admin can override per-model rates via PUT /admin/pricing/{model}.
+# Admin can override per-model input/output rates via PUT /admin/pricing/{model}.
+#
+# `cached_input` is NOT stored in the admin-editable DB table — OpenAI fixes the
+# cache discount per model family (90% off for gpt-5, 75% off for gpt-4.1,
+# 50% off for gpt-4o, none for gpt-4 / gpt-3.5-turbo) so it's kept here as the
+# authoritative value and read directly by calculate_cost.
 # ============================================================================
 
 _DEFAULT_MODEL_PRICING = {
-    "gpt-4o": {"input": 0.0025, "output": 0.01},
-    "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},
-    "gpt-4": {"input": 0.03, "output": 0.06},
-    "gpt-4-turbo": {"input": 0.01, "output": 0.03},
-    "gpt-3.5-turbo": {"input": 0.0005, "output": 0.0015},
-    "default": {"input": 0.01, "output": 0.03},
+    # GPT-5 family (current flagship; 90% cache discount)
+    "gpt-5":         {"input": 0.00125,  "cached_input": 0.000125, "output": 0.01},
+    "gpt-5-mini":    {"input": 0.00025,  "cached_input": 0.000025, "output": 0.002},
+    "gpt-5-nano":    {"input": 0.00005,  "cached_input": 0.000005, "output": 0.0004},
+    # GPT-4.1 family (instruction-tuned; 75% cache discount)
+    "gpt-4.1":       {"input": 0.002,    "cached_input": 0.0005,   "output": 0.008},
+    "gpt-4.1-mini":  {"input": 0.0004,   "cached_input": 0.0001,   "output": 0.0016},
+    "gpt-4.1-nano":  {"input": 0.0001,   "cached_input": 0.000025, "output": 0.0004},
+    # GPT-4o family (50% cache discount)
+    "gpt-4o":        {"input": 0.0025,   "cached_input": 0.00125,  "output": 0.01},
+    "gpt-4o-mini":   {"input": 0.00015,  "cached_input": 0.000075, "output": 0.0006},
+    # Reasoning models — reasoning tokens are billed as output, use sparingly
+    "o3":            {"input": 0.002,    "cached_input": 0.0005,   "output": 0.008},
+    "o4-mini":       {"input": 0.0011,   "cached_input": 0.000275, "output": 0.0044},
+    # Legacy (no prompt caching)
+    "gpt-4":         {"input": 0.03,     "cached_input": 0.03,     "output": 0.06},
+    "gpt-4-turbo":   {"input": 0.01,     "cached_input": 0.01,     "output": 0.03},
+    "gpt-3.5-turbo": {"input": 0.0005,   "cached_input": 0.0005,   "output": 0.0015},
+    # Fallback for unknown models — use gpt-5 rates (current default planner model)
+    "default":       {"input": 0.00125,  "cached_input": 0.000125, "output": 0.01},
 }
 
 # Keep the old name around so any existing import of MODEL_PRICING still works.
@@ -575,14 +594,24 @@ class StructuredLogger:
             prompt_summary: Brief summary of prompt (truncated)
             success: Whether call succeeded
             error: Error message if failed
-            cached_tokens: Number of prompt tokens served from OpenAI cache (50% discount)
+            cached_tokens: Number of prompt tokens served from OpenAI cache.
+                Discount varies by model family: 90% off for gpt-5, 75% off for
+                gpt-4.1, 50% off for gpt-4o, none for gpt-4 / gpt-3.5-turbo.
         """
-        # Calculate cost — cached prompt tokens get 50% discount from OpenAI
+        # `pricing` carries admin-overridable input/output rates (DB-backed).
+        # `cached_input` is OpenAI-set so it's read from the authoritative
+        # _DEFAULT_MODEL_PRICING dict directly (not from the DB cache, which
+        # only stores input/output columns). Unknown models fall back to the
+        # conservative 50%-off assumption to preserve pre-2026-04 behavior.
         pricing = get_model_pricing(model)
+        default_pricing = _DEFAULT_MODEL_PRICING.get(
+            model, _DEFAULT_MODEL_PRICING["default"]
+        )
         non_cached_input = input_tokens - cached_tokens
+        cached_rate = default_pricing.get("cached_input", pricing["input"] * 0.5)
         cost = (
             (non_cached_input * pricing["input"] / 1000)
-            + (cached_tokens * pricing["input"] / 1000 * 0.5)
+            + (cached_tokens * cached_rate / 1000)
             + (output_tokens * pricing["output"] / 1000)
         )
         

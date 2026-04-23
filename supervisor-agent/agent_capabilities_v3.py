@@ -629,12 +629,15 @@ agent_capabilities = {
                 "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info"},
             },
             "search_files": {
-                "description": "Search files by name across the user's whole Drive (all folders). Returns files the user has access to.",
+                "description": "Search files by name across the user's whole Drive (all folders). Returns files the user has access to. Optional createdTime bounds scope results to a date window — e.g. 'files created this month', 'this quarter', 'since my last review'.",
                 "args": {
                     "search_term": "str (required) — keywords to match against file NAMES (uses Drive `name contains` semantics, case-insensitive). Does NOT match inside file bodies/content. Partial matches are OK, e.g. search_term='Q1' matches 'Q1 Budget.xlsx'.",
+                    "created_after": "str (optional) — ISO-8601 date ('YYYY-MM-DD') or datetime ('YYYY-MM-DDTHH:MM:SS'). INCLUSIVE lower bound on createdTime. Compute bounds yourself from today_date (e.g. 'this month' → first-of-current-month). Drive does NOT accept natural-language strings like 'this month'.",
+                    "created_before": "str (optional) — ISO-8601 date or datetime. EXCLUSIVE upper bound on createdTime. Pair with created_after to form a half-open [after, before) window. For 'April 2026': created_after='2026-04-01' + created_before='2026-05-01' — no double-counting at month boundaries.",
                 },
                 "returns": ["success", "results", "count", "search_term", "message", "error"],
                 "returns_detail": "results is an array; each result has: id, name, mimeType, size, createdTime, webViewLink, parents",
+                "note": "Date bounds must be pre-computed by the planner from today_date and passed as ISO strings. The agent will NOT parse natural-language like 'this month' / 'last week' / 'yesterday'. Malformed dates return success=false with a clear error; no Drive call is made.",
             },
             "get_folder_info": {
                 "description": "STRICT folder lookup by path — resolves a folder_path (e.g. 'Finance/Q1') to its ID and returns summary stats. Does NOT create missing folders; returns an error if the folder is not found. Use this BEFORE any create/upload/move step when the user specified a folder but did not explicitly ask to create it.",
