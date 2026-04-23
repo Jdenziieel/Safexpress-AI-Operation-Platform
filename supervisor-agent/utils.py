@@ -413,10 +413,12 @@ def execute_llm_transform(instruction: str, content: str, trace=None) -> dict:
 
         input_tokens = 0
         output_tokens = 0
+        cached_tokens = 0
         if hasattr(response, "response_metadata"):
             token_usage = response.response_metadata.get("token_usage", {})
             input_tokens = token_usage.get("prompt_tokens", 0)
             output_tokens = token_usage.get("completion_tokens", 0)
+            cached_tokens = token_usage.get("prompt_tokens_details", {}).get("cached_tokens", 0)
 
         logger.llm_call(
             model=TRANSFORM_MODEL,
@@ -427,6 +429,7 @@ def execute_llm_transform(instruction: str, content: str, trace=None) -> dict:
             tier="orchestrator",
             prompt_summary=f"Transform: {instruction[:50]}...",
             success=True,
+            cached_tokens=cached_tokens,
         )
 
         transformed = response.content.strip()

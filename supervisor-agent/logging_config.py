@@ -55,22 +55,38 @@ QUOTA_ENABLED = os.getenv("QUOTA_ENABLED", "true").lower() in ("true", "1", "yes
 
 
 # ============================================================================
-# TOKEN PRICING (per 1K tokens) — rate card as of 2026-04
-# Hardcoded defaults used as seed values and fallback when DB is unavailable.
-# Admin can override per-model input/output rates via PUT /admin/pricing/{model}.
+# TOKEN PRICING (per 1K tokens) — rate card as of 2026-04-23
+# Source of truth: https://platform.openai.com/docs/pricing (Standard tier).
 #
-# `cached_input` is NOT stored in the admin-editable DB table — OpenAI fixes the
-# cache discount per model family (90% off for gpt-5, 75% off for gpt-4.1,
-# 50% off for gpt-4o, none for gpt-4 / gpt-3.5-turbo) so it's kept here as the
-# authoritative value and read directly by calculate_cost.
+# This table is the AUTHORITATIVE default used to seed the admin-editable
+# `model_pricing` SQLite table on first startup. Admin edits via
+# PUT /admin/pricing/{model} override these values at runtime and survive
+# restarts (rows whose `updated_by != 'system_seed'` are preserved by
+# `seed_model_pricing`). Rows still marked 'system_seed' are UPGRADED in place
+# when a newer code default disagrees, so updating this table and restarting
+# is enough to propagate an official OpenAI rate change.
+#
+# `cached_input` is now ALSO admin-editable (same DB table, new column) —
+# admins can dial the cache discount if OpenAI changes it. When the DB column
+# is NULL, the value below is used as fallback.
 # ============================================================================
 
 _DEFAULT_MODEL_PRICING = {
-    # GPT-5 family (current flagship; 90% cache discount)
+    # GPT-5.4 family — current flagship (2026-04). 90% cache discount.
+    "gpt-5.4":       {"input": 0.0025,   "cached_input": 0.00025,  "output": 0.015},
+    "gpt-5.4-mini":  {"input": 0.00075,  "cached_input": 0.000075, "output": 0.0045},
+    "gpt-5.4-nano":  {"input": 0.0002,   "cached_input": 0.00002,  "output": 0.00125},
+    "gpt-5.4-pro":   {"input": 0.03,     "cached_input": 0.03,     "output": 0.18},  # pro tier has no cache discount
+    # GPT-5.2 / 5.1 refreshes — same family, different snapshots
+    "gpt-5.2":       {"input": 0.00175,  "cached_input": 0.000175, "output": 0.014},
+    "gpt-5.2-pro":   {"input": 0.021,    "cached_input": 0.021,    "output": 0.168},
+    "gpt-5.1":       {"input": 0.00125,  "cached_input": 0.000125, "output": 0.01},
+    # GPT-5 launch family (Aug 2025) — still callable by exact model ID.
     "gpt-5":         {"input": 0.00125,  "cached_input": 0.000125, "output": 0.01},
     "gpt-5-mini":    {"input": 0.00025,  "cached_input": 0.000025, "output": 0.002},
     "gpt-5-nano":    {"input": 0.00005,  "cached_input": 0.000005, "output": 0.0004},
-    # GPT-4.1 family (instruction-tuned; 75% cache discount)
+    "gpt-5-pro":     {"input": 0.015,    "cached_input": 0.015,    "output": 0.12},
+    # GPT-4.1 family (1M context; 75% cache discount)
     "gpt-4.1":       {"input": 0.002,    "cached_input": 0.0005,   "output": 0.008},
     "gpt-4.1-mini":  {"input": 0.0004,   "cached_input": 0.0001,   "output": 0.0016},
     "gpt-4.1-nano":  {"input": 0.0001,   "cached_input": 0.000025, "output": 0.0004},
@@ -78,9 +94,14 @@ _DEFAULT_MODEL_PRICING = {
     "gpt-4o":        {"input": 0.0025,   "cached_input": 0.00125,  "output": 0.01},
     "gpt-4o-mini":   {"input": 0.00015,  "cached_input": 0.000075, "output": 0.0006},
     # Reasoning models — reasoning tokens are billed as output, use sparingly
+    "o1":            {"input": 0.015,    "cached_input": 0.0075,   "output": 0.06},
+    "o1-pro":        {"input": 0.15,     "cached_input": 0.15,     "output": 0.6},
+    "o1-mini":       {"input": 0.0011,   "cached_input": 0.00055,  "output": 0.0044},
     "o3":            {"input": 0.002,    "cached_input": 0.0005,   "output": 0.008},
+    "o3-mini":       {"input": 0.0011,   "cached_input": 0.00055,  "output": 0.0044},
+    "o3-pro":        {"input": 0.02,     "cached_input": 0.02,     "output": 0.08},
     "o4-mini":       {"input": 0.0011,   "cached_input": 0.000275, "output": 0.0044},
-    # Legacy (no prompt caching)
+    # Legacy (no prompt caching — OpenAI billed full price for cached tokens)
     "gpt-4":         {"input": 0.03,     "cached_input": 0.03,     "output": 0.06},
     "gpt-4-turbo":   {"input": 0.01,     "cached_input": 0.01,     "output": 0.03},
     "gpt-3.5-turbo": {"input": 0.0005,   "cached_input": 0.0005,   "output": 0.0015},
@@ -100,7 +121,13 @@ _pricing_seeded = False
 
 
 def _refresh_pricing_cache():
-    """Reload the full model_pricing table into _pricing_cache."""
+    """Reload the full model_pricing table into _pricing_cache.
+
+    Each cache entry carries `input`, `output`, and (when the DB column is
+    populated) `cached_input`. Seeding runs once per process and upgrades
+    stale `system_seed` rows in place so new OpenAI rate cards take effect
+    on restart, while admin-edited rows are preserved.
+    """
     global _pricing_cache, _pricing_cache_ts, _pricing_seeded
     storage = get_log_storage()
     if not storage:
@@ -113,21 +140,31 @@ def _refresh_pricing_cache():
     rows = storage.get_all_model_pricing()
     new_cache = {}
     for row in rows:
-        new_cache[row["model"]] = {
+        entry = {
             "input": row["input_rate_per_1k"],
             "output": row["output_rate_per_1k"],
         }
-    _pricing_cache.update(new_cache)
+        cached_rate = row.get("cached_input_rate_per_1k")
+        if cached_rate is not None:
+            entry["cached_input"] = cached_rate
+        new_cache[row["model"]] = entry
+    _pricing_cache = new_cache
     _pricing_cache_ts = time.time()
 
 
 def get_model_pricing(model: str) -> Dict[str, float]:
     """
-    Return {"input": <rate>, "output": <rate>} for *model*.
+    Return {"input": <rate>, "output": <rate>, "cached_input"?: <rate>} for
+    *model*.
 
-    Reads from an in-memory cache backed by the model_pricing SQLite table.
-    Falls back to the hardcoded _DEFAULT_MODEL_PRICING dict if the DB is
-    unavailable or the model is unknown.
+    Read order (dynamic override wins):
+      1. In-memory cache populated from the admin-editable `model_pricing`
+         SQLite table (60s TTL; force-refreshed after PUT /admin/pricing).
+      2. Hardcoded _DEFAULT_MODEL_PRICING (authoritative rate card).
+      3. The "default" fallback (currently gpt-5 rates) for unknown models.
+
+    Any admin edit via PUT /admin/pricing/{model} is what wins — the hardcoded
+    table is only consulted when the DB has no row or the DB is unreachable.
     """
     global _pricing_cache_ts
 
@@ -598,17 +635,22 @@ class StructuredLogger:
                 Discount varies by model family: 90% off for gpt-5, 75% off for
                 gpt-4.1, 50% off for gpt-4o, none for gpt-4 / gpt-3.5-turbo.
         """
-        # `pricing` carries admin-overridable input/output rates (DB-backed).
-        # `cached_input` is OpenAI-set so it's read from the authoritative
-        # _DEFAULT_MODEL_PRICING dict directly (not from the DB cache, which
-        # only stores input/output columns). Unknown models fall back to the
-        # conservative 50%-off assumption to preserve pre-2026-04 behavior.
+        # Rate lookup priority (dynamic override wins):
+        #   1. DB-backed in-memory cache (admin-editable via PUT /admin/pricing)
+        #   2. Hardcoded _DEFAULT_MODEL_PRICING (authoritative rate card)
+        #   3. Conservative 50%-off fallback for models missing from both
+        # `pricing` covers the DB-or-default merge; `default_pricing` is the
+        # second-tier fallback for the cached-input rate when the DB row
+        # hasn't populated that column yet.
         pricing = get_model_pricing(model)
         default_pricing = _DEFAULT_MODEL_PRICING.get(
             model, _DEFAULT_MODEL_PRICING["default"]
         )
-        non_cached_input = input_tokens - cached_tokens
-        cached_rate = default_pricing.get("cached_input", pricing["input"] * 0.5)
+        non_cached_input = max(input_tokens - cached_tokens, 0)
+        cached_rate = pricing.get(
+            "cached_input",
+            default_pricing.get("cached_input", pricing["input"] * 0.5),
+        )
         cost = (
             (non_cached_input * pricing["input"] / 1000)
             + (cached_tokens * cached_rate / 1000)
@@ -705,6 +747,7 @@ class StructuredLogger:
                     cumulative_cost_usd=round(token_summary.total_estimated_cost, 6) if token_summary else None,
                     user_id=user_id,
                     service="supervisor",
+                    cached_tokens=cached_tokens,
                 )
         except Exception:
             pass

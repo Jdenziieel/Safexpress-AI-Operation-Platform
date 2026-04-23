@@ -107,6 +107,10 @@ class LogStorage:
             cursor.execute("ALTER TABLE llm_calls ADD COLUMN service TEXT DEFAULT 'supervisor'")
         except Exception:
             pass
+        try:
+            cursor.execute("ALTER TABLE llm_calls ADD COLUMN cached_tokens INTEGER DEFAULT 0")
+        except Exception:
+            pass
         
         # Agent calls table (for execution tracking)
         cursor.execute("""
@@ -175,16 +179,25 @@ class LogStorage:
             )
         """)
         
-        # Model pricing table (admin-modifiable per-model rates)
+        # Model pricing table (admin-modifiable per-model rates).
+        # `cached_input_rate_per_1k` is NULLable — NULL means "use the hardcoded
+        # fallback in logging_config._DEFAULT_MODEL_PRICING"; the seed path
+        # populates it with the current OpenAI discount, so admins can override
+        # it later if OpenAI changes the cache-discount ratio.
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS model_pricing (
                 model TEXT PRIMARY KEY,
                 input_rate_per_1k REAL NOT NULL,
                 output_rate_per_1k REAL NOT NULL,
+                cached_input_rate_per_1k REAL,
                 updated_at TEXT NOT NULL,
                 updated_by TEXT
             )
         """)
+        try:
+            cursor.execute("ALTER TABLE model_pricing ADD COLUMN cached_input_rate_per_1k REAL")
+        except Exception:
+            pass
         
         # System settings table (key-value store for admin config)
         cursor.execute("""
@@ -326,25 +339,28 @@ class LogStorage:
         cumulative_tokens: Optional[int] = None,
         cumulative_cost_usd: Optional[float] = None,
         user_id: Optional[str] = None,
-        service: str = "supervisor"
+        service: str = "supervisor",
+        cached_tokens: int = 0,
     ) -> int:
         """Insert an LLM call record"""
         conn = self._get_connection()
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             INSERT INTO llm_calls (timestamp, request_id, conversation_id, user_id, service,
                                   model, tier, operation, input_tokens, output_tokens,
                                   total_tokens, estimated_cost_usd, duration_ms, success,
-                                  prompt_summary, error, cumulative_tokens, cumulative_cost_usd)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                  prompt_summary, error, cumulative_tokens, cumulative_cost_usd,
+                                  cached_tokens)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             timestamp, request_id, conversation_id, user_id, service,
             model, tier, operation, input_tokens, output_tokens,
             total_tokens, estimated_cost_usd, duration_ms, 1 if success else 0,
-            prompt_summary, error, cumulative_tokens, cumulative_cost_usd
+            prompt_summary, error, cumulative_tokens, cumulative_cost_usd,
+            cached_tokens,
         ))
-        
+
         call_id = cursor.lastrowid
         conn.commit()
         conn.close()
@@ -1018,8 +1034,17 @@ class LogStorage:
 
     def seed_model_pricing(self, default_pricing: Dict[str, Dict[str, float]]):
         """
-        Seed model_pricing table with defaults if empty.
-        Only inserts models that don't already exist (preserves admin edits).
+        Seed model_pricing table with defaults.
+
+        Behavior:
+        - Rows missing from the DB are inserted with the provided rates.
+        - Rows already marked `system_seed` are UPGRADED in place if a newer
+          default disagrees — this keeps the DB aligned with the authoritative
+          OpenAI rate card after we update the code defaults.
+        - Rows edited by an admin (updated_by != 'system_seed') are PRESERVED
+          so dynamic overrides never get clobbered by a restart.
+        - `cached_input` is seeded too, and the same upgrade-vs-preserve rule
+          applies on the cached_input_rate_per_1k column independently.
         """
         conn = self._get_connection()
         cursor = conn.cursor()
@@ -1029,9 +1054,38 @@ class LogStorage:
             if model == "default":
                 continue
             cursor.execute(
-                "INSERT OR IGNORE INTO model_pricing (model, input_rate_per_1k, output_rate_per_1k, updated_at, updated_by) VALUES (?, ?, ?, ?, ?)",
-                (model, rates["input"], rates["output"], now, "system_seed")
+                "SELECT input_rate_per_1k, output_rate_per_1k, cached_input_rate_per_1k, updated_by "
+                "FROM model_pricing WHERE model = ?",
+                (model,),
             )
+            row = cursor.fetchone()
+            cached_rate = rates.get("cached_input")
+            if row is None:
+                cursor.execute(
+                    "INSERT INTO model_pricing (model, input_rate_per_1k, output_rate_per_1k, cached_input_rate_per_1k, updated_at, updated_by) "
+                    "VALUES (?, ?, ?, ?, ?, ?)",
+                    (model, rates["input"], rates["output"], cached_rate, now, "system_seed"),
+                )
+                continue
+
+            # Only upgrade rows that still carry the system_seed marker —
+            # anything touched by an admin stays put.
+            if row["updated_by"] == "system_seed":
+                cursor.execute(
+                    "UPDATE model_pricing "
+                    "SET input_rate_per_1k = ?, output_rate_per_1k = ?, cached_input_rate_per_1k = ?, updated_at = ?, updated_by = 'system_seed' "
+                    "WHERE model = ?",
+                    (rates["input"], rates["output"], cached_rate, now, model),
+                )
+                continue
+
+            # Admin-edited row: only back-fill the cached-rate column if it's
+            # still NULL (pre-migration rows). Don't touch input/output rates.
+            if row["cached_input_rate_per_1k"] is None and cached_rate is not None:
+                cursor.execute(
+                    "UPDATE model_pricing SET cached_input_rate_per_1k = ? WHERE model = ?",
+                    (cached_rate, model),
+                )
 
         conn.commit()
         conn.close()
@@ -1040,33 +1094,74 @@ class LogStorage:
         """Return every row from model_pricing."""
         conn = self._get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT model, input_rate_per_1k, output_rate_per_1k, updated_at, updated_by FROM model_pricing ORDER BY model")
+        cursor.execute(
+            "SELECT model, input_rate_per_1k, output_rate_per_1k, cached_input_rate_per_1k, updated_at, updated_by "
+            "FROM model_pricing ORDER BY model"
+        )
         rows = [dict(row) for row in cursor.fetchall()]
         conn.close()
         return rows
 
     def get_model_pricing(self, model: str) -> Optional[Dict[str, float]]:
-        """Get pricing for a single model. Returns None if not found."""
+        """Get pricing for a single model. Returns None if not found.
+
+        The returned dict always contains `input` and `output`; `cached_input`
+        is included only when the DB column is populated. Callers must be
+        prepared for `cached_input` to be missing and fall back to a hardcoded
+        default in that case.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT input_rate_per_1k, output_rate_per_1k FROM model_pricing WHERE model = ?", (model,))
+        cursor.execute(
+            "SELECT input_rate_per_1k, output_rate_per_1k, cached_input_rate_per_1k "
+            "FROM model_pricing WHERE model = ?",
+            (model,),
+        )
         row = cursor.fetchone()
         conn.close()
         if not row:
             return None
-        return {"input": row["input_rate_per_1k"], "output": row["output_rate_per_1k"]}
+        result = {"input": row["input_rate_per_1k"], "output": row["output_rate_per_1k"]}
+        if row["cached_input_rate_per_1k"] is not None:
+            result["cached_input"] = row["cached_input_rate_per_1k"]
+        return result
 
     def update_model_pricing(
-        self, model: str, input_rate: float, output_rate: float, updated_by: str = "admin"
+        self,
+        model: str,
+        input_rate: float,
+        output_rate: float,
+        cached_input_rate: Optional[float] = None,
+        updated_by: str = "admin",
     ) -> bool:
-        """Update or insert pricing for a model. Returns True if a row was affected."""
+        """Update or insert pricing for a model. Returns True if a row was affected.
+
+        When `cached_input_rate` is None, the DB column is left unchanged for
+        existing rows (for new rows, it defaults to NULL so the hardcoded
+        fallback applies).
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
         now = datetime.utcnow().isoformat()
-        cursor.execute(
-            "INSERT OR REPLACE INTO model_pricing (model, input_rate_per_1k, output_rate_per_1k, updated_at, updated_by) VALUES (?, ?, ?, ?, ?)",
-            (model, input_rate, output_rate, now, updated_by)
-        )
+
+        cursor.execute("SELECT cached_input_rate_per_1k FROM model_pricing WHERE model = ?", (model,))
+        existing = cursor.fetchone()
+
+        if existing is None:
+            cursor.execute(
+                "INSERT INTO model_pricing (model, input_rate_per_1k, output_rate_per_1k, cached_input_rate_per_1k, updated_at, updated_by) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (model, input_rate, output_rate, cached_input_rate, now, updated_by),
+            )
+        else:
+            effective_cached = cached_input_rate if cached_input_rate is not None else existing["cached_input_rate_per_1k"]
+            cursor.execute(
+                "UPDATE model_pricing "
+                "SET input_rate_per_1k = ?, output_rate_per_1k = ?, cached_input_rate_per_1k = ?, updated_at = ?, updated_by = ? "
+                "WHERE model = ?",
+                (input_rate, output_rate, effective_cached, now, updated_by, model),
+            )
+
         affected = cursor.rowcount > 0
         conn.commit()
         conn.close()

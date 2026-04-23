@@ -14,29 +14,49 @@ from collections import defaultdict
 from log_storage import LogStorage
 from pii_redactor import PIIRedactor
 
-# Seed pricing for the admin-editable model_pricing table. Mirrors
-# logging_config._DEFAULT_MODEL_PRICING (input/output only — cache discount
-# lives in logging_config because the DB schema only stores the two rates).
-# Rate card as of 2026-04.
+# Seed pricing for the admin-editable `model_pricing` table. This is kept in
+# sync with logging_config._DEFAULT_MODEL_PRICING and used by the admin routes
+# as a narrow-purpose copy (same rates, same source of truth). `cached_input`
+# is now a real DB column and admin-editable, so we seed it here too.
+# Rate card: https://platform.openai.com/docs/pricing (as of 2026-04-23).
+#
+# If you change these rates, also update logging_config._DEFAULT_MODEL_PRICING.
+# The two are deliberately separate so this module doesn't force-import
+# logging_config during dependency-injection at admin-route registration time.
 _SEED_PRICING = {
-    # GPT-5 family
-    "gpt-5":         {"input": 0.00125,  "output": 0.01},
-    "gpt-5-mini":    {"input": 0.00025,  "output": 0.002},
-    "gpt-5-nano":    {"input": 0.00005,  "output": 0.0004},
+    # GPT-5.4 family — current flagship
+    "gpt-5.4":       {"input": 0.0025,   "cached_input": 0.00025,  "output": 0.015},
+    "gpt-5.4-mini":  {"input": 0.00075,  "cached_input": 0.000075, "output": 0.0045},
+    "gpt-5.4-nano":  {"input": 0.0002,   "cached_input": 0.00002,  "output": 0.00125},
+    "gpt-5.4-pro":   {"input": 0.03,     "cached_input": 0.03,     "output": 0.18},
+    # GPT-5.2 / 5.1 refreshes
+    "gpt-5.2":       {"input": 0.00175,  "cached_input": 0.000175, "output": 0.014},
+    "gpt-5.2-pro":   {"input": 0.021,    "cached_input": 0.021,    "output": 0.168},
+    "gpt-5.1":       {"input": 0.00125,  "cached_input": 0.000125, "output": 0.01},
+    # GPT-5 launch family
+    "gpt-5":         {"input": 0.00125,  "cached_input": 0.000125, "output": 0.01},
+    "gpt-5-mini":    {"input": 0.00025,  "cached_input": 0.000025, "output": 0.002},
+    "gpt-5-nano":    {"input": 0.00005,  "cached_input": 0.000005, "output": 0.0004},
+    "gpt-5-pro":     {"input": 0.015,    "cached_input": 0.015,    "output": 0.12},
     # GPT-4.1 family
-    "gpt-4.1":       {"input": 0.002,    "output": 0.008},
-    "gpt-4.1-mini":  {"input": 0.0004,   "output": 0.0016},
-    "gpt-4.1-nano":  {"input": 0.0001,   "output": 0.0004},
+    "gpt-4.1":       {"input": 0.002,    "cached_input": 0.0005,   "output": 0.008},
+    "gpt-4.1-mini":  {"input": 0.0004,   "cached_input": 0.0001,   "output": 0.0016},
+    "gpt-4.1-nano":  {"input": 0.0001,   "cached_input": 0.000025, "output": 0.0004},
     # GPT-4o family
-    "gpt-4o":        {"input": 0.0025,   "output": 0.01},
-    "gpt-4o-mini":   {"input": 0.00015,  "output": 0.0006},
+    "gpt-4o":        {"input": 0.0025,   "cached_input": 0.00125,  "output": 0.01},
+    "gpt-4o-mini":   {"input": 0.00015,  "cached_input": 0.000075, "output": 0.0006},
     # Reasoning models
-    "o3":            {"input": 0.002,    "output": 0.008},
-    "o4-mini":       {"input": 0.0011,   "output": 0.0044},
-    # Legacy
-    "gpt-4":         {"input": 0.03,     "output": 0.06},
-    "gpt-4-turbo":   {"input": 0.01,     "output": 0.03},
-    "gpt-3.5-turbo": {"input": 0.0005,   "output": 0.0015},
+    "o1":            {"input": 0.015,    "cached_input": 0.0075,   "output": 0.06},
+    "o1-pro":        {"input": 0.15,     "cached_input": 0.15,     "output": 0.6},
+    "o1-mini":       {"input": 0.0011,   "cached_input": 0.00055,  "output": 0.0044},
+    "o3":            {"input": 0.002,    "cached_input": 0.0005,   "output": 0.008},
+    "o3-mini":       {"input": 0.0011,   "cached_input": 0.00055,  "output": 0.0044},
+    "o3-pro":        {"input": 0.02,     "cached_input": 0.02,     "output": 0.08},
+    "o4-mini":       {"input": 0.0011,   "cached_input": 0.000275, "output": 0.0044},
+    # Legacy (no cache discount)
+    "gpt-4":         {"input": 0.03,     "cached_input": 0.03,     "output": 0.06},
+    "gpt-4-turbo":   {"input": 0.01,     "cached_input": 0.01,     "output": 0.03},
+    "gpt-3.5-turbo": {"input": 0.0005,   "cached_input": 0.0005,   "output": 0.0015},
 }
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -467,14 +487,39 @@ async def get_usage_summary():
 class PricingUpdate(BaseModel):
     input_rate_per_1k: float = Field(..., gt=0, description="Cost per 1 000 input tokens (USD)")
     output_rate_per_1k: float = Field(..., gt=0, description="Cost per 1 000 output tokens (USD)")
+    # Optional — omit to keep the existing DB value (or fall back to the
+    # hardcoded default in logging_config._DEFAULT_MODEL_PRICING).
+    cached_input_rate_per_1k: Optional[float] = Field(
+        None, ge=0,
+        description="Cost per 1 000 CACHED input tokens (USD). "
+                    "OpenAI discounts cached tokens 50–90% depending on model family. "
+                    "Omit to keep the current value.",
+    )
 
 
 @router.get("/pricing")
 async def get_pricing():
-    """Return current per-model pricing rates."""
+    """Return current per-model pricing rates.
+
+    Always seeds the `model_pricing` table with the authoritative defaults
+    before returning — so newly-added models show up immediately and
+    `system_seed` rows stay synced with the code defaults. Admin-edited rows
+    (updated_by != 'system_seed') are preserved verbatim.
+    """
     try:
         storage = LogStorage()
-        storage.seed_model_pricing(_SEED_PRICING)
+
+        # Pass the FULL rate dict (input + output + cached_input) so the
+        # seed path can populate all three columns in one pass.
+        seed_payload = {
+            model: {
+                "input": rates["input"],
+                "output": rates["output"],
+                "cached_input": rates.get("cached_input"),
+            }
+            for model, rates in _SEED_PRICING.items()
+        }
+        storage.seed_model_pricing(seed_payload)
         rows = storage.get_all_model_pricing()
 
         token_stats = storage.get_token_usage_stats()
@@ -487,6 +532,8 @@ async def get_pricing():
                 "model": row["model"],
                 "input_rate_per_1k": row["input_rate_per_1k"],
                 "output_rate_per_1k": row["output_rate_per_1k"],
+                # May be None — means "use hardcoded fallback in logging_config"
+                "cached_input_rate_per_1k": row.get("cached_input_rate_per_1k"),
                 "updated_at": row["updated_at"],
                 "updated_by": row["updated_by"],
                 "total_input_tokens": usage.get("input_tokens", 0) or 0,
@@ -496,7 +543,8 @@ async def get_pricing():
 
         return {
             "models": models,
-            "notice": "Rate changes apply to future usage only. Historical costs are preserved."
+            "notice": "Rate changes apply to future usage only. Historical costs are preserved. "
+                      "cached_input_rate_per_1k controls the OpenAI cache discount; leave null to use the hardcoded default.",
         }
 
     except Exception as e:
@@ -505,13 +553,19 @@ async def get_pricing():
 
 @router.put("/pricing/{model}")
 async def update_pricing(model: str, body: PricingUpdate):
-    """Update input/output rate for a model. Only affects future cost computations."""
+    """Update input/output (and optionally cached-input) rate for a model.
+
+    Only affects future cost computations. Historical `llm_calls.estimated_cost_usd`
+    values are preserved as-is. Invalidates the in-memory pricing cache so the
+    new rate takes effect on the very next call.
+    """
     try:
         storage = LogStorage()
         storage.update_model_pricing(
             model=model,
             input_rate=body.input_rate_per_1k,
             output_rate=body.output_rate_per_1k,
+            cached_input_rate=body.cached_input_rate_per_1k,
             updated_by="admin",
         )
 
@@ -525,8 +579,9 @@ async def update_pricing(model: str, body: PricingUpdate):
             "model": model,
             "input_rate_per_1k": body.input_rate_per_1k,
             "output_rate_per_1k": body.output_rate_per_1k,
+            "cached_input_rate_per_1k": body.cached_input_rate_per_1k,
             "updated_at": datetime.utcnow().isoformat(),
-            "notice": "Rate changes apply to future usage only. Historical costs are preserved."
+            "notice": "Rate changes apply to future usage only. Historical costs are preserved.",
         }
 
     except Exception as e:

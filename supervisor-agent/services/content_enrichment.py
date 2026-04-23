@@ -176,13 +176,14 @@ Original message: "{user_message}"{file_section}"""
 
         enriched_text = llm_response.content.strip()
 
-        # Token tracking
         input_tokens = 0
         output_tokens = 0
+        cached_tokens = 0
         if hasattr(llm_response, 'response_metadata'):
             token_usage = llm_response.response_metadata.get('token_usage', {})
             input_tokens = token_usage.get('prompt_tokens', 0)
             output_tokens = token_usage.get('completion_tokens', 0)
+            cached_tokens = token_usage.get('prompt_tokens_details', {}).get('cached_tokens', 0)
 
         logger.llm_call(
             model="gpt-4o-mini",
@@ -193,6 +194,7 @@ Original message: "{user_message}"{file_section}"""
             tier="enrichment",
             prompt_summary=f"Enriching: {', '.join(task_set)}",
             success=True,
+            cached_tokens=cached_tokens,
         )
 
         trace.step("enrichment", "LLM enrichment complete", {
