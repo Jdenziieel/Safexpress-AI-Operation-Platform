@@ -12,7 +12,7 @@ import json
 import time
 import asyncio
 import httpx
-from typing import List, Dict, Optional
+from typing import Any, List, Dict, Optional
 from langchain_openai import ChatOpenAI
 from agent_capabilities_v3 import agent_capabilities
 import tiktoken
@@ -360,23 +360,109 @@ def generate_action_summary(tool: str, inputs: dict) -> dict:
     return summary
 
 
-def execute_llm_transform(instruction: str, content: str, trace=None) -> dict:
+def _strip_transform_fences(s: str) -> str:
+    """Strip leading ```lang\\n and trailing ``` from an LLM response.
+
+    Local to this module; same semantics as Sheets-agent's `_strip_md_fences`
+    but duplicated to keep the supervisor-agent free of sub-agent imports."""
+    stripped = s.strip()
+    changed = False
+    if stripped.startswith("```"):
+        nl = stripped.find("\n")
+        if nl != -1:
+            stripped = stripped[nl + 1 :]
+            changed = True
+    if stripped.endswith("```"):
+        stripped = stripped[:-3].rstrip()
+        changed = True
+    return stripped.strip() if changed else s.strip()
+
+
+_SCALAR_TYPES = (str, int, float, bool, type(None))
+
+
+def _validate_json_rows(parsed: Any) -> Optional[str]:
+    """Return None if `parsed` is a valid 2D list of scalars, else a
+    human-readable error describing what's wrong."""
+    if not isinstance(parsed, list):
+        return f"expected a JSON array, got {type(parsed).__name__}"
+    for i, row in enumerate(parsed):
+        if not isinstance(row, list):
+            return f"row {i} is {type(row).__name__}, expected a JSON array"
+        for j, cell in enumerate(row):
+            if not isinstance(cell, _SCALAR_TYPES):
+                return f"row {i} cell {j} is {type(cell).__name__}, expected a scalar (string/number/bool/null)"
+    return None
+
+
+def _validate_json_table(parsed: Any) -> Optional[str]:
+    """Return None if `parsed` is a valid `{"headers":[...], "rows":[[...]]}`
+    shape, else a human-readable error describing what's wrong."""
+    if not isinstance(parsed, dict):
+        return f"expected a JSON object, got {type(parsed).__name__}"
+    if "headers" not in parsed or "rows" not in parsed:
+        return f"expected keys 'headers' and 'rows', got {list(parsed.keys())}"
+    headers = parsed["headers"]
+    rows = parsed["rows"]
+    if not isinstance(headers, list):
+        return f"headers must be an array, got {type(headers).__name__}"
+    for i, h in enumerate(headers):
+        if not isinstance(h, str):
+            return f"headers[{i}] is {type(h).__name__}, expected a string"
+    err = _validate_json_rows(rows)
+    if err is not None:
+        return f"rows: {err}"
+    return None
+
+
+def execute_llm_transform(
+    instruction: str,
+    content: str,
+    trace=None,
+    output_format: str = "text",
+) -> dict:
     """
-    Run an LLM transformation on content (e.g., fix grammar, summarize, translate).
+    Run an LLM transformation on content (e.g., fix grammar, summarize,
+    translate, or produce a structured rows/table payload).
+
     This is a local call — no HTTP to an external agent.
 
     Args:
-        instruction: What transformation to apply (e.g. "Fix the grammar and spelling")
-        content: The text content to transform
-        trace: Optional trace object for logging
+        instruction: What transformation to apply (e.g. "Fix the grammar
+            and spelling", or — when output_format is structured — "Extract
+            order lines as rows of (date, order_ref, item_code, qty)").
+        content: The text content to transform.
+        trace: Optional trace object for logging.
+        output_format: Output shape contract:
+            - "text" (default): return the transformed text verbatim.
+              Back-compatible — behavior identical to pre-Commit 2.
+            - "json_rows": return a 2D JSON array `[[...], [...]]` with
+              scalar cells. Markdown fences are stripped, json.loads runs,
+              shape is validated; on failure returns success=False.
+              Result is re-serialized to a compact JSON string so the
+              orchestrator's Jinja substitution + Sheets-agent's
+              `_coerce_rows` both see clean JSON.
+            - "json_table": return `{"headers":[...], "rows":[[...]]}`
+              with string headers and scalar cells. Same parse/validate/
+              re-serialize path as json_rows.
 
     Returns:
-        dict with keys: success, transformed_content, error
+        dict with keys: success, transformed_content, error. When
+        output_format is "json_rows" or "json_table", transformed_content
+        is a canonical JSON string of the parsed+validated value.
     """
     if not content or not content.strip():
         return {"success": False, "error": "No text content provided to transform", "transformed_content": ""}
     if not instruction or not instruction.strip():
         return {"success": False, "error": "No transformation instruction provided", "transformed_content": ""}
+
+    output_format = (output_format or "text").strip().lower()
+    if output_format not in ("text", "json_rows", "json_table"):
+        return {
+            "success": False,
+            "error": f"Unsupported output_format '{output_format}'. Expected one of: text, json_rows, json_table.",
+            "transformed_content": "",
+        }
 
     _encoding = tiktoken.get_encoding("cl100k_base")
     estimated_tokens = len(_encoding.encode(content))
@@ -390,11 +476,32 @@ def execute_llm_transform(instruction: str, content: str, trace=None) -> dict:
             trace.warning(f"llm_transform rejected: {estimated_tokens} tokens exceeds limit")
         return {"success": False, "error": error_msg, "transformed_content": ""}
 
-    system_prompt = (
-        "You are a precise text transformation assistant. "
-        "Apply the requested transformation to the provided content. "
-        "Return ONLY the transformed text — no explanations, no markdown fences, no preamble."
-    )
+    if output_format == "text":
+        system_prompt = (
+            "You are a precise text transformation assistant. "
+            "Apply the requested transformation to the provided content. "
+            "Return ONLY the transformed text — no explanations, no markdown fences, no preamble."
+        )
+    elif output_format == "json_rows":
+        system_prompt = (
+            "You are a precise text-to-structured-data transformation assistant. "
+            "Apply the requested transformation and return ONLY a JSON array of arrays "
+            "(a 2D list of rows). Each inner array is one row; cells must be strings, "
+            "numbers, booleans, or null — no nested objects. "
+            "Return ONLY the JSON value — no explanations, no markdown fences, no preamble. "
+            "Example: [[\"Nov 05\",\"VRM001\",\"A1\"],[\"Nov 05\",\"VRM002\",\"B2\"]]"
+        )
+    else:  # json_table
+        system_prompt = (
+            "You are a precise text-to-structured-data transformation assistant. "
+            "Apply the requested transformation and return ONLY a JSON object of shape "
+            "{\"headers\": [\"col1\", ...], \"rows\": [[cell1, cell2, ...], ...]}. "
+            "Headers must be strings; row cells must be strings, numbers, booleans, or "
+            "null — no nested objects. Each row should have the same number of cells as "
+            "headers (pad with null if a value is unknown). "
+            "Return ONLY the JSON value — no explanations, no markdown fences, no preamble. "
+            "Example: {\"headers\":[\"Date\",\"Ref\",\"Code\"],\"rows\":[[\"Nov 05\",\"VRM001\",\"A1\"]]}"
+        )
     user_prompt = f"Instruction: {instruction}\n\nContent to transform:\n{content}"
 
     llm = ChatOpenAI(
@@ -433,8 +540,37 @@ def execute_llm_transform(instruction: str, content: str, trace=None) -> dict:
         )
 
         transformed = response.content.strip()
+
+        if output_format in ("json_rows", "json_table"):
+            cleaned = _strip_transform_fences(transformed)
+            try:
+                parsed = json.loads(cleaned)
+            except json.JSONDecodeError as e:
+                err = (
+                    f"LLM output for output_format='{output_format}' was not valid JSON: {e}. "
+                    f"Sample: {cleaned[:200]!r}"
+                )
+                if trace:
+                    trace.warning(err)
+                return {"success": False, "error": err, "transformed_content": ""}
+            validator = _validate_json_rows if output_format == "json_rows" else _validate_json_table
+            shape_err = validator(parsed)
+            if shape_err is not None:
+                err = (
+                    f"LLM output for output_format='{output_format}' had invalid shape: {shape_err}. "
+                    f"Sample: {cleaned[:200]!r}"
+                )
+                if trace:
+                    trace.warning(err)
+                return {"success": False, "error": err, "transformed_content": ""}
+            transformed = json.dumps(parsed, ensure_ascii=False)
+
         if trace:
-            trace.step("llm_transform", f"Transformed {len(content)} chars -> {len(transformed)} chars")
+            trace.step(
+                "llm_transform",
+                f"Transformed {len(content)} chars -> {len(transformed)} chars "
+                f"(output_format={output_format})",
+            )
 
         return {
             "success": True,

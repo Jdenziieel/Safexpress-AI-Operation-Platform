@@ -108,7 +108,7 @@ def create_drive_service(credentials_dict: CredentialsDict):
 def create_sheet(
     title: str,
     sheet_names: Optional[List[str]] = None,
-    initial_data: Optional[List[List[Any]]] = None,
+    initial_data: Any = None,
     folder_id: Optional[str] = None,
     credentials_dict: Optional[CredentialsDict] = None,
 ) -> Dict[str, Any]:
@@ -118,7 +118,14 @@ def create_sheet(
     Args:
         title: Name of the spreadsheet
         sheet_names: Optional list of sheet tab names (default: ["Sheet1"])
-        initial_data: Optional 2D list of data to populate first sheet
+        initial_data: Optional data to populate first sheet. Accepts a
+            native `List[List[Any]]`, a single 1D list (promoted to one
+            row — commonly used as the header row when seeding a new
+            sheet before `append_rows`), a JSON string, a Python-repr
+            string, a markdown-fenced code block wrapping either, or a
+            newline-separated collection of per-line list reprs.
+            Normalized to `List[List[Any]]` via `_coerce_rows` before
+            the API call.
         folder_id: Optional Drive folder ID to place the new sheet in. The
                    sheet is first created at the Drive root (Sheets API does
                    not accept a parent at creation time), then reparented via
@@ -135,6 +142,17 @@ def create_sheet(
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
 
+        coerced_initial: List[List[Any]] = []
+        if initial_data is not None:
+            try:
+                coerced_initial = _coerce_rows(initial_data)
+            except ValueError as e:
+                return {
+                    "success": False,
+                    "error": f"Invalid initial_data shape for create_sheet: {e}",
+                    "error_type": "bad_input",
+                }
+
         service = create_sheets_service(credentials_dict)
 
         sheets = []
@@ -150,13 +168,13 @@ def create_sheet(
         sheet_id = result.get("spreadsheetId")
         sheet_url = result.get("spreadsheetUrl")
 
-        if initial_data and len(initial_data) > 0:
+        if coerced_initial:
             first_sheet_name = sheet_names[0] if sheet_names else "Sheet1"
             service.spreadsheets().values().update(
                 spreadsheetId=sheet_id,
                 range=f"{first_sheet_name}!A1",
                 valueInputOption="RAW",
-                body={"values": initial_data},
+                body={"values": coerced_initial},
             ).execute()
 
         # Reparent into the target folder if requested. We do NOT fail the
@@ -277,11 +295,11 @@ def read_sheet(
 def update_sheet(
     sheet_id: str,
     range_name: str,
-    data: List[List[Any]],
+    data: Any,
     credentials_dict: Optional[CredentialsDict] = None,
 ) -> Dict[str, Any]:
     """
-    Update data in a specific range of a Google Sheet
+    Update data in a specific range of a Google Sheet.
 
     Args:
         sheet_id: Google Sheets ID, or a full URL. A `?gid=` tab
@@ -291,7 +309,12 @@ def update_sheet(
             prefix is exactly the legacy "Sheet1" default it is
             rewritten to the tab identified by the URL's `gid=`
             parameter. Other explicit tab prefixes are honored as-is.
-        data: 2D list of values to write
+        data: Values to write. Accepts a native `List[List[Any]]`, a
+            single 1D list (promoted to one row), a JSON string, a
+            Python-repr string, a markdown-fenced code block wrapping
+            either, or a newline-separated collection of per-line
+            list reprs. Everything is normalized to `List[List[Any]]`
+            via `_coerce_rows` before the API call.
         credentials_dict: Google OAuth credentials
 
     Returns:
@@ -300,6 +323,15 @@ def update_sheet(
     try:
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
+
+        try:
+            rows = _coerce_rows(data)
+        except ValueError as e:
+            return {
+                "success": False,
+                "error": f"Invalid data shape for update_sheet: {e}",
+                "error_type": "bad_input",
+            }
 
         gid = _extract_gid(sheet_id)
         sheet_id = _extract_sheet_id(sheet_id)
@@ -316,7 +348,7 @@ def update_sheet(
                 spreadsheetId=sheet_id,
                 range=effective_range,
                 valueInputOption="RAW",
-                body={"values": data},
+                body={"values": rows},
             )
             .execute()
         )
@@ -336,32 +368,85 @@ def update_sheet(
         return {"success": False, "error": f"Failed to update sheet: {str(e)}"}
 
 
+def _col_index_to_a1_letter(idx: int) -> str:
+    """Convert a 0-based column index to an A1 column letter (A, B, ..., Z,
+    AA, AB, ..., AZ, BA, ...). Used by `append_rows(dedup_on=...)` to build
+    a single-column range for reading existing values."""
+    if idx < 0:
+        raise ValueError(f"Column index must be non-negative, got {idx}")
+    s = ""
+    n = idx
+    while True:
+        s = chr(ord("A") + (n % 26)) + s
+        n = n // 26 - 1
+        if n < 0:
+            break
+    return s
+
+
 def append_rows(
     sheet_id: str,
-    data: List[List[Any]],
+    data: Any,
     sheet_name: Optional[str] = None,
+    dedup_on: Optional[str] = None,
     credentials_dict: Optional[CredentialsDict] = None,
 ) -> Dict[str, Any]:
     """
-    Append rows to the end of a sheet
+    Append rows to the end of a sheet, with optional idempotent dedup.
 
     Args:
         sheet_id: Google Sheets ID, or a full URL. A `?gid=` tab
             identifier in the URL is honored when `sheet_name` is not
             explicitly provided.
-        data: 2D list of rows to append
+        data: Rows to append. Accepts a native `List[List[Any]]`, a
+            single 1D list (promoted to one row), a JSON string, a
+            Python-repr string, a markdown-fenced code block wrapping
+            either, or a newline-separated collection of per-line
+            list reprs. Everything is normalized to `List[List[Any]]`
+            via `_coerce_rows` before the API call.
         sheet_name: Name of the sheet tab. Optional — when omitted the
             tool resolves the tab via the URL's `gid=` parameter, or
             falls back to the first tab. Pass an explicit name to
             override that resolution.
+        dedup_on: Optional column name (exact match against row 1 of the
+            resolved tab; case-insensitive, whitespace-trimmed). When
+            set, the tool reads existing values in that column, skips
+            incoming rows whose value in the same column already exists,
+            and also dedupes within the same batch. Enables idempotent
+            re-runs without duplicate inflation. Common stable-ID
+            columns: "message_id", "order_ref", "event_id", "date"+
+            "order_ref" pairing (two-column keys not supported — pick
+            one canonical ID column).
         credentials_dict: Google OAuth credentials
 
     Returns:
-        Dictionary with append results
+        Dictionary with append results. When dedup_on was set, also
+        includes `rows_skipped`, `skipped_keys` (up to 10 samples), and
+        `dedup_column`. On a completely-deduplicated run, `rows_added`
+        is 0 and no API append call is made.
     """
     try:
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
+
+        try:
+            rows = _coerce_rows(data)
+        except ValueError as e:
+            return {
+                "success": False,
+                "error": f"Invalid data shape for append_rows: {e}",
+                "error_type": "bad_input",
+            }
+
+        if not rows:
+            return {
+                "success": True,
+                "rows_added": 0,
+                "range_updated": None,
+                "updated_cells": 0,
+                "sheet_name": sheet_name,
+                "message": "No rows to append (empty input after coercion)",
+            }
 
         gid = _extract_gid(sheet_id)
         sheet_id = _extract_sheet_id(sheet_id)
@@ -371,7 +456,94 @@ def append_rows(
 
         service = create_sheets_service(credentials_dict)
 
-        # Find the next empty row
+        rows_skipped = 0
+        skipped_keys: List[str] = []
+        dedup_column_name: Optional[str] = None
+
+        if dedup_on:
+            dedup_column_name = str(dedup_on).strip()
+            if not dedup_column_name:
+                return {
+                    "success": False,
+                    "error": "dedup_on must be a non-empty column name",
+                    "error_type": "bad_input",
+                }
+
+            header_result = (
+                service.spreadsheets()
+                .values()
+                .get(spreadsheetId=sheet_id, range=f"{resolved_tab}!1:1")
+                .execute()
+            )
+            headers_row = (header_result.get("values") or [[]])[0] if header_result.get("values") else []
+            header_norm = [_norm_header(c) for c in headers_row]
+            target_norm = _norm_header(dedup_column_name)
+            if target_norm not in header_norm:
+                return {
+                    "success": False,
+                    "error": (
+                        f"dedup_on column '{dedup_column_name}' not found in "
+                        f"row 1 of {resolved_tab}. Existing headers: {headers_row!r}. "
+                        f"Add the column via ensure_headers first, or drop dedup_on."
+                    ),
+                    "error_type": "missing_dedup_column",
+                    "existing_headers": headers_row,
+                    "sheet_name": resolved_tab,
+                }
+            col_idx = header_norm.index(target_norm)
+            col_letter = _col_index_to_a1_letter(col_idx)
+
+            existing_result = (
+                service.spreadsheets()
+                .values()
+                .get(
+                    spreadsheetId=sheet_id,
+                    range=f"{resolved_tab}!{col_letter}2:{col_letter}",
+                )
+                .execute()
+            )
+            existing_col_values = existing_result.get("values") or []
+            existing_keys: set = {
+                str((row[0] if row else "") or "").strip().lower()
+                for row in existing_col_values
+            }
+            existing_keys.discard("")  # blank cells are not "duplicate of each other"
+
+            batch_keys: set = set()
+            filtered_rows: List[List[Any]] = []
+            for row in rows:
+                cell = str((row[col_idx] if col_idx < len(row) else "") or "").strip()
+                key = cell.lower()
+                if not key:
+                    # Empty dedup value — let it through so the caller can
+                    # diagnose; the row is NOT deduplicated on blanks.
+                    filtered_rows.append(row)
+                    continue
+                if key in existing_keys or key in batch_keys:
+                    rows_skipped += 1
+                    if len(skipped_keys) < 10:
+                        skipped_keys.append(cell)
+                    continue
+                batch_keys.add(key)
+                filtered_rows.append(row)
+            rows = filtered_rows
+
+            if not rows:
+                return {
+                    "success": True,
+                    "rows_added": 0,
+                    "rows_skipped": rows_skipped,
+                    "skipped_keys": skipped_keys,
+                    "dedup_column": dedup_column_name,
+                    "range_updated": None,
+                    "updated_cells": 0,
+                    "sheet_name": resolved_tab,
+                    "message": (
+                        f"All {rows_skipped} incoming rows already present in "
+                        f"{resolved_tab}.{col_letter} — nothing to append"
+                    ),
+                }
+
         range_name = f"{resolved_tab}!A:A"
         result = (
             service.spreadsheets()
@@ -381,19 +553,29 @@ def append_rows(
                 range=range_name,
                 valueInputOption="RAW",
                 insertDataOption="INSERT_ROWS",
-                body={"values": data},
+                body={"values": rows},
             )
             .execute()
         )
 
-        return {
+        response: Dict[str, Any] = {
             "success": True,
-            "rows_added": len(data),
+            "rows_added": len(rows),
             "range_updated": result.get("updates", {}).get("updatedRange"),
             "updated_cells": result.get("updates", {}).get("updatedCells", 0),
             "sheet_name": resolved_tab,
-            "message": f"Appended {len(data)} rows to {resolved_tab}",
+            "message": f"Appended {len(rows)} rows to {resolved_tab}",
         }
+        if dedup_on:
+            response["rows_skipped"] = rows_skipped
+            response["skipped_keys"] = skipped_keys
+            response["dedup_column"] = dedup_column_name
+            if rows_skipped:
+                response["message"] = (
+                    f"Appended {len(rows)} rows to {resolved_tab} "
+                    f"({rows_skipped} duplicate{'s' if rows_skipped != 1 else ''} skipped)"
+                )
+        return response
 
     except HttpError as e:
         return {"success": False, "error": f"Google Sheets API error: {str(e)}"}
@@ -636,7 +818,7 @@ def get_sheet_headers(
             spreadsheetId=sheet_id,
             range=f"{resolved_tab}!1:1"
         ).execute()
-        headers = result.get("values", [[]])[0]
+        headers = result.get("values", [[]])[0] if result.get("values") else []
         return {
             "success": True,
             "headers": headers,
@@ -645,6 +827,213 @@ def get_sheet_headers(
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+def _norm_header(val: Any) -> str:
+    """Canonicalize a header cell for comparison.
+
+    Normalization steps (applied in order):
+      1. `str()` + `.strip()` + `.lower()` — neutralize null, case, edge whitespace.
+      2. Collapse runs of whitespace / underscore / hyphen into a single space.
+
+    Step 2 exists because the planner often guesses at dedup_on names with
+    one separator style ("message_id", "order-ref") while the actual sheet
+    header uses another ("Message ID", "Order Ref"). Without this
+    tolerance, those drops into `missing_dedup_column` even though the
+    columns are semantically the same. The trade-off is that two columns
+    genuinely named "Order Ref" and "Order_Ref" in the same sheet would
+    collide — an unusual schema we're willing to reject as ambiguous.
+    """
+    normalized = str(val or "").strip().lower()
+    return re.sub(r"[\s_\-]+", " ", normalized).strip()
+
+
+def ensure_headers(
+    sheet_id: str,
+    headers: Any,
+    sheet_name: Optional[str] = None,
+    force: bool = False,
+    credentials_dict: Optional[CredentialsDict] = None,
+) -> Dict[str, Any]:
+    """Idempotent header writer / validator.
+
+    Three branches:
+      1. Row 1 is empty   -> write `headers`,   return action="created".
+      2. Row 1 matches    -> no-op,             return action="matched".
+         (Exact-length, order-sensitive, case-insensitive, whitespace-trimmed.)
+      3. Row 1 mismatches -> if force=False, return an error with
+                             `existing_headers` + `requested_headers`.
+                             if force=True, overwrite,
+                             return action="overwritten" + `prior_headers`.
+
+    Called by Rule 17 as a fallback when get_sheet_headers returned []
+    (fresh tab); called by Rule 18 as an alternate to seeding headers
+    via create_sheet.initial_data.
+
+    Args:
+        sheet_id: Google Sheets ID or URL. `?gid=` in URLs honored.
+        headers: Canonical header row. Accepts a native `List[str]`, a
+            JSON string (e.g. '["Date","Ref"]'), a Python-repr string
+            (e.g. "['Date', 'Ref']"), OR a nested single-row 2D list
+            (e.g. [["Date","Ref"]]) — the nested form is flattened since
+            `ensure_headers` always writes row 1. The string forms exist
+            because Jinja renders a list variable as a Python-repr
+            string in the normal-execution substitution path (see
+            AUTO-UNWRAP ASYMMETRY in supervisor_agent.py). Must end up
+            as a non-empty list of non-blank strings.
+        sheet_name: Optional tab name; resolved via gid or first tab when
+            omitted.
+        force: When True, overwrites a mismatching row 1 instead of
+            returning an error. Defaults to False — destructive overwrite
+            must be explicit.
+        credentials_dict: Google OAuth credentials.
+
+    Returns:
+        Always includes `success`. On success also includes `action`
+        (created|matched|overwritten), `headers_set` (bool), `headers`
+        (the final row-1 values), `sheet_name`, and — when action was
+        overwritten — `prior_headers`. On mismatch without force:
+        `error`, `error_type="header_conflict"`, `existing_headers`,
+        `requested_headers`.
+    """
+    try:
+        if not credentials_dict:
+            return {"success": False, "error": "Credentials required"}
+
+        # Defensive parse: `headers` may arrive as a str (Jinja render of
+        # a list variable) or as a 2D single-row list ([["Date","Ref"]]
+        # if the caller mistakenly passed create_sheet.initial_data
+        # shape). Normalize to a flat List[str] before validating.
+        try:
+            coerced = _coerce_rows(headers)
+        except ValueError as e:
+            return {
+                "success": False,
+                "error": f"Invalid headers shape for ensure_headers: {e}",
+                "error_type": "bad_input",
+            }
+        if not coerced:
+            return {
+                "success": False,
+                "error": "headers is empty after parsing",
+                "error_type": "bad_input",
+            }
+        if len(coerced) > 1:
+            return {
+                "success": False,
+                "error": (
+                    f"headers must be a single row (got {len(coerced)} rows). "
+                    f"Pass a flat list like ['Date','Ref'], not a 2D table."
+                ),
+                "error_type": "bad_input",
+            }
+        header_row = coerced[0]
+        if not header_row:
+            return {
+                "success": False,
+                "error": "headers is an empty row",
+                "error_type": "bad_input",
+            }
+        normalized_headers = [str(h or "").strip() for h in header_row]
+        if any(not h for h in normalized_headers):
+            return {
+                "success": False,
+                "error": "headers contains a blank entry; all column names must be non-empty strings",
+                "error_type": "bad_input",
+            }
+
+        gid = _extract_gid(sheet_id)
+        sheet_id = _extract_sheet_id(sheet_id)
+        resolved_tab = _pick_sheet_name(
+            sheet_name, sheet_id, gid, credentials_dict
+        )
+
+        service = create_sheets_service(credentials_dict)
+
+        read_result = (
+            service.spreadsheets()
+            .values()
+            .get(spreadsheetId=sheet_id, range=f"{resolved_tab}!1:1")
+            .execute()
+        )
+        existing = (read_result.get("values") or [[]])[0] if read_result.get("values") else []
+        existing_has_content = any(bool(str(c or "").strip()) for c in existing)
+
+        # Branch 1: empty row 1 -> write headers
+        if not existing_has_content:
+            service.spreadsheets().values().update(
+                spreadsheetId=sheet_id,
+                range=f"{resolved_tab}!A1",
+                valueInputOption="RAW",
+                body={"values": [normalized_headers]},
+            ).execute()
+            return {
+                "success": True,
+                "action": "created",
+                "headers_set": True,
+                "headers": normalized_headers,
+                "sheet_name": resolved_tab,
+                "message": f"Wrote {len(normalized_headers)} header columns to {resolved_tab}",
+            }
+
+        existing_norm = [_norm_header(c) for c in existing]
+        expected_norm = [_norm_header(c) for c in normalized_headers]
+
+        matches_exactly = existing_norm == expected_norm
+        if matches_exactly:
+            return {
+                "success": True,
+                "action": "matched",
+                "headers_set": False,
+                "headers": existing,
+                "sheet_name": resolved_tab,
+                "message": f"Headers already match in {resolved_tab} ({len(existing)} columns)",
+            }
+
+        if not force:
+            return {
+                "success": False,
+                "error": (
+                    f"Header mismatch in {resolved_tab}: existing headers "
+                    f"differ from requested. Pass force=true to overwrite, "
+                    f"or resolve the schema manually."
+                ),
+                "error_type": "header_conflict",
+                "existing_headers": existing,
+                "requested_headers": normalized_headers,
+                "sheet_name": resolved_tab,
+            }
+
+        # Branch 3 (force=True): overwrite. Pad trailing cells with empty
+        # strings when the new schema is narrower than the old one, so
+        # Sheets doesn't leave stale header names in columns beyond the
+        # new width (Sheets values.update with a short values[] leaves
+        # cells past values[][-1] UNTOUCHED; padding forces them to be
+        # cleared). When the new schema is wider or same width, no
+        # padding is needed.
+        padded = list(normalized_headers)
+        if len(existing) > len(padded):
+            padded.extend([""] * (len(existing) - len(padded)))
+        service.spreadsheets().values().update(
+            spreadsheetId=sheet_id,
+            range=f"{resolved_tab}!A1",
+            valueInputOption="RAW",
+            body={"values": [padded]},
+        ).execute()
+        return {
+            "success": True,
+            "action": "overwritten",
+            "headers_set": True,
+            "headers": normalized_headers,
+            "prior_headers": existing,
+            "sheet_name": resolved_tab,
+            "message": f"Overwrote row 1 in {resolved_tab} (prior headers preserved in prior_headers)",
+        }
+
+    except HttpError as e:
+        return {"success": False, "error": f"Google Sheets API error: {str(e)}"}
+    except Exception as e:
+        return {"success": False, "error": f"Failed to ensure headers: {str(e)}"}
 
 
 def update_by_date_match(
@@ -1108,7 +1497,14 @@ def _row_dedup_key(row: List[Any]) -> Tuple[str, str, str]:
 def _parse_orders_input(parsed_orders: Any) -> list:
     """Robustly parse the parsed_orders argument which may arrive as a
     JSON string, Python repr string (from Jinja2 rendering), dict wrapper,
-    or a native list.  Returns the list of order objects or raises ValueError."""
+    or a native list.  Returns the list of order objects or raises ValueError.
+
+    Sibling of `_coerce_rows` (defined below). `_parse_orders_input` targets
+    the delivery-order shape (list of dicts); `_coerce_rows` targets the
+    generic append/update shape (list of lists). Kept separate because the
+    two callers expect different inner shapes; consolidation deferred until
+    a third caller with overlapping needs emerges.
+    """
     if isinstance(parsed_orders, str):
         try:
             parsed_orders = json.loads(parsed_orders)
@@ -1123,6 +1519,163 @@ def _parse_orders_input(parsed_orders: Any) -> list:
     if not isinstance(parsed_orders, list):
         raise ValueError(f"parsed_orders must be a list, got {type(parsed_orders).__name__}")
     return parsed_orders
+
+
+def _try_json_for_rows(s: str) -> Any:
+    """Try json.loads; return parsed value or None on any parse failure.
+    Broad exception catch — some JSON decoders raise ValueError, some
+    raise JSONDecodeError, some TypeError on unexpected inputs."""
+    try:
+        return json.loads(s)
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return None
+
+
+def _try_literal_eval_for_rows(s: str) -> Any:
+    """Try ast.literal_eval; return parsed value or None on any parse
+    failure. Used as the Python-repr fallback when JSON fails (Python
+    repr uses single quotes which JSON rejects)."""
+    import ast
+    try:
+        return ast.literal_eval(s)
+    except (ValueError, SyntaxError, MemoryError, TypeError):
+        return None
+
+
+def _strip_md_fences(s: str) -> str:
+    """Strip a leading ```lang\\n (or bare ```\\n) and a trailing ``` from
+    a markdown-fenced code block. Returns the cleaned content. If no
+    fences are present returns the input stripped of outer whitespace
+    (idempotent)."""
+    stripped = s.strip()
+    changed = False
+    if stripped.startswith("```"):
+        nl = stripped.find("\n")
+        if nl != -1:
+            stripped = stripped[nl + 1 :]
+            changed = True
+        # If no newline after the opening fence, it's just "```" with no
+        # body — leave the original alone rather than nuking it.
+    if stripped.endswith("```"):
+        stripped = stripped[:-3].rstrip()
+        changed = True
+    return stripped.strip() if changed else s.strip()
+
+
+def _coerce_rows(data: Any) -> List[List[Any]]:
+    """Normalize `data` for append_rows / update_sheet / create_sheet.initial_data
+    to List[List[Any]], accepting a variety of upstream-degraded shapes.
+
+    Sibling of `_parse_orders_input` (~40-60% overlap). This helper exists
+    because llm_tool.transform_text, when asked to output "a list of rows",
+    tends to emit ONE of several strings that Jinja then renders verbatim
+    into the substituted inputs:
+      - a clean JSON 2D array: `[["a","b"],["c","d"]]`
+      - a Python-repr 2D list: `[['a','b'],['c','d']]`
+      - a Python-repr per line (DEMO5.2 shape): `['a','b']\\n['c','d']\\n['e','f']`
+      - any of the above wrapped in ```json ... ``` fences
+      - a dict wrapper: `{"rows": [["a","b"]]}`
+
+    The orchestrator's pause-time auto-unwrap (search for the
+    approval-pause branch in supervisor_agent.py) handles single-expression
+    JSON/repr but cannot parse multi-line or fenced shapes. The
+    normal-execution substitution path has NO unwrap at all — Jinja output
+    is passed through as a raw string (search tag: "AUTO-UNWRAP ASYMMETRY"
+    in supervisor_agent.py). This asymmetry is intentional so sub-agents
+    that actually want a raw string keep working; the cost is that tools
+    which do expect native types must be defensive, which is what this
+    helper is for.
+
+    Strategy order (each falls through to the next on failure):
+      1. list — all items sequences -> passthrough (coerce tuples to lists);
+                no items sequences   -> 1D promoted to single-row 2D;
+                mixed                -> raise (ambiguous shape).
+      2. tuple — convert to list, recurse.
+      3. dict with "rows"/"data"/"values" key -> recurse on that value.
+      4. None or empty-string -> return [].
+      5. str -> json.loads on entire value; recurse on success.
+      6. str -> ast.literal_eval on entire value; recurse on success.
+      7. str -> strip markdown fences, retry 5+6.
+      8. str -> splitlines, parse each non-blank line via literal_eval
+               (then JSON as fallback), accumulate lists that parsed.
+               Handles the DEMO5.2 multi-line shape.
+      9. anything else -> raise ValueError with a clear type hint.
+    """
+    # 1. list
+    if isinstance(data, list):
+        if not data:
+            return []
+        has_seq = any(isinstance(row, (list, tuple)) for row in data)
+        all_seq = all(isinstance(row, (list, tuple)) for row in data)
+        if has_seq and not all_seq:
+            raise ValueError(
+                "data must be a 2D list OR a 1D list of scalars — "
+                "received a mixed list (some rows are sequences, others scalars)."
+            )
+        if all_seq:
+            return [list(row) for row in data]
+        # 1D promoted to single-row 2D
+        return [list(data)]
+    # 2. tuple
+    if isinstance(data, tuple):
+        return _coerce_rows(list(data))
+    # 3. dict wrapper
+    if isinstance(data, dict):
+        for key in ("rows", "data", "values"):
+            if key in data:
+                return _coerce_rows(data[key])
+        raise ValueError(
+            f"dict input to _coerce_rows must have a 'rows', 'data', or "
+            f"'values' key; got keys {list(data.keys())}"
+        )
+    # 4. None / empty
+    if data is None:
+        return []
+    # String strategies
+    if isinstance(data, str):
+        stripped = data.strip()
+        if not stripped:
+            return []
+        # 5. JSON
+        parsed = _try_json_for_rows(stripped)
+        if parsed is not None:
+            return _coerce_rows(parsed)
+        # 6. literal_eval
+        parsed = _try_literal_eval_for_rows(stripped)
+        if parsed is not None:
+            return _coerce_rows(parsed)
+        # 7. markdown-fence strip + retry
+        fenced = _strip_md_fences(stripped)
+        if fenced and fenced != stripped:
+            parsed = _try_json_for_rows(fenced)
+            if parsed is None:
+                parsed = _try_literal_eval_for_rows(fenced)
+            if parsed is not None:
+                return _coerce_rows(parsed)
+        # 8. splitlines + per-line parse (DEMO5.2 shape)
+        rows: List[List[Any]] = []
+        for line in stripped.splitlines():
+            line = line.strip().rstrip(",")
+            if not line:
+                continue
+            row_val = _try_literal_eval_for_rows(line)
+            if row_val is None:
+                row_val = _try_json_for_rows(line)
+            if isinstance(row_val, (list, tuple)):
+                rows.append(list(row_val))
+        if rows:
+            return rows
+        # All strategies exhausted
+        sample = data[:200] + ("..." if len(data) > 200 else "")
+        raise ValueError(
+            "Could not coerce string to 2D rows (tried JSON, literal_eval, "
+            f"markdown-fence strip, and per-line split). Input sample: {sample!r}"
+        )
+    # 9. anything else
+    raise ValueError(
+        f"data must be a 2D list, 1D list, string, tuple, or dict — "
+        f"got {type(data).__name__}"
+    )
 
 
 def _extract_sheet_id(sheet_id_or_url: str) -> str:
@@ -1961,6 +2514,10 @@ TOOL_REGISTRY = {
     "get_sheet_headers": {
         "func": get_sheet_headers,
         "description": "Get header row of an existing sheet for column mapping",
+    },
+    "ensure_headers": {
+        "func": ensure_headers,
+        "description": "Idempotent header writer/validator — writes row 1 if empty, no-ops if it matches, errors on mismatch unless force=true",
     },
     "validate_delivery_sheet": {
         "func": validate_delivery_sheet,

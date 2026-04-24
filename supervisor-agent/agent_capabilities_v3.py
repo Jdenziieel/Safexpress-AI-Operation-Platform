@@ -367,7 +367,7 @@ agent_capabilities = {
                 "args": {
                     "title": "str (required) — spreadsheet name",
                     "sheet_names": "List[str] (optional) — tab names (default: ['Sheet1']). DO NOT use 'tabs' — the argument name is 'sheet_names'.",
-                    "initial_data": "List[List[Any]] (optional) — 2D rows to populate the first sheet. DO NOT use 'rows' — the argument name is 'initial_data'.",
+                    "initial_data": "List[List[Any]] (optional) — 2D rows to populate the first sheet. DO NOT use 'rows' — the argument name is 'initial_data'. The tool also accepts a 1D list (promoted to a single header row), a JSON string (e.g. '[[\"Date\",\"Ref\"],[\"Nov 05\",\"VRM001\"]]'), a Python-repr string, or a markdown-fenced code block wrapping either — all normalized to 2D internally. For the fresh-sheet pipeline (Rule 18), pass the output of llm_tool.transform_text(output_format='json_rows') directly as a Jinja variable; have the LLM emit the HEADER row as the first row so both headers and body land in one call — no separate append_rows step needed. Prefer passing a clean 2D list whenever possible; string forms exist as a safety net for LLM-generated values.",
                     "folder_id": "str (optional) — Drive folder ID to place the sheet in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step. DO NOT use 'folder_path' — this tool does not accept that argument. If you only have a folder path, resolve it first via drive_agent.get_folder_info or drive_agent.create_folder and wire the folder_id output here via {{ folder_id }}.",
                 },
                 "returns": ["success", "sheet_id", "sheet_url", "title", "folder_id", "folder_moved", "warning", "message"],
@@ -388,19 +388,20 @@ agent_capabilities = {
                 "args": {
                     "sheet_id": "str (required) — Google Sheets ID or URL. A `?gid=` tab identifier in the URL is honored when range_name uses the legacy 'Sheet1' prefix.",
                     "range_name": "str (required) — A1 notation range to overwrite (e.g. 'Sheet1!A1:D10'). If the prefix is exactly the legacy 'Sheet1' default it is rewritten to the tab identified by the URL's `gid=` parameter. Other explicit tab prefixes are honored as-is.",
-                    "data": "List[List[Any]] (required) — 2D rows to write. DO NOT use 'values' — the argument name is 'data'.",
+                    "data": "List[List[Any]] (required) — 2D rows to write. DO NOT use 'values' — the argument name is 'data'. The tool also accepts a JSON string, a Python-repr string, a markdown-fenced code block wrapping either, or a newline-separated collection of per-line list reprs — all normalized to 2D internally. Prefer passing a clean 2D list whenever possible; string forms exist as a safety net for LLM-generated values.",
                 },
                 "returns": ["success", "updated_cells", "updated_range", "range", "error"],
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "append_rows": {
-                "description": "Append rows to the END of a sheet tab (does not overwrite existing rows). Use update_sheet or update_by_date_match for in-place edits. Accepts the spreadsheet ID OR a full spreadsheet URL.",
+                "description": "Append rows to the END of a sheet tab (does not overwrite existing rows). Use update_sheet or update_by_date_match for in-place edits. Accepts the spreadsheet ID OR a full spreadsheet URL. Optional idempotent dedup via `dedup_on` — see Rule 17.",
                 "args": {
                     "sheet_id": "str (required) — Google Sheets ID or URL. A `?gid=` tab identifier in the URL is used when sheet_name is omitted.",
-                    "data": "List[List[Any]] (required) — 2D rows to append. DO NOT use 'values' or 'rows' — the argument name is 'data'.",
+                    "data": "List[List[Any]] (required) — 2D rows to append. DO NOT use 'values' or 'rows' — the argument name is 'data'. The tool also accepts a JSON string, a Python-repr string, a markdown-fenced code block wrapping either, or a newline-separated collection of per-line list reprs — all normalized to 2D internally. Prefer passing a clean 2D list whenever possible; string forms exist as a safety net for LLM-generated values.",
                     "sheet_name": "str (optional) — tab name to append to. When omitted, the tab is resolved from the URL's `gid=` parameter, or falls back to the first tab of the spreadsheet. Pass an explicit name to override.",
+                    "dedup_on": "str (optional) — column name (must match a row-1 header; case-insensitive, whitespace-trimmed). When set, the tool reads existing values in that column, skips incoming rows whose value at the SAME column index already appears in the sheet, and also dedupes within the batch. Enables idempotent re-runs — use with Rule 17 when the workflow may fire twice for the same input (daily trackers, resumed workflows). Pick ONE stable identifier column (message_id, order_ref, event_id). Multi-column composite keys not supported — compose a stable single-column key client-side if needed.",
                 },
-                "returns": ["success", "rows_added", "range_updated", "updated_cells", "sheet_name", "message", "error"],
+                "returns": ["success", "rows_added", "rows_skipped", "skipped_keys", "dedup_column", "range_updated", "updated_cells", "sheet_name", "message", "error", "error_type", "existing_headers"],
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "get_sheet_metadata": {
@@ -413,13 +414,25 @@ agent_capabilities = {
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "get_sheet_headers": {
-                "description": "Return the header row (row 1) of a specific tab. Useful before column-mapping or before update_sheet to align incoming data. Accepts the spreadsheet ID OR a full spreadsheet URL.",
+                "description": "Return the header row (row 1) of a specific tab. Useful before column-mapping or before update_sheet to align incoming data. Accepts the spreadsheet ID OR a full spreadsheet URL. Returns an EMPTY headers list when the tab is fresh (row 1 blank) — the planner should pair with ensure_headers to seed row 1 in that case (see Rule 17).",
                 "args": {
                     "sheet_id": "str (required) — Google Sheets ID or URL. A `?gid=` tab identifier in the URL is used when sheet_name is omitted.",
                     "sheet_name": "str (optional) — tab name. When omitted, the tab is resolved from the URL's `gid=` parameter, or falls back to the first tab of the spreadsheet.",
                 },
                 "returns": ["success", "headers", "column_count", "sheet_name", "error"],
-                "returns_detail": "headers is a list of header strings from row 1.",
+                "returns_detail": "headers is a list of header strings from row 1. Empty list `[]` when row 1 has no content yet.",
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
+            },
+            "ensure_headers": {
+                "description": "Idempotent header writer/validator for row 1 of a tab. Three branches: (1) row 1 empty -> writes the provided headers; (2) row 1 matches exactly (case-insensitive, whitespace-trimmed) -> no-op; (3) row 1 mismatches -> returns an error with existing vs requested headers UNLESS force=true, in which case the row is overwritten (prior_headers preserved in the response). Use after create_sheet for fresh-sheet flows (Rule 18), or after get_sheet_headers returns empty (Rule 17's fallback branch). Accepts the spreadsheet ID OR a full spreadsheet URL.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID or URL. A `?gid=` tab identifier in the URL is used when sheet_name is omitted.",
+                    "headers": "List[str] (required) — canonical header row to install or validate. Must be a non-empty list of non-blank strings. The tool also accepts a JSON string (e.g. '[\"Date\",\"Ref\"]'), a Python-repr string (e.g. \"['Date', 'Ref']\" — the shape Jinja renders a list variable into when substituted into a string input), or a single-row 2D list ([['Date','Ref']]); all are flattened to a 1D list internally. Prefer passing a clean list when possible — the string forms exist as a safety net for `{{ sheet_headers }}`-style substitution.",
+                    "sheet_name": "str (optional) — tab name. When omitted, the tab is resolved from the URL's `gid=` parameter, or falls back to the first tab of the spreadsheet.",
+                    "force": "bool (optional, default false) — when true, a mismatching existing row 1 is overwritten instead of returning an error. Destructive — set only when the caller has explicit user intent to replace the schema.",
+                },
+                "returns": ["success", "action", "headers_set", "headers", "prior_headers", "existing_headers", "requested_headers", "sheet_name", "message", "error", "error_type"],
+                "returns_detail": "action is one of: 'created' (row 1 was empty), 'matched' (existing row 1 matched), 'overwritten' (force=true path). On header_conflict, `existing_headers` and `requested_headers` are both populated so the caller can surface a meaningful diff.",
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "clear_sheet": {
@@ -708,10 +721,11 @@ agent_capabilities = {
         "description": "Built-in LLM transformation tool. Runs locally in the orchestrator — no external agent call. Use this between read and write steps to transform content.",
         "tools": {
             "transform_text": {
-                "description": "Transform text content using an LLM (e.g. fix grammar, summarize, translate, rewrite). Place between a read step and a write step. The instruction should describe the transformation; content is the text to transform.",
+                "description": "Transform text content using an LLM (e.g. fix grammar, summarize, translate, rewrite, OR extract structured rows/tables). Place between a read step and a write step. The instruction should describe the transformation; content is the text to transform. Set output_format to 'json_rows' or 'json_table' when the next step is sheets_agent.append_rows / update_sheet / create_sheet — the orchestrator will validate the JSON shape and return a canonical string that Jinja substitution + _coerce_rows can safely consume.",
                 "args": {
-                    "instruction": "str (required) — what to do with the content (e.g. 'Fix all grammar and spelling errors')",
-                    "content": "str (required) — the text to transform (use {{ variable }} from a previous read step)",
+                    "instruction": "str (required) — what to do with the content (e.g. 'Fix all grammar and spelling errors', or 'Extract delivery-order line items as rows of [Date, Order Reference, Item Code, Qty]').",
+                    "content": "str (required) — the text to transform (use {{ variable }} from a previous read step).",
+                    "output_format": "str (optional, default 'text') — output shape contract. 'text' returns the transformed text verbatim (back-compatible default). 'json_rows' returns a compact JSON 2D array `[[...], [...]]` with scalar cells — the primary structured format. Use with Rule 17 (append to existing sheet, body rows only, headers aligned via get_sheet_headers) or Rule 18 (create new sheet, first row is headers + body rows follow — feed the whole value into create_sheet.initial_data in one shot). 'json_table' returns `{\"headers\":[...], \"rows\":[[...]]}` as a compact JSON STRING — useful for tools that accept a headers+rows object, but NOT usable for splitting headers and rows into separate template variables (extract_nested_value cannot drill into a JSON string). For create_sheet + append_rows chains, prefer json_rows with first-row-as-headers. Malformed JSON from the LLM is caught and returned as success=False with a clear error so the workflow can stop cleanly instead of writing garbage to Sheets.",
                 },
                 "returns": ["success", "transformed_content", "error"],
             },

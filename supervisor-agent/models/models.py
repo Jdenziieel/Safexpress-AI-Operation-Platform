@@ -104,6 +104,12 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     "get_sheet_headers": ActionRiskLevel.SAFE,
     "validate_delivery_sheet": ActionRiskLevel.SAFE,
     "preview_delivery_order_insertion": ActionRiskLevel.SAFE,
+    # ensure_headers is idempotent — writes row 1 only when blank or
+    # when force=True. The force=True path is destructive but requires
+    # an explicit planner decision (Rule 17 only emits force=True when
+    # user intent is replace-the-schema). MODERATE = auto-approved by
+    # default; a future tightening could escalate to DANGEROUS if force
+    # is set, but the split-tier pattern isn't supported yet.
     # Calendar (read-only)
     "list_events": ActionRiskLevel.SAFE,
     "get_event": ActionRiskLevel.SAFE,
@@ -140,6 +146,7 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     "move_file": ActionRiskLevel.MODERATE,
     # Sheets (new spreadsheet)
     "create_sheet": ActionRiskLevel.MODERATE,
+    "ensure_headers": ActionRiskLevel.MODERATE,
     # Calendar (new or modified event; update_event rewrites but events
     # have change history and attendee notifications can be recalled)
     "create_event": ActionRiskLevel.MODERATE,

@@ -292,8 +292,12 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
 
         # Block H (Phase 1): sheets/spreadsheet keyword safety net.
         # Injects sheets_agent.create_sheet when the classifier missed
-        # it. Placed BEFORE Block F so Block F can see create_sheet and
-        # pair it with get_folder_info when the user mentions a folder.
+        # it. Placed BEFORE Block K so Block K's extension can see the
+        # freshly-injected create_sheet and pair it with append_rows +
+        # header companions when the request also carries a cross-agent
+        # data source (e.g. gmail.search_emails + "new sheet"). Placed
+        # BEFORE Block F so Block F can see create_sheet and pair it
+        # with get_folder_info when the user mentions a folder.
         # Keyword set is deliberately narrow — bare " sheet " excluded
         # to avoid false positives on "cheat sheet", "datasheet",
         # "rate sheet". Composes with Block G (delivery orders), which
@@ -308,6 +312,84 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
             sheets_caps = agent_capabilities.get("sheets_agent", {}).get("tools", {})
             if "create_sheet" in sheets_caps:
                 validated["sheets_agent"] = ["create_sheet"]
+
+        # Block K (Commit 3): schema-aware append safety net.
+        # When the classifier selected a sheets WRITE tool (the user is
+        # writing INTO an existing sheet), the planner needs the two
+        # header-management companions so it can implement Rule 17:
+        #   - get_sheet_headers: read existing row 1 to align column order
+        #     of the incoming rows (feeds the transform_text instruction).
+        #   - ensure_headers: idempotently create / validate row 1 when
+        #     the tab might be empty (DEMO5.2-style "append to a blank
+        #     tab" or fresh-sheet paths that skipped create_sheet's
+        #     initial_data).
+        # Block E (above) already injected drive_agent.search_files for
+        # sheet-id resolution; Block K complements that with the header
+        # companions. Firing signal is presence-based (no keyword check)
+        # so the block fires for any write tool — keeps the logic simple
+        # and avoids the false-negative trap where a user's phrasing
+        # happens to dodge a keyword list.
+        # Placed AFTER Block H so Block K's extension sees any create_sheet
+        # that Block H injected on keyword alone (classifier miss case).
+        _SHEET_WRITE_TOOLS = {
+            "append_rows", "update_sheet",
+            "upload_mapped_data", "update_by_date_match",
+        }
+        if "sheets_agent" in validated:
+            sheets_tools_for_k = validated["sheets_agent"]
+            sheets_caps_for_k = agent_capabilities.get("sheets_agent", {}).get("tools", {})
+            if any(t in _SHEET_WRITE_TOOLS for t in sheets_tools_for_k):
+                for companion in ("get_sheet_headers", "ensure_headers"):
+                    if companion not in sheets_tools_for_k and companion in sheets_caps_for_k:
+                        sheets_tools_for_k.append(companion)
+
+            # Block K extension (Commit 4): fresh-sheet pipeline safety net.
+            # When sheets_agent.create_sheet is present (either from the
+            # classifier or freshly injected by Block H above) AND the
+            # request is a cross-agent ingestion (reads from emails/docs/
+            # drive/mapping plus a sheet creation), the planner also needs
+            # append_rows in case the body is large enough to warrant the
+            # split create_sheet → append_rows flow from Rule 18's alternate
+            # path. For the primary path (Rule 18 step D with initial_data
+            # carrying headers+body), append_rows is harmless — the planner
+            # just won't emit it. Signal is presence-based: any data-source
+            # agent/tool in validated is enough. We also key off append-
+            # intent keywords ("append", "add these", "populate with", "put
+            # ... into") as an explicit signal when create_sheet is the
+            # only tool in the request. Gated on create_sheet being present
+            # AND append_rows NOT already injected.
+            _DATA_SOURCE_TOOLS = {
+                "gmail_agent": ("search_emails", "read_email_content", "search_drafts"),
+                "docs_agent": ("read_doc", "list_my_docs"),
+                "drive_agent": ("read_file_content", "download_file", "search_files", "list_files"),
+                "mapping_agent": ("parse_file", "smart_column_mapping", "transform_data"),
+            }
+            _APPEND_INTENT_KEYWORDS = (
+                " append ", " add these ", " add them ", " add the ",
+                " populate ", " populated ", " fill in ", " fill with ",
+                " put them ", " put the ", " put those ", " write them ",
+                " with the data ", " with these ", " with the rows ",
+                " rows from ", " data from ", " entries from ",
+            )
+            has_create_sheet = "create_sheet" in sheets_tools_for_k
+            has_append_rows = "append_rows" in sheets_tools_for_k
+            if has_create_sheet and not has_append_rows and "append_rows" in sheets_caps_for_k:
+                has_data_source = any(
+                    other_agent in validated
+                    and any(t in validated[other_agent] for t in source_tools)
+                    for other_agent, source_tools in _DATA_SOURCE_TOOLS.items()
+                )
+                has_append_intent = any(kw in input_lower for kw in _APPEND_INTENT_KEYWORDS)
+                if has_data_source or has_append_intent:
+                    sheets_tools_for_k.append("append_rows")
+                    # If we just injected append_rows, the Rule-17 companions
+                    # (get_sheet_headers, ensure_headers) are still useful for
+                    # the alternate Rule-18 path where the sheet is created
+                    # blank and headers land via ensure_headers. Re-run the
+                    # header-companion injection so the planner has them too.
+                    for companion in ("get_sheet_headers", "ensure_headers"):
+                        if companion not in sheets_tools_for_k and companion in sheets_caps_for_k:
+                            sheets_tools_for_k.append(companion)
 
         # "Put X in folder Y" safety net: when the user asks to create a
         # sheet or doc AND references a folder, the planner needs a way to
