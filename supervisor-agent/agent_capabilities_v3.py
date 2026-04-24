@@ -354,12 +354,12 @@ agent_capabilities = {
             "upload_mapped_data": {
                 "description": "Upload/append pre-transformed data to a Google Sheet. Requires locally processed data — CANNOT accept a Google Drive file ID or URL as transformed_data.",
                 "args": {
-                    "sheet_id": "str (required) — Google Sheets ID",
+                    "sheet_id": "str (required) — Google Sheets ID or URL. If a full URL with a `?gid=` tab identifier is supplied and `sheet_name` is omitted, the tool resolves the correct tab from the gid.",
                     "transformed_data": "str (required) — JSON array of row objects from mapping_agent.transform_data (NOT a file ID or file path)",
-                    "sheet_name": "str (optional) — default 'Sheet1'",
+                    "sheet_name": "str (optional) — tab name. When omitted, the tool resolves the tab via the URL's `gid=` parameter, or falls back to the first tab of the spreadsheet.",
                     "append_mode": "bool (optional) — true to append",
                 },
-                "returns": ["success", "rows_added"],
+                "returns": ["success", "rows_added", "sheet_name"],
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "create_sheet": {
@@ -376,8 +376,8 @@ agent_capabilities = {
             "read_sheet": {
                 "description": "Read cell values from a Google Sheet. Accepts the spreadsheet ID OR a full spreadsheet URL — URLs are auto-parsed to extract the ID.",
                 "args": {
-                    "sheet_id": "str (required) — Google Sheets ID or URL (https://docs.google.com/spreadsheets/d/<id>/edit)",
-                    "range_name": "str (optional) — A1 notation range (e.g. 'Sheet1', 'Sheet1!A1:D10'). Default 'Sheet1'.",
+                    "sheet_id": "str (required) — Google Sheets ID or URL (https://docs.google.com/spreadsheets/d/<id>/edit). A `?gid=` tab identifier in the URL is used when range_name is omitted or uses the legacy 'Sheet1' default.",
+                    "range_name": "str (optional) — A1 notation range (e.g. 'Sheet1', 'Sheet1!A1:D10'). When omitted (or when the prefix is the legacy 'Sheet1' default), the tab is resolved from the URL's `gid=` parameter or falls back to the first tab. Explicit non-default tab prefixes like 'Orders!A1:D10' are honored as-is.",
                 },
                 "returns": ["success", "data", "row_count", "column_count", "range", "message", "error"],
                 "returns_detail": "data is a 2D list of cell values (strings).",
@@ -386,21 +386,21 @@ agent_capabilities = {
             "update_sheet": {
                 "description": "Overwrite a specific range in a Google Sheet with a 2D array of values. Accepts the spreadsheet ID OR a full spreadsheet URL.",
                 "args": {
-                    "sheet_id": "str (required) — Google Sheets ID or URL",
-                    "range_name": "str (required) — A1 notation range to overwrite (e.g. 'Sheet1!A1:D10')",
+                    "sheet_id": "str (required) — Google Sheets ID or URL. A `?gid=` tab identifier in the URL is honored when range_name uses the legacy 'Sheet1' prefix.",
+                    "range_name": "str (required) — A1 notation range to overwrite (e.g. 'Sheet1!A1:D10'). If the prefix is exactly the legacy 'Sheet1' default it is rewritten to the tab identified by the URL's `gid=` parameter. Other explicit tab prefixes are honored as-is.",
                     "data": "List[List[Any]] (required) — 2D rows to write. DO NOT use 'values' — the argument name is 'data'.",
                 },
-                "returns": ["success", "updated_cells", "updated_range", "error"],
+                "returns": ["success", "updated_cells", "updated_range", "range", "error"],
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "append_rows": {
                 "description": "Append rows to the END of a sheet tab (does not overwrite existing rows). Use update_sheet or update_by_date_match for in-place edits. Accepts the spreadsheet ID OR a full spreadsheet URL.",
                 "args": {
-                    "sheet_id": "str (required) — Google Sheets ID or URL",
+                    "sheet_id": "str (required) — Google Sheets ID or URL. A `?gid=` tab identifier in the URL is used when sheet_name is omitted.",
                     "data": "List[List[Any]] (required) — 2D rows to append. DO NOT use 'values' or 'rows' — the argument name is 'data'.",
-                    "sheet_name": "str (optional) — tab name to append to (default 'Sheet1')",
+                    "sheet_name": "str (optional) — tab name to append to. When omitted, the tab is resolved from the URL's `gid=` parameter, or falls back to the first tab of the spreadsheet. Pass an explicit name to override.",
                 },
-                "returns": ["success", "rows_added", "range_updated", "updated_cells", "message", "error"],
+                "returns": ["success", "rows_added", "range_updated", "updated_cells", "sheet_name", "message", "error"],
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "get_sheet_metadata": {
@@ -415,8 +415,8 @@ agent_capabilities = {
             "get_sheet_headers": {
                 "description": "Return the header row (row 1) of a specific tab. Useful before column-mapping or before update_sheet to align incoming data. Accepts the spreadsheet ID OR a full spreadsheet URL.",
                 "args": {
-                    "sheet_id": "str (required) — Google Sheets ID or URL",
-                    "sheet_name": "str (optional) — tab name (default 'Sheet1')",
+                    "sheet_id": "str (required) — Google Sheets ID or URL. A `?gid=` tab identifier in the URL is used when sheet_name is omitted.",
+                    "sheet_name": "str (optional) — tab name. When omitted, the tab is resolved from the URL's `gid=` parameter, or falls back to the first tab of the spreadsheet.",
                 },
                 "returns": ["success", "headers", "column_count", "sheet_name", "error"],
                 "returns_detail": "headers is a list of header strings from row 1.",
@@ -425,10 +425,10 @@ agent_capabilities = {
             "clear_sheet": {
                 "description": "Clear cell values in a range (structure/formatting preserved — only values are wiped). Destructive for data. Accepts the spreadsheet ID OR a full spreadsheet URL.",
                 "args": {
-                    "sheet_id": "str (required) — Google Sheets ID or URL",
-                    "range_name": "str (optional) — A1 notation range to clear (default 'Sheet1')",
+                    "sheet_id": "str (required) — Google Sheets ID or URL. A `?gid=` tab identifier in the URL is used when range_name is omitted or uses the legacy 'Sheet1' default.",
+                    "range_name": "str (optional) — A1 notation range to clear. When omitted (or when the prefix is the legacy 'Sheet1' default), the tab is resolved from the URL's `gid=` parameter or falls back to the first tab.",
                 },
-                "returns": ["success", "cleared_range", "message", "error"],
+                "returns": ["success", "cleared_range", "range", "message", "error"],
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "validate_delivery_sheet": {

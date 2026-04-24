@@ -1538,23 +1538,59 @@ def orchestrator_node(state: SharedState) -> SharedState:
                             break
 
                     if disambig_var and isinstance(items, list) and len(items) > 1:
-                        # Downstream-usage gate: only pause if a remaining step's
-                        # Jinja inputs actually reference this variable. Matches
-                        # {{ var }}, {{var}}, {{ var.x }}, {{ var[0] }}, {{ var|f }}
-                        # but not {{ var_other }} (word-boundary-like via lookahead).
-                        disambig_pattern = re.compile(
-                            r"\{\{\s*" + re.escape(disambig_var) + r"(?=\s|\}|\.|\[|\|)"
+                        # Downstream-usage gate: three-way branch so bare
+                        # `{{ var }}` (batch processing) is distinguished
+                        # from narrowing references that target a single
+                        # item (`{{ var.x }}`, `{{ var[0] }}`, `{{ var|first }}`).
+                        #
+                        # Prior to this gate, any downstream mention of the
+                        # variable caused a pause — so a plan like
+                        # `search_emails -> transform_text(content="{{ emails }}")`
+                        # was forced through a single-pick disambiguation UI,
+                        # which then silently dropped 4-of-5 items when the
+                        # user answered "1" (see DEMO5.0).
+                        #
+                        # Semantics:
+                        #   - PICK-ONE:   `[<idx>]`, `.<attr>`, `|first|last|random|nth(...)`
+                        #                 → pause (single item targeted)
+                        #   - BARE/BATCH: `{{ var }}` / `{{ var }}` / `|tojson`
+                        #                 `|length` / `|map` / `|list` / etc.
+                        #                 → continue (all items flow through)
+                        #   - UNREFERENCED: no downstream use at all
+                        #                 → continue (existing skip branch)
+                        #
+                        # Limits (documented): multi-select ("3 of 5") is not
+                        # supported by the disambiguation UI; Part C of Bug B.5
+                        # is the follow-up for that. For now, "all" and "one"
+                        # are the two paths. `append_rows`/`update_sheet` are
+                        # DANGEROUS-tier, so the user keeps an approve-or-cancel
+                        # gate at the write step for the "all" path.
+                        pick_one_pattern = re.compile(
+                            r"\{\{\s*" + re.escape(disambig_var) + r"\s*"
+                            r"(?:"
+                            r"\[\s*\d+"                                   # {{ var[0] }}, {{ var[1]. }}
+                            r"|\.\s*[A-Za-z_]\w*"                         # {{ var.field }}
+                            r"|\|\s*(?:first|last|random|nth)\b"          # {{ var|first }}, {{ var|nth(2) }}
+                            r")"
                         )
-                        downstream_uses_var = False
+                        any_ref_pattern = re.compile(
+                            r"\{\{\s*" + re.escape(disambig_var)
+                            + r"(?=\s|\}|\.|\[|\|)"
+                        )
+                        downstream_pick_one = False
+                        downstream_any_ref = False
                         for future_step in plan[step_num:]:
                             future_inputs_str = json.dumps(
                                 future_step.get("inputs", {}), default=str
                             )
-                            if disambig_pattern.search(future_inputs_str):
-                                downstream_uses_var = True
+                            if pick_one_pattern.search(future_inputs_str):
+                                downstream_pick_one = True
+                                downstream_any_ref = True
                                 break
+                            if any_ref_pattern.search(future_inputs_str):
+                                downstream_any_ref = True
 
-                        if not downstream_uses_var:
+                        if not downstream_any_ref:
                             print(
                                 f"\n DISAMBIGUATION SKIPPED: {tool_name} returned "
                                 f"{len(items)} results, but no remaining step references "
@@ -1564,6 +1600,19 @@ def orchestrator_node(state: SharedState) -> SharedState:
                                 "disambiguation_skipped",
                                 f"step {step_num}: {tool_name} returned {len(items)} results "
                                 f"but downstream steps do not consume `{disambig_var}` — no pause",
+                            )
+                        elif not downstream_pick_one:
+                            print(
+                                f"\n DISAMBIGUATION SKIPPED: {tool_name} returned "
+                                f"{len(items)} results; downstream uses `{{{{ {disambig_var} }}}}` "
+                                f"as a whole list (no indexed/attribute/picker syntax) — "
+                                f"treating as batch, continuing execution"
+                            )
+                            trace.step(
+                                "disambiguation_skipped_batch",
+                                f"step {step_num}: {tool_name} returned {len(items)} results; "
+                                f"downstream references to `{disambig_var}` are bare/batch-only "
+                                f"(no `.field`/`[i]`/`|first`) — batch-processing all items",
                             )
                         else:
                             print(f"\n DISAMBIGUATION: {tool_name} returned {len(items)} results — pausing for user selection")

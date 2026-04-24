@@ -210,15 +210,20 @@ def create_sheet(
 
 def read_sheet(
     sheet_id: str,
-    range_name: str = "Sheet1",
+    range_name: Optional[str] = None,
     credentials_dict: Optional[CredentialsDict] = None,
 ) -> Dict[str, Any]:
     """
     Read data from a Google Sheet
 
     Args:
-        sheet_id: Google Sheets ID
-        range_name: Range to read (e.g., 'Sheet1' or 'Sheet1!A1:D10')
+        sheet_id: Google Sheets ID, or a full URL. A `?gid=` tab
+            identifier in the URL is used when `range_name` is a bare
+            tab reference (e.g. the legacy "Sheet1" default).
+        range_name: Range to read (e.g., 'Sheet1' or 'Sheet1!A1:D10').
+            Optional — when omitted (or when it is the legacy "Sheet1"
+            default), the tool resolves the tab via the URL's `gid=`
+            parameter or falls back to the first tab.
         credentials_dict: Google OAuth credentials
 
     Returns:
@@ -228,14 +233,18 @@ def read_sheet(
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
 
+        gid = _extract_gid(sheet_id)
         sheet_id = _extract_sheet_id(sheet_id)
+        effective_range = _apply_tab_to_range(
+            range_name, sheet_id, gid, credentials_dict
+        )
 
         service = create_sheets_service(credentials_dict)
 
         result = (
             service.spreadsheets()
             .values()
-            .get(spreadsheetId=sheet_id, range=range_name)
+            .get(spreadsheetId=sheet_id, range=effective_range)
             .execute()
         )
 
@@ -247,7 +256,7 @@ def read_sheet(
                 "data": [],
                 "row_count": 0,
                 "column_count": 0,
-                "range": range_name,
+                "range": effective_range,
                 "message": "No data found in range",
             }
 
@@ -256,7 +265,7 @@ def read_sheet(
             "data": values,
             "row_count": len(values),
             "column_count": len(values[0]) if values else 0,
-            "range": range_name,
+            "range": effective_range,
         }
 
     except HttpError as e:
@@ -275,8 +284,13 @@ def update_sheet(
     Update data in a specific range of a Google Sheet
 
     Args:
-        sheet_id: Google Sheets ID
-        range_name: Range to update (e.g., 'Sheet1!A1:D10')
+        sheet_id: Google Sheets ID, or a full URL. A `?gid=` tab
+            identifier in the URL is honored when `range_name` uses
+            the legacy "Sheet1" prefix.
+        range_name: Range to update (e.g., 'Sheet1!A1:D10'). If the
+            prefix is exactly the legacy "Sheet1" default it is
+            rewritten to the tab identified by the URL's `gid=`
+            parameter. Other explicit tab prefixes are honored as-is.
         data: 2D list of values to write
         credentials_dict: Google OAuth credentials
 
@@ -287,7 +301,11 @@ def update_sheet(
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
 
+        gid = _extract_gid(sheet_id)
         sheet_id = _extract_sheet_id(sheet_id)
+        effective_range = _apply_tab_to_range(
+            range_name, sheet_id, gid, credentials_dict
+        )
 
         service = create_sheets_service(credentials_dict)
 
@@ -296,7 +314,7 @@ def update_sheet(
             .values()
             .update(
                 spreadsheetId=sheet_id,
-                range=range_name,
+                range=effective_range,
                 valueInputOption="RAW",
                 body={"values": data},
             )
@@ -308,8 +326,8 @@ def update_sheet(
             "updated_cells": result.get("updatedCells", 0),
             "updated_rows": result.get("updatedRows", 0),
             "updated_columns": result.get("updatedColumns", 0),
-            "range": range_name,
-            "message": f"Updated {result.get('updatedCells', 0)} cells in {range_name}",
+            "range": effective_range,
+            "message": f"Updated {result.get('updatedCells', 0)} cells in {effective_range}",
         }
 
     except HttpError as e:
@@ -321,16 +339,21 @@ def update_sheet(
 def append_rows(
     sheet_id: str,
     data: List[List[Any]],
-    sheet_name: str = "Sheet1",
+    sheet_name: Optional[str] = None,
     credentials_dict: Optional[CredentialsDict] = None,
 ) -> Dict[str, Any]:
     """
     Append rows to the end of a sheet
 
     Args:
-        sheet_id: Google Sheets ID
+        sheet_id: Google Sheets ID, or a full URL. A `?gid=` tab
+            identifier in the URL is honored when `sheet_name` is not
+            explicitly provided.
         data: 2D list of rows to append
-        sheet_name: Name of the sheet tab (default: "Sheet1")
+        sheet_name: Name of the sheet tab. Optional — when omitted the
+            tool resolves the tab via the URL's `gid=` parameter, or
+            falls back to the first tab. Pass an explicit name to
+            override that resolution.
         credentials_dict: Google OAuth credentials
 
     Returns:
@@ -340,12 +363,16 @@ def append_rows(
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
 
+        gid = _extract_gid(sheet_id)
         sheet_id = _extract_sheet_id(sheet_id)
+        resolved_tab = _pick_sheet_name(
+            sheet_name, sheet_id, gid, credentials_dict
+        )
 
         service = create_sheets_service(credentials_dict)
 
         # Find the next empty row
-        range_name = f"{sheet_name}!A:A"
+        range_name = f"{resolved_tab}!A:A"
         result = (
             service.spreadsheets()
             .values()
@@ -364,7 +391,8 @@ def append_rows(
             "rows_added": len(data),
             "range_updated": result.get("updates", {}).get("updatedRange"),
             "updated_cells": result.get("updates", {}).get("updatedCells", 0),
-            "message": f"Appended {len(data)} rows to {sheet_name}",
+            "sheet_name": resolved_tab,
+            "message": f"Appended {len(data)} rows to {resolved_tab}",
         }
 
     except HttpError as e:
@@ -376,7 +404,7 @@ def append_rows(
 def upload_mapped_data(
     sheet_id: str,
     transformed_data: str,  # JSON string from mapping agent's transform_data
-    sheet_name: str = "Sheet1",
+    sheet_name: Optional[str] = None,
     append_mode: bool = True,
     credentials_dict: Optional[CredentialsDict] = None,
 ) -> Dict[str, Any]:
@@ -385,9 +413,13 @@ def upload_mapped_data(
     This is the main integration point with the mapping agent
 
     Args:
-        sheet_id: Google Sheets ID
+        sheet_id: Google Sheets ID, or a full URL. A `?gid=` tab
+            identifier in the URL is honored when `sheet_name` is not
+            explicitly provided.
         transformed_data: JSON string of transformed data (from mapping agent)
-        sheet_name: Sheet tab name to write to
+        sheet_name: Sheet tab name to write to. Optional — when omitted
+            the tool resolves the tab via the URL's `gid=` parameter,
+            or falls back to the first tab.
         append_mode: If True, append to sheet. If False, overwrite from A1
         credentials_dict: Google OAuth credentials
 
@@ -398,7 +430,11 @@ def upload_mapped_data(
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
 
+        gid = _extract_gid(sheet_id)
         sheet_id = _extract_sheet_id(sheet_id)
+        resolved_tab = _pick_sheet_name(
+            sheet_name, sheet_id, gid, credentials_dict
+        )
 
         service = create_sheets_service(credentials_dict)
 
@@ -427,7 +463,7 @@ def upload_mapped_data(
                 .values()
                 .append(
                     spreadsheetId=sheet_id,
-                    range=f"{sheet_name}!A:A",
+                    range=f"{resolved_tab}!A:A",
                     valueInputOption="RAW",
                     insertDataOption="INSERT_ROWS",
                     body={"values": all_data},
@@ -440,7 +476,8 @@ def upload_mapped_data(
                 "rows_added": len(all_data),
                 "range_updated": result.get("updates", {}).get("updatedRange"),
                 "mode": "append",
-                "message": f"Appended {len(data_rows)} data rows to {sheet_name}",
+                "sheet_name": resolved_tab,
+                "message": f"Appended {len(data_rows)} data rows to {resolved_tab}",
             }
         else:
             # Overwrite from A1
@@ -449,7 +486,7 @@ def upload_mapped_data(
                 .values()
                 .update(
                     spreadsheetId=sheet_id,
-                    range=f"{sheet_name}!A1",
+                    range=f"{resolved_tab}!A1",
                     valueInputOption="RAW",
                     body={"values": all_data},
                 )
@@ -461,7 +498,8 @@ def upload_mapped_data(
                 "rows_written": len(all_data),
                 "updated_cells": result.get("updatedCells", 0),
                 "mode": "overwrite",
-                "message": f"Wrote {len(data_rows)} data rows to {sheet_name}",
+                "sheet_name": resolved_tab,
+                "message": f"Wrote {len(data_rows)} data rows to {resolved_tab}",
             }
 
     except HttpError as e:
@@ -525,15 +563,20 @@ def get_sheet_metadata(
 
 def clear_sheet(
     sheet_id: str,
-    range_name: str = "Sheet1",
+    range_name: Optional[str] = None,
     credentials_dict: Optional[CredentialsDict] = None,
 ) -> Dict[str, Any]:
     """
     Clear data from a sheet range
 
     Args:
-        sheet_id: Google Sheets ID
-        range_name: Range to clear (e.g., 'Sheet1' or 'Sheet1!A1:D10')
+        sheet_id: Google Sheets ID, or a full URL. A `?gid=` tab
+            identifier in the URL is used when `range_name` is a bare
+            tab reference (e.g. the legacy "Sheet1" default).
+        range_name: Range to clear (e.g., 'Sheet1' or 'Sheet1!A1:D10').
+            Optional — when omitted (or when the prefix is the legacy
+            "Sheet1" default), the tool resolves the tab via the URL's
+            `gid=` parameter or falls back to the first tab.
         credentials_dict: Google OAuth credentials
 
     Returns:
@@ -543,21 +586,26 @@ def clear_sheet(
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
 
+        gid = _extract_gid(sheet_id)
         sheet_id = _extract_sheet_id(sheet_id)
+        effective_range = _apply_tab_to_range(
+            range_name, sheet_id, gid, credentials_dict
+        )
 
         service = create_sheets_service(credentials_dict)
 
         result = (
             service.spreadsheets()
             .values()
-            .clear(spreadsheetId=sheet_id, range=range_name, body={})
+            .clear(spreadsheetId=sheet_id, range=effective_range, body={})
             .execute()
         )
 
         return {
             "success": True,
             "cleared_range": result.get("clearedRange"),
-            "message": f"Cleared data from {range_name}",
+            "range": effective_range,
+            "message": f"Cleared data from {effective_range}",
         }
 
     except HttpError as e:
@@ -568,23 +616,32 @@ def clear_sheet(
 
 def get_sheet_headers(
     sheet_id: str,
-    sheet_name: str = "Sheet1",
+    sheet_name: Optional[str] = None,
     credentials_dict: Optional[CredentialsDict] = None,
 ) -> Dict[str, Any]:
-    """Get the header row of an existing sheet — needed for column mapping"""
+    """Get the header row of an existing sheet — needed for column mapping.
+
+    When `sheet_name` is omitted, the tool resolves the tab via the URL's
+    `gid=` parameter or falls back to the first tab. Pass an explicit name
+    to override that resolution.
+    """
     try:
+        gid = _extract_gid(sheet_id)
         sheet_id = _extract_sheet_id(sheet_id)
+        resolved_tab = _pick_sheet_name(
+            sheet_name, sheet_id, gid, credentials_dict
+        )
         service = create_sheets_service(credentials_dict)
         result = service.spreadsheets().values().get(
             spreadsheetId=sheet_id,
-            range=f"{sheet_name}!1:1"
+            range=f"{resolved_tab}!1:1"
         ).execute()
         headers = result.get("values", [[]])[0]
         return {
             "success": True,
             "headers": headers,
             "column_count": len(headers),
-            "sheet_name": sheet_name,
+            "sheet_name": resolved_tab,
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -975,6 +1032,19 @@ def update_by_date_match(
 # ============================================================
 
 _SHEET_URL_RE = re.compile(r"spreadsheets/d/([a-zA-Z0-9_-]+)")
+# Gid identifies a specific tab inside a spreadsheet. Shows up in Google
+# URLs as either `?gid=123` or `#gid=123` (and sometimes both, e.g.
+# `/edit?gid=123#gid=123`). We accept any of those forms.
+_GID_URL_RE = re.compile(r"[?#&]gid=(\d+)")
+
+# Historical default tab name when no `sheet_name` was supplied to the
+# generic sheet tools. If a user pasted a URL pointing at a different
+# tab (via `?gid=…`) but omitted `sheet_name`, the old code hardcoded
+# "Sheet1" and crashed with "Unable to parse range: Sheet1!A:A" when
+# the spreadsheet had no tab literally called "Sheet1". The helpers
+# below treat this literal as a "resolve via gid / first tab" signal
+# while still honoring explicit non-default names.
+_LEGACY_DEFAULT_TAB = "Sheet1"
 
 _EXPECTED_HEADERS = ["Date", "Order Reference", "Item Code", "Item Description", "QTY", "UOM", "CB Date", "Requested by"]
 _EXPECTED_TABS = {"Food", "non-food"}
@@ -1061,6 +1131,134 @@ def _extract_sheet_id(sheet_id_or_url: str) -> str:
     if m:
         return m.group(1)
     return sheet_id_or_url.strip()
+
+
+def _extract_gid(sheet_id_or_url: Any) -> Optional[int]:
+    """Extract the `gid=N` tab identifier from a Google Sheets URL.
+
+    Returns the gid as an int when found, or None when the input is
+    a raw ID or a URL without a gid. Invariant #13 requires every tool
+    that accepts an ID to also accept a full URL; this helper is the
+    tab-level extension of that — a URL like
+    `/edit?gid=1392110385#gid=1392110385` tells us which tab the user
+    meant, without needing a separate `sheet_name` argument.
+    """
+    s = str(sheet_id_or_url or "")
+    m = _GID_URL_RE.search(s)
+    if not m:
+        return None
+    try:
+        return int(m.group(1))
+    except (TypeError, ValueError):
+        return None
+
+
+def _resolve_tab_title(
+    sheet_id: str,
+    gid: Optional[int],
+    credentials_dict: Optional[CredentialsDict],
+) -> Optional[str]:
+    """Resolve a tab title from a spreadsheet ID + optional gid.
+
+    - gid provided, match found: returns that tab's title.
+    - gid provided, no match: falls through to the first tab (the gid
+      may have been stale or pointed at a deleted tab; the first tab
+      is still better than hardcoding "Sheet1").
+    - gid absent: returns the first tab's title.
+    - Any API failure (auth, network, permission): returns None. Callers
+      must treat None as "fall back to the caller's default" — we do NOT
+      raise here because this is a soft best-effort lookup.
+    """
+    if not credentials_dict:
+        return None
+    try:
+        service = create_sheets_service(credentials_dict)
+        spreadsheet = service.spreadsheets().get(spreadsheetId=sheet_id).execute()
+    except Exception:
+        return None
+    sheets_meta = spreadsheet.get("sheets", []) or []
+    if not sheets_meta:
+        return None
+    if gid is not None:
+        for s in sheets_meta:
+            props = s.get("properties", {}) or {}
+            if props.get("sheetId") == gid:
+                title = props.get("title")
+                if title:
+                    return title
+    first_props = (sheets_meta[0].get("properties", {}) or {})
+    return first_props.get("title")
+
+
+def _pick_sheet_name(
+    provided_name: Optional[str],
+    sheet_id: str,
+    gid: Optional[int],
+    credentials_dict: Optional[CredentialsDict],
+    default: str = _LEGACY_DEFAULT_TAB,
+) -> str:
+    """Pick the tab name for a generic sheet operation.
+
+    Precedence (strongest to weakest):
+      1. An explicit `provided_name` that is NOT the legacy "Sheet1"
+         default: honor as-is. The planner / user clearly named a tab.
+      2. A gid parsed from the URL: call the Sheets API and resolve it
+         to the current tab title.
+      3. No gid: resolve to the first tab's title via the same API.
+      4. API resolution failed (auth/network/permission): fall back to
+         `provided_name` (which is None or "Sheet1" at this point) or
+         the hardcoded default. This preserves pre-fix behavior for the
+         pathological case where we cannot call the API at all.
+
+    Note: when `provided_name == "Sheet1"` AND the URL has a gid, the gid
+    wins — we treat the legacy default as "caller did not specify a tab".
+    This is the DEMO5.0 case. A user who genuinely wants the "Sheet1"
+    tab on a multi-tab sheet should pass a URL without `gid=` (or pass
+    a tab name other than the legacy default).
+    """
+    if provided_name and provided_name != default:
+        return provided_name
+    resolved = _resolve_tab_title(sheet_id, gid, credentials_dict)
+    if resolved:
+        return resolved
+    return provided_name or default
+
+
+def _apply_tab_to_range(
+    range_name: Optional[str],
+    sheet_id: str,
+    gid: Optional[int],
+    credentials_dict: Optional[CredentialsDict],
+    default: str = _LEGACY_DEFAULT_TAB,
+) -> str:
+    """Rewrite a `range_name` argument (for read_sheet / clear_sheet /
+    update_sheet) so it targets the resolved tab when the caller only
+    supplied the legacy default.
+
+    Handled cases:
+      - "Sheet1" (legacy default, bare tab name)  -> resolved tab name
+      - "Sheet1!A1:D10" (legacy default + prefix) -> "<resolved>!A1:D10"
+      - "Orders" / "Orders!A1:D10" (non-default)  -> honored as-is
+      - None / ""                                 -> resolved tab name
+      - "A1:D10" (bare cell range, no prefix)     -> honored as-is
+        (Sheets API will default to the first tab; we do not inject
+        the resolved tab here to avoid changing semantics for callers
+        that intentionally omit a prefix.)
+    """
+    raw = (range_name or "").strip()
+    if not raw:
+        resolved = _resolve_tab_title(sheet_id, gid, credentials_dict)
+        return resolved or default
+    if raw == default:
+        resolved = _resolve_tab_title(sheet_id, gid, credentials_dict)
+        return resolved or default
+    if "!" in raw:
+        tab, sep, cells = raw.partition("!")
+        if tab.strip() == default:
+            resolved = _resolve_tab_title(sheet_id, gid, credentials_dict)
+            if resolved:
+                return f"{resolved}{sep}{cells}"
+    return raw
 
 
 def _classify_http_error(e: HttpError) -> Dict[str, Any]:
