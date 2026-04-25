@@ -51,14 +51,86 @@ os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder-for-offline-sim")
 
 
 def _stub(module_name: str, **attrs) -> types.ModuleType:
-    """Register (or return) a dummy module so heavy-dep imports don't break the sim."""
+    """Register (or return) a dummy module so heavy-dep imports don't break the sim.
+
+    Prefer the REAL module when it's installed locally — the stubs exist
+    only to keep imports like `import pandas` from blowing up on machines
+    that haven't pip-installed every transitive dep. They were never meant
+    to fight with class-level annotations like `pd.DataFrame` in production
+    code (see smart_mapping_engine.py:154).
+    """
     if module_name in sys.modules:
         return sys.modules[module_name]
+    try:
+        import importlib
+        real = importlib.import_module(module_name)
+        sys.modules[module_name] = real
+        for k, v in attrs.items():
+            if not hasattr(real, k):
+                setattr(real, k, v)
+        return real
+    except Exception:
+        pass
     mod = types.ModuleType(module_name)
     for k, v in attrs.items():
         setattr(mod, k, v)
     sys.modules[module_name] = mod
     return mod
+
+
+def _first_order(parsed: dict) -> dict:
+    """Adapter: navigate the post-refactor _parse_single_pdf shape.
+
+    The post-refactor parser returns:
+      - rejection: {rejected: True, file, reason}                     (per PDF)
+      - success:   {rejected: False, file, orders: [{file, page, header, line_items, warnings}, ...], rejected_pages: [...]}
+
+    Pre-refactor scenarios in this file were written against the legacy
+    flat shape where header / line_items lived at the top level. This
+    helper returns orders[0] in the success case (so the legacy assertions
+    on parsed.get('header') / parsed.get('line_items') keep working) and
+    returns the rejection dict unchanged so .get('rejected') / .get('reason')
+    callers continue to behave.
+    """
+    if not isinstance(parsed, dict):
+        return {}
+    if parsed.get("rejected"):
+        return parsed
+    orders = parsed.get("orders") or []
+    if orders:
+        return orders[0]
+    return {"header": {}, "line_items": [], "warnings": []}
+
+
+def _wrap_old_shape_success(old_result: dict) -> dict:
+    """Adapter: wrap a legacy-flat success stub into the new nested shape.
+
+    Test stubs that monkey-patch _parse_single_pdf with literal dicts were
+    originally written for the pre-refactor flat shape:
+        {"file": "...", "header": {...}, "line_items": [...], "warnings": [...]}
+
+    parse_delivery_order_pdfs now expects the per-page nested shape:
+        {"rejected": False, "file": "...", "orders": [{...}], "rejected_pages": []}
+
+    Pass a legacy dict in, get the nested form out; rejection dicts are
+    returned unchanged.
+    """
+    if not isinstance(old_result, dict):
+        return old_result
+    if old_result.get("rejected"):
+        return old_result
+    return {
+        "rejected": False,
+        "file": old_result.get("file", ""),
+        "orders": [{
+            "file": old_result.get("file", ""),
+            "page": 1,
+            "header": old_result.get("header", {}),
+            "line_items": old_result.get("line_items", []),
+            "warnings": old_result.get("warnings", []),
+        }],
+        "rejected_pages": [],
+    }
 
 
 # Heavy runtime deps that the sub-agent modules import at top-level but that
@@ -1142,12 +1214,12 @@ try:
 
     def _mixed_parser(fp: str):
         if fp.endswith("good.pdf"):
-            return {
+            return _wrap_old_shape_success({
                 "file": "good.pdf",
                 "header": {"order_reference": "DO-1"},
                 "line_items": [{"sku": "A", "qty": 1}],
                 "warnings": [],
-            }
+            })
         return {"rejected": True, "file": fp, "reason": "bad format"}
 
     mapping_mod._parse_single_pdf = _mixed_parser
@@ -1604,7 +1676,8 @@ try:
 
     parsed = _run_fake_parse(mapping_mod, "/tmp/Food_DELIVERY_ORDER.pdf", table)
 
-    items = parsed.get("line_items", [])
+    page_order = _first_order(parsed)
+    items = page_order.get("line_items", [])
     item_codes = [i.get("item_code") for i in items]
     if parsed.get("rejected"):
         record(
@@ -1621,17 +1694,13 @@ try:
             f"got {len(items)} items: {item_codes}",
         )
 
-    # With filename inference removed, category must come from
-    # item-code prefix (RMFD* -> FOOD) since the fake first-page text
-    # has no "Category: FOOD" label. This proves the content-only chain
-    # works even when the explicit label is absent.
-    if parsed.get("header", {}).get("category") == "FOOD":
+    if page_order.get("header", {}).get("category") == "FOOD":
         record("_parse_single_pdf fills header.category=FOOD via item-code prefix (content)", "PASS")
     else:
         record(
             "_parse_single_pdf fills header.category=FOOD via item-code prefix (content)",
             "FAIL",
-            f"header={parsed.get('header')!r}",
+            f"header={page_order.get('header')!r}",
         )
 except Exception as e:
     record(
@@ -1963,9 +2032,18 @@ try:
 
     parsed = _run_fake_parse(mapping_mod, "/tmp/Tech_DELIVERY_ORDER.pdf", tech_table)
     problems = []
-    if not parsed.get("rejected"):
-        problems.append(f"expected rejected=True, got {parsed!r}")
-    reason = parsed.get("reason") or ""
+    # Per-page refactor: a Tech PDF whose only page trips the category gate
+    # comes back as {rejected: False, orders: [], rejected_pages: [{page, reason}]}.
+    # parse_delivery_order_pdfs collapses that to a rejected_files entry, so
+    # the user-facing behaviour is unchanged. Accept either shape here.
+    if parsed.get("rejected"):
+        reason = parsed.get("reason") or ""
+    else:
+        rej_pages = parsed.get("rejected_pages") or []
+        orders = parsed.get("orders") or []
+        if not rej_pages or orders:
+            problems.append(f"expected rejected=True or all-pages-rejected, got {parsed!r}")
+        reason = "; ".join((p.get("reason", "") for p in rej_pages))
     if "FOOD" not in reason.upper() or "NON-FOOD" not in reason.upper():
         problems.append(f"rejection reason should mention FOOD and NON-FOOD, got {reason!r}")
     if problems:
@@ -2078,7 +2156,17 @@ try:
     for pdf_path, table, expect_rejected, expected_category in cases:
         parsed = _run_fake_parse(mapping_mod, pdf_path, table)
         if expect_rejected:
-            if not parsed.get("rejected"):
+            # Same as the Tech-rejection scenario: accept either whole-PDF
+            # rejection (rejected: True) or all-pages-rejected (orders empty
+            # + rejected_pages non-empty), since parse_delivery_order_pdfs
+            # collapses both into the same user-facing "rejected file".
+            whole_pdf_reject = parsed.get("rejected")
+            all_pages_rejected = (
+                not parsed.get("rejected")
+                and not (parsed.get("orders") or [])
+                and bool(parsed.get("rejected_pages") or [])
+            )
+            if not (whole_pdf_reject or all_pages_rejected):
                 problems.append(
                     f"{pdf_path!r} with TECH content: expected rejection, got {parsed!r}"
                 )
@@ -2088,7 +2176,7 @@ try:
                     f"{pdf_path!r} with FOOD content: expected acceptance, got reason={parsed.get('reason')!r}"
                 )
             else:
-                got_cat = parsed.get("header", {}).get("category")
+                got_cat = _first_order(parsed).get("header", {}).get("category")
                 if got_cat != expected_category:
                     problems.append(
                         f"{pdf_path!r}: got category={got_cat!r}, want {expected_category!r}"
@@ -3793,12 +3881,12 @@ try:
 
     def _chain_parser(fp: str):
         if "Food" in fp:
-            return {
+            return _wrap_old_shape_success({
                 "file": "Food_DELIVERY_ORDER (1).pdf",
                 "header": {"reference_number": "DO-01", "category": "FOOD", "requested_by": "QA"},
                 "line_items": [{"item_code": "RMFD001", "item_description": "TEST", "qty": 5, "uom": "KG"}],
                 "warnings": [],
-            }
+            })
         return {
             "rejected": True,
             "file": "Tech_DELIVERY_ORDER (1).pdf",

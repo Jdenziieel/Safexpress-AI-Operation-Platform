@@ -152,6 +152,347 @@ def _body_display(body: str, single_item: bool) -> str:
     return preview
 
 
+def _summarise_sample_row(item: dict) -> str:
+    """One-line rendering of a sample item for per-PDF preview/write
+    blocks. Truncates descriptions so the summary stays scannable in
+    chat. Missing fields render as `—`."""
+    code = str(item.get("item_code") or "—")
+    desc = str(item.get("item_description") or "—")
+    qty = item.get("qty")
+    qty_str = f"{qty}" if qty not in ("", None) else "—"
+    uom = str(item.get("uom") or "")
+    if len(desc) > 60:
+        desc = desc[:57] + "..."
+    tail = f"{qty_str} {uom}".strip()
+    return f"`{code}` · {desc} · {tail}"
+
+
+def _render_per_pdf_blocks(
+    orders_summary: list,
+    files_summary: list,
+    include_samples: bool = True,
+    max_samples_per_order: int = 3,
+) -> str:
+    """Render one block per source PDF, listing each page/order beneath
+    its file with sample rows. Shared between preview and write
+    formatters — both need the same per-PDF breakdown so the user can
+    eyeball "page 2 of FoodReq went to the Food tab" before and after
+    the write.
+
+    `files_summary` drives the block headers (filename, page count,
+    tabs, total items) and `orders_summary` (keyed by file+page) drives
+    the nested per-page bullets with refs / requested_by / samples.
+    """
+    if not files_summary:
+        return ""
+
+    orders_by_file: dict = {}
+    for o in orders_summary or []:
+        orders_by_file.setdefault(o.get("file"), []).append(o)
+
+    parts: list = []
+    for fs_idx, fs in enumerate(files_summary):
+        fname = fs.get("file") or "(unknown)"
+        pages = fs.get("pages") or []
+        total_items = fs.get("total_items") or 0
+        tabs = fs.get("tabs") or []
+        tab_label = " / ".join(t for t in tabs if t) or "—"
+
+        if fs_idx > 0:
+            parts.append("")
+
+        parts.append(
+            f"**`{fname}`** — {len(pages)} page(s), {total_items} item(s) → {tab_label}"
+        )
+
+        for order in orders_by_file.get(fname, []):
+            ref = order.get("reference_number") or "(no ref)"
+            req = order.get("requested_by") or "(no requester)"
+            page = order.get("page")
+            page_label = f"Page {page}" if page is not None else "Order"
+            item_count = order.get("item_count") or 0
+            parts.append(
+                f"- {page_label} (ref: `{ref}`, requested by {req}) — {item_count} item(s)"
+            )
+            if include_samples:
+                for sample in (order.get("sample_rows") or [])[:max_samples_per_order]:
+                    parts.append(f"    - {_summarise_sample_row(sample)}")
+
+    return "\n".join(parts)
+
+
+def _render_duplicates_block(
+    duplicates: list,
+    duplicates_by_file: dict,
+    title: str,
+    total: Optional[int] = None,
+    max_samples: int = 10,
+) -> str:
+    """Render the duplicate-section tail shared by preview and write
+    formatters. Returns "" when there are no duplicates so callers can
+    unconditionally append the result.
+
+    `duplicates` may be the full list (preview path) OR a truncated
+    sample list of up to 10 entries (write path — `skipped_samples`).
+    The caller is expected to pass the TRUE aggregate count via
+    `total` when `duplicates` is a sample; otherwise `total` falls
+    back to `len(duplicates)` to preserve the single-source-of-truth
+    case. Without this split the header would misreport the count
+    (e.g. 80 batch-duplicates rendering as "Duplicates skipped (10)").
+
+    Layout:
+      **<title> (N):**
+      - `file.pdf` — K duplicate row(s)
+      (reason breakdown, if derivable from the sample)
+      Sample duplicates:
+      - Tab "Food" · file.pdf p1 · date · ref · code
+    """
+    if not duplicates and not (duplicates_by_file and total):
+        return ""
+
+    derived_total = total
+    if derived_total is None:
+        if isinstance(duplicates, list):
+            derived_total = len(duplicates)
+        elif isinstance(duplicates, int):
+            derived_total = duplicates
+        else:
+            derived_total = 0
+
+    if not derived_total:
+        return ""
+
+    out_lines = [f"**{title} ({derived_total}):**"]
+
+    if duplicates_by_file:
+        for fname, count in duplicates_by_file.items():
+            label = fname or "(unknown)"
+            out_lines.append(f"- `{label}` — {count} duplicate row(s)")
+
+    if isinstance(duplicates, list) and duplicates:
+        reason_counts: dict = {}
+        for d in duplicates:
+            if not isinstance(d, dict):
+                continue
+            r = d.get("reason") or "unknown"
+            reason_counts[r] = reason_counts.get(r, 0) + 1
+        if reason_counts:
+            # When we only have a sample (sample_len < derived_total),
+            # report reasons as proportions of the sample, not absolute
+            # counts — otherwise a 10-sample of an 80-row batch would
+            # claim "10 duplicate within batch" which reads as "only 10
+            # of 80 had that reason", misleading the user. For full-
+            # list callers (preview), sample_len == derived_total so the
+            # proportion becomes the absolute count and reads naturally.
+            sample_len = len(duplicates)
+            if sample_len == derived_total:
+                reason_line = ", ".join(f"{c} {r}" for r, c in reason_counts.items())
+                out_lines.append(f"Reasons: {reason_line}.")
+            elif sample_len > 0:
+                parts = []
+                for reason, count in reason_counts.items():
+                    pct = round(100 * count / sample_len)
+                    parts.append(f"{pct}% {reason}")
+                out_lines.append(
+                    f"Reasons (sampled from first {sample_len}): {', '.join(parts)}."
+                )
+
+        out_lines.append("")
+        out_lines.append("Sample duplicate row(s):")
+        for d in duplicates[:max_samples]:
+            if not isinstance(d, dict):
+                continue
+            tab = d.get("tab") or "?"
+            f = d.get("file") or "?"
+            p = d.get("page")
+            p_str = f" p{p}" if p is not None else ""
+            date = d.get("date") or "—"
+            ref = d.get("order_reference") or "—"
+            code = d.get("item_code") or "—"
+            out_lines.append(
+                f"- Tab \"{tab}\" · `{f}`{p_str} · {date} · {ref} · `{code}`"
+            )
+        shown = min(len(duplicates), max_samples)
+        if derived_total > shown:
+            out_lines.append(f"_…and {derived_total - shown} more._")
+
+    return "\n".join(out_lines)
+
+
+def _render_warnings_block(warnings, title: str = "Warnings", max_items: int = 10) -> str:
+    """Render a terse warnings tail. Returns "" when empty."""
+    if not warnings:
+        return ""
+    if isinstance(warnings, str):
+        warnings = [warnings]
+    if not isinstance(warnings, list):
+        return ""
+    deduped: list = []
+    seen = set()
+    for w in warnings:
+        if not w:
+            continue
+        if w in seen:
+            continue
+        seen.add(w)
+        deduped.append(w)
+    if not deduped:
+        return ""
+    lines = [f"**{title}:**"]
+    for w in deduped[:max_items]:
+        lines.append(f"- {w}")
+    if len(deduped) > max_items:
+        lines.append(f"_…and {len(deduped) - max_items} more._")
+    return "\n".join(lines)
+
+
+def _format_preview_delivery_order_insertion(output: dict) -> str:
+    """Render the sheets-agent preview as a per-PDF block with sample
+    rows plus an explicit duplicate section.
+
+    Replaces the legacy `use_message: True` behaviour that collapsed the
+    preview to a single "N row(s) ready to insert" sentence — the user
+    could not see which PDFs routed to which tab, which items previewed,
+    or what duplicates were about to be skipped.
+    """
+    total_new = output.get("total_new_rows")
+    has_preview_rows = bool(output.get("preview_rows"))
+    if total_new is None:
+        total_new = len(output.get("preview_rows") or [])
+    target_tabs = output.get("target_tabs") or []
+    duplicate_count = output.get("duplicate_count") or 0
+
+    # Backwards-compat fallback: if the caller passed nothing structured
+    # (no rows, no tabs, no orders_summary) but DID supply a `message`
+    # string, render the message verbatim. Preserves the legacy
+    # `use_message: True` template behaviour for synthetic fixtures and
+    # callers that haven't been migrated to the rich shape yet — without
+    # this, `format_step("...preview...", {"message": "17 row(s) ready"})`
+    # would render "Ready to insert 0 row(s) across 0 tab(s)." instead of
+    # the supplied message.
+    has_structured = (
+        bool(total_new) or bool(target_tabs) or bool(output.get("orders_summary"))
+        or bool(output.get("files_summary")) or has_preview_rows or bool(duplicate_count)
+    )
+    msg = output.get("message")
+    if not has_structured and isinstance(msg, str) and msg.strip():
+        return msg
+
+    headline = f"Ready to insert {total_new} row(s) across {len(target_tabs)} tab(s)"
+    if duplicate_count:
+        headline += f"; {duplicate_count} duplicate(s) detected"
+    headline += "."
+
+    parts = [headline]
+
+    pdf_blocks = _render_per_pdf_blocks(
+        output.get("orders_summary") or [],
+        output.get("files_summary") or [],
+    )
+    if pdf_blocks:
+        parts.append("")
+        parts.append(pdf_blocks)
+
+    dup_block = _render_duplicates_block(
+        output.get("duplicates") or [],
+        output.get("duplicates_by_file") or {},
+        title="Duplicates detected",
+        total=output.get("duplicate_count"),
+    )
+    if dup_block:
+        parts.append("")
+        parts.append(dup_block)
+
+    warn_block = _render_warnings_block(output.get("warnings"))
+    if warn_block:
+        parts.append("")
+        parts.append(warn_block)
+
+    return "\n".join(parts)
+
+
+def _format_write_delivery_order_data(output: dict) -> str:
+    """Render the sheets-agent write result as a per-PDF block plus an
+    explicit duplicate-skipped section.
+
+    Replaces the legacy `use_message: True` one-liner ("Successfully
+    wrote N rows to M tab(s)") that silently hid per-PDF routing and
+    duplicate-skip counts — users had no way to tell whether
+    `write_delivery_order_data` dropped rows vs wrote them all.
+    """
+    rows_written = output.get("rows_written") or 0
+    tabs_used = output.get("tabs_used") or []
+    duplicates_skipped = output.get("duplicates_skipped") or 0
+    skipped_samples = output.get("skipped_samples") or []
+
+    # Backwards-compat fallback: same rationale as the preview formatter.
+    has_structured = (
+        bool(rows_written) or bool(tabs_used)
+        or bool(duplicates_skipped) or bool(skipped_samples)
+        or bool(output.get("orders_summary"))
+        or bool(output.get("files_summary"))
+    )
+    msg = output.get("message")
+    if not has_structured and isinstance(msg, str) and msg.strip():
+        return msg
+
+    tab_count = len(tabs_used) if isinstance(tabs_used, list) else 0
+    headline = f"Wrote {rows_written} row(s) across {tab_count} tab(s)"
+    if duplicates_skipped:
+        headline += f"; skipped {duplicates_skipped} duplicate row(s)"
+    headline += "."
+
+    parts = [headline]
+
+    if isinstance(tabs_used, list) and tabs_used:
+        tab_lines = []
+        for t in tabs_used:
+            if isinstance(t, dict):
+                name = t.get("tab") or "?"
+                n = t.get("rows_written")
+                if n is not None:
+                    tab_lines.append(f"- `{name}` — {n} row(s) written")
+                else:
+                    tab_lines.append(f"- `{name}`")
+        if tab_lines:
+            parts.append("\n**Tabs updated:**\n" + "\n".join(tab_lines))
+
+    pdf_blocks = _render_per_pdf_blocks(
+        output.get("orders_summary") or [],
+        output.get("files_summary") or [],
+    )
+    if pdf_blocks:
+        parts.append("")
+        parts.append(pdf_blocks)
+
+    dup_block = _render_duplicates_block(
+        skipped_samples if isinstance(skipped_samples, list) else [],
+        output.get("duplicates_by_file") or {},
+        title="Duplicates skipped",
+        # `duplicates_skipped` is the TRUE count (an int); `skipped_samples`
+        # is truncated to 10 to keep the response compact. We must render
+        # the true count in the header or the user will under-estimate the
+        # dedup.
+        total=int(duplicates_skipped or 0),
+    )
+    if dup_block:
+        parts.append("")
+        parts.append(dup_block)
+
+    warn_block = _render_warnings_block(output.get("warnings"))
+    if warn_block:
+        parts.append("")
+        parts.append(warn_block)
+
+    errors = output.get("errors") or []
+    err_block = _render_warnings_block(errors, title="Errors")
+    if err_block:
+        parts.append("")
+        parts.append(err_block)
+
+    return "\n".join(parts)
+
+
 def _format_parse_delivery_order_pdfs(output: dict) -> str:
     """Deterministic summary for mapping_agent.parse_delivery_order_pdfs.
 
@@ -476,11 +817,20 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
     },
     ("sheets_agent", "preview_delivery_order_insertion"): {
         "type": "action",
-        "use_message": True,
+        # Callable template so the preview surfaces per-PDF blocks with
+        # sample rows + an explicit duplicate breakdown. `use_message`
+        # collapsed everything into the one-liner "N row(s) ready to
+        # insert" which hid the per-file routing the user needs to see
+        # before approving the write.
+        "template": _format_preview_delivery_order_insertion,
     },
     ("sheets_agent", "write_delivery_order_data"): {
         "type": "action",
-        "use_message": True,
+        # Same story as preview: callable so the write result shows
+        # per-PDF blocks + duplicates-skipped breakdown, not just
+        # "Successfully wrote N rows". Silent dedup was the top user
+        # complaint from DeliveryTesting.log.
+        "template": _format_write_delivery_order_data,
     },
 
     # ========================= LLM TOOL (built-in) =========================

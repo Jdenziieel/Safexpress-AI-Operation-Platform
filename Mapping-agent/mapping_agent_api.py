@@ -6,7 +6,7 @@ Completely independent of any destination (Sheets, Excel, Database, etc.)
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 import os
 import re
 import uvicorn
@@ -960,8 +960,15 @@ def extract_dates_from_all_rows(
 
 _REQUISITION_MARKERS = {"PRODUCTION MATERIALS REQUISITION LIST", "REQUISITION LIST"}
 
+# `reference_number` requires a non-optional disambiguator after `Ref` /
+# `Reference` (No/Number/#) OR a fully-labeled `Order No` / `Order Ref`.
+# Without this, the bare `Ref` substring matched inside common item words
+# like "Refined" (from "Sugar Refined") on continuation pages and captured
+# "ined" as the reference — see fix-delivery-order-parsing-and-ux plan Bug 1.
+# The captured char-class is widened to `[A-Z0-9\-]+` so hyphenated
+# references like `DO-2026-01` are preserved.
 _HEADER_PATTERNS = {
-    "reference_number": re.compile(r"(?:Ref(?:erence)?\.?\s*(?:No\.?|Number|#)?|Order\s*(?:No\.?|Ref))\s*[:\-]?\s*([A-Z0-9]+)", re.IGNORECASE),
+    "reference_number": re.compile(r"\b(?:Ref(?:erence)?\.?\s*(?:No\.?|Number|#)|Order\s*(?:No\.?|Ref))\s*[:\-]?\s*([A-Z0-9\-]+)", re.IGNORECASE),
     "date": re.compile(r"(?:Date|Order\s*Date)\s*[:\-]?\s*(.+?)(?:\s{2,}|$)", re.IGNORECASE),
     # Intentionally locked to FOOD and NON-FOOD. The requisition sheet only
     # accepts these two categories — any other content (e.g. Tech/IT) is
@@ -1001,8 +1008,14 @@ _HEADER_PATTERNS = {
 # items table to avoid capturing digits inside item codes or qty values.
 
 # Order reference: user-specified product rule is "a token starting with
-# VRM" — try that first as the most specific signal.
-_REFERENCE_VRM_FALLBACK = re.compile(r"\b(VRM[A-Z0-9]+)\b")
+# VRM" — try that first as the most specific signal. The inner char-class
+# accepts hyphens after the first alphanumeric so page-suffixed references
+# like `VRMSDSF26427-1` / `VRMSDSF26427-2` are captured intact (without the
+# hyphen the capture would truncate at `VRMSDSF26427`, collapsing every
+# page of a multi-page PDF onto the same reference — the opposite of the
+# per-page design). The final class forces an alphanumeric end-char so a
+# stray trailing hyphen doesn't pollute the capture.
+_REFERENCE_VRM_FALLBACK = re.compile(r"\b(VRM[A-Z0-9][A-Z0-9\-]*[A-Z0-9])\b")
 
 # Generic fallback: an uppercase alphanumeric token on a line by itself
 # that contains at least one digit. Excludes English template words like
@@ -1011,6 +1024,17 @@ _REFERENCE_VRM_FALLBACK = re.compile(r"\b(VRM[A-Z0-9]+)\b")
 _REFERENCE_STANDALONE_FALLBACK = re.compile(
     r"^\s*([A-Z][A-Z0-9\-]{3,}\d[A-Z0-9\-]*)\s*$",
     re.MULTILINE,
+)
+
+# Positional FOOD / NON-FOOD standalone fallback. Some pages of a
+# multi-page requisition drop the explicit "Category:" label and just
+# sit the word "Non-Food" next to the date (observed on page 2 of
+# NonFood_Requisition.pdf: `Nov 05, Wed Non-Food`). Scoped to the
+# header section above the items table so item descriptions never feed
+# this pattern.
+_CATEGORY_STANDALONE_FALLBACK = re.compile(
+    r"\b(FOOD|NON[\s\-]?FOOD)\b",
+    re.IGNORECASE,
 )
 
 # "Mon dd" or "Mon dd, Weekday" — abbreviated month form used by the
@@ -1079,6 +1103,12 @@ _FOOTER_STOP_KEYWORDS = {
 _ITEM_CODE_CATEGORY_PREFIXES = (
     ("RMFD", "FOOD"),
     ("FOOD-", "FOOD"),
+    # Non-food requisitions observed in Production use item codes starting
+    # with `NMFD` (non-food material). Give the category gate a second
+    # signal besides the "Category:" label so a page that drops the label
+    # still routes correctly.
+    ("NMFD", "NON-FOOD"),
+    ("NONFOOD-", "NON-FOOD"),
 )
 
 
@@ -1130,6 +1160,15 @@ def _extract_header_from_text(full_text: str) -> Dict[str, str]:
         if m:
             header["reference_number"] = m.group(1).strip()
 
+    # Category standalone fallback: some pages drop the "Category:" label
+    # and just write "Food" / "Non-Food" next to the date. Scope to the
+    # header section so item descriptions can't accidentally feed the
+    # gate.
+    if not header.get("category"):
+        m = _CATEGORY_STANDALONE_FALLBACK.search(header_section)
+        if m:
+            header["category"] = m.group(1).strip()
+
     # Date extraction: take the abbreviated-month form ("Nov 05, Wed")
     # and deliberately ignore any sibling MM/DD/YYYY timestamp on the
     # same line — that numeric form is the Google-Docs creation stamp,
@@ -1144,40 +1183,61 @@ def _extract_header_from_text(full_text: str) -> Dict[str, str]:
     return header
 
 
-def _extract_requested_by_from_signature_table(pdf) -> str:
-    """Scan every page's tables for a signature block whose header row
+def _extract_requested_by_from_tables(tables) -> str:
+    """Scan the supplied tables for a signature block whose header row
     contains a 'Requested By' cell, and return the first non-empty,
     non-boilerplate name in that column.
 
     The Google-Docs requisition template places the requester name in a
     small 4-column signature table at the bottom of the document:
 
-        ['Requested By', 'Assembled By', 'Checked By', 'Received By']
-        ['M.C FRANCO',   '',             '',           '']
+        ['Requested By:', 'Assembled By:', 'Checked By:', 'Received By:']
+        ['M.C FRANCO\\nname', 'Signature over printed name', ...]
         ['Signature over printed name', ...]
 
     Pdfplumber's table extraction preserves this structure, so we can
     pluck the name directly from row 1, column 0 of the signature table
     — far more reliable than regex-matching the flattened text, which
     conflates the "Requested By:" empty line with the 4-column label row.
+
+    Two gotchas this helper has to handle:
+
+    1. pdfplumber-extracted header cells carry the trailing ":" character
+       ("REQUESTED BY:"), so a literal `"REQUESTED BY" in header_cells`
+       check silently fails. We strip trailing colons before comparison.
+    2. The name cell is commonly rendered as `"M.C FRANCO\\nname"` because
+       pdfplumber merges the handwritten name line with the "name"
+       stamp label below it. We split on newlines and keep the first
+       line that is not a label / footer keyword.
+
+    Accepts a list of tables (as returned by `page.extract_tables()`) so
+    it can be called per-page rather than iterating the whole PDF. The
+    caller decides which page's signature block to attribute a name to.
     """
-    for page in pdf.pages:
-        for table in page.extract_tables() or []:
-            if not table or len(table) < 2:
+    _LABEL_NOISE = {"NAME", "PRINTED NAME", "SIGNATURE", ""}
+    for table in tables or []:
+        if not table or len(table) < 2:
+            continue
+        header_cells = [_clean_cell(c).rstrip(":").strip().upper() for c in table[0]]
+        if "REQUESTED BY" not in header_cells:
+            continue
+        req_col = header_cells.index("REQUESTED BY")
+        for row in table[1:]:
+            if not row or len(row) <= req_col:
                 continue
-            header_cells = [_clean_cell(c).upper() for c in table[0]]
-            if "REQUESTED BY" not in header_cells:
+            candidate = _clean_cell(row[req_col])
+            if not candidate:
                 continue
-            req_col = header_cells.index("REQUESTED BY")
-            for row in table[1:]:
-                if not row or len(row) <= req_col:
+            for line in candidate.split("\n"):
+                line = line.strip()
+                if not line:
                     continue
-                candidate = _clean_cell(row[req_col])
-                if not candidate:
+                upper = line.upper()
+                if upper in _FOOTER_STOP_KEYWORDS:
                     continue
-                if candidate.upper() in _FOOTER_STOP_KEYWORDS:
+                if upper in _LABEL_NOISE:
                     continue
-                return candidate
+                return line
     return ""
 
 
@@ -1262,8 +1322,200 @@ def _clean_cell(val: Any) -> str:
     return str(val).strip()
 
 
+def _parse_items_from_tables(tables: List[List[List[Any]]]) -> Tuple[List[Dict[str, Any]], List[str], bool]:
+    """Walk a single page's tables, find the one that has an items header
+    row (Item Code/Description + Qty/UOM), and return the parsed items,
+    any row-level warnings, and a boolean indicating whether a header was
+    actually found.
+
+    This helper intentionally has **no cross-page state**: callers MUST
+    pass a single page's tables. The pre-fix parser carried a
+    `last_known_col_indices` dict across pages so that continuation
+    pages without a repeated header row could still be parsed, but in
+    the requisition-template world each page repeats its own items
+    header — and the carryover branch misrouted page 2's 2-row
+    mini-header table (`[['', 'VRMSDSF26427-2'], ['Nov 05, Wed',
+    'Category: Food']]`) as two junk item rows. See fix-delivery-order
+    plan Bug 3.
+    """
+    line_items: List[Dict[str, Any]] = []
+    warnings: List[str] = []
+    header_found = False
+
+    for table in tables or []:
+        if not table or len(table) < 2:
+            continue
+
+        header_row_idx = None
+        col_indices: Dict[str, int] = {}
+
+        for row_idx, row in enumerate(table):
+            row_upper = [_clean_cell(c).upper() for c in row]
+            has_item_code = any("ITEM" in c and "CODE" in c for c in row_upper) or any("ITEMCODE" in c.replace(" ", "") for c in row_upper)
+            has_description = any("DESC" in c for c in row_upper) or any("ITEM" in c and ("DESC" in c or "NAME" in c) for c in row_upper)
+            has_qty = any(c in ("QTY", "QUANTITY") for c in row_upper)
+            has_uom = any(c in ("UOM", "UNIT") for c in row_upper)
+
+            if (has_item_code or has_description) and (has_qty or has_uom):
+                header_row_idx = row_idx
+                for ci, cell_val in enumerate(row_upper):
+                    clean = cell_val.replace(" ", "")
+                    if "ITEMCODE" in clean or ("ITEM" in cell_val and "CODE" in cell_val):
+                        col_indices["item_code"] = ci
+                    elif "DESC" in cell_val or ("ITEM" in cell_val and "NAME" in cell_val):
+                        col_indices["item_description"] = ci
+                    elif cell_val in ("QTY", "QUANTITY"):
+                        col_indices["qty"] = ci
+                    elif cell_val in ("UOM", "UNIT"):
+                        col_indices["uom"] = ci
+                    elif "CB" in cell_val and "DATE" in cell_val:
+                        col_indices["cb_date"] = ci
+                break
+
+        if header_row_idx is None:
+            # Not the items table on this page — could be the mini
+            # reference/date header table or the signature block. Skip,
+            # but do NOT borrow column indices from any other table:
+            # that's exactly how page-2 header tables were misrouted as
+            # items under the pre-fix parser.
+            continue
+
+        header_found = True
+        data_rows = table[header_row_idx + 1:]
+
+        for row in data_rows:
+            if not row or all(_clean_cell(c) == "" for c in row):
+                continue
+
+            item: Dict[str, Any] = {}
+            for field_name, ci in col_indices.items():
+                item[field_name] = _clean_cell(row[ci]) if ci < len(row) else ""
+
+            qty_str = item.get("qty", "")
+            if qty_str:
+                try:
+                    item["qty"] = float(str(qty_str).replace(",", ""))
+                except ValueError:
+                    item["qty"] = qty_str
+            else:
+                item["qty"] = ""
+
+            item_code = item.get("item_code", "")
+            desc = item.get("item_description", "")
+            if not item_code and not desc:
+                continue
+
+            # Drop signature / sign-off block rows (cells literally
+            # saying "Requested By" / "Checked By" / "Signature over
+            # printed name", or free-text name rows like "M.C FRANCO"
+            # with no digits in the item_code position).
+            if _is_footer_row(item):
+                continue
+
+            if not item.get("item_code"):
+                warnings.append(f"Missing item_code for: {desc[:40]}")
+            if not item.get("qty") and item.get("qty") != 0:
+                warnings.append(f"Missing qty for: {item_code or desc[:40]}")
+            if not item.get("uom"):
+                warnings.append(f"Missing uom for: {item_code or desc[:40]}")
+
+            line_items.append(item)
+
+    return line_items, warnings, header_found
+
+
+def _parse_single_page(page, page_index: int, filename: str) -> Optional[Dict[str, Any]]:
+    """Parse a single PDF page into one requisition order.
+
+    Returns one of:
+      * `{"rejected": False, "file", "page", "header", "line_items", "warnings"}`
+        — a fully-parsed page; `header` carries `reference_number`,
+        `date`, `category` (normalised to FOOD/NON-FOOD), and
+        `requested_by`.
+      * `{"rejected": True, "file", "page", "reason"}` — the page has
+        items but fails the category gate (FOOD/NON-FOOD). The caller
+        can surface this to the user without tanking other pages in
+        the same PDF.
+      * `None` — the page has no items-table header at all (e.g. a
+        purely decorative cover page). Silently skip.
+
+    Design notes:
+      * `_extract_header_from_text` is fed ONLY this page's text, so
+        the reference captured is whatever sits on THIS page
+        (`VRMSDSF26427-1` vs `VRMSDSF26427-2` on a two-page PDF).
+        No suffix-stripping / merge heuristic — each page is its own
+        order.
+      * Requested-by resolution is also per-page: the signature-table
+        fallback reads `page.extract_tables()`, not the whole PDF.
+      * Items are derived from `_parse_items_from_tables`, which now
+        requires an items-header row on THIS page — no cross-page
+        column-index carryover.
+    """
+    page_text = page.extract_text() or ""
+    header = _extract_header_from_text(page_text)
+
+    tables = page.extract_tables() or []
+
+    if not header.get("requested_by"):
+        name = _extract_requested_by_from_tables(tables)
+        if name:
+            header["requested_by"] = name
+
+    line_items, warnings, header_found = _parse_items_from_tables(tables)
+
+    if not header_found:
+        return None
+
+    raw_category = header.get("category") or ""
+    normalised = _normalise_category(raw_category)
+    if not normalised:
+        normalised = _normalise_category(_infer_category_from_items(line_items))
+
+    if normalised not in _ACCEPTED_CATEGORIES:
+        return {
+            "rejected": True,
+            "file": filename,
+            "page": page_index,
+            "reason": (
+                f"Page {page_index} category is not FOOD or NON-FOOD. "
+                "The requisition sheet only accepts these two categories. "
+                "This page did not expose a 'Category: FOOD' or "
+                "'Category: NON-FOOD' label, and its item codes did not "
+                f"match a known FOOD prefix. Detected category label: {raw_category!r}."
+            ),
+        }
+
+    header["category"] = normalised
+
+    return {
+        "rejected": False,
+        "file": filename,
+        "page": page_index,
+        "header": header,
+        "line_items": line_items,
+        "warnings": warnings,
+    }
+
+
 def _parse_single_pdf(file_path: str) -> Dict[str, Any]:
-    """Parse a single PDF and return structured data or rejection info."""
+    """Open a PDF and return one order per page.
+
+    Return shape:
+      * `{"rejected": True, "file", "reason"}` — whole-PDF rejection
+        (not a PDF, file missing, pdfplumber unavailable, no pages, not
+        a requisition template, or an unexpected exception).
+      * `{"rejected": False, "file", "orders": [...], "rejected_pages": [...]}`
+        — at least one page produced a valid order. `orders` contains
+        per-page entries in page order; `rejected_pages` (if any)
+        carries per-page category-gate rejections so
+        `parse_delivery_order_pdfs` can surface them.
+
+    A PDF whose every page either skipped (no items header) or hit the
+    category gate will have `orders: []` and still `rejected: False`.
+    `parse_delivery_order_pdfs` then promotes that to a rejected-file
+    entry with a synthesised reason, so the user always sees why the
+    file produced zero orders.
+    """
     if not PDFPLUMBER_AVAILABLE:
         return {"rejected": True, "file": os.path.basename(file_path), "reason": "pdfplumber not installed"}
 
@@ -1273,197 +1525,41 @@ def _parse_single_pdf(file_path: str) -> Dict[str, Any]:
     if not os.path.exists(file_path):
         return {"rejected": True, "file": os.path.basename(file_path), "reason": f"File not found: {file_path}"}
 
+    filename = os.path.basename(file_path)
+
     try:
         with pdfplumber.open(file_path) as pdf:
             if not pdf.pages:
-                return {"rejected": True, "file": os.path.basename(file_path), "reason": "PDF has no pages"}
+                return {"rejected": True, "file": filename, "reason": "PDF has no pages"}
 
             first_page_text = pdf.pages[0].extract_text() or ""
-
             if not _is_requisition_pdf(first_page_text):
-                return {"rejected": True, "file": os.path.basename(file_path), "reason": "Not a requisition list template"}
+                return {"rejected": True, "file": filename, "reason": "Not a requisition list template"}
 
-            all_text = first_page_text
-            for page in pdf.pages[1:]:
-                pt = page.extract_text() or ""
-                all_text += "\n" + pt
+            orders: List[Dict[str, Any]] = []
+            rejected_pages: List[Dict[str, Any]] = []
 
-            header = _extract_header_from_text(all_text)
-
-            # Signature-table fallback for requested_by. The flat-text
-            # regex is brittle here because pdfplumber's extract_text
-            # renders the 4-column signature block as two adjacent lines:
-            #
-            #     Requested By:                              ← empty label
-            #     Requested By Assembled By Checked By ...   ← column-header row
-            #     M.C FRANCO                                 ← actual name (col 0)
-            #
-            # The greedy `.+?` in _HEADER_PATTERNS["requested_by"] skips
-            # the empty label line and captures "Assembled By Checked By
-            # Received By" from the column-header row — which
-            # _extract_header_from_text now scrubs. Pull the real name
-            # directly from the signature table's row 1, column 0.
-            if not header.get("requested_by"):
-                name = _extract_requested_by_from_signature_table(pdf)
-                if name:
-                    header["requested_by"] = name
-
-            line_items: List[Dict[str, Any]] = []
-            warnings: List[str] = []
-            # Carry column indices across pages so continuation pages
-            # without a repeated header row are still parsed.
-            last_known_col_indices: Dict[str, int] = {}
-
-            for page_idx, page in enumerate(pdf.pages):
-                tables = page.extract_tables()
-                if not tables:
+            for idx, page in enumerate(pdf.pages):
+                page_result = _parse_single_page(page, idx + 1, filename)
+                if page_result is None:
                     continue
-
-                for table in tables:
-                    if not table or len(table) < 2:
-                        continue
-
-                    # Find the header row of the items table
-                    header_row_idx = None
-                    col_indices: Dict[str, int] = {}
-
-                    for row_idx, row in enumerate(table):
-                        row_upper = [_clean_cell(c).upper() for c in row]
-                        has_item_code = any("ITEM" in c and "CODE" in c for c in row_upper) or any("ITEMCODE" in c.replace(" ", "") for c in row_upper)
-                        has_description = any("DESC" in c for c in row_upper) or any("ITEM" in c and ("DESC" in c or "NAME" in c) for c in row_upper)
-                        has_qty = any(c in ("QTY", "QUANTITY") for c in row_upper)
-                        has_uom = any(c in ("UOM", "UNIT") for c in row_upper)
-
-                        if (has_item_code or has_description) and (has_qty or has_uom):
-                            header_row_idx = row_idx
-                            for ci, cell_val in enumerate(row_upper):
-                                clean = cell_val.replace(" ", "")
-                                if "ITEMCODE" in clean or ("ITEM" in cell_val and "CODE" in cell_val):
-                                    col_indices["item_code"] = ci
-                                elif "DESC" in cell_val or ("ITEM" in cell_val and "NAME" in cell_val):
-                                    col_indices["item_description"] = ci
-                                elif cell_val in ("QTY", "QUANTITY"):
-                                    col_indices["qty"] = ci
-                                elif cell_val in ("UOM", "UNIT"):
-                                    col_indices["uom"] = ci
-                                elif "CB" in cell_val and "DATE" in cell_val:
-                                    col_indices["cb_date"] = ci
-                            last_known_col_indices = col_indices
-                            break
-
-                    if header_row_idx is None:
-                        if not last_known_col_indices:
-                            continue
-                        # Continuation page without a repeated header row —
-                        # treat ALL rows as data using the prior page's columns.
-                        col_indices = last_known_col_indices
-                        data_rows = table
-                    else:
-                        data_rows = table[header_row_idx + 1:]
-
-                    # — data_rows is now set regardless of header presence —
-                    for row in data_rows:
-                        if not row or all(_clean_cell(c) == "" for c in row):
-                            continue
-
-                        item = {}
-                        for field_name, ci in col_indices.items():
-                            if ci < len(row):
-                                item[field_name] = _clean_cell(row[ci])
-                            else:
-                                item[field_name] = ""
-
-                        # Parse qty as float
-                        qty_str = item.get("qty", "")
-                        if qty_str:
-                            try:
-                                item["qty"] = float(qty_str.replace(",", ""))
-                            except ValueError:
-                                item["qty"] = qty_str
-                        else:
-                            item["qty"] = ""
-
-                        # Skip rows that look like sub-totals or footers
-                        item_code = item.get("item_code", "")
-                        desc = item.get("item_description", "")
-                        if not item_code and not desc:
-                            continue
-
-                        # Drop signature / sign-off block rows that survived
-                        # the column mapping (Bug 4). The filter below catches
-                        # the two common shapes: (a) cells that literally say
-                        # "Requested By", "Checked By", "Signature over
-                        # printed name", etc., and (b) free-text name rows
-                        # like "M.C FRANCO" that have no digits in the
-                        # item_code position.
-                        if _is_footer_row(item):
-                            continue
-
-                        # Warn on missing critical fields
-                        row_warnings = []
-                        if not item.get("item_code"):
-                            row_warnings.append(f"Missing item_code for: {desc[:40]}")
-                        if not item.get("qty") and item.get("qty") != 0:
-                            row_warnings.append(f"Missing qty for: {item_code or desc[:40]}")
-                        if not item.get("uom"):
-                            row_warnings.append(f"Missing uom for: {item_code or desc[:40]}")
-
-                        warnings.extend(row_warnings)
-                        line_items.append(item)
-
-            # ----------------------------------------------------------------
-            # CATEGORY GATE (content-only)
-            # ----------------------------------------------------------------
-            # Product rule: the requisition sheet template has exactly two
-            # destinations — Food and non-food tabs. A PDF that matches the
-            # requisition template but whose content reads as Tech / IT /
-            # anything else MUST be rejected here. We never force-route it
-            # into Food or non-food because its item codes and descriptions
-            # don't belong in either tab.
-            #
-            # Resolution order for the category field (CONTENT ONLY):
-            #   1. Explicit "Category: FOOD" / "Category: NON-FOOD" label in
-            #      the PDF text (strict regex above).
-            #   2. Item-code prefix majority vote (e.g. RMFD* -> FOOD).
-            # Filename is NEVER consulted — a file named "Food_DO.pdf" with
-            # TECH content must still be rejected, and a file named
-            # "DO-2025-04-21.pdf" with RMFD items must still be accepted as
-            # FOOD. If both content signals fail, reject the file.
-            raw_category = header.get("category") or ""
-            normalised = _normalise_category(raw_category)
-
-            if not normalised:
-                normalised = _normalise_category(_infer_category_from_items(line_items))
-
-            if normalised not in _ACCEPTED_CATEGORIES:
-                return {
-                    "rejected": True,
-                    "file": os.path.basename(file_path),
-                    "reason": (
-                        "Category is not FOOD or NON-FOOD. The requisition "
-                        "sheet only accepts these two categories. The PDF "
-                        "content did not expose a 'Category: FOOD' or "
-                        "'Category: NON-FOOD' label, and its item codes did "
-                        "not match a known FOOD prefix. Detected category "
-                        f"label: {raw_category!r}."
-                    ),
-                }
-
-            # Stamp the canonical category back onto the header so downstream
-            # sees a consistent "FOOD" or "NON-FOOD" regardless of how we
-            # got here (explicit label, filename, or item prefix).
-            header["category"] = normalised
+                if page_result.get("rejected"):
+                    rejected_pages.append({
+                        "page": page_result["page"],
+                        "reason": page_result["reason"],
+                    })
+                    continue
+                orders.append(page_result)
 
             return {
                 "rejected": False,
-                "file": os.path.basename(file_path),
-                "header": header,
-                "line_items": line_items,
-                "warnings": warnings,
+                "file": filename,
+                "orders": orders,
+                "rejected_pages": rejected_pages,
             }
 
     except Exception as e:
-        return {"rejected": True, "file": os.path.basename(file_path), "reason": f"Error reading PDF: {str(e)}"}
+        return {"rejected": True, "file": filename, "reason": f"Error reading PDF: {str(e)}"}
 
 
 def _flatten_file_paths(raw: Any) -> List[str]:
@@ -1523,20 +1619,61 @@ def parse_delivery_order_pdfs(file_paths: Any) -> Dict[str, Any]:
         if not file_paths:
             return {"success": False, "error": "No file paths provided. Expected a list of paths or the gmail search response with attachments."}
 
-        parsed_orders = []
-        rejected_files = []
+        parsed_orders: List[Dict[str, Any]] = []
+        rejected_files: List[Dict[str, Any]] = []
+        files_attempted = 0
+        files_with_orders: set = set()
 
         for fp in file_paths:
+            files_attempted += 1
             result = _parse_single_pdf(str(fp))
             if result.get("rejected"):
                 rejected_files.append({"file": result["file"], "reason": result["reason"]})
-            else:
+                continue
+
+            filename = result.get("file")
+            orders = result.get("orders") or []
+            rejected_pages = result.get("rejected_pages") or []
+
+            # Flatten per-page orders onto parsed_orders, stamping `file`
+            # and `page` onto every entry so downstream (preview / write
+            # / response templates) can group samples per-file and call
+            # out duplicates by page.
+            for page_order in orders:
                 parsed_orders.append({
-                    "file": result["file"],
-                    "header": result["header"],
-                    "line_items": result["line_items"],
-                    "warnings": result["warnings"],
+                    "file": filename,
+                    "page": page_order.get("page"),
+                    "header": page_order["header"],
+                    "line_items": page_order["line_items"],
+                    "warnings": page_order.get("warnings") or [],
                 })
+                files_with_orders.add(filename)
+
+            # If a PDF had zero usable pages (every page either had no
+            # items table or hit the category gate), surface it as a
+            # rejected file so the user isn't left wondering why nothing
+            # came out of it.
+            if not orders:
+                if rejected_pages:
+                    reason = "; ".join(p["reason"] for p in rejected_pages)
+                else:
+                    reason = (
+                        "PDF matched the requisition template but no page "
+                        "contained an items table with Item Code/Qty columns."
+                    )
+                rejected_files.append({"file": filename, "reason": reason})
+            else:
+                # Surface per-page rejections as warnings on the corresponding
+                # file's orders so the user knows some pages were skipped.
+                for rp in rejected_pages:
+                    for po in parsed_orders:
+                        if po.get("file") == filename:
+                            po["warnings"] = (po.get("warnings") or []) + [
+                                f"Skipped page {rp['page']}: {rp['reason']}"
+                            ]
+                            break
+
+        total_files_parsed = len(files_with_orders)
 
         # Fail loudly when nothing parsed AND at least one file was attempted —
         # prevents the orchestrator from cascading into validate / preview / write
@@ -1561,14 +1698,21 @@ def parse_delivery_order_pdfs(file_paths: Any) -> Dict[str, Any]:
                 "rejected_files": rejected_files,
                 "total_parsed": 0,
                 "total_rejected": len(rejected_files),
+                "total_files_parsed": 0,
+                "total_files_attempted": files_attempted,
             }
 
         return {
             "success": True,
             "parsed_orders": parsed_orders,
             "rejected_files": rejected_files,
+            # `total_parsed` now counts orders (one per page), not files —
+            # this is the number that the sheets agent will iterate when
+            # previewing / writing rows.
             "total_parsed": len(parsed_orders),
             "total_rejected": len(rejected_files),
+            "total_files_parsed": total_files_parsed,
+            "total_files_attempted": files_attempted,
         }
 
     except Exception as e:

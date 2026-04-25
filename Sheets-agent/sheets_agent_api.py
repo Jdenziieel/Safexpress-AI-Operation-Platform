@@ -2098,6 +2098,160 @@ def validate_delivery_sheet(
         return {"success": False, "error": f"Validation failed: {str(e)}"}
 
 
+def _build_rows_from_orders(
+    parsed_orders: List[Dict[str, Any]],
+    tab_names: List[str],
+) -> Tuple[
+    Dict[str, List[List[str]]],
+    Dict[str, List[Dict[str, Any]]],
+    List[Dict[str, Any]],
+    List[str],
+]:
+    """Translate `parsed_orders` into the intermediate state that both
+    `preview_delivery_order_insertion` and `write_delivery_order_data`
+    need:
+
+      * `tab_rows` — `{tab_name: [[col0, col1, ...], ...]}`, the actual
+        8-column rows the Sheets API will append.
+      * `tab_row_meta` — parallel to `tab_rows`, carrying per-row
+        `{file, page, reference_number}` so duplicate detection can
+        attribute a skipped row back to its source file/page.
+      * `orders_summary` — one entry per order (one per PDF page after
+        the mapping-agent per-page refactor) with `file`, `page`,
+        `reference_number`, `category`, `requested_by`, `tab`,
+        `item_count`, and up to 3 `sample_rows`. The response template
+        renders this as the per-PDF block the user asked for.
+      * `warnings` — routing / missing-field warnings collected while
+        building rows.
+
+    Extracted into a shared helper so preview and write stay in lock-
+    step; otherwise drift between the two (e.g. preview counts differ
+    from write counts) makes the approval pause feel dishonest.
+    """
+    tab_rows: Dict[str, List[List[str]]] = {}
+    tab_row_meta: Dict[str, List[Dict[str, Any]]] = {}
+    orders_summary: List[Dict[str, Any]] = []
+    warnings: List[str] = []
+
+    for order in parsed_orders:
+        header = order.get("header", {}) or {}
+        raw_category = header.get("category") or ""
+        actual_tab, route_warning = _resolve_tab_for_category(raw_category, tab_names)
+
+        if not actual_tab:
+            warnings.append(
+                f"{route_warning} (order {header.get('reference_number', '?')})"
+            )
+            continue
+
+        source_file = order.get("file") or "(unknown)"
+        source_page = order.get("page")
+        date_val = header.get("date", "")
+        ref = header.get("reference_number", "")
+        requested_by = header.get("requested_by", "")
+        header_cb_date = header.get("cb_date", "")
+        line_items = order.get("line_items", []) or []
+
+        sample_rows: List[Dict[str, Any]] = []
+
+        for item in line_items:
+            row = [
+                date_val,
+                ref,
+                item.get("item_code", ""),
+                item.get("item_description", ""),
+                str(item.get("qty", "")),
+                item.get("uom", ""),
+                item.get("cb_date", "") or header_cb_date,
+                requested_by,
+            ]
+            tab_rows.setdefault(actual_tab, []).append(row)
+            tab_row_meta.setdefault(actual_tab, []).append({
+                "file": source_file,
+                "page": source_page,
+                "reference_number": ref,
+            })
+
+            if len(sample_rows) < 3:
+                sample_rows.append({
+                    "item_code": item.get("item_code", ""),
+                    "item_description": item.get("item_description", ""),
+                    "qty": item.get("qty", ""),
+                    "uom": item.get("uom", ""),
+                })
+
+            if not item.get("item_code"):
+                warnings.append(
+                    f"Missing Item Code in row: {str(item.get('item_description', '?'))[:40]}"
+                )
+            if not item.get("qty") and item.get("qty") != 0:
+                warnings.append(
+                    f"Missing QTY for {item.get('item_code', '?')}"
+                )
+
+        orders_summary.append({
+            "file": source_file,
+            "page": source_page,
+            "reference_number": ref,
+            "category": raw_category,
+            "requested_by": requested_by,
+            "tab": actual_tab,
+            "item_count": len(line_items),
+            "sample_rows": sample_rows,
+        })
+
+    return tab_rows, tab_row_meta, orders_summary, warnings
+
+
+def _aggregate_files_summary(orders_summary: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Collapse the per-order summary into one entry per source file,
+    preserving insertion order. Used by the response-template formatters
+    to render a per-PDF block (one block per input file, listing every
+    page under it).
+    """
+    by_file: Dict[str, Dict[str, Any]] = {}
+    order: List[str] = []
+    for entry in orders_summary:
+        fname = entry.get("file") or "(unknown)"
+        if fname not in by_file:
+            by_file[fname] = {
+                "file": fname,
+                "pages": [],
+                "total_items": 0,
+                "references": [],
+                "requested_bys": [],
+                "tabs": [],
+            }
+            order.append(fname)
+        rec = by_file[fname]
+        page = entry.get("page")
+        if page is not None and page not in rec["pages"]:
+            rec["pages"].append(page)
+        rec["total_items"] += int(entry.get("item_count") or 0)
+        for key_pair in (
+            ("reference_number", "references"),
+            ("requested_by", "requested_bys"),
+            ("tab", "tabs"),
+        ):
+            val = entry.get(key_pair[0])
+            if val and val not in rec[key_pair[1]]:
+                rec[key_pair[1]].append(val)
+    return [by_file[f] for f in order]
+
+
+def _tally_duplicates_by_file(
+    duplicate_entries: List[Dict[str, Any]],
+) -> Dict[str, int]:
+    """Count duplicate rows per source file. The entries must already
+    carry a `file` key (stamped by the duplicate-detection pass, which
+    reads it from `tab_row_meta`)."""
+    by_file: Dict[str, int] = {}
+    for entry in duplicate_entries:
+        fname = entry.get("file") or "(unknown)"
+        by_file[fname] = by_file.get(fname, 0) + 1
+    return by_file
+
+
 def preview_delivery_order_insertion(
     sheet_id: str,
     parsed_orders: Any,
@@ -2139,50 +2293,14 @@ def preview_delivery_order_insertion(
             for s in spreadsheet.get("sheets", [])
         ]
 
-        # Build flat rows and group by target tab (case-insensitive lookup)
-        tab_rows: Dict[str, List[List[str]]] = {}
-        all_preview_rows = []
-        warnings: List[str] = []
+        tab_rows, tab_row_meta, orders_summary, warnings = _build_rows_from_orders(
+            parsed_orders, tab_names
+        )
 
-        for order in parsed_orders:
-            header = order.get("header", {})
-            category = header.get("category") or ""
-            actual_tab, route_warning = _resolve_tab_for_category(category, tab_names)
-
-            if not actual_tab:
-                # Non-FOOD/NON-FOOD category, or a missing destination tab.
-                # Either way this order is skipped — don't force it anywhere.
-                warnings.append(
-                    f"{route_warning} (order {header.get('reference_number', '?')})"
-                )
-                continue
-
-            date_val = header.get("date", "")
-            ref = header.get("reference_number", "")
-            requested_by = header.get("requested_by", "")
-            header_cb_date = header.get("cb_date", "")
-
-            for item in order.get("line_items", []):
-                row = [
-                    date_val,
-                    ref,
-                    item.get("item_code", ""),
-                    item.get("item_description", ""),
-                    str(item.get("qty", "")),
-                    item.get("uom", ""),
-                    item.get("cb_date", "") or header_cb_date,
-                    requested_by,
-                ]
-                tab_rows.setdefault(actual_tab, []).append(row)
-                all_preview_rows.append({
-                    "tab": actual_tab,
-                    "values": row,
-                })
-
-                if not item.get("item_code"):
-                    warnings.append(f"Missing Item Code in row: {item.get('item_description', '?')[:40]}")
-                if not item.get("qty") and item.get("qty") != 0:
-                    warnings.append(f"Missing QTY for {item.get('item_code', '?')}")
+        all_preview_rows: List[Dict[str, Any]] = []
+        for tab_name, rows in tab_rows.items():
+            for row in rows:
+                all_preview_rows.append({"tab": tab_name, "values": row})
 
         # Duplicate detection using the (Date, Order Reference, Item Code)
         # key. Catches both rows that already exist in the destination tab
@@ -2190,7 +2308,9 @@ def preview_delivery_order_insertion(
         # the same PDF was passed to parse_delivery_order_pdfs twice in
         # one call). The preview and the write paths share the same
         # helper `_row_dedup_key` so the user sees exactly the rows the
-        # write will skip.
+        # write will skip. We also attach `file`/`page` metadata from the
+        # parallel `tab_row_meta` index so downstream rendering can show
+        # which PDF produced each duplicate.
         duplicates: List[Dict[str, Any]] = []
         for tab_name, new_rows in tab_rows.items():
             try:
@@ -2204,11 +2324,14 @@ def preview_delivery_order_insertion(
                 existing_keys = {_row_dedup_key(erow) for erow in existing_values[1:]}
 
                 batch_keys: set = set()
-                for row in new_rows:
+                for idx, row in enumerate(new_rows):
+                    meta = tab_row_meta.get(tab_name, [{}])[idx] if idx < len(tab_row_meta.get(tab_name, [])) else {}
                     key = _row_dedup_key(row)
                     if key in existing_keys:
                         duplicates.append({
                             "tab": tab_name,
+                            "file": meta.get("file"),
+                            "page": meta.get("page"),
                             "reason": "already in sheet",
                             "date": row[0] if len(row) > 0 else "",
                             "order_reference": row[1] if len(row) > 1 else "",
@@ -2217,6 +2340,8 @@ def preview_delivery_order_insertion(
                     elif key in batch_keys:
                         duplicates.append({
                             "tab": tab_name,
+                            "file": meta.get("file"),
+                            "page": meta.get("page"),
                             "reason": "duplicate within batch",
                             "date": row[0] if len(row) > 0 else "",
                             "order_reference": row[1] if len(row) > 1 else "",
@@ -2228,6 +2353,8 @@ def preview_delivery_order_insertion(
                 warnings.append(f"Could not read existing data from tab '{tab_name}': {str(e)}")
 
         total_new = sum(len(rows) for rows in tab_rows.values())
+        files_summary = _aggregate_files_summary(orders_summary)
+        duplicates_by_file = _tally_duplicates_by_file(duplicates)
 
         return {
             "success": True,
@@ -2235,6 +2362,9 @@ def preview_delivery_order_insertion(
             "total_new_rows": total_new,
             "duplicates": duplicates,
             "duplicate_count": len(duplicates),
+            "duplicates_by_file": duplicates_by_file,
+            "orders_summary": orders_summary,
+            "files_summary": files_summary,
             "warnings": warnings,
             "target_tabs": list(tab_rows.keys()),
             "message": f"{total_new} row(s) ready to insert across {len(tab_rows)} tab(s). "
@@ -2286,41 +2416,9 @@ def write_delivery_order_data(
             for s in spreadsheet.get("sheets", [])
         ]
 
-        # Build flat rows grouped by target tab (case-insensitive lookup)
-        tab_rows: Dict[str, List[List[str]]] = {}
-        skipped_warnings: List[str] = []
-
-        for order in parsed_orders:
-            header = order.get("header", {})
-            category = header.get("category") or ""
-            actual_tab, route_warning = _resolve_tab_for_category(category, tab_names)
-
-            if not actual_tab:
-                # Non-FOOD/NON-FOOD category, or a missing destination tab.
-                # Skip — the requisition template only has homes for FOOD
-                # and NON-FOOD, never Tech / IT / anything else.
-                skipped_warnings.append(
-                    f"{route_warning} (order {header.get('reference_number', '?')})"
-                )
-                continue
-
-            date_val = header.get("date", "")
-            ref = header.get("reference_number", "")
-            requested_by = header.get("requested_by", "")
-            header_cb_date = header.get("cb_date", "")
-
-            for item in order.get("line_items", []):
-                row = [
-                    date_val,
-                    ref,
-                    item.get("item_code", ""),
-                    item.get("item_description", ""),
-                    str(item.get("qty", "")),
-                    item.get("uom", ""),
-                    item.get("cb_date", "") or header_cb_date,
-                    requested_by,
-                ]
-                tab_rows.setdefault(actual_tab, []).append(row)
+        tab_rows, tab_row_meta, orders_summary, skipped_warnings = _build_rows_from_orders(
+            parsed_orders, tab_names
+        )
 
         if not tab_rows:
             return {
@@ -2375,11 +2473,21 @@ def write_delivery_order_data(
             batch_keys: set = set()
             kept_rows: List[List[str]] = []
 
-            for row in rows:
+            # Look up the parallel metadata list so duplicates are
+            # attributed back to their source file/page. `meta_list` may
+            # be shorter than `rows` in pathological cases (should not
+            # happen since they're built together) — we defensively index
+            # with `idx < len(meta_list)`.
+            meta_list = tab_row_meta.get(tab_name, [])
+
+            for idx, row in enumerate(rows):
+                meta = meta_list[idx] if idx < len(meta_list) else {}
                 key = _row_dedup_key(row)
                 if key in existing_keys:
                     duplicates_skipped.append({
                         "tab": tab_name,
+                        "file": meta.get("file"),
+                        "page": meta.get("page"),
                         "reason": "already in sheet",
                         "date": row[0] if len(row) > 0 else "",
                         "order_reference": row[1] if len(row) > 1 else "",
@@ -2389,6 +2497,8 @@ def write_delivery_order_data(
                 if key in batch_keys:
                     duplicates_skipped.append({
                         "tab": tab_name,
+                        "file": meta.get("file"),
+                        "page": meta.get("page"),
                         "reason": "duplicate within batch",
                         "date": row[0] if len(row) > 0 else "",
                         "order_reference": row[1] if len(row) > 1 else "",
@@ -2402,6 +2512,9 @@ def write_delivery_order_data(
                 filtered_tab_rows[tab_name] = kept_rows
 
         total_incoming = sum(len(r) for r in tab_rows.values())
+        duplicates_by_file = _tally_duplicates_by_file(duplicates_skipped)
+        files_summary = _aggregate_files_summary(orders_summary)
+
         if not filtered_tab_rows:
             # Every incoming row was a duplicate. This is a legitimate
             # no-op outcome (user re-submitted the same PDF) and reports
@@ -2412,6 +2525,9 @@ def write_delivery_order_data(
                 "rows_written": 0,
                 "duplicates_skipped": len(duplicates_skipped),
                 "skipped_samples": duplicates_skipped[:10],
+                "duplicates_by_file": duplicates_by_file,
+                "orders_summary": orders_summary,
+                "files_summary": files_summary,
                 "tabs_used": [],
                 "warnings": skipped_warnings if skipped_warnings else None,
                 "message": (
@@ -2459,6 +2575,12 @@ def write_delivery_order_data(
             "rows_written": total_written,
             "duplicates_skipped": len(duplicates_skipped),
             "skipped_samples": duplicates_skipped[:10] if duplicates_skipped else None,
+            "duplicates_by_file": duplicates_by_file,
+            # Per-order + per-file breakdown so the supervisor response
+            # template can render a per-PDF block with sample rows instead
+            # of the one-line "wrote N rows" summary.
+            "orders_summary": orders_summary,
+            "files_summary": files_summary,
             "tabs_used": tabs_used,
             "errors": errors if errors else None,
             # Surface routing fallbacks (e.g. Tech items that landed in

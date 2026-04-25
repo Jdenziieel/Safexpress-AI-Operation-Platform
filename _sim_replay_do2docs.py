@@ -65,6 +65,21 @@ os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder-for-offline-sim")
 def _stub(module_name: str, **attrs) -> types.ModuleType:
     if module_name in sys.modules:
         return sys.modules[module_name]
+    try:
+        # Prefer the REAL module when it's installed. The stubs exist only
+        # to keep imports like `import pandas` from blowing up on machines
+        # that haven't pip-installed every transitive dep — they were
+        # never meant to fight with annotations like `pd.DataFrame` in
+        # production code (see smart_mapping_engine.py:154).
+        import importlib
+        real = importlib.import_module(module_name)
+        sys.modules[module_name] = real
+        for k, v in attrs.items():
+            if not hasattr(real, k):
+                setattr(real, k, v)
+        return real
+    except Exception:
+        pass
     mod = types.ModuleType(module_name)
     for k, v in attrs.items():
         setattr(mod, k, v)
@@ -112,6 +127,29 @@ class _FakePDF:
         return self
     def __exit__(self, *exc):
         return False
+
+
+def _first_order(parsed):
+    """Adapter: navigate the post-refactor _parse_single_pdf shape.
+
+    Post-refactor shape:
+      - rejection: {rejected: True, file, reason}
+      - success:   {rejected: False, file, orders: [{file, page, header, line_items, warnings}, ...], rejected_pages: [...]}
+
+    Legacy assertions in this replay sim were written for the flat shape
+    (header / line_items at top level). This helper returns orders[0] for
+    success cases so those assertions keep working, and returns the
+    rejection dict unchanged so .get('rejected') / .get('reason') keep
+    behaving.
+    """
+    if not isinstance(parsed, dict):
+        return {}
+    if parsed.get("rejected"):
+        return parsed
+    orders = parsed.get("orders") or []
+    if orders:
+        return orders[0]
+    return {"header": {}, "line_items": [], "warnings": []}
 
 
 def _run_fake_parse(mapping_mod, pdf_path, table,
@@ -278,12 +316,26 @@ try:
     print(f"  parsed.rejected = {tech_parsed.get('rejected')!r}")
     print(f"  parsed.reason   = {tech_parsed.get('reason', '')[:120]!r}")
 
+    # After the per-page refactor, _parse_single_pdf can reject in two ways:
+    #   (a) whole-PDF reject  -> {rejected: True, reason: "..."}
+    #       (template gate, missing file, pdfplumber unavailable, etc.)
+    #   (b) per-page reject   -> {rejected: False, orders: [], rejected_pages: [{page, reason}, ...]}
+    #       (every page passed the template gate but failed the category gate)
+    # parse_delivery_order_pdfs collapses both into rejected_files with a
+    # unified reason; the user-visible behaviour is identical. The Tech PDF
+    # in this fixture passes the template-name check and then trips the
+    # category gate on its single page, so it lands on path (b).
     problems = []
-    if not tech_parsed.get("rejected"):
-        problems.append(
-            f"Tech PDF should be REJECTED, got {tech_parsed!r}"
-        )
-    reason = tech_parsed.get("reason", "")
+    if tech_parsed.get("rejected"):
+        reason = tech_parsed.get("reason", "")
+    else:
+        rej_pages = tech_parsed.get("rejected_pages") or []
+        orders = tech_parsed.get("orders") or []
+        if not rej_pages or orders:
+            problems.append(
+                f"Tech PDF should be REJECTED (whole-PDF or all-pages), got {tech_parsed!r}"
+            )
+        reason = "; ".join((p.get("reason", "") for p in rej_pages))
     if "FOOD" not in reason.upper() or "NON-FOOD" not in reason.upper():
         problems.append(
             f"Rejection reason should mention FOOD / NON-FOOD, got {reason!r}"
@@ -311,8 +363,9 @@ try:
         mapping_mod, "/tmp/Food_DELIVERY_ORDER (1).pdf", FOOD_TABLE
     )
 
-    header = food_parsed.get("header", {})
-    line_items = food_parsed.get("line_items", [])
+    food_first = _first_order(food_parsed)
+    header = food_first.get("header", {})
+    line_items = food_first.get("line_items", [])
     item_codes = [i.get("item_code") for i in line_items]
 
     print(f"  parsed.rejected        = {food_parsed.get('rejected')!r}")

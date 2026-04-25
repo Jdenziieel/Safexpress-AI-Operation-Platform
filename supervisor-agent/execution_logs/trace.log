@@ -7091,3 +7091,1861 @@ Parameters:
 [2026-04-23 23:06:31.759] [PRINT]   Bug 3 OK: non-auth categories unaffected by the fix
 [2026-04-23 23:06:31.766] [PRINT] ====================================================================
 [2026-04-23 23:06:31.777] [PRINT] All 9 checks passed
+[2026-04-24 19:21:32.446] [PRINT] === PARSE ===
+[2026-04-24 19:21:32.475] [PRINT] orders=4  files=2  rejected=0
+[2026-04-24 19:21:32.483] [PRINT]   Food_Requisition.pdf p1: ref=VRMSDSF26427-1  req=M.C FRANCO  cat=FOOD  items=20
+[2026-04-24 19:21:32.493] [PRINT]   Food_Requisition.pdf p2: ref=VRMSDSF26427-2  req=M.C FRANCO  cat=FOOD  items=20
+[2026-04-24 19:21:32.501] [PRINT]   NonFood_Requisition.pdf p1: ref=VRMSDSF26438-1  req=M.C FRANCO  cat=NON-FOOD  items=20
+[2026-04-24 19:21:32.510] [PRINT]   NonFood_Requisition.pdf p2: ref=VRMSDSF26438-2  req=M.C FRANCO  cat=NON-FOOD  items=20
+[2026-04-24 19:21:32.520] [PRINT] 
+[2026-04-24 19:21:32.520] [PRINT] PARSE INVARIANTS: all checks passed
+[2026-04-24 19:21:32.530] [PRINT] 
+[2026-04-24 19:21:32.530] [PRINT] === RENDERED: parse_delivery_order_pdfs ===
+[2026-04-24 19:21:32.540] [PRINT] Parsed 4 delivery order(s), 0 file(s) rejected
+[2026-04-24 19:21:32.550] [PRINT] 
+[2026-04-24 19:21:32.550] [PRINT] === RENDERED: preview_delivery_order_insertion ===
+[2026-04-24 19:21:56.937] [PRINT] === PARSE ===
+[2026-04-24 19:21:56.955] [PRINT] orders=4  files=2  rejected=0
+[2026-04-24 19:21:56.965] [PRINT]   Food_Requisition.pdf p1: ref=VRMSDSF26427-1  req=M.C FRANCO  cat=FOOD  items=20
+[2026-04-24 19:21:56.976] [PRINT]   Food_Requisition.pdf p2: ref=VRMSDSF26427-2  req=M.C FRANCO  cat=FOOD  items=20
+[2026-04-24 19:21:56.986] [PRINT]   NonFood_Requisition.pdf p1: ref=VRMSDSF26438-1  req=M.C FRANCO  cat=NON-FOOD  items=20
+[2026-04-24 19:21:57.000] [PRINT]   NonFood_Requisition.pdf p2: ref=VRMSDSF26438-2  req=M.C FRANCO  cat=NON-FOOD  items=20
+[2026-04-24 19:21:57.010] [PRINT] 
+[2026-04-24 19:21:57.010] [PRINT] PARSE INVARIANTS: all checks passed
+[2026-04-24 19:21:57.020] [PRINT] 
+[2026-04-24 19:21:57.020] [PRINT] === RENDERED: parse_delivery_order_pdfs ===
+[2026-04-24 19:21:57.031] [PRINT] Parsed 4 delivery order(s), 0 file(s) rejected
+[2026-04-24 19:21:57.041] [PRINT] 
+[2026-04-24 19:21:57.041] [PRINT] === RENDERED: preview_delivery_order_insertion ===
+[2026-04-24 19:21:57.050] [PRINT] Ready to insert 80 row(s) across 2 tab(s); 2 duplicate(s) detected.
+[2026-04-24 19:21:57.050] [PRINT] 
+[2026-04-24 19:21:57.050] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:21:57.050] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:21:57.050] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:21:57.050] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:21:57.050] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:21:57.050] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:21:57.050] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:21:57.050] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:21:57.050] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:21:57.050] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:21:57.050] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:21:57.050] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:21:57.050] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:21:57.050] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:21:57.050] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:21:57.050] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:21:57.050] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:21:57.050] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:21:57.050] [PRINT] 
+[2026-04-24 19:21:57.050] [PRINT] **Duplicates detected (2):**
+[2026-04-24 19:21:57.050] [PRINT] - `Food_Requisition.pdf` — 2 duplicate row(s)
+[2026-04-24 19:21:57.050] [PRINT] Reasons: 2 already in sheet.
+[2026-04-24 19:21:57.050] [PRINT] 
+[2026-04-24 19:21:57.050] [PRINT] Sample duplicate row(s):
+[2026-04-24 19:21:57.050] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810030020`
+[2026-04-24 19:21:57.050] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810270002`
+[2026-04-24 19:21:57.060] [PRINT] 
+[2026-04-24 19:21:57.060] [PRINT] === RENDERED: write_delivery_order_data ===
+[2026-04-24 19:21:57.069] [PRINT] Wrote 78 row(s) across 2 tab(s); skipped 2 duplicate row(s).
+[2026-04-24 19:21:57.069] [PRINT] 
+[2026-04-24 19:21:57.069] [PRINT] **Tabs updated:**
+[2026-04-24 19:21:57.069] [PRINT] - `Food` — 38 row(s) written
+[2026-04-24 19:21:57.069] [PRINT] - `non-food` — 40 row(s) written
+[2026-04-24 19:21:57.069] [PRINT] 
+[2026-04-24 19:21:57.069] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:21:57.069] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:21:57.069] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:21:57.069] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:21:57.069] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:21:57.069] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:21:57.069] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:21:57.069] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:21:57.069] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:21:57.069] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:21:57.069] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:21:57.069] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:21:57.069] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:21:57.069] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:21:57.069] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:21:57.069] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:21:57.069] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:21:57.069] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:21:57.069] [PRINT] 
+[2026-04-24 19:21:57.069] [PRINT] **Duplicates skipped (2):**
+[2026-04-24 19:21:57.069] [PRINT] - `Food_Requisition.pdf` — 2 duplicate row(s)
+[2026-04-24 19:21:57.069] [PRINT] Reasons: 2 already in sheet.
+[2026-04-24 19:21:57.069] [PRINT] 
+[2026-04-24 19:21:57.069] [PRINT] Sample duplicate row(s):
+[2026-04-24 19:21:57.069] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810030020`
+[2026-04-24 19:21:57.069] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810270002`
+[2026-04-24 19:23:14.546] [PRINT] PARSE: 4 orders, 80 rows — ok
+[2026-04-24 19:23:14.568] [PRINT] 
+[2026-04-24 19:23:14.568] [PRINT] === Scenario A: preview with 'already in sheet' dupes ===
+[2026-04-24 19:23:14.580] [PRINT] Ready to insert 80 row(s) across 2 tab(s); 8 duplicate(s) detected.
+[2026-04-24 19:23:14.580] [PRINT] 
+[2026-04-24 19:23:14.580] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:23:14.580] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.580] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:23:14.580] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:23:14.580] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:23:14.580] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.580] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:23:14.580] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:23:14.580] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:23:14.580] [PRINT] 
+[2026-04-24 19:23:14.580] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:23:14.580] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.580] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:23:14.580] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:23:14.580] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:23:14.580] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.580] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:23:14.580] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:23:14.580] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:23:14.580] [PRINT] 
+[2026-04-24 19:23:14.580] [PRINT] **Duplicates detected (8):**
+[2026-04-24 19:23:14.580] [PRINT] - `Food_Requisition.pdf` — 5 duplicate row(s)
+[2026-04-24 19:23:14.580] [PRINT] - `NonFood_Requisition.pdf` — 3 duplicate row(s)
+[2026-04-24 19:23:14.580] [PRINT] Reasons: 8 already in sheet.
+[2026-04-24 19:23:14.580] [PRINT] 
+[2026-04-24 19:23:14.580] [PRINT] Sample duplicate row(s):
+[2026-04-24 19:23:14.580] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810030020`
+[2026-04-24 19:23:14.580] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810270002`
+[2026-04-24 19:23:14.580] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00710020049`
+[2026-04-24 19:23:14.580] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040003`
+[2026-04-24 19:23:14.580] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040007`
+[2026-04-24 19:23:14.580] [PRINT] - Tab "non-food" · `NonFood_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26438-1 · `NMFD00810030020`
+[2026-04-24 19:23:14.580] [PRINT] - Tab "non-food" · `NonFood_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26438-1 · `NMFD00810270002`
+[2026-04-24 19:23:14.580] [PRINT] - Tab "non-food" · `NonFood_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26438-1 · `NMFD00710020049`
+[2026-04-24 19:23:14.590] [PRINT] 
+[2026-04-24 19:23:14.590] [PRINT] === Scenario B: preview with NO duplicates ===
+[2026-04-24 19:23:14.600] [PRINT] Ready to insert 80 row(s) across 2 tab(s).
+[2026-04-24 19:23:14.600] [PRINT] 
+[2026-04-24 19:23:14.600] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:23:14.600] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.600] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:23:14.600] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:23:14.600] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:23:14.600] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.600] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:23:14.600] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:23:14.600] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:23:14.600] [PRINT] 
+[2026-04-24 19:23:14.600] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:23:14.600] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.600] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:23:14.600] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:23:14.600] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:23:14.600] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.600] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:23:14.600] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:23:14.600] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:23:14.609] [PRINT] 
+[2026-04-24 19:23:14.609] [PRINT] === Scenario C: write with BATCH-WITHIN duplicates ===
+[2026-04-24 19:23:14.619] [PRINT] Wrote 80 row(s) across 2 tab(s); skipped 80 duplicate row(s).
+[2026-04-24 19:23:14.619] [PRINT] 
+[2026-04-24 19:23:14.619] [PRINT] **Tabs updated:**
+[2026-04-24 19:23:14.619] [PRINT] - `Food` — 40 row(s) written
+[2026-04-24 19:23:14.619] [PRINT] - `non-food` — 40 row(s) written
+[2026-04-24 19:23:14.619] [PRINT] 
+[2026-04-24 19:23:14.619] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 80 item(s) → Food
+[2026-04-24 19:23:14.619] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:23:14.619] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:23:14.619] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:23:14.619] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:23:14.619] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:23:14.619] [PRINT] 
+[2026-04-24 19:23:14.619] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 80 item(s) → non-food
+[2026-04-24 19:23:14.619] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:23:14.619] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:23:14.619] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:23:14.619] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:23:14.619] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:23:14.619] [PRINT] 
+[2026-04-24 19:23:14.619] [PRINT] **Duplicates skipped (10):**
+[2026-04-24 19:23:14.619] [PRINT] - `Food_Requisition.pdf` — 40 duplicate row(s)
+[2026-04-24 19:23:14.619] [PRINT] - `NonFood_Requisition.pdf` — 40 duplicate row(s)
+[2026-04-24 19:23:14.619] [PRINT] Reasons: 10 duplicate within batch.
+[2026-04-24 19:23:14.619] [PRINT] 
+[2026-04-24 19:23:14.619] [PRINT] Sample duplicate row(s):
+[2026-04-24 19:23:14.619] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810030020`
+[2026-04-24 19:23:14.619] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810270002`
+[2026-04-24 19:23:14.619] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00710020049`
+[2026-04-24 19:23:14.619] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040003`
+[2026-04-24 19:23:14.619] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040007`
+[2026-04-24 19:23:14.619] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00710100002`
+[2026-04-24 19:23:14.619] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01010010007`
+[2026-04-24 19:23:14.619] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01010010053`
+[2026-04-24 19:23:14.619] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810060008`
+[2026-04-24 19:23:14.619] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00310010001`
+[2026-04-24 19:23:14.629] [PRINT] 
+[2026-04-24 19:23:14.629] [PRINT] === Scenario D: write with routing warning (TECH order skipped) ===
+[2026-04-24 19:23:14.640] [PRINT] Wrote 80 row(s) across 2 tab(s).
+[2026-04-24 19:23:14.640] [PRINT] 
+[2026-04-24 19:23:14.640] [PRINT] **Tabs updated:**
+[2026-04-24 19:23:14.640] [PRINT] - `Food` — 40 row(s) written
+[2026-04-24 19:23:14.640] [PRINT] - `non-food` — 40 row(s) written
+[2026-04-24 19:23:14.640] [PRINT] 
+[2026-04-24 19:23:14.640] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:23:14.640] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.640] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:23:14.640] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:23:14.640] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:23:14.640] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.640] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:23:14.640] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:23:14.640] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:23:14.640] [PRINT] 
+[2026-04-24 19:23:14.640] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:23:14.640] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.640] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:23:14.640] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:23:14.640] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:23:14.640] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:23:14.640] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:23:14.640] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:23:14.640] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:23:14.640] [PRINT] 
+[2026-04-24 19:23:14.640] [PRINT] **Warnings:**
+[2026-04-24 19:23:14.640] [PRINT] - Category 'TECH' is not FOOD or NON-FOOD — order skipped. Only the two requisition categories have a destination in the Food / non-food sheet template. (order VRM99999999-1)
+[2026-04-24 19:23:14.650] [PRINT] 
+[2026-04-24 19:23:14.650] [PRINT] ALL ASSERTIONS: passed
+[2026-04-24 19:24:33.250] [PRINT] PARSE: 4 orders, 80 rows — ok
+[2026-04-24 19:24:33.271] [PRINT] 
+[2026-04-24 19:24:33.271] [PRINT] === Scenario A: preview with 'already in sheet' dupes ===
+[2026-04-24 19:24:33.282] [PRINT] Ready to insert 80 row(s) across 2 tab(s); 8 duplicate(s) detected.
+[2026-04-24 19:24:33.282] [PRINT] 
+[2026-04-24 19:24:33.282] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:24:33.282] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.282] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:24:33.282] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:33.282] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:24:33.282] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.282] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:24:33.282] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:33.282] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:33.282] [PRINT] 
+[2026-04-24 19:24:33.282] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:24:33.282] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.282] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:24:33.282] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:33.282] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:24:33.282] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.282] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:24:33.282] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:33.282] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:33.282] [PRINT] 
+[2026-04-24 19:24:33.282] [PRINT] **Duplicates detected (8):**
+[2026-04-24 19:24:33.282] [PRINT] - `Food_Requisition.pdf` — 5 duplicate row(s)
+[2026-04-24 19:24:33.282] [PRINT] - `NonFood_Requisition.pdf` — 3 duplicate row(s)
+[2026-04-24 19:24:33.282] [PRINT] Reasons: 8 already in sheet.
+[2026-04-24 19:24:33.282] [PRINT] 
+[2026-04-24 19:24:33.282] [PRINT] Sample duplicate row(s):
+[2026-04-24 19:24:33.282] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810030020`
+[2026-04-24 19:24:33.282] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810270002`
+[2026-04-24 19:24:33.282] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00710020049`
+[2026-04-24 19:24:33.282] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040003`
+[2026-04-24 19:24:33.282] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040007`
+[2026-04-24 19:24:33.282] [PRINT] - Tab "non-food" · `NonFood_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26438-1 · `NMFD00810030020`
+[2026-04-24 19:24:33.282] [PRINT] - Tab "non-food" · `NonFood_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26438-1 · `NMFD00810270002`
+[2026-04-24 19:24:33.282] [PRINT] - Tab "non-food" · `NonFood_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26438-1 · `NMFD00710020049`
+[2026-04-24 19:24:33.292] [PRINT] 
+[2026-04-24 19:24:33.292] [PRINT] === Scenario B: preview with NO duplicates ===
+[2026-04-24 19:24:33.303] [PRINT] Ready to insert 80 row(s) across 2 tab(s).
+[2026-04-24 19:24:33.303] [PRINT] 
+[2026-04-24 19:24:33.303] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:24:33.303] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.303] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:24:33.303] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:33.303] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:24:33.303] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.303] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:24:33.303] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:33.303] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:33.303] [PRINT] 
+[2026-04-24 19:24:33.303] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:24:33.303] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.303] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:24:33.303] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:33.303] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:24:33.303] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.303] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:24:33.303] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:33.303] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:33.314] [PRINT] 
+[2026-04-24 19:24:33.314] [PRINT] === Scenario C: write with BATCH-WITHIN duplicates ===
+[2026-04-24 19:24:33.326] [PRINT] Wrote 80 row(s) across 2 tab(s); skipped 80 duplicate row(s).
+[2026-04-24 19:24:33.326] [PRINT] 
+[2026-04-24 19:24:33.326] [PRINT] **Tabs updated:**
+[2026-04-24 19:24:33.326] [PRINT] - `Food` — 40 row(s) written
+[2026-04-24 19:24:33.326] [PRINT] - `non-food` — 40 row(s) written
+[2026-04-24 19:24:33.326] [PRINT] 
+[2026-04-24 19:24:33.326] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 80 item(s) → Food
+[2026-04-24 19:24:33.326] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:24:33.326] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:33.326] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:24:33.326] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:33.326] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:33.326] [PRINT] 
+[2026-04-24 19:24:33.326] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 80 item(s) → non-food
+[2026-04-24 19:24:33.326] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:24:33.326] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:33.326] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:24:33.326] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:33.326] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:33.326] [PRINT] 
+[2026-04-24 19:24:33.326] [PRINT] **Duplicates skipped (80):**
+[2026-04-24 19:24:33.326] [PRINT] - `Food_Requisition.pdf` — 40 duplicate row(s)
+[2026-04-24 19:24:33.326] [PRINT] - `NonFood_Requisition.pdf` — 40 duplicate row(s)
+[2026-04-24 19:24:33.326] [PRINT] Reasons (sampled from first 10): 100% duplicate within batch.
+[2026-04-24 19:24:33.326] [PRINT] 
+[2026-04-24 19:24:33.326] [PRINT] Sample duplicate row(s):
+[2026-04-24 19:24:33.326] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810030020`
+[2026-04-24 19:24:33.326] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810270002`
+[2026-04-24 19:24:33.326] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00710020049`
+[2026-04-24 19:24:33.326] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040003`
+[2026-04-24 19:24:33.326] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040007`
+[2026-04-24 19:24:33.326] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00710100002`
+[2026-04-24 19:24:33.326] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01010010007`
+[2026-04-24 19:24:33.326] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01010010053`
+[2026-04-24 19:24:33.326] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810060008`
+[2026-04-24 19:24:33.326] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00310010001`
+[2026-04-24 19:24:33.326] [PRINT] _…and 70 more._
+[2026-04-24 19:24:33.335] [PRINT] 
+[2026-04-24 19:24:33.335] [PRINT] === Scenario D: write with routing warning (TECH order skipped) ===
+[2026-04-24 19:24:33.345] [PRINT] Wrote 80 row(s) across 2 tab(s).
+[2026-04-24 19:24:33.345] [PRINT] 
+[2026-04-24 19:24:33.345] [PRINT] **Tabs updated:**
+[2026-04-24 19:24:33.345] [PRINT] - `Food` — 40 row(s) written
+[2026-04-24 19:24:33.345] [PRINT] - `non-food` — 40 row(s) written
+[2026-04-24 19:24:33.345] [PRINT] 
+[2026-04-24 19:24:33.345] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:24:33.345] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.345] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:24:33.345] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:33.345] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:24:33.345] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.345] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:24:33.345] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:33.345] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:33.345] [PRINT] 
+[2026-04-24 19:24:33.345] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:24:33.345] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.345] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:24:33.345] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:33.345] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:24:33.345] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:33.345] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:24:33.345] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:33.345] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:33.345] [PRINT] 
+[2026-04-24 19:24:33.345] [PRINT] **Warnings:**
+[2026-04-24 19:24:33.345] [PRINT] - Category 'TECH' is not FOOD or NON-FOOD — order skipped. Only the two requisition categories have a destination in the Food / non-food sheet template. (order VRM99999999-1)
+[2026-04-24 19:24:33.354] [PRINT] 
+[2026-04-24 19:24:33.354] [PRINT] ALL ASSERTIONS: passed
+[2026-04-24 19:24:49.944] [PRINT] PARSE: 4 orders, 80 rows — ok
+[2026-04-24 19:24:49.972] [PRINT] 
+[2026-04-24 19:24:49.972] [PRINT] === Scenario A: preview with 'already in sheet' dupes ===
+[2026-04-24 19:24:49.986] [PRINT] Ready to insert 80 row(s) across 2 tab(s); 8 duplicate(s) detected.
+[2026-04-24 19:24:49.986] [PRINT] 
+[2026-04-24 19:24:49.986] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:24:49.986] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:49.986] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:24:49.986] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:49.986] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:24:49.986] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:49.986] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:24:49.986] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:49.986] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:49.986] [PRINT] 
+[2026-04-24 19:24:49.986] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:24:49.986] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:49.986] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:24:49.986] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:49.986] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:24:49.986] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:49.986] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:24:49.986] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:49.986] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:49.986] [PRINT] 
+[2026-04-24 19:24:49.986] [PRINT] **Duplicates detected (8):**
+[2026-04-24 19:24:49.986] [PRINT] - `Food_Requisition.pdf` — 5 duplicate row(s)
+[2026-04-24 19:24:49.986] [PRINT] - `NonFood_Requisition.pdf` — 3 duplicate row(s)
+[2026-04-24 19:24:49.986] [PRINT] Reasons: 8 already in sheet.
+[2026-04-24 19:24:49.986] [PRINT] 
+[2026-04-24 19:24:49.986] [PRINT] Sample duplicate row(s):
+[2026-04-24 19:24:49.986] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810030020`
+[2026-04-24 19:24:49.986] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810270002`
+[2026-04-24 19:24:49.986] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00710020049`
+[2026-04-24 19:24:49.986] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040003`
+[2026-04-24 19:24:49.986] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040007`
+[2026-04-24 19:24:49.986] [PRINT] - Tab "non-food" · `NonFood_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26438-1 · `NMFD00810030020`
+[2026-04-24 19:24:49.986] [PRINT] - Tab "non-food" · `NonFood_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26438-1 · `NMFD00810270002`
+[2026-04-24 19:24:49.986] [PRINT] - Tab "non-food" · `NonFood_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26438-1 · `NMFD00710020049`
+[2026-04-24 19:24:50.005] [PRINT] 
+[2026-04-24 19:24:50.005] [PRINT] === Scenario B: preview with NO duplicates ===
+[2026-04-24 19:24:50.020] [PRINT] Ready to insert 80 row(s) across 2 tab(s).
+[2026-04-24 19:24:50.020] [PRINT] 
+[2026-04-24 19:24:50.020] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:24:50.020] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.020] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:24:50.020] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:50.020] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:24:50.020] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.020] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:24:50.020] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:50.020] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:50.020] [PRINT] 
+[2026-04-24 19:24:50.020] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:24:50.020] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.020] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:24:50.020] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:50.020] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:24:50.020] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.020] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:24:50.020] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:50.020] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:50.037] [PRINT] 
+[2026-04-24 19:24:50.037] [PRINT] === Scenario C: write with BATCH-WITHIN duplicates ===
+[2026-04-24 19:24:50.052] [PRINT] Wrote 80 row(s) across 2 tab(s); skipped 80 duplicate row(s).
+[2026-04-24 19:24:50.052] [PRINT] 
+[2026-04-24 19:24:50.052] [PRINT] **Tabs updated:**
+[2026-04-24 19:24:50.052] [PRINT] - `Food` — 40 row(s) written
+[2026-04-24 19:24:50.052] [PRINT] - `non-food` — 40 row(s) written
+[2026-04-24 19:24:50.052] [PRINT] 
+[2026-04-24 19:24:50.052] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 80 item(s) → Food
+[2026-04-24 19:24:50.052] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:24:50.052] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:50.052] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:24:50.052] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:50.052] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:50.052] [PRINT] 
+[2026-04-24 19:24:50.052] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 80 item(s) → non-food
+[2026-04-24 19:24:50.052] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:24:50.052] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:50.052] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:24:50.052] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:50.052] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:50.052] [PRINT] 
+[2026-04-24 19:24:50.052] [PRINT] **Duplicates skipped (80):**
+[2026-04-24 19:24:50.052] [PRINT] - `Food_Requisition.pdf` — 40 duplicate row(s)
+[2026-04-24 19:24:50.052] [PRINT] - `NonFood_Requisition.pdf` — 40 duplicate row(s)
+[2026-04-24 19:24:50.052] [PRINT] Reasons (sampled from first 10): 100% duplicate within batch.
+[2026-04-24 19:24:50.052] [PRINT] 
+[2026-04-24 19:24:50.052] [PRINT] Sample duplicate row(s):
+[2026-04-24 19:24:50.052] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810030020`
+[2026-04-24 19:24:50.052] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00810270002`
+[2026-04-24 19:24:50.052] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00710020049`
+[2026-04-24 19:24:50.052] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040003`
+[2026-04-24 19:24:50.052] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810040007`
+[2026-04-24 19:24:50.052] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00710100002`
+[2026-04-24 19:24:50.052] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01010010007`
+[2026-04-24 19:24:50.052] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01010010053`
+[2026-04-24 19:24:50.052] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD01810060008`
+[2026-04-24 19:24:50.052] [PRINT] - Tab "Food" · `Food_Requisition.pdf` p1 · Nov 05, Wed · VRMSDSF26427-1 · `RMFD00310010001`
+[2026-04-24 19:24:50.052] [PRINT] _…and 70 more._
+[2026-04-24 19:24:50.066] [PRINT] 
+[2026-04-24 19:24:50.066] [PRINT] === Scenario D: write with routing warning (TECH order skipped) ===
+[2026-04-24 19:24:50.079] [PRINT] Wrote 80 row(s) across 2 tab(s).
+[2026-04-24 19:24:50.079] [PRINT] 
+[2026-04-24 19:24:50.079] [PRINT] **Tabs updated:**
+[2026-04-24 19:24:50.079] [PRINT] - `Food` — 40 row(s) written
+[2026-04-24 19:24:50.079] [PRINT] - `non-food` — 40 row(s) written
+[2026-04-24 19:24:50.079] [PRINT] 
+[2026-04-24 19:24:50.079] [PRINT] **`Food_Requisition.pdf`** — 2 page(s), 40 item(s) → Food
+[2026-04-24 19:24:50.079] [PRINT] - Page 1 (ref: `VRMSDSF26427-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.079] [PRINT]     - `RMFD00810030020` · Bread Crumbs – Village Gourmet – 1 Kg / Pack · 10.0 Pack
+[2026-04-24 19:24:50.079] [PRINT]     - `RMFD00810270002` · Broth Powder Chicken – Knorr – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:50.079] [PRINT]     - `RMFD00710020049` · Cheese Filled – Kraft Eden – 430G / Pack · 72.0 Pack
+[2026-04-24 19:24:50.079] [PRINT] - Page 2 (ref: `VRMSDSF26427-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.079] [PRINT]     - `RMFD00910130004` · Pickle Relish – RAM – 1 Gal / Container · 4.0 Container
+[2026-04-24 19:24:50.079] [PRINT]     - `RMFD00810190003` · Seasoning Liquid – Knorr – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:50.079] [PRINT]     - `RMFD01110080001` · Sesame Oil – Yuen Yick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:50.079] [PRINT] 
+[2026-04-24 19:24:50.079] [PRINT] **`NonFood_Requisition.pdf`** — 2 page(s), 40 item(s) → non-food
+[2026-04-24 19:24:50.079] [PRINT] - Page 1 (ref: `VRMSDSF26438-1`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.079] [PRINT]     - `NMFD00810030020` · Disposable Gloves – Latex – 100 pcs / Box · 10.0 Box
+[2026-04-24 19:24:50.079] [PRINT]     - `NMFD00810270002` · Cleaning Powder – All-Purpose – 1 KG / Pack · 12.0 Pack
+[2026-04-24 19:24:50.079] [PRINT]     - `NMFD00710020049` · Cling Wrap – Standard – 430M / Roll · 72.0 Roll
+[2026-04-24 19:24:50.079] [PRINT] - Page 2 (ref: `VRMSDSF26438-2`, requested by M.C FRANCO) — 20 item(s)
+[2026-04-24 19:24:50.079] [PRINT]     - `NMFD00910130004` · Mop Head – Cotton – 1 pc / Container · 4.0 Container
+[2026-04-24 19:24:50.079] [PRINT]     - `NMFD00810190003` · Floor Cleaner – Industrial – 3.8 L / Container · 4.0 Container
+[2026-04-24 19:24:50.079] [PRINT]     - `NMFD01110080001` · Cooking Spray – Non-Stick – 750 ML / Bottle · 12.0 Bottle
+[2026-04-24 19:24:50.079] [PRINT] 
+[2026-04-24 19:24:50.079] [PRINT] **Warnings:**
+[2026-04-24 19:24:50.079] [PRINT] - Category 'TECH' is not FOOD or NON-FOOD — order skipped. Only the two requisition categories have a destination in the Food / non-food sheet template. (order VRM99999999-1)
+[2026-04-24 19:24:50.093] [PRINT] 
+[2026-04-24 19:24:50.093] [PRINT] ALL ASSERTIONS: passed
+[2026-04-26 01:49:56.227] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:49:56.355] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:49:56.370] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:49:56.389] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:49:56.409] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:49:56.436] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:49:56.565] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:49:56.579] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:49:56.593] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:49:56.611] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:49:56.624] [PRINT] [ OK ] Flaw D (Bug 5) - Drive 2-result ambiguity now pauses for user pick - orchestrator prompts user to choose between the 2 sheets instead of silently defaulting to results[0]
+[2026-04-26 01:49:56.638] [PRINT] ==============================================================================
+[2026-04-26 01:49:56.647] [PRINT] SUMMARY - post-fix replay of DeliveryOrder2Docuemnts
+[2026-04-26 01:49:56.655] [PRINT] ==============================================================================
+[2026-04-26 01:49:56.667] [PRINT]   PASS: 1
+[2026-04-26 01:49:56.675] [PRINT]   FAIL: 4
+[2026-04-26 01:49:56.684] [PRINT]   INFO: 0
+[2026-04-26 01:50:40.083] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:50:40.209] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:50:40.224] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:50:40.238] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:50:40.253] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:50:40.270] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:50:40.409] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:50:40.420] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:50:40.434] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:50:40.451] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:50:40.465] [PRINT] [ OK ] Flaw D (Bug 5) - Drive 2-result ambiguity now pauses for user pick - orchestrator prompts user to choose between the 2 sheets instead of silently defaulting to results[0]
+[2026-04-26 01:50:40.478] [PRINT] ==============================================================================
+[2026-04-26 01:50:40.491] [PRINT] SUMMARY - post-fix replay of DeliveryOrder2Docuemnts
+[2026-04-26 01:50:40.521] [PRINT] ==============================================================================
+[2026-04-26 01:50:40.535] [PRINT]   PASS: 1
+[2026-04-26 01:50:40.550] [PRINT]   FAIL: 4
+[2026-04-26 01:50:40.566] [PRINT]   INFO: 0
+[2026-04-26 01:52:03.307] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:52:03.448] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:52:03.465] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:52:03.479] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:52:03.488] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:52:03.504] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:52:03.613] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:52:03.624] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:52:03.635] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:52:03.645] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:52:03.654] [PRINT] [ OK ] Flaw D (Bug 5) - Drive 2-result ambiguity now pauses for user pick - orchestrator prompts user to choose between the 2 sheets instead of silently defaulting to results[0]
+[2026-04-26 01:52:03.665] [PRINT] ==============================================================================
+[2026-04-26 01:52:03.674] [PRINT] SUMMARY - post-fix replay of DeliveryOrder2Docuemnts
+[2026-04-26 01:52:03.682] [PRINT] ==============================================================================
+[2026-04-26 01:52:03.690] [PRINT]   PASS: 4
+[2026-04-26 01:52:03.700] [PRINT]   FAIL: 1
+[2026-04-26 01:52:03.710] [PRINT]   INFO: 0
+[2026-04-26 01:52:47.742] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:52:47.857] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:52:47.871] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:52:47.889] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:52:47.913] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:52:47.937] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:52:48.061] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:52:48.071] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:52:48.085] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:52:48.102] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:52:48.120] [PRINT] [ OK ] Flaw D (Bug 5) - Drive 2-result ambiguity now pauses for user pick - orchestrator prompts user to choose between the 2 sheets instead of silently defaulting to results[0]
+[2026-04-26 01:52:48.140] [PRINT] ==============================================================================
+[2026-04-26 01:52:48.156] [PRINT] SUMMARY - post-fix replay of DeliveryOrder2Docuemnts
+[2026-04-26 01:52:48.170] [PRINT] ==============================================================================
+[2026-04-26 01:52:48.184] [PRINT]   PASS: 5
+[2026-04-26 01:52:48.201] [PRINT]   FAIL: 0
+[2026-04-26 01:52:48.217] [PRINT]   INFO: 0
+[2026-04-26 01:52:48.231] [PRINT]   All Flaws A-E that were observable in the old log are now blocked by the implemented fixes (Bug 5 included).
+[2026-04-26 01:53:02.156] [PRINT] [ OK ] templates: delivery-order summary template removed
+[2026-04-26 01:53:02.210] [PRINT] [ OK ] tools.py: _process_delivery_order_workflow_impl removed
+[2026-04-26 01:53:02.223] [PRINT] [ OK ] tools.py: dead helpers removed (G12)
+[2026-04-26 01:53:02.255] [PRINT] [ OK ] api.py: TOOL_MAP no longer dispatches the broken tool
+[2026-04-26 01:53:02.265] [PRINT] ============================================================================
+[2026-04-26 01:53:02.284] [PRINT] Scenario 2 - G2: dead delivery_order_service is deleted
+[2026-04-26 01:53:02.299] [PRINT] ============================================================================
+[2026-04-26 01:53:02.312] [PRINT] [ OK ] __init__.py no longer imports DeliveryOrderService
+[2026-04-26 01:53:02.327] [PRINT] [ OK ] delivery_order_service.py file deleted
+[2026-04-26 01:53:02.346] [PRINT] [ OK ] services package still imports cleanly
+[2026-04-26 01:53:02.362] [PRINT] ============================================================================
+[2026-04-26 01:53:02.372] [PRINT] Scenario 3 - Block G safety net with realistic classifier misses
+[2026-04-26 01:53:02.383] [PRINT] ============================================================================
+[2026-04-26 01:53:06.359] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:53:06.411] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:53:06.428] [PRINT] [ OK ] Block G A: spaced 'delivery order'
+[2026-04-26 01:53:06.445] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:53:06.493] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:53:06.507] [PRINT] [ OK ] Block G B: hyphenated 'delivery-order'
+[2026-04-26 01:53:06.520] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:53:06.558] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:53:06.571] [PRINT] [ OK ] Block G C: bare 'requisition'
+[2026-04-26 01:53:06.585] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:53:06.621] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:53:06.632] [PRINT] [ OK ] Block G D: 'purchase-order'
+[2026-04-26 01:53:06.643] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:53:06.674] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:53:06.686] [PRINT] [ OK ] Block G E: 'po pdf' phrase
+[2026-04-26 01:53:06.695] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:53:06.735] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:53:06.764] [PRINT] [ OK ] Block G F: 'order list'
+[2026-04-26 01:53:06.785] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:53:06.836] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:53:06.852] [PRINT] [ OK ] Block G negative control (no injection for non-delivery)
+[2026-04-26 01:53:06.866] [PRINT] ============================================================================
+[2026-04-26 01:53:06.875] [PRINT] Scenario 4 - Planner prompt exposes Rule 16 + Example 3
+[2026-04-26 01:53:06.886] [PRINT] ============================================================================
+[2026-04-26 01:53:06.894] [PRINT] [ OK ] planner prompt includes Rule 16 + Example 3 + all steering
+[2026-04-26 01:53:06.903] [PRINT] ============================================================================
+[2026-04-26 01:53:06.911] [PRINT] Scenario 5 - get_filtered_capabilities_v2 hides upload_mapped_data
+[2026-04-26 01:53:06.917] [PRINT] ============================================================================
+[2026-04-26 01:53:06.929] [PRINT] [ OK ] filtered caps shape is correct
+[2026-04-26 01:53:06.938] [PRINT] ============================================================================
+[2026-04-26 01:53:06.946] [PRINT] Scenario 6 - variable substitution round-trips list values correctly
+[2026-04-26 01:53:06.961] [PRINT] ============================================================================
+[2026-04-26 01:53:07.658] [PRINT] [ OK ] mapping_agent._flatten_file_paths decodes Jinja-stringified list
+[2026-04-26 01:53:07.687] [PRINT] [ OK ] sheets_agent._parse_orders_input decodes full Python repr (None/True/apostrophe)
+[2026-04-26 01:53:07.705] [PRINT] ============================================================================
+[2026-04-26 01:53:07.726] [PRINT] Scenario 7 - approval-branch substitution round-trips Python literals
+[2026-04-26 01:53:07.746] [PRINT] ============================================================================
+[2026-04-26 01:53:07.760] [PRINT] [ OK ] approval substitution (G6) round-trips Python list cleanly
+[2026-04-26 01:53:07.774] [PRINT] [ OK ] legacy approval substitution is demonstrably broken (as expected) - old code left parsed_orders as a raw string — G6 fix required
+[2026-04-26 01:53:07.784] [PRINT] ============================================================================
+[2026-04-26 01:53:07.796] [PRINT] Scenario 8 - G7 rich approval message renders readable summary
+[2026-04-26 01:53:07.805] [PRINT] ============================================================================
+[2026-04-26 01:53:07.820] [PRINT] [ OK ] approval message is readable, not a raw dump
+[2026-04-26 01:53:07.827] [PRINT] 
+[2026-04-26 01:53:07.827] [PRINT] --- approval message preview ---
+[2026-04-26 01:53:07.836] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-26 01:53:07.836] [PRINT] 
+[2026-04-26 01:53:07.836] [PRINT] Step 6 of 6
+[2026-04-26 01:53:07.836] [PRINT] 
+[2026-04-26 01:53:07.836] [PRINT] **Append the parsed delivery-order rows into the DO Tracker sheet**
+[2026-04-26 01:53:07.836] [PRINT] 
+[2026-04-26 01:53:07.836] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-26 01:53:07.836] [PRINT] - **Sheet ID:** 1A2B3C4D5E6F7G8H9I0J_real_sheet_id
+[2026-04-26 01:53:07.836] [PRINT] - **Orders to write:** 2
+[2026-04-26 01:53:07.836] [PRINT] - **Total line items:** 3
+[2026-04-26 01:53:07.836] [PRINT] - **Source files:** DO-2026-0417.pdf, requisition_april.pdf
+[2026-04-26 01:53:07.836] [PRINT] - **Sample header (order 1):** order_reference=DO-2026-0417, order_date=2026-04-17, vendor=Supplier's Co., urgent=True
+[2026-04-26 01:53:07.836] [PRINT] 
+[2026-04-26 01:53:07.836] [PRINT] ---
+[2026-04-26 01:53:07.836] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-26 01:53:07.845] [PRINT] --- end preview ---
+[2026-04-26 01:53:07.858] [PRINT] ============================================================================
+[2026-04-26 01:53:07.870] [PRINT] Scenario 9 - Full pipeline walkthrough across 3 user inputs
+[2026-04-26 01:53:07.883] [PRINT] ============================================================================
+[2026-04-26 01:53:09.739] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:53:09.870] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:53:09.887] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:53:09.910] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:53:09.925] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:53:09.944] [PRINT] [ OK ] Scenario A (sheet-by-name): all 6 steps wire cleanly
+[2026-04-26 01:53:09.966] [PRINT] [ OK ] Scenario B (uploaded file, bare string path): 5-step chain wires cleanly
+[2026-04-26 01:53:09.986] [PRINT] [ OK ] Scenario C (sheet URL pasted): 5-step chain skips drive lookup
+[2026-04-26 01:53:10.000] [PRINT] ============================================================================
+[2026-04-26 01:53:10.014] [PRINT] Scenario 10 - capability-schema guard against arg-name drift
+[2026-04-26 01:53:10.027] [PRINT] ============================================================================
+[2026-04-26 01:53:10.041] [PRINT] [ OK ] all sim plans use only capability-declared arg names
+[2026-04-26 01:53:10.058] [PRINT] [ OK ] planner prompt Example 3 uses only capability-declared arg names (6 steps checked)
+[2026-04-26 01:53:10.074] [PRINT] ============================================================================
+[2026-04-26 01:53:10.088] [PRINT] Scenario 11 - Rule 16 text forbids wrong search_files args
+[2026-04-26 01:53:10.102] [PRINT] ============================================================================
+[2026-04-26 01:53:10.116] [PRINT] [ OK ] Rule 16 search_files line uses correct args only
+[2026-04-26 01:53:10.129] [PRINT] [ OK ] Rule 16 uploaded_file guidance uses bare-string pattern
+[2026-04-26 01:53:10.142] [PRINT] ============================================================================
+[2026-04-26 01:53:10.155] [PRINT] Scenario 12 - mapping_agent.parse_delivery_order_pdfs halts cleanly on all-rejected
+[2026-04-26 01:53:10.165] [PRINT] ============================================================================
+[2026-04-26 01:53:10.186] [PRINT] [ OK ] parse_delivery_order_pdfs signals failure on all-rejected
+[2026-04-26 01:53:10.199] [PRINT] [FAIL] parse_delivery_order_pdfs still succeeds with partial wins - unexpected: {'success': False, 'error': "Failed to parse delivery order PDFs: name '_wrap_old_shape_success' is not defined"}
+[2026-04-26 01:53:10.211] [PRINT] ============================================================================
+[2026-04-26 01:53:10.224] [PRINT] Scenario 13 - Mapping agent ToolResponse exposes no_results top-level
+[2026-04-26 01:53:10.242] [PRINT] ============================================================================
+[2026-04-26 01:53:10.261] [PRINT] [ OK ] ToolResponse serialises no_results at top level
+[2026-04-26 01:53:10.276] [PRINT] [ OK ] orchestrator halt-branch would trigger on this response
+[2026-04-26 01:53:10.291] [PRINT] ============================================================================
+[2026-04-26 01:53:10.306] [PRINT] Scenario 14 - Tier 1 DELIVERY ORDER WORKFLOW requires write/parse verb
+[2026-04-26 01:53:10.325] [PRINT] ============================================================================
+[2026-04-26 01:53:10.344] [PRINT] [ OK ] Tier 1 DELIVERY ORDER WORKFLOW has verb-gate + negative case
+[2026-04-26 01:53:10.362] [PRINT] ============================================================================
+[2026-04-26 01:53:10.379] [PRINT] Scenario 15 - Approval message warns when parsed_orders is empty
+[2026-04-26 01:53:10.392] [PRINT] ============================================================================
+[2026-04-26 01:53:10.412] [PRINT] [ OK ] empty parsed_orders produces a loud approval message
+[2026-04-26 01:53:10.428] [PRINT] [ OK ] non-empty parsed_orders still shows detailed summary
+[2026-04-26 01:53:10.445] [PRINT] ============================================================================
+[2026-04-26 01:53:10.458] [PRINT] Scenario 16 - Mapping inference yields only FOOD / NON-FOOD / empty
+[2026-04-26 01:53:10.471] [PRINT] ============================================================================
+[2026-04-26 01:53:10.494] [PRINT] [ OK ] Mapping agent does NOT expose _infer_category_from_filename
+[2026-04-26 01:53:10.507] [PRINT] [ OK ] _infer_category_from_items only yields FOOD (or empty for TECH/unknown)
+[2026-04-26 01:53:10.522] [PRINT] [ OK ] _HEADER_PATTERNS['category'] is strict (FOOD / NON-FOOD only)
+[2026-04-26 01:53:10.535] [PRINT] [ OK ] _normalise_category accepts only FOOD / NON-FOOD variants
+[2026-04-26 01:53:10.551] [PRINT] ============================================================================
+[2026-04-26 01:53:10.569] [PRINT] Scenario 17 - _is_footer_row drops signature blocks, keeps real items
+[2026-04-26 01:53:10.584] [PRINT] ============================================================================
+[2026-04-26 01:53:10.608] [PRINT] [ OK ] _is_footer_row filters signatures without false positives
+[2026-04-26 01:53:10.619] [PRINT] [ OK ] _parse_single_pdf drops footer rows end-to-end (FOOD)
+[2026-04-26 01:53:10.632] [PRINT] [ OK ] _parse_single_pdf fills header.category=FOOD via item-code prefix (content)
+[2026-04-26 01:53:10.648] [PRINT] ============================================================================
+[2026-04-26 01:53:10.662] [PRINT] Scenario 18 - _resolve_tab_for_category is strictly FOOD / NON-FOOD
+[2026-04-26 01:53:10.678] [PRINT] ============================================================================
+[2026-04-26 01:53:10.705] [PRINT] [ OK ] _resolve_tab_for_category routes only FOOD / NON-FOOD, skips everything else
+[2026-04-26 01:53:10.722] [PRINT] ============================================================================
+[2026-04-26 01:53:10.735] [PRINT] Scenario 19 - preview_delivery_order_insertion routes strictly FOOD/NON-FOOD
+[2026-04-26 01:53:10.753] [PRINT] ============================================================================
+[2026-04-26 01:53:10.784] [PRINT] [ OK ] preview routes FOOD->Food and NON-FOOD->non-food
+[2026-04-26 01:53:10.801] [PRINT] [ OK ] preview skips TECH order (defensive) and routes others correctly
+[2026-04-26 01:53:10.817] [PRINT] [ OK ] preview hard-skips FOOD order when Food tab is absent
+[2026-04-26 01:53:10.831] [PRINT] ============================================================================
+[2026-04-26 01:53:10.841] [PRINT] Scenario 20 - Mapping parser rejects Tech requisition PDFs
+[2026-04-26 01:53:10.854] [PRINT] ============================================================================
+[2026-04-26 01:53:10.873] [PRINT] [FAIL] _parse_single_pdf rejects Tech requisition PDFs - expected rejected=True, got {'rejected': False, 'file': 'Tech_DELIVERY_ORDER.pdf', 'orders': [], 'rejected_pages': [{'page': 1, 'reason': "Page 1 category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. This page did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."}]}; rejection reason should mention FOOD and NON-FOOD, got ''
+[2026-04-26 01:53:10.883] [PRINT] [ OK ] parse_delivery_order_pdfs keeps FOOD, rejects TECH on mixed batch
+[2026-04-26 01:53:10.895] [PRINT] ============================================================================
+[2026-04-26 01:53:10.907] [PRINT] Scenario 21 - Filename is ignored; category comes from content only
+[2026-04-26 01:53:10.924] [PRINT] ============================================================================
+[2026-04-26 01:53:10.949] [PRINT] [FAIL] Filename never overrides content in category detection - '/tmp/Food_DELIVERY_ORDER.pdf' with TECH content: expected rejection, got {'rejected': False, 'file': 'Food_DELIVERY_ORDER.pdf', 'orders': [], 'rejected_pages': [{'page': 1, 'reason': "Page 1 category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. This page did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."}]}; '/tmp/NonFood_DELIVERY_ORDER.pdf' with TECH content: expected rejection, got {'rejected': False, 'file': 'NonFood_DELIVERY_ORDER.pdf', 'orders': [], 'rejected_pages': [{'page': 1, 'reason': "Page 1 category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. This page did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."}]}
+[2026-04-26 01:53:10.975] [PRINT] ============================================================================
+[2026-04-26 01:53:10.986] [PRINT] Scenario 22 - Non-PDF files are rejected with 'Not a PDF file'
+[2026-04-26 01:53:10.999] [PRINT] ============================================================================
+[2026-04-26 01:53:11.020] [PRINT] [ OK ] Non-PDF uploads are rejected by file-type gate
+[2026-04-26 01:53:11.032] [PRINT] ============================================================================
+[2026-04-26 01:53:11.043] [PRINT] Scenario 23 - PDFs that don't match our template are rejected
+[2026-04-26 01:53:11.054] [PRINT] ============================================================================
+[2026-04-26 01:53:11.076] [PRINT] [ OK ] Wrong-template PDFs rejected before data parsing
+[2026-04-26 01:53:11.088] [PRINT] ============================================================================
+[2026-04-26 01:53:11.104] [PRINT] Scenario 24 - validate_delivery_sheet rejects wrong sheet with clear error
+[2026-04-26 01:53:11.120] [PRINT] ============================================================================
+[2026-04-26 01:53:11.145] [PRINT] [ OK ] validate_delivery_sheet flags wrong sheet with explicit 'different sheet' error
+[2026-04-26 01:53:11.158] [PRINT] [ OK ] validate_delivery_sheet flags header mismatch with actionable detail
+[2026-04-26 01:53:11.168] [PRINT] ============================================================================
+[2026-04-26 01:53:11.178] [PRINT] Scenario 25 - validate_delivery_sheet catches read-only sheet access
+[2026-04-26 01:53:11.188] [PRINT] ============================================================================
+[2026-04-26 01:53:11.204] [PRINT] [ OK ] validate_delivery_sheet catches read-only access with actionable error
+[2026-04-26 01:53:11.217] [PRINT] [ OK ] validate_delivery_sheet happy path still returns success=True
+[2026-04-26 01:53:11.231] [PRINT] ============================================================================
+[2026-04-26 01:53:11.246] [PRINT] Scenario 26 - write_delivery_order_data catches 403 on append with read_only error
+[2026-04-26 01:53:11.259] [PRINT] ============================================================================
+[2026-04-26 01:53:11.290] [PRINT] [ OK ] write_delivery_order_data surfaces read-only error on 403 during append
+[2026-04-26 01:53:11.301] [PRINT] ============================================================================
+[2026-04-26 01:53:11.314] [PRINT] Scenario 27 - Bug 5: indexed output_var on name-based lookup triggers pause
+[2026-04-26 01:53:11.329] [PRINT] ============================================================================
+[2026-04-26 01:53:11.347] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:53:11.448] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:53:11.455] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:53:11.463] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:53:11.473] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:53:11.485] [PRINT] [ OK ] Bug 5 - search_files + 'results[0].id' + 2 matches -> pause - indexed extraction on name-based lookup now triggers disambiguation
+[2026-04-26 01:53:11.500] [PRINT] ============================================================================
+[2026-04-26 01:53:11.515] [PRINT] Scenario 28 - Bug 5: email search with 'emails[0].message_id' still auto-picks latest
+[2026-04-26 01:53:11.534] [PRINT] ============================================================================
+[2026-04-26 01:53:11.551] [PRINT] [ OK ] Bug 5 - search_emails + 'emails[0].message_id' NOT paused - email/draft searches keep 'latest' auto-selection semantics
+[2026-04-26 01:53:11.567] [PRINT] ============================================================================
+[2026-04-26 01:53:11.581] [PRINT] Scenario 29 - Bug 5: indexed output_var but no downstream use -> no pause
+[2026-04-26 01:53:11.594] [PRINT] ============================================================================
+[2026-04-26 01:53:11.609] [PRINT] [ OK ] Bug 5 - downstream-usage gate still blocks unused indexed var - Bug B.5 gate preserved — indexed var without downstream reference does not pause
+[2026-04-26 01:53:11.623] [PRINT] ============================================================================
+[2026-04-26 01:53:11.634] [PRINT] Scenario 30 - Bug 5: resume re-runs extraction against patched agent_result
+[2026-04-26 01:53:11.645] [PRINT] ============================================================================
+[2026-04-26 01:53:11.658] [PRINT] [ OK ] Bug 5 - resume: user picks option 2 -> sheet_id = 1bbb - extract_nested_value over patched agent_result correctly yields option 2's id
+[2026-04-26 01:53:11.671] [PRINT] ============================================================================
+[2026-04-26 01:53:11.684] [PRINT] Scenario 31 - Bug 5: whole-array pattern still works after resume
+[2026-04-26 01:53:11.697] [PRINT] ============================================================================
+[2026-04-26 01:53:11.708] [PRINT] [ OK ] Bug 5 - whole-array resume pattern still works - backwards-compatible with the {"results": "results"} pattern
+[2026-04-26 01:53:11.721] [PRINT] ============================================================================
+[2026-04-26 01:53:11.731] [PRINT] Scenario 32 - Bug 1: Tier 1 prompt keeps email_filter extraction rule
+[2026-04-26 01:53:11.744] [PRINT] ============================================================================
+[2026-04-26 01:53:11.756] [PRINT] [ OK ] Bug 1 - Tier 1 prompt carries email_filter extraction rule - multi-turn narrowing context is preserved for the planner
+[2026-04-26 01:53:11.769] [PRINT] ============================================================================
+[2026-04-26 01:53:11.783] [PRINT] Scenario 33 - Bug 1: Planner Rule 16 consumes email_filter when present
+[2026-04-26 01:53:11.796] [PRINT] ============================================================================
+[2026-04-26 01:53:11.809] [PRINT] [ OK ] Bug 1 - Planner Rule 16 honors email_filter verbatim - Rule 16 now routes email_filter -> query, fallback preserved for fresh turns
+[2026-04-26 01:53:11.824] [PRINT] ============================================================================
+[2026-04-26 01:53:11.836] [PRINT] Scenario 34 - Bug 1: build_supervisor_input emits email_filter to planner
+[2026-04-26 01:53:11.847] [PRINT] ============================================================================
+[2026-04-26 01:53:11.857] [PRINT] [ OK ] Bug 1 - build_supervisor_input surfaces email_filter - email_filter flows cleanly from extracted_info -> Parameters -> planner
+[2026-04-26 01:53:11.868] [PRINT] ============================================================================
+[2026-04-26 01:53:11.880] [PRINT] Scenario 35 - Silent-rejection: orchestrator attaches upstream_rejected_files on pause
+[2026-04-26 01:53:11.891] [PRINT] ============================================================================
+[2026-04-26 01:53:11.901] [PRINT] [ OK ] Scenario 35a - supervisor_agent.py contains upstream_rejected_files scan
+[2026-04-26 01:53:11.911] [PRINT] [ OK ] Scenario 35b - scan extracts rejected_files from step_N_mapping_agent
+[2026-04-26 01:53:11.921] [PRINT] [ OK ] Scenario 35c - scan returns [] when nothing was rejected (no regression)
+[2026-04-26 01:53:11.934] [PRINT] [ OK ] Scenario 35d - rejected_files deduped by filename across step namespaces
+[2026-04-26 01:53:11.951] [PRINT] [ OK ] Scenario 35e - scan ignores noisy values, skips non-step_* keys
+[2026-04-26 01:53:11.968] [PRINT] ============================================================================
+[2026-04-26 01:53:11.983] [PRINT] Scenario 36 - Approval message surfaces upstream_rejected_files warning
+[2026-04-26 01:53:12.001] [PRINT] ============================================================================
+[2026-04-26 01:53:12.017] [PRINT] [ OK ] Scenario 36a - approval message warns about skipped PDFs in partial-success case
+[2026-04-26 01:53:12.032] [PRINT] 
+[2026-04-26 01:53:12.032] [PRINT] --- approval message preview (partial success) ---
+[2026-04-26 01:53:12.045] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-26 01:53:12.045] [PRINT] 
+[2026-04-26 01:53:12.045] [PRINT] Step 6 of 6
+[2026-04-26 01:53:12.045] [PRINT] 
+[2026-04-26 01:53:12.045] [PRINT] **Append the parsed delivery-order rows into the sheet**
+[2026-04-26 01:53:12.045] [PRINT] 
+[2026-04-26 01:53:12.045] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-26 01:53:12.045] [PRINT] - **Sheet ID:** 1SHEET_ID
+[2026-04-26 01:53:12.045] [PRINT] - **Orders to write:** 1
+[2026-04-26 01:53:12.045] [PRINT] - **Total line items:** 17
+[2026-04-26 01:53:12.045] [PRINT] - **Source files:** Food_DELIVERY_ORDER (1).pdf
+[2026-04-26 01:53:12.045] [PRINT] - **Sample header (order 1):** reference_number=DO-2026-01, category=FOOD
+[2026-04-26 01:53:12.045] [PRINT] 
+[2026-04-26 01:53:12.045] [PRINT] **Note — some attachments were skipped and will NOT be written:**
+[2026-04-26 01:53:12.045] [PRINT] - `Tech_DELIVERY_ORDER (1).pdf` — Category is not FOOD or NON-FOOD
+[2026-04-26 01:53:12.045] [PRINT] 
+[2026-04-26 01:53:12.045] [PRINT] ---
+[2026-04-26 01:53:12.045] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-26 01:53:12.060] [PRINT] --- end preview ---
+[2026-04-26 01:53:12.075] [PRINT] [ OK ] Scenario 36b - approval message truncates >5 rejected files with footer
+[2026-04-26 01:53:12.089] [PRINT] ============================================================================
+[2026-04-26 01:53:12.106] [PRINT] Scenario 37 - Approval message unchanged when no PDFs were rejected
+[2026-04-26 01:53:12.123] [PRINT] ============================================================================
+[2026-04-26 01:53:12.141] [PRINT] [ OK ] Scenario 37 - approval message unchanged on no-rejection path
+[2026-04-26 01:53:12.156] [PRINT] [ OK ] Scenario 37b - empty upstream_rejected_files list renders no warning
+[2026-04-26 01:53:12.170] [PRINT] ============================================================================
+[2026-04-26 01:53:12.183] [PRINT] Scenario 38 - Final summary template lists rejected files
+[2026-04-26 01:53:12.196] [PRINT] ============================================================================
+[2026-04-26 01:53:12.210] [PRINT] [ OK ] Scenario 38a - parse_delivery_order_pdfs template lists skipped files
+[2026-04-26 01:53:12.225] [PRINT] 
+[2026-04-26 01:53:12.225] [PRINT] --- final summary preview (mixed) ---
+[2026-04-26 01:53:12.235] [PRINT] Parsed 1 delivery order(s), 1 file(s) rejected
+[2026-04-26 01:53:12.235] [PRINT] 
+[2026-04-26 01:53:12.235] [PRINT] **Skipped files:**
+[2026-04-26 01:53:12.235] [PRINT] - `Tech_DELIVERY_ORDER (1).pdf` — Category is not FOOD or NON-FOOD
+[2026-04-26 01:53:12.249] [PRINT] --- end preview ---
+[2026-04-26 01:53:12.265] [PRINT] [ OK ] Scenario 38b - final summary truncates >5 rejected files
+[2026-04-26 01:53:12.277] [PRINT] ============================================================================
+[2026-04-26 01:53:12.289] [PRINT] Scenario 39 - Final summary regression: no rejections + other templates still work
+[2026-04-26 01:53:12.305] [PRINT] ============================================================================
+[2026-04-26 01:53:12.325] [PRINT] [ OK ] Scenario 39a - clean parse renders legacy one-line summary
+[2026-04-26 01:53:12.340] [PRINT] [ OK ] Scenario 39b - static-string templates (reply_to_email) still render
+[2026-04-26 01:53:12.359] [PRINT] [FAIL] Scenario 39c - use_message templates still render after callable upgrade - preview='Ready to insert 0 row(s) across 0 tab(s).'
+[2026-04-26 01:53:12.374] [PRINT] ============================================================================
+[2026-04-26 01:53:12.389] [PRINT] Scenario 40 - E2E: DeliveryTesting2PDFs2.log partial-rejection chain is no longer silent
+[2026-04-26 01:53:12.405] [PRINT] ============================================================================
+[2026-04-26 01:53:12.436] [PRINT] [ OK ] Scenario 40 - E2E chain surfaces partial rejection end-to-end - mapping → step_info scan → approval prompt → final summary all mention Tech PDF
+[2026-04-26 01:53:12.451] [PRINT] ============================================================================
+[2026-04-26 01:53:12.464] [PRINT] FINAL REPORT
+[2026-04-26 01:53:12.479] [PRINT] ============================================================================
+[2026-04-26 01:53:12.491] [PRINT] TOTAL: 81 checks — PASS: 77, FAIL: 4, INFO: 0
+[2026-04-26 01:53:12.506] [PRINT] FAILURES:
+[2026-04-26 01:53:12.519] [PRINT]   * parse_delivery_order_pdfs still succeeds with partial wins
+[2026-04-26 01:53:12.535] [PRINT]       unexpected: {'success': False, 'error': "Failed to parse delivery order PDFs: name '_wrap_old_shape_success' is not defined"}
+[2026-04-26 01:53:12.547] [PRINT]   * _parse_single_pdf rejects Tech requisition PDFs
+[2026-04-26 01:53:12.559] [PRINT]       expected rejected=True, got {'rejected': False, 'file': 'Tech_DELIVERY_ORDER.pdf', 'orders': [], 'rejected_pages': [{'page': 1, 'reason': "Page 1 category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. This page did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."}]}; rejection reason should mention FOOD and NON-FOOD, got ''
+[2026-04-26 01:53:12.571] [PRINT]   * Filename never overrides content in category detection
+[2026-04-26 01:53:12.581] [PRINT]       '/tmp/Food_DELIVERY_ORDER.pdf' with TECH content: expected rejection, got {'rejected': False, 'file': 'Food_DELIVERY_ORDER.pdf', 'orders': [], 'rejected_pages': [{'page': 1, 'reason': "Page 1 category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. This page did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."}]}; '/tmp/NonFood_DELIVERY_ORDER.pdf' with TECH content: expected rejection, got {'rejected': False, 'file': 'NonFood_DELIVERY_ORDER.pdf', 'orders': [], 'rejected_pages': [{'page': 1, 'reason': "Page 1 category is not FOOD or NON-FOOD. The requisition sheet only accepts these two categories. This page did not expose a 'Category: FOOD' or 'Category: NON-FOOD' label, and its item codes did not match a known FOOD prefix. Detected category label: ''."}]}
+[2026-04-26 01:53:12.591] [PRINT]   * Scenario 39c - use_message templates still render after callable upgrade
+[2026-04-26 01:53:12.600] [PRINT]       preview='Ready to insert 0 row(s) across 0 tab(s).'
+[2026-04-26 01:55:36.182] [PRINT] [ OK ] templates: delivery-order summary template removed
+[2026-04-26 01:55:36.211] [PRINT] [ OK ] tools.py: _process_delivery_order_workflow_impl removed
+[2026-04-26 01:55:36.228] [PRINT] [ OK ] tools.py: dead helpers removed (G12)
+[2026-04-26 01:55:36.245] [PRINT] [ OK ] api.py: TOOL_MAP no longer dispatches the broken tool
+[2026-04-26 01:55:36.259] [PRINT] ============================================================================
+[2026-04-26 01:55:36.274] [PRINT] Scenario 2 - G2: dead delivery_order_service is deleted
+[2026-04-26 01:55:36.292] [PRINT] ============================================================================
+[2026-04-26 01:55:36.308] [PRINT] [ OK ] __init__.py no longer imports DeliveryOrderService
+[2026-04-26 01:55:36.321] [PRINT] [ OK ] delivery_order_service.py file deleted
+[2026-04-26 01:55:36.335] [PRINT] [ OK ] services package still imports cleanly
+[2026-04-26 01:55:36.345] [PRINT] ============================================================================
+[2026-04-26 01:55:36.354] [PRINT] Scenario 3 - Block G safety net with realistic classifier misses
+[2026-04-26 01:55:36.366] [PRINT] ============================================================================
+[2026-04-26 01:55:39.898] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:55:39.967] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:55:39.988] [PRINT] [ OK ] Block G A: spaced 'delivery order'
+[2026-04-26 01:55:40.005] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:55:40.047] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:55:40.064] [PRINT] [ OK ] Block G B: hyphenated 'delivery-order'
+[2026-04-26 01:55:40.076] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:55:40.112] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:55:40.124] [PRINT] [ OK ] Block G C: bare 'requisition'
+[2026-04-26 01:55:40.134] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:55:40.160] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:55:40.170] [PRINT] [ OK ] Block G D: 'purchase-order'
+[2026-04-26 01:55:40.178] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:55:40.212] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:55:40.222] [PRINT] [ OK ] Block G E: 'po pdf' phrase
+[2026-04-26 01:55:40.233] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:55:40.270] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:55:40.283] [PRINT] [ OK ] Block G F: 'order list'
+[2026-04-26 01:55:40.293] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:55:40.324] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:55:40.336] [PRINT] [ OK ] Block G negative control (no injection for non-delivery)
+[2026-04-26 01:55:40.351] [PRINT] ============================================================================
+[2026-04-26 01:55:40.361] [PRINT] Scenario 4 - Planner prompt exposes Rule 16 + Example 3
+[2026-04-26 01:55:40.373] [PRINT] ============================================================================
+[2026-04-26 01:55:40.385] [PRINT] [ OK ] planner prompt includes Rule 16 + Example 3 + all steering
+[2026-04-26 01:55:40.399] [PRINT] ============================================================================
+[2026-04-26 01:55:40.412] [PRINT] Scenario 5 - get_filtered_capabilities_v2 hides upload_mapped_data
+[2026-04-26 01:55:40.423] [PRINT] ============================================================================
+[2026-04-26 01:55:40.433] [PRINT] [ OK ] filtered caps shape is correct
+[2026-04-26 01:55:40.446] [PRINT] ============================================================================
+[2026-04-26 01:55:40.459] [PRINT] Scenario 6 - variable substitution round-trips list values correctly
+[2026-04-26 01:55:40.474] [PRINT] ============================================================================
+[2026-04-26 01:55:41.092] [PRINT] [ OK ] mapping_agent._flatten_file_paths decodes Jinja-stringified list
+[2026-04-26 01:55:41.127] [PRINT] [ OK ] sheets_agent._parse_orders_input decodes full Python repr (None/True/apostrophe)
+[2026-04-26 01:55:41.145] [PRINT] ============================================================================
+[2026-04-26 01:55:41.161] [PRINT] Scenario 7 - approval-branch substitution round-trips Python literals
+[2026-04-26 01:55:41.176] [PRINT] ============================================================================
+[2026-04-26 01:55:41.193] [PRINT] [ OK ] approval substitution (G6) round-trips Python list cleanly
+[2026-04-26 01:55:41.206] [PRINT] [ OK ] legacy approval substitution is demonstrably broken (as expected) - old code left parsed_orders as a raw string — G6 fix required
+[2026-04-26 01:55:41.221] [PRINT] ============================================================================
+[2026-04-26 01:55:41.232] [PRINT] Scenario 8 - G7 rich approval message renders readable summary
+[2026-04-26 01:55:41.245] [PRINT] ============================================================================
+[2026-04-26 01:55:41.261] [PRINT] [ OK ] approval message is readable, not a raw dump
+[2026-04-26 01:55:41.274] [PRINT] 
+[2026-04-26 01:55:41.274] [PRINT] --- approval message preview ---
+[2026-04-26 01:55:41.285] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-26 01:55:41.285] [PRINT] 
+[2026-04-26 01:55:41.285] [PRINT] Step 6 of 6
+[2026-04-26 01:55:41.285] [PRINT] 
+[2026-04-26 01:55:41.285] [PRINT] **Append the parsed delivery-order rows into the DO Tracker sheet**
+[2026-04-26 01:55:41.285] [PRINT] 
+[2026-04-26 01:55:41.285] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-26 01:55:41.285] [PRINT] - **Sheet ID:** 1A2B3C4D5E6F7G8H9I0J_real_sheet_id
+[2026-04-26 01:55:41.285] [PRINT] - **Orders to write:** 2
+[2026-04-26 01:55:41.285] [PRINT] - **Total line items:** 3
+[2026-04-26 01:55:41.285] [PRINT] - **Source files:** DO-2026-0417.pdf, requisition_april.pdf
+[2026-04-26 01:55:41.285] [PRINT] - **Sample header (order 1):** order_reference=DO-2026-0417, order_date=2026-04-17, vendor=Supplier's Co., urgent=True
+[2026-04-26 01:55:41.285] [PRINT] 
+[2026-04-26 01:55:41.285] [PRINT] ---
+[2026-04-26 01:55:41.285] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-26 01:55:41.296] [PRINT] --- end preview ---
+[2026-04-26 01:55:41.307] [PRINT] ============================================================================
+[2026-04-26 01:55:41.320] [PRINT] Scenario 9 - Full pipeline walkthrough across 3 user inputs
+[2026-04-26 01:55:41.333] [PRINT] ============================================================================
+[2026-04-26 01:55:43.775] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:55:43.874] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:55:43.883] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:55:43.893] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:55:43.903] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:55:43.922] [PRINT] [ OK ] Scenario A (sheet-by-name): all 6 steps wire cleanly
+[2026-04-26 01:55:43.949] [PRINT] [ OK ] Scenario B (uploaded file, bare string path): 5-step chain wires cleanly
+[2026-04-26 01:55:43.971] [PRINT] [ OK ] Scenario C (sheet URL pasted): 5-step chain skips drive lookup
+[2026-04-26 01:55:43.982] [PRINT] ============================================================================
+[2026-04-26 01:55:43.995] [PRINT] Scenario 10 - capability-schema guard against arg-name drift
+[2026-04-26 01:55:44.009] [PRINT] ============================================================================
+[2026-04-26 01:55:44.018] [PRINT] [ OK ] all sim plans use only capability-declared arg names
+[2026-04-26 01:55:44.033] [PRINT] [ OK ] planner prompt Example 3 uses only capability-declared arg names (6 steps checked)
+[2026-04-26 01:55:44.045] [PRINT] ============================================================================
+[2026-04-26 01:55:44.056] [PRINT] Scenario 11 - Rule 16 text forbids wrong search_files args
+[2026-04-26 01:55:44.070] [PRINT] ============================================================================
+[2026-04-26 01:55:44.082] [PRINT] [ OK ] Rule 16 search_files line uses correct args only
+[2026-04-26 01:55:44.094] [PRINT] [ OK ] Rule 16 uploaded_file guidance uses bare-string pattern
+[2026-04-26 01:55:44.104] [PRINT] ============================================================================
+[2026-04-26 01:55:44.113] [PRINT] Scenario 12 - mapping_agent.parse_delivery_order_pdfs halts cleanly on all-rejected
+[2026-04-26 01:55:44.124] [PRINT] ============================================================================
+[2026-04-26 01:55:44.140] [PRINT] [ OK ] parse_delivery_order_pdfs signals failure on all-rejected
+[2026-04-26 01:55:44.149] [PRINT] [ OK ] parse_delivery_order_pdfs still succeeds with partial wins
+[2026-04-26 01:55:44.158] [PRINT] ============================================================================
+[2026-04-26 01:55:44.169] [PRINT] Scenario 13 - Mapping agent ToolResponse exposes no_results top-level
+[2026-04-26 01:55:44.177] [PRINT] ============================================================================
+[2026-04-26 01:55:44.185] [PRINT] [ OK ] ToolResponse serialises no_results at top level
+[2026-04-26 01:55:44.192] [PRINT] [ OK ] orchestrator halt-branch would trigger on this response
+[2026-04-26 01:55:44.200] [PRINT] ============================================================================
+[2026-04-26 01:55:44.209] [PRINT] Scenario 14 - Tier 1 DELIVERY ORDER WORKFLOW requires write/parse verb
+[2026-04-26 01:55:44.219] [PRINT] ============================================================================
+[2026-04-26 01:55:44.229] [PRINT] [ OK ] Tier 1 DELIVERY ORDER WORKFLOW has verb-gate + negative case
+[2026-04-26 01:55:44.240] [PRINT] ============================================================================
+[2026-04-26 01:55:44.250] [PRINT] Scenario 15 - Approval message warns when parsed_orders is empty
+[2026-04-26 01:55:44.262] [PRINT] ============================================================================
+[2026-04-26 01:55:44.273] [PRINT] [ OK ] empty parsed_orders produces a loud approval message
+[2026-04-26 01:55:44.284] [PRINT] [ OK ] non-empty parsed_orders still shows detailed summary
+[2026-04-26 01:55:44.297] [PRINT] ============================================================================
+[2026-04-26 01:55:44.305] [PRINT] Scenario 16 - Mapping inference yields only FOOD / NON-FOOD / empty
+[2026-04-26 01:55:44.315] [PRINT] ============================================================================
+[2026-04-26 01:55:44.336] [PRINT] [ OK ] Mapping agent does NOT expose _infer_category_from_filename
+[2026-04-26 01:55:44.348] [PRINT] [ OK ] _infer_category_from_items only yields FOOD (or empty for TECH/unknown)
+[2026-04-26 01:55:44.363] [PRINT] [ OK ] _HEADER_PATTERNS['category'] is strict (FOOD / NON-FOOD only)
+[2026-04-26 01:55:44.376] [PRINT] [ OK ] _normalise_category accepts only FOOD / NON-FOOD variants
+[2026-04-26 01:55:44.391] [PRINT] ============================================================================
+[2026-04-26 01:55:44.402] [PRINT] Scenario 17 - _is_footer_row drops signature blocks, keeps real items
+[2026-04-26 01:55:44.415] [PRINT] ============================================================================
+[2026-04-26 01:55:44.439] [PRINT] [ OK ] _is_footer_row filters signatures without false positives
+[2026-04-26 01:55:44.453] [PRINT] [ OK ] _parse_single_pdf drops footer rows end-to-end (FOOD)
+[2026-04-26 01:55:44.468] [PRINT] [ OK ] _parse_single_pdf fills header.category=FOOD via item-code prefix (content)
+[2026-04-26 01:55:44.481] [PRINT] ============================================================================
+[2026-04-26 01:55:44.494] [PRINT] Scenario 18 - _resolve_tab_for_category is strictly FOOD / NON-FOOD
+[2026-04-26 01:55:44.510] [PRINT] ============================================================================
+[2026-04-26 01:55:44.534] [PRINT] [ OK ] _resolve_tab_for_category routes only FOOD / NON-FOOD, skips everything else
+[2026-04-26 01:55:44.547] [PRINT] ============================================================================
+[2026-04-26 01:55:44.560] [PRINT] Scenario 19 - preview_delivery_order_insertion routes strictly FOOD/NON-FOOD
+[2026-04-26 01:55:44.576] [PRINT] ============================================================================
+[2026-04-26 01:55:44.601] [PRINT] [ OK ] preview routes FOOD->Food and NON-FOOD->non-food
+[2026-04-26 01:55:44.612] [PRINT] [ OK ] preview skips TECH order (defensive) and routes others correctly
+[2026-04-26 01:55:44.626] [PRINT] [ OK ] preview hard-skips FOOD order when Food tab is absent
+[2026-04-26 01:55:44.639] [PRINT] ============================================================================
+[2026-04-26 01:55:44.653] [PRINT] Scenario 20 - Mapping parser rejects Tech requisition PDFs
+[2026-04-26 01:55:44.666] [PRINT] ============================================================================
+[2026-04-26 01:55:44.690] [PRINT] [ OK ] _parse_single_pdf rejects Tech requisition PDFs
+[2026-04-26 01:55:44.701] [PRINT] [ OK ] parse_delivery_order_pdfs keeps FOOD, rejects TECH on mixed batch
+[2026-04-26 01:55:44.712] [PRINT] ============================================================================
+[2026-04-26 01:55:44.723] [PRINT] Scenario 21 - Filename is ignored; category comes from content only
+[2026-04-26 01:55:44.734] [PRINT] ============================================================================
+[2026-04-26 01:55:44.753] [PRINT] [ OK ] Filename never overrides content in category detection
+[2026-04-26 01:55:44.764] [PRINT] ============================================================================
+[2026-04-26 01:55:44.773] [PRINT] Scenario 22 - Non-PDF files are rejected with 'Not a PDF file'
+[2026-04-26 01:55:44.785] [PRINT] ============================================================================
+[2026-04-26 01:55:44.800] [PRINT] [ OK ] Non-PDF uploads are rejected by file-type gate
+[2026-04-26 01:55:44.810] [PRINT] ============================================================================
+[2026-04-26 01:55:44.818] [PRINT] Scenario 23 - PDFs that don't match our template are rejected
+[2026-04-26 01:55:44.832] [PRINT] ============================================================================
+[2026-04-26 01:55:44.853] [PRINT] [ OK ] Wrong-template PDFs rejected before data parsing
+[2026-04-26 01:55:44.863] [PRINT] ============================================================================
+[2026-04-26 01:55:44.873] [PRINT] Scenario 24 - validate_delivery_sheet rejects wrong sheet with clear error
+[2026-04-26 01:55:44.882] [PRINT] ============================================================================
+[2026-04-26 01:55:44.899] [PRINT] [ OK ] validate_delivery_sheet flags wrong sheet with explicit 'different sheet' error
+[2026-04-26 01:55:44.910] [PRINT] [ OK ] validate_delivery_sheet flags header mismatch with actionable detail
+[2026-04-26 01:55:44.920] [PRINT] ============================================================================
+[2026-04-26 01:55:44.929] [PRINT] Scenario 25 - validate_delivery_sheet catches read-only sheet access
+[2026-04-26 01:55:44.939] [PRINT] ============================================================================
+[2026-04-26 01:55:44.957] [PRINT] [ OK ] validate_delivery_sheet catches read-only access with actionable error
+[2026-04-26 01:55:44.970] [PRINT] [ OK ] validate_delivery_sheet happy path still returns success=True
+[2026-04-26 01:55:44.982] [PRINT] ============================================================================
+[2026-04-26 01:55:44.997] [PRINT] Scenario 26 - write_delivery_order_data catches 403 on append with read_only error
+[2026-04-26 01:55:45.011] [PRINT] ============================================================================
+[2026-04-26 01:55:45.031] [PRINT] [ OK ] write_delivery_order_data surfaces read-only error on 403 during append
+[2026-04-26 01:55:45.041] [PRINT] ============================================================================
+[2026-04-26 01:55:45.049] [PRINT] Scenario 27 - Bug 5: indexed output_var on name-based lookup triggers pause
+[2026-04-26 01:55:45.058] [PRINT] ============================================================================
+[2026-04-26 01:55:45.072] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:55:45.204] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:55:45.220] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:55:45.239] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:55:45.252] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:55:45.271] [PRINT] [ OK ] Bug 5 - search_files + 'results[0].id' + 2 matches -> pause - indexed extraction on name-based lookup now triggers disambiguation
+[2026-04-26 01:55:45.287] [PRINT] ============================================================================
+[2026-04-26 01:55:45.301] [PRINT] Scenario 28 - Bug 5: email search with 'emails[0].message_id' still auto-picks latest
+[2026-04-26 01:55:45.315] [PRINT] ============================================================================
+[2026-04-26 01:55:45.326] [PRINT] [ OK ] Bug 5 - search_emails + 'emails[0].message_id' NOT paused - email/draft searches keep 'latest' auto-selection semantics
+[2026-04-26 01:55:45.343] [PRINT] ============================================================================
+[2026-04-26 01:55:45.356] [PRINT] Scenario 29 - Bug 5: indexed output_var but no downstream use -> no pause
+[2026-04-26 01:55:45.367] [PRINT] ============================================================================
+[2026-04-26 01:55:45.376] [PRINT] [ OK ] Bug 5 - downstream-usage gate still blocks unused indexed var - Bug B.5 gate preserved — indexed var without downstream reference does not pause
+[2026-04-26 01:55:45.390] [PRINT] ============================================================================
+[2026-04-26 01:55:45.403] [PRINT] Scenario 30 - Bug 5: resume re-runs extraction against patched agent_result
+[2026-04-26 01:55:45.419] [PRINT] ============================================================================
+[2026-04-26 01:55:45.435] [PRINT] [ OK ] Bug 5 - resume: user picks option 2 -> sheet_id = 1bbb - extract_nested_value over patched agent_result correctly yields option 2's id
+[2026-04-26 01:55:45.449] [PRINT] ============================================================================
+[2026-04-26 01:55:45.461] [PRINT] Scenario 31 - Bug 5: whole-array pattern still works after resume
+[2026-04-26 01:55:45.475] [PRINT] ============================================================================
+[2026-04-26 01:55:45.487] [PRINT] [ OK ] Bug 5 - whole-array resume pattern still works - backwards-compatible with the {"results": "results"} pattern
+[2026-04-26 01:55:45.501] [PRINT] ============================================================================
+[2026-04-26 01:55:45.515] [PRINT] Scenario 32 - Bug 1: Tier 1 prompt keeps email_filter extraction rule
+[2026-04-26 01:55:45.529] [PRINT] ============================================================================
+[2026-04-26 01:55:45.545] [PRINT] [ OK ] Bug 1 - Tier 1 prompt carries email_filter extraction rule - multi-turn narrowing context is preserved for the planner
+[2026-04-26 01:55:45.557] [PRINT] ============================================================================
+[2026-04-26 01:55:45.571] [PRINT] Scenario 33 - Bug 1: Planner Rule 16 consumes email_filter when present
+[2026-04-26 01:55:45.586] [PRINT] ============================================================================
+[2026-04-26 01:55:45.596] [PRINT] [ OK ] Bug 1 - Planner Rule 16 honors email_filter verbatim - Rule 16 now routes email_filter -> query, fallback preserved for fresh turns
+[2026-04-26 01:55:45.611] [PRINT] ============================================================================
+[2026-04-26 01:55:45.623] [PRINT] Scenario 34 - Bug 1: build_supervisor_input emits email_filter to planner
+[2026-04-26 01:55:45.634] [PRINT] ============================================================================
+[2026-04-26 01:55:45.642] [PRINT] [ OK ] Bug 1 - build_supervisor_input surfaces email_filter - email_filter flows cleanly from extracted_info -> Parameters -> planner
+[2026-04-26 01:55:45.653] [PRINT] ============================================================================
+[2026-04-26 01:55:45.664] [PRINT] Scenario 35 - Silent-rejection: orchestrator attaches upstream_rejected_files on pause
+[2026-04-26 01:55:45.672] [PRINT] ============================================================================
+[2026-04-26 01:55:45.684] [PRINT] [ OK ] Scenario 35a - supervisor_agent.py contains upstream_rejected_files scan
+[2026-04-26 01:55:45.695] [PRINT] [ OK ] Scenario 35b - scan extracts rejected_files from step_N_mapping_agent
+[2026-04-26 01:55:45.707] [PRINT] [ OK ] Scenario 35c - scan returns [] when nothing was rejected (no regression)
+[2026-04-26 01:55:45.721] [PRINT] [ OK ] Scenario 35d - rejected_files deduped by filename across step namespaces
+[2026-04-26 01:55:45.734] [PRINT] [ OK ] Scenario 35e - scan ignores noisy values, skips non-step_* keys
+[2026-04-26 01:55:45.748] [PRINT] ============================================================================
+[2026-04-26 01:55:45.758] [PRINT] Scenario 36 - Approval message surfaces upstream_rejected_files warning
+[2026-04-26 01:55:45.770] [PRINT] ============================================================================
+[2026-04-26 01:55:45.782] [PRINT] [ OK ] Scenario 36a - approval message warns about skipped PDFs in partial-success case
+[2026-04-26 01:55:45.791] [PRINT] 
+[2026-04-26 01:55:45.791] [PRINT] --- approval message preview (partial success) ---
+[2026-04-26 01:55:45.803] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-26 01:55:45.803] [PRINT] 
+[2026-04-26 01:55:45.803] [PRINT] Step 6 of 6
+[2026-04-26 01:55:45.803] [PRINT] 
+[2026-04-26 01:55:45.803] [PRINT] **Append the parsed delivery-order rows into the sheet**
+[2026-04-26 01:55:45.803] [PRINT] 
+[2026-04-26 01:55:45.803] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-26 01:55:45.803] [PRINT] - **Sheet ID:** 1SHEET_ID
+[2026-04-26 01:55:45.803] [PRINT] - **Orders to write:** 1
+[2026-04-26 01:55:45.803] [PRINT] - **Total line items:** 17
+[2026-04-26 01:55:45.803] [PRINT] - **Source files:** Food_DELIVERY_ORDER (1).pdf
+[2026-04-26 01:55:45.803] [PRINT] - **Sample header (order 1):** reference_number=DO-2026-01, category=FOOD
+[2026-04-26 01:55:45.803] [PRINT] 
+[2026-04-26 01:55:45.803] [PRINT] **Note — some attachments were skipped and will NOT be written:**
+[2026-04-26 01:55:45.803] [PRINT] - `Tech_DELIVERY_ORDER (1).pdf` — Category is not FOOD or NON-FOOD
+[2026-04-26 01:55:45.803] [PRINT] 
+[2026-04-26 01:55:45.803] [PRINT] ---
+[2026-04-26 01:55:45.803] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-26 01:55:45.812] [PRINT] --- end preview ---
+[2026-04-26 01:55:45.821] [PRINT] [ OK ] Scenario 36b - approval message truncates >5 rejected files with footer
+[2026-04-26 01:55:45.833] [PRINT] ============================================================================
+[2026-04-26 01:55:45.843] [PRINT] Scenario 37 - Approval message unchanged when no PDFs were rejected
+[2026-04-26 01:55:45.856] [PRINT] ============================================================================
+[2026-04-26 01:55:45.866] [PRINT] [ OK ] Scenario 37 - approval message unchanged on no-rejection path
+[2026-04-26 01:55:45.874] [PRINT] [ OK ] Scenario 37b - empty upstream_rejected_files list renders no warning
+[2026-04-26 01:55:45.883] [PRINT] ============================================================================
+[2026-04-26 01:55:45.892] [PRINT] Scenario 38 - Final summary template lists rejected files
+[2026-04-26 01:55:45.901] [PRINT] ============================================================================
+[2026-04-26 01:55:45.912] [PRINT] [ OK ] Scenario 38a - parse_delivery_order_pdfs template lists skipped files
+[2026-04-26 01:55:45.921] [PRINT] 
+[2026-04-26 01:55:45.921] [PRINT] --- final summary preview (mixed) ---
+[2026-04-26 01:55:45.935] [PRINT] Parsed 1 delivery order(s), 1 file(s) rejected
+[2026-04-26 01:55:45.935] [PRINT] 
+[2026-04-26 01:55:45.935] [PRINT] **Skipped files:**
+[2026-04-26 01:55:45.935] [PRINT] - `Tech_DELIVERY_ORDER (1).pdf` — Category is not FOOD or NON-FOOD
+[2026-04-26 01:55:45.946] [PRINT] --- end preview ---
+[2026-04-26 01:55:45.956] [PRINT] [ OK ] Scenario 38b - final summary truncates >5 rejected files
+[2026-04-26 01:55:45.968] [PRINT] ============================================================================
+[2026-04-26 01:55:45.979] [PRINT] Scenario 39 - Final summary regression: no rejections + other templates still work
+[2026-04-26 01:55:45.994] [PRINT] ============================================================================
+[2026-04-26 01:55:46.012] [PRINT] [ OK ] Scenario 39a - clean parse renders legacy one-line summary
+[2026-04-26 01:55:46.028] [PRINT] [ OK ] Scenario 39b - static-string templates (reply_to_email) still render
+[2026-04-26 01:55:46.042] [PRINT] [ OK ] Scenario 39c - use_message templates still render after callable upgrade
+[2026-04-26 01:55:46.058] [PRINT] ============================================================================
+[2026-04-26 01:55:46.069] [PRINT] Scenario 40 - E2E: DeliveryTesting2PDFs2.log partial-rejection chain is no longer silent
+[2026-04-26 01:55:46.083] [PRINT] ============================================================================
+[2026-04-26 01:55:46.110] [PRINT] [ OK ] Scenario 40 - E2E chain surfaces partial rejection end-to-end - mapping → step_info scan → approval prompt → final summary all mention Tech PDF
+[2026-04-26 01:55:46.123] [PRINT] ============================================================================
+[2026-04-26 01:55:46.135] [PRINT] FINAL REPORT
+[2026-04-26 01:55:46.146] [PRINT] ============================================================================
+[2026-04-26 01:55:46.157] [PRINT] TOTAL: 81 checks — PASS: 81, FAIL: 0, INFO: 0
+[2026-04-26 01:56:10.573] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:56:10.730] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:56:10.740] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:56:10.751] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:56:10.762] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:56:10.780] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:56:10.880] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:56:10.891] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:56:10.904] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:56:10.921] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:56:10.941] [PRINT] [ OK ] Flaw D (Bug 5) - Drive 2-result ambiguity now pauses for user pick - orchestrator prompts user to choose between the 2 sheets instead of silently defaulting to results[0]
+[2026-04-26 01:56:10.956] [PRINT] ==============================================================================
+[2026-04-26 01:56:10.971] [PRINT] SUMMARY - post-fix replay of DeliveryOrder2Docuemnts
+[2026-04-26 01:56:10.988] [PRINT] ==============================================================================
+[2026-04-26 01:56:11.005] [PRINT]   PASS: 5
+[2026-04-26 01:56:11.018] [PRINT]   FAIL: 0
+[2026-04-26 01:56:11.033] [PRINT]   INFO: 0
+[2026-04-26 01:56:11.047] [PRINT]   All Flaws A-E that were observable in the old log are now blocked by the implemented fixes (Bug 5 included).
+[2026-04-26 01:57:24.125] [PRINT] ==============================================================================
+[2026-04-26 01:57:24.153] [PRINT] 1) ThreadManager.replace_last_assistant_message rewrites in place
+[2026-04-26 01:57:24.166] [PRINT] ==============================================================================
+[2026-04-26 01:57:24.228] [PRINT]  SQLite thread manager initialized: C:\Users\Denz\AppData\Local\Temp\persist_sim_o7q2kfop\threads.db
+[2026-04-26 01:57:57.333] [PRINT] ==============================================================================
+[2026-04-26 01:57:57.362] [PRINT] 1) ThreadManager.replace_last_assistant_message rewrites in place
+[2026-04-26 01:57:57.379] [PRINT] ==============================================================================
+[2026-04-26 01:57:57.456] [PRINT]  SQLite thread manager initialized: C:\Users\Denz\AppData\Local\Temp\persist_sim_ot_vy49x\threads.db
+[2026-04-26 01:57:57.478] [PRINT]  Created thread: u-test_3aed098a for user: u-test
+[2026-04-26 01:57:57.516] [PRINT] [ OK ] ThreadManager.replace_last_assistant_message - stub overwritten in place — no duplicate row, content matches rich response
+[2026-04-26 01:57:57.530] [PRINT] ==============================================================================
+[2026-04-26 01:57:57.542] [PRINT] 1b) After a second user turn, replace targets the LATEST assistant row only
+[2026-04-26 01:57:57.557] [PRINT] ==============================================================================
+[2026-04-26 01:57:57.593] [PRINT] [ OK ] Replace targets only the LATEST assistant row - previous rich response preserved; only the fresh stub was overwritten
+[2026-04-26 01:57:57.606] [PRINT] ==============================================================================
+[2026-04-26 01:57:57.621] [PRINT] 1c) Replace returns False when the thread has no assistant row
+[2026-04-26 01:57:57.636] [PRINT] ==============================================================================
+[2026-04-26 01:57:57.660] [PRINT]  Created thread: u-test_b1a32e7e for user: u-test
+[2026-04-26 01:57:57.680] [PRINT] [ OK ] Replace returns False when no assistant row exists - caller can detect and fall back to add_message
+[2026-04-26 01:57:57.697] [PRINT] ==============================================================================
+[2026-04-26 01:57:57.712] [PRINT] 2) ConversationMemoryManager.replace_last_assistant_message
+[2026-04-26 01:57:57.725] [PRINT] ==============================================================================
+[2026-04-26 01:58:00.562] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 9, "total": 9, "max": 2000}
+[2026-04-26 01:58:00.563] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 15, "total": 24, "max": 2000, "response_preview": "Ready to execute! 7-step workflow planned."}
+[2026-04-26 01:58:00.565] [INFO] [-]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 90, "total": 99, "max": 2000, "response_preview": "**Done — Delivery order workflow**\n\n- Parsed 2 PDF(s)\n- 80 line items routed to 2 tabs\n- 4 duplicates skipped\n\n**Per-PDF samples:**\n- `Food_Requisition.pdf` — page 1 — RMFD001 Beef 10 KG\n- `NonFood_Re..."}
+[2026-04-26 01:58:00.565] [PRINT] [ OK ] Memory replace_last_assistant_message rewrites in place - working_context + raw_history rewritten; tokens recomputed (now 99)
+[2026-04-26 01:58:00.578] [PRINT] ==============================================================================
+[2026-04-26 01:58:00.589] [PRINT] 2b) Memory replace returns False when there is no assistant entry yet
+[2026-04-26 01:58:00.601] [PRINT] ==============================================================================
+[2026-04-26 01:58:00.613] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 9, "total": 9, "max": 2000}
+[2026-04-26 01:58:00.614] [PRINT] [ OK ] Memory replace returns False with no assistant entry - no spurious entry inserted
+[2026-04-26 01:58:00.630] [PRINT] ==============================================================================
+[2026-04-26 01:58:00.639] [PRINT] SUMMARY
+[2026-04-26 01:58:00.655] [PRINT] ==============================================================================
+[2026-04-26 01:58:00.670] [PRINT]   PASS: 5
+[2026-04-26 01:58:00.684] [PRINT]   FAIL: 0
+[2026-04-26 01:58:24.232] [PRINT] [ OK ] templates: delivery-order summary template removed
+[2026-04-26 01:58:24.252] [PRINT] [ OK ] tools.py: _process_delivery_order_workflow_impl removed
+[2026-04-26 01:58:24.265] [PRINT] [ OK ] tools.py: dead helpers removed (G12)
+[2026-04-26 01:58:24.274] [PRINT] [ OK ] api.py: TOOL_MAP no longer dispatches the broken tool
+[2026-04-26 01:58:24.285] [PRINT] ============================================================================
+[2026-04-26 01:58:24.294] [PRINT] Scenario 2 - G2: dead delivery_order_service is deleted
+[2026-04-26 01:58:24.303] [PRINT] ============================================================================
+[2026-04-26 01:58:24.311] [PRINT] [ OK ] __init__.py no longer imports DeliveryOrderService
+[2026-04-26 01:58:24.323] [PRINT] [ OK ] delivery_order_service.py file deleted
+[2026-04-26 01:58:24.336] [PRINT] [ OK ] services package still imports cleanly
+[2026-04-26 01:58:24.345] [PRINT] ============================================================================
+[2026-04-26 01:58:24.353] [PRINT] Scenario 3 - Block G safety net with realistic classifier misses
+[2026-04-26 01:58:24.365] [PRINT] ============================================================================
+[2026-04-26 01:58:28.153] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:58:28.189] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:58:28.206] [PRINT] [ OK ] Block G A: spaced 'delivery order'
+[2026-04-26 01:58:28.222] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:58:28.263] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:58:28.285] [PRINT] [ OK ] Block G B: hyphenated 'delivery-order'
+[2026-04-26 01:58:28.298] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:58:28.335] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:58:28.351] [PRINT] [ OK ] Block G C: bare 'requisition'
+[2026-04-26 01:58:28.364] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:58:28.412] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:58:28.426] [PRINT] [ OK ] Block G D: 'purchase-order'
+[2026-04-26 01:58:28.440] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:58:28.478] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:58:28.494] [PRINT] [ OK ] Block G E: 'po pdf' phrase
+[2026-04-26 01:58:28.512] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:58:28.564] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:58:28.577] [PRINT] [ OK ] Block G F: 'order list'
+[2026-04-26 01:58:28.594] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 01:58:28.632] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 01:58:28.643] [PRINT] [ OK ] Block G negative control (no injection for non-delivery)
+[2026-04-26 01:58:28.656] [PRINT] ============================================================================
+[2026-04-26 01:58:28.666] [PRINT] Scenario 4 - Planner prompt exposes Rule 16 + Example 3
+[2026-04-26 01:58:28.681] [PRINT] ============================================================================
+[2026-04-26 01:58:28.693] [PRINT] [ OK ] planner prompt includes Rule 16 + Example 3 + all steering
+[2026-04-26 01:58:28.705] [PRINT] ============================================================================
+[2026-04-26 01:58:28.716] [PRINT] Scenario 5 - get_filtered_capabilities_v2 hides upload_mapped_data
+[2026-04-26 01:58:28.728] [PRINT] ============================================================================
+[2026-04-26 01:58:28.739] [PRINT] [ OK ] filtered caps shape is correct
+[2026-04-26 01:58:28.752] [PRINT] ============================================================================
+[2026-04-26 01:58:28.763] [PRINT] Scenario 6 - variable substitution round-trips list values correctly
+[2026-04-26 01:58:28.775] [PRINT] ============================================================================
+[2026-04-26 01:58:29.477] [PRINT] [ OK ] mapping_agent._flatten_file_paths decodes Jinja-stringified list
+[2026-04-26 01:58:29.495] [PRINT] [ OK ] sheets_agent._parse_orders_input decodes full Python repr (None/True/apostrophe)
+[2026-04-26 01:58:29.506] [PRINT] ============================================================================
+[2026-04-26 01:58:29.517] [PRINT] Scenario 7 - approval-branch substitution round-trips Python literals
+[2026-04-26 01:58:29.528] [PRINT] ============================================================================
+[2026-04-26 01:58:29.541] [PRINT] [ OK ] approval substitution (G6) round-trips Python list cleanly
+[2026-04-26 01:58:29.555] [PRINT] [ OK ] legacy approval substitution is demonstrably broken (as expected) - old code left parsed_orders as a raw string — G6 fix required
+[2026-04-26 01:58:29.567] [PRINT] ============================================================================
+[2026-04-26 01:58:29.578] [PRINT] Scenario 8 - G7 rich approval message renders readable summary
+[2026-04-26 01:58:29.590] [PRINT] ============================================================================
+[2026-04-26 01:58:29.605] [PRINT] [ OK ] approval message is readable, not a raw dump
+[2026-04-26 01:58:29.618] [PRINT] 
+[2026-04-26 01:58:29.618] [PRINT] --- approval message preview ---
+[2026-04-26 01:58:29.631] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-26 01:58:29.631] [PRINT] 
+[2026-04-26 01:58:29.631] [PRINT] Step 6 of 6
+[2026-04-26 01:58:29.631] [PRINT] 
+[2026-04-26 01:58:29.631] [PRINT] **Append the parsed delivery-order rows into the DO Tracker sheet**
+[2026-04-26 01:58:29.631] [PRINT] 
+[2026-04-26 01:58:29.631] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-26 01:58:29.631] [PRINT] - **Sheet ID:** 1A2B3C4D5E6F7G8H9I0J_real_sheet_id
+[2026-04-26 01:58:29.631] [PRINT] - **Orders to write:** 2
+[2026-04-26 01:58:29.631] [PRINT] - **Total line items:** 3
+[2026-04-26 01:58:29.631] [PRINT] - **Source files:** DO-2026-0417.pdf, requisition_april.pdf
+[2026-04-26 01:58:29.631] [PRINT] - **Sample header (order 1):** order_reference=DO-2026-0417, order_date=2026-04-17, vendor=Supplier's Co., urgent=True
+[2026-04-26 01:58:29.631] [PRINT] 
+[2026-04-26 01:58:29.631] [PRINT] ---
+[2026-04-26 01:58:29.631] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-26 01:58:29.644] [PRINT] --- end preview ---
+[2026-04-26 01:58:29.654] [PRINT] ============================================================================
+[2026-04-26 01:58:29.663] [PRINT] Scenario 9 - Full pipeline walkthrough across 3 user inputs
+[2026-04-26 01:58:29.673] [PRINT] ============================================================================
+[2026-04-26 01:58:32.242] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:58:32.395] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:58:32.416] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:58:32.438] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:58:32.453] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:58:32.474] [PRINT] [ OK ] Scenario A (sheet-by-name): all 6 steps wire cleanly
+[2026-04-26 01:58:32.490] [PRINT] [ OK ] Scenario B (uploaded file, bare string path): 5-step chain wires cleanly
+[2026-04-26 01:58:32.506] [PRINT] [ OK ] Scenario C (sheet URL pasted): 5-step chain skips drive lookup
+[2026-04-26 01:58:32.517] [PRINT] ============================================================================
+[2026-04-26 01:58:32.532] [PRINT] Scenario 10 - capability-schema guard against arg-name drift
+[2026-04-26 01:58:32.547] [PRINT] ============================================================================
+[2026-04-26 01:58:32.560] [PRINT] [ OK ] all sim plans use only capability-declared arg names
+[2026-04-26 01:58:32.579] [PRINT] [ OK ] planner prompt Example 3 uses only capability-declared arg names (6 steps checked)
+[2026-04-26 01:58:32.595] [PRINT] ============================================================================
+[2026-04-26 01:58:32.609] [PRINT] Scenario 11 - Rule 16 text forbids wrong search_files args
+[2026-04-26 01:58:32.626] [PRINT] ============================================================================
+[2026-04-26 01:58:32.639] [PRINT] [ OK ] Rule 16 search_files line uses correct args only
+[2026-04-26 01:58:32.654] [PRINT] [ OK ] Rule 16 uploaded_file guidance uses bare-string pattern
+[2026-04-26 01:58:32.664] [PRINT] ============================================================================
+[2026-04-26 01:58:32.673] [PRINT] Scenario 12 - mapping_agent.parse_delivery_order_pdfs halts cleanly on all-rejected
+[2026-04-26 01:58:32.682] [PRINT] ============================================================================
+[2026-04-26 01:58:32.699] [PRINT] [ OK ] parse_delivery_order_pdfs signals failure on all-rejected
+[2026-04-26 01:58:32.708] [PRINT] [ OK ] parse_delivery_order_pdfs still succeeds with partial wins
+[2026-04-26 01:58:32.721] [PRINT] ============================================================================
+[2026-04-26 01:58:32.734] [PRINT] Scenario 13 - Mapping agent ToolResponse exposes no_results top-level
+[2026-04-26 01:58:32.746] [PRINT] ============================================================================
+[2026-04-26 01:58:32.760] [PRINT] [ OK ] ToolResponse serialises no_results at top level
+[2026-04-26 01:58:32.773] [PRINT] [ OK ] orchestrator halt-branch would trigger on this response
+[2026-04-26 01:58:32.786] [PRINT] ============================================================================
+[2026-04-26 01:58:32.799] [PRINT] Scenario 14 - Tier 1 DELIVERY ORDER WORKFLOW requires write/parse verb
+[2026-04-26 01:58:32.811] [PRINT] ============================================================================
+[2026-04-26 01:58:32.829] [PRINT] [ OK ] Tier 1 DELIVERY ORDER WORKFLOW has verb-gate + negative case
+[2026-04-26 01:58:32.844] [PRINT] ============================================================================
+[2026-04-26 01:58:32.858] [PRINT] Scenario 15 - Approval message warns when parsed_orders is empty
+[2026-04-26 01:58:32.874] [PRINT] ============================================================================
+[2026-04-26 01:58:32.890] [PRINT] [ OK ] empty parsed_orders produces a loud approval message
+[2026-04-26 01:58:32.901] [PRINT] [ OK ] non-empty parsed_orders still shows detailed summary
+[2026-04-26 01:58:32.915] [PRINT] ============================================================================
+[2026-04-26 01:58:32.926] [PRINT] Scenario 16 - Mapping inference yields only FOOD / NON-FOOD / empty
+[2026-04-26 01:58:32.940] [PRINT] ============================================================================
+[2026-04-26 01:58:32.959] [PRINT] [ OK ] Mapping agent does NOT expose _infer_category_from_filename
+[2026-04-26 01:58:32.974] [PRINT] [ OK ] _infer_category_from_items only yields FOOD (or empty for TECH/unknown)
+[2026-04-26 01:58:32.995] [PRINT] [ OK ] _HEADER_PATTERNS['category'] is strict (FOOD / NON-FOOD only)
+[2026-04-26 01:58:33.006] [PRINT] [ OK ] _normalise_category accepts only FOOD / NON-FOOD variants
+[2026-04-26 01:58:33.022] [PRINT] ============================================================================
+[2026-04-26 01:58:33.035] [PRINT] Scenario 17 - _is_footer_row drops signature blocks, keeps real items
+[2026-04-26 01:58:33.049] [PRINT] ============================================================================
+[2026-04-26 01:58:33.073] [PRINT] [ OK ] _is_footer_row filters signatures without false positives
+[2026-04-26 01:58:33.085] [PRINT] [ OK ] _parse_single_pdf drops footer rows end-to-end (FOOD)
+[2026-04-26 01:58:33.099] [PRINT] [ OK ] _parse_single_pdf fills header.category=FOOD via item-code prefix (content)
+[2026-04-26 01:58:33.112] [PRINT] ============================================================================
+[2026-04-26 01:58:33.123] [PRINT] Scenario 18 - _resolve_tab_for_category is strictly FOOD / NON-FOOD
+[2026-04-26 01:58:33.137] [PRINT] ============================================================================
+[2026-04-26 01:58:33.161] [PRINT] [ OK ] _resolve_tab_for_category routes only FOOD / NON-FOOD, skips everything else
+[2026-04-26 01:58:33.175] [PRINT] ============================================================================
+[2026-04-26 01:58:33.187] [PRINT] Scenario 19 - preview_delivery_order_insertion routes strictly FOOD/NON-FOOD
+[2026-04-26 01:58:33.200] [PRINT] ============================================================================
+[2026-04-26 01:58:33.220] [PRINT] [ OK ] preview routes FOOD->Food and NON-FOOD->non-food
+[2026-04-26 01:58:33.229] [PRINT] [ OK ] preview skips TECH order (defensive) and routes others correctly
+[2026-04-26 01:58:33.243] [PRINT] [ OK ] preview hard-skips FOOD order when Food tab is absent
+[2026-04-26 01:58:33.254] [PRINT] ============================================================================
+[2026-04-26 01:58:33.264] [PRINT] Scenario 20 - Mapping parser rejects Tech requisition PDFs
+[2026-04-26 01:58:33.275] [PRINT] ============================================================================
+[2026-04-26 01:58:33.293] [PRINT] [ OK ] _parse_single_pdf rejects Tech requisition PDFs
+[2026-04-26 01:58:33.301] [PRINT] [ OK ] parse_delivery_order_pdfs keeps FOOD, rejects TECH on mixed batch
+[2026-04-26 01:58:33.311] [PRINT] ============================================================================
+[2026-04-26 01:58:33.321] [PRINT] Scenario 21 - Filename is ignored; category comes from content only
+[2026-04-26 01:58:33.329] [PRINT] ============================================================================
+[2026-04-26 01:58:33.343] [PRINT] [ OK ] Filename never overrides content in category detection
+[2026-04-26 01:58:33.353] [PRINT] ============================================================================
+[2026-04-26 01:58:33.360] [PRINT] Scenario 22 - Non-PDF files are rejected with 'Not a PDF file'
+[2026-04-26 01:58:33.367] [PRINT] ============================================================================
+[2026-04-26 01:58:33.380] [PRINT] [ OK ] Non-PDF uploads are rejected by file-type gate
+[2026-04-26 01:58:33.389] [PRINT] ============================================================================
+[2026-04-26 01:58:33.397] [PRINT] Scenario 23 - PDFs that don't match our template are rejected
+[2026-04-26 01:58:33.409] [PRINT] ============================================================================
+[2026-04-26 01:58:33.435] [PRINT] [ OK ] Wrong-template PDFs rejected before data parsing
+[2026-04-26 01:58:33.447] [PRINT] ============================================================================
+[2026-04-26 01:58:33.458] [PRINT] Scenario 24 - validate_delivery_sheet rejects wrong sheet with clear error
+[2026-04-26 01:58:33.471] [PRINT] ============================================================================
+[2026-04-26 01:58:33.493] [PRINT] [ OK ] validate_delivery_sheet flags wrong sheet with explicit 'different sheet' error
+[2026-04-26 01:58:33.504] [PRINT] [ OK ] validate_delivery_sheet flags header mismatch with actionable detail
+[2026-04-26 01:58:33.514] [PRINT] ============================================================================
+[2026-04-26 01:58:33.524] [PRINT] Scenario 25 - validate_delivery_sheet catches read-only sheet access
+[2026-04-26 01:58:33.534] [PRINT] ============================================================================
+[2026-04-26 01:58:33.554] [PRINT] [ OK ] validate_delivery_sheet catches read-only access with actionable error
+[2026-04-26 01:58:33.563] [PRINT] [ OK ] validate_delivery_sheet happy path still returns success=True
+[2026-04-26 01:58:33.573] [PRINT] ============================================================================
+[2026-04-26 01:58:33.585] [PRINT] Scenario 26 - write_delivery_order_data catches 403 on append with read_only error
+[2026-04-26 01:58:33.597] [PRINT] ============================================================================
+[2026-04-26 01:58:33.622] [PRINT] [ OK ] write_delivery_order_data surfaces read-only error on 403 during append
+[2026-04-26 01:58:33.635] [PRINT] ============================================================================
+[2026-04-26 01:58:33.644] [PRINT] Scenario 27 - Bug 5: indexed output_var on name-based lookup triggers pause
+[2026-04-26 01:58:33.655] [PRINT] ============================================================================
+[2026-04-26 01:58:33.672] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:58:33.789] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:58:33.805] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:58:33.828] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:58:33.845] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:58:33.863] [PRINT] [ OK ] Bug 5 - search_files + 'results[0].id' + 2 matches -> pause - indexed extraction on name-based lookup now triggers disambiguation
+[2026-04-26 01:58:33.880] [PRINT] ============================================================================
+[2026-04-26 01:58:33.896] [PRINT] Scenario 28 - Bug 5: email search with 'emails[0].message_id' still auto-picks latest
+[2026-04-26 01:58:33.910] [PRINT] ============================================================================
+[2026-04-26 01:58:33.923] [PRINT] [ OK ] Bug 5 - search_emails + 'emails[0].message_id' NOT paused - email/draft searches keep 'latest' auto-selection semantics
+[2026-04-26 01:58:33.940] [PRINT] ============================================================================
+[2026-04-26 01:58:33.952] [PRINT] Scenario 29 - Bug 5: indexed output_var but no downstream use -> no pause
+[2026-04-26 01:58:33.968] [PRINT] ============================================================================
+[2026-04-26 01:58:33.981] [PRINT] [ OK ] Bug 5 - downstream-usage gate still blocks unused indexed var - Bug B.5 gate preserved — indexed var without downstream reference does not pause
+[2026-04-26 01:58:33.992] [PRINT] ============================================================================
+[2026-04-26 01:58:34.008] [PRINT] Scenario 30 - Bug 5: resume re-runs extraction against patched agent_result
+[2026-04-26 01:58:34.025] [PRINT] ============================================================================
+[2026-04-26 01:58:34.043] [PRINT] [ OK ] Bug 5 - resume: user picks option 2 -> sheet_id = 1bbb - extract_nested_value over patched agent_result correctly yields option 2's id
+[2026-04-26 01:58:34.058] [PRINT] ============================================================================
+[2026-04-26 01:58:34.071] [PRINT] Scenario 31 - Bug 5: whole-array pattern still works after resume
+[2026-04-26 01:58:34.083] [PRINT] ============================================================================
+[2026-04-26 01:58:34.097] [PRINT] [ OK ] Bug 5 - whole-array resume pattern still works - backwards-compatible with the {"results": "results"} pattern
+[2026-04-26 01:58:34.110] [PRINT] ============================================================================
+[2026-04-26 01:58:34.128] [PRINT] Scenario 32 - Bug 1: Tier 1 prompt keeps email_filter extraction rule
+[2026-04-26 01:58:34.144] [PRINT] ============================================================================
+[2026-04-26 01:58:34.159] [PRINT] [ OK ] Bug 1 - Tier 1 prompt carries email_filter extraction rule - multi-turn narrowing context is preserved for the planner
+[2026-04-26 01:58:34.174] [PRINT] ============================================================================
+[2026-04-26 01:58:34.193] [PRINT] Scenario 33 - Bug 1: Planner Rule 16 consumes email_filter when present
+[2026-04-26 01:58:34.208] [PRINT] ============================================================================
+[2026-04-26 01:58:34.225] [PRINT] [ OK ] Bug 1 - Planner Rule 16 honors email_filter verbatim - Rule 16 now routes email_filter -> query, fallback preserved for fresh turns
+[2026-04-26 01:58:34.242] [PRINT] ============================================================================
+[2026-04-26 01:58:34.257] [PRINT] Scenario 34 - Bug 1: build_supervisor_input emits email_filter to planner
+[2026-04-26 01:58:34.276] [PRINT] ============================================================================
+[2026-04-26 01:58:34.288] [PRINT] [ OK ] Bug 1 - build_supervisor_input surfaces email_filter - email_filter flows cleanly from extracted_info -> Parameters -> planner
+[2026-04-26 01:58:34.303] [PRINT] ============================================================================
+[2026-04-26 01:58:34.317] [PRINT] Scenario 35 - Silent-rejection: orchestrator attaches upstream_rejected_files on pause
+[2026-04-26 01:58:34.330] [PRINT] ============================================================================
+[2026-04-26 01:58:34.348] [PRINT] [ OK ] Scenario 35a - supervisor_agent.py contains upstream_rejected_files scan
+[2026-04-26 01:58:34.363] [PRINT] [ OK ] Scenario 35b - scan extracts rejected_files from step_N_mapping_agent
+[2026-04-26 01:58:34.374] [PRINT] [ OK ] Scenario 35c - scan returns [] when nothing was rejected (no regression)
+[2026-04-26 01:58:34.386] [PRINT] [ OK ] Scenario 35d - rejected_files deduped by filename across step namespaces
+[2026-04-26 01:58:34.401] [PRINT] [ OK ] Scenario 35e - scan ignores noisy values, skips non-step_* keys
+[2026-04-26 01:58:34.414] [PRINT] ============================================================================
+[2026-04-26 01:58:34.429] [PRINT] Scenario 36 - Approval message surfaces upstream_rejected_files warning
+[2026-04-26 01:58:34.444] [PRINT] ============================================================================
+[2026-04-26 01:58:34.463] [PRINT] [ OK ] Scenario 36a - approval message warns about skipped PDFs in partial-success case
+[2026-04-26 01:58:34.481] [PRINT] 
+[2026-04-26 01:58:34.481] [PRINT] --- approval message preview (partial success) ---
+[2026-04-26 01:58:34.495] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-26 01:58:34.495] [PRINT] 
+[2026-04-26 01:58:34.495] [PRINT] Step 6 of 6
+[2026-04-26 01:58:34.495] [PRINT] 
+[2026-04-26 01:58:34.495] [PRINT] **Append the parsed delivery-order rows into the sheet**
+[2026-04-26 01:58:34.495] [PRINT] 
+[2026-04-26 01:58:34.495] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-26 01:58:34.495] [PRINT] - **Sheet ID:** 1SHEET_ID
+[2026-04-26 01:58:34.495] [PRINT] - **Orders to write:** 1
+[2026-04-26 01:58:34.495] [PRINT] - **Total line items:** 17
+[2026-04-26 01:58:34.495] [PRINT] - **Source files:** Food_DELIVERY_ORDER (1).pdf
+[2026-04-26 01:58:34.495] [PRINT] - **Sample header (order 1):** reference_number=DO-2026-01, category=FOOD
+[2026-04-26 01:58:34.495] [PRINT] 
+[2026-04-26 01:58:34.495] [PRINT] **Note — some attachments were skipped and will NOT be written:**
+[2026-04-26 01:58:34.495] [PRINT] - `Tech_DELIVERY_ORDER (1).pdf` — Category is not FOOD or NON-FOOD
+[2026-04-26 01:58:34.495] [PRINT] 
+[2026-04-26 01:58:34.495] [PRINT] ---
+[2026-04-26 01:58:34.495] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-26 01:58:34.506] [PRINT] --- end preview ---
+[2026-04-26 01:58:34.521] [PRINT] [ OK ] Scenario 36b - approval message truncates >5 rejected files with footer
+[2026-04-26 01:58:34.533] [PRINT] ============================================================================
+[2026-04-26 01:58:34.545] [PRINT] Scenario 37 - Approval message unchanged when no PDFs were rejected
+[2026-04-26 01:58:34.556] [PRINT] ============================================================================
+[2026-04-26 01:58:34.568] [PRINT] [ OK ] Scenario 37 - approval message unchanged on no-rejection path
+[2026-04-26 01:58:34.579] [PRINT] [ OK ] Scenario 37b - empty upstream_rejected_files list renders no warning
+[2026-04-26 01:58:34.588] [PRINT] ============================================================================
+[2026-04-26 01:58:34.600] [PRINT] Scenario 38 - Final summary template lists rejected files
+[2026-04-26 01:58:34.615] [PRINT] ============================================================================
+[2026-04-26 01:58:34.628] [PRINT] [ OK ] Scenario 38a - parse_delivery_order_pdfs template lists skipped files
+[2026-04-26 01:58:34.638] [PRINT] 
+[2026-04-26 01:58:34.638] [PRINT] --- final summary preview (mixed) ---
+[2026-04-26 01:58:34.653] [PRINT] Parsed 1 delivery order(s), 1 file(s) rejected
+[2026-04-26 01:58:34.653] [PRINT] 
+[2026-04-26 01:58:34.653] [PRINT] **Skipped files:**
+[2026-04-26 01:58:34.653] [PRINT] - `Tech_DELIVERY_ORDER (1).pdf` — Category is not FOOD or NON-FOOD
+[2026-04-26 01:58:34.668] [PRINT] --- end preview ---
+[2026-04-26 01:58:34.681] [PRINT] [ OK ] Scenario 38b - final summary truncates >5 rejected files
+[2026-04-26 01:58:34.693] [PRINT] ============================================================================
+[2026-04-26 01:58:34.705] [PRINT] Scenario 39 - Final summary regression: no rejections + other templates still work
+[2026-04-26 01:58:34.719] [PRINT] ============================================================================
+[2026-04-26 01:58:34.737] [PRINT] [ OK ] Scenario 39a - clean parse renders legacy one-line summary
+[2026-04-26 01:58:34.751] [PRINT] [ OK ] Scenario 39b - static-string templates (reply_to_email) still render
+[2026-04-26 01:58:34.763] [PRINT] [ OK ] Scenario 39c - use_message templates still render after callable upgrade
+[2026-04-26 01:58:34.776] [PRINT] ============================================================================
+[2026-04-26 01:58:34.790] [PRINT] Scenario 40 - E2E: DeliveryTesting2PDFs2.log partial-rejection chain is no longer silent
+[2026-04-26 01:58:34.802] [PRINT] ============================================================================
+[2026-04-26 01:58:34.830] [PRINT] [ OK ] Scenario 40 - E2E chain surfaces partial rejection end-to-end - mapping → step_info scan → approval prompt → final summary all mention Tech PDF
+[2026-04-26 01:58:34.839] [PRINT] ============================================================================
+[2026-04-26 01:58:34.849] [PRINT] FINAL REPORT
+[2026-04-26 01:58:34.862] [PRINT] ============================================================================
+[2026-04-26 01:58:34.873] [PRINT] TOTAL: 81 checks — PASS: 81, FAIL: 0, INFO: 0
+[2026-04-26 01:58:45.718] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:58:45.843] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:58:45.857] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:58:45.875] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:58:45.887] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:58:45.907] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 01:58:46.019] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 01:58:46.029] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 01:58:46.041] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 01:58:46.051] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 01:58:46.065] [PRINT] [ OK ] Flaw D (Bug 5) - Drive 2-result ambiguity now pauses for user pick - orchestrator prompts user to choose between the 2 sheets instead of silently defaulting to results[0]
+[2026-04-26 01:58:46.076] [PRINT] ==============================================================================
+[2026-04-26 01:58:46.088] [PRINT] SUMMARY - post-fix replay of DeliveryOrder2Docuemnts
+[2026-04-26 01:58:46.101] [PRINT] ==============================================================================
+[2026-04-26 01:58:46.115] [PRINT]   PASS: 5
+[2026-04-26 01:58:46.129] [PRINT]   FAIL: 0
+[2026-04-26 01:58:46.143] [PRINT]   INFO: 0
+[2026-04-26 01:58:46.155] [PRINT]   All Flaws A-E that were observable in the old log are now blocked by the implemented fixes (Bug 5 included).
+[2026-04-26 02:09:32.002] [PRINT] [ OK ] templates: delivery-order summary template removed
+[2026-04-26 02:09:32.038] [PRINT] [ OK ] tools.py: _process_delivery_order_workflow_impl removed
+[2026-04-26 02:09:32.056] [PRINT] [ OK ] tools.py: dead helpers removed (G12)
+[2026-04-26 02:09:32.075] [PRINT] [ OK ] api.py: TOOL_MAP no longer dispatches the broken tool
+[2026-04-26 02:09:32.100] [PRINT] ============================================================================
+[2026-04-26 02:09:32.119] [PRINT] Scenario 2 - G2: dead delivery_order_service is deleted
+[2026-04-26 02:09:32.134] [PRINT] ============================================================================
+[2026-04-26 02:09:32.151] [PRINT] [ OK ] __init__.py no longer imports DeliveryOrderService
+[2026-04-26 02:09:32.170] [PRINT] [ OK ] delivery_order_service.py file deleted
+[2026-04-26 02:09:32.187] [PRINT] [ OK ] services package still imports cleanly
+[2026-04-26 02:09:32.197] [PRINT] ============================================================================
+[2026-04-26 02:09:32.213] [PRINT] Scenario 3 - Block G safety net with realistic classifier misses
+[2026-04-26 02:09:32.227] [PRINT] ============================================================================
+[2026-04-26 02:09:35.009] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 02:09:35.059] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 02:09:35.079] [PRINT] [ OK ] Block G A: spaced 'delivery order'
+[2026-04-26 02:09:35.105] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 02:09:35.158] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 02:09:35.174] [PRINT] [ OK ] Block G B: hyphenated 'delivery-order'
+[2026-04-26 02:09:35.195] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 02:09:35.249] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 02:09:35.261] [PRINT] [ OK ] Block G C: bare 'requisition'
+[2026-04-26 02:09:35.273] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 02:09:35.317] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 02:09:35.331] [PRINT] [ OK ] Block G D: 'purchase-order'
+[2026-04-26 02:09:35.344] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 02:09:35.375] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 02:09:35.384] [PRINT] [ OK ] Block G E: 'po pdf' phrase
+[2026-04-26 02:09:35.393] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 02:09:35.427] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 02:09:35.438] [PRINT] [ OK ] Block G F: 'order list'
+[2026-04-26 02:09:35.454] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-04-26 02:09:35.492] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-04-26 02:09:35.507] [PRINT] [ OK ] Block G negative control (no injection for non-delivery)
+[2026-04-26 02:09:35.523] [PRINT] ============================================================================
+[2026-04-26 02:09:35.538] [PRINT] Scenario 4 - Planner prompt exposes Rule 16 + Example 3
+[2026-04-26 02:09:35.553] [PRINT] ============================================================================
+[2026-04-26 02:09:35.569] [PRINT] [ OK ] planner prompt includes Rule 16 + Example 3 + all steering
+[2026-04-26 02:09:35.583] [PRINT] ============================================================================
+[2026-04-26 02:09:35.598] [PRINT] Scenario 5 - get_filtered_capabilities_v2 hides upload_mapped_data
+[2026-04-26 02:09:35.614] [PRINT] ============================================================================
+[2026-04-26 02:09:35.631] [PRINT] [ OK ] filtered caps shape is correct
+[2026-04-26 02:09:35.651] [PRINT] ============================================================================
+[2026-04-26 02:09:35.663] [PRINT] Scenario 6 - variable substitution round-trips list values correctly
+[2026-04-26 02:09:35.673] [PRINT] ============================================================================
+[2026-04-26 02:09:36.152] [PRINT] [ OK ] mapping_agent._flatten_file_paths decodes Jinja-stringified list
+[2026-04-26 02:09:36.180] [PRINT] [ OK ] sheets_agent._parse_orders_input decodes full Python repr (None/True/apostrophe)
+[2026-04-26 02:09:36.194] [PRINT] ============================================================================
+[2026-04-26 02:09:36.207] [PRINT] Scenario 7 - approval-branch substitution round-trips Python literals
+[2026-04-26 02:09:36.225] [PRINT] ============================================================================
+[2026-04-26 02:09:36.246] [PRINT] [ OK ] approval substitution (G6) round-trips Python list cleanly
+[2026-04-26 02:09:36.266] [PRINT] [ OK ] legacy approval substitution is demonstrably broken (as expected) - old code left parsed_orders as a raw string — G6 fix required
+[2026-04-26 02:09:36.285] [PRINT] ============================================================================
+[2026-04-26 02:09:36.305] [PRINT] Scenario 8 - G7 rich approval message renders readable summary
+[2026-04-26 02:09:36.325] [PRINT] ============================================================================
+[2026-04-26 02:09:36.356] [PRINT] [ OK ] approval message is readable, not a raw dump
+[2026-04-26 02:09:36.375] [PRINT] 
+[2026-04-26 02:09:36.375] [PRINT] --- approval message preview ---
+[2026-04-26 02:09:36.400] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-26 02:09:36.400] [PRINT] 
+[2026-04-26 02:09:36.400] [PRINT] Step 6 of 6
+[2026-04-26 02:09:36.400] [PRINT] 
+[2026-04-26 02:09:36.400] [PRINT] **Append the parsed delivery-order rows into the DO Tracker sheet**
+[2026-04-26 02:09:36.400] [PRINT] 
+[2026-04-26 02:09:36.400] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-26 02:09:36.400] [PRINT] - **Sheet ID:** 1A2B3C4D5E6F7G8H9I0J_real_sheet_id
+[2026-04-26 02:09:36.400] [PRINT] - **Orders to write:** 2
+[2026-04-26 02:09:36.400] [PRINT] - **Total line items:** 3
+[2026-04-26 02:09:36.400] [PRINT] - **Source files:** DO-2026-0417.pdf, requisition_april.pdf
+[2026-04-26 02:09:36.400] [PRINT] - **Sample header (order 1):** order_reference=DO-2026-0417, order_date=2026-04-17, vendor=Supplier's Co., urgent=True
+[2026-04-26 02:09:36.400] [PRINT] 
+[2026-04-26 02:09:36.400] [PRINT] ---
+[2026-04-26 02:09:36.400] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-26 02:09:36.423] [PRINT] --- end preview ---
+[2026-04-26 02:09:36.436] [PRINT] ============================================================================
+[2026-04-26 02:09:36.454] [PRINT] Scenario 9 - Full pipeline walkthrough across 3 user inputs
+[2026-04-26 02:09:36.467] [PRINT] ============================================================================
+[2026-04-26 02:09:38.273] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 02:09:38.348] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 02:09:38.357] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 02:09:38.364] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 02:09:38.371] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 02:09:38.382] [PRINT] [ OK ] Scenario A (sheet-by-name): all 6 steps wire cleanly
+[2026-04-26 02:09:38.397] [PRINT] [ OK ] Scenario B (uploaded file, bare string path): 5-step chain wires cleanly
+[2026-04-26 02:09:38.416] [PRINT] [ OK ] Scenario C (sheet URL pasted): 5-step chain skips drive lookup
+[2026-04-26 02:09:38.430] [PRINT] ============================================================================
+[2026-04-26 02:09:38.443] [PRINT] Scenario 10 - capability-schema guard against arg-name drift
+[2026-04-26 02:09:38.453] [PRINT] ============================================================================
+[2026-04-26 02:09:38.465] [PRINT] [ OK ] all sim plans use only capability-declared arg names
+[2026-04-26 02:09:38.485] [PRINT] [ OK ] planner prompt Example 3 uses only capability-declared arg names (6 steps checked)
+[2026-04-26 02:09:38.496] [PRINT] ============================================================================
+[2026-04-26 02:09:38.507] [PRINT] Scenario 11 - Rule 16 text forbids wrong search_files args
+[2026-04-26 02:09:38.520] [PRINT] ============================================================================
+[2026-04-26 02:09:38.531] [PRINT] [ OK ] Rule 16 search_files line uses correct args only
+[2026-04-26 02:09:38.556] [PRINT] [ OK ] Rule 16 uploaded_file guidance uses bare-string pattern
+[2026-04-26 02:09:38.577] [PRINT] ============================================================================
+[2026-04-26 02:09:38.591] [PRINT] Scenario 12 - mapping_agent.parse_delivery_order_pdfs halts cleanly on all-rejected
+[2026-04-26 02:09:38.607] [PRINT] ============================================================================
+[2026-04-26 02:09:38.626] [PRINT] [ OK ] parse_delivery_order_pdfs signals failure on all-rejected
+[2026-04-26 02:09:38.635] [PRINT] [ OK ] parse_delivery_order_pdfs still succeeds with partial wins
+[2026-04-26 02:09:38.648] [PRINT] ============================================================================
+[2026-04-26 02:09:38.656] [PRINT] Scenario 13 - Mapping agent ToolResponse exposes no_results top-level
+[2026-04-26 02:09:38.665] [PRINT] ============================================================================
+[2026-04-26 02:09:38.673] [PRINT] [ OK ] ToolResponse serialises no_results at top level
+[2026-04-26 02:09:38.681] [PRINT] [ OK ] orchestrator halt-branch would trigger on this response
+[2026-04-26 02:09:38.688] [PRINT] ============================================================================
+[2026-04-26 02:09:38.695] [PRINT] Scenario 14 - Tier 1 DELIVERY ORDER WORKFLOW requires write/parse verb
+[2026-04-26 02:09:38.702] [PRINT] ============================================================================
+[2026-04-26 02:09:38.711] [PRINT] [ OK ] Tier 1 DELIVERY ORDER WORKFLOW has verb-gate + negative case
+[2026-04-26 02:09:38.718] [PRINT] ============================================================================
+[2026-04-26 02:09:38.730] [PRINT] Scenario 15 - Approval message warns when parsed_orders is empty
+[2026-04-26 02:09:38.743] [PRINT] ============================================================================
+[2026-04-26 02:09:38.761] [PRINT] [ OK ] empty parsed_orders produces a loud approval message
+[2026-04-26 02:09:38.770] [PRINT] [ OK ] non-empty parsed_orders still shows detailed summary
+[2026-04-26 02:09:38.780] [PRINT] ============================================================================
+[2026-04-26 02:09:38.790] [PRINT] Scenario 16 - Mapping inference yields only FOOD / NON-FOOD / empty
+[2026-04-26 02:09:38.799] [PRINT] ============================================================================
+[2026-04-26 02:09:38.822] [PRINT] [ OK ] Mapping agent does NOT expose _infer_category_from_filename
+[2026-04-26 02:09:38.829] [PRINT] [ OK ] _infer_category_from_items only yields FOOD (or empty for TECH/unknown)
+[2026-04-26 02:09:38.843] [PRINT] [ OK ] _HEADER_PATTERNS['category'] is strict (FOOD / NON-FOOD only)
+[2026-04-26 02:09:38.858] [PRINT] [ OK ] _normalise_category accepts only FOOD / NON-FOOD variants
+[2026-04-26 02:09:38.871] [PRINT] ============================================================================
+[2026-04-26 02:09:38.877] [PRINT] Scenario 17 - _is_footer_row drops signature blocks, keeps real items
+[2026-04-26 02:09:38.885] [PRINT] ============================================================================
+[2026-04-26 02:09:38.904] [PRINT] [ OK ] _is_footer_row filters signatures without false positives
+[2026-04-26 02:09:38.910] [PRINT] [ OK ] _parse_single_pdf drops footer rows end-to-end (FOOD)
+[2026-04-26 02:09:38.923] [PRINT] [ OK ] _parse_single_pdf fills header.category=FOOD via item-code prefix (content)
+[2026-04-26 02:09:38.938] [PRINT] ============================================================================
+[2026-04-26 02:09:38.948] [PRINT] Scenario 18 - _resolve_tab_for_category is strictly FOOD / NON-FOOD
+[2026-04-26 02:09:38.959] [PRINT] ============================================================================
+[2026-04-26 02:09:38.977] [PRINT] [ OK ] _resolve_tab_for_category routes only FOOD / NON-FOOD, skips everything else
+[2026-04-26 02:09:38.985] [PRINT] ============================================================================
+[2026-04-26 02:09:38.994] [PRINT] Scenario 19 - preview_delivery_order_insertion routes strictly FOOD/NON-FOOD
+[2026-04-26 02:09:39.004] [PRINT] ============================================================================
+[2026-04-26 02:09:39.020] [PRINT] [ OK ] preview routes FOOD->Food and NON-FOOD->non-food
+[2026-04-26 02:09:39.033] [PRINT] [ OK ] preview skips TECH order (defensive) and routes others correctly
+[2026-04-26 02:09:39.050] [PRINT] [ OK ] preview hard-skips FOOD order when Food tab is absent
+[2026-04-26 02:09:39.067] [PRINT] ============================================================================
+[2026-04-26 02:09:39.080] [PRINT] Scenario 20 - Mapping parser rejects Tech requisition PDFs
+[2026-04-26 02:09:39.089] [PRINT] ============================================================================
+[2026-04-26 02:09:39.111] [PRINT] [ OK ] _parse_single_pdf rejects Tech requisition PDFs
+[2026-04-26 02:09:39.121] [PRINT] [ OK ] parse_delivery_order_pdfs keeps FOOD, rejects TECH on mixed batch
+[2026-04-26 02:09:39.131] [PRINT] ============================================================================
+[2026-04-26 02:09:39.142] [PRINT] Scenario 21 - Filename is ignored; category comes from content only
+[2026-04-26 02:09:39.161] [PRINT] ============================================================================
+[2026-04-26 02:09:39.191] [PRINT] [ OK ] Filename never overrides content in category detection
+[2026-04-26 02:09:39.212] [PRINT] ============================================================================
+[2026-04-26 02:09:39.237] [PRINT] Scenario 22 - Non-PDF files are rejected with 'Not a PDF file'
+[2026-04-26 02:09:39.256] [PRINT] ============================================================================
+[2026-04-26 02:09:39.286] [PRINT] [ OK ] Non-PDF uploads are rejected by file-type gate
+[2026-04-26 02:09:39.302] [PRINT] ============================================================================
+[2026-04-26 02:09:39.317] [PRINT] Scenario 23 - PDFs that don't match our template are rejected
+[2026-04-26 02:09:39.333] [PRINT] ============================================================================
+[2026-04-26 02:09:39.350] [PRINT] [ OK ] Wrong-template PDFs rejected before data parsing
+[2026-04-26 02:09:39.358] [PRINT] ============================================================================
+[2026-04-26 02:09:39.366] [PRINT] Scenario 24 - validate_delivery_sheet rejects wrong sheet with clear error
+[2026-04-26 02:09:39.374] [PRINT] ============================================================================
+[2026-04-26 02:09:39.388] [PRINT] [ OK ] validate_delivery_sheet flags wrong sheet with explicit 'different sheet' error
+[2026-04-26 02:09:39.396] [PRINT] [ OK ] validate_delivery_sheet flags header mismatch with actionable detail
+[2026-04-26 02:09:39.403] [PRINT] ============================================================================
+[2026-04-26 02:09:39.409] [PRINT] Scenario 25 - validate_delivery_sheet catches read-only sheet access
+[2026-04-26 02:09:39.416] [PRINT] ============================================================================
+[2026-04-26 02:09:39.427] [PRINT] [ OK ] validate_delivery_sheet catches read-only access with actionable error
+[2026-04-26 02:09:39.435] [PRINT] [ OK ] validate_delivery_sheet happy path still returns success=True
+[2026-04-26 02:09:39.442] [PRINT] ============================================================================
+[2026-04-26 02:09:39.449] [PRINT] Scenario 26 - write_delivery_order_data catches 403 on append with read_only error
+[2026-04-26 02:09:39.458] [PRINT] ============================================================================
+[2026-04-26 02:09:39.472] [PRINT] [ OK ] write_delivery_order_data surfaces read-only error on 403 during append
+[2026-04-26 02:09:39.480] [PRINT] ============================================================================
+[2026-04-26 02:09:39.486] [PRINT] Scenario 27 - Bug 5: indexed output_var on name-based lookup triggers pause
+[2026-04-26 02:09:39.495] [PRINT] ============================================================================
+[2026-04-26 02:09:39.508] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 02:09:39.574] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 02:09:39.585] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 02:09:39.598] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 02:09:39.618] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 02:09:39.630] [PRINT] [ OK ] Bug 5 - search_files + 'results[0].id' + 2 matches -> pause - indexed extraction on name-based lookup now triggers disambiguation
+[2026-04-26 02:09:39.646] [PRINT] ============================================================================
+[2026-04-26 02:09:39.665] [PRINT] Scenario 28 - Bug 5: email search with 'emails[0].message_id' still auto-picks latest
+[2026-04-26 02:09:39.680] [PRINT] ============================================================================
+[2026-04-26 02:09:39.693] [PRINT] [ OK ] Bug 5 - search_emails + 'emails[0].message_id' NOT paused - email/draft searches keep 'latest' auto-selection semantics
+[2026-04-26 02:09:39.703] [PRINT] ============================================================================
+[2026-04-26 02:09:39.711] [PRINT] Scenario 29 - Bug 5: indexed output_var but no downstream use -> no pause
+[2026-04-26 02:09:39.719] [PRINT] ============================================================================
+[2026-04-26 02:09:39.726] [PRINT] [ OK ] Bug 5 - downstream-usage gate still blocks unused indexed var - Bug B.5 gate preserved — indexed var without downstream reference does not pause
+[2026-04-26 02:09:39.733] [PRINT] ============================================================================
+[2026-04-26 02:09:39.741] [PRINT] Scenario 30 - Bug 5: resume re-runs extraction against patched agent_result
+[2026-04-26 02:09:39.757] [PRINT] ============================================================================
+[2026-04-26 02:09:39.774] [PRINT] [ OK ] Bug 5 - resume: user picks option 2 -> sheet_id = 1bbb - extract_nested_value over patched agent_result correctly yields option 2's id
+[2026-04-26 02:09:39.795] [PRINT] ============================================================================
+[2026-04-26 02:09:39.806] [PRINT] Scenario 31 - Bug 5: whole-array pattern still works after resume
+[2026-04-26 02:09:39.822] [PRINT] ============================================================================
+[2026-04-26 02:09:39.839] [PRINT] [ OK ] Bug 5 - whole-array resume pattern still works - backwards-compatible with the {"results": "results"} pattern
+[2026-04-26 02:09:39.857] [PRINT] ============================================================================
+[2026-04-26 02:09:39.872] [PRINT] Scenario 32 - Bug 1: Tier 1 prompt keeps email_filter extraction rule
+[2026-04-26 02:09:39.885] [PRINT] ============================================================================
+[2026-04-26 02:09:39.900] [PRINT] [ OK ] Bug 1 - Tier 1 prompt carries email_filter extraction rule - multi-turn narrowing context is preserved for the planner
+[2026-04-26 02:09:39.910] [PRINT] ============================================================================
+[2026-04-26 02:09:39.919] [PRINT] Scenario 33 - Bug 1: Planner Rule 16 consumes email_filter when present
+[2026-04-26 02:09:39.934] [PRINT] ============================================================================
+[2026-04-26 02:09:39.951] [PRINT] [ OK ] Bug 1 - Planner Rule 16 honors email_filter verbatim - Rule 16 now routes email_filter -> query, fallback preserved for fresh turns
+[2026-04-26 02:09:39.966] [PRINT] ============================================================================
+[2026-04-26 02:09:39.977] [PRINT] Scenario 34 - Bug 1: build_supervisor_input emits email_filter to planner
+[2026-04-26 02:09:39.989] [PRINT] ============================================================================
+[2026-04-26 02:09:39.999] [PRINT] [ OK ] Bug 1 - build_supervisor_input surfaces email_filter - email_filter flows cleanly from extracted_info -> Parameters -> planner
+[2026-04-26 02:09:40.012] [PRINT] ============================================================================
+[2026-04-26 02:09:40.020] [PRINT] Scenario 35 - Silent-rejection: orchestrator attaches upstream_rejected_files on pause
+[2026-04-26 02:09:40.031] [PRINT] ============================================================================
+[2026-04-26 02:09:40.044] [PRINT] [ OK ] Scenario 35a - supervisor_agent.py contains upstream_rejected_files scan
+[2026-04-26 02:09:40.056] [PRINT] [ OK ] Scenario 35b - scan extracts rejected_files from step_N_mapping_agent
+[2026-04-26 02:09:40.067] [PRINT] [ OK ] Scenario 35c - scan returns [] when nothing was rejected (no regression)
+[2026-04-26 02:09:40.078] [PRINT] [ OK ] Scenario 35d - rejected_files deduped by filename across step namespaces
+[2026-04-26 02:09:40.091] [PRINT] [ OK ] Scenario 35e - scan ignores noisy values, skips non-step_* keys
+[2026-04-26 02:09:40.100] [PRINT] ============================================================================
+[2026-04-26 02:09:40.109] [PRINT] Scenario 36 - Approval message surfaces upstream_rejected_files warning
+[2026-04-26 02:09:40.118] [PRINT] ============================================================================
+[2026-04-26 02:09:40.129] [PRINT] [ OK ] Scenario 36a - approval message warns about skipped PDFs in partial-success case
+[2026-04-26 02:09:40.136] [PRINT] 
+[2026-04-26 02:09:40.136] [PRINT] --- approval message preview (partial success) ---
+[2026-04-26 02:09:40.147] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-26 02:09:40.147] [PRINT] 
+[2026-04-26 02:09:40.147] [PRINT] Step 6 of 6
+[2026-04-26 02:09:40.147] [PRINT] 
+[2026-04-26 02:09:40.147] [PRINT] **Append the parsed delivery-order rows into the sheet**
+[2026-04-26 02:09:40.147] [PRINT] 
+[2026-04-26 02:09:40.147] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-04-26 02:09:40.147] [PRINT] - **Sheet ID:** 1SHEET_ID
+[2026-04-26 02:09:40.147] [PRINT] - **Orders to write:** 1
+[2026-04-26 02:09:40.147] [PRINT] - **Total line items:** 17
+[2026-04-26 02:09:40.147] [PRINT] - **Source files:** Food_DELIVERY_ORDER (1).pdf
+[2026-04-26 02:09:40.147] [PRINT] - **Sample header (order 1):** reference_number=DO-2026-01, category=FOOD
+[2026-04-26 02:09:40.147] [PRINT] 
+[2026-04-26 02:09:40.147] [PRINT] **Note — some attachments were skipped and will NOT be written:**
+[2026-04-26 02:09:40.147] [PRINT] - `Tech_DELIVERY_ORDER (1).pdf` — Category is not FOOD or NON-FOOD
+[2026-04-26 02:09:40.147] [PRINT] 
+[2026-04-26 02:09:40.147] [PRINT] ---
+[2026-04-26 02:09:40.147] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-26 02:09:40.164] [PRINT] --- end preview ---
+[2026-04-26 02:09:40.177] [PRINT] [ OK ] Scenario 36b - approval message truncates >5 rejected files with footer
+[2026-04-26 02:09:40.194] [PRINT] ============================================================================
+[2026-04-26 02:09:40.211] [PRINT] Scenario 37 - Approval message unchanged when no PDFs were rejected
+[2026-04-26 02:09:40.226] [PRINT] ============================================================================
+[2026-04-26 02:09:40.235] [PRINT] [ OK ] Scenario 37 - approval message unchanged on no-rejection path
+[2026-04-26 02:09:40.245] [PRINT] [ OK ] Scenario 37b - empty upstream_rejected_files list renders no warning
+[2026-04-26 02:09:40.257] [PRINT] ============================================================================
+[2026-04-26 02:09:40.266] [PRINT] Scenario 38 - Final summary template lists rejected files
+[2026-04-26 02:09:40.275] [PRINT] ============================================================================
+[2026-04-26 02:09:40.290] [PRINT] [ OK ] Scenario 38a - parse_delivery_order_pdfs template lists skipped files
+[2026-04-26 02:09:40.299] [PRINT] 
+[2026-04-26 02:09:40.299] [PRINT] --- final summary preview (mixed) ---
+[2026-04-26 02:09:40.308] [PRINT] Parsed 1 delivery order(s), 1 file(s) rejected
+[2026-04-26 02:09:40.308] [PRINT] 
+[2026-04-26 02:09:40.308] [PRINT] **Skipped files:**
+[2026-04-26 02:09:40.308] [PRINT] - `Tech_DELIVERY_ORDER (1).pdf` — Category is not FOOD or NON-FOOD
+[2026-04-26 02:09:40.316] [PRINT] --- end preview ---
+[2026-04-26 02:09:40.329] [PRINT] [ OK ] Scenario 38b - final summary truncates >5 rejected files
+[2026-04-26 02:09:40.338] [PRINT] ============================================================================
+[2026-04-26 02:09:40.346] [PRINT] Scenario 39 - Final summary regression: no rejections + other templates still work
+[2026-04-26 02:09:40.357] [PRINT] ============================================================================
+[2026-04-26 02:09:40.373] [PRINT] [ OK ] Scenario 39a - clean parse renders legacy one-line summary
+[2026-04-26 02:09:40.382] [PRINT] [ OK ] Scenario 39b - static-string templates (reply_to_email) still render
+[2026-04-26 02:09:40.394] [PRINT] [ OK ] Scenario 39c - use_message templates still render after callable upgrade
+[2026-04-26 02:09:40.412] [PRINT] ============================================================================
+[2026-04-26 02:09:40.429] [PRINT] Scenario 40 - E2E: DeliveryTesting2PDFs2.log partial-rejection chain is no longer silent
+[2026-04-26 02:09:40.444] [PRINT] ============================================================================
+[2026-04-26 02:09:40.463] [PRINT] [ OK ] Scenario 40 - E2E chain surfaces partial rejection end-to-end - mapping → step_info scan → approval prompt → final summary all mention Tech PDF
+[2026-04-26 02:09:40.471] [PRINT] ============================================================================
+[2026-04-26 02:09:40.482] [PRINT] FINAL REPORT
+[2026-04-26 02:09:40.493] [PRINT] ============================================================================
+[2026-04-26 02:09:40.500] [PRINT] TOTAL: 81 checks — PASS: 81, FAIL: 0, INFO: 0
+[2026-04-26 02:10:55.959] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-26 02:10:56.104] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-26 02:10:56.119] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-26 02:10:56.135] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-26 02:10:56.151] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-26 02:10:56.197] [PRINT] ============================================================================
+[2026-04-26 02:10:56.204] [PRINT] STATIC: chokepoint wired into every message-producing endpoint
+[2026-04-26 02:10:56.218] [PRINT] ============================================================================
+[2026-04-26 02:10:56.235] [PRINT] [ OK ] send_message_to_thread calls _persist_final_response  (regression: was already wired)
+[2026-04-26 02:10:56.242] [PRINT] [ OK ] send_message_to_thread - chokepoint runs AFTER process_message
+[2026-04-26 02:10:56.256] [PRINT] [ OK ] send_message_to_thread_with_upload calls _persist_final_response  (regression: was already wired)
+[2026-04-26 02:10:56.264] [PRINT] [ OK ] send_message_to_thread_with_upload - chokepoint runs AFTER process_message
+[2026-04-26 02:10:56.273] [PRINT] [ OK ] create_thread calls _persist_final_response  (fix: previously missing chokepoint)
+[2026-04-26 02:10:56.281] [PRINT] [ OK ] create_thread - chokepoint runs AFTER process_message
+[2026-04-26 02:10:56.292] [PRINT] [ OK ] create_thread_with_upload calls _persist_final_response  (fix: previously missing chokepoint)
+[2026-04-26 02:10:56.302] [PRINT] [ OK ] create_thread_with_upload - chokepoint runs AFTER process_message
+[2026-04-26 02:10:56.313] [PRINT] ============================================================================
+[2026-04-26 02:10:56.325] [PRINT] STATIC: _run_workflow_and_update_state delegates persistence
+[2026-04-26 02:10:56.334] [PRINT] ============================================================================
+[2026-04-26 02:10:56.344] [PRINT] [ OK ] _run_workflow_and_update_state no longer calls memory_mgr.add_message(assistant)
+[2026-04-26 02:10:56.358] [PRINT] [ OK ] _run_workflow_and_update_state no longer calls thread_manager.add_message(assistant)
+[2026-04-26 02:10:56.370] [PRINT] ============================================================================
+[2026-04-26 02:10:56.379] [PRINT] RUNTIME: ThreadManager.replace_last_assistant_message
+[2026-04-26 02:10:56.389] [PRINT] ============================================================================
+[2026-04-26 02:10:56.427] [PRINT]  SQLite thread manager initialized: C:\Users\Denz\AppData\Local\Temp\tmpeacfgk7m\smoke.db
+[2026-04-26 02:10:56.453] [PRINT]  Created thread: u1_47a9f3d0 for user: u1
+[2026-04-26 02:10:56.492] [PRINT] [ OK ] replace returned True for existing assistant row
+[2026-04-26 02:10:56.508] [PRINT] [ OK ] row count unchanged after replace (2 == 2)
+[2026-04-26 02:10:56.518] [PRINT] [ OK ] second row is still the assistant
+[2026-04-26 02:10:56.529] [PRINT] [ OK ] assistant content equals rich text
+[2026-04-26 02:10:56.548] [PRINT] [ OK ] same message_id (in-place update, no new row)
+[2026-04-26 02:10:56.560] [PRINT] [ OK ] thread.last_message_preview refreshed to rich content
+[2026-04-26 02:10:56.569] [PRINT]  Created thread: u1_bc37d088 for user: u1
+[2026-04-26 02:10:56.580] [PRINT] [ OK ] replace returns False when no assistant row exists
+[2026-04-26 02:10:56.590] [PRINT] [ OK ] no row created on the empty-replace path (caller must add_message)
+[2026-04-26 02:10:56.600] [PRINT] ============================================================================
+[2026-04-26 02:10:56.609] [PRINT] RUNTIME: ConversationMemoryManager.replace_last_assistant_message
+[2026-04-26 02:10:56.621] [PRINT] ============================================================================
+[2026-04-26 02:10:56.848] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 7, "total": 7, "max": 2000}
+[2026-04-26 02:10:56.850] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 6, "total": 13, "max": 2000, "response_preview": "stub"}
+[2026-04-26 02:10:56.852] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 7, "total": 20, "max": 2000}
+[2026-04-26 02:10:56.853] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 7, "total": 27, "max": 2000, "response_preview": "older stub"}
+[2026-04-26 02:10:56.855] [INFO] [-]   INFO: Memory: replaced last assistant message  | {"tokens": 19, "total": 39, "max": 2000, "response_preview": "RICH RESPONSE — Wrote 17 rows across 2 tabs."}
+[2026-04-26 02:10:56.856] [PRINT] [ OK ] memory replace returned True
+[2026-04-26 02:10:56.876] [PRINT] [ OK ] raw_history latest assistant updated
+[2026-04-26 02:10:56.897] [PRINT] [ OK ] older assistant entry preserved (only LATEST replaced)
+[2026-04-26 02:10:56.918] [PRINT] [ OK ] working_context latest assistant updated
+[2026-04-26 02:10:56.940] [PRINT] [ OK ] token count grew (rich > stub): 27 -> 39
+[2026-04-26 02:10:56.960] [PRINT] [ OK ] token count non-negative: 39
+[2026-04-26 02:10:56.982] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 6, "max": 2000}
+[2026-04-26 02:10:56.984] [PRINT] [ OK ] memory replace returns False when no assistant exists
+[2026-04-26 02:10:57.003] [PRINT] [ OK ] memory unchanged after no-op replace
+[2026-04-26 02:10:57.016] [PRINT] ============================================================================
+[2026-04-26 02:10:57.031] [PRINT] RUNTIME: _persist_final_response idempotency
+[2026-04-26 02:10:57.052] [PRINT] ============================================================================
+[2026-04-26 02:10:57.119] [PRINT]  SQLite thread manager initialized: C:\Users\Denz\AppData\Local\Temp\tmp_e4h6grg\smoke2.db
+[2026-04-26 02:10:57.151] [PRINT]  Created thread: u1_547be0ce for user: u1
+[2026-04-26 02:10:57.207] [PRINT] [ OK ] double-replace with identical content both succeed
+[2026-04-26 02:10:57.232] [PRINT] [ OK ] still exactly 2 rows after double-replace (2)
+[2026-04-26 02:10:57.277] [PRINT] [ OK ] content stable after double-replace
+[2026-04-26 02:10:57.299] [PRINT] ============================================================================
+[2026-04-26 02:10:57.314] [PRINT] RUNTIME: chokepoint guards against empty inputs
+[2026-04-26 02:10:57.331] [PRINT] ============================================================================
+[2026-04-26 02:10:57.343] [PRINT] [ OK ] _persist_final_response has early-return guard for empty thread_id/text
+[2026-04-26 02:10:57.354] [PRINT] [ OK ] _persist_final_response wraps the rewrite in try/except (non-fatal)
+[2026-04-26 02:10:57.363] [PRINT] ============================================================================
+[2026-04-26 02:10:57.373] [PRINT] STATIC: chokepoint runs before the response is sent to FE
+[2026-04-26 02:10:57.382] [PRINT] ============================================================================
+[2026-04-26 02:10:57.389] [PRINT] [ OK ] send_message_to_thread - chokepoint runs before final return
+[2026-04-26 02:10:57.397] [PRINT] [ OK ] send_message_to_thread_with_upload - chokepoint runs before final return
+[2026-04-26 02:10:57.416] [PRINT] [ OK ] create_thread - chokepoint runs before final return
+[2026-04-26 02:10:57.431] [PRINT] [ OK ] create_thread_with_upload - chokepoint runs before final return
+[2026-04-26 02:10:57.440] [PRINT] ============================================================================
+[2026-04-26 02:10:57.447] [PRINT] FINAL REPORT — PASS: 35, FAIL: 0
+[2026-04-26 02:10:57.456] [PRINT] ============================================================================

@@ -598,6 +598,69 @@ class ThreadManager:
         
         return message_id
     
+    def replace_last_assistant_message(self, thread_id: str, content: str) -> bool:
+        """
+        Replace the content of the most recent assistant message in a thread.
+
+        This is the chokepoint used by the API layer to persist the FINAL
+        rich response after all post-processing handlers (approval, disambiguation,
+        workflow execution, resume) have finished enriching it. Without this, the
+        UI shows the long response live but the DB only holds the short stub
+        that `process_message` wrote — so a thread switch / re-login would make
+        the long response "disappear".
+
+        Behaviour:
+        - Looks up the latest row in `messages` for this thread where role='assistant'.
+        - Updates ONLY that row's `content`. Leaves `created_at`, `file_*` etc untouched.
+        - Also refreshes the parent thread's `last_message_preview` so the
+          sidebar preview matches what the user actually sees.
+        - If no assistant row exists yet (rare — would mean process_message
+          didn't save), this is a no-op returning False; caller should fall
+          back to add_message.
+
+        Args:
+            thread_id: Thread identifier
+            content: Final rich message content to persist
+
+        Returns:
+            True if a row was updated, False if no assistant row exists yet.
+        """
+        now = datetime.utcnow().isoformat()
+
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT message_id FROM messages
+            WHERE thread_id = ? AND role = 'assistant'
+            ORDER BY message_id DESC
+            LIMIT 1
+        """, (thread_id,))
+        row = cursor.fetchone()
+
+        if not row:
+            conn.close()
+            return False
+
+        message_id = row[0]
+
+        cursor.execute("""
+            UPDATE messages SET content = ? WHERE message_id = ?
+        """, (content, message_id))
+
+        preview = content[:100] if len(content) > 100 else content
+        cursor.execute("""
+            UPDATE threads
+            SET last_message_preview = ?,
+                updated_at = ?
+            WHERE thread_id = ?
+        """, (preview, now, thread_id))
+
+        conn.commit()
+        conn.close()
+
+        return True
+
     def get_messages(self, thread_id: str, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """
         Get messages from a thread.

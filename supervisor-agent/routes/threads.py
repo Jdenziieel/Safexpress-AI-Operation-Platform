@@ -521,19 +521,75 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
         execution_message=message_text,
     )
 
-    # Fix memory gap: store the execution result in conversation memory
-    # so it appears in working_context for subsequent turns
-    if thread_id:
-        memory_mgr = conversational_agent._get_memory_manager(thread_id, conversation_state.memory_state)
-        memory_mgr.add_message("assistant", friendly_summary)
-        conversational_agent._save_memory_to_state(conversation_state, thread_id)
-        conversational_agent.thread_manager.add_message(thread_id, "assistant", friendly_summary)
+    # NOTE on persistence:
+    # We deliberately do NOT call thread_manager.add_message here. The single
+    # chokepoint `_persist_final_response` (called once at the end of the API
+    # handler) rewrites the stub assistant row from process_message with the
+    # final post-handler response_text — which is exactly this friendly_summary
+    # in the standard execution path. Adding it here would create a duplicate
+    # DB row and a duplicate memory entry that would survive thread-switches.
 
     return friendly_summary, conversation_state
 
 # ============================================================
 # SHARED HELPERS
 # ============================================================
+
+def _persist_final_response(thread_id: str, conversation_state, final_response_text: str) -> None:
+    """
+    Chokepoint that persists the FINAL post-handler response_text to DB and memory.
+
+    Background — the disappearing-long-response bug:
+        `process_message` saves a stub assistant message (e.g. "Ready to execute…"
+        or a clarification question) to BOTH the messages table and the memory
+        manager BEFORE downstream handlers run. The handlers
+        (_handle_pending_action_decision, _handle_disambiguation_selection,
+        _execute_workflow_guarded → _run_workflow_and_update_state, plus
+        _resume_remaining_steps) ENRICH the response_text with rich Markdown
+        (multi-line samples, per-PDF blocks, duplicate counts, etc.). That rich
+        text is returned over the API and rendered live by the frontend, but
+        nothing was rewriting the persisted row. On thread-switch / re-login
+        the FE re-reads from the DB and only finds the original stub — the
+        long response visibly "disappears".
+
+    This helper is the single place that closes that gap. It rewrites the
+    last assistant row in `messages` and the matching entry in working_context
+    + raw_history, then re-saves the memory state to conversation_state.
+
+    Idempotent: if the response is unchanged from the stub (e.g. the path was
+    a pure clarification question and no handler enriched it), the rewrite is
+    still cheap (just an UPDATE with the same content) and harmless.
+
+    Args:
+        thread_id: Thread identifier
+        conversation_state: Current conversation state (its memory_state will be refreshed)
+        final_response_text: The final, fully-rendered response text returned to the FE
+    """
+    if not thread_id or not final_response_text:
+        return
+
+    try:
+        replaced = conversational_agent.thread_manager.replace_last_assistant_message(
+            thread_id, final_response_text
+        )
+        if not replaced:
+            conversational_agent.thread_manager.add_message(
+                thread_id, "assistant", final_response_text
+            )
+
+        memory_mgr = conversational_agent._get_memory_manager(
+            thread_id, conversation_state.memory_state
+        )
+        mem_replaced = memory_mgr.replace_last_assistant_message(final_response_text)
+        if not mem_replaced:
+            memory_mgr.add_message("assistant", final_response_text)
+
+        conversational_agent._save_memory_to_state(conversation_state, thread_id)
+        conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
+    except Exception as exc:
+        print(f"[persist_final_response] non-fatal: {exc}")
+        traceback.print_exc()
+
 
 def _check_quota_or_raise(user_id: str, estimated_tokens: int = 2000):
     """Raise 403 (deactivated) or 429 (exceeded) if user fails quota check."""
@@ -942,6 +998,15 @@ async def create_thread(request: CreateThreadRequest):
                     bot_response = "Is there anything else I can help with?"
                     conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
 
+            # Chokepoint: persist the FINAL post-workflow response so a thread
+            # switch / re-login keeps the long response intact. Without this,
+            # an initial-message workflow run on a brand-new thread (e.g.
+            # "create thread + parse delivery PDFs in one go") writes only the
+            # short stub from process_message into messages.db; the rich
+            # friendly_summary comes back over the wire but disappears on the
+            # very next FE reload of this thread.
+            _persist_final_response(thread_id, conversation_state, bot_response)
+
         thread_metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
         response = {
@@ -1074,6 +1139,13 @@ async def create_thread_with_upload(
                 updated_state.intent = None
                 response_text = "Is there anything else I can help with?"
                 conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
+
+        # Chokepoint: persist the FINAL post-workflow response so a thread
+        # switch / re-login keeps the long response intact. Mirrors the
+        # send_message_to_thread_with_upload chokepoint — the create-with-upload
+        # path also runs process_message + execute_workflow_guarded and would
+        # otherwise leave the rich friendly_summary unpersisted.
+        _persist_final_response(thread_id, updated_state, response_text)
 
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
@@ -1348,6 +1420,10 @@ async def send_message_to_thread(thread_id: str, request: dict):
                 response_text = "Is there anything else I can help with?"
                 conversational_agent.thread_service.save_thread_to_db(thread_id, conversation_state)
 
+        # Chokepoint: persist the final, post-handler response to DB and memory
+        # so thread-switch / re-login keeps the long response intact.
+        _persist_final_response(thread_id, conversation_state, response_text)
+
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 
         # Log request summary before returning
@@ -1481,6 +1557,8 @@ async def send_message_to_thread_with_upload(
                 updated_state.intent = None
                 response_text = "Is there anything else I can help with?"
                 conversational_agent.thread_service.save_thread_to_db(thread_id, updated_state)
+
+        _persist_final_response(thread_id, updated_state, response_text)
 
         metadata = conversational_agent.thread_service.get_thread_metadata(thread_id)
 

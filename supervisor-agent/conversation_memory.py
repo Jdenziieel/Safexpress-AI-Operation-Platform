@@ -130,6 +130,61 @@ class ConversationMemoryManager:
         else:
             trace.info(f"Memory: added {role} message", {"tokens": message_tokens, "total": self.memory.current_token_count, "max": self.memory.MAX_TOKENS_BEFORE_SUMMARY})
     
+    def replace_last_assistant_message(self, content: str) -> bool:
+        """
+        Replace the content of the most recent assistant message in working
+        context AND raw history. Token count is recomputed for the rewritten
+        message so summarization thresholds stay accurate.
+
+        Used by the API chokepoint to keep memory aligned with the persisted
+        DB row when a post-handler enriches the assistant response after
+        process_message saved an initial stub. Without this the next-turn
+        Tier 1 LLM would still see the stale stub in raw_history.
+
+        Returns:
+            True if an assistant message was rewritten, False if none exists yet
+            (caller should fall back to add_message).
+        """
+        target_idx_wc = -1
+        for i in range(len(self.memory.working_context) - 1, -1, -1):
+            if self.memory.working_context[i].get("role") == "assistant":
+                target_idx_wc = i
+                break
+
+        target_idx_raw = -1
+        for i in range(len(self.memory.raw_history) - 1, -1, -1):
+            if self.memory.raw_history[i].get("role") == "assistant":
+                target_idx_raw = i
+                break
+
+        if target_idx_wc == -1 and target_idx_raw == -1:
+            return False
+
+        if target_idx_wc != -1:
+            old_content = self.memory.working_context[target_idx_wc].get("content", "")
+            old_tokens = self._count_tokens("assistant") + self._count_tokens(old_content) + 4
+            new_tokens = self._count_tokens("assistant") + self._count_tokens(content) + 4
+
+            self.memory.working_context[target_idx_wc] = {"role": "assistant", "content": content}
+            self.memory.current_token_count += (new_tokens - old_tokens)
+            if self.memory.current_token_count < 0:
+                self.memory.current_token_count = self._count_message_tokens(self.memory.working_context)
+
+        if target_idx_raw != -1:
+            self.memory.raw_history[target_idx_raw] = {"role": "assistant", "content": content}
+
+        preview = content[:200] + ("..." if len(content) > 200 else "")
+        trace.info(
+            "Memory: replaced last assistant message",
+            {
+                "tokens": self._count_tokens("assistant") + self._count_tokens(content) + 4,
+                "total": self.memory.current_token_count,
+                "max": self.memory.MAX_TOKENS_BEFORE_SUMMARY,
+                "response_preview": preview,
+            },
+        )
+        return True
+
     def _summarize_conversation(self) -> None:
         """
         Summarize old conversation turns to free up context space.
