@@ -3140,14 +3140,17 @@ except Exception as e:
 
 
 # ------------------------------------------------------------------
-# SCENARIO 33 — Bug 1 Planner Rule 16 honors email_filter when set.
+# SCENARIO 33 — Bug F Planner Rule 16 wraps email_filter in subject:"..."
 #
-# The planner must plug email_filter (if present in Parameters) into the
-# Gmail search step's `query` argument verbatim, instead of the generic
-# "delivery order OR DO OR requisition…" fallback. This is what actually
-# narrows the search in Turn 3 of the DeliveryTest.log regression.
+# Updated for the Bug F (Gmail naive-query) fix: when email_filter is
+# present in Parameters, the planner must wrap its value as
+# `subject:"<email_filter>" has:attachment` so Gmail matches the SUBJECT
+# field only — bare keywords match across body/subject/attachment text and
+# return overly-broad results (the "Delivery Food 2 Food!" → 10 emails
+# regression in execution_logs/paul/searchingSpecificDeliveryOrderIssueAgain.log).
+# The fallback for fresh batch requests (no email_filter) is preserved.
 # ------------------------------------------------------------------
-section("Scenario 33 - Bug 1: Planner Rule 16 consumes email_filter when present")
+section("Scenario 33 - Bug F: Planner Rule 16 wraps email_filter in subject:\"...\"")
 
 try:
     sup_path = SUP / "supervisor_agent.py"
@@ -3156,10 +3159,12 @@ try:
     required_phrases = [
         # Rule 16 anchor.
         "DELIVERY-ORDER PIPELINE (task_type=process_delivery_order)",
-        # The conditional email_filter wiring.
-        "if Parameters contains email_filter",
-        "use its value verbatim",
-        'has:attachment',
+        # The new conditional email_filter wiring — wrap-in-subject pattern.
+        "if email_filter is present",
+        'wrap its value as `subject:"<email_filter>" has:attachment`',
+        "Gmail matches the SUBJECT field only",
+        # Inline mini-example anchor (the failing log's input).
+        'subject:"Delivery Food 2 Food!" has:attachment',
         # The generic fallback text must still be present for the else branch.
         "delivery order OR DO OR requisition OR purchase order OR PO has:attachment",
     ]
@@ -3167,19 +3172,19 @@ try:
 
     if missing:
         record(
-            "Bug 1 - Planner Rule 16 honors email_filter verbatim",
+            "Bug F - Planner Rule 16 wraps email_filter in subject:\"...\"",
             "FAIL",
             f"missing phrases: {missing}",
         )
     else:
         record(
-            "Bug 1 - Planner Rule 16 honors email_filter verbatim",
+            "Bug F - Planner Rule 16 wraps email_filter in subject:\"...\"",
             "PASS",
-            "Rule 16 now routes email_filter -> query, fallback preserved for fresh turns",
+            "Rule 16 wraps email_filter as subject:\"...\"; fallback preserved for fresh turns",
         )
 except Exception as e:
     record(
-        "Bug 1 - Planner Rule 16 honors email_filter verbatim",
+        "Bug F - Planner Rule 16 wraps email_filter in subject:\"...\"",
         "FAIL",
         f"{e}\n{traceback.format_exc()}",
     )

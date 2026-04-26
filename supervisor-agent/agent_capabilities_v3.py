@@ -106,14 +106,15 @@ agent_capabilities = {
                 "can_be_derived_from": {"message_id": "search_emails"},
             },
             "search_emails_with_delivery_order_attachments": {
-                "description": "Search Gmail for emails with PDF/Excel delivery order attachments. Downloads files to temp directory.",
+                "description": "Search Gmail for emails with PDF/Excel delivery order attachments. Downloads matching files to a temp directory. Supports full Gmail query syntax (subject:\"...\", filename:..., from:..., newer_than:Nd, has:attachment).",
                 "args": {
-                    "query": "str (optional) — Gmail search query (default: 'delivery order')",
+                    "query": "str (optional) — Gmail search query (default: 'delivery order'). When the user names a SPECIFIC email-subject phrase ('named X' / 'titled X' / 'called X' / 'subject X'), wrap it as subject:\"X\" so Gmail matches the subject field only; bare keywords match body + subject + attachment text and return overly-broad results.",
                     "max_results": "int (optional) — max emails to search",
                     "download_attachments": "bool (optional) — download files (default: True)",
                     "temp_dir": "str (optional) — custom save directory",
                 },
                 "returns": ["success", "emails_with_attachments", "total_emails_found", "total_attachments_downloaded", "temp_directory", "error"],
+                "note": "GMAIL QUERY CONSTRUCTION. Compose `query` from operators based on user intent: subject:\"phrase\" when the user names the email SUBJECT (always quote, even for short phrases); filename:name.ext when the user names an ATTACHMENT FILE; from:email when the user names a SENDER; newer_than:Nd for relative date windows; always include has:attachment. Combine with spaces (Gmail ANDs them). EXAMPLES — user 'find order named Holiday Run from Carlos last 7 days' → query='subject:\"Holiday Run\" from:carlos newer_than:7d has:attachment'; user 'find order with attachment named DO_001.pdf' → query='filename:DO_001.pdf has:attachment'; user 'find recent delivery orders' → query='delivery order has:attachment' (bare keywords when no specific phrase is supplied). RULES: (1) include any user-supplied phrase ONCE — either inside subject:\"...\" OR as bare keywords, never both; (2) if the user paraphrases the subject (rather than quoting it verbatim), prefer bare keywords — Gmail's subject phrase match is exact-substring and returns zero results on mismatch; (3) when intent is ambiguous between subject / filename / sender, default to bare keywords.",
             },
             "save_attachment_metadata": {
                 "description": "Save attachment metadata to local SQLite database.",
