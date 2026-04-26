@@ -150,11 +150,30 @@ class SummarizationService:
             if composed:
                 return composed
 
+        # 3+ steps (or 2 steps with no recognised pattern):
+        # wrap the per-step block with a short narrator opening + closing
+        # so the response reads like a recap rather than a flat dump of
+        # numbered headings. This is purely deterministic — the per-step
+        # bodies still come from the response_templates registry.
         parts = []
         for i, (step_info, text) in enumerate(formatted_steps):
-            desc = step_info.get("description", step_info.get("tool", ""))
-            parts.append(f"**Step {i + 1}** — {desc}:\n{text}")
-        return "\n\n".join(parts)
+            # Planner sometimes leaves description as the literal string
+            # "No description" (default in supervisor_agent's plan
+            # validator). Fall back to the tool name in that case so the
+            # heading reads "Step 1 — search_emails:" instead of
+            # "Step 1 — No description:".
+            raw_desc = step_info.get("description") or ""
+            tool_name = step_info.get("tool", "")
+            if not raw_desc.strip() or raw_desc.strip().lower() == "no description":
+                desc = tool_name or "step"
+            else:
+                desc = raw_desc
+            parts.append(f"**Step {i + 1} — {desc}:**\n{text}")
+
+        body = "\n\n".join(parts)
+        if len(formatted_steps) >= 3:
+            return f"Here's what I did across these steps:\n\n{body}\n\nAll set."
+        return body
 
     def _try_two_step_pattern(
         self, formatted_steps: List[Tuple[dict, str]]
@@ -470,10 +489,10 @@ class SummarizationService:
                 )
 
         lines.append("\n---")
-        lines.append(
-            f'*Original request: "{original_request[:100]}'
-            f'{"..." if len(original_request) > 100 else ""}"*'
-        )
+        if original_request and original_request.strip():
+            truncated = original_request[:100]
+            ellipsis = "..." if len(original_request) > 100 else ""
+            lines.append(f"**You asked:** {truncated}{ellipsis}")
 
         return "\n".join(lines)
 
@@ -504,9 +523,7 @@ class SummarizationService:
                         lines.append("\n**Filters used:**")
                         lines.extend(filter_lines)
                     lines.append("\n**Suggestions:**")
-                    lines.append("  • Try broadening your search terms")
-                    lines.append("  • Check the date range if specified")
-                    lines.append("  • Verify the sender's email address spelling")
+                    lines.extend(self._gmail_no_results_hints(inputs))
 
                 elif "calendar" in tool.lower() or "event" in tool.lower():
                     lines.append(
@@ -517,8 +534,7 @@ class SummarizationService:
                         lines.append("\n**Filters used:**")
                         lines.extend(filter_lines)
                     lines.append("\n**Suggestions:**")
-                    lines.append("  • Try expanding the date range")
-                    lines.append("  • Check if the calendar is shared with you")
+                    lines.extend(self._calendar_no_results_hints(inputs))
 
                 elif "doc" in tool.lower() or "drive" in tool.lower():
                     lines.append(
@@ -529,9 +545,7 @@ class SummarizationService:
                         lines.append("\n**Filters used:**")
                         lines.extend(filter_lines)
                     lines.append("\n**Suggestions:**")
-                    lines.append("  • Try different keywords")
-                    lines.append("  • Check the folder location")
-                    lines.append("  • Verify you have access to the files")
+                    lines.extend(self._drive_no_results_hints(inputs))
 
                 else:
                     lines.append(
@@ -548,10 +562,10 @@ class SummarizationService:
                         lines.extend(generic_filter_lines)
 
         lines.append("\n---")
-        lines.append(
-            f'*Original request: "{original_request[:100]}'
-            f'{"..." if len(original_request) > 100 else ""}"*'
-        )
+        if original_request and original_request.strip():
+            truncated = original_request[:100]
+            ellipsis = "..." if len(original_request) > 100 else ""
+            lines.append(f"**You asked:** {truncated}{ellipsis}")
 
         return "\n".join(lines)
 
@@ -632,6 +646,145 @@ class SummarizationService:
         return lines
 
     @staticmethod
+    def _gmail_no_results_hints(inputs: Dict[str, Any]) -> List[str]:
+        """Generate filter-aware suggestions for a Gmail no-results case.
+
+        Looks at WHICH filters the planner actually applied and tells the
+        user the most likely culprit:
+          * multiple AND-keywords → suggest dropping the rarest one;
+          * a `subject:"..."` filter → suggest broadening to from/keyword;
+          * a tight date range → suggest expanding it;
+          * a sender filter → suggest spelling check.
+        Always falls back to at least one generic hint if no specific
+        signal fires, so the user never sees an empty Suggestions block.
+
+        `keywords` may arrive as either a list or a comma-separated
+        string from the planner; both shapes are handled.
+        """
+        hints: List[str] = []
+
+        keywords = inputs.get("keywords")
+        keyword_count = 0
+        if isinstance(keywords, list):
+            keyword_count = len([k for k in keywords if str(k).strip()])
+        elif isinstance(keywords, str) and keywords.strip():
+            parts = [p for p in keywords.split(",") if p.strip()]
+            keyword_count = len(parts) if parts else 1
+
+        if keyword_count > 1:
+            hints.append(
+                "  • Multiple keywords must ALL match — try removing the most specific one."
+            )
+
+        if inputs.get("subject"):
+            hints.append(
+                "  • Subject filter is exact — try broadening to a sender or keyword instead."
+            )
+
+        if inputs.get("from") or inputs.get("from_email"):
+            hints.append(
+                "  • Double-check the sender's email address for a typo or wrong domain."
+            )
+
+        if (inputs.get("after") or inputs.get("date_from")) and (
+            inputs.get("before") or inputs.get("date_to")
+        ):
+            hints.append(
+                "  • Try widening the date range — the email may fall outside this window."
+            )
+        elif inputs.get("after") or inputs.get("date_from"):
+            hints.append(
+                "  • Try removing the start-date filter to include older messages."
+            )
+        elif inputs.get("before") or inputs.get("date_to"):
+            hints.append(
+                "  • Try removing the end-date filter to include newer messages."
+            )
+
+        if inputs.get("has_attachment"):
+            hints.append(
+                "  • Searching attachments only — try without that filter if unsure."
+            )
+
+        if not hints:
+            hints.extend(
+                [
+                    "  • Try broadening your search terms.",
+                    "  • Check the date range if specified.",
+                    "  • Verify the sender's email address spelling.",
+                ]
+            )
+        return hints
+
+    @staticmethod
+    def _calendar_no_results_hints(inputs: Dict[str, Any]) -> List[str]:
+        """Generate filter-aware suggestions for a Calendar no-results case."""
+        hints: List[str] = []
+        has_text = bool(inputs.get("q") or inputs.get("query"))
+        has_range = bool(
+            (inputs.get("time_min") or inputs.get("start_time"))
+            and (inputs.get("time_max") or inputs.get("end_time"))
+        )
+        cal_id = inputs.get("calendar_id")
+
+        if has_text:
+            hints.append(
+                "  • Free-text search matches event titles and descriptions only — try a different keyword."
+            )
+        if has_range:
+            hints.append(
+                "  • Try expanding the date range — the event may fall outside it."
+            )
+        if cal_id and cal_id != "primary":
+            hints.append(
+                "  • Make sure you have access to this calendar and it's still shared."
+            )
+
+        if not hints:
+            hints.extend(
+                [
+                    "  • Try expanding the date range.",
+                    "  • Check if the calendar is shared with you.",
+                ]
+            )
+        return hints
+
+    @staticmethod
+    def _drive_no_results_hints(inputs: Dict[str, Any]) -> List[str]:
+        """Generate filter-aware suggestions for a Drive no-results case."""
+        hints: List[str] = []
+        term = inputs.get("search_term") or inputs.get("query") or inputs.get("name")
+        folder = inputs.get("folder_id") or inputs.get("folder_name")
+        mime = inputs.get("mime_type") or inputs.get("mimeType")
+
+        if term and len(str(term).split()) > 1:
+            hints.append(
+                "  • Drive search matches partial names — try a single distinctive word from the title."
+            )
+        elif term:
+            hints.append(
+                "  • Drive name search is case-insensitive but exact — check spelling."
+            )
+        if folder:
+            hints.append(
+                "  • The file may sit in a different folder — try removing the folder filter."
+            )
+        if mime:
+            hints.append(
+                "  • Type filter is strict — try without it (the file may be a different format)."
+            )
+
+        if not hints:
+            hints.extend(
+                [
+                    "  • Try different keywords.",
+                    "  • Check the folder location.",
+                    "  • Verify you have access to the files.",
+                ]
+            )
+        return hints
+
+    @staticmethod
     def _render_generic_filters(inputs: Dict[str, Any]) -> List[str]:
         """Render scalar inputs for unknown / fallback tools. Skips keys
         starting with `_` (internal), credentials_dict, page tokens,
@@ -677,6 +830,25 @@ class SummarizationService:
         if not error_msg or not isinstance(error_msg, str):
             return False
         s = error_msg.strip()
+        # Python exception markers ALWAYS get rejected, regardless of
+        # length, so the humanizer below gets a chance to translate them.
+        # The previous implementation only rejected `<HttpError ...>` and
+        # let strings like "Gmail API error: KeyError: 'invalid_field'"
+        # through the prose-check (because they contain spaces +
+        # lowercase letters), causing raw Python tracebacks to surface
+        # in the chat UI. Match the colon variant ("KeyError:") only —
+        # bare words like "TypeError" inside a sentence are not a
+        # traceback shape.
+        if re.search(
+            r"\b(KeyError|IndexError|TypeError|ValueError|AttributeError|"
+            r"NameError|RuntimeError|UndefinedError|StopIteration|"
+            r"FileNotFoundError|PermissionError|OSError|IOError|"
+            r"ZeroDivisionError|AssertionError|ImportError|ModuleNotFoundError|"
+            r"NotImplementedError|RecursionError|UnicodeDecodeError|"
+            r"UnicodeEncodeError|JSONDecodeError|TemplateSyntaxError):",
+            s,
+        ):
+            return False
         if len(s) < 40:
             return False
         # Bare exception markers — usually means we picked up a stringified
@@ -753,29 +925,103 @@ class SummarizationService:
             error_msg,
             re.IGNORECASE,
         )
-        if not match:
-            return error_msg
+        if match:
+            service_label = match.group(1).strip()
+            try:
+                status_code = int(match.group(2))
+            except (TypeError, ValueError):
+                status_code = None
+            if status_code is not None:
+                friendly = SummarizationService._GOOGLE_API_HTTP_STATUS_MESSAGES.get(
+                    status_code
+                )
+                if friendly:
+                    # Normalize service label: lowercase, no "error" suffix.
+                    label = re.sub(
+                        r"\s*error\s*$", "", service_label, flags=re.IGNORECASE
+                    ).strip()
+                    if label:
+                        return f"{label} returned HTTP {status_code}: {friendly}"
+                    return f"Google service returned HTTP {status_code}: {friendly}"
 
-        service_label = match.group(1).strip()
-        try:
-            status_code = int(match.group(2))
-        except (TypeError, ValueError):
-            return error_msg
-
-        friendly = SummarizationService._GOOGLE_API_HTTP_STATUS_MESSAGES.get(
-            status_code
+        # Python exception fallback. Sub-agents occasionally crash on
+        # malformed planner inputs (KeyError on a missing field, an
+        # UndefinedError from an unresolved Jinja variable, etc). The raw
+        # exception name + message is unhelpful in chat — replace it with
+        # a sentence-shaped explanation. We extract the optional service
+        # prefix the same way we do for HttpError so the user still knows
+        # which integration tripped.
+        py_match = re.search(
+            r"(?:((?:Google\s+)?[\w-]+(?:\s+API)?\s+error)\s*:\s*)?"
+            r"\b(KeyError|IndexError|TypeError|ValueError|AttributeError|"
+            r"NameError|RuntimeError|UndefinedError|FileNotFoundError|"
+            r"PermissionError|TemplateSyntaxError|JSONDecodeError|"
+            r"ModuleNotFoundError|ImportError|NotImplementedError|"
+            r"AssertionError|RecursionError|UnicodeDecodeError|"
+            r"UnicodeEncodeError|OSError|IOError|ZeroDivisionError|"
+            r"StopIteration)\s*:\s*(.+?)(?:\s*$|\s*\n)",
+            error_msg,
+            re.IGNORECASE | re.DOTALL,
         )
-        if not friendly:
-            # Unknown status code — keep original text (e.g. unusual 451)
-            return error_msg
+        if py_match:
+            raw_service = py_match.group(1)
+            exc_type = py_match.group(2)
+            exc_detail = (py_match.group(3) or "").strip()
+            # Strip outer matching quotes ONLY when the entire detail is a
+            # quoted token like `'invalid_field'`. Asymmetric stripping
+            # (e.g. on `'event_id' is undefined`) leaves an orphan
+            # apostrophe and reads as broken (`event_id' is undefined`).
+            if (
+                len(exc_detail) >= 2
+                and exc_detail[0] in "'\""
+                and exc_detail[-1] == exc_detail[0]
+                and exc_detail[0] not in exc_detail[1:-1]
+            ):
+                exc_detail = exc_detail[1:-1]
+            # Truncate excessively long traceback tails — anything past
+            # the first sentence is usually noise from a stringified
+            # exception args tuple.
+            if len(exc_detail) > 160:
+                exc_detail = exc_detail[:157] + "..."
 
-        # Normalize service label: lowercase, no "error" suffix, capitalize
-        # first letter of each major word. "Gmail API error" → "Gmail API";
-        # "Google Sheets API error" → "Google Sheets API".
-        label = re.sub(r"\s*error\s*$", "", service_label, flags=re.IGNORECASE).strip()
-        if label:
-            return f"{label} returned HTTP {status_code}: {friendly}"
-        return f"Google service returned HTTP {status_code}: {friendly}"
+            friendly_for_type = {
+                "KeyError": "a required field was missing",
+                "IndexError": "an expected list item was out of range",
+                "TypeError": "the data didn't match the expected shape",
+                "ValueError": "the value provided wasn't valid",
+                "AttributeError": "an expected property was missing",
+                "NameError": "an internal reference was undefined",
+                "UndefinedError": "a step referenced data that wasn't produced earlier",
+                "FileNotFoundError": "the file couldn't be located",
+                "PermissionError": "the file or resource isn't readable",
+                "TemplateSyntaxError": "a parameter template was malformed",
+                "JSONDecodeError": "a response wasn't valid JSON",
+                "ModuleNotFoundError": "an internal component is missing",
+                "ImportError": "an internal component is missing",
+                "NotImplementedError": "this operation isn't supported here yet",
+                "AssertionError": "an internal sanity check failed",
+                "RecursionError": "an internal loop went too deep",
+                "UnicodeDecodeError": "the data couldn't be read as text",
+                "UnicodeEncodeError": "the data couldn't be encoded for sending",
+                "OSError": "a low-level system error happened",
+                "IOError": "a low-level I/O error happened",
+                "ZeroDivisionError": "a calculation tried to divide by zero",
+                "StopIteration": "an internal iterator finished unexpectedly",
+                "RuntimeError": "an internal runtime error happened",
+            }.get(exc_type, "an internal error happened")
+
+            label = ""
+            if raw_service:
+                label = re.sub(
+                    r"\s*error\s*$", "", raw_service, flags=re.IGNORECASE
+                ).strip()
+
+            tail = f' (detail: "{exc_detail}")' if exc_detail and len(exc_detail) <= 80 else ""
+            if label:
+                return f"{label} hit a problem — {friendly_for_type}{tail}."
+            return f"The operation hit a problem — {friendly_for_type}{tail}."
+
+        return error_msg
 
     def _categorize_error(self, error_msg: str) -> str:
         error_lower = (error_msg or "").lower()

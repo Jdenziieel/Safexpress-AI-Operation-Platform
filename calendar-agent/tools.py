@@ -151,6 +151,55 @@ def format_datetime(dt_str: str) -> Optional[str]:
         return None
 
 
+def _format_event_datetime(s: str) -> str:
+    """Format an ISO datetime/date string for user-facing event messages.
+
+    Examples:
+        "2026-04-22T10:00:00"        → "April 22, 2026 at 10:00 AM"
+        "2026-04-22T10:00:00+08:00"  → "April 22, 2026 at 10:00 AM"
+        "2026-04-22"                 → "April 22, 2026 (all day)"
+        "tomorrow at 10am"           → "tomorrow at 10am"  (passthrough)
+        ""                           → ""
+
+    Returns the input unchanged when it can't be parsed, so the caller
+    never has to guard for failure. Used by `create_event` and
+    `update_event` to replace raw ISO strings in user-facing `message`
+    fields.
+    """
+    if not isinstance(s, str) or not s:
+        return s
+    try:
+        dt = parser.parse(s)
+        if "T" not in s:
+            return f"{dt.strftime('%B %d, %Y')} (all day)"
+        return f"{dt.strftime('%B %d, %Y')} at {dt.strftime('%I:%M %p').lstrip('0')}"
+    except Exception:
+        return s
+
+
+def _format_event_range(start: str, end: str) -> str:
+    """Format a (start, end) pair for user-facing messages.
+
+    When start and end fall on the same calendar day, collapses to
+    "April 22, 2026 from 10:00 AM to 12:00 PM" instead of repeating
+    the date. Falls back to "<start> to <end>" via
+    `_format_event_datetime` when parsing fails.
+    """
+    if not isinstance(start, str) or not isinstance(end, str) or not start or not end:
+        return f"{start} to {end}"
+    try:
+        s_dt = parser.parse(start)
+        e_dt = parser.parse(end)
+        if s_dt.date() == e_dt.date() and "T" in start and "T" in end:
+            date_part = s_dt.strftime("%B %d, %Y")
+            s_time = s_dt.strftime("%I:%M %p").lstrip("0")
+            e_time = e_dt.strftime("%I:%M %p").lstrip("0")
+            return f"{date_part} from {s_time} to {e_time}"
+    except Exception:
+        pass
+    return f"{_format_event_datetime(start)} to {_format_event_datetime(end)}"
+
+
 def validate_future_datetime(dt_str: str) -> Dict:
     """
     Validate that a datetime is in the future.
@@ -342,7 +391,15 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
             if add_meet_link else None
         )
 
-        message_parts = [f"Successfully created event '{summary}' from {start} to {end}"]
+        # Use the already-validated/normalized formatted_start/formatted_end
+        # (RFC3339 with Asia/Manila tz) so natural-language inputs like
+        # "tomorrow 2pm" still surface as a friendly absolute date in the
+        # user-facing message — rather than echoing back the raw input
+        # which `parser.parse` can't handle.
+        message_parts = [
+            f"Successfully created event '{summary}' on "
+            f"{_format_event_range(formatted_start, formatted_end)}"
+        ]
         if emails:
             message_parts.append(f"Invitations sent to: {', '.join(emails)}")
         if location:
@@ -512,7 +569,7 @@ def update_event_impl(event_id: str, new_summary: Optional[str] = None,
             formatted_start = format_datetime(new_start)
             if formatted_start:
                 event["start"]["dateTime"] = formatted_start
-                changes.append(f"start time to {new_start}")
+                changes.append(f"start time to {_format_event_datetime(formatted_start)}")
 
         if new_end:
             end_validation = validate_future_datetime(new_end)
@@ -527,7 +584,7 @@ def update_event_impl(event_id: str, new_summary: Optional[str] = None,
             formatted_end = format_datetime(new_end)
             if formatted_end:
                 event["end"]["dateTime"] = formatted_end
-                changes.append(f"end time to {new_end}")
+                changes.append(f"end time to {_format_event_datetime(formatted_end)}")
 
         if new_summary:
             event["summary"] = new_summary

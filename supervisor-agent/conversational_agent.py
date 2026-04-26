@@ -506,7 +506,15 @@ class ConversationalAgent(Tier0ChecksMixin):
                 response = analysis.clarification_question or "Please provide more details."
 
         else:
-            response = "I'm processing your request..."
+            # Catch-all only fires when analysis.intent is None / unrecognised.
+            # The legacy wording ("I'm processing your request...") was both
+            # misleading (no work is actually queued at this point) and
+            # uninformative. Acknowledge the message landed and invite the
+            # user to clarify.
+            response = (
+                "I got your message but couldn't quite tell what to do next. "
+                "Could you rephrase or add a bit more detail?"
+            )
         
         # Add assistant response to memory manager
         memory_manager.add_message("assistant", response)

@@ -1120,6 +1120,46 @@ def format_step(agent: str, tool: str, output: dict) -> Optional[str]:
     return None
 
 
+def format_step_compact(agent: str, tool: str, output: dict) -> Optional[str]:
+    """One-line summary of a step's output for inclusion in mid-flow
+    messages (e.g. the "Completed so far" header on pause prompts).
+
+    Wraps `format_step` and returns only the first non-empty line of the
+    rendered text. Returns None when no template applies, when the
+    template renders to empty, or when format_step itself raises.
+
+    Why a separate helper instead of inlining `.split('\\n')[0]`:
+      * Some callable formatters (e.g. delivery-order preview/write) emit
+        20-50 line bodies. Dropping that into a "Completed so far" prefix
+        would bury the actual approval/disambiguation prompt below the
+        fold. The compact form keeps mid-flow messages scannable.
+      * Query-type templates start with a header line (e.g. "Found 5
+        emails:") that IS the natural one-line summary.
+      * Centralised so callers don't all need their own try/except wrap.
+    """
+    try:
+        full = format_step(agent, tool, output)
+    except Exception:
+        return None
+    if not full:
+        return None
+    for line in full.split("\n"):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        # Query templates emit a header like "Found 5 emails:" expecting a
+        # following list. When we drop the list and use the header alone
+        # in a bullet, the dangling colon reads as a broken sentence —
+        # strip it. Bold-wrapped trailing colons (e.g. "**Found 5 emails:**")
+        # are also normalized.
+        if stripped.endswith("**") and stripped.endswith(":**"):
+            stripped = stripped[:-3] + "**"
+        elif stripped.endswith(":"):
+            stripped = stripped[:-1]
+        return stripped
+    return None
+
+
 def _format_action(template_def: dict, output: dict) -> str:
     if template_def.get("use_message") and output.get("message"):
         text = output["message"]

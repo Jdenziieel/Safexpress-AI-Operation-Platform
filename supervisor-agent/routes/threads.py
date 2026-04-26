@@ -7,6 +7,7 @@ messaging, file uploads, and workflow execution triggering.
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from datetime import datetime, timedelta, timezone
+from typing import Tuple
 import asyncio
 import json
 import os
@@ -39,6 +40,48 @@ from llm_error_handler import LLMServiceException
 from s3_temp_storage import store_temp_file, delete_temp_file
 
 router = APIRouter()
+
+
+def _render_completed_so_far(completed: list) -> str:
+    """Render a 'Completed so far' bullet list for the four mid-pause sites.
+
+    Each entry tries the rich `format_step_compact` helper first (one-line
+    summary derived from the response_templates registry — e.g.
+    "Found 5 emails matching 'order'"). Falls back to the planner's step
+    description, then the tool name, so we always have *something* useful
+    to show even when a template is missing.
+
+    Returns a leading newline + bulleted block, or empty string when there
+    are no successful steps to mention. Callers can append unconditionally.
+    """
+    if not completed:
+        return ""
+
+    try:
+        from services.response_templates import format_step_compact
+    except Exception:
+        format_step_compact = None  # type: ignore[assignment]
+
+    lines = []
+    for r in completed:
+        agent = (r.get("agent") or "").strip()
+        tool = (r.get("tool") or "").strip()
+        # Success / no_results records both use the "output" key
+        # (supervisor_agent.py:1661 + 1874). There's no "result" key in
+        # production records — the variable is purely a defensive guard
+        # against a non-dict output payload.
+        raw_output = r.get("output")
+        output = raw_output if isinstance(raw_output, dict) else {}
+        compact = None
+        if format_step_compact and agent and tool:
+            try:
+                compact = format_step_compact(agent, tool, output)
+            except Exception:
+                compact = None
+        text = compact or r.get("description") or tool or "Step completed"
+        lines.append(f"- {text}")
+
+    return "\n**Completed so far:**\n" + "\n".join(lines) + "\n"
 
 
 async def _resume_remaining_steps(conversation_state, previous_result, response_prefix, thread_id,
@@ -128,9 +171,7 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
             
             # Add completed steps from this resumption
             completed = [r for r in results if r.get("status") == "success"]
-            if completed:
-                steps_summary = "\n".join(f"  Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
-                response_prefix += f"\n{steps_summary}\n"
+            response_prefix += _render_completed_so_far(completed)
             
             return response_prefix + "\n\n" + approval_msg, conversation_state
 
@@ -157,9 +198,7 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
             disambig_msg = _build_disambiguation_message(options, source_tool)
 
             completed = [r for r in results if r.get("status") == "success"]
-            if completed:
-                steps_summary = "\n".join(f"  Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
-                response_prefix += f"\n{steps_summary}\n"
+            response_prefix += _render_completed_so_far(completed)
 
             return response_prefix + "\n\n" + disambig_msg, conversation_state
 
@@ -184,23 +223,46 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
 
         if completed:
             response_prefix += "\n"
-            for r in completed:
-                desc = r.get("description", r.get("tool", ""))
-                agent_name = r.get("agent", "")
+
+            def _render_one(r: dict) -> Tuple[str, str]:
+                """Return (heading_desc, rich_or_fallback_body) for a step."""
+                raw_desc = r.get("description") or ""
                 tool_name = r.get("tool", "")
+                if not raw_desc.strip() or raw_desc.strip().lower() == "no description":
+                    desc = tool_name or "step"
+                else:
+                    desc = raw_desc
+                agent_name = r.get("agent", "")
                 output = r.get("output", {}) if isinstance(r.get("output"), dict) else {}
                 rich_text = ""
-                if format_step is not None:
+                if format_step is not None and agent_name and tool_name:
                     try:
                         rendered = format_step(agent_name, tool_name, output)
                         if rendered and rendered.strip():
                             rich_text = rendered.strip()
                     except Exception as _fmt_exc:
                         print(f"format_step failed for {agent_name}.{tool_name}: {_fmt_exc}")
+                return desc, rich_text
+
+            if len(completed) == 1:
+                # Single resumed step renders without a "Step 1 — X:" wrapper
+                # so the result reads identically to a one-step direct
+                # completion. Matches `_compose_steps` len==1 behaviour.
+                desc, rich_text = _render_one(completed[0])
                 if rich_text:
-                    response_prefix += f"\n**{desc}**\n{rich_text}\n"
+                    response_prefix += f"\n{rich_text}\n"
                 else:
-                    response_prefix += f"\n  {desc} — done"
+                    response_prefix += f"\n{desc} — done\n"
+            else:
+                # Multi-step uses the same heading shape as
+                # _compose_steps so resume-path output looks identical to
+                # a non-paused workflow's recap.
+                rendered_blocks = []
+                for idx, r in enumerate(completed, 1):
+                    desc, rich_text = _render_one(r)
+                    body = rich_text if rich_text else f"{desc} — done"
+                    rendered_blocks.append(f"**Step {idx} — {desc}:**\n{body}")
+                response_prefix += "\n" + "\n\n".join(rendered_blocks) + "\n"
 
         if errors:
             try:
@@ -496,9 +558,12 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
         # Add completed steps summary if any
         results = final_context.get("results", [])
         completed = [r for r in results if r.get("status") == "success"]
-        if completed:
-            steps_summary = "\n".join(f"  Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
-            approval_message = f"**Completed so far:**\n{steps_summary}\n\n{approval_message}"
+        completed_block = _render_completed_so_far(completed)
+        if completed_block:
+            # `completed_block` already starts with "\n**Completed so far:**\n"
+            # so we strip the leading newline here and add a trailing newline
+            # before the approval body.
+            approval_message = completed_block.lstrip("\n") + "\n" + approval_message
         
         return approval_message, conversation_state
 
@@ -530,9 +595,9 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
 
         results = final_context.get("results", [])
         completed = [r for r in results if r.get("status") == "success"]
-        if completed:
-            steps_summary = "\n".join(f"  Step {r['step']}: {r.get('description', r.get('tool', ''))}" for r in completed)
-            disambig_message = f"**Completed so far:**\n{steps_summary}\n\n{disambig_message}"
+        completed_block = _render_completed_so_far(completed)
+        if completed_block:
+            disambig_message = completed_block.lstrip("\n") + "\n" + disambig_message
 
         return disambig_message, conversation_state
 
