@@ -493,6 +493,180 @@ def _format_write_delivery_order_data(output: dict) -> str:
     return "\n".join(parts)
 
 
+def _format_extract_template_format(output: dict) -> str:
+    """Format docs_agent.extract_template_format result.
+
+    Replaces the legacy "Template placeholders found: {placeholders}" line
+    that rendered the placeholder list as a Python repr (`['NAME', 'DATE']`)
+    with a count + bulleted list. Truncates the bullet list at 8 entries to
+    keep chat short and shows a "...and N more" line for the rest.
+    """
+    placeholders = output.get("placeholders") or output.get("template_placeholders") or []
+    if not isinstance(placeholders, list):
+        # Some impls return placeholders as a comma-separated string. Handle
+        # gracefully so we never expose the raw repr to the user.
+        placeholders = [p.strip() for p in str(placeholders).split(",") if p.strip()]
+
+    if not placeholders:
+        return "Template analysed — no placeholders found."
+
+    count = len(placeholders)
+    text = f"Template analysed — found {count} placeholder(s):"
+    rendered = 0
+    for p in placeholders:
+        text += f"\n- `{p}`"
+        rendered += 1
+        if rendered >= 8:
+            break
+    if count > rendered:
+        text += f"\n_…and {count - rendered} more._"
+    return text
+
+
+def _format_parse_file(output: dict) -> str:
+    """Format mapping_agent.parse_file result.
+
+    Replaces "Parsed {row_count} rows — columns: {columns}" (which dumped
+    the column list as a Python repr) with row/column count summary plus
+    a friendly comma-separated list of column names. Long column lists are
+    truncated with a "…and N more" marker."""
+    rows = output.get("row_count")
+    if rows is None:
+        rows = len(output.get("sample_data") or [])
+    columns = output.get("columns") or []
+    if not isinstance(columns, list):
+        columns = []
+
+    col_count = output.get("column_count")
+    if col_count is None:
+        col_count = len(columns)
+
+    text = f"Parsed **{rows}** row(s) across **{col_count}** column(s)"
+    if columns:
+        # Render at most 12 names inline, then a "+N more" indicator —
+        # keeps the chat message short for wide datasets.
+        if len(columns) <= 12:
+            shown = ", ".join(str(c) for c in columns)
+            text += f"\nColumns: {shown}"
+        else:
+            shown = ", ".join(str(c) for c in columns[:12])
+            text += f"\nColumns: {shown}, _…and {len(columns) - 12} more_"
+    return text
+
+
+def _format_smart_column_mapping(output: dict) -> str:
+    """Format mapping_agent.smart_column_mapping result.
+
+    Replaces the legacy raw-dict dump with a count summary plus a per-mapping
+    bullet line. Renders confidence scores when available. Skips the bullet
+    list (and just shows the count) when there are more than 12 mappings,
+    since a 50-line chat message is worse than no detail at all.
+    """
+    mappings = output.get("mappings") or {}
+    if not isinstance(mappings, dict):
+        mappings = {}
+
+    high_conf = output.get("high_confidence_count")
+    accuracy = output.get("accuracy_estimate")
+    confidence_scores = output.get("confidence_scores") or {}
+
+    total = len(mappings)
+    text = f"Created **{total}** column mapping(s)"
+    if high_conf is not None:
+        text += f" — {high_conf} high-confidence"
+    if isinstance(accuracy, (int, float)):
+        # accuracy comes through as a 0..1 fraction
+        text += f" (accuracy ~{int(round(accuracy * 100))}%)"
+
+    if mappings and total <= 12:
+        text += "\n"
+        for src, target in list(mappings.items())[:12]:
+            score_text = ""
+            score = confidence_scores.get(src) if isinstance(confidence_scores, dict) else None
+            if isinstance(score, (int, float)):
+                score_text = f" _({int(round(score * 100))}%)_"
+            text += f"\n- `{src}` → `{target}`{score_text}"
+
+    needs_review = output.get("needs_review") or []
+    if isinstance(needs_review, list) and needs_review:
+        text += f"\n\n**Needs review:** {len(needs_review)} mapping(s) had low confidence"
+
+    return text
+
+
+def _format_transform_data(output: dict) -> str:
+    """Format mapping_agent.transform_data result.
+
+    Replaces the legacy one-liner "Data transformed successfully" with a
+    summary of what was actually transformed — row count, kept/dropped
+    column counts when statistics are present.
+    """
+    rows = output.get("row_count")
+    cols = output.get("column_count")
+    stats = output.get("statistics") or {}
+
+    parts: list[str] = []
+    if rows is not None:
+        parts.append(f"**{rows}** row(s)")
+    if cols is not None:
+        parts.append(f"**{cols}** column(s)")
+
+    if not parts:
+        return "Data transformed successfully."
+
+    text = f"Transformed {' and '.join(parts)}"
+
+    src_cols = stats.get("source_columns") if isinstance(stats, dict) else None
+    mapped_cols = stats.get("mapped_columns") if isinstance(stats, dict) else None
+    if src_cols is not None and mapped_cols is not None:
+        text += f"\nKept {mapped_cols} of {src_cols} source column(s) after mapping"
+
+    return text
+
+
+def _format_update_by_date_match(output: dict) -> str:
+    """Format sheets_agent.update_by_date_match result.
+
+    Renders rows updated, rows not matched, and the tab where the update
+    landed. Falls back to the legacy compact line when sheet_name is
+    missing (older sub-agent deploys before the echo was added)."""
+    rows_updated = output.get("rows_updated", 0)
+    rows_not_found = output.get("rows_not_found", 0)
+    sheet_name = output.get("sheet_name")
+    sheet_url = output.get("sheet_url")
+
+    text = f"Updated **{rows_updated}** row(s) by date match"
+    if rows_not_found:
+        text += f" ({rows_not_found} not matched)"
+    if sheet_name:
+        text += f" in **{sheet_name}** tab"
+    if sheet_url:
+        text += f"\nSheet: {sheet_url}"
+    return text
+
+
+def _format_upload_mapped_data(output: dict) -> str:
+    """Format sheets_agent.upload_mapped_data result.
+
+    Renders rows added/written, the tab name, and the sheet URL. Handles
+    both append-mode (`rows_added`) and overwrite-mode (`rows_written`)
+    return shapes."""
+    mode = output.get("mode") or "append"
+    rows = output.get("rows_added")
+    if rows is None:
+        rows = output.get("rows_written", 0)
+    sheet_name = output.get("sheet_name")
+    sheet_url = output.get("sheet_url")
+
+    verb = "Appended" if mode == "append" else "Wrote"
+    text = f"{verb} **{rows}** row(s)"
+    if sheet_name:
+        text += f" to **{sheet_name}** tab"
+    if sheet_url:
+        text += f"\nSheet: {sheet_url}"
+    return text
+
+
 def _format_parse_delivery_order_pdfs(output: dict) -> str:
     """Deterministic summary for mapping_agent.parse_delivery_order_pdfs.
 
@@ -598,16 +772,42 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         "template": "Sent email to **{to}**, subject: **{subject}** (attachment: {attachment_name})",
     },
     ("gmail_agent", "download_attachment"): {
+        # Callable so we can render bytes via _format_size_bytes (e.g.
+        # "1.2MB") instead of the raw byte count, and drop the server-side
+        # `save_path` from the user-visible message — it's a path on the
+        # backend host that the user has no way to access from the chat UI.
+        # The path stays in the agent's return for downstream tools that
+        # need it (parse_file, mapping_agent, etc.).
         "type": "action",
-        "template": "Downloaded **{filename}** to {save_path} ({file_size} bytes)",
+        "template": lambda out: (
+            f"Downloaded **{out.get('filename') or 'attachment'}**"
+            + (
+                f" ({_format_size_bytes(out.get('file_size'))})"
+                if out.get("file_size") is not None
+                else ""
+            )
+        ),
     },
     ("gmail_agent", "search_emails_with_delivery_order_attachments"): {
+        # Callable so we can omit the server-side temp_directory that the
+        # legacy template used to expose to the user — that path is meaningful
+        # only to the backend agent (e.g. /tmp/gmail_attach_xyz) and offers no
+        # value in chat. The download counts and email count are what the user
+        # cares about; the temp_dir still flows through the agent return for
+        # downstream tools that need to parse the files.
         "type": "action",
-        "template": "Found {total_emails_found} email(s) with {total_attachments_downloaded} attachment(s) downloaded to {temp_directory}",
+        "template": lambda out: (
+            f"Found {out.get('total_emails_found', 0)} email(s) with "
+            f"{out.get('total_attachments_downloaded', 0)} attachment(s) downloaded"
+        ),
     },
     ("gmail_agent", "save_attachment_metadata"): {
+        # The legacy template surfaced an internal SQLite `inserted_id` that
+        # the user could not act on — it was a row primary key of an opaque
+        # metadata table, not the Drive file ID, the Gmail message ID, or
+        # anything the chat UI links to. Replaced with a generic confirmation.
         "type": "action",
-        "template": "Attachment metadata saved (record ID: {inserted_id})",
+        "template": "Attachment metadata saved.",
     },
 
     # ========================= DOCS AGENT =========================
@@ -621,24 +821,36 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         "use_message": True,
     },
     ("docs_agent", "extract_template_format"): {
+        # Legacy template rendered the placeholder list as Python repr
+        # ("['NAME', 'DATE']") which is technical and ugly in chat. Render
+        # as a friendly bullet list with a count when more than 3.
         "type": "action",
-        "template": "Template placeholders found: {placeholders}",
+        "template": lambda out: _format_extract_template_format(out),
     },
     ("docs_agent", "create_from_my_template"): {
+        # Title was previously dropped — the URL alone makes the user click
+        # to verify they got the right document. Title now leads, URL trails.
         "type": "action",
-        "template": "Created document from template: {url}",
+        "template": "Created document **{title}** from template: {url}",
     },
     ("docs_agent", "add_text"): {
+        # text_length (a raw character count) is meaningful to a developer
+        # but not to a user reviewing what just happened — replaced with a
+        # generic "Text added" confirmation. The document_url is the
+        # verification mechanism the user actually needs.
         "type": "action",
-        "template": "Added {text_length} characters to document: {document_url}",
+        "template": "Added text to document: {document_url}",
     },
     ("docs_agent", "create_doc_with_content"): {
+        # Same rationale as add_text — drop the technical char count, keep
+        # title (as the human-meaningful identifier) and URL (as the
+        # verification link).
         "type": "action",
-        "template": "Created **{title}** with content ({text_length} chars): {document_url}",
+        "template": "Created **{title}** with content: {document_url}",
     },
     ("docs_agent", "add_text_from_file"): {
         "type": "action",
-        "template": "Added file content ({text_length} chars) to document: {document_url}",
+        "template": "Added file content to document: {document_url}",
     },
     ("docs_agent", "read_doc"): {
         "type": "action",
@@ -770,20 +982,32 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
     # ========================= MAPPING AGENT =========================
 
     ("mapping_agent", "parse_file"): {
+        # Legacy template rendered `columns` as a raw Python list repr
+        # (`['Date', 'Amount', 'Customer']`) and ignored row/column counts'
+        # context. Now we render a count summary first, then a friendly
+        # comma-separated list of column names (truncated when long).
         "type": "action",
-        "template": "Parsed {row_count} rows — columns: {columns}",
+        "template": lambda out: _format_parse_file(out),
     },
     ("mapping_agent", "extract_dates_from_all_rows"): {
         "type": "action",
-        "template": "Extracted dates from {total_rows} rows (date column: {date_column})",
+        "template": "Extracted dates from {total_rows} row(s) (date column: **{date_column}**)",
     },
     ("mapping_agent", "smart_column_mapping"): {
+        # The legacy template rendered the full mappings dict as Python
+        # repr ("{'Date': 'date', 'Amount': 'amount'}") which is unreadable
+        # for any non-trivial mapping. Now: count summary + per-mapping
+        # bullet list with confidence scores when present.
         "type": "action",
-        "template": "Column mappings created: {mappings}",
+        "template": lambda out: _format_smart_column_mapping(out),
     },
     ("mapping_agent", "transform_data"): {
+        # Previously a one-line "Data transformed successfully" — gave the
+        # user nothing about what was transformed. Now includes row count,
+        # column count, and a comparison against source columns to show
+        # what was kept / dropped during mapping.
         "type": "action",
-        "template": "Data transformed successfully",
+        "template": lambda out: _format_transform_data(out),
     },
     ("mapping_agent", "extract_date_from_data"): {
         "type": "action",
@@ -800,16 +1024,28 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
     # ========================= SHEETS AGENT =========================
 
     ("sheets_agent", "update_by_date_match"): {
+        # Legacy template hid where the update happened — now shows the
+        # specific tab. The sub-agent now echoes sheet_name + sheet_url
+        # back in the response so we can render the same level of detail
+        # the user got at preview time. Backwards-compat: when sheet_name
+        # is missing (older deploys) the template still renders the
+        # counts cleanly.
         "type": "action",
-        "template": "Updated {rows_updated} row(s) by date match ({rows_not_found} not found)",
+        "template": lambda out: _format_update_by_date_match(out),
     },
     ("sheets_agent", "upload_mapped_data"): {
+        # Same rationale as update_by_date_match — the user previously
+        # had no way to tell which sheet/tab the data landed in unless
+        # they opened the Drive link manually. Now renders tab name +
+        # the sheet URL inline.
         "type": "action",
-        "template": "Uploaded {rows_added} row(s) to sheet",
+        "template": lambda out: _format_upload_mapped_data(out),
     },
     ("sheets_agent", "create_sheet"): {
+        # Title was previously omitted — surfacing it makes the success
+        # message verifiable without clicking through to the Drive URL.
         "type": "action",
-        "template": "Created spreadsheet: {sheet_url}",
+        "template": "Created spreadsheet **{title}**: {sheet_url}",
     },
     ("sheets_agent", "validate_delivery_sheet"): {
         "type": "action",

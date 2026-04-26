@@ -960,6 +960,144 @@ def get_all_pending_actions(thread_id: str = None) -> List[Dict]:
     return storage.get_pending_actions(thread_id=thread_id, status="pending")
 
 
+# ID-shaped argument names that commonly appear in tool inputs and need a
+# friendly label (subject / title / file name / event summary) rendered next
+# to them in the approval prompt. Mapped to the human-meaningful field names
+# their corresponding list-item shape exposes.
+_ID_DISPLAY_FIELDS: Dict[str, List[str]] = {
+    # Gmail
+    "message_id": ["subject", "from", "date"],
+    # Drive / Docs
+    "document_id": ["title", "name"],
+    "file_id": ["name", "title"],
+    # Sheets
+    "sheet_id": ["title", "name"],
+    "spreadsheet_id": ["title", "name"],
+    # Calendar
+    "event_id": ["summary", "start", "end", "location"],
+    "calendar_id": ["name", "summary"],
+    # Drive folder
+    "folder_id": ["name"],
+    "parent_folder_id": ["name"],
+}
+
+
+def _resolve_display_context(
+    inputs: Dict[str, Any], variable_context: Dict[str, Any]
+) -> Dict[str, Dict[str, Any]]:
+    """
+    Resolve human-friendly labels for ID-shaped values in `inputs` by scanning
+    `variable_context` for the original list-of-dicts the IDs came from.
+
+    Why: the planner emits Jinja templates like
+       {"message_id": "{{ search_emails.emails[0].message_id }}"}
+    which the orchestrator substitutes into a bare string ID before pausing
+    for approval. The user-facing approval prompt then has access to only the
+    raw ID — no subject, no sender, no title — and the user has no way to
+    verify they're approving the right action.
+
+    Approach: for each input key that looks like an ID (matched against
+    `_ID_DISPLAY_FIELDS`), recursively scan `variable_context` for any list
+    of dicts containing an item whose own `<key>` (or `id`/`<base>_id`
+    sibling) equals the substituted value. When found, copy the configured
+    display fields out of that item and return them keyed by input field.
+
+    Returns a dict like::
+        {
+            "message_id": {"subject": "Q4 Report", "from": "alice@x.com", "date": "..."},
+            "document_id": {"title": "Meeting Notes"},
+        }
+
+    The result is stashed on the pending action's ``step_info["display_context"]``
+    so the rich approval message can render those labels alongside (or instead
+    of) the raw IDs. Returns an empty dict on any error — display_context is
+    purely additive, never blocking.
+    """
+    if not isinstance(inputs, dict) or not isinstance(variable_context, dict):
+        return {}
+
+    targets: List[tuple] = []
+    for key, val in inputs.items():
+        # We only resolve scalar string IDs. List/dict inputs (e.g.
+        # parsed_orders) are handled by tool-specific branches in the
+        # approval renderer.
+        if not isinstance(val, str) or not val.strip():
+            continue
+        fields = _ID_DISPLAY_FIELDS.get(key)
+        if not fields:
+            continue
+        targets.append((key, val, fields))
+
+    if not targets:
+        return {}
+
+    resolved: Dict[str, Dict[str, Any]] = {}
+    for input_key, id_value, display_fields in targets:
+        match = _find_item_by_id(variable_context, input_key, id_value, max_depth=4)
+        if not match:
+            continue
+        captured: Dict[str, Any] = {}
+        for f in display_fields:
+            v = match.get(f)
+            if v is None or v == "":
+                continue
+            captured[f] = v
+        if captured:
+            resolved[input_key] = captured
+
+    return resolved
+
+
+def _find_item_by_id(
+    container: Any,
+    input_key: str,
+    id_value: str,
+    max_depth: int = 4,
+    _depth: int = 0,
+) -> Optional[Dict[str, Any]]:
+    """Recursively search a nested context container for a dict whose ID
+    matches `id_value`.
+
+    A "matching dict" is one where any of these hold::
+        item[input_key] == id_value          (exact key match — primary case)
+        item["id"] == id_value               (generic id field)
+        item["<base>_id"] == id_value        (e.g. document_id key on doc item)
+
+    where `<base>` is the input_key with its trailing `_id` stripped.
+
+    Bounded by `max_depth` to keep the scan O(small) on deeply nested
+    payloads. Returns the first match found in document order — fine for
+    our use case because the planner's IDs almost always come from the
+    same step's output, so the first match in any list is the right one.
+    """
+    if _depth >= max_depth:
+        return None
+
+    base = input_key[:-3] if input_key.endswith("_id") else input_key
+    sibling_id_key = f"{base}_id"
+
+    if isinstance(container, dict):
+        # Direct ID match on this dict (covers cases where the dict IS the item)
+        for k in (input_key, "id", sibling_id_key):
+            if container.get(k) == id_value:
+                return container
+        for v in container.values():
+            found = _find_item_by_id(v, input_key, id_value, max_depth, _depth + 1)
+            if found is not None:
+                return found
+    elif isinstance(container, list):
+        for item in container:
+            if isinstance(item, dict):
+                for k in (input_key, "id", sibling_id_key):
+                    if item.get(k) == id_value:
+                        return item
+            found = _find_item_by_id(item, input_key, id_value, max_depth, _depth + 1)
+            if found is not None:
+                return found
+
+    return None
+
+
 def orchestrator_node(state: SharedState) -> SharedState:
     """
     Executes the plan by calling specialized agent microservices via HTTP.
@@ -1121,6 +1259,16 @@ def orchestrator_node(state: SharedState) -> SharedState:
                     if _fname:
                         _seen_rejected_files.add(_fname)
 
+            # Resolve human-friendly labels for any ID-shaped inputs so the
+            # approval prompt can show subject/title/name next to the raw ID.
+            # Done at pause time (not display time) because variable_context
+            # is the only place the source list-of-dicts is available, and it
+            # is wiped on workflow completion. The result persists with the
+            # pending_action and survives the pause/resume cycle.
+            display_context = _resolve_display_context(
+                substituted_inputs, variable_context
+            )
+
             step_info = {
                 "step_number": step_num,
                 "total_steps": len(plan),
@@ -1131,6 +1279,8 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 "output_variables": output_variables,
                 "risk_level": risk_level.value,
             }
+            if display_context:
+                step_info["display_context"] = display_context
             if upstream_rejected_files:
                 step_info["upstream_rejected_files"] = upstream_rejected_files
 

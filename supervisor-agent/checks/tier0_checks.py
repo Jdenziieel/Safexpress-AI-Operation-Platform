@@ -82,18 +82,16 @@ class Tier0ChecksMixin:
             
             if is_reject:
                 trace.step("tier0", f"pending action REJECTED via chat: {action_id}")
-                
-                # Build cancellation summary
-                cancel_msg = f"**Action Cancelled**\n\n"
-                cancel_msg += f"The following action has been cancelled:\n"
-                cancel_msg += f"- **Action:** {description}\n"
-                if pending.get("inputs"):
-                    inputs = pending["inputs"]
-                    if inputs.get("to"):
-                        cancel_msg += f"- **Recipient:** {inputs['to']}\n"
-                    if inputs.get("subject"):
-                        cancel_msg += f"- **Subject:** {inputs['subject']}\n"
-                
+
+                # Build cancellation summary using the same tool-specific
+                # branching as the approval renderer so the user can verify
+                # WHICH action was cancelled — for non-email actions (a doc
+                # edit, a sheet write, an event delete) the legacy version
+                # showed only "Action: <description>" with zero detail.
+                # _build_cancel_summary mirrors _build_rich_approval_message's
+                # field selection per tool while staying short.
+                cancel_msg = _build_cancel_summary(pending)
+
                 # Check if there were remaining steps
                 remaining_count = len(conversation_state.remaining_steps)
                 if remaining_count > 0:
@@ -774,6 +772,130 @@ What would you like to do?"""
         return None
 
 
+def _build_cancel_summary(pending_action: dict) -> str:
+    """
+    Build a tool-aware cancellation summary that mirrors the approval
+    message's field selection but stays compact (no body preview, no
+    full input dump).
+
+    Pre-fix this rendered only "Action: <description>" + Recipient/Subject
+    for emails — for a cancelled `delete_event`, `update_doc`, or
+    `write_delivery_order_data`, the user got NO information about what
+    they had just declined. With a tool-aware switch the cancel message
+    now confirms the resource that was being acted on (subject, title,
+    name, or summary) so the user can be certain they cancelled the
+    right thing without having to click "details" first.
+    """
+    tool = pending_action.get("tool", "")
+    description = pending_action.get("description", "Unknown action")
+    inputs = pending_action.get("inputs", {}) or {}
+    display_context = pending_action.get("display_context") or {}
+
+    msg = "**Action Cancelled**\n\n"
+    msg += "The following action has been cancelled:\n"
+    msg += f"- **Action:** {description}\n"
+
+    if tool in ("send_draft_email", "send_email_with_attachment"):
+        if inputs.get("to"):
+            msg += f"- **Recipient:** {inputs['to']}\n"
+        if inputs.get("subject"):
+            msg += f"- **Subject:** {inputs['subject']}\n"
+
+    elif tool == "reply_to_email":
+        ctx = display_context.get("message_id") or {}
+        if ctx.get("subject"):
+            msg += f"- **Original subject:** {ctx['subject']}\n"
+        if ctx.get("from"):
+            msg += f"- **Original sender:** {ctx['from']}\n"
+
+    elif tool in ("add_text", "edit_doc", "update_doc"):
+        line = _format_id_with_label(
+            inputs, display_context, "document_id", "title", ("name",)
+        )
+        if line:
+            msg += line
+
+    elif tool in ("delete_email", "delete_file", "delete_event"):
+        for id_field, primary, fallbacks in (
+            ("message_id", "subject", ("from",)),
+            ("event_id", "summary", ("start",)),
+            ("file_id", "name", ("title",)),
+            ("document_id", "title", ("name",)),
+        ):
+            if id_field in inputs:
+                line = _format_id_with_label(
+                    inputs, display_context, id_field, primary, fallbacks
+                )
+                if line:
+                    msg += line
+
+    elif tool == "write_delivery_order_data":
+        line = _format_id_with_label(
+            inputs, display_context, "sheet_id", "title", ("name",)
+        )
+        if line:
+            msg += line
+        parsed_orders = inputs.get("parsed_orders") or []
+        if isinstance(parsed_orders, list) and parsed_orders:
+            total_items = sum(
+                len(o.get("line_items") or [])
+                for o in parsed_orders
+                if isinstance(o, dict)
+            )
+            msg += f"- **Orders that would have been written:** {len(parsed_orders)} ({total_items} item(s))\n"
+
+    return msg
+
+
+def _format_id_with_label(
+    inputs: dict,
+    display_context: dict,
+    id_field: str,
+    primary_label_field: str,
+    fallback_label_fields: tuple = (),
+) -> str:
+    """
+    Build a one-line identifier display that prefers a human-friendly label
+    over the raw internal ID, while keeping the ID available for advanced
+    users / debugging.
+
+    Why: the previous approval message rendered a bare line like
+        - **Document ID:** 1abc-7DEF...
+    which is unverifiable to a non-technical user. With display_context the
+    same line becomes:
+        - **Document:** Meeting Notes Q4 (`1abc-7DEF...`)
+
+    Returns the formatted markdown line (without trailing newline). Falls
+    back gracefully when display_context is absent — older pending actions
+    saved before this enrichment was added still render fine, just with the
+    raw ID as before.
+    """
+    raw_id = inputs.get(id_field, "")
+    if not raw_id:
+        return ""
+
+    ctx_for_field = display_context.get(id_field) if isinstance(display_context, dict) else None
+    label = None
+    if isinstance(ctx_for_field, dict):
+        label = ctx_for_field.get(primary_label_field)
+        if not label:
+            for f in fallback_label_fields:
+                v = ctx_for_field.get(f)
+                if v:
+                    label = v
+                    break
+
+    pretty_id_field = id_field.replace("_id", "").replace("_", " ").title()
+    if label:
+        # Truncate the ID so the line stays readable; full ID is still in
+        # pending_action.inputs for tooling that needs it.
+        short_id = str(raw_id)
+        if len(short_id) > 28:
+            short_id = short_id[:24] + "..."
+        return f"- **{pretty_id_field}:** {label} (`{short_id}`)\n"
+    return f"- **{pretty_id_field} ID:** {raw_id}\n"
+
+
 def _build_rich_approval_message(pending_action: dict) -> str:
     """
     Build a rich, detailed approval message for a pending action.
@@ -783,6 +905,13 @@ def _build_rich_approval_message(pending_action: dict) -> str:
     risk_level = pending_action.get("risk_level", "DANGEROUS")
     description = pending_action.get("description", "Unknown action")
     inputs = pending_action.get("inputs", {})
+    # display_context is populated at pause time by
+    # supervisor_agent._resolve_display_context — it maps each ID-shaped input
+    # field to the human-friendly fields (subject/title/name/summary) of the
+    # source item. Always present as a dict (possibly empty). Pre-existing
+    # pending_actions persisted before this enrichment landed will simply
+    # have an empty dict and render the legacy "ID: ..." shape.
+    display_context = pending_action.get("display_context") or {}
     step_number = pending_action.get("step_number")
     total_steps = pending_action.get("total_steps")
     
@@ -814,7 +943,20 @@ def _build_rich_approval_message(pending_action: dict) -> str:
     
     elif tool == "reply_to_email":
         msg += "**Replying to Email**\n"
-        if inputs.get("message_id"):
+        # Prefer subject + sender (resolved at pause time from search results
+        # in variable_context) over the raw Gmail message_id, which is opaque
+        # to the user and impossible to verify before clicking "approve".
+        ctx = display_context.get("message_id") or {}
+        if ctx.get("subject"):
+            msg += f"- **Original subject:** {ctx['subject']}\n"
+        if ctx.get("from"):
+            msg += f"- **Original sender:** {ctx['from']}\n"
+        if ctx.get("date"):
+            msg += f"- **Original date:** {ctx['date']}\n"
+        if not ctx and inputs.get("message_id"):
+            # No display_context resolved (e.g. ID was not in any list in
+            # variable_context — happens when the user passed it directly).
+            # Keep the legacy line so the user still sees the target.
             msg += f"- **Message ID:** {inputs['message_id']}\n"
         if inputs.get("reply_body"):
             body_preview = inputs["reply_body"][:300]
@@ -824,8 +966,11 @@ def _build_rich_approval_message(pending_action: dict) -> str:
     
     elif tool == "add_text":
         msg += "**Adding Text to Document**\n"
-        if inputs.get("document_id"):
-            msg += f"- **Document ID:** {inputs['document_id']}\n"
+        line = _format_id_with_label(
+            inputs, display_context, "document_id", "title", ("name",)
+        )
+        if line:
+            msg += line
         if inputs.get("text"):
             text_preview = inputs["text"][:300]
             if len(inputs["text"]) > 300:
@@ -834,13 +979,38 @@ def _build_rich_approval_message(pending_action: dict) -> str:
     
     elif tool in ("delete_email", "delete_file", "delete_event"):
         msg += "**Deleting Resource**\n"
+        # First render any ID-shaped inputs with their resolved friendly
+        # labels so the user can verify *which* resource is about to be
+        # deleted before approving. Skip those keys in the generic loop
+        # below to avoid duplicating the same field with two formats.
+        rendered_keys: set = set()
+        for id_field, primary, fallbacks in (
+            ("message_id", "subject", ("from",)),
+            ("event_id", "summary", ("start",)),
+            ("file_id", "name", ("title",)),
+            ("document_id", "title", ("name",)),
+        ):
+            if id_field in inputs:
+                line = _format_id_with_label(
+                    inputs, display_context, id_field, primary, fallbacks
+                )
+                if line:
+                    msg += line
+                rendered_keys.add(id_field)
+        # Show remaining inputs (e.g. confirm flags, force flags) below the
+        # resolved-ID line, skipping anything we already displayed.
         for key, value in inputs.items():
+            if key in rendered_keys:
+                continue
             msg += f"- **{key}:** {value}\n"
     
     elif tool == "edit_doc":
         msg += "**Editing Document (find & replace)**\n"
-        if inputs.get("document_id"):
-            msg += f"- **Document ID:** {inputs['document_id']}\n"
+        line = _format_id_with_label(
+            inputs, display_context, "document_id", "title", ("name",)
+        )
+        if line:
+            msg += line
         if inputs.get("old_text"):
             msg += f"- **Find:** {inputs['old_text'][:100]}{'...' if len(inputs.get('old_text', '')) > 100 else ''}\n"
         if inputs.get("new_text"):
@@ -848,8 +1018,11 @@ def _build_rich_approval_message(pending_action: dict) -> str:
 
     elif tool == "update_doc":
         msg += "**Replacing Entire Document Content**\n"
-        if inputs.get("document_id"):
-            msg += f"- **Document ID:** {inputs['document_id']}\n"
+        line = _format_id_with_label(
+            inputs, display_context, "document_id", "title", ("name",)
+        )
+        if line:
+            msg += line
         if inputs.get("new_content"):
             preview = inputs["new_content"][:300]
             if len(inputs["new_content"]) > 300:
@@ -862,8 +1035,16 @@ def _build_rich_approval_message(pending_action: dict) -> str:
         # of nested structures and renders as an unreadable truncated repr under
         # the generic branch).
         msg += "**Writing Delivery-Order Data to Sheet**\n"
-        if inputs.get("sheet_id"):
-            msg += f"- **Sheet ID:** {inputs['sheet_id']}\n"
+        # Prefer the resolved sheet title (from a prior search_files step
+        # in variable_context) over the raw Drive ID. _format_id_with_label
+        # already handles the bare-ID fallback when display_context has no
+        # entry for sheet_id (e.g. the user pasted the URL directly without
+        # a search step ahead of it).
+        sheet_line = _format_id_with_label(
+            inputs, display_context, "sheet_id", "title", ("name",)
+        )
+        if sheet_line:
+            msg += sheet_line
 
         parsed_orders = inputs.get("parsed_orders")
         if isinstance(parsed_orders, list) and parsed_orders:
@@ -940,14 +1121,36 @@ def _build_rich_approval_message(pending_action: dict) -> str:
                 msg += f"_…and {len(rejected_files) - rendered} more skipped._\n"
 
     else:
-        # Generic — show all non-empty inputs
+        # Generic — show all non-empty inputs. For ID-shaped fields with a
+        # resolved label in display_context, render the friendly form
+        # ("Document: Meeting Notes (`<id>`)") instead of the bare ID so
+        # tools that don't have an explicit branch above (e.g. future
+        # mutation tools) still benefit from label resolution.
         msg += f"**{tool}**\n"
         for key, value in inputs.items():
-            if value:
-                val_str = str(value)
-                if len(val_str) > 200:
-                    val_str = val_str[:200] + "..."
-                msg += f"- **{key}:** {val_str}\n"
+            if not value:
+                continue
+            if key in display_context:
+                # Pick the most descriptive label among the configured
+                # display fields for this ID. Order matters — first
+                # non-empty wins, mirroring _format_id_with_label.
+                ctx = display_context[key]
+                label = None
+                for f in ("title", "subject", "name", "summary"):
+                    if isinstance(ctx, dict) and ctx.get(f):
+                        label = ctx[f]
+                        break
+                if label:
+                    short_id = str(value)
+                    if len(short_id) > 28:
+                        short_id = short_id[:24] + "..."
+                    pretty = key.replace("_id", "").replace("_", " ").title()
+                    msg += f"- **{pretty}:** {label} (`{short_id}`)\n"
+                    continue
+            val_str = str(value)
+            if len(val_str) > 200:
+                val_str = val_str[:200] + "..."
+            msg += f"- **{key}:** {val_str}\n"
     
     msg += f"\n---\n"
     msg += f"Reply **\"yes\"** to proceed or **\"cancel\"** to stop."
@@ -962,8 +1165,21 @@ def _build_disambiguation_message(options, source_tool):
 
     Renders shape-aware detail per option:
       - emails/drafts (search_emails, search_drafts): Subject, From, Date, body preview
-      - docs/files (list_my_docs, search_files, list_files): Name, ID, Modified
+      - docs/files (list_my_docs, search_files, list_files): Name, Modified, mimeType label
+
+    The internal Drive/Docs `id` field is intentionally NOT shown — the user
+    selects by number or by name, and a 44-char base64 ID adds noise without
+    helping disambiguation. The ID is still preserved in the option dict for
+    the resume-side lookup; we just don't display it.
     """
+    # Defer-import to avoid pulling response_templates as a top-level
+    # dependency of the tier0 mixin (which is imported at app start).
+    try:
+        from services.response_templates import _format_date_friendly, _format_mime_type
+    except Exception:
+        _format_date_friendly = lambda x: x  # type: ignore
+        _format_mime_type = lambda x: x  # type: ignore
+
     msg = "**Multiple results found** — please select one:\n\n"
 
     is_email_shape = source_tool in ("search_emails", "search_drafts")
@@ -985,17 +1201,29 @@ def _build_disambiguation_message(options, source_tool):
             msg += f"**{i}.** {subject}\n"
             msg += f"   From: {sender}\n"
             if date:
-                msg += f"   Date: {date}\n"
+                msg += f"   Date: {_format_date_friendly(date)}\n"
             if body_preview:
                 msg += f"   Preview: {body_preview}\n"
             msg += "\n"
         else:
             name = option.get("name") or option.get("title") or option.get("subject") or f"Item {i}"
             msg += f"**{i}.** {name}\n"
-            if option.get("id"):
-                msg += f"   ID: `{option['id']}`\n"
+            mime = option.get("mimeType")
+            if mime:
+                msg += f"   Type: {_format_mime_type(mime)}\n"
             if option.get("modified"):
-                msg += f"   Modified: {option['modified']}\n"
+                msg += f"   Modified: {_format_date_friendly(option['modified'])}\n"
+            elif option.get("modifiedTime"):
+                msg += f"   Modified: {_format_date_friendly(option['modifiedTime'])}\n"
+            owner = option.get("owners") or option.get("owner")
+            if isinstance(owner, list) and owner:
+                first = owner[0]
+                if isinstance(first, dict):
+                    owner_label = first.get("displayName") or first.get("emailAddress")
+                    if owner_label:
+                        msg += f"   Owner: {owner_label}\n"
+            elif isinstance(owner, str) and owner:
+                msg += f"   Owner: {owner}\n"
             msg += "\n"
 
     msg += "---\n"

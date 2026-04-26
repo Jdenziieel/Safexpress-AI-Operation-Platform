@@ -166,31 +166,97 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
         # All remaining steps completed
         conversation_state.remaining_steps = []
         conversation_state.workflow_context = None
-        
-        # Build rich summary from results with actual data
+
+        # Build rich summary from results with actual data.
+        # Per-step rendering goes through the response_templates registry
+        # so each step gets its full detail block (per-PDF samples,
+        # duplicates, sent-email recipient/subject, doc URL, etc.) rather
+        # than just the planner's bare description string. Falls back to
+        # "{description} — done" for tools without a registered template.
         completed = [r for r in results if r.get("status") == "success"]
         errors = [r for r in results if r.get("status") == "error"]
-        
+
+        try:
+            from services.response_templates import format_step
+        except Exception as _imp_exc:
+            format_step = None  # type: ignore
+            print(f"response_templates import failed in resume: {_imp_exc}")
+
         if completed:
+            response_prefix += "\n"
             for r in completed:
                 desc = r.get("description", r.get("tool", ""))
-                response_prefix += f"\n  {desc} — done"
-        
+                agent_name = r.get("agent", "")
+                tool_name = r.get("tool", "")
+                output = r.get("output", {}) if isinstance(r.get("output"), dict) else {}
+                rich_text = ""
+                if format_step is not None:
+                    try:
+                        rendered = format_step(agent_name, tool_name, output)
+                        if rendered and rendered.strip():
+                            rich_text = rendered.strip()
+                    except Exception as _fmt_exc:
+                        print(f"format_step failed for {agent_name}.{tool_name}: {_fmt_exc}")
+                if rich_text:
+                    response_prefix += f"\n**{desc}**\n{rich_text}\n"
+                else:
+                    response_prefix += f"\n  {desc} — done"
+
         if errors:
+            try:
+                from services.summarization_service import SummarizationService
+                _summarizer = SummarizationService
+            except Exception:
+                _summarizer = None  # type: ignore
             for r in errors:
                 desc = r.get("description", r.get("tool", ""))
+                # Sub-agents craft user-facing error strings with concrete
+                # next steps (e.g. "ask the sheet owner to change your
+                # permission from Viewer to Editor"). Surface those
+                # verbatim. For raw `<HttpError NNN ...>` text the
+                # humanizer translates the HTTP status into a clean
+                # sentence — keeps error fidelity while losing the URL
+                # and reason-phrase noise.
                 err = r.get("error", "Unknown error")
-                response_prefix += f"\n  {desc} — failed: {err}"
-        
+                if _summarizer is not None:
+                    try:
+                        if not _summarizer._is_verbatim_error_useful(err):
+                            humanized = _summarizer._humanize_api_error(err)
+                            if humanized != err:
+                                err = humanized
+                    except Exception:
+                        pass
+                response_prefix += f"\n\n**{desc} — failed**\n{err}"
+
         response_prefix += "\n\nAll steps completed! Is there anything else I can help with?"
-        
+
         return response_prefix, conversation_state
-        
+
     except Exception as e:
-        print(f"Error resuming remaining steps: {str(e)}")
+        # Catch-all for orchestrator-level failures during resume — keep the
+        # workflow_context cleared so the user can start fresh. Don't dump
+        # the raw Python exception (KeyError, UndefinedError, etc.) into
+        # chat; route it through the humanizer-then-categorize-then-suggest
+        # pipeline that the approval-failure branch uses, so the user
+        # sees a sentence they can act on instead of a stack trace.
+        err_str = str(e)
+        print(f"Error resuming remaining steps: {err_str}")
         conversation_state.remaining_steps = []
         conversation_state.workflow_context = None
-        return response_prefix + f"\n\nError continuing workflow: {str(e)}", conversation_state
+
+        response_prefix += "\n\n**Could not continue the workflow.**"
+        try:
+            from services.summarization_service import SummarizationService
+            if SummarizationService._is_verbatim_error_useful(err_str):
+                response_prefix += f"\n\n**Issue:** {err_str}"
+            else:
+                humanized = SummarizationService._humanize_api_error(err_str)
+                if humanized != err_str:
+                    response_prefix += f"\n\n**Issue:** {humanized}"
+        except Exception:
+            pass
+
+        return response_prefix, conversation_state
 
 
 # --- REACT FLOW DISABLED — uncomment to re-enable ---
@@ -697,41 +763,99 @@ async def _handle_pending_action_decision(conversation_state, thread_id: str, re
             conversation_state.extracted_info.pop("action_id", None)
             conversation_state.extracted_info.pop("decision", None)
 
+            # Common metadata used by both the success and failure
+            # branches below. `clean_description` strips the planner's
+            # editorial "(DANGEROUS — requires approval)" suffix because
+            # the line is no longer accurate at this point — the user
+            # has decided, so showing the approval-required tag in the
+            # status header is just noise.
+            description = pending.get("description", "Action")
+            tool_name = pending.get("tool", "unknown")
+            agent_name = pending.get("agent", "")
+            inputs = pending.get("inputs", {})
+
+            clean_description = description
+            for _suffix in (
+                " (DANGEROUS — requires approval)",
+                " (CRITICAL — requires approval)",
+                " (DANGEROUS - requires approval)",
+                " (CRITICAL - requires approval)",
+            ):
+                if clean_description.endswith(_suffix):
+                    clean_description = clean_description[: -len(_suffix)]
+                    break
+
             if result.get("success"):
-                description = pending.get("description", "Action")
-                tool_name = pending.get("tool", "unknown")
-                inputs = pending.get("inputs", {})
-                response_text = f"**Done — {description}**\n\n"
+                response_text = f"**Done — {clean_description}**\n\n"
 
-                detail_parts = []
-                action_result = result.get("result", {}) if isinstance(result.get("result"), dict) else {}
-                if tool_name in ("send_draft_email", "send_email_with_attachment"):
-                    if inputs.get("to"):
-                        detail_parts.append(f"Sent to **{inputs['to']}**")
-                    if inputs.get("subject"):
-                        detail_parts.append(f"Subject: **{inputs['subject']}**")
-                elif tool_name == "reply_to_email":
-                    detail_parts.append("Reply sent")
-                elif tool_name == "create_draft_email":
-                    if inputs.get("to"):
-                        detail_parts.append(f"Draft created for **{inputs['to']}**")
-                elif tool_name in ("create_doc", "add_text"):
-                    title = inputs.get("title") or action_result.get("title", "")
-                    if title:
-                        detail_parts.append(f"Document: **{title}**")
-                elif tool_name == "create_event":
-                    summary = inputs.get("summary") or inputs.get("title", "")
-                    if summary:
-                        detail_parts.append(f"Event: **{summary}**")
-                elif tool_name in ("delete_email", "delete_file", "delete_event"):
-                    detail_parts.append("Deleted successfully")
-                elif tool_name == "upload_file":
-                    fname = inputs.get("filename") or inputs.get("file_name", "")
-                    if fname:
-                        detail_parts.append(f"Uploaded **{fname}**")
+                # Prefer the rich response_templates registry for the
+                # success body. This pulls in per-PDF blocks, duplicate
+                # breakdowns, tab summaries, etc. for delivery-order
+                # writes; created-doc URL + title; created-event summary
+                # with start/end/attendees; sent-email subject/recipient;
+                # and so on — all the detail the user needs to verify what
+                # actually happened, instead of just echoing the
+                # planner's step description.
+                #
+                # Sub-agent responses come in two shapes (see
+                # supervisor_agent.py:1447 for the same dual-handling):
+                #   1. Direct  — {"success": true, "rows_written": N, ...}
+                #   2. Wrapped — {"success": true, "result": {"rows_written": N, ...}}
+                # `format_step` only knows about the inner output dict, so
+                # we unwrap the wrapped form here and fall back to the top
+                # level for the direct form.
+                _nested = result.get("result")
+                if isinstance(_nested, dict) and _nested:
+                    action_result = _nested
+                else:
+                    action_result = result if isinstance(result, dict) else {}
+                rich_text = ""
+                try:
+                    from services.response_templates import format_step
+                    rendered = format_step(agent_name, tool_name, action_result)
+                    if rendered and rendered.strip():
+                        rich_text = rendered.strip()
+                except Exception as _fmt_exc:
+                    # Never let a template bug silence the success
+                    # message — fall through to the legacy detail switch.
+                    print(f"format_step failed for {agent_name}.{tool_name}: {_fmt_exc}")
 
-                if detail_parts:
-                    response_text += "\n".join(f"- {p}" for p in detail_parts) + "\n"
+                if rich_text:
+                    response_text += rich_text + "\n"
+                else:
+                    # Legacy per-tool detail fallback for tools without a
+                    # registered response template, or when rendering
+                    # raised. Kept identical to the pre-template behaviour
+                    # so anything the registry doesn't cover still emits
+                    # the same minimal bullet list it always did.
+                    detail_parts = []
+                    if tool_name in ("send_draft_email", "send_email_with_attachment"):
+                        if inputs.get("to"):
+                            detail_parts.append(f"Sent to **{inputs['to']}**")
+                        if inputs.get("subject"):
+                            detail_parts.append(f"Subject: **{inputs['subject']}**")
+                    elif tool_name == "reply_to_email":
+                        detail_parts.append("Reply sent")
+                    elif tool_name == "create_draft_email":
+                        if inputs.get("to"):
+                            detail_parts.append(f"Draft created for **{inputs['to']}**")
+                    elif tool_name in ("create_doc", "add_text"):
+                        title = inputs.get("title") or action_result.get("title", "")
+                        if title:
+                            detail_parts.append(f"Document: **{title}**")
+                    elif tool_name == "create_event":
+                        summary = inputs.get("summary") or inputs.get("title", "")
+                        if summary:
+                            detail_parts.append(f"Event: **{summary}**")
+                    elif tool_name in ("delete_email", "delete_file", "delete_event"):
+                        detail_parts.append("Deleted successfully")
+                    elif tool_name == "upload_file":
+                        fname = inputs.get("filename") or inputs.get("file_name", "")
+                        if fname:
+                            detail_parts.append(f"Uploaded **{fname}**")
+
+                    if detail_parts:
+                        response_text += "\n".join(f"- {p}" for p in detail_parts) + "\n"
 
                 remaining = conversation_state.remaining_steps
 
@@ -757,13 +881,65 @@ async def _handle_pending_action_decision(conversation_state, thread_id: str, re
                     conversation_state.last_execution_message = f"Approved and executed: {description}"
                     _clear_workflow_state(conversation_state)
             else:
+                # Sub-agents (sheets, drive, gmail) return user-facing
+                # error messages with concrete remediation hints — e.g.
+                # "Access to this spreadsheet was denied. You may only
+                #  have view/read-only access. To write data you need
+                #  Editor access — ask the sheet owner to change your
+                #  permission from Viewer to Editor."
+                # Surface that verbatim. Add a categorized Suggestion
+                # line on top so the user gets both the specific guidance
+                # AND a generic next step.
                 error_msg = result.get("error", "Unknown error")
-                response_text = f"**Action Failed**\n\n{error_msg}\n\nWould you like to try again, or is there something else I can help with?"
+                suggestion = ""
+                try:
+                    from services.summarization_service import SummarizationService
+                    # Categorize against the RAW message so the suggestion
+                    # template selection still keys on HTTP status codes
+                    # (403, 404, …) embedded in the original HttpError repr.
+                    category = SummarizationService(conversational_agent.llm)._categorize_error(error_msg)
+                    suggestion_map = {
+                        "auth": "Your access may have expired. Try reconnecting your account.",
+                        "not_found": "Verify the resource ID or name and try again.",
+                        "timeout": "The service may be busy. Please try again in a moment.",
+                        "connection": "Check that all services are running and try again.",
+                        "permission": "If you cannot adjust the access yourself, contact the resource owner or your administrator.",
+                        "rate_limit": "Wait a moment before retrying.",
+                    }
+                    suggestion = suggestion_map.get(category, "")
+
+                    # Humanize raw `<HttpError NNN ...>` text into a clean
+                    # sentence — but ONLY when the sub-agent did not already
+                    # provide prose-quality guidance (sheets_agent's curated
+                    # permission errors pass through untouched).
+                    if not SummarizationService._is_verbatim_error_useful(error_msg):
+                        humanized = SummarizationService._humanize_api_error(error_msg)
+                        if humanized != error_msg:
+                            error_msg = humanized
+                except Exception as _cat_exc:
+                    print(f"error categorization failed in approval handler: {_cat_exc}")
+
+                response_text = f"**Action Failed — {clean_description}**\n\n**Issue:** {error_msg}\n"
+                if suggestion:
+                    response_text += f"\n**Suggestion:** {suggestion}\n"
+                response_text += "\nWould you like to try again, or is there something else I can help with?"
                 _clear_workflow_state(conversation_state)
 
         except Exception as e:
-            print(f"Error executing approved action: {str(e)}")
-            response_text = f"**Execution Error**\n\n{str(e)}\n\nWould you like to try again, or is there something else I can help with?"
+            err_str = str(e)
+            print(f"Error executing approved action: {err_str}")
+            response_text = f"**Execution Error**\n\n"
+            try:
+                from services.summarization_service import SummarizationService
+                if SummarizationService._is_verbatim_error_useful(err_str):
+                    response_text += f"**Issue:** {err_str}\n"
+                else:
+                    humanized = SummarizationService._humanize_api_error(err_str)
+                    if humanized != err_str:
+                        response_text += f"**Issue:** {humanized}\n"
+            except Exception:
+                response_text += "Something went wrong while running this action.\n"
+            response_text += "\nWould you like to try again, or is there something else I can help with?"
             conversation_state.pending_actions = []
             conversation_state.workflow_paused = False
             _clear_workflow_state(conversation_state)
@@ -901,8 +1077,49 @@ async def _handle_disambiguation_selection(conversation_state, thread_id: str, r
             if not conversation_state.workflow_paused and not conversation_state.disambiguation_options:
                 _clear_workflow_state(conversation_state)
         except Exception as e:
-            print(f"Error resuming after disambiguation: {e}")
-            response_text += f"\nError continuing workflow: {str(e)}"
+            # Don't dump the raw Python exception text into the chat. Wrap it
+            # the same way the approval-failure branch does: an Issue header
+            # (verbatim only when the message looks user-friendly) plus a
+            # categorized Suggestion. Anything more technical leaks the
+            # internals (Jinja undefined names, KeyError tracebacks) to a
+            # non-technical user with no actionable next step.
+            err_str = str(e)
+            print(f"Error resuming after disambiguation: {err_str}")
+
+            response_text += "\n\n**Could not continue the workflow after your selection.**"
+
+            try:
+                from services.summarization_service import SummarizationService
+                # Same humanization-vs-verbatim rule as the approval-failure
+                # branch: if the agent already produced prose, keep it; if
+                # the message is a raw HttpError repr, translate via
+                # _humanize_api_error; otherwise omit the Issue line entirely
+                # so we don't dump KeyError tracebacks into chat.
+                category = SummarizationService(
+                    conversational_agent.llm
+                )._categorize_error(err_str)
+                if SummarizationService._is_verbatim_error_useful(err_str):
+                    response_text += f"\n\n**Issue:** {err_str}"
+                else:
+                    humanized = SummarizationService._humanize_api_error(err_str)
+                    if humanized != err_str:
+                        response_text += f"\n\n**Issue:** {humanized}"
+                suggestion_map = {
+                    "auth": "Your access may have expired. Try reconnecting your account.",
+                    "not_found": "The selected item may have been moved or deleted. Try the search again.",
+                    "timeout": "The service may be busy. Please try again in a moment.",
+                    "connection": "Check that all services are running and try again.",
+                    "permission": "If you cannot adjust the access yourself, contact the resource owner or your administrator.",
+                    "rate_limit": "Wait a moment before retrying.",
+                    "dependency": "Try running the search again so the workflow has fresh context.",
+                }
+                suggestion = suggestion_map.get(category, "")
+                if suggestion:
+                    response_text += f"\n\n**Suggestion:** {suggestion}"
+            except Exception as _cat_exc:
+                print(f"error categorization failed in disambiguation handler: {_cat_exc}")
+
+            response_text += "\n\nWould you like to try again, or is there something else I can help with?"
             _clear_workflow_state(conversation_state)
         finally:
             conversation_state.executing = False

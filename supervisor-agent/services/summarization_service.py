@@ -9,6 +9,7 @@ template is missing for an unrecognised tool.
 """
 
 import json
+import re
 import time
 from typing import Optional, Dict, Any, List, Tuple
 from models.models import ConversationState
@@ -336,10 +337,35 @@ class SummarizationService:
         lines = ["**Unable to complete your request**\n"]
 
         error_msg = final_context.get("error", execution_message)
+        # Categorize against the RAW message — its embedded HTTP status
+        # codes ("403", "404") and reason phrases drive the suggestion
+        # template selection. Humanizing first would erase those signals.
         error_category = self._categorize_error(error_msg)
 
+        # Translate raw `<HttpError NNN ...>` reprs into a friendly sentence
+        # ("Gmail API returned HTTP 403: you don't have permission ..."),
+        # but ONLY when the agent did not already supply prose-quality text.
+        # Sub-agents like sheets_agent return curated permission messages
+        # with explicit remediation steps — those are detected via
+        # `_is_verbatim_error_useful` and pass through untouched. For raw
+        # HttpError-only strings the humanizer kicks in and gives the user
+        # something they can actually understand.
+        verbatim = self._is_verbatim_error_useful(error_msg)
+        if not verbatim:
+            humanized = self._humanize_api_error(error_msg)
+            if humanized != error_msg:
+                # The humanizer matched a Google API pattern — promote the
+                # cleaned text to the displayed Issue line. We re-check
+                # _is_verbatim_error_useful so the cleaner sentence flows
+                # through the same branch as a sub-agent's curated text.
+                error_msg = humanized
+                verbatim = self._is_verbatim_error_useful(error_msg)
+
         if error_category == "auth":
-            lines.append("**Issue:** Authentication failed with the service.")
+            if verbatim:
+                lines.append(f"**Issue:** {error_msg}")
+            else:
+                lines.append("**Issue:** Authentication failed with the service.")
             lines.append(
                 "**Suggestion:** Your access may have expired. Please try reconnecting your account.\n"
             )
@@ -353,33 +379,61 @@ class SummarizationService:
                 "**Suggestion:** Please try again. If the problem persists, rephrase your request and re-run.\n"
             )
         elif error_category == "not_found":
-            lines.append("**Issue:** The requested resource could not be found.")
-            lines.append(
-                "**Suggestion:** Please verify the ID or name and try again.\n"
-            )
+            if verbatim:
+                lines.append(f"**Issue:** {error_msg}")
+            else:
+                lines.append("**Issue:** The requested resource could not be found.")
+                lines.append(
+                    "**Suggestion:** Please verify the ID or name and try again.\n"
+                )
         elif error_category == "timeout":
-            lines.append("**Issue:** The operation took too long to complete.")
+            if verbatim:
+                lines.append(f"**Issue:** {error_msg}")
+            else:
+                lines.append("**Issue:** The operation took too long to complete.")
             lines.append(
                 "**Suggestion:** The service may be busy. Please try again in a moment.\n"
             )
         elif error_category == "connection":
-            lines.append("**Issue:** Could not connect to the required service.")
+            if verbatim:
+                lines.append(f"**Issue:** {error_msg}")
+            else:
+                lines.append("**Issue:** Could not connect to the required service.")
             lines.append(
                 "**Suggestion:** Please check if all services are running and try again.\n"
             )
         elif error_category == "permission":
-            lines.append(
-                "**Issue:** You don't have permission to perform this action."
-            )
-            lines.append(
-                "**Suggestion:** Please verify your access rights or contact your administrator.\n"
-            )
+            if verbatim:
+                # The agent already named the resource and recommended a
+                # remediation — surface it verbatim and add only the
+                # generic admin-fallback line, which is value-add rather
+                # than redundant ("contact your administrator" still
+                # applies even when "ask the owner" is the primary path).
+                lines.append(f"**Issue:** {error_msg}")
+                lines.append(
+                    "**Suggestion:** If you cannot adjust the access yourself, contact the resource owner or your administrator.\n"
+                )
+            else:
+                lines.append(
+                    "**Issue:** You don't have permission to perform this action."
+                )
+                lines.append(
+                    "**Suggestion:** Please verify your access rights or contact your administrator.\n"
+                )
         elif error_category == "rate_limit":
-            lines.append("**Issue:** Too many requests were made in a short time.")
+            if verbatim:
+                lines.append(f"**Issue:** {error_msg}")
+            else:
+                lines.append("**Issue:** Too many requests were made in a short time.")
             lines.append(
                 "**Suggestion:** Please wait a moment and try again.\n"
             )
         elif error_category == "dependency":
+            # "Dependency" is the synthetic upstream-no-results category;
+            # the underlying error is usually a Jinja UndefinedError or a
+            # canned "earlier step returned no results" string — neither
+            # is user-friendly verbatim. Always render the structured
+            # template here.
             lines.append(f"**Issue:** An earlier step returned no results, so the remaining steps could not continue.")
             lines.append(
                 "**Suggestion:** Try broadening your search criteria or verifying the details.\n"
@@ -431,16 +485,24 @@ class SummarizationService:
         for result in results:
             if isinstance(result, dict) and result.get("status") == "no_results":
                 tool = result.get("tool", "")
-                inputs = result.get("inputs", {})
+                inputs = result.get("inputs", {}) or {}
                 message = result.get("message", "")
 
                 if "email" in tool.lower() or "gmail" in tool.lower():
-                    query = inputs.get("query", inputs.get("search_query", ""))
                     lines.append(
                         "No emails were found matching your search criteria."
                     )
-                    if query:
-                        lines.append(f"  • Search query: `{query}`")
+                    # Render the actual filters that were applied so the
+                    # user can see WHY zero hits came back. The legacy
+                    # version dumped only the raw `query` string and
+                    # ignored sender/subject/date/label hints, leaving the
+                    # user unable to tell whether (a) the filter was too
+                    # narrow, (b) the date range was wrong, or (c) the
+                    # sender's address was misspelled.
+                    filter_lines = self._render_gmail_filters(inputs)
+                    if filter_lines:
+                        lines.append("\n**Filters used:**")
+                        lines.extend(filter_lines)
                     lines.append("\n**Suggestions:**")
                     lines.append("  • Try broadening your search terms")
                     lines.append("  • Check the date range if specified")
@@ -450,6 +512,10 @@ class SummarizationService:
                     lines.append(
                         "No calendar events were found matching your criteria."
                     )
+                    filter_lines = self._render_calendar_filters(inputs)
+                    if filter_lines:
+                        lines.append("\n**Filters used:**")
+                        lines.extend(filter_lines)
                     lines.append("\n**Suggestions:**")
                     lines.append("  • Try expanding the date range")
                     lines.append("  • Check if the calendar is shared with you")
@@ -458,6 +524,10 @@ class SummarizationService:
                     lines.append(
                         "No documents were found matching your search."
                     )
+                    filter_lines = self._render_drive_filters(inputs)
+                    if filter_lines:
+                        lines.append("\n**Filters used:**")
+                        lines.extend(filter_lines)
                     lines.append("\n**Suggestions:**")
                     lines.append("  • Try different keywords")
                     lines.append("  • Check the folder location")
@@ -469,6 +539,13 @@ class SummarizationService:
                     )
                     if message:
                         lines.append(f"  • Details: {message}")
+                    # Generic input dump for unknown tools — show top-level
+                    # scalar inputs so the user can still see what was
+                    # searched / requested.
+                    generic_filter_lines = self._render_generic_filters(inputs)
+                    if generic_filter_lines:
+                        lines.append("\n**Inputs used:**")
+                        lines.extend(generic_filter_lines)
 
         lines.append("\n---")
         lines.append(
@@ -477,6 +554,228 @@ class SummarizationService:
         )
 
         return "\n".join(lines)
+
+    @staticmethod
+    def _render_gmail_filters(inputs: Dict[str, Any]) -> List[str]:
+        """Render the sender/subject/date/label hints from a gmail
+        search inputs dict as friendly bullet lines. Skips empty fields
+        and hides internal scaffolding (max_results, page tokens) the
+        user does not care about."""
+        lines: List[str] = []
+        query = inputs.get("query") or inputs.get("search_query")
+        if query:
+            lines.append(f"  • Search query: `{query}`")
+        for field, label in (
+            ("from", "From"),
+            ("from_email", "From"),
+            ("to", "To"),
+            ("subject", "Subject"),
+            ("after", "After"),
+            ("before", "Before"),
+            ("date_from", "After"),
+            ("date_to", "Before"),
+            ("has_attachment", "Has attachment"),
+        ):
+            v = inputs.get(field)
+            if v:
+                lines.append(f"  • {label}: `{v}`")
+        labels = inputs.get("label_ids") or inputs.get("labels")
+        if labels:
+            if isinstance(labels, list):
+                lines.append(f"  • Labels: {', '.join(str(l) for l in labels)}")
+            else:
+                lines.append(f"  • Labels: {labels}")
+        keywords = inputs.get("keywords")
+        if keywords:
+            if isinstance(keywords, list):
+                lines.append(f"  • Keywords: {', '.join(str(k) for k in keywords)}")
+            else:
+                lines.append(f"  • Keywords: {keywords}")
+        return lines
+
+    @staticmethod
+    def _render_calendar_filters(inputs: Dict[str, Any]) -> List[str]:
+        """Render calendar event search filters. Common shape includes
+        time_min/time_max + optional q (free-text) + calendar_id."""
+        lines: List[str] = []
+        for field, label in (
+            ("time_min", "From"),
+            ("time_max", "To"),
+            ("start_time", "From"),
+            ("end_time", "To"),
+            ("q", "Search text"),
+            ("query", "Search text"),
+            ("calendar_id", "Calendar"),
+        ):
+            v = inputs.get(field)
+            if v:
+                lines.append(f"  • {label}: `{v}`")
+        return lines
+
+    @staticmethod
+    def _render_drive_filters(inputs: Dict[str, Any]) -> List[str]:
+        """Render drive/docs search filters. Shows the search term,
+        folder context, and mime-type filter when present."""
+        lines: List[str] = []
+        for field, label in (
+            ("search_term", "Search term"),
+            ("query", "Search term"),
+            ("name", "Name contains"),
+            ("folder_id", "Folder ID"),
+            ("folder_name", "Folder"),
+            ("mime_type", "Type filter"),
+            ("mimeType", "Type filter"),
+        ):
+            v = inputs.get(field)
+            if v:
+                lines.append(f"  • {label}: `{v}`")
+        return lines
+
+    @staticmethod
+    def _render_generic_filters(inputs: Dict[str, Any]) -> List[str]:
+        """Render scalar inputs for unknown / fallback tools. Skips keys
+        starting with `_` (internal), credentials_dict, page tokens,
+        max_results, and other scaffolding that doesn't help the user
+        understand WHY no results came back."""
+        skip = {
+            "credentials_dict",
+            "max_results",
+            "page_token",
+            "next_page_token",
+            "page_size",
+        }
+        lines: List[str] = []
+        for k, v in inputs.items():
+            if not v:
+                continue
+            if k in skip or (isinstance(k, str) and k.startswith("_")):
+                continue
+            val_str = str(v)
+            if len(val_str) > 120:
+                val_str = val_str[:117] + "..."
+            lines.append(f"  • {k}: `{val_str}`")
+        return lines
+
+    @staticmethod
+    def _is_verbatim_error_useful(error_msg: str) -> bool:
+        """Decide whether an error message is informative enough to surface
+        verbatim as the user-facing Issue body.
+
+        Sub-agents typically craft user-friendly messages (full sentences,
+        named the resource, included a remediation hint). Generic Python
+        exceptions and bare HTTP statuses are not — they look like internal
+        leakage to a non-technical user. This helper draws the line.
+
+        Useful (returned True) — at least one full sentence (>=40 chars),
+        contains lowercase letters/whitespace (i.e. prose, not just a code
+        token), and does not look like a Python traceback marker.
+
+        Not useful (returned False) — empty, too short, all-caps codes,
+        bare exception names, or starts with a typical traceback prefix.
+        We fall back to the categorical canned message in that case.
+        """
+        if not error_msg or not isinstance(error_msg, str):
+            return False
+        s = error_msg.strip()
+        if len(s) < 40:
+            return False
+        # Bare exception markers — usually means we picked up a stringified
+        # traceback rather than an agent-crafted message.
+        if s.startswith(("Traceback ", "Exception:", "<class '")):
+            return False
+        # Common opaque single-token / code-only error shapes
+        if s.startswith(("HTTP ", "HttpError ", "Error:")) and len(s) < 80:
+            return False
+        # Raw `<HttpError NNN ...>` reprs from googleapiclient — these contain
+        # English prose ("when requesting", "returned") so the prose-detector
+        # below would let them through, but they expose URLs and reason
+        # phrases that confuse non-technical users. Reject them here so the
+        # humanizer can replace with a friendly sentence.
+        if "<HttpError " in s or re.search(r"\bHttpError\s+\d{3}\b", s):
+            return False
+        # Has at least some prose — a space and a lowercase letter — to
+        # filter out things like "PERMISSION_DENIED" or "INVALID_ARGUMENT".
+        has_prose = any(c == " " for c in s) and any(
+            c.islower() for c in s
+        )
+        return has_prose
+
+    # Map of common Google API HttpError statuses → user-readable sentence.
+    # The reason string in the HttpError repr is technical (e.g. "Insufficient
+    # Permission" or "Requested entity was not found.") and references resources
+    # by raw URL — both confuse non-technical users. We normalize by HTTP
+    # status code, which is consistent across services.
+    _GOOGLE_API_HTTP_STATUS_MESSAGES: Dict[int, str] = {
+        400: "The request was invalid. The selected resource may have unexpected formatting or missing fields.",
+        401: "Authentication failed — your access token is missing or expired.",
+        403: "You don't have permission to perform this action on the selected resource.",
+        404: "The requested resource could not be found. It may have been moved or deleted.",
+        409: "There is a conflict with the current state of the resource (e.g. a duplicate entry or scheduling conflict).",
+        429: "The service rate limit was hit — too many requests in a short time.",
+        500: "The Google service hit an internal error. This usually clears up on its own.",
+        502: "The Google service returned a bad gateway response. This is temporary.",
+        503: "The Google service is temporarily unavailable.",
+        504: "The Google service took too long to respond.",
+    }
+
+    @staticmethod
+    def _humanize_api_error(error_msg: str) -> str:
+        """Translate raw `<HttpError NNN ... returned "...">` strings emitted
+        by `googleapiclient` into user-readable sentences.
+
+        Sub-agents (gmail, docs, drive, calendar) all wrap caught exceptions
+        as ``"<Service> API error: <error>"`` where ``<error>`` is the HttpError
+        repr. The repr exposes the full request URL and a technical reason
+        phrase — neither belongs in the chat UI.
+
+        Strategy: extract the HTTP status code via regex and substitute the
+        category sentence from `_GOOGLE_API_HTTP_STATUS_MESSAGES`, prefixed
+        with the service label (so the user still knows which integration
+        failed). When a parsable status is not present, return the original
+        string unchanged so we never lose error fidelity.
+
+        The `_categorize_error` routing still runs against the ORIGINAL
+        message (which contains the digits "403" / "404" etc.), so a 403
+        error still classifies as "permission" and gets the right
+        Suggestion line — only the displayed `Issue:` text is humanized.
+        """
+        if not error_msg or not isinstance(error_msg, str):
+            return error_msg
+
+        # Match patterns like:
+        #   "Gmail API error: <HttpError 403 when requesting https://...>"
+        #   "Google Sheets API error: <HttpError 429 when requesting ...>"
+        #   "Calendar API error: <HttpError 404 ...>"
+        # The leading "Service Name API error:" prefix is captured so we can
+        # re-attach a friendly service label.
+        match = re.search(
+            r"((?:Google\s+)?[\w-]+(?:\s+API)?\s+error)\s*:\s*<?HttpError\s+(\d{3})",
+            error_msg,
+            re.IGNORECASE,
+        )
+        if not match:
+            return error_msg
+
+        service_label = match.group(1).strip()
+        try:
+            status_code = int(match.group(2))
+        except (TypeError, ValueError):
+            return error_msg
+
+        friendly = SummarizationService._GOOGLE_API_HTTP_STATUS_MESSAGES.get(
+            status_code
+        )
+        if not friendly:
+            # Unknown status code — keep original text (e.g. unusual 451)
+            return error_msg
+
+        # Normalize service label: lowercase, no "error" suffix, capitalize
+        # first letter of each major word. "Gmail API error" → "Gmail API";
+        # "Google Sheets API error" → "Google Sheets API".
+        label = re.sub(r"\s*error\s*$", "", service_label, flags=re.IGNORECASE).strip()
+        if label:
+            return f"{label} returned HTTP {status_code}: {friendly}"
+        return f"Google service returned HTTP {status_code}: {friendly}"
 
     def _categorize_error(self, error_msg: str) -> str:
         error_lower = (error_msg or "").lower()

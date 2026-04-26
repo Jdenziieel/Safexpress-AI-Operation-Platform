@@ -658,6 +658,8 @@ def upload_mapped_data(
                 "rows_added": len(all_data),
                 "range_updated": result.get("updates", {}).get("updatedRange"),
                 "mode": "append",
+                "sheet_id": sheet_id,
+                "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit",
                 "sheet_name": resolved_tab,
                 "message": f"Appended {len(data_rows)} data rows to {resolved_tab}",
             }
@@ -680,6 +682,8 @@ def upload_mapped_data(
                 "rows_written": len(all_data),
                 "updated_cells": result.get("updatedCells", 0),
                 "mode": "overwrite",
+                "sheet_id": sheet_id,
+                "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit",
                 "sheet_name": resolved_tab,
                 "message": f"Wrote {len(data_rows)} data rows to {resolved_tab}",
             }
@@ -1397,6 +1401,9 @@ def update_by_date_match(
             "rows_updated": rows_updated,
             "total_rows_processed": len(rows_with_dates),
             "rows_not_found": rows_not_found,
+            "sheet_id": sheet_id,
+            "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit",
+            "sheet_name": sheet_name,
             "message": f"Successfully updated {rows_updated} rows by date matching",
         }
 

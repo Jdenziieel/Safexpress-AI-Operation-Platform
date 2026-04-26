@@ -10717,3 +10717,380 @@ Parameters:
 [2026-04-26 23:57:34.910] [PRINT] FINAL REPORT
 [2026-04-26 23:57:34.931] [PRINT] ============================================================================
 [2026-04-26 23:57:34.957] [PRINT] TOTAL: 81 checks — PASS: 81, FAIL: 0, INFO: 0
+[2026-04-27 01:02:38.429] [PRINT] B2 download_attachment:
+[2026-04-27 01:02:38.459] [PRINT]  
+[2026-04-27 01:02:38.483] [PRINT] 'Downloaded **invoice.pdf** (512KB)'
+[2026-04-27 01:02:38.497] [PRINT] B1:
+[2026-04-27 01:02:38.509] [PRINT]  
+[2026-04-27 01:02:38.520] [PRINT] 'Found 3 email(s) with 5 attachment(s) downloaded'
+[2026-04-27 01:02:38.530] [PRINT] B3:
+[2026-04-27 01:02:38.539] [PRINT]  
+[2026-04-27 01:02:38.546] [PRINT] 'Attachment metadata saved.'
+[2026-04-27 01:02:38.551] [PRINT] B6 create_sheet:
+[2026-04-27 01:02:38.556] [PRINT]  
+[2026-04-27 01:02:38.561] [PRINT] 'Created spreadsheet **Q4 Sales**: https://docs.google.com/spreadsheets/d/abc'
+[2026-04-27 01:02:38.566] [PRINT] B6 create_from_my_template:
+[2026-04-27 01:02:38.573] [PRINT]  
+[2026-04-27 01:02:38.578] [PRINT] 'Created document **Meeting Notes Apr 27** from template: https://docs.google.com/document/d/x'
+[2026-04-27 01:02:38.583] [PRINT] B5 add_text:
+[2026-04-27 01:02:38.589] [PRINT]  
+[2026-04-27 01:02:38.595] [PRINT] 'Added text to document: https://docs.google.com/document/d/x'
+[2026-04-27 01:02:38.601] [PRINT] B7:
+[2026-04-27 01:02:38.607] [PRINT]  
+[2026-04-27 01:02:38.612] [PRINT] 'Template analysed — found 3 placeholder(s):\n- `NAME`\n- `DATE`\n- `AMOUNT`'
+[2026-04-27 01:02:38.618] [PRINT] B4 parse_file:
+[2026-04-27 01:02:38.623] [PRINT]  
+[2026-04-27 01:02:38.627] [PRINT] 'Parsed **50** row(s) across **5** column(s)\nColumns: Date, Amount, Customer, Item, Qty'
+[2026-04-27 01:02:38.633] [PRINT] B4 smart_column_mapping:
+[2026-04-27 01:02:38.642] [PRINT]  
+[2026-04-27 01:02:38.653] [PRINT] 'Created **2** column mapping(s) — 2 high-confidence (accuracy ~92%)\n\n- `Date` → `date` _(95%)_\n- `Amount` → `amount` _(88%)_'
+[2026-04-27 01:02:38.674] [PRINT] B4 transform_data:
+[2026-04-27 01:02:38.682] [PRINT]  
+[2026-04-27 01:02:38.697] [PRINT] 'Transformed **50** row(s) and **8** column(s)\nKept 8 of 12 source column(s) after mapping'
+[2026-04-27 01:02:38.708] [PRINT] B8 update_by_date_match:
+[2026-04-27 01:02:38.717] [PRINT]  
+[2026-04-27 01:02:38.726] [PRINT] 'Updated **10** row(s) by date match (2 not matched) in **DATA ENTRY** tab\nSheet: https://docs.google.com/spreadsheets/d/x'
+[2026-04-27 01:02:38.736] [PRINT] B8 upload_mapped_data:
+[2026-04-27 01:02:38.748] [PRINT]  
+[2026-04-27 01:02:38.755] [PRINT] 'Appended **25** row(s) to **Sheet1** tab\nSheet: https://docs.google.com/spreadsheets/d/x'
+[2026-04-27 01:02:38.761] [PRINT] ALL PHASE 2 TEMPLATES PASS
+[2026-04-27 01:04:13.087] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-27 01:04:13.328] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-27 01:04:13.366] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-27 01:04:13.400] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-27 01:04:13.547] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-27 01:04:13.598] [PRINT] A2 reply_to_email:
+[2026-04-27 01:04:13.720] [PRINT]  
+[2026-04-27 01:04:13.811] [PRINT] {'message_id': {'subject': 'Q4 Report', 'from': 'alice@x.com', 'date': 'Wed, 21 Feb 2024 10:00'}}
+[2026-04-27 01:04:13.841] [PRINT] A2 write_delivery_order_data:
+[2026-04-27 01:04:13.862] [PRINT]  
+[2026-04-27 01:04:13.903] [PRINT] {'sheet_id': {'name': 'Daily Ops Tracker'}}
+[2026-04-27 01:04:14.042] [PRINT] A2 no-context:
+[2026-04-27 01:04:14.101] [PRINT]  
+[2026-04-27 01:04:14.143] [PRINT] {}
+[2026-04-27 01:04:14.168] [PRINT] A2 nested event:
+[2026-04-27 01:04:14.338] [PRINT]  
+[2026-04-27 01:04:14.359] [PRINT] {'event_id': {'summary': 'Team Sync', 'start': '2026-04-27T09:00'}}
+[2026-04-27 01:04:14.371] [PRINT] A2 _resolve_display_context PASS
+[2026-04-27 01:04:14.385] [PRINT] ---approval msg---
+[2026-04-27 01:04:14.399] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-27 01:04:14.399] [PRINT] 
+[2026-04-27 01:04:14.399] [PRINT] Step 2 of 3
+[2026-04-27 01:04:14.399] [PRINT] 
+[2026-04-27 01:04:14.399] [PRINT] **Reply to email about Q4**
+[2026-04-27 01:04:14.399] [PRINT] 
+[2026-04-27 01:04:14.399] [PRINT] **Replying to Email**
+[2026-04-27 01:04:14.399] [PRINT] - **Original subject:** Q4 Sales Report
+[2026-04-27 01:04:14.399] [PRINT] - **Original sender:** alice@example.com
+[2026-04-27 01:04:14.399] [PRINT] - **Original date:** Wed, 21 Feb 2024 10:00
+[2026-04-27 01:04:14.399] [PRINT] - **Reply preview:**
+[2026-04-27 01:04:14.399] [PRINT]   > Thanks for sending the report.
+[2026-04-27 01:04:14.399] [PRINT] 
+[2026-04-27 01:04:14.399] [PRINT] ---
+[2026-04-27 01:04:14.399] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-27 01:04:14.415] [PRINT] ---cancel msg---
+[2026-04-27 01:04:14.437] [PRINT] **Action Cancelled**
+[2026-04-27 01:04:14.437] [PRINT] 
+[2026-04-27 01:04:14.437] [PRINT] The following action has been cancelled:
+[2026-04-27 01:04:14.437] [PRINT] - **Action:** Reply to email about Q4
+[2026-04-27 01:04:14.437] [PRINT] - **Original subject:** Q4 Sales Report
+[2026-04-27 01:04:14.437] [PRINT] - **Original sender:** alice@example.com
+[2026-04-27 01:04:14.476] [PRINT] ---cancel delete_event---
+[2026-04-27 01:04:14.610] [PRINT] **Action Cancelled**
+[2026-04-27 01:04:14.610] [PRINT] 
+[2026-04-27 01:04:14.610] [PRINT] The following action has been cancelled:
+[2026-04-27 01:04:14.610] [PRINT] - **Action:** Delete the team sync
+[2026-04-27 01:04:14.610] [PRINT] - **Event:** Team Sync Apr 28 (`EV-XYZ-9999`)
+[2026-04-27 01:04:14.650] [PRINT] ---disambig msg---
+[2026-04-27 01:04:14.664] [PRINT] **Multiple results found** — please select one:
+[2026-04-27 01:04:14.664] [PRINT] 
+[2026-04-27 01:04:14.664] [PRINT] **1.** Project Brief
+[2026-04-27 01:04:14.664] [PRINT]    Type: Google Doc
+[2026-04-27 01:04:14.664] [PRINT]    Modified: Mon, 15 Apr 2024, 08:30
+[2026-04-27 01:04:14.664] [PRINT] 
+[2026-04-27 01:04:14.664] [PRINT] **2.** Status Update
+[2026-04-27 01:04:14.664] [PRINT]    Type: Google Sheet
+[2026-04-27 01:04:14.664] [PRINT]    Modified: Sat, 20 Apr 2024, 14:00
+[2026-04-27 01:04:14.664] [PRINT] 
+[2026-04-27 01:04:14.664] [PRINT] ---
+[2026-04-27 01:04:14.664] [PRINT] Reply with the **number** (e.g. "1") or the **name** of the item you want.
+[2026-04-27 01:04:14.664] [PRINT] Reply **"cancel"** to stop.
+[2026-04-27 01:04:14.679] [PRINT] ---disambig email---
+[2026-04-27 01:04:14.693] [PRINT] **Multiple results found** — please select one:
+[2026-04-27 01:04:14.693] [PRINT] 
+[2026-04-27 01:04:14.693] [PRINT] **1.** Hi
+[2026-04-27 01:04:14.693] [PRINT]    From: a@x.com
+[2026-04-27 01:04:14.693] [PRINT]    Date: Wed, 21 Feb 2024, 10:00
+[2026-04-27 01:04:14.693] [PRINT]    Preview: This is a long body. This is a long body. This is a long body. This is a long body. This is a long body. This is a long body. This is a long...
+[2026-04-27 01:04:14.693] [PRINT] 
+[2026-04-27 01:04:14.693] [PRINT] ---
+[2026-04-27 01:04:14.693] [PRINT] Reply with the **number** (e.g. "1") or the **name** of the item you want.
+[2026-04-27 01:04:14.693] [PRINT] Reply **"cancel"** to stop.
+[2026-04-27 01:04:14.706] [PRINT] A2 + A3 + C2 PASS
+[2026-04-27 01:05:57.869] [PRINT] INPUT  (403): Gmail API error: <HttpError 403 when requesting https://gmail.googleapis.com/gma...
+[2026-04-27 01:05:57.888] [PRINT] OUTPUT          : Gmail API returned HTTP 403: You don't have permission to perform this action on the selected resource.
+[2026-04-27 01:05:57.899] [PRINT] INPUT  (404): Google Sheets API error: <HttpError 404 when requesting https://sheets.googleapi...
+[2026-04-27 01:05:57.909] [PRINT] OUTPUT          : Google Sheets API returned HTTP 404: The requested resource could not be found. It may have been moved or deleted.
+[2026-04-27 01:05:57.919] [PRINT] INPUT  (429): Calendar API error: <HttpError 429 when requesting https://www.googleapis.com/ca...
+[2026-04-27 01:05:57.929] [PRINT] OUTPUT          : Calendar API returned HTTP 429: The service rate limit was hit — too many requests in a short time.
+[2026-04-27 01:05:57.939] [PRINT] INPUT  (401): Drive API error: <HttpError 401 when requesting https://www.googleapis.com/drive...
+[2026-04-27 01:05:57.950] [PRINT] OUTPUT          : Drive API returned HTTP 401: Authentication failed — your access token is missing or expired.
+[2026-04-27 01:05:57.958] [PRINT] INPUT  (500): Google Docs API error: <HttpError 500 when requesting https://docs.googleapis.co...
+[2026-04-27 01:05:57.968] [PRINT] OUTPUT          : Google Docs API returned HTTP 500: The Google service hit an internal error. This usually clears up on its own.
+[2026-04-27 01:05:57.978] [PRINT] C1 passthrough plain text: Failed to parse PDF: malformed header
+[2026-04-27 01:05:57.987] [PRINT] C1 humanize_api_error PASS
+[2026-04-27 01:05:57.995] [PRINT] ---A4 gmail---
+[2026-04-27 01:05:58.003] [PRINT] **Search completed — No results found**
+[2026-04-27 01:05:58.003] [PRINT] 
+[2026-04-27 01:05:58.003] [PRINT] No emails were found matching your search criteria.
+[2026-04-27 01:05:58.003] [PRINT] 
+[2026-04-27 01:05:58.003] [PRINT] **Filters used:**
+[2026-04-27 01:05:58.003] [PRINT]   • Search query: `Q4 report`
+[2026-04-27 01:05:58.003] [PRINT]   • From: `alice@example.com`
+[2026-04-27 01:05:58.003] [PRINT]   • Subject: `urgent`
+[2026-04-27 01:05:58.003] [PRINT]   • After: `2024/04/01`
+[2026-04-27 01:05:58.003] [PRINT]   • Before: `2024/04/30`
+[2026-04-27 01:05:58.003] [PRINT]   • Labels: INBOX, IMPORTANT
+[2026-04-27 01:05:58.003] [PRINT] 
+[2026-04-27 01:05:58.003] [PRINT] **Suggestions:**
+[2026-04-27 01:05:58.003] [PRINT]   • Try broadening your search terms
+[2026-04-27 01:05:58.003] [PRINT]   • Check the date range if specified
+[2026-04-27 01:05:58.003] [PRINT]   • Verify the sender's email address spelling
+[2026-04-27 01:05:58.003] [PRINT] 
+[2026-04-27 01:05:58.003] [PRINT] ---
+[2026-04-27 01:05:58.003] [PRINT] *Original request: "Find Q4 emails from alice"*
+[2026-04-27 01:05:58.013] [PRINT] ---A4 drive---
+[2026-04-27 01:05:58.022] [PRINT] **Search completed — No results found**
+[2026-04-27 01:05:58.022] [PRINT] 
+[2026-04-27 01:05:58.022] [PRINT] No documents were found matching your search.
+[2026-04-27 01:05:58.022] [PRINT] 
+[2026-04-27 01:05:58.022] [PRINT] **Filters used:**
+[2026-04-27 01:05:58.022] [PRINT]   • Search term: `Project Brief`
+[2026-04-27 01:05:58.022] [PRINT]   • Folder: `Q4 2024`
+[2026-04-27 01:05:58.022] [PRINT]   • Type filter: `application/vnd.google-apps.document`
+[2026-04-27 01:05:58.022] [PRINT] 
+[2026-04-27 01:05:58.022] [PRINT] **Suggestions:**
+[2026-04-27 01:05:58.022] [PRINT]   • Try different keywords
+[2026-04-27 01:05:58.022] [PRINT]   • Check the folder location
+[2026-04-27 01:05:58.022] [PRINT]   • Verify you have access to the files
+[2026-04-27 01:05:58.022] [PRINT] 
+[2026-04-27 01:05:58.022] [PRINT] ---
+[2026-04-27 01:05:58.022] [PRINT] *Original request: "Find project brief"*
+[2026-04-27 01:05:58.030] [PRINT] ---A4 calendar---
+[2026-04-27 01:05:58.038] [PRINT] **Search completed — No results found**
+[2026-04-27 01:05:58.038] [PRINT] 
+[2026-04-27 01:05:58.038] [PRINT] No calendar events were found matching your criteria.
+[2026-04-27 01:05:58.038] [PRINT] 
+[2026-04-27 01:05:58.038] [PRINT] **Filters used:**
+[2026-04-27 01:05:58.038] [PRINT]   • From: `2024-04-01T00:00:00Z`
+[2026-04-27 01:05:58.038] [PRINT]   • To: `2024-04-30T23:59:59Z`
+[2026-04-27 01:05:58.038] [PRINT]   • Search text: `team sync`
+[2026-04-27 01:05:58.038] [PRINT] 
+[2026-04-27 01:05:58.038] [PRINT] **Suggestions:**
+[2026-04-27 01:05:58.038] [PRINT]   • Try expanding the date range
+[2026-04-27 01:05:58.038] [PRINT]   • Check if the calendar is shared with you
+[2026-04-27 01:05:58.038] [PRINT] 
+[2026-04-27 01:05:58.038] [PRINT] ---
+[2026-04-27 01:05:58.038] [PRINT] *Original request: "Find team sync events"*
+[2026-04-27 01:05:58.046] [PRINT] ---A4 generic---
+[2026-04-27 01:05:58.058] [PRINT] **Search completed — No results found**
+[2026-04-27 01:05:58.058] [PRINT] 
+[2026-04-27 01:05:58.058] [PRINT] The operation completed but returned no data.
+[2026-04-27 01:05:58.058] [PRINT]   • Details: Nothing found
+[2026-04-27 01:05:58.058] [PRINT] 
+[2026-04-27 01:05:58.058] [PRINT] **Inputs used:**
+[2026-04-27 01:05:58.058] [PRINT]   • query_term: `widget`
+[2026-04-27 01:05:58.058] [PRINT] 
+[2026-04-27 01:05:58.058] [PRINT] ---
+[2026-04-27 01:05:58.058] [PRINT] *Original request: "find widget"*
+[2026-04-27 01:05:58.068] [PRINT] A4 PASS
+[2026-04-27 01:05:58.076] [PRINT] ---A4 + C1 integration: rate-limit on Gmail send---
+[2026-04-27 01:05:58.085] [PRINT] **Unable to complete your request**
+[2026-04-27 01:05:58.085] [PRINT] 
+[2026-04-27 01:05:58.085] [PRINT] **Issue:** Gmail API error: <HttpError 429 when requesting https://gmail.googleapis.com/gmail/v1/users/me/messages/send returned "Quota exceeded">
+[2026-04-27 01:05:58.085] [PRINT] **Suggestion:** Please wait a moment and try again.
+[2026-04-27 01:05:58.085] [PRINT] 
+[2026-04-27 01:05:58.085] [PRINT] 
+[2026-04-27 01:05:58.085] [PRINT] ---
+[2026-04-27 01:05:58.085] [PRINT] *Original request: "Send the report"*
+[2026-04-27 01:06:33.442] [PRINT] INPUT  (403): Gmail API error: <HttpError 403 when requesting https://gmail.googleapis.com/gma...
+[2026-04-27 01:06:33.466] [PRINT] OUTPUT          : Gmail API returned HTTP 403: You don't have permission to perform this action on the selected resource.
+[2026-04-27 01:06:33.477] [PRINT] INPUT  (404): Google Sheets API error: <HttpError 404 when requesting https://sheets.googleapi...
+[2026-04-27 01:06:33.487] [PRINT] OUTPUT          : Google Sheets API returned HTTP 404: The requested resource could not be found. It may have been moved or deleted.
+[2026-04-27 01:06:33.496] [PRINT] INPUT  (429): Calendar API error: <HttpError 429 when requesting https://www.googleapis.com/ca...
+[2026-04-27 01:06:33.503] [PRINT] OUTPUT          : Calendar API returned HTTP 429: The service rate limit was hit — too many requests in a short time.
+[2026-04-27 01:06:33.512] [PRINT] INPUT  (401): Drive API error: <HttpError 401 when requesting https://www.googleapis.com/drive...
+[2026-04-27 01:06:33.520] [PRINT] OUTPUT          : Drive API returned HTTP 401: Authentication failed — your access token is missing or expired.
+[2026-04-27 01:06:33.528] [PRINT] INPUT  (500): Google Docs API error: <HttpError 500 when requesting https://docs.googleapis.co...
+[2026-04-27 01:06:33.535] [PRINT] OUTPUT          : Google Docs API returned HTTP 500: The Google service hit an internal error. This usually clears up on its own.
+[2026-04-27 01:06:33.543] [PRINT] C1 passthrough plain text: Failed to parse PDF: malformed header
+[2026-04-27 01:06:33.551] [PRINT] C1 humanize_api_error PASS
+[2026-04-27 01:06:33.561] [PRINT] ---A4 gmail---
+[2026-04-27 01:06:33.571] [PRINT] **Search completed — No results found**
+[2026-04-27 01:06:33.571] [PRINT] 
+[2026-04-27 01:06:33.571] [PRINT] No emails were found matching your search criteria.
+[2026-04-27 01:06:33.571] [PRINT] 
+[2026-04-27 01:06:33.571] [PRINT] **Filters used:**
+[2026-04-27 01:06:33.571] [PRINT]   • Search query: `Q4 report`
+[2026-04-27 01:06:33.571] [PRINT]   • From: `alice@example.com`
+[2026-04-27 01:06:33.571] [PRINT]   • Subject: `urgent`
+[2026-04-27 01:06:33.571] [PRINT]   • After: `2024/04/01`
+[2026-04-27 01:06:33.571] [PRINT]   • Before: `2024/04/30`
+[2026-04-27 01:06:33.571] [PRINT]   • Labels: INBOX, IMPORTANT
+[2026-04-27 01:06:33.571] [PRINT] 
+[2026-04-27 01:06:33.571] [PRINT] **Suggestions:**
+[2026-04-27 01:06:33.571] [PRINT]   • Try broadening your search terms
+[2026-04-27 01:06:33.571] [PRINT]   • Check the date range if specified
+[2026-04-27 01:06:33.571] [PRINT]   • Verify the sender's email address spelling
+[2026-04-27 01:06:33.571] [PRINT] 
+[2026-04-27 01:06:33.571] [PRINT] ---
+[2026-04-27 01:06:33.571] [PRINT] *Original request: "Find Q4 emails from alice"*
+[2026-04-27 01:06:33.580] [PRINT] ---A4 drive---
+[2026-04-27 01:06:33.588] [PRINT] **Search completed — No results found**
+[2026-04-27 01:06:33.588] [PRINT] 
+[2026-04-27 01:06:33.588] [PRINT] No documents were found matching your search.
+[2026-04-27 01:06:33.588] [PRINT] 
+[2026-04-27 01:06:33.588] [PRINT] **Filters used:**
+[2026-04-27 01:06:33.588] [PRINT]   • Search term: `Project Brief`
+[2026-04-27 01:06:33.588] [PRINT]   • Folder: `Q4 2024`
+[2026-04-27 01:06:33.588] [PRINT]   • Type filter: `application/vnd.google-apps.document`
+[2026-04-27 01:06:33.588] [PRINT] 
+[2026-04-27 01:06:33.588] [PRINT] **Suggestions:**
+[2026-04-27 01:06:33.588] [PRINT]   • Try different keywords
+[2026-04-27 01:06:33.588] [PRINT]   • Check the folder location
+[2026-04-27 01:06:33.588] [PRINT]   • Verify you have access to the files
+[2026-04-27 01:06:33.588] [PRINT] 
+[2026-04-27 01:06:33.588] [PRINT] ---
+[2026-04-27 01:06:33.588] [PRINT] *Original request: "Find project brief"*
+[2026-04-27 01:06:33.598] [PRINT] ---A4 calendar---
+[2026-04-27 01:06:33.612] [PRINT] **Search completed — No results found**
+[2026-04-27 01:06:33.612] [PRINT] 
+[2026-04-27 01:06:33.612] [PRINT] No calendar events were found matching your criteria.
+[2026-04-27 01:06:33.612] [PRINT] 
+[2026-04-27 01:06:33.612] [PRINT] **Filters used:**
+[2026-04-27 01:06:33.612] [PRINT]   • From: `2024-04-01T00:00:00Z`
+[2026-04-27 01:06:33.612] [PRINT]   • To: `2024-04-30T23:59:59Z`
+[2026-04-27 01:06:33.612] [PRINT]   • Search text: `team sync`
+[2026-04-27 01:06:33.612] [PRINT] 
+[2026-04-27 01:06:33.612] [PRINT] **Suggestions:**
+[2026-04-27 01:06:33.612] [PRINT]   • Try expanding the date range
+[2026-04-27 01:06:33.612] [PRINT]   • Check if the calendar is shared with you
+[2026-04-27 01:06:33.612] [PRINT] 
+[2026-04-27 01:06:33.612] [PRINT] ---
+[2026-04-27 01:06:33.612] [PRINT] *Original request: "Find team sync events"*
+[2026-04-27 01:06:33.622] [PRINT] ---A4 generic---
+[2026-04-27 01:06:33.632] [PRINT] **Search completed — No results found**
+[2026-04-27 01:06:33.632] [PRINT] 
+[2026-04-27 01:06:33.632] [PRINT] The operation completed but returned no data.
+[2026-04-27 01:06:33.632] [PRINT]   • Details: Nothing found
+[2026-04-27 01:06:33.632] [PRINT] 
+[2026-04-27 01:06:33.632] [PRINT] **Inputs used:**
+[2026-04-27 01:06:33.632] [PRINT]   • query_term: `widget`
+[2026-04-27 01:06:33.632] [PRINT] 
+[2026-04-27 01:06:33.632] [PRINT] ---
+[2026-04-27 01:06:33.632] [PRINT] *Original request: "find widget"*
+[2026-04-27 01:06:33.643] [PRINT] A4 PASS
+[2026-04-27 01:06:33.656] [PRINT] ---A4 + C1 integration: rate-limit on Gmail send---
+[2026-04-27 01:06:33.667] [PRINT] **Unable to complete your request**
+[2026-04-27 01:06:33.667] [PRINT] 
+[2026-04-27 01:06:33.667] [PRINT] **Issue:** Gmail API returned HTTP 429: The service rate limit was hit — too many requests in a short time.
+[2026-04-27 01:06:33.667] [PRINT] **Suggestion:** Please wait a moment and try again.
+[2026-04-27 01:06:33.667] [PRINT] 
+[2026-04-27 01:06:33.667] [PRINT] 
+[2026-04-27 01:06:33.667] [PRINT] ---
+[2026-04-27 01:06:33.667] [PRINT] *Original request: "Send the report"*
+[2026-04-27 01:06:33.679] [PRINT] ---C1 curated passthrough---
+[2026-04-27 01:06:33.690] [PRINT] **Unable to complete your request**
+[2026-04-27 01:06:33.690] [PRINT] 
+[2026-04-27 01:06:33.690] [PRINT] **Issue:** Access to this spreadsheet was denied. You may only have view/read-only access. To write data you need Editor access — ask the sheet owner to change your permission from Viewer to Editor.
+[2026-04-27 01:06:33.690] [PRINT] **Suggestion:** If you cannot adjust the access yourself, contact the resource owner or your administrator.
+[2026-04-27 01:06:33.690] [PRINT] 
+[2026-04-27 01:06:33.690] [PRINT] 
+[2026-04-27 01:06:33.690] [PRINT] ---
+[2026-04-27 01:06:33.690] [PRINT] *Original request: "Write data to sheet"*
+[2026-04-27 01:06:33.699] [PRINT] Integration PASS
+[2026-04-27 01:06:33.708] [PRINT] ============================================================
+[2026-04-27 01:06:33.716] [PRINT] ALL A4 + C1 SMOKE TESTS PASS
+[2026-04-27 01:23:32.868] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-27 01:23:32.998] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-27 01:23:33.011] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-27 01:23:33.022] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-27 01:23:33.034] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-27 01:23:33.049] [PRINT] 
+[2026-04-27 01:23:33.049] [PRINT] ============================================================
+[2026-04-27 01:23:33.049] [PRINT] 1. _resolve_display_context
+[2026-04-27 01:23:33.049] [PRINT] ============================================================
+[2026-04-27 01:23:33.060] [PRINT]    message_id resolved: Q4 Report
+[2026-04-27 01:23:33.072] [PRINT]    document_id resolved (fallback to 'name'): Q4 Plan
+[2026-04-27 01:23:33.085] [PRINT]    unknown ID → empty dict (no false-positive)
+[2026-04-27 01:23:33.096] [PRINT] 
+[2026-04-27 01:23:33.096] [PRINT] ============================================================
+[2026-04-27 01:23:33.096] [PRINT] 2. _format_id_with_label
+[2026-04-27 01:23:33.096] [PRINT] ============================================================
+[2026-04-27 01:23:33.108] [PRINT]    resolved label: - **Document:** Q4 Plan (`DOC_222`)
+[2026-04-27 01:23:33.121] [PRINT]    missing label fallback: - **Document ID:** DOC_999
+[2026-04-27 01:23:33.132] [PRINT]    empty inputs → empty string
+[2026-04-27 01:23:33.142] [PRINT] 
+[2026-04-27 01:23:33.142] [PRINT] ============================================================
+[2026-04-27 01:23:33.142] [PRINT] 3. _build_rich_approval_message
+[2026-04-27 01:23:33.142] [PRINT] ============================================================
+[2026-04-27 01:23:33.153] [PRINT]    reply_to_email shows subject + sender (not raw ID)
+[2026-04-27 01:23:33.162] [PRINT]    delete_event resolves event_id → summary
+[2026-04-27 01:23:33.173] [PRINT]    write_delivery_order_data resolves sheet_id → title + summarises orders
+[2026-04-27 01:23:33.183] [PRINT] 
+[2026-04-27 01:23:33.183] [PRINT] ============================================================
+[2026-04-27 01:23:33.183] [PRINT] 4. _build_cancel_summary
+[2026-04-27 01:23:33.183] [PRINT] ============================================================
+[2026-04-27 01:23:33.194] [PRINT]    cancel reply_to_email shows original subject
+[2026-04-27 01:23:33.206] [PRINT]    cancel delete_event shows event summary
+[2026-04-27 01:23:33.219] [PRINT] 
+[2026-04-27 01:23:33.219] [PRINT] ============================================================
+[2026-04-27 01:23:33.219] [PRINT] 5. _build_disambiguation_message
+[2026-04-27 01:23:33.219] [PRINT] ============================================================
+[2026-04-27 01:23:33.233] [PRINT]    doc-list: ID hidden, names shown, mimeType labeled
+[2026-04-27 01:23:33.245] [PRINT]    email-list: subject + from + body preview
+[2026-04-27 01:23:33.254] [PRINT] 
+[2026-04-27 01:23:33.254] [PRINT] ============================================================
+[2026-04-27 01:23:33.254] [PRINT] 6. _format_no_results_response
+[2026-04-27 01:23:33.254] [PRINT] ============================================================
+[2026-04-27 01:23:33.265] [PRINT]    gmail no-results renders from/subject/date/keywords
+[2026-04-27 01:23:33.277] [PRINT]    drive no-results renders search_term + folder + mime_type
+[2026-04-27 01:23:33.287] [PRINT] 
+[2026-04-27 01:23:33.287] [PRINT] ============================================================
+[2026-04-27 01:23:33.287] [PRINT] 7-8. error helpers
+[2026-04-27 01:23:33.287] [PRINT] ============================================================
+[2026-04-27 01:23:33.299] [PRINT]    raw 403: → 'Gmail API returned HTTP 403: You don't have permission to perform this action on the selected resource.'
+[2026-04-27 01:23:33.310] [PRINT]    curated sub-agent message: verbatim ✓
+[2026-04-27 01:23:33.321] [PRINT]    raw 404: → 'Calendar API returned HTTP 404: The requested resource could not be found. It may have been moved or deleted.'
+[2026-04-27 01:23:33.333] [PRINT] 
+[2026-04-27 01:23:33.333] [PRINT] ============================================================
+[2026-04-27 01:23:33.333] [PRINT] 9. format_step (new templates)
+[2026-04-27 01:23:33.333] [PRINT] ============================================================
+[2026-04-27 01:23:33.344] [PRINT]    delivery-order search: 'Found 2 email(s) with 3 attachment(s) downloaded' (no temp_dir leak)
+[2026-04-27 01:23:33.356] [PRINT]    download_attachment: 'Downloaded **DO-001.pdf** (151KB)' (no save_path leak)
+[2026-04-27 01:23:33.366] [PRINT]    save_attachment_metadata: 'Attachment metadata saved.' (no inserted_id leak)
+[2026-04-27 01:23:33.378] [PRINT]    parse_file: 'Parsed **25** row(s) across **4** column(s)
+[2026-04-27 01:23:33.378] [PRINT] Columns: A, B, C, D'
+[2026-04-27 01:23:33.391] [PRINT]    smart_column_mapping: 'Created **3** column mapping(s) — 3 high-confidence (accuracy ~92%)
+[2026-04-27 01:23:33.391] [PRINT] 
+[2026-04-27 01:23:33.391] [PRINT] - `a` → `X`
+[2026-04-27 01:23:33.391] [PRINT] - `b` → `Y`
+[2026-04-27 01:23:33.391] [PRINT] - `c` → `Z`'
+[2026-04-27 01:23:33.402] [PRINT]    transform_data: 'Transformed **25** row(s) and **4** column(s)
+[2026-04-27 01:23:33.402] [PRINT] Kept 4 of 5 source column(s) after mapping'
+[2026-04-27 01:23:33.413] [PRINT]    upload_mapped_data: 'Appended **25** row(s) to **Orders** tab
+[2026-04-27 01:23:33.413] [PRINT] Sheet: https://docs.google.com/spreadsheets/d/S1/edit'
+[2026-04-27 01:23:33.424] [PRINT]    update_by_date_match: 'Updated **5** row(s) by date match (2 not matched) in **Tracker** tab
+[2026-04-27 01:23:33.424] [PRINT] Sheet: https://docs.google.com/spreadsheets/d/S1/edit'
+[2026-04-27 01:23:33.435] [PRINT]    create_sheet: 'Created spreadsheet **Quarterly Plan**: https://docs.google.com/spreadsheets/d/S2/edit'
+[2026-04-27 01:23:33.446] [PRINT]    extract_template_format: 
+[2026-04-27 01:23:33.446] [PRINT] Template analysed — found 3 placeholder(s):
+[2026-04-27 01:23:33.446] [PRINT] - `NAME`
+[2026-04-27 01:23:33.446] [PRINT] - `DATE`
+[2026-04-27 01:23:33.446] [PRINT] - `AMOUNT`
+[2026-04-27 01:23:33.455] [PRINT]    add_text: 'Added text to document: https://docs.google.com/document/d/DOC_1/edit' (no char count)
+[2026-04-27 01:23:33.466] [PRINT]    create_doc_with_content: 'Created **Meeting Notes** with content: https://docs.google.com/document/d/X/edit'
+[2026-04-27 01:23:33.476] [PRINT] 
+[2026-04-27 01:23:33.476] [PRINT] ============================================================
+[2026-04-27 01:23:33.488] [PRINT] ALL SMOKE TESTS PASSED
+[2026-04-27 01:23:33.497] [PRINT] ============================================================
