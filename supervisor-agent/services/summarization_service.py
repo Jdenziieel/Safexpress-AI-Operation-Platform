@@ -552,7 +552,7 @@ class SummarizationService:
                         "The operation completed but returned no data."
                     )
                     if message:
-                        lines.append(f"  • Details: {message}")
+                        lines.append(f"- Details: {message}")
                     # Generic input dump for unknown tools — show top-level
                     # scalar inputs so the user can still see what was
                     # searched / requested.
@@ -578,7 +578,7 @@ class SummarizationService:
         lines: List[str] = []
         query = inputs.get("query") or inputs.get("search_query")
         if query:
-            lines.append(f"  • Search query: `{query}`")
+            lines.append(f"- Search query: `{query}`")
         for field, label in (
             ("from", "From"),
             ("from_email", "From"),
@@ -592,19 +592,19 @@ class SummarizationService:
         ):
             v = inputs.get(field)
             if v:
-                lines.append(f"  • {label}: `{v}`")
+                lines.append(f"- {label}: `{v}`")
         labels = inputs.get("label_ids") or inputs.get("labels")
         if labels:
             if isinstance(labels, list):
-                lines.append(f"  • Labels: {', '.join(str(l) for l in labels)}")
+                lines.append(f"- Labels: {', '.join(str(l) for l in labels)}")
             else:
-                lines.append(f"  • Labels: {labels}")
+                lines.append(f"- Labels: {labels}")
         keywords = inputs.get("keywords")
         if keywords:
             if isinstance(keywords, list):
-                lines.append(f"  • Keywords: {', '.join(str(k) for k in keywords)}")
+                lines.append(f"- Keywords: {', '.join(str(k) for k in keywords)}")
             else:
-                lines.append(f"  • Keywords: {keywords}")
+                lines.append(f"- Keywords: {keywords}")
         return lines
 
     @staticmethod
@@ -623,7 +623,7 @@ class SummarizationService:
         ):
             v = inputs.get(field)
             if v:
-                lines.append(f"  • {label}: `{v}`")
+                lines.append(f"- {label}: `{v}`")
         return lines
 
     @staticmethod
@@ -642,7 +642,7 @@ class SummarizationService:
         ):
             v = inputs.get(field)
             if v:
-                lines.append(f"  • {label}: `{v}`")
+                lines.append(f"- {label}: `{v}`")
         return lines
 
     @staticmethod
@@ -673,45 +673,45 @@ class SummarizationService:
 
         if keyword_count > 1:
             hints.append(
-                "  • Multiple keywords must ALL match — try removing the most specific one."
+                "- Multiple keywords must ALL match — try removing the most specific one."
             )
 
         if inputs.get("subject"):
             hints.append(
-                "  • Subject filter is exact — try broadening to a sender or keyword instead."
+                "- Subject filter is exact — try broadening to a sender or keyword instead."
             )
 
         if inputs.get("from") or inputs.get("from_email"):
             hints.append(
-                "  • Double-check the sender's email address for a typo or wrong domain."
+                "- Double-check the sender's email address for a typo or wrong domain."
             )
 
         if (inputs.get("after") or inputs.get("date_from")) and (
             inputs.get("before") or inputs.get("date_to")
         ):
             hints.append(
-                "  • Try widening the date range — the email may fall outside this window."
+                "- Try widening the date range — the email may fall outside this window."
             )
         elif inputs.get("after") or inputs.get("date_from"):
             hints.append(
-                "  • Try removing the start-date filter to include older messages."
+                "- Try removing the start-date filter to include older messages."
             )
         elif inputs.get("before") or inputs.get("date_to"):
             hints.append(
-                "  • Try removing the end-date filter to include newer messages."
+                "- Try removing the end-date filter to include newer messages."
             )
 
         if inputs.get("has_attachment"):
             hints.append(
-                "  • Searching attachments only — try without that filter if unsure."
+                "- Searching attachments only — try without that filter if unsure."
             )
 
         if not hints:
             hints.extend(
                 [
-                    "  • Try broadening your search terms.",
-                    "  • Check the date range if specified.",
-                    "  • Verify the sender's email address spelling.",
+                    "- Try broadening your search terms.",
+                    "- Check the date range if specified.",
+                    "- Verify the sender's email address spelling.",
                 ]
             )
         return hints
@@ -729,22 +729,22 @@ class SummarizationService:
 
         if has_text:
             hints.append(
-                "  • Free-text search matches event titles and descriptions only — try a different keyword."
+                "- Free-text search matches event titles and descriptions only — try a different keyword."
             )
         if has_range:
             hints.append(
-                "  • Try expanding the date range — the event may fall outside it."
+                "- Try expanding the date range — the event may fall outside it."
             )
         if cal_id and cal_id != "primary":
             hints.append(
-                "  • Make sure you have access to this calendar and it's still shared."
+                "- Make sure you have access to this calendar and it's still shared."
             )
 
         if not hints:
             hints.extend(
                 [
-                    "  • Try expanding the date range.",
-                    "  • Check if the calendar is shared with you.",
+                    "- Try expanding the date range.",
+                    "- Check if the calendar is shared with you.",
                 ]
             )
         return hints
@@ -759,27 +759,27 @@ class SummarizationService:
 
         if term and len(str(term).split()) > 1:
             hints.append(
-                "  • Drive search matches partial names — try a single distinctive word from the title."
+                "- Drive search matches partial names — try a single distinctive word from the title."
             )
         elif term:
             hints.append(
-                "  • Drive name search is case-insensitive but exact — check spelling."
+                "- Drive name search is case-insensitive but exact — check spelling."
             )
         if folder:
             hints.append(
-                "  • The file may sit in a different folder — try removing the folder filter."
+                "- The file may sit in a different folder — try removing the folder filter."
             )
         if mime:
             hints.append(
-                "  • Type filter is strict — try without it (the file may be a different format)."
+                "- Type filter is strict — try without it (the file may be a different format)."
             )
 
         if not hints:
             hints.extend(
                 [
-                    "  • Try different keywords.",
-                    "  • Check the folder location.",
-                    "  • Verify you have access to the files.",
+                    "- Try different keywords.",
+                    "- Check the folder location.",
+                    "- Verify you have access to the files.",
                 ]
             )
         return hints
@@ -806,7 +806,7 @@ class SummarizationService:
             val_str = str(v)
             if len(val_str) > 120:
                 val_str = val_str[:117] + "..."
-            lines.append(f"  • {k}: `{val_str}`")
+            lines.append(f"- {k}: `{val_str}`")
         return lines
 
     @staticmethod

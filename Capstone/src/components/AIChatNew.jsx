@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { 
   Send, 
   Sparkles, 
@@ -13,8 +14,6 @@ import {
   CheckCircle,
   XCircle,
   User,
-  Mail,
-  Calendar,
   Bot,
   Menu,
   ListTodo,
@@ -39,67 +38,6 @@ import { supervisorApi } from "../api";
 import QuotaWidget from "./QuotaWidget";
 import QuotaExceededModal from "./QuotaExceededModal";
 import LLMErrorModal from "./LLMErrorModal";
-
-// Helper function to parse email results from assistant response
-function parseEmailResults(content) {
-  try {
-    const jsonMatch = content.match(/\{[\s\S]*"emails"[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.emails && Array.isArray(parsed.emails)) {
-        return parsed.emails;
-      }
-    }
-    
-    const emailPattern = /\{\s*"message_id"[\s\S]*?"subject"[\s\S]*?"from"[\s\S]*?\}/g;
-    const matches = content.match(emailPattern);
-    if (matches) {
-      return matches.map(match => {
-        try {
-          return JSON.parse(match);
-        } catch {
-          return null;
-        }
-      }).filter(Boolean);
-    }
-  } catch (e) {
-    console.log("Could not parse emails from response:", e);
-  }
-  return null;
-}
-
-// Email Card Component
-function EmailCard({ email }) {
-  return (
-    <div className="email-card">
-      <div className="email-card-header">
-        <Mail size={18} className="email-icon" />
-        <div className="email-card-content">
-          <div className="email-subject">
-            {email.subject || 'No Subject'}
-          </div>
-          <div className="email-meta">
-            <div className="email-from">
-              <User size={14} />
-              <span>{email.from || 'Unknown'}</span>
-            </div>
-            {email.date && (
-              <div className="email-date">
-                <Calendar size={14} />
-                <span>{new Date(email.date).toLocaleDateString()}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      {email.body && (
-        <div className="email-body">
-          {email.body.substring(0, 200)}{email.body.length > 200 ? '...' : ''}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Progress Step Component
 function ProgressStep({ step, isActive, isCompleted }) {
@@ -1397,8 +1335,6 @@ function AIChatNew() {
               ) : (
                 <>
                   {messages.map((message) => {
-                    const emails = message.role === "assistant" ? parseEmailResults(message.content) : null;
-                    
                     return (
                       <div
                         key={message.id}
@@ -1419,27 +1355,21 @@ function AIChatNew() {
                               fileSize={message.file_size}
                             />
                           )}
-                          {emails && emails.length > 0 ? (
-                            <>
-                              <div className="email-results-header">
-                                📧 Found {emails.length} email{emails.length !== 1 ? 's' : ''}
-                              </div>
-                              {emails.map((email, idx) => (
-                                <EmailCard key={email.message_id || idx} email={email} />
-                              ))}
-                            </>
-                          ) : (
-                            <>
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {message.content}
-                              </ReactMarkdown>
-                              {message.role === "assistant" &&
-                                isStreaming &&
-                                message.content && (
-                                  <span className="cursor-blink">|</span>
-                                )}
-                            </>
-                          )}
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkBreaks]}
+                            components={{
+                              a: ({ node, ...props }) => (
+                                <a {...props} target="_blank" rel="noreferrer noopener" />
+                              ),
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                          {message.role === "assistant" &&
+                            isStreaming &&
+                            message.content && (
+                              <span className="cursor-blink">|</span>
+                            )}
                           {/* Show token usage for execution completion messages */}
                           {message.tokenUsage && message.tokenUsage.total_tokens > 0 && (
                             <div className="message-token-usage">
