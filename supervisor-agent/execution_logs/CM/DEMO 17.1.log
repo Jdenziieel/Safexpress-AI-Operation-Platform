@@ -1,0 +1,424 @@
+[2026-04-26 05:07:37.262] [INFO] [req_20260425205843_a9a97da4] [T:e15b2105] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-26 05:07:37.267] [INFO] [req_20260425205843_a9a97da4] [T:e15b2105] ← RESPONSE: 200 (5ms)
+[2026-04-26 05:07:37.267] [INFO] [req_20260425205843_a9a97da4] [T:e15b2105] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 05:07:58.849] [INFO] [req_20260425205843_a9a97da4] [T:e15b2105] → REQUEST: POST /threads  | {"query": null}
+[2026-04-26 05:07:58.850] [INFO] [req_20260425205843_a9a97da4] [T:new]   STEP [create_thread]: user=bfc86262-160a-4d55-a8b5-13de48606736, has_message=True
+[2026-04-26 05:08:03.304] [PRINT]  Created thread: bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8 for user: bfc86262-160a-4d55-a8b5-13de48606736
+[2026-04-26 05:08:03.317] [PRINT]  Created new thread: bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8 for user: bfc86262-160a-4d55-a8b5-13de48606736 with title: None
+[2026-04-26 05:08:03.331] [PRINT] Saved conversation state to SQLite: bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8
+[2026-04-26 05:08:03.346] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:08:03.356] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8
+[2026-04-26 05:08:03.366] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:08:03.378] [PRINT]   User: Create a Google Calendar event named "Ops Recovery Workshop" for tomorrow (45 minutes), prepare a Google Doc agenda with...
+[2026-04-26 05:08:03.388] [PRINT]   ConversationState:
+[2026-04-26 05:08:03.398] [PRINT]     extracted_info: {}
+[2026-04-26 05:08:03.405] [PRINT]     missing_fields: []
+[2026-04-26 05:08:03.414] [PRINT]     intent: null
+[2026-04-26 05:08:03.422] [PRINT]     clarification_question: null
+[2026-04-26 05:08:03.430] [PRINT]     ready_for_execution: false
+[2026-04-26 05:08:03.438] [PRINT]     execution_summary: null
+[2026-04-26 05:08:03.447] [PRINT]     execution_mode: "standard"
+[2026-04-26 05:08:03.456] [PRINT]     execution_history: []
+[2026-04-26 05:08:03.463] [PRINT]     completed_tasks: []
+[2026-04-26 05:08:03.471] [PRINT]     has_executed: false
+[2026-04-26 05:08:03.478] [PRINT]     last_executed_at: null
+[2026-04-26 05:08:03.486] [PRINT]     last_execution_status: null
+[2026-04-26 05:08:03.493] [PRINT]     last_execution_message: null
+[2026-04-26 05:08:03.501] [PRINT]     executing: false
+[2026-04-26 05:08:03.510] [PRINT]     pending_actions: []
+[2026-04-26 05:08:03.522] [PRINT]     workflow_paused: false
+[2026-04-26 05:08:03.533] [PRINT]     remaining_steps: []
+[2026-04-26 05:08:03.544] [PRINT]     workflow_context: null
+[2026-04-26 05:08:03.555] [PRINT]     disambiguation_options: []
+[2026-04-26 05:08:03.567] [PRINT]     disambiguation_variable: null
+[2026-04-26 05:08:03.578] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:08:03.590] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8, msg=Create a Google Calendar event named "Ops Recovery Workshop" for tomorrow (45 mi
+[2026-04-26 05:08:03.592] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 66, "total": 66, "max": 2000}
+[2026-04-26 05:08:03.602] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-26 05:08:03.603] [PRINT] 
+[2026-04-26 05:08:03.603] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:08:03.613] [PRINT] TIER 0.5 — Building prompt
+[2026-04-26 05:08:03.630] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:08:03.641] [PRINT]    bot_signal : (none)
+[2026-04-26 05:08:03.654] [PRINT]    state_block: (none)
+[2026-04-26 05:08:03.665] [PRINT]    file_context: (none)
+[2026-04-26 05:08:03.676] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:08:07.503] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=756 out=118 | $0.0002 | 3789ms | cumulative: in=756 out=118 total=874 $0.0002
+[2026-04-26 05:08:07.513] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting multiple actions to be performed, including creating a calendar event, preparing a document, generating a tracker sheet, and drafting follow-up emails.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting multiple actions to be performed, including creating a calendar event, preparing a document, generating a tracker sheet, and drafting follow-up emails.\",\n    \"query_scope\":
+[2026-04-26 05:08:07.514] [INFO] [-]   STEP [tier0.5]: enrichment detected  | {"tasks": ["create_calendar_event", "prepare_document", "generate_tracker_sheet", "draft_follow_up_emails"], "file_context_needed": false}
+[2026-04-26 05:08:07.514] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": true}
+[2026-04-26 05:08:07.517] [PRINT] 
+[2026-04-26 05:08:07.517] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:08:07.528] [PRINT] ENRICHMENT PHASE — Generating/transforming content
+[2026-04-26 05:08:07.539] [PRINT]    Tasks: ['create_calendar_event', 'prepare_document', 'generate_tracker_sheet', 'draft_follow_up_emails']
+[2026-04-26 05:08:07.549] [PRINT]    File context needed: False
+[2026-04-26 05:08:07.562] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:08:07.573] [INFO] [-]   STEP [enrichment]: starting enrichment phase  | {"tasks": ["create_calendar_event", "prepare_document", "generate_tracker_sheet", "draft_follow_up_emails"]}
+[2026-04-26 05:08:10.156] [PRINT]  OK [enrichment] gpt-4o-mini | content_enrichment | in=304 out=61 | $0.0001 | 2548ms | cumulative: in=1060 out=179 total=1239 $0.0003
+[2026-04-26 05:08:10.172] [INFO] [-]   STEP [enrichment]: LLM enrichment complete
+    ↳ {"tasks": ["generate_tracker_sheet", "create_calendar_event", "draft_follow_up_emails", "prepare_document"], "original_len": 311, "enriched_len": 311, "duration_ms": 2547.58, "has_passthrough_vars": false}
+[2026-04-26 05:08:10.173] [PRINT] 
+[2026-04-26 05:08:10.173] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:08:10.183] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-26 05:08:10.191] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:08:10.202] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-26 05:08:10.203] [PRINT] 
+[2026-04-26 05:08:10.203] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 05:08:10.212] [PRINT] BUILDING LLM CONTEXT
+[2026-04-26 05:08:10.223] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 05:08:10.233] [PRINT]    Summary: none
+[2026-04-26 05:08:10.242] [PRINT]    Recent messages: 1
+[2026-04-26 05:08:10.251] [PRINT]       USER: Create a Google Calendar event named "Ops Recovery Workshop" for tomorrow (45 mi...
+[2026-04-26 05:08:10.261] [PRINT] 
+[2026-04-26 05:08:10.261] [PRINT]    Final context: 338 chars (~84 tokens)
+[2026-04-26 05:08:10.273] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 05:08:10.283] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=1, ~84 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 338, "context_tokens_est": 84}
+[2026-04-26 05:08:10.283] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-26 05:08:11.534] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1709 out=47 | $0.0003 | 1226ms | cumulative: in=2769 out=226 total=2995 $0.0006
+[2026-04-26 05:08:11.557] [PRINT]    relevant_agents: ['calendar_agent', 'docs_agent', 'sheets_agent', 'gmail_agent', 'llm_tool']
+[2026-04-26 05:08:11.567] [PRINT]    capabilities (top-level): ['**CALENDAR_AGENT:**', '**DOCS_AGENT:**', '**SHEETS_AGENT:**', '**GMAIL_AGENT:**', '**LLM_TOOL:**']
+[2026-04-26 05:08:11.576] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["calendar_agent", "docs_agent", "sheets_agent", "gmail_agent", "llm_tool"]}
+[2026-04-26 05:08:11.576] [PRINT]    user_prompt (673 chars):
+[2026-04-26 05:08:11.586] [PRINT]      RECENT CONVERSATION:
+[2026-04-26 05:08:11.595] [PRINT]      USER: Create a Google Calendar event named "Ops Recovery Workshop" for tomorrow (45 minutes), prepare a Google Doc agenda with owners per topic, and after the event, generate an action tracker sheet with Task, Owner, Due Date, and Status. Draft follow-up emails to all attendees summarizing commitments and deadlines.
+[2026-04-26 05:08:11.604] [PRINT]      
+[2026-04-26 05:08:11.614] [PRINT]      CURRENT USER MESSAGE: Create a Google Calendar event named "Ops Recovery Workshop" for tomorrow (45 minutes), prepare a Google Doc agenda with owners per topic,...
+[2026-04-26 05:08:11.623] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:08:15.228] [PRINT]  OK [1] gpt-4.1-mini | tier_1_full_analysis | in=2465 out=323, cached=1024 | $0.0012 | 3572ms | cumulative: in=5234 out=549 total=5783 $0.0017
+[2026-04-26 05:08:15.236] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "compound_task", "missing_fields": ["event start time (exact time tomorrow)", "agenda topics and owners", "email recipients (attendees' emails)"], "clarification_question": "To create the calendar event, what exact start time tomorrow should I use? For the agenda document, could you please provide the topics and their respective owners? Also, do you have the email addresses of the attendees to send the follow-up emails after the e
+[2026-04-26 05:08:15.238] [INFO] [-]   ANALYSIS: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False  | {"missing_fields": ["event start time (exact time tomorrow)", "agenda topics and owners", "email recipients (attendees' emails)"]}
+[2026-04-26 05:08:15.238] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.NEEDS_CLARIFICATION
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "N/A", "missing_fields": ["event start time (exact time tomorrow)", "agenda topics and owners", "email recipients (attendees' emails)"], "clarification_question": "To create the calendar event, what exact start time tomorrow should I use? For the agenda document, could you please provide the topics and their respective owners? Also, do you have the email addresses of the attendees to send the follow-up emails after the event?", "r
+[2026-04-26 05:08:15.239] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 125, "total": 191, "max": 2000, "response_preview": "To create the calendar event, what exact start time tomorrow should I use? For the agenda document, could you please provide the topics and their respective owners? Also, do you have the email address..."}
+[2026-04-26 05:08:15.273] [INFO] [req_20260425210803_88fa4d58] [T:new]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 125, "total": 191, "max": 2000, "response_preview": "To create the calendar event, what exact start time tomorrow should I use? For the agenda document, could you please provide the topics and their respective owners? Also, do you have the email address..."}
+[2026-04-26 05:08:15.298] [PRINT] 
+[2026-04-26 05:08:15.298] [PRINT] ============================================================
+[2026-04-26 05:08:15.307] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-26 05:08:15.315] [PRINT] ============================================================
+[2026-04-26 05:08:15.322] [PRINT]   LLM calls:        4
+[2026-04-26 05:08:15.330] [PRINT]   Total input:      5,234 tokens
+[2026-04-26 05:08:15.338] [PRINT]   Total output:     549 tokens
+[2026-04-26 05:08:15.345] [PRINT]   Total tokens:     5,783 tokens
+[2026-04-26 05:08:15.353] [PRINT]   Cached tokens:    1,024 (19.6% of input)
+[2026-04-26 05:08:15.361] [PRINT]   Estimated cost:   $0.0017
+[2026-04-26 05:08:15.369] [PRINT]   Total duration:   11967ms (12.0s)
+[2026-04-26 05:08:15.376] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-26 05:08:15.383] [PRINT]   Breakdown by call:
+[2026-04-26 05:08:15.390] [PRINT]     1. gpt-4o-mini      in=756    out=118   $0.0002 3789ms
+[2026-04-26 05:08:15.399] [PRINT]     2. gpt-4o-mini      in=304    out=61    $0.0001 2548ms
+[2026-04-26 05:08:15.406] [PRINT]     3. gpt-4o-mini      in=1709   out=47    $0.0003 1226ms
+[2026-04-26 05:08:15.413] [PRINT]     4. gpt-4.1-mini     in=2465   out=323   (cached=1024) $0.0012 3572ms
+[2026-04-26 05:08:15.420] [PRINT] ============================================================
+[2026-04-26 05:08:18.650] [INFO] [req_20260425210803_88fa4d58] [T:new] ← RESPONSE: 200 (19801ms)
+[2026-04-26 05:08:18.650] [INFO] [req_20260425210803_88fa4d58] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 05:11:04.842] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8
+[2026-04-26 05:11:04.879] [INFO] [req_20260425210803_88fa4d58] [T:new] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8/messages  | {"query": null}
+[2026-04-26 05:11:09.331] [INFO] [req_20260425211109_0ed95970] [T:a0872ab8]   USER MSG: "1. Start time is 1:00 PM.
+2. For the agenda document, you provide the topics and their respective ow..."
+[2026-04-26 05:11:09.334] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:11:09.343] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8
+[2026-04-26 05:11:09.353] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:11:09.364] [PRINT]   User: 1. Start time is 1:00 PM.
+[2026-04-26 05:11:09.364] [PRINT] 2. For the agenda document, you provide the topics and their respective owners.
+[2026-04-26 05:11:09.364] [PRINT] 3. Email addre...
+[2026-04-26 05:11:09.378] [PRINT]   ConversationState:
+[2026-04-26 05:11:09.390] [PRINT]     extracted_info: {"_cached_tool_filter": {"calendar_agent": ["create_event"], "docs_agent": ["create_doc", "list_my_docs"], "sheets_agent": ["create_sheet", "append_rows", "get_sheet_headers", "ensure_headers"], "gmail_agent": ["create_draft_email", "send_draft_email", "search_drafts"]}, "event_name": "Ops Recovery Workshop", "event_duration_minutes": 45, "agenda_doc_title": "Ops Recovery Workshop Agenda", "action_tracker_sheet_title": "Ops Recovery Workshop Action Tracker", "email_subject": "Follow-up: Ops Recovery Workshop Commitments and Deadlines"}
+[2026-04-26 05:11:09.401] [PRINT]     missing_fields: ["event start time (exact time tomorrow)", "agenda topics and owners", "email recipients (attendees' emails)"]
+[2026-04-26 05:11:09.411] [PRINT]     intent: "needs_clarification"
+[2026-04-26 05:11:09.424] [PRINT]     clarification_question: "To create the calendar event, what exact start time tomorrow should I use? For the agenda document, could you please provide the topics and their respective owners? Also, do you have the email addresses of the attendees to send the follow-up emails after the event?"
+[2026-04-26 05:11:09.434] [PRINT]     ready_for_execution: false
+[2026-04-26 05:11:09.444] [PRINT]     execution_summary: "Create a calendar event 'Ops Recovery Workshop' tomorrow for 45 minutes, prepare an agenda document with owners per topic, generate an action tracker sheet after the event, and draft follow-up emails summarizing commitments and deadlines."
+[2026-04-26 05:11:09.455] [PRINT]     execution_mode: "standard"
+[2026-04-26 05:11:09.465] [PRINT]     execution_history: []
+[2026-04-26 05:11:09.476] [PRINT]     completed_tasks: []
+[2026-04-26 05:11:09.486] [PRINT]     has_executed: false
+[2026-04-26 05:11:09.496] [PRINT]     last_executed_at: null
+[2026-04-26 05:11:09.508] [PRINT]     last_execution_status: null
+[2026-04-26 05:11:09.518] [PRINT]     last_execution_message: null
+[2026-04-26 05:11:09.528] [PRINT]     executing: false
+[2026-04-26 05:11:09.538] [PRINT]     pending_actions: []
+[2026-04-26 05:11:09.548] [PRINT]     workflow_paused: false
+[2026-04-26 05:11:09.559] [PRINT]     remaining_steps: []
+[2026-04-26 05:11:09.569] [PRINT]     workflow_context: null
+[2026-04-26 05:11:09.581] [PRINT]     disambiguation_options: []
+[2026-04-26 05:11:09.591] [PRINT]     disambiguation_variable: null
+[2026-04-26 05:11:09.600] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:11:09.610] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8, msg=1. Start time is 1:00 PM.
+2. For the agenda document, you provide the topics and
+[2026-04-26 05:11:09.611] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 62, "total": 253, "max": 2000}
+[2026-04-26 05:11:09.619] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check
+    ↳ {"extracted_info": {"_cached_tool_filter": {"calendar_agent": ["create_event"], "docs_agent": ["create_doc", "list_my_docs"], "sheets_agent": ["create_sheet", "append_rows", "get_sheet_headers", "ensure_headers"], "gmail_agent": ["create_draft_email", "send_draft_email", "search_drafts"]}, "event_name": "Ops Recovery Workshop", "event_duration_minutes": 45, "agenda_doc_title": "Ops Recovery Workshop Agenda", "action_tracker_sheet_title": "Ops Recovery Workshop Action Tracker", "email_subject": "
+[2026-04-26 05:11:09.619] [PRINT] 
+[2026-04-26 05:11:09.619] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:11:09.628] [PRINT] TIER 0.5 — Building prompt
+[2026-04-26 05:11:09.638] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:11:09.648] [PRINT]    bot_signal : PHASE: Awaiting answer — bot asked: "To create the calendar event, what exact start time tomorrow should I use? For the agenda document, could you please provide the topics and their respective owners? Also, do you have the email addresses of the attendees to send the follow-up emails after the event?"
+[2026-04-26 05:11:09.658] [PRINT]    state_block: TASK FIELDS: [_cached_tool_filter, event_name, event_duration_minutes, agenda_doc_title, action_tracker_sheet_title, email_subject] — missing: [event start time (exact time tomorrow)]
+[2026-04-26 05:11:09.670] [PRINT]    file_context: (none)
+[2026-04-26 05:11:09.679] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:11:12.146] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=989 out=45 | $0.0002 | 2426ms | cumulative: in=989 out=45 total=1034 $0.0002
+[2026-04-26 05:11:12.158] [INFO] [-]   STEP [tier0.5]: category: FOLLOWUP_ANSWER, confidence: high
+    ↳ {"reasoning": "The user provided specific answers to the bot's questions regarding the event start time and email addresses of attendees.", "raw_response": "{\n    \"category\": \"followup_answer\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user provided specific answers to the bot's questions regarding the event start time and email addresses of attendees.\"\n}"}
+[2026-04-26 05:11:12.158] [INFO] [-]   STEP [tier0.5]: complex followup answer — proceeding to full analysis
+[2026-04-26 05:11:12.158] [PRINT] 
+[2026-04-26 05:11:12.158] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:11:12.168] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-26 05:11:12.178] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:11:12.188] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-26 05:11:12.189] [PRINT] 
+[2026-04-26 05:11:12.189] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 05:11:12.198] [PRINT] BUILDING LLM CONTEXT
+[2026-04-26 05:11:12.209] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 05:11:12.219] [PRINT]    Summary: none
+[2026-04-26 05:11:12.228] [PRINT]    Recent messages: 3
+[2026-04-26 05:11:12.239] [PRINT]       USER: Create a Google Calendar event named "Ops Recovery Workshop" for tomorrow (45 mi...
+[2026-04-26 05:11:12.250] [PRINT]       ASSISTANT: To create the calendar event, what exact start time tomorrow should I use? For t...
+[2026-04-26 05:11:12.261] [PRINT]       USER: 1. Start time is 1:00 PM.
+[2026-04-26 05:11:12.261] [PRINT] 2. For the agenda document, you provide the topics and...
+[2026-04-26 05:11:12.271] [PRINT] 
+[2026-04-26 05:11:12.271] [PRINT]    Final context: 1144 chars (~286 tokens)
+[2026-04-26 05:11:12.282] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 05:11:12.292] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=3, ~286 tokens  | {"has_summary": false, "recent_messages": 3, "context_chars": 1144, "context_tokens_est": 286}
+[2026-04-26 05:11:12.293] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-26 05:11:13.536] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1705 out=37 | $0.0003 | 1217ms | cumulative: in=2694 out=82 total=2776 $0.0005
+[2026-04-26 05:11:13.558] [PRINT]    relevant_agents: ['calendar_agent', 'docs_agent', 'gmail_agent', 'sheets_agent']
+[2026-04-26 05:11:13.571] [PRINT]    capabilities (top-level): ['**CALENDAR_AGENT:**', '**DOCS_AGENT:**', '**GMAIL_AGENT:**', '**SHEETS_AGENT:**']
+[2026-04-26 05:11:13.587] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["calendar_agent", "docs_agent", "gmail_agent", "sheets_agent"]}
+[2026-04-26 05:11:13.587] [PRINT]    user_prompt (1387 chars):
+[2026-04-26 05:11:13.598] [PRINT]      RECENT CONVERSATION:
+[2026-04-26 05:11:13.608] [PRINT]      USER: Create a Google Calendar event named "Ops Recovery Workshop" for tomorrow (45 minutes), prepare a Google Doc agenda with owners per topic, and after the event, generate an action tracker sheet with Task, Owner, Due Date, and Status. Draft follow-up emails to all attendees summarizing commitments and deadlines.
+[2026-04-26 05:11:13.618] [PRINT]      ASSISTANT: To create the calendar event, what exact start time tomorrow should I use? For the agenda document, could you please provide the topics and their resp...
+[2026-04-26 05:11:13.628] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:11:19.192] [PRINT]  OK [1] gpt-4.1-mini | tier_1_full_analysis | in=2631 out=373, cached=1024 | $0.0013 | 5522ms | cumulative: in=5325 out=455 total=5780 $0.0018
+[2026-04-26 05:11:19.203] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "compound_task", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "User provided start time and attendee emails. User requested that I provide agenda topics and owners, so I included a sample agenda with topics and owners to proceed.", "extracted_info": {"event_name": "Ops Recovery Workshop", "start_time": "2026-04-27T13:00:00", "duration_minutes": 45, "agenda_doc_title": "Ops Recovery Works
+[2026-04-26 05:11:19.205] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-26 05:11:19.205] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Create a Google Calendar event 'Ops Recovery Workshop' starting at 1:00 PM tomorrow for 45 minutes, create an agenda Google Doc with provided topics and owners, create an action tracker sheet with specified columns, and draft follow-up emails to the three attendees summarizing commitments and deadlines.", "execution_mode":
+[2026-04-26 05:11:22.642] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=473 out=172 | $0.0002 | 3388ms | cumulative: in=5798 out=627 total=6425 $0.0020
+[2026-04-26 05:11:22.653] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 203, "total": 456, "max": 2000, "response_preview": "**Ready to execute!**\n\n- **Event Name:** Ops Recovery Workshop  \n- **Date and Time:** Tomorrow, April 27, 2026 at 1:00 PM  \n- **Duration:** 45 minutes  \n- **Agenda Document Title:** Ops Recovery Works..."}
+[2026-04-26 05:11:22.692] [INFO] [req_20260425211109_0ed95970] [T:a0872ab8]   BOT RESP: "**Ready to execute!**
+
+- **Event Name:** Ops Recovery Workshop  
+- **Date and Time:** Tomorrow, Apri..."
+[2026-04-26 05:11:22.703] [INFO] [req_20260425211109_0ed95970] [T:a0872ab8]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 203, "total": 456, "max": 2000, "response_preview": "**Ready to execute!**\n\n- **Event Name:** Ops Recovery Workshop  \n- **Date and Time:** Tomorrow, April 27, 2026 at 1:00 PM  \n- **Duration:** 45 minutes  \n- **Agenda Document Title:** Ops Recovery Works..."}
+[2026-04-26 05:11:22.752] [PRINT] 
+[2026-04-26 05:11:22.752] [PRINT] ============================================================
+[2026-04-26 05:11:22.763] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-26 05:11:22.774] [PRINT] ============================================================
+[2026-04-26 05:11:22.784] [PRINT]   LLM calls:        4
+[2026-04-26 05:11:22.795] [PRINT]   Total input:      5,798 tokens
+[2026-04-26 05:11:22.804] [PRINT]   Total output:     627 tokens
+[2026-04-26 05:11:22.817] [PRINT]   Total tokens:     6,425 tokens
+[2026-04-26 05:11:22.827] [PRINT]   Cached tokens:    1,024 (17.7% of input)
+[2026-04-26 05:11:22.837] [PRINT]   Estimated cost:   $0.0020
+[2026-04-26 05:11:22.846] [PRINT]   Total duration:   13424ms (13.4s)
+[2026-04-26 05:11:22.857] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-26 05:11:22.870] [PRINT]   Breakdown by call:
+[2026-04-26 05:11:22.880] [PRINT]     1. gpt-4o-mini      in=989    out=45    $0.0002 2426ms
+[2026-04-26 05:11:22.891] [PRINT]     2. gpt-4o-mini      in=1705   out=37    $0.0003 1217ms
+[2026-04-26 05:11:22.901] [PRINT]     3. gpt-4.1-mini     in=2631   out=373   (cached=1024) $0.0013 5522ms
+[2026-04-26 05:11:22.911] [PRINT]     4. gpt-4o-mini      in=473    out=172   $0.0002 3388ms
+[2026-04-26 05:11:22.920] [PRINT] ============================================================
+[2026-04-26 05:11:26.258] [INFO] [req_20260425211109_0ed95970] [T:a0872ab8] ← RESPONSE: 200 (21379ms)
+[2026-04-26 05:11:26.261] [INFO] [req_20260425211109_0ed95970] [T:a0872ab8] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 05:11:26.266] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8
+[2026-04-26 05:12:15.300] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8
+[2026-04-26 05:12:15.334] [INFO] [req_20260425211109_0ed95970] [T:a0872ab8] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8/messages  | {"query": null}
+[2026-04-26 05:12:19.817] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8]   USER MSG: "yes"
+[2026-04-26 05:12:19.820] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:12:19.829] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8
+[2026-04-26 05:12:19.841] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:12:19.852] [PRINT]   User: yes
+[2026-04-26 05:12:19.862] [PRINT]   ConversationState:
+[2026-04-26 05:12:19.872] [PRINT]     extracted_info: {"_cached_tool_filter": {"calendar_agent": ["create_event"], "docs_agent": ["list_my_docs", "create_doc"], "gmail_agent": ["send_draft_email", "search_drafts", "create_draft_email"], "sheets_agent": ["create_sheet", "append_rows", "get_sheet_headers", "ensure_headers"]}, "event_name": "Ops Recovery Workshop", "event_duration_minutes": 45, "agenda_doc_title": "Ops Recovery Workshop Agenda", "action_tracker_sheet_title": "Ops Recovery Workshop Action Tracker", "email_subject": "Follow-up: Ops Recovery Workshop Commitments and Deadlines", "start_time": "2026-04-27T13:00:00", "duration_minutes": 45, "agenda_topics_owners": [{"topic": "Incident Overview", "owner": "Alice"}, {"topic": "Root Cause Analysis", "owner": "Bob"}, {"topic": "Recovery Steps", "owner": "Charlie"}, {"topic": "Preventive Measures", "owner": "Dana"}], "action_tracker_title": "Ops Recovery Workshop Action Tracker", "action_tracker_columns": ["Task", "Owner", "Due Date", "Status"], "attendees_emails": ["cm.carla051403@gmail.com", "cm.carla03@gmail.com", "russ051403@gmail.com"]}
+[2026-04-26 05:12:19.884] [PRINT]     missing_fields: []
+[2026-04-26 05:12:19.894] [PRINT]     intent: "ready_to_execute"
+[2026-04-26 05:12:19.904] [PRINT]     clarification_question: null
+[2026-04-26 05:12:19.914] [PRINT]     ready_for_execution: false
+[2026-04-26 05:12:19.924] [PRINT]     execution_summary: "Create a Google Calendar event 'Ops Recovery Workshop' starting at 1:00 PM tomorrow for 45 minutes, create an agenda Google Doc with provided topics and owners, create an action tracker sheet with specified columns, and draft follow-up emails to the three attendees summarizing commitments and deadlines."
+[2026-04-26 05:12:19.935] [PRINT]     execution_mode: "standard"
+[2026-04-26 05:12:19.946] [PRINT]     execution_history: []
+[2026-04-26 05:12:19.956] [PRINT]     completed_tasks: []
+[2026-04-26 05:12:19.965] [PRINT]     has_executed: false
+[2026-04-26 05:12:19.975] [PRINT]     last_executed_at: null
+[2026-04-26 05:12:19.985] [PRINT]     last_execution_status: null
+[2026-04-26 05:12:19.996] [PRINT]     last_execution_message: null
+[2026-04-26 05:12:20.006] [PRINT]     executing: false
+[2026-04-26 05:12:20.016] [PRINT]     pending_actions: []
+[2026-04-26 05:12:20.026] [PRINT]     workflow_paused: false
+[2026-04-26 05:12:20.039] [PRINT]     remaining_steps: []
+[2026-04-26 05:12:20.051] [PRINT]     workflow_context: null
+[2026-04-26 05:12:20.061] [PRINT]     disambiguation_options: []
+[2026-04-26 05:12:20.072] [PRINT]     disambiguation_variable: null
+[2026-04-26 05:12:20.082] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:12:20.092] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8, msg=yes
+[2026-04-26 05:12:20.093] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 462, "max": 2000}
+[2026-04-26 05:12:20.100] [INFO] [-]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-26 05:12:20.103] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-26 05:12:20.104] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Create a Google Calendar event 'Ops Recovery Workshop' starting at 1:00 PM tomorrow for 45 minutes, create an agenda Google Doc with provided topics and owners, create an action tracker sheet with specified columns, and draft follow-up emails to the three attendees summarizing commitments and deadlines.", "execution_mode": 
+[2026-04-26 05:12:24.168] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=473 out=172 | $0.0002 | 4011ms | cumulative: in=473 out=172 total=645 $0.0002
+[2026-04-26 05:12:24.179] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 203, "total": 665, "max": 2000, "response_preview": "**Ready to execute!**\n\n- **Event Name:** Ops Recovery Workshop  \n- **Date & Time:** Tomorrow, April 27, 2026 at 1:00 PM  \n- **Duration:** 45 minutes  \n- **Agenda Document Title:** Ops Recovery Worksho..."}
+[2026-04-26 05:12:24.211] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8]   BOT RESP [READY TO EXECUTE]: "**Ready to execute!**
+
+- **Event Name:** Ops Recovery Workshop  
+- **Date & Time:** Tomorrow, April ..."
+[2026-04-26 05:12:24.212] [PRINT] Thread bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8 ready - executing workflow...
+[2026-04-26 05:12:24.221] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-26 05:12:24.252] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8]   WORKFLOW START: "Create a Google Calendar event 'Ops Recovery Workshop' starting at 1:00 PM tomor..." (0 steps)
+[2026-04-26 05:12:24.253] [PRINT]  Date context: today=2026-04-26
+[2026-04-26 05:12:24.263] [PRINT]  Starting workflow execution (mode=standard)...
+[2026-04-26 05:12:24.273] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-26 05:12:24.274] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-26 05:12:24.284] [PRINT] 
+[2026-04-26 05:12:24.284] [PRINT] ============================================================
+[2026-04-26 05:12:24.293] [PRINT] SUPERVISOR NODE - Planning Phase
+[2026-04-26 05:12:24.302] [PRINT] ============================================================
+[2026-04-26 05:12:24.311] [PRINT] User Input: Create a Google Calendar event 'Ops Recovery Workshop' starting at 1:00 PM tomorrow for 45 minutes, create an agenda Google Doc with provided topics and owners, create an action tracker sheet with specified columns, and draft follow-up emails to the three attendees summarizing commitments and deadlines.
+[2026-04-26 05:12:24.311] [PRINT] 
+[2026-04-26 05:12:24.311] [PRINT] Parameters:
+[2026-04-26 05:12:24.311] [PRINT] - event_name: Ops Recovery Workshop
+[2026-04-26 05:12:24.311] [PRINT] - event_duration_minutes: 45
+[2026-04-26 05:12:24.311] [PRINT] - agenda_doc_title: Ops Recovery Workshop Agenda
+[2026-04-26 05:12:24.311] [PRINT] - action_tracker_sheet_title: Ops Recovery Workshop Action Tracker
+[2026-04-26 05:12:24.311] [PRINT] - email_subject: Follow-up: Ops Recovery Workshop Commitments and Deadlines
+[2026-04-26 05:12:24.311] [PRINT] - start_time: 2026-04-27T13:00:00
+[2026-04-26 05:12:24.311] [PRINT] - duration_minutes: 45
+[2026-04-26 05:12:24.311] [PRINT] - agenda_topics_owners: [
+[2026-04-26 05:12:24.311] [PRINT]   {
+[2026-04-26 05:12:24.311] [PRINT]     "topic": "Incident Overview",
+[2026-04-26 05:12:24.311] [PRINT]     "owner": "Alice"
+[2026-04-26 05:12:24.311] [PRINT]   },
+[2026-04-26 05:12:24.311] [PRINT]   {
+[2026-04-26 05:12:24.311] [PRINT]     "topic": "Root Cause Analysis",
+[2026-04-26 05:12:24.311] [PRINT]     "owner": "Bob"
+[2026-04-26 05:12:24.311] [PRINT]   },
+[2026-04-26 05:12:24.311] [PRINT]   {
+[2026-04-26 05:12:24.311] [PRINT]     "topic": "Recovery Steps",
+[2026-04-26 05:12:24.311] [PRINT]     "owner": "Charlie"
+[2026-04-26 05:12:24.311] [PRINT]   },
+[2026-04-26 05:12:24.311] [PRINT]   {
+[2026-04-26 05:12:24.311] [PRINT]     "topic": "Preventive Measures",
+[2026-04-26 05:12:24.311] [PRINT]     "owner": "Dana"
+[2026-04-26 05:12:24.311] [PRINT]   }
+[2026-04-26 05:12:24.311] [PRINT] ]
+[2026-04-26 05:12:24.311] [PRINT] - action_tracker_title: Ops Recovery Workshop Action Tracker
+[2026-04-26 05:12:24.311] [PRINT] - action_tracker_columns: [
+[2026-04-26 05:12:24.311] [PRINT]   "Task",
+[2026-04-26 05:12:24.311] [PRINT]   "Owner",
+[2026-04-26 05:12:24.311] [PRINT]   "Due Date",
+[2026-04-26 05:12:24.311] [PRINT]   "Status"
+[2026-04-26 05:12:24.311] [PRINT] ]
+[2026-04-26 05:12:24.311] [PRINT] - attendees_emails: [
+[2026-04-26 05:12:24.311] [PRINT]   "cm.carla051403@gmail.com",
+[2026-04-26 05:12:24.311] [PRINT]   "cm.carla03@gmail.com",
+[2026-04-26 05:12:24.311] [PRINT]   "russ051403@gmail.com"
+[2026-04-26 05:12:24.311] [PRINT] ]
+[2026-04-26 05:12:24.321] [INFO] [-]   STEP [supervisor_node]: Planning for: Create a Google Calendar event 'Ops Recovery Workshop' starting at 1:00 PM tomor
+[2026-04-26 05:12:24.322] [PRINT] Context dates: today=2026-04-26
+[2026-04-26 05:12:24.333] [PRINT] Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-26 05:12:24.343] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['calendar_agent', 'docs_agent', 'gmail_agent', 'sheets_agent']
+[2026-04-26 05:12:24.344] [PRINT] Relevant agents: ['calendar_agent', 'docs_agent', 'gmail_agent', 'sheets_agent', 'llm_tool']
+[2026-04-26 05:12:24.355] [PRINT] Filtered tools: {'calendar_agent': ['create_event'], 'docs_agent': ['list_my_docs', 'create_doc'], 'gmail_agent': ['send_draft_email', 'search_drafts', 'create_draft_email'], 'sheets_agent': ['get_sheet_headers', 'append_rows', 'create_sheet', 'ensure_headers']}
+[2026-04-26 05:12:24.367] [PRINT] Calling LLM to generate multi-step plan...
+[2026-04-26 05:12:24.378] [PRINT] Token optimization:
+[2026-04-26 05:12:24.388] [PRINT]    Agents: 5/7
+[2026-04-26 05:12:24.399] [PRINT]    Tools: 10/64
+[2026-04-26 05:12:24.410] [PRINT]    Context size: 16,637 chars (~4,159 tokens)
+[2026-04-26 05:12:24.421] [INFO] [-]   STEP [plan_generation_start]: agents=5/7, tools=10/64, context_tokens~4159
+[2026-04-26 05:12:27.914] [PRINT] [TOKEN REPORTING SKIPPED] LLM call not successful
+[2026-04-26 05:12:27.958] [PRINT]  FAIL [supervisor] gpt-4.1 | plan_generation | in=8908 out=308, cached=4096 | $0.0141 | 3488ms | cumulative: in=9381 out=480 total=9861 $0.0143
+[2026-04-26 05:12:27.968] [PRINT] Failed to generate plan: Plan parsing failed: 9 validation errors for ExecutionPlan
+[2026-04-26 05:12:27.968] [PRINT] steps.0.inputs
+[2026-04-26 05:12:27.968] [PRINT]   Field required [type=missing, input_value={'agent': 'calendar_agent...nd a Google Meet link."}, input_type=dict]
+[2026-04-26 05:12:27.968] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 05:12:27.968] [PRINT] steps.1.inputs
+[2026-04-26 05:12:27.968] [PRINT]   Field required [type=missing, input_value={'agent': 'docs_agent', '...as the meeting agenda."}, input_type=dict]
+[2026-04-26 05:12:27.968] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 05:12:27.968] [PRINT] steps.2.inputs
+[2026-04-26 05:12:27.968] [PRINT]   Field required [type=missing, input_value={'agent': 'llm_tool', 'to...er for the agenda doc.'}, input_type=dict]
+[2026-04-26 05:12:27.968] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 05:12:27.968] [PRINT] steps.3.inputs
+[2026-04-26 05:12:27.968] [PRINT]   Field required [type=missing, input_value={'agent': 'docs_agent', '...o get its document_id."}, input_type=dict]
+[2026-04-26 05:12:27.968] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 05:12:27.968] [PRINT] steps.4.inputs
+[2026-04-26 05:12:27.968] [PRINT]   Field required [type=missing, input_value={'agent': 'docs_agent', '...t into the agenda doc.'}, input_type=dict]
+[2026-04-26 05:12:27.968] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 05:12:27.968] [PRINT] steps.5.inputs
+[2026-04-26 05:12:27.968] [PRINT]   Field required [type=missing, input_value={'agent': 'llm_tool', 'to...ut_format': 'json_rows'}, input_type=dict]
+[2026-04-26 05:12:27.968] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 05:12:27.968] [PRINT] steps.6.inputs
+[2026-04-26 05:12:27.968] [PRINT]   Field required [type=missing, input_value={'agent': 'sheets_agent',...ers and one blank row."}, input_type=dict]
+[2026-04-26 05:12:27.968] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 05:12:27.968] [PRINT] steps.7.inputs
+[2026-04-26 05:12:27.968] [PRINT]   Field required [type=missing, input_value={'agent': 'llm_tool', 'to...da and action tracker.'}, input_type=dict]
+[2026-04-26 05:12:27.968] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 05:12:27.968] [PRINT] steps.8.inputs
+[2026-04-26 05:12:27.968] [PRINT]   Field required [type=missing, input_value={'agent': 'gmail_agent', ...mmary and commitments.'}, input_type=dict]
+[2026-04-26 05:12:27.968] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 05:12:27.977] [ERROR] [-]  ERROR: Plan generation failed: Plan parsing failed: 9 validation errors for ExecutionPlan
+steps.0.inputs
+  Field required [type=missing, input_value={'agent': 'calendar_agent...nd a Google Meet link."}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.1.inputs
+  Field required [type=missing, input_value={'agent': 'docs_agent', '...as the meeting agenda."}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.2.inputs
+  Field required [type=missing, input_value={'agent': 'llm_tool', 'to...er for the agenda doc.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.3.inputs
+  Field required [type=missing, input_value={'agent': 'docs_agent', '...o get its document_id."}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.4.inputs
+  Field required [type=missing, input_value={'agent': 'docs_agent', '...t into the agenda doc.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.5.inputs
+  Field required [type=missing, input_value={'agent': 'llm_tool', 'to...ut_format': 'json_rows'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.6.inputs
+  Field required [type=missing, input_value={'agent': 'sheets_agent',...ers and one blank row."}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.7.inputs
+  Field required [type=missing, input_value={'agent': 'llm_tool', 'to...da and action tracker.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.8.inputs
+  Field required [type=missing, input_value={'agent': 'gmail_agent', ...mmary and commitments.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 05:12:27.979] [ERROR] [req_20260425211219_582a5e3a] [T:a0872ab8]  ERROR: Workflow execution failed | ValueError: Failed to generate plan: Plan parsing failed: 9 validation errors for ExecutionPlan
+steps.0.inputs
+  Field required [type=missing, input_value={'agent': 'calendar_agent...nd a Google Meet link."}, inp
+[2026-04-26 05:12:28.013] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 535, "total": 997, "max": 2000, "response_preview": "**Unable to complete your request**\n\n**Issue:** Failed to generate plan: Plan parsing failed: 9 validation errors for ExecutionPlan\nsteps.0.inputs\n  Field required [type=missing, input_value={'agent':..."}
+[2026-04-26 05:12:28.057] [PRINT] 
+[2026-04-26 05:12:28.057] [PRINT] ============================================================
+[2026-04-26 05:12:28.069] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-26 05:12:28.081] [PRINT] ============================================================
+[2026-04-26 05:12:28.091] [PRINT]   LLM calls:        2
+[2026-04-26 05:12:28.102] [PRINT]   Total input:      9,381 tokens
+[2026-04-26 05:12:28.114] [PRINT]   Total output:     480 tokens
+[2026-04-26 05:12:28.127] [PRINT]   Total tokens:     9,861 tokens
+[2026-04-26 05:12:28.138] [PRINT]   Cached tokens:    4,096 (43.7% of input)
+[2026-04-26 05:12:28.149] [PRINT]   Estimated cost:   $0.0143
+[2026-04-26 05:12:28.163] [PRINT]   Total duration:   8244ms (8.2s)
+[2026-04-26 05:12:28.176] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-26 05:12:28.186] [PRINT]   Breakdown by call:
+[2026-04-26 05:12:28.198] [PRINT]     1. gpt-4o-mini      in=473    out=172   $0.0002 4011ms
+[2026-04-26 05:12:28.209] [PRINT]     2. gpt-4.1          in=8908   out=308   (cached=4096) $0.0141 3488ms
+[2026-04-26 05:12:28.220] [PRINT] ============================================================
+[2026-04-26 05:12:28.241] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8] ← RESPONSE: 200 (12907ms)
+[2026-04-26 05:12:28.241] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 05:12:28.246] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8
+[2026-04-26 05:13:39.702] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8] → REQUEST: PUT /threads/bfc86262-160a-4d55-a8b5-13de48606736_a0872ab8  | {"query": null}
+[2026-04-26 05:13:39.725] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8] ← RESPONSE: 200 (23ms)
+[2026-04-26 05:13:39.726] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 05:13:48.479] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-26 05:13:48.493] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8] ← RESPONSE: 200 (13ms)
+[2026-04-26 05:13:48.493] [INFO] [req_20260425211219_582a5e3a] [T:a0872ab8] ─────────: ──────────────────────────────────────────────────

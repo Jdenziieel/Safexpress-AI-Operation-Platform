@@ -1,0 +1,244 @@
+[2026-04-26 22:26:49.654] [INFO] [req_20260426130910_9e4aecc5] [T:d4e50b98] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-26 22:26:49.672] [INFO] [req_20260426130910_9e4aecc5] [T:d4e50b98] ← RESPONSE: 200 (17ms)
+[2026-04-26 22:26:49.673] [INFO] [req_20260426130910_9e4aecc5] [T:d4e50b98] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 22:27:25.012] [INFO] [req_20260426130910_9e4aecc5] [T:d4e50b98] → REQUEST: POST /threads  | {"query": null}
+[2026-04-26 22:27:25.017] [INFO] [req_20260426130910_9e4aecc5] [T:new]   STEP [create_thread]: user=bfc86262-160a-4d55-a8b5-13de48606736, has_message=True
+[2026-04-26 22:27:29.540] [PRINT]  Created thread: bfc86262-160a-4d55-a8b5-13de48606736_59171f52 for user: bfc86262-160a-4d55-a8b5-13de48606736
+[2026-04-26 22:27:29.563] [PRINT]  Created new thread: bfc86262-160a-4d55-a8b5-13de48606736_59171f52 for user: bfc86262-160a-4d55-a8b5-13de48606736 with title: None
+[2026-04-26 22:27:29.584] [PRINT] Saved conversation state to SQLite: bfc86262-160a-4d55-a8b5-13de48606736_59171f52
+[2026-04-26 22:27:29.608] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 22:27:29.617] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_59171f52
+[2026-04-26 22:27:29.629] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 22:27:29.639] [PRINT]   User: Review today’s unread emails and find delivery order attachments in PDF or Excel format. Extract the data and map it to ...
+[2026-04-26 22:27:29.649] [PRINT]   ConversationState:
+[2026-04-26 22:27:29.658] [PRINT]     extracted_info: {}
+[2026-04-26 22:27:29.668] [PRINT]     missing_fields: []
+[2026-04-26 22:27:29.678] [PRINT]     intent: null
+[2026-04-26 22:27:29.688] [PRINT]     clarification_question: null
+[2026-04-26 22:27:29.699] [PRINT]     ready_for_execution: false
+[2026-04-26 22:27:29.708] [PRINT]     execution_summary: null
+[2026-04-26 22:27:29.718] [PRINT]     execution_mode: "standard"
+[2026-04-26 22:27:29.728] [PRINT]     execution_history: []
+[2026-04-26 22:27:29.737] [PRINT]     completed_tasks: []
+[2026-04-26 22:27:29.748] [PRINT]     has_executed: false
+[2026-04-26 22:27:29.757] [PRINT]     last_executed_at: null
+[2026-04-26 22:27:29.767] [PRINT]     last_execution_status: null
+[2026-04-26 22:27:29.776] [PRINT]     last_execution_message: null
+[2026-04-26 22:27:29.786] [PRINT]     executing: false
+[2026-04-26 22:27:29.797] [PRINT]     pending_actions: []
+[2026-04-26 22:27:29.807] [PRINT]     workflow_paused: false
+[2026-04-26 22:27:29.818] [PRINT]     remaining_steps: []
+[2026-04-26 22:27:29.827] [PRINT]     workflow_context: null
+[2026-04-26 22:27:29.840] [PRINT]     disambiguation_options: []
+[2026-04-26 22:27:29.849] [PRINT]     disambiguation_variable: null
+[2026-04-26 22:27:29.859] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 22:27:29.868] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_59171f52, msg=Review today’s unread emails and find delivery order attachments in PDF or Excel
+[2026-04-26 22:27:30.951] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 258, "total": 258, "max": 2000}
+[2026-04-26 22:27:30.970] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-26 22:27:30.971] [PRINT] 
+[2026-04-26 22:27:30.971] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 22:27:30.982] [PRINT] TIER 0.5 — Building prompt
+[2026-04-26 22:27:30.993] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 22:27:31.004] [PRINT]    bot_signal : (none)
+[2026-04-26 22:27:31.015] [PRINT]    state_block: (none)
+[2026-04-26 22:27:31.026] [PRINT]    file_context: (none)
+[2026-04-26 22:27:31.037] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 22:27:33.830] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=947 out=48 | $0.0002 | 2754ms | cumulative: in=947 out=48 total=995 $0.0002
+[2026-04-26 22:27:33.841] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting a specific action to review emails, extract data, and map it to a Google Sheet with detailed instructions.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting a specific action to review emails, extract data, and map it to a Google Sheet with detailed instructions.\"\n}"}
+[2026-04-26 22:27:33.841] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-04-26 22:27:33.842] [PRINT] 
+[2026-04-26 22:27:33.842] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 22:27:33.851] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-26 22:27:33.861] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 22:27:33.870] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-26 22:27:33.871] [PRINT] 
+[2026-04-26 22:27:33.871] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 22:27:33.881] [PRINT] BUILDING LLM CONTEXT
+[2026-04-26 22:27:33.891] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 22:27:33.900] [PRINT]    Summary: none
+[2026-04-26 22:27:33.913] [PRINT]    Recent messages: 1
+[2026-04-26 22:27:33.923] [PRINT]       USER: Review today’s unread emails and find delivery order attachments in PDF or Excel...
+[2026-04-26 22:27:33.934] [PRINT] 
+[2026-04-26 22:27:33.934] [PRINT]    Final context: 1167 chars (~291 tokens)
+[2026-04-26 22:27:33.943] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 22:27:33.953] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=1, ~291 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 1167, "context_tokens_est": 291}
+[2026-04-26 22:27:33.954] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-26 22:27:36.229] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1900 out=67 | $0.0003 | 2245ms | cumulative: in=2847 out=115 total=2962 $0.0005
+[2026-04-26 22:27:36.254] [PRINT]    relevant_agents: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'docs_agent', 'drive_agent', 'llm_tool']
+[2026-04-26 22:27:36.264] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**', '**MAPPING_AGENT:**', '**SHEETS_AGENT:**', '**DOCS_AGENT:**', '**DRIVE_AGENT:**', '**LLM_TOOL:**']
+[2026-04-26 22:27:36.274] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent", "mapping_agent", "sheets_agent", "docs_agent", "drive_agent", "llm_tool"]}
+[2026-04-26 22:27:36.275] [PRINT]    user_prompt (2331 chars):
+[2026-04-26 22:27:36.285] [PRINT]      RECENT CONVERSATION:
+[2026-04-26 22:27:36.297] [PRINT]      USER: Review today’s unread emails and find delivery order attachments in PDF or Excel format. Extract the data and map it to this sheet format using header matching only: https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=sharing. Handle all three scenarios: if the target sheet does not exist, create it with the correct headers before inserting data; if the target sheet exists but is empty, add the headers first then insert data; an...
+[2026-04-26 22:27:36.307] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 22:27:40.224] [PRINT]  OK [1] gpt-4.1-mini | tier_1_full_analysis | in=3311 out=230 | $0.0017 | 3876ms | cumulative: in=6158 out=345 total=6503 $0.0022
+[2026-04-26 22:27:40.234] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "process_delivery_order", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user requests to review today's unread emails for delivery order attachments in PDF or Excel, extract and map data to a specified Google Sheet with detailed handling scenarios, and then create a s", "extracted_info": {"sheet_name": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44
+[2026-04-26 22:27:40.236] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-26 22:27:40.236] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Parse delivery-order PDFs and Excel attachments from today's unread emails and write to the specified Google Sheet with header matching and scenario handling; then create a summary Google Doc with extraction and insertion statistics and failure reasons.", "execution_mode": "standard", "extracted_info": {"_cached_tool_filte
+[2026-04-26 22:28:13.488] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=250 out=120 | $0.0001 | 33208ms | cumulative: in=6408 out=465 total=6873 $0.0023
+[2026-04-26 22:28:13.501] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 152, "total": 410, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- **Task Summary**: Parse delivery-order PDFs and Excel attachments from today's unread emails and write to the specified Google Sheet. Create a summary Goog..."}
+[2026-04-26 22:28:13.547] [INFO] [req_20260426142729_2c2f0e2e] [T:new]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 152, "total": 410, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- **Task Summary**: Parse delivery-order PDFs and Excel attachments from today's unread emails and write to the specified Google Sheet. Create a summary Goog..."}
+[2026-04-26 22:28:13.587] [PRINT] 
+[2026-04-26 22:28:13.587] [PRINT] ============================================================
+[2026-04-26 22:28:13.597] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-26 22:28:13.606] [PRINT] ============================================================
+[2026-04-26 22:28:13.616] [PRINT]   LLM calls:        4
+[2026-04-26 22:28:13.627] [PRINT]   Total input:      6,408 tokens
+[2026-04-26 22:28:13.637] [PRINT]   Total output:     465 tokens
+[2026-04-26 22:28:13.647] [PRINT]   Total tokens:     6,873 tokens
+[2026-04-26 22:28:13.656] [PRINT]   Estimated cost:   $0.0023
+[2026-04-26 22:28:13.666] [PRINT]   Total duration:   44003ms (44.0s)
+[2026-04-26 22:28:13.676] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-26 22:28:13.687] [PRINT]   Breakdown by call:
+[2026-04-26 22:28:13.697] [PRINT]     1. gpt-4o-mini      in=947    out=48    $0.0002 2754ms
+[2026-04-26 22:28:13.708] [PRINT]     2. gpt-4o-mini      in=1900   out=67    $0.0003 2245ms
+[2026-04-26 22:28:13.720] [PRINT]     3. gpt-4.1-mini     in=3311   out=230   $0.0017 3876ms
+[2026-04-26 22:28:13.730] [PRINT]     4. gpt-4o-mini      in=250    out=120   $0.0001 33208ms
+[2026-04-26 22:28:13.739] [PRINT] ============================================================
+[2026-04-26 22:28:16.772] [INFO] [req_20260426142729_2c2f0e2e] [T:new] ← RESPONSE: 200 (51760ms)
+[2026-04-26 22:28:16.775] [INFO] [req_20260426142729_2c2f0e2e] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 22:32:05.725] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_59171f52
+[2026-04-26 22:32:05.746] [INFO] [req_20260426142729_2c2f0e2e] [T:new] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_59171f52/messages  | {"query": null}
+[2026-04-26 22:32:10.241] [INFO] [req_20260426143210_af697b8f] [T:59171f52]   USER MSG: "yes"
+[2026-04-26 22:32:10.244] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 22:32:10.255] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_59171f52
+[2026-04-26 22:32:10.266] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 22:32:10.277] [PRINT]   User: yes
+[2026-04-26 22:32:10.288] [PRINT]   ConversationState:
+[2026-04-26 22:32:10.303] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["get_sheet_metadata", "ensure_headers", "append_rows", "get_sheet_headers", "validate_delivery_sheet", "preview_delivery_order_insertion", "write_delivery_order_data"], "docs_agent": ["create_doc", "add_text", "list_my_docs", "read_doc", "edit_doc", "update_doc"], "drive_agent": ["search_files"]}, "sheet_name": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=sharing"}
+[2026-04-26 22:32:10.316] [PRINT]     missing_fields: []
+[2026-04-26 22:32:10.326] [PRINT]     intent: "ready_to_execute"
+[2026-04-26 22:32:10.335] [PRINT]     clarification_question: null
+[2026-04-26 22:32:10.345] [PRINT]     ready_for_execution: false
+[2026-04-26 22:32:10.357] [PRINT]     execution_summary: "Parse delivery-order PDFs and Excel attachments from today's unread emails and write to the specified Google Sheet with header matching and scenario handling; then create a summary Google Doc with extraction and insertion statistics and failure reasons."
+[2026-04-26 22:32:10.372] [PRINT]     execution_mode: "standard"
+[2026-04-26 22:32:10.382] [PRINT]     execution_history: []
+[2026-04-26 22:32:10.391] [PRINT]     completed_tasks: []
+[2026-04-26 22:32:10.405] [PRINT]     has_executed: false
+[2026-04-26 22:32:10.417] [PRINT]     last_executed_at: null
+[2026-04-26 22:32:10.431] [PRINT]     last_execution_status: null
+[2026-04-26 22:32:10.445] [PRINT]     last_execution_message: null
+[2026-04-26 22:32:10.458] [PRINT]     executing: false
+[2026-04-26 22:32:10.469] [PRINT]     pending_actions: []
+[2026-04-26 22:32:10.481] [PRINT]     workflow_paused: false
+[2026-04-26 22:32:10.492] [PRINT]     remaining_steps: []
+[2026-04-26 22:32:10.505] [PRINT]     workflow_context: null
+[2026-04-26 22:32:10.516] [PRINT]     disambiguation_options: []
+[2026-04-26 22:32:10.525] [PRINT]     disambiguation_variable: null
+[2026-04-26 22:32:10.537] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 22:32:10.547] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_59171f52, msg=yes
+[2026-04-26 22:32:11.489] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 416, "max": 2000}
+[2026-04-26 22:32:11.505] [INFO] [-]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-26 22:32:11.507] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-26 22:32:11.508] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Parse delivery-order PDFs and Excel attachments from today's unread emails and write to the specified Google Sheet with header matching and scenario handling; then create a summary Google Doc with extraction and insertion statistics and failure reasons.", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter
+[2026-04-26 22:32:15.620] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=250 out=111 | $0.0001 | 4080ms | cumulative: in=250 out=111 total=361 $0.0001
+[2026-04-26 22:32:15.638] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 141, "total": 557, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- **Task Summary**: Parse delivery-order PDFs and Excel attachments from today's unread emails and write to the specified Google Sheet.\n- **Google Sheet**: [..."}
+[2026-04-26 22:32:15.679] [INFO] [req_20260426143210_af697b8f] [T:59171f52]   BOT RESP [READY TO EXECUTE]: "**Ready to execute!**
+
+Task Confirmation:
+
+- **Task Summary**: Parse delivery-order PDFs and Excel a..."
+[2026-04-26 22:32:15.680] [PRINT] Thread bfc86262-160a-4d55-a8b5-13de48606736_59171f52 ready - executing workflow...
+[2026-04-26 22:32:15.690] [INFO] [req_20260426143210_af697b8f] [T:59171f52]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-26 22:32:15.715] [INFO] [req_20260426143210_af697b8f] [T:59171f52]   WORKFLOW START: "Parse delivery-order PDFs and Excel attachments from today's unread emails and w..." (0 steps)
+[2026-04-26 22:32:15.716] [PRINT]  Date context: today=2026-04-26
+[2026-04-26 22:32:15.726] [PRINT]  Starting workflow execution (mode=standard)...
+[2026-04-26 22:32:15.737] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-26 22:32:15.740] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-26 22:32:15.752] [PRINT] 
+[2026-04-26 22:32:15.752] [PRINT] ============================================================
+[2026-04-26 22:32:15.762] [PRINT] SUPERVISOR NODE - Planning Phase
+[2026-04-26 22:32:15.774] [PRINT] ============================================================
+[2026-04-26 22:32:15.784] [PRINT] User Input: Parse delivery-order PDFs and Excel attachments from today's unread emails and write to the specified Google Sheet with header matching and scenario handling; then create a summary Google Doc with extraction and insertion statistics and failure reasons.
+[2026-04-26 22:32:15.784] [PRINT] 
+[2026-04-26 22:32:15.784] [PRINT] Parameters:
+[2026-04-26 22:32:15.784] [PRINT] - sheet_name: https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?usp=sharing
+[2026-04-26 22:32:15.794] [INFO] [-]   STEP [supervisor_node]: Planning for: Parse delivery-order PDFs and Excel attachments from today's unread emails and w
+[2026-04-26 22:32:15.794] [PRINT] Context dates: today=2026-04-26
+[2026-04-26 22:32:15.805] [PRINT] Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-26 22:32:15.815] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['gmail_agent', 'mapping_agent', 'sheets_agent', 'docs_agent', 'drive_agent']
+[2026-04-26 22:32:15.816] [PRINT] Relevant agents: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'docs_agent', 'drive_agent', 'llm_tool']
+[2026-04-26 22:32:15.826] [PRINT] Filtered tools: {'gmail_agent': ['search_emails_with_delivery_order_attachments', 'search_emails'], 'mapping_agent': ['parse_delivery_order_pdfs'], 'sheets_agent': ['validate_delivery_sheet', 'append_rows', 'get_sheet_metadata', 'get_sheet_headers', 'preview_delivery_order_insertion', 'write_delivery_order_data', 'ensure_headers'], 'docs_agent': ['create_doc', 'update_doc', 'edit_doc', 'add_text', 'read_doc', 'list_my_docs'], 'drive_agent': ['search_files']}
+[2026-04-26 22:32:15.838] [PRINT] Calling LLM to generate multi-step plan...
+[2026-04-26 22:32:15.850] [PRINT] Token optimization:
+[2026-04-26 22:32:15.860] [PRINT]    Agents: 6/7
+[2026-04-26 22:32:15.870] [PRINT]    Tools: 17/64
+[2026-04-26 22:32:15.880] [PRINT]    Context size: 22,529 chars (~5,632 tokens)
+[2026-04-26 22:32:15.891] [INFO] [-]   STEP [plan_generation_start]: agents=6/7, tools=17/64, context_tokens~5632
+[2026-04-26 22:32:18.660] [PRINT] [TOKEN REPORTING SKIPPED] LLM call not successful
+[2026-04-26 22:32:18.690] [PRINT]  FAIL [supervisor] gpt-4.1 | plan_generation | in=10331 out=239, cached=4096 | $0.0164 | 2756ms | cumulative: in=10581 out=350 total=10931 $0.0165
+[2026-04-26 22:32:18.697] [PRINT] Failed to generate plan: Plan parsing failed: 7 validation errors for ExecutionPlan
+[2026-04-26 22:32:18.697] [PRINT] steps.0.inputs
+[2026-04-26 22:32:18.697] [PRINT]   Field required [type=missing, input_value={'agent': 'gmail_agent', ...nts and download them."}, input_type=dict]
+[2026-04-26 22:32:18.697] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 22:32:18.697] [PRINT] steps.1.inputs
+[2026-04-26 22:32:18.697] [PRINT]   Field required [type=missing, input_value={'agent': 'mapping_agent'...structured order data.'}, input_type=dict]
+[2026-04-26 22:32:18.697] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 22:32:18.697] [PRINT] steps.2.inputs
+[2026-04-26 22:32:18.697] [PRINT]   Field required [type=missing, input_value={'agent': 'sheets_agent',...e before writing data.'}, input_type=dict]
+[2026-04-26 22:32:18.697] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 22:32:18.697] [PRINT] steps.3.inputs
+[2026-04-26 22:32:18.697] [PRINT]   Field required [type=missing, input_value={'agent': 'sheets_agent',...gs, for user approval.'}, input_type=dict]
+[2026-04-26 22:32:18.697] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 22:32:18.697] [PRINT] steps.4.inputs
+[2026-04-26 22:32:18.697] [PRINT]   Field required [type=missing, input_value={'agent': 'sheets_agent',...alidation and preview.'}, input_type=dict]
+[2026-04-26 22:32:18.697] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 22:32:18.697] [PRINT] steps.5.inputs
+[2026-04-26 22:32:18.697] [PRINT]   Field required [type=missing, input_value={'agent': 'llm_tool', 'to...rting in a Google Doc.'}, input_type=dict]
+[2026-04-26 22:32:18.697] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 22:32:18.697] [PRINT] steps.6.inputs
+[2026-04-26 22:32:18.697] [PRINT]   Field required [type=missing, input_value={'agent': 'docs_agent', '...s and failure reasons.'}, input_type=dict]
+[2026-04-26 22:32:18.697] [PRINT]     For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 22:32:18.706] [ERROR] [-]  ERROR: Plan generation failed: Plan parsing failed: 7 validation errors for ExecutionPlan
+steps.0.inputs
+  Field required [type=missing, input_value={'agent': 'gmail_agent', ...nts and download them."}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.1.inputs
+  Field required [type=missing, input_value={'agent': 'mapping_agent'...structured order data.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.2.inputs
+  Field required [type=missing, input_value={'agent': 'sheets_agent',...e before writing data.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.3.inputs
+  Field required [type=missing, input_value={'agent': 'sheets_agent',...gs, for user approval.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.4.inputs
+  Field required [type=missing, input_value={'agent': 'sheets_agent',...alidation and preview.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.5.inputs
+  Field required [type=missing, input_value={'agent': 'llm_tool', 'to...rting in a Google Doc.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+steps.6.inputs
+  Field required [type=missing, input_value={'agent': 'docs_agent', '...s and failure reasons.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+[2026-04-26 22:32:18.708] [ERROR] [req_20260426143210_af697b8f] [T:59171f52]  ERROR: Workflow execution failed | ValueError: Failed to generate plan: Plan parsing failed: 7 validation errors for ExecutionPlan
+steps.0.inputs
+  Field required [type=missing, input_value={'agent': 'gmail_agent', ...nts and download them."}, inp
+[2026-04-26 22:32:18.752] [INFO] [req_20260426143210_af697b8f] [T:59171f52]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 419, "total": 835, "max": 2000, "response_preview": "**Unable to complete your request**\n\n**Issue:** Failed to generate plan: Plan parsing failed: 7 validation errors for ExecutionPlan\nsteps.0.inputs\n  Field required [type=missing, input_value={'agent':..."}
+[2026-04-26 22:32:18.798] [PRINT] 
+[2026-04-26 22:32:18.798] [PRINT] ============================================================
+[2026-04-26 22:32:18.809] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-26 22:32:18.820] [PRINT] ============================================================
+[2026-04-26 22:32:18.830] [PRINT]   LLM calls:        2
+[2026-04-26 22:32:18.842] [PRINT]   Total input:      10,581 tokens
+[2026-04-26 22:32:18.855] [PRINT]   Total output:     350 tokens
+[2026-04-26 22:32:18.867] [PRINT]   Total tokens:     10,931 tokens
+[2026-04-26 22:32:18.880] [PRINT]   Cached tokens:    4,096 (38.7% of input)
+[2026-04-26 22:32:18.892] [PRINT]   Estimated cost:   $0.0165
+[2026-04-26 22:32:18.903] [PRINT]   Total duration:   8561ms (8.6s)
+[2026-04-26 22:32:18.916] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-26 22:32:18.927] [PRINT]   Breakdown by call:
+[2026-04-26 22:32:18.939] [PRINT]     1. gpt-4o-mini      in=250    out=111   $0.0001 4080ms
+[2026-04-26 22:32:18.950] [PRINT]     2. gpt-4.1          in=10331  out=239   (cached=4096) $0.0164 2756ms
+[2026-04-26 22:32:18.962] [PRINT] ============================================================
+[2026-04-26 22:32:19.653] [INFO] [req_20260426143210_af697b8f] [T:59171f52] ← RESPONSE: 200 (13907ms)
+[2026-04-26 22:32:19.653] [INFO] [req_20260426143210_af697b8f] [T:59171f52] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 22:32:19.656] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_59171f52
