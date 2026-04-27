@@ -32,6 +32,29 @@
   -ms-overflow-style: none;
 }
 
+.knowledge-base-container::-webkit-scrollbar {
+  width: 0px;
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.knowledge-base-container {
+  scrollbar-width: none;
+}
+
+/* Hide scrollbar for IE and Edge */
+.knowledge-base-container {
+  -ms-overflow-style: none;
+}
+
+@media (max-width: 900px) {
+  .knowledge-base-container {
+    margin-left: 0;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
 /* Chat Threads Sidebar */
 .chat-threads-sidebar {
   width: 280px;
@@ -113,29 +136,6 @@
   color: #1e40af;
 }
 
-.knowledge-base-container::-webkit-scrollbar {
-  width: 0px;
-  display: none;
-}
-
-/* Hide scrollbar for Firefox */
-.knowledge-base-container {
-  scrollbar-width: none;
-}
-
-/* Hide scrollbar for IE and Edge */
-.knowledge-base-container {
-  -ms-overflow-style: none;
-}
-
-@media (max-width: 900px) {
-  .knowledge-base-container {
-    margin-left: 0;
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-}
-
 /* Header */
 .knowledge-base-header-row {
   margin-bottom: 32px;
@@ -160,6 +160,49 @@
   font-size: 1.2rem;
   color: #6b7280;
   font-weight: 500;
+}
+
+.knowledge-base-header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding-top: 26px;
+}
+
+.main-card-btn {
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease !important;
+  transform: none !important;
+}
+
+.main-card-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.main-card-btn:hover {
+  transform: none !important;
+}
+
+/* Tooltip hover behavior for header icon buttons */
+div:hover > .button-tooltip {
+  opacity: 1 !important;
+}
+
+.knowledge-base-header-action-button-process {
+  background-color: #26326e;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(38, 50, 110, 0.08);
+  font-weight: 800;
+}
+
+.knowledge-base-header-action-button-process:hover:not(:disabled),
+.knowledge-base-header-action-button-process:focus {
+  background-color: #fcb117 !important;
+  color: #26326e !important;
+  box-shadow: 0 4px 12px rgba(252, 177, 23, 0.3);
 }
 
 .kb-chat-button {
