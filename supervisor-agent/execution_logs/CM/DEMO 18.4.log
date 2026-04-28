@@ -1,0 +1,528 @@
+[2026-04-26 05:32:48.663] [INFO] [req_20260425213201_c9777b31] [T:e9434c93] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-26 05:32:48.670] [INFO] [req_20260425213201_c9777b31] [T:e9434c93] ← RESPONSE: 200 (7ms)
+[2026-04-26 05:32:48.670] [INFO] [req_20260425213201_c9777b31] [T:e9434c93] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 05:33:09.696] [INFO] [req_20260425213201_c9777b31] [T:e9434c93] → REQUEST: POST /threads  | {"query": null}
+[2026-04-26 05:33:09.697] [INFO] [req_20260425213201_c9777b31] [T:new]   STEP [create_thread]: user=bfc86262-160a-4d55-a8b5-13de48606736, has_message=True
+[2026-04-26 05:33:14.166] [PRINT]  Created thread: bfc86262-160a-4d55-a8b5-13de48606736_77120d03 for user: bfc86262-160a-4d55-a8b5-13de48606736
+[2026-04-26 05:33:14.180] [PRINT]  Created new thread: bfc86262-160a-4d55-a8b5-13de48606736_77120d03 for user: bfc86262-160a-4d55-a8b5-13de48606736 with title: None
+[2026-04-26 05:33:14.194] [PRINT] Saved conversation state to SQLite: bfc86262-160a-4d55-a8b5-13de48606736_77120d03
+[2026-04-26 05:33:14.209] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:33:14.216] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_77120d03
+[2026-04-26 05:33:14.224] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:33:14.232] [PRINT]   User: Find keyword "poor delivery" from April 25 2026, 12:00 MN to April 26 4:30AM in email, group by customer and reason, and...
+[2026-04-26 05:33:14.240] [PRINT]   ConversationState:
+[2026-04-26 05:33:14.251] [PRINT]     extracted_info: {}
+[2026-04-26 05:33:14.264] [PRINT]     missing_fields: []
+[2026-04-26 05:33:14.277] [PRINT]     intent: null
+[2026-04-26 05:33:14.289] [PRINT]     clarification_question: null
+[2026-04-26 05:33:14.301] [PRINT]     ready_for_execution: false
+[2026-04-26 05:33:14.314] [PRINT]     execution_summary: null
+[2026-04-26 05:33:14.326] [PRINT]     execution_mode: "standard"
+[2026-04-26 05:33:14.338] [PRINT]     execution_history: []
+[2026-04-26 05:33:14.349] [PRINT]     completed_tasks: []
+[2026-04-26 05:33:14.362] [PRINT]     has_executed: false
+[2026-04-26 05:33:14.371] [PRINT]     last_executed_at: null
+[2026-04-26 05:33:14.382] [PRINT]     last_execution_status: null
+[2026-04-26 05:33:14.393] [PRINT]     last_execution_message: null
+[2026-04-26 05:33:14.402] [PRINT]     executing: false
+[2026-04-26 05:33:14.410] [PRINT]     pending_actions: []
+[2026-04-26 05:33:14.418] [PRINT]     workflow_paused: false
+[2026-04-26 05:33:14.427] [PRINT]     remaining_steps: []
+[2026-04-26 05:33:14.437] [PRINT]     workflow_context: null
+[2026-04-26 05:33:14.446] [PRINT]     disambiguation_options: []
+[2026-04-26 05:33:14.455] [PRINT]     disambiguation_variable: null
+[2026-04-26 05:33:14.465] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:33:14.473] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_77120d03, msg=Find keyword "poor delivery" from April 25 2026, 12:00 MN to April 26 4:30AM in 
+[2026-04-26 05:33:14.474] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 92, "total": 92, "max": 2000}
+[2026-04-26 05:33:14.483] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-26 05:33:14.483] [PRINT] 
+[2026-04-26 05:33:14.483] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:33:14.492] [PRINT] TIER 0.5 — Building prompt
+[2026-04-26 05:33:14.501] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:33:14.510] [PRINT]    bot_signal : (none)
+[2026-04-26 05:33:14.519] [PRINT]    state_block: (none)
+[2026-04-26 05:33:14.528] [PRINT]    file_context: (none)
+[2026-04-26 05:33:14.539] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:33:16.174] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=780 out=52 | $0.0001 | 1594ms | cumulative: in=780 out=52 total=832 $0.0001
+[2026-04-26 05:33:16.187] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting multiple actions including finding keywords in emails, creating a Google Sheet, and drafting an email, which indicates a specific task request.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting multiple actions including finding keywords in emails, creating a Google Sheet, and drafting an email, which indicates a specific task request.\"\n}"}
+[2026-04-26 05:33:16.188] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-04-26 05:33:16.189] [PRINT] 
+[2026-04-26 05:33:16.189] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:33:16.198] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-26 05:33:16.209] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:33:16.218] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-26 05:33:16.219] [PRINT] 
+[2026-04-26 05:33:16.219] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 05:33:16.228] [PRINT] BUILDING LLM CONTEXT
+[2026-04-26 05:33:16.239] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 05:33:16.248] [PRINT]    Summary: none
+[2026-04-26 05:33:16.258] [PRINT]    Recent messages: 1
+[2026-04-26 05:33:16.268] [PRINT]       USER: Find keyword "poor delivery" from April 25 2026, 12:00 MN to April 26 4:30AM in ...
+[2026-04-26 05:33:16.278] [PRINT] 
+[2026-04-26 05:33:16.278] [PRINT]    Final context: 391 chars (~97 tokens)
+[2026-04-26 05:33:16.288] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-26 05:33:16.297] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=1, ~97 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 391, "context_tokens_est": 97}
+[2026-04-26 05:33:16.298] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-26 05:33:17.426] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1733 out=31 | $0.0003 | 1107ms | cumulative: in=2513 out=83 total=2596 $0.0004
+[2026-04-26 05:33:17.447] [PRINT]    relevant_agents: ['gmail_agent', 'sheets_agent', 'docs_agent', 'llm_tool']
+[2026-04-26 05:33:17.458] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**', '**SHEETS_AGENT:**', '**DOCS_AGENT:**', '**LLM_TOOL:**']
+[2026-04-26 05:33:17.468] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent", "sheets_agent", "docs_agent", "llm_tool"]}
+[2026-04-26 05:33:17.468] [PRINT]    user_prompt (779 chars):
+[2026-04-26 05:33:17.478] [PRINT]      RECENT CONVERSATION:
+[2026-04-26 05:33:17.490] [PRINT]      USER: Find keyword "poor delivery" from April 25 2026, 12:00 MN to April 26 4:30AM in email, group by customer and reason, and prepare callback-ready notes. Create a Google Sheet "Failed Attempt Call Queue" with Customer, Contact, Reason, Preferred Time, and Proposed Resolution. Draft customer-facing email in a Google Doc with tone variants (formal, friendly, urgent).
+[2026-04-26 05:33:17.504] [PRINT]      
+[2026-04-26 05:33:17.518] [PRINT]      CURRENT USER MESSAGE: Find keyword "poor delivery" from April 25 2026, 12:00 MN to April 26 4:30AM in email...
+[2026-04-26 05:33:17.531] [PRINT] ──────────────────────────────────────────────────
+[2026-04-26 05:33:21.441] [PRINT]  OK [1] gpt-4.1-mini | tier_1_full_analysis | in=2353 out=311, cached=2048 | $0.0008 | 3874ms | cumulative: in=4866 out=394 total=5260 $0.0013
+[2026-04-26 05:33:21.455] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "process_delivery_order", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "User requests to find emails with keyword 'poor delivery' in a specific time range, group by customer and reason, prepare callback notes, create a Google Sheet with specified columns, and draft a Goog", "extracted_info": {"query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30", "sheet_name": "Fail
+[2026-04-26 05:33:21.457] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-26 05:33:21.458] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Search emails with 'poor delivery' from April 25 2026 00:00 to April 26 2026 04:30, group by customer and reason, prepare callback notes, create Google Sheet 'Failed Attempt Call Queue' with specified columns, and draft customer-facing email in a Google Doc with formal, friendly, and urgent tone variants.", "execution_mode
+[2026-04-26 05:33:24.571] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=345 out=170 | $0.0002 | 3087ms | cumulative: in=5211 out=564 total=5775 $0.0014
+[2026-04-26 05:33:24.581] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 196, "total": 288, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- **Search Emails**: Look for emails containing \"poor delivery\" from Friday, April 25, 2026, at 12:00 AM to Saturday, April 26, 2026, at 4:30 AM.\n- **Groupin..."}
+[2026-04-26 05:33:24.619] [INFO] [req_20260425213314_ca25d4d7] [T:new]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 196, "total": 288, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- **Search Emails**: Look for emails containing \"poor delivery\" from Friday, April 25, 2026, at 12:00 AM to Saturday, April 26, 2026, at 4:30 AM.\n- **Groupin..."}
+[2026-04-26 05:33:24.650] [PRINT] 
+[2026-04-26 05:33:24.650] [PRINT] ============================================================
+[2026-04-26 05:33:24.658] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-26 05:33:24.667] [PRINT] ============================================================
+[2026-04-26 05:33:24.676] [PRINT]   LLM calls:        4
+[2026-04-26 05:33:24.683] [PRINT]   Total input:      5,211 tokens
+[2026-04-26 05:33:24.695] [PRINT]   Total output:     564 tokens
+[2026-04-26 05:33:24.707] [PRINT]   Total tokens:     5,775 tokens
+[2026-04-26 05:33:24.720] [PRINT]   Cached tokens:    2,048 (39.3% of input)
+[2026-04-26 05:33:24.731] [PRINT]   Estimated cost:   $0.0014
+[2026-04-26 05:33:24.746] [PRINT]   Total duration:   10454ms (10.5s)
+[2026-04-26 05:33:24.757] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-26 05:33:24.769] [PRINT]   Breakdown by call:
+[2026-04-26 05:33:24.781] [PRINT]     1. gpt-4o-mini      in=780    out=52    $0.0001 1594ms
+[2026-04-26 05:33:24.794] [PRINT]     2. gpt-4o-mini      in=1733   out=31    $0.0003 1107ms
+[2026-04-26 05:33:24.807] [PRINT]     3. gpt-4.1-mini     in=2353   out=311   (cached=2048) $0.0008 3874ms
+[2026-04-26 05:33:24.821] [PRINT]     4. gpt-4o-mini      in=345    out=170   $0.0002 3087ms
+[2026-04-26 05:33:24.833] [PRINT] ============================================================
+[2026-04-26 05:33:28.485] [INFO] [req_20260425213314_ca25d4d7] [T:new] ← RESPONSE: 200 (18789ms)
+[2026-04-26 05:33:28.485] [INFO] [req_20260425213314_ca25d4d7] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 05:34:52.180] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_77120d03
+[2026-04-26 05:34:52.212] [INFO] [req_20260425213314_ca25d4d7] [T:new] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_77120d03/messages  | {"query": null}
+[2026-04-26 05:34:56.725] [INFO] [req_20260425213456_583522f8] [T:77120d03]   USER MSG: "yes"
+[2026-04-26 05:34:56.729] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:34:56.739] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_77120d03
+[2026-04-26 05:34:56.751] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:34:56.763] [PRINT]   User: yes
+[2026-04-26 05:34:56.775] [PRINT]   ConversationState:
+[2026-04-26 05:34:56.785] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_emails"], "sheets_agent": ["create_sheet", "append_rows", "get_sheet_headers", "ensure_headers"], "docs_agent": ["create_doc", "list_my_docs"]}, "query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30", "sheet_name": "Failed Attempt Call Queue", "sheet_columns": ["Customer", "Contact", "Reason", "Preferred Time", "Proposed Resolution"], "email_doc_title": "Customer-facing email - poor delivery callback", "email_tone_variants": ["formal", "friendly", "urgent"]}
+[2026-04-26 05:34:56.795] [PRINT]     missing_fields: []
+[2026-04-26 05:34:56.805] [PRINT]     intent: "ready_to_execute"
+[2026-04-26 05:34:56.814] [PRINT]     clarification_question: null
+[2026-04-26 05:34:56.823] [PRINT]     ready_for_execution: false
+[2026-04-26 05:34:56.833] [PRINT]     execution_summary: "Search emails with 'poor delivery' from April 25 2026 00:00 to April 26 2026 04:30, group by customer and reason, prepare callback notes, create Google Sheet 'Failed Attempt Call Queue' with specified columns, and draft customer-facing email in a Google Doc with formal, friendly, and urgent tone variants."
+[2026-04-26 05:34:56.842] [PRINT]     execution_mode: "standard"
+[2026-04-26 05:34:56.853] [PRINT]     execution_history: []
+[2026-04-26 05:34:56.862] [PRINT]     completed_tasks: []
+[2026-04-26 05:34:56.872] [PRINT]     has_executed: false
+[2026-04-26 05:34:56.881] [PRINT]     last_executed_at: null
+[2026-04-26 05:34:56.892] [PRINT]     last_execution_status: null
+[2026-04-26 05:34:56.902] [PRINT]     last_execution_message: null
+[2026-04-26 05:34:56.912] [PRINT]     executing: false
+[2026-04-26 05:34:56.922] [PRINT]     pending_actions: []
+[2026-04-26 05:34:56.931] [PRINT]     workflow_paused: false
+[2026-04-26 05:34:56.941] [PRINT]     remaining_steps: []
+[2026-04-26 05:34:56.951] [PRINT]     workflow_context: null
+[2026-04-26 05:34:56.962] [PRINT]     disambiguation_options: []
+[2026-04-26 05:34:56.973] [PRINT]     disambiguation_variable: null
+[2026-04-26 05:34:56.982] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-26 05:34:56.992] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_77120d03, msg=yes
+[2026-04-26 05:34:56.993] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 294, "max": 2000}
+[2026-04-26 05:34:57.000] [INFO] [-]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-26 05:34:57.006] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-26 05:34:57.007] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Search emails with 'poor delivery' from April 25 2026 00:00 to April 26 2026 04:30, group by customer and reason, prepare callback notes, create Google Sheet 'Failed Attempt Call Queue' with specified columns, and draft customer-facing email in a Google Doc with formal, friendly, and urgent tone variants.", "execution_mode"
+[2026-04-26 05:34:59.918] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=345 out=151 | $0.0001 | 2884ms | cumulative: in=345 out=151 total=496 $0.0001
+[2026-04-26 05:34:59.926] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 177, "total": 471, "max": 2000, "response_preview": "**Ready to execute!**\n\n- **Task Summary**: Search for emails containing \"poor delivery\" from Friday, April 25, 2026 at 12:00 AM to Saturday, April 26, 2026 at 4:30 AM.\n- **Grouping**: By customer and ..."}
+[2026-04-26 05:34:59.958] [INFO] [req_20260425213456_583522f8] [T:77120d03]   BOT RESP [READY TO EXECUTE]: "**Ready to execute!**
+
+- **Task Summary**: Search for emails containing "poor delivery" from Friday,..."
+[2026-04-26 05:34:59.959] [PRINT] Thread bfc86262-160a-4d55-a8b5-13de48606736_77120d03 ready - executing workflow...
+[2026-04-26 05:34:59.969] [INFO] [req_20260425213456_583522f8] [T:77120d03]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-26 05:34:59.995] [INFO] [req_20260425213456_583522f8] [T:77120d03]   WORKFLOW START: "Search emails with 'poor delivery' from April 25 2026 00:00 to April 26 2026 04:..." (0 steps)
+[2026-04-26 05:34:59.996] [PRINT]  Date context: today=2026-04-26
+[2026-04-26 05:35:00.005] [PRINT]  Starting workflow execution (mode=standard)...
+[2026-04-26 05:35:00.015] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-26 05:35:00.016] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-26 05:35:00.030] [PRINT] 
+[2026-04-26 05:35:00.030] [PRINT] ============================================================
+[2026-04-26 05:35:00.039] [PRINT] SUPERVISOR NODE - Planning Phase
+[2026-04-26 05:35:00.048] [PRINT] ============================================================
+[2026-04-26 05:35:00.058] [PRINT] User Input: Search emails with 'poor delivery' from April 25 2026 00:00 to April 26 2026 04:30, group by customer and reason, prepare callback notes, create Google Sheet 'Failed Attempt Call Queue' with specified columns, and draft customer-facing email in a Google Doc with formal, friendly, and urgent tone variants.
+[2026-04-26 05:35:00.058] [PRINT] 
+[2026-04-26 05:35:00.058] [PRINT] Parameters:
+[2026-04-26 05:35:00.058] [PRINT] - query: "poor delivery" after:2026/04/25 00:00 before:2026/04/26 04:30
+[2026-04-26 05:35:00.058] [PRINT] - sheet_name: Failed Attempt Call Queue
+[2026-04-26 05:35:00.058] [PRINT] - sheet_columns: [
+[2026-04-26 05:35:00.058] [PRINT]   "Customer",
+[2026-04-26 05:35:00.058] [PRINT]   "Contact",
+[2026-04-26 05:35:00.058] [PRINT]   "Reason",
+[2026-04-26 05:35:00.058] [PRINT]   "Preferred Time",
+[2026-04-26 05:35:00.058] [PRINT]   "Proposed Resolution"
+[2026-04-26 05:35:00.058] [PRINT] ]
+[2026-04-26 05:35:00.058] [PRINT] - email_doc_title: Customer-facing email - poor delivery callback
+[2026-04-26 05:35:00.058] [PRINT] - email_tone_variants: [
+[2026-04-26 05:35:00.058] [PRINT]   "formal",
+[2026-04-26 05:35:00.058] [PRINT]   "friendly",
+[2026-04-26 05:35:00.058] [PRINT]   "urgent"
+[2026-04-26 05:35:00.058] [PRINT] ]
+[2026-04-26 05:35:00.068] [INFO] [-]   STEP [supervisor_node]: Planning for: Search emails with 'poor delivery' from April 25 2026 00:00 to April 26 2026 04:
+[2026-04-26 05:35:00.068] [PRINT] Context dates: today=2026-04-26
+[2026-04-26 05:35:00.079] [PRINT] Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-26 05:35:00.089] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['gmail_agent', 'sheets_agent', 'docs_agent']
+[2026-04-26 05:35:00.089] [PRINT] Relevant agents: ['gmail_agent', 'sheets_agent', 'docs_agent', 'llm_tool']
+[2026-04-26 05:35:00.099] [PRINT] Filtered tools: {'gmail_agent': ['search_emails'], 'sheets_agent': ['get_sheet_headers', 'append_rows', 'create_sheet', 'ensure_headers'], 'docs_agent': ['list_my_docs', 'create_doc']}
+[2026-04-26 05:35:00.110] [PRINT] Calling LLM to generate multi-step plan...
+[2026-04-26 05:35:00.120] [PRINT] Token optimization:
+[2026-04-26 05:35:00.131] [PRINT]    Agents: 4/7
+[2026-04-26 05:35:00.140] [PRINT]    Tools: 7/64
+[2026-04-26 05:35:00.150] [PRINT]    Context size: 14,850 chars (~3,712 tokens)
+[2026-04-26 05:35:00.160] [INFO] [-]   STEP [plan_generation_start]: agents=4/7, tools=7/64, context_tokens~3712
+[2026-04-26 05:35:07.547] [PRINT]  OK [supervisor] gpt-4.1 | plan_generation | in=8365 out=541, cached=7168 | $0.0103 | 7357ms | cumulative: in=8710 out=692 total=9402 $0.0104
+[2026-04-26 05:35:07.557] [PRINT] Plan generated successfully!
+[2026-04-26 05:35:07.568] [PRINT] 
+[2026-04-26 05:35:07.568] [PRINT] Generated Plan:
+[2026-04-26 05:35:07.568] [PRINT] {
+[2026-04-26 05:35:07.568] [PRINT]   "steps": [
+[2026-04-26 05:35:07.568] [PRINT]     {
+[2026-04-26 05:35:07.568] [PRINT]       "agent": "gmail_agent",
+[2026-04-26 05:35:07.568] [PRINT]       "tool": "search_emails",
+[2026-04-26 05:35:07.568] [PRINT]       "inputs": {
+[2026-04-26 05:35:07.568] [PRINT]         "query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30",
+[2026-04-26 05:35:07.568] [PRINT]         "max_results": 50
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "output_variables": {
+[2026-04-26 05:35:07.568] [PRINT]         "recent_emails": "emails"
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "description": "Search emails with 'poor delivery' from April 25, 2026 00:00 to April 26, 2026 04:30."
+[2026-04-26 05:35:07.568] [PRINT]     },
+[2026-04-26 05:35:07.568] [PRINT]     {
+[2026-04-26 05:35:07.568] [PRINT]       "agent": "llm_tool",
+[2026-04-26 05:35:07.568] [PRINT]       "tool": "transform_text",
+[2026-04-26 05:35:07.568] [PRINT]       "inputs": {
+[2026-04-26 05:35:07.568] [PRINT]         "instruction": "Group the following emails by customer and reason for poor delivery. For each group, prepare callback notes with the following columns: Customer, Contact, Reason, Preferred Time, Proposed Resolution. Output as a 2D JSON array: the first row MUST be the headers: [\"Customer\",\"Contact\",\"Reason\",\"Preferred Time\",\"Proposed Resolution\"], followed by one row per callback needed. If information is missing, leave the cell blank.",
+[2026-04-26 05:35:07.568] [PRINT]         "content": "{{ recent_emails }}",
+[2026-04-26 05:35:07.568] [PRINT]         "output_format": "json_rows"
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "output_variables": {
+[2026-04-26 05:35:07.568] [PRINT]         "tracker_table": "transformed_content"
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "description": "Group emails by customer and reason, prepare callback notes, and structure as a table with specified columns."
+[2026-04-26 05:35:07.568] [PRINT]     },
+[2026-04-26 05:35:07.568] [PRINT]     {
+[2026-04-26 05:35:07.568] [PRINT]       "agent": "sheets_agent",
+[2026-04-26 05:35:07.568] [PRINT]       "tool": "create_sheet",
+[2026-04-26 05:35:07.568] [PRINT]       "inputs": {
+[2026-04-26 05:35:07.568] [PRINT]         "title": "Failed Attempt Call Queue",
+[2026-04-26 05:35:07.568] [PRINT]         "sheet_names": [
+[2026-04-26 05:35:07.568] [PRINT]           "Sheet1"
+[2026-04-26 05:35:07.568] [PRINT]         ],
+[2026-04-26 05:35:07.568] [PRINT]         "initial_data": "{{ tracker_table }}"
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "output_variables": {
+[2026-04-26 05:35:07.568] [PRINT]         "sheet_id": "sheet_id"
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "description": "Create a new Google Sheet 'Failed Attempt Call Queue' with the callback notes table."
+[2026-04-26 05:35:07.568] [PRINT]     },
+[2026-04-26 05:35:07.568] [PRINT]     {
+[2026-04-26 05:35:07.568] [PRINT]       "agent": "llm_tool",
+[2026-04-26 05:35:07.568] [PRINT]       "tool": "transform_text",
+[2026-04-26 05:35:07.568] [PRINT]       "inputs": {
+[2026-04-26 05:35:07.568] [PRINT]         "instruction": "Draft three versions of a customer-facing email for a poor delivery callback: one formal, one friendly, and one urgent. Each version should address the customer, acknowledge the delivery issue, and propose a callback. Clearly label each version. Output as a single document with clear section headings for each tone variant.",
+[2026-04-26 05:35:07.568] [PRINT]         "content": "Callback context: poor delivery. Use a professional, empathetic approach.",
+[2026-04-26 05:35:07.568] [PRINT]         "output_format": "text"
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "output_variables": {
+[2026-04-26 05:35:07.568] [PRINT]         "email_variants": "transformed_content"
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "description": "Draft customer-facing email in three tone variants: formal, friendly, and urgent."
+[2026-04-26 05:35:07.568] [PRINT]     },
+[2026-04-26 05:35:07.568] [PRINT]     {
+[2026-04-26 05:35:07.568] [PRINT]       "agent": "docs_agent",
+[2026-04-26 05:35:07.568] [PRINT]       "tool": "create_doc",
+[2026-04-26 05:35:07.568] [PRINT]       "inputs": {
+[2026-04-26 05:35:07.568] [PRINT]         "title": "Customer-facing email - poor delivery callback"
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "output_variables": {
+[2026-04-26 05:35:07.568] [PRINT]         "document_id": "document_id"
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "description": "Create a new Google Doc for the customer-facing email variants."
+[2026-04-26 05:35:07.568] [PRINT]     },
+[2026-04-26 05:35:07.568] [PRINT]     {
+[2026-04-26 05:35:07.568] [PRINT]       "agent": "docs_agent",
+[2026-04-26 05:35:07.568] [PRINT]       "tool": "add_text",
+[2026-04-26 05:35:07.568] [PRINT]       "inputs": {
+[2026-04-26 05:35:07.568] [PRINT]         "document_id": "{{ document_id }}",
+[2026-04-26 05:35:07.568] [PRINT]         "text": "{{ email_variants }}"
+[2026-04-26 05:35:07.568] [PRINT]       },
+[2026-04-26 05:35:07.568] [PRINT]       "output_variables": {},
+[2026-04-26 05:35:07.568] [PRINT]       "description": "Insert the drafted email tone variants into the new Google Doc."
+[2026-04-26 05:35:07.568] [PRINT]     }
+[2026-04-26 05:35:07.568] [PRINT]   ]
+[2026-04-26 05:35:07.568] [PRINT] }
+[2026-04-26 05:35:07.580] [INFO] [-]   STEP [plan_generated]: 6 steps: gmail_agent.search_emails, llm_tool.transform_text, sheets_agent.create_sheet, llm_tool.transform_text, docs_agent.create_doc, docs_agent.add_text
+[2026-04-26 05:35:07.581] [PRINT] 
+[2026-04-26 05:35:07.581] [PRINT] Plan saved to: C:\Users\Carlos Miguel Carla\Documents\GitHub\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-26 05:35:07.591] [PRINT] ============================================================
+[2026-04-26 05:35:07.601] [PRINT] 
+[2026-04-26 05:35:07.601] [PRINT] ============================================================
+[2026-04-26 05:35:07.611] [PRINT] ORCHESTRATOR NODE - Execution Phase
+[2026-04-26 05:35:07.621] [PRINT] ============================================================
+[2026-04-26 05:35:07.630] [PRINT] Found 6 steps to execute
+[2026-04-26 05:35:07.641] [INFO] [-]   STEP [orchestrator_node]: 6 steps to execute
+[2026-04-26 05:35:07.642] [PRINT] 
+[2026-04-26 05:35:07.642] [PRINT] INITIAL CONTEXT:
+[2026-04-26 05:35:07.654] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-26 05:35:07.663] [PRINT]    today_date: 2026-04-26
+[2026-04-26 05:35:07.673] [PRINT]    _cached_tool_filter: dict (length: 3)
+[2026-04-26 05:35:07.684] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-26 05:35:07.694] [PRINT] Pre-flight credential check passed (5 fields)
+[2026-04-26 05:35:07.705] [PRINT] 
+[2026-04-26 05:35:07.705] [PRINT] ============================================================
+[2026-04-26 05:35:07.714] [PRINT] Step 1/6: gmail_agent.search_emails
+[2026-04-26 05:35:07.724] [PRINT] Description: Search emails with 'poor delivery' from April 25, 2026 00:00 to April 26, 2026 04:30.
+[2026-04-26 05:35:07.734] [PRINT] ============================================================
+[2026-04-26 05:35:07.754] [PRINT] Risk Level: safe
+[2026-04-26 05:35:07.765] [PRINT] 
+[2026-04-26 05:35:07.765] [PRINT] Substituting variables in inputs...
+[2026-04-26 05:35:07.775] [PRINT]    Original inputs: {
+[2026-04-26 05:35:07.775] [PRINT]       "query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30",
+[2026-04-26 05:35:07.775] [PRINT]       "max_results": 50
+[2026-04-26 05:35:07.775] [PRINT] }
+[2026-04-26 05:35:07.786] [PRINT]    Substituted inputs: {
+[2026-04-26 05:35:07.786] [PRINT]       "query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30",
+[2026-04-26 05:35:07.786] [PRINT]       "max_results": 50
+[2026-04-26 05:35:07.786] [PRINT] }
+[2026-04-26 05:35:07.796] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-26 05:35:07.807] [INFO] [-]   STEP [variable_substitution]: step 1: gmail_agent.search_emails  | {"inputs": {"query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30", "max_results": 50}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-26 05:35:07.807] [PRINT] 
+[2026-04-26 05:35:07.807] [PRINT] Calling agent microservice: http://localhost:8000/execute_task
+[2026-04-26 05:35:07.819] [PRINT] 
+[2026-04-26 05:35:07.819] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-26 05:35:07.828] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-26 05:35:07.838] [PRINT]    Tool: search_emails
+[2026-04-26 05:35:07.848] [PRINT]    Inputs keys: ['query', 'max_results']
+[2026-04-26 05:35:07.857] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-26 05:35:07.870] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-26 05:35:07.880] [PRINT]    Payload size: 750 bytes
+[2026-04-26 05:35:07.890] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-26 05:35:07.900] [PRINT] 
+[2026-04-26 05:35:07.900] [PRINT] Sending request to agent...
+[2026-04-26 05:35:07.910] [PRINT]    URL: http://localhost:8000/execute_task
+[2026-04-26 05:35:07.921] [PRINT]    Timeout: 320 seconds
+[2026-04-26 05:35:07.930] [PRINT]    Max retries: 3
+[2026-04-26 05:35:07.940] [PRINT] Attempt 1/3 calling http://localhost:8000/execute_task
+[2026-04-26 05:35:07.951] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-26 05:35:11.889] [PRINT] ℹ Agent returned no results: No emails found matching query: '"poor delivery" after:2026/04/25 00:00 before:2026/04/26 04:30'
+[2026-04-26 05:35:11.900] [PRINT] ⏱ Agent call completed in 4000.56ms
+[2026-04-26 05:35:11.912] [PRINT] Agent response received
+[2026-04-26 05:35:11.922] [AGENT] [-]   AGENT:  gmail_agent.search_emails (4001ms)  | {"query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30", "max_results": "50"}
+[2026-04-26 05:35:11.923] [PRINT] 
+[2026-04-26 05:35:11.923] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-26 05:35:11.932] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-26 05:35:11.943] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-26 05:35:11.952] [PRINT] {
+[2026-04-26 05:35:11.952] [PRINT]   "success": false,
+[2026-04-26 05:35:11.952] [PRINT]   "emails": [],
+[2026-04-26 05:35:11.952] [PRINT]   "count": 0,
+[2026-04-26 05:35:11.952] [PRINT]   "query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30",
+[2026-04-26 05:35:11.952] [PRINT]   "label_filter": null,
+[2026-04-26 05:35:11.952] [PRINT]   "error": "No emails found matching query: '\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30'",
+[2026-04-26 05:35:11.952] [PRINT]   "no_results": true
+[2026-04-26 05:35:11.952] [PRINT] }
+[2026-04-26 05:35:11.962] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-26 05:35:11.972] [PRINT] 
+[2026-04-26 05:35:11.972] [PRINT] ERROR RESPONSE DETAILS:
+[2026-04-26 05:35:11.982] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-26 05:35:11.992] [PRINT]    Error message: No emails found matching query: '"poor delivery" after:2026/04/25 00:00 before:2026/04/26 04:30'
+[2026-04-26 05:35:12.005] [PRINT]    Is no_results: True
+[2026-04-26 05:35:12.014] [PRINT]    Full response: {
+[2026-04-26 05:35:12.014] [PRINT]   "success": false,
+[2026-04-26 05:35:12.014] [PRINT]   "emails": [],
+[2026-04-26 05:35:12.014] [PRINT]   "count": 0,
+[2026-04-26 05:35:12.014] [PRINT]   "query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30",
+[2026-04-26 05:35:12.014] [PRINT]   "label_filter": null,
+[2026-04-26 05:35:12.014] [PRINT]   "error": "No emails found matching query: '\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30'",
+[2026-04-26 05:35:12.014] [PRINT]   "no_results": true
+[2026-04-26 05:35:12.014] [PRINT] }
+[2026-04-26 05:35:12.024] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-26 05:35:12.033] [PRINT] ℹ No results found: No emails found matching query: '"poor delivery" after:2026/04/25 00:00 before:2026/04/26 04:30'
+[2026-04-26 05:35:12.044] [PRINT]    This step returned no data, but the operation was valid.
+[2026-04-26 05:35:12.055] [PRINT]    Continuing to next step (if any)...
+[2026-04-26 05:35:12.083] [PRINT]    Added empty context under step_1_gmail_agent: ['emails', 'count', 'query', 'label_filter']
+[2026-04-26 05:35:12.092] [PRINT] Variables not populated due to no results: ['recent_emails']
+[2026-04-26 05:35:12.103] [PRINT]    Skipping 5 remaining step(s) that depend on these variables.
+[2026-04-26 05:35:12.113] [PRINT] 
+[2026-04-26 05:35:12.113] [PRINT]  Workflow failed: No emails found matching query: '"poor delivery" after:2026/04/25 00:00 before:2026/04/26 04:30'
+[2026-04-26 05:35:12.123] [INFO] [-]   WORKFLOW END: error (1/6 steps)
+[2026-04-26 05:35:12.123] [PRINT] 
+[2026-04-26 05:35:12.123] [PRINT]  Generated Plan:
+[2026-04-26 05:35:12.123] [PRINT] {
+[2026-04-26 05:35:12.123] [PRINT]   "steps": [
+[2026-04-26 05:35:12.123] [PRINT]     {
+[2026-04-26 05:35:12.123] [PRINT]       "agent": "gmail_agent",
+[2026-04-26 05:35:12.123] [PRINT]       "tool": "search_emails",
+[2026-04-26 05:35:12.123] [PRINT]       "inputs": {
+[2026-04-26 05:35:12.123] [PRINT]         "query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30",
+[2026-04-26 05:35:12.123] [PRINT]         "max_results": 50
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "output_variables": {
+[2026-04-26 05:35:12.123] [PRINT]         "recent_emails": "emails"
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "description": "Search emails with 'poor delivery' from April 25, 2026 00:00 to April 26, 2026 04:30."
+[2026-04-26 05:35:12.123] [PRINT]     },
+[2026-04-26 05:35:12.123] [PRINT]     {
+[2026-04-26 05:35:12.123] [PRINT]       "agent": "llm_tool",
+[2026-04-26 05:35:12.123] [PRINT]       "tool": "transform_text",
+[2026-04-26 05:35:12.123] [PRINT]       "inputs": {
+[2026-04-26 05:35:12.123] [PRINT]         "instruction": "Group the following emails by customer and reason for poor delivery. For each group, prepare callback notes with the following columns: Customer, Contact, Reason, Preferred Time, Proposed Resolution. Output as a 2D JSON array: the first row MUST be the headers: [\"Customer\",\"Contact\",\"Reason\",\"Preferred Time\",\"Proposed Resolution\"], followed by one row per callback needed. If information is missing, leave the cell blank.",
+[2026-04-26 05:35:12.123] [PRINT]         "content": "{{ recent_emails }}",
+[2026-04-26 05:35:12.123] [PRINT]         "output_format": "json_rows"
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "output_variables": {
+[2026-04-26 05:35:12.123] [PRINT]         "tracker_table": "transformed_content"
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "description": "Group emails by customer and reason, prepare callback notes, and structure as a table with specified columns."
+[2026-04-26 05:35:12.123] [PRINT]     },
+[2026-04-26 05:35:12.123] [PRINT]     {
+[2026-04-26 05:35:12.123] [PRINT]       "agent": "sheets_agent",
+[2026-04-26 05:35:12.123] [PRINT]       "tool": "create_sheet",
+[2026-04-26 05:35:12.123] [PRINT]       "inputs": {
+[2026-04-26 05:35:12.123] [PRINT]         "title": "Failed Attempt Call Queue",
+[2026-04-26 05:35:12.123] [PRINT]         "sheet_names": [
+[2026-04-26 05:35:12.123] [PRINT]           "Sheet1"
+[2026-04-26 05:35:12.123] [PRINT]         ],
+[2026-04-26 05:35:12.123] [PRINT]         "initial_data": "{{ tracker_table }}"
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "output_variables": {
+[2026-04-26 05:35:12.123] [PRINT]         "sheet_id": "sheet_id"
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "description": "Create a new Google Sheet 'Failed Attempt Call Queue' with the callback notes table."
+[2026-04-26 05:35:12.123] [PRINT]     },
+[2026-04-26 05:35:12.123] [PRINT]     {
+[2026-04-26 05:35:12.123] [PRINT]       "agent": "llm_tool",
+[2026-04-26 05:35:12.123] [PRINT]       "tool": "transform_text",
+[2026-04-26 05:35:12.123] [PRINT]       "inputs": {
+[2026-04-26 05:35:12.123] [PRINT]         "instruction": "Draft three versions of a customer-facing email for a poor delivery callback: one formal, one friendly, and one urgent. Each version should address the customer, acknowledge the delivery issue, and propose a callback. Clearly label each version. Output as a single document with clear section headings for each tone variant.",
+[2026-04-26 05:35:12.123] [PRINT]         "content": "Callback context: poor delivery. Use a professional, empathetic approach.",
+[2026-04-26 05:35:12.123] [PRINT]         "output_format": "text"
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "output_variables": {
+[2026-04-26 05:35:12.123] [PRINT]         "email_variants": "transformed_content"
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "description": "Draft customer-facing email in three tone variants: formal, friendly, and urgent."
+[2026-04-26 05:35:12.123] [PRINT]     },
+[2026-04-26 05:35:12.123] [PRINT]     {
+[2026-04-26 05:35:12.123] [PRINT]       "agent": "docs_agent",
+[2026-04-26 05:35:12.123] [PRINT]       "tool": "create_doc",
+[2026-04-26 05:35:12.123] [PRINT]       "inputs": {
+[2026-04-26 05:35:12.123] [PRINT]         "title": "Customer-facing email - poor delivery callback"
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "output_variables": {
+[2026-04-26 05:35:12.123] [PRINT]         "document_id": "document_id"
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "description": "Create a new Google Doc for the customer-facing email variants."
+[2026-04-26 05:35:12.123] [PRINT]     },
+[2026-04-26 05:35:12.123] [PRINT]     {
+[2026-04-26 05:35:12.123] [PRINT]       "agent": "docs_agent",
+[2026-04-26 05:35:12.123] [PRINT]       "tool": "add_text",
+[2026-04-26 05:35:12.123] [PRINT]       "inputs": {
+[2026-04-26 05:35:12.123] [PRINT]         "document_id": "{{ document_id }}",
+[2026-04-26 05:35:12.123] [PRINT]         "text": "{{ email_variants }}"
+[2026-04-26 05:35:12.123] [PRINT]       },
+[2026-04-26 05:35:12.123] [PRINT]       "output_variables": {},
+[2026-04-26 05:35:12.123] [PRINT]       "description": "Insert the drafted email tone variants into the new Google Doc."
+[2026-04-26 05:35:12.123] [PRINT]     }
+[2026-04-26 05:35:12.123] [PRINT]   ]
+[2026-04-26 05:35:12.123] [PRINT] }
+[2026-04-26 05:35:12.134] [PRINT] 
+[2026-04-26 05:35:12.134] [PRINT]  Final Context: {
+[2026-04-26 05:35:12.134] [PRINT]   "today_date": "2026-04-26",
+[2026-04-26 05:35:12.134] [PRINT]   "_cached_tool_filter": {
+[2026-04-26 05:35:12.134] [PRINT]     "gmail_agent": [
+[2026-04-26 05:35:12.134] [PRINT]       "search_emails"
+[2026-04-26 05:35:12.134] [PRINT]     ],
+[2026-04-26 05:35:12.134] [PRINT]     "sheets_agent": [
+[2026-04-26 05:35:12.134] [PRINT]       "get_sheet_headers",
+[2026-04-26 05:35:12.134] [PRINT]       "append_rows",
+[2026-04-26 05:35:12.134] [PRINT]       "create_sheet",
+[2026-04-26 05:35:12.134] [PRINT]       "ensure_headers"
+[2026-04-26 05:35:12.134] [PRINT]     ],
+[2026-04-26 05:35:12.134] [PRINT]     "docs_agent": [
+[2026-04-26 05:35:12.134] [PRINT]       "list_my_docs",
+[2026-04-26 05:35:12.134] [PRINT]       "create_doc"
+[2026-04-26 05:35:12.134] [PRINT]     ]
+[2026-04-26 05:35:12.134] [PRINT]   },
+[2026-04-26 05:35:12.134] [PRINT]   "step_1_gmail_agent": {
+[2026-04-26 05:35:12.134] [PRINT]     "emails": [],
+[2026-04-26 05:35:12.134] [PRINT]     "count": 0,
+[2026-04-26 05:35:12.134] [PRINT]     "query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30",
+[2026-04-26 05:35:12.134] [PRINT]     "label_filter": null
+[2026-04-26 05:35:12.134] [PRINT]   },
+[2026-04-26 05:35:12.134] [PRINT]   "results": [
+[2026-04-26 05:35:12.134] [PRINT]     {
+[2026-04-26 05:35:12.134] [PRINT]       "step": 1,
+[2026-04-26 05:35:12.134] [PRINT]       "agent": "gmail_agent",
+[2026-04-26 05:35:12.134] [PRINT]       "tool": "search_emails",
+[2026-04-26 05:35:12.134] [PRINT]       "description": "Search emails with 'poor delivery' from April 25, 2026 00:00 to April 26, 2026 04:30.",
+[2026-04-26 05:35:12.134] [PRINT]       "inputs": {
+[2026-04-26 05:35:12.134] [PRINT]         "query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30",
+[2026-04-26 05:35:12.134] [PRINT]         "max_results": 50
+[2026-04-26 05:35:12.134] [PRINT]       },
+[2026-04-26 05:35:12.134] [PRINT]       "status": "no_results",
+[2026-04-26 05:35:12.134] [PRINT]       "message": "No emails found matching query: '\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30'",
+[2026-04-26 05:35:12.134] [PRINT]       "output": {
+[2026-04-26 05:35:12.134] [PRINT]         "success": false,
+[2026-04-26 05:35:12.134] [PRINT]         "emails": [],
+[2026-04-26 05:35:12.134] [PRINT]         "count": 0,
+[2026-04-26 05:35:12.134] [PRINT]         "query": "\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30",
+[2026-04-26 05:35:12.134] [PRINT]         "label_filter": null,
+[2026-04-26 05:35:12.134] [PRINT]         "error": "No emails found matching query: '\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30'",
+[2026-04-26 05:35:12.134] [PRINT]         "no_results": true
+[2026-04-26 05:35:12.134] [PRINT]       }
+[2026-04-26 05:35:12.134] [PRINT]     },
+[2026-04-26 05:35:12.134] [PRINT]     {
+[2026-04-26 05:35:12.134] [PRINT]       "step": 2,
+[2026-04-26 05:35:12.134] [PRINT]       "agent": "llm_tool",
+[2026-04-26 05:35:12.134] [PRINT]       "tool": "transform_text",
+[2026-04-26 05:35:12.134] [PRINT]       "description": "Skipped \u2014 depends on 'recent_emails' which was not available",
+[2026-04-26 05:35:12.134] [PRINT]       "status": "skipped"
+[2026-04-26 05:35:12.134] [PRINT]     }
+[2026-04-26 05:35:12.134] [PRINT]   ],
+[2026-04-26 05:35:12.134] [PRINT]   "stopped_at_step": 1,
+[2026-04-26 05:35:12.134] [PRINT]   "error": "No emails found matching query: '\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30'",
+[2026-04-26 05:35:12.134] [PRINT]   "error_is_no_results": true
+[2026-04-26 05:35:12.134] [PRINT] }
+[2026-04-26 05:35:12.178] [INFO] [req_20260425213456_583522f8] [T:77120d03]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 98, "total": 392, "max": 2000, "response_preview": "**Search completed — No results found**\n\nNo emails were found matching your search criteria.\n  • Search query: `\"poor delivery\" after:2026/04/25 00:00 before:2026/04/26 04:30`\n\n**Suggestions:**\n  • Tr..."}
+[2026-04-26 05:35:12.215] [PRINT] 
+[2026-04-26 05:35:12.215] [PRINT] ============================================================
+[2026-04-26 05:35:12.225] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-26 05:35:12.236] [PRINT] ============================================================
+[2026-04-26 05:35:12.246] [PRINT]   LLM calls:        2
+[2026-04-26 05:35:12.257] [PRINT]   Total input:      8,710 tokens
+[2026-04-26 05:35:12.268] [PRINT]   Total output:     692 tokens
+[2026-04-26 05:35:12.282] [PRINT]   Total tokens:     9,402 tokens
+[2026-04-26 05:35:12.291] [PRINT]   Cached tokens:    7,168 (82.3% of input)
+[2026-04-26 05:35:12.300] [PRINT]   Estimated cost:   $0.0104
+[2026-04-26 05:35:12.311] [PRINT]   Total duration:   15527ms (15.5s)
+[2026-04-26 05:35:12.324] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-26 05:35:12.333] [PRINT]   Breakdown by call:
+[2026-04-26 05:35:12.342] [PRINT]     1. gpt-4o-mini      in=345    out=151   $0.0001 2884ms
+[2026-04-26 05:35:12.351] [PRINT]     2. gpt-4.1          in=8365   out=541   (cached=7168) $0.0103 7357ms
+[2026-04-26 05:35:12.361] [PRINT] ============================================================
+[2026-04-26 05:35:12.379] [INFO] [req_20260425213456_583522f8] [T:77120d03] ← RESPONSE: 200 (20167ms)
+[2026-04-26 05:35:12.379] [INFO] [req_20260425213456_583522f8] [T:77120d03] ─────────: ──────────────────────────────────────────────────
+[2026-04-26 05:35:12.382] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_77120d03
+[2026-04-26 05:36:29.136] [INFO] [req_20260425213456_583522f8] [T:77120d03] → REQUEST: PUT /threads/bfc86262-160a-4d55-a8b5-13de48606736_77120d03  | {"query": null}
+[2026-04-26 05:36:29.177] [INFO] [req_20260425213456_583522f8] [T:77120d03] ← RESPONSE: 200 (41ms)
+[2026-04-26 05:36:29.178] [INFO] [req_20260425213456_583522f8] [T:77120d03] ─────────: ──────────────────────────────────────────────────

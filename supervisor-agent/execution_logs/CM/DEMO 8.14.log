@@ -1,0 +1,916 @@
+[2026-04-23 23:25:06.879] [INFO] [-] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-23 23:25:06.899] [INFO] [-] ← RESPONSE: 200 (20ms)
+[2026-04-23 23:25:06.900] [INFO] [-] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 23:25:12.510] [INFO] [-] → REQUEST: POST /threads  | {"query": null}
+[2026-04-23 23:25:12.516] [INFO] [-] [T:new]   STEP [create_thread]: user=bfc86262-160a-4d55-a8b5-13de48606736, has_message=True
+[2026-04-23 23:25:17.559] [PRINT]  Created thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c for user: bfc86262-160a-4d55-a8b5-13de48606736
+[2026-04-23 23:25:17.602] [PRINT]  Created new thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c for user: bfc86262-160a-4d55-a8b5-13de48606736 with title: None
+[2026-04-23 23:25:17.638] [PRINT] Saved conversation state to SQLite: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:25:17.671] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:25:17.691] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:25:17.712] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:25:17.735] [PRINT]   User: Create a calendar event titled SafeExpress Daily Ops Sync for tomorrow at 9:00 AM for 30 minutes, then notify them about...
+[2026-04-23 23:25:17.764] [PRINT]   ConversationState:
+[2026-04-23 23:25:17.800] [PRINT]     extracted_info: {}
+[2026-04-23 23:25:17.829] [PRINT]     missing_fields: []
+[2026-04-23 23:25:17.857] [PRINT]     intent: null
+[2026-04-23 23:25:17.879] [PRINT]     clarification_question: null
+[2026-04-23 23:25:17.894] [PRINT]     ready_for_execution: false
+[2026-04-23 23:25:17.912] [PRINT]     execution_summary: null
+[2026-04-23 23:25:17.930] [PRINT]     execution_mode: "standard"
+[2026-04-23 23:25:17.951] [PRINT]     execution_history: []
+[2026-04-23 23:25:17.973] [PRINT]     completed_tasks: []
+[2026-04-23 23:25:17.996] [PRINT]     has_executed: false
+[2026-04-23 23:25:18.015] [PRINT]     last_executed_at: null
+[2026-04-23 23:25:18.034] [PRINT]     last_execution_status: null
+[2026-04-23 23:25:18.050] [PRINT]     last_execution_message: null
+[2026-04-23 23:25:18.065] [PRINT]     executing: false
+[2026-04-23 23:25:18.080] [PRINT]     pending_actions: []
+[2026-04-23 23:25:18.095] [PRINT]     workflow_paused: false
+[2026-04-23 23:25:18.109] [PRINT]     remaining_steps: []
+[2026-04-23 23:25:18.124] [PRINT]     workflow_context: null
+[2026-04-23 23:25:18.140] [PRINT]     disambiguation_options: []
+[2026-04-23 23:25:18.154] [PRINT]     disambiguation_variable: null
+[2026-04-23 23:25:18.168] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:25:18.182] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_556cf94c, msg=Create a calendar event titled SafeExpress Daily Ops Sync for tomorrow at 9:00 A
+[2026-04-23 23:25:18.590] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 94, "total": 94, "max": 2000}
+[2026-04-23 23:25:18.610] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-23 23:25:18.611] [PRINT] 
+[2026-04-23 23:25:18.611] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:25:18.626] [PRINT] TIER 0.5 — Building prompt
+[2026-04-23 23:25:18.643] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:25:18.660] [PRINT]    bot_signal : (none)
+[2026-04-23 23:25:18.681] [PRINT]    state_block: (none)
+[2026-04-23 23:25:18.700] [PRINT]    file_context: (none)
+[2026-04-23 23:25:18.719] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:25:20.852] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=784 out=42 | $0.0001 | 1988ms | cumulative: in=784 out=42 total=826 $0.0001
+[2026-04-23 23:25:20.891] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting multiple actions including creating a calendar event and a Google Doc with specific details.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting multiple actions including creating a calendar event and a Google Doc with specific details.\"\n}"}
+[2026-04-23 23:25:20.894] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-04-23 23:25:20.899] [PRINT] 
+[2026-04-23 23:25:20.899] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:25:20.937] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-23 23:25:20.979] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:25:21.018] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-23 23:25:21.021] [PRINT] 
+[2026-04-23 23:25:21.021] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 23:25:21.048] [PRINT] BUILDING LLM CONTEXT
+[2026-04-23 23:25:21.082] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 23:25:21.123] [PRINT]    Summary: none
+[2026-04-23 23:25:21.158] [PRINT]    Recent messages: 1
+[2026-04-23 23:25:21.195] [PRINT]       USER: Create a calendar event titled SafeExpress Daily Ops Sync for tomorrow at 9:00 A...
+[2026-04-23 23:25:21.238] [PRINT] 
+[2026-04-23 23:25:21.238] [PRINT]    Final context: 431 chars (~107 tokens)
+[2026-04-23 23:25:21.273] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 23:25:21.305] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=1, ~107 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 431, "context_tokens_est": 107}
+[2026-04-23 23:25:21.306] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-23 23:25:22.826] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1706 out=20, cached=1664 | $0.0001 | 1416ms | cumulative: in=2490 out=62 total=2552 $0.0003
+[2026-04-23 23:25:22.890] [PRINT]    relevant_agents: ['calendar_agent', 'docs_agent', 'gmail_agent', 'llm_tool']
+[2026-04-23 23:25:22.910] [PRINT]    capabilities (top-level): ['**CALENDAR_AGENT:**', '**DOCS_AGENT:**', '**GMAIL_AGENT:**', '**LLM_TOOL:**']
+[2026-04-23 23:25:22.926] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["calendar_agent", "docs_agent", "gmail_agent", "llm_tool"]}
+[2026-04-23 23:25:22.927] [PRINT]    user_prompt (859 chars):
+[2026-04-23 23:25:22.944] [PRINT]      RECENT CONVERSATION:
+[2026-04-23 23:25:22.962] [PRINT]      USER: Create a calendar event titled SafeExpress Daily Ops Sync for tomorrow at 9:00 AM for 30 minutes, then notify them about the meeting, the email is cm.carla03@gmail.com. Then create a Google Doc named 'SafeExpress Daily Ops Sync' with sections Yesterday’s Issues, Today’s Priorities, and Blockers, and place the created Google Doc named 'SafeExpress Daily Ops Sync' link in the calendar event description.
+[2026-04-23 23:25:22.982] [PRINT]      
+[2026-04-23 23:25:23.001] [PRINT]      CURRENT USER MESSAGE: Create a calendar event titled SafeExpress Da...
+[2026-04-23 23:25:23.019] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:25:27.635] [PRINT]  OK [1] gpt-4.1-mini | tier_1_full_analysis | in=2249 out=301 | $0.0014 | 4497ms | cumulative: in=4739 out=363 total=5102 $0.0017
+[2026-04-23 23:25:27.661] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "compound", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user requests creating a calendar event with a specific title, time, duration, and attendee email, then notifying the attendee. Next, they want a Google Doc with specified sections created and the", "extracted_info": {"calendar_event": {"title": "SafeExpress Daily Ops Sync", "start_time": "tomorrow 9:00 AM", "duration_minutes"
+[2026-04-23 23:25:27.667] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-23 23:25:27.669] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Create a calendar event titled 'SafeExpress Daily Ops Sync' for tomorrow at 9:00 AM for 30 minutes with attendee cm.carla03@gmail.com, notify them about the meeting, create a Google Doc named 'SafeExpress Daily Ops Sync' with sections Yesterday’s Issues, Today’s Priorities, and Blockers, and place the Google Doc link in th
+[2026-04-23 23:25:31.551] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=346 out=118 | $0.0001 | 3803ms | cumulative: in=5085 out=481 total=5566 $0.0018
+[2026-04-23 23:25:31.587] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 147, "total": 241, "max": 2000, "response_preview": "**Ready to execute!**\n\n- **Calendar Event Title:** SafeExpress Daily Ops Sync  \n- **Date and Time:** Tomorrow at 9:00 AM  \n- **Duration:** 30 minutes  \n- **Attendees:** cm.carla03@gmail.com  \n- **Noti..."}
+[2026-04-23 23:25:31.741] [PRINT] 
+[2026-04-23 23:25:31.741] [PRINT] ============================================================
+[2026-04-23 23:25:31.786] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 23:25:31.828] [PRINT] ============================================================
+[2026-04-23 23:25:31.846] [PRINT]   LLM calls:        4
+[2026-04-23 23:25:31.863] [PRINT]   Total input:      5,085 tokens
+[2026-04-23 23:25:31.882] [PRINT]   Total output:     481 tokens
+[2026-04-23 23:25:31.911] [PRINT]   Total tokens:     5,566 tokens
+[2026-04-23 23:25:31.941] [PRINT]   Cached tokens:    1,664 (32.7% of input)
+[2026-04-23 23:25:31.965] [PRINT]   Estimated cost:   $0.0018
+[2026-04-23 23:25:31.985] [PRINT]   Total duration:   14065ms (14.1s)
+[2026-04-23 23:25:32.002] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-23 23:25:32.020] [PRINT]   Breakdown by call:
+[2026-04-23 23:25:32.040] [PRINT]     1. gpt-4o-mini      in=784    out=42    $0.0001 1988ms
+[2026-04-23 23:25:32.057] [PRINT]     2. gpt-4o-mini      in=1706   out=20    (cached=1664) $0.0001 1416ms
+[2026-04-23 23:25:32.074] [PRINT]     3. gpt-4.1-mini     in=2249   out=301   $0.0014 4497ms
+[2026-04-23 23:25:32.094] [PRINT]     4. gpt-4o-mini      in=346    out=118   $0.0001 3803ms
+[2026-04-23 23:25:32.111] [PRINT] ============================================================
+[2026-04-23 23:25:35.147] [INFO] [req_20260423152517_0b3cec25] [T:new] ← RESPONSE: 200 (22637ms)
+[2026-04-23 23:25:35.149] [INFO] [req_20260423152517_0b3cec25] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 23:26:37.357] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:26:37.437] [INFO] [req_20260423152517_0b3cec25] [T:new] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_556cf94c/messages  | {"query": null}
+[2026-04-23 23:26:42.658] [INFO] [req_20260423152642_d9bb1119] [T:556cf94c]   USER MSG: "add this:
+
+Notification Email Sent To: cm.carla03@gmail.com
+
+Subject: SafeExpress Daily Ops Sync — T..."
+[2026-04-23 23:26:42.664] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:26:42.680] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:26:42.699] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:26:42.718] [PRINT]   User: add this:
+[2026-04-23 23:26:42.718] [PRINT] 
+[2026-04-23 23:26:42.718] [PRINT] Notification Email Sent To: cm.carla03@gmail.com
+[2026-04-23 23:26:42.718] [PRINT] 
+[2026-04-23 23:26:42.718] [PRINT] Subject: SafeExpress Daily Ops Sync — Tomorrow at 9:00 AM
+[2026-04-23 23:26:42.718] [PRINT] 
+[2026-04-23 23:26:42.718] [PRINT] ...
+[2026-04-23 23:26:42.735] [PRINT]   ConversationState:
+[2026-04-23 23:26:42.752] [PRINT]     extracted_info: {"_cached_tool_filter": {"calendar_agent": ["create_event", "update_event", "list_events"], "docs_agent": ["create_doc", "list_my_docs", "create_doc_with_content"], "gmail_agent": ["create_draft_email", "send_draft_email", "search_drafts"]}, "calendar_event": {"title": "SafeExpress Daily Ops Sync", "start_time": "tomorrow 9:00 AM", "duration_minutes": 30, "attendees": ["cm.carla03@gmail.com"]}, "google_doc": {"title": "SafeExpress Daily Ops Sync", "sections": ["Yesterday\u2019s Issues", "Today\u2019s Priorities", "Blockers"]}}
+[2026-04-23 23:26:42.770] [PRINT]     missing_fields: []
+[2026-04-23 23:26:42.792] [PRINT]     intent: "ready_to_execute"
+[2026-04-23 23:26:42.818] [PRINT]     clarification_question: null
+[2026-04-23 23:26:42.846] [PRINT]     ready_for_execution: false
+[2026-04-23 23:26:42.873] [PRINT]     execution_summary: "Create a calendar event titled 'SafeExpress Daily Ops Sync' for tomorrow at 9:00 AM for 30 minutes with attendee cm.carla03@gmail.com, notify them about the meeting, create a Google Doc named 'SafeExpress Daily Ops Sync' with sections Yesterday\u2019s Issues, Today\u2019s Priorities, and Blockers, and place the Google Doc link in the calendar event description."
+[2026-04-23 23:26:42.893] [PRINT]     execution_mode: "standard"
+[2026-04-23 23:26:42.913] [PRINT]     execution_history: []
+[2026-04-23 23:26:42.934] [PRINT]     completed_tasks: []
+[2026-04-23 23:26:42.955] [PRINT]     has_executed: false
+[2026-04-23 23:26:42.984] [PRINT]     last_executed_at: null
+[2026-04-23 23:26:43.006] [PRINT]     last_execution_status: null
+[2026-04-23 23:26:43.027] [PRINT]     last_execution_message: null
+[2026-04-23 23:26:43.050] [PRINT]     executing: false
+[2026-04-23 23:26:43.073] [PRINT]     pending_actions: []
+[2026-04-23 23:26:43.096] [PRINT]     workflow_paused: false
+[2026-04-23 23:26:43.115] [PRINT]     remaining_steps: []
+[2026-04-23 23:26:43.136] [PRINT]     workflow_context: null
+[2026-04-23 23:26:43.162] [PRINT]     disambiguation_options: []
+[2026-04-23 23:26:43.184] [PRINT]     disambiguation_variable: null
+[2026-04-23 23:26:43.200] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:26:43.215] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_556cf94c, msg=add this:
+
+Notification Email Sent To: cm.carla03@gmail.com
+
+Subject: SafeExpres
+[2026-04-23 23:26:43.216] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 52, "total": 293, "max": 2000}
+[2026-04-23 23:26:43.228] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check
+    ↳ {"extracted_info": {"_cached_tool_filter": {"calendar_agent": ["create_event", "update_event", "list_events"], "docs_agent": ["create_doc", "list_my_docs", "create_doc_with_content"], "gmail_agent": ["create_draft_email", "send_draft_email", "search_drafts"]}, "calendar_event": {"title": "SafeExpress Daily Ops Sync", "start_time": "tomorrow 9:00 AM", "duration_minutes": 30, "attendees": ["cm.carla03@gmail.com"]}, "google_doc": {"title": "SafeExpress Daily Ops Sync", "sections": ["Yesterday’s Iss
+[2026-04-23 23:26:43.230] [PRINT] 
+[2026-04-23 23:26:43.230] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:26:43.247] [PRINT] TIER 0.5 — Building prompt
+[2026-04-23 23:26:43.266] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:26:43.283] [PRINT]    bot_signal : PHASE: Awaiting user CONFIRMATION to execute.
+[2026-04-23 23:26:43.303] [PRINT]    state_block: TASK FIELDS: [_cached_tool_filter, calendar_event, google_doc]
+[2026-04-23 23:26:43.325] [PRINT]    file_context: (none)
+[2026-04-23 23:26:43.357] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:26:45.415] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=922 out=40 | $0.0002 | 1974ms | cumulative: in=922 out=40 total=962 $0.0002
+[2026-04-23 23:26:45.443] [INFO] [-]   STEP [tier0.5]: category: MODIFICATION, confidence: high
+    ↳ {"reasoning": "The user is requesting to add specific details to the existing calendar event and email notification.", "raw_response": "{\n    \"category\": \"modification\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting to add specific details to the existing calendar event and email notification.\"\n}"}
+[2026-04-23 23:26:45.444] [INFO] [-]   STEP [tier0.5]: complex modification — proceeding to full analysis
+[2026-04-23 23:26:45.445] [PRINT] 
+[2026-04-23 23:26:45.445] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:26:45.467] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-23 23:26:45.491] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:26:45.516] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-23 23:26:45.517] [PRINT] 
+[2026-04-23 23:26:45.517] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 23:26:45.544] [PRINT] BUILDING LLM CONTEXT
+[2026-04-23 23:26:45.569] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 23:26:45.600] [PRINT]    Summary: none
+[2026-04-23 23:26:45.627] [PRINT]    Recent messages: 3
+[2026-04-23 23:26:45.659] [PRINT]       USER: Create a calendar event titled SafeExpress Daily Ops Sync for tomorrow at 9:00 A...
+[2026-04-23 23:26:45.686] [PRINT]       ASSISTANT: **Ready to execute!**
+[2026-04-23 23:26:45.686] [PRINT] 
+[2026-04-23 23:26:45.686] [PRINT] - **Calendar Event Title:** SafeExpress Daily Ops Sync  
+[2026-04-23 23:26:45.686] [PRINT] ...
+[2026-04-23 23:26:45.714] [PRINT]       USER: add this:
+[2026-04-23 23:26:45.714] [PRINT] 
+[2026-04-23 23:26:45.714] [PRINT] Notification Email Sent To: cm.carla03@gmail.com
+[2026-04-23 23:26:45.714] [PRINT] 
+[2026-04-23 23:26:45.714] [PRINT] Subject: SafeExpres...
+[2026-04-23 23:26:45.742] [PRINT] 
+[2026-04-23 23:26:45.742] [PRINT]    Final context: 1240 chars (~310 tokens)
+[2026-04-23 23:26:45.773] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 23:26:45.799] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=3, ~310 tokens  | {"has_summary": false, "recent_messages": 3, "context_chars": 1240, "context_tokens_est": 310}
+[2026-04-23 23:26:45.801] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-23 23:26:47.940] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1664 out=19, cached=1536 | $0.0001 | 1814ms | cumulative: in=2586 out=59 total=2645 $0.0003
+[2026-04-23 23:26:47.987] [PRINT]    relevant_agents: ['gmail_agent', 'calendar_agent', 'docs_agent']
+[2026-04-23 23:26:48.033] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**', '**CALENDAR_AGENT:**', '**DOCS_AGENT:**']
+[2026-04-23 23:26:48.074] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent", "calendar_agent", "docs_agent"]}
+[2026-04-23 23:26:48.078] [PRINT]    user_prompt (1468 chars):
+[2026-04-23 23:26:48.106] [PRINT]      RECENT CONVERSATION:
+[2026-04-23 23:26:48.128] [PRINT]      USER: Create a calendar event titled SafeExpress Daily Ops Sync for tomorrow at 9:00 AM for 30 minutes, then notify them about the meeting, the email is cm.carla03@gmail.com. Then create a Google Doc named 'SafeExpress Daily Ops Sync' with sections Yesterday’s Issues, Today’s Priorities, and Blockers, and place the created Google Doc named 'SafeExpress Daily Ops Sync' link in the calendar event description.
+[2026-04-23 23:26:48.151] [PRINT]      ASSISTANT: **Ready to execute!**
+[2026-04-23 23:26:48.175] [PRINT]      
+[2026-04-23 23:26:48.190] [PRINT]      - **Calendar Event Title:** SafeEx...
+[2026-04-23 23:26:48.206] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 23:26:52.734] [PRINT]  OK [1] gpt-4.1-mini | tier_1_full_analysis | in=2386 out=344 | $0.0015 | 4412ms | cumulative: in=4972 out=403 total=5375 $0.0018
+[2026-04-23 23:26:52.763] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "create_event_and_doc_with_notification_email", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "User wants to add a notification email with specified recipient, subject, and body to the previously planned calendar event and Google Doc creation task.", "extracted_info": {"calendar_event": {"title": "SafeExpress Daily Ops Sync", "date_time": "tomorrow 9:00 AM", "duration_minutes": 30, "atten
+[2026-04-23 23:26:52.767] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-23 23:26:52.768] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Create calendar event 'SafeExpress Daily Ops Sync' for tomorrow at 9:00 AM for 30 minutes with attendee cm.carla03@gmail.com, create Google Doc 'SafeExpress Daily Ops Sync' with specified sections, include the doc link in the event description, and send a notification email to cm.carla03@gmail.com with the given subject an
+[2026-04-23 23:26:56.951] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=412 out=162 | $0.0002 | 4084ms | cumulative: in=5384 out=565 total=5949 $0.0020
+[2026-04-23 23:26:56.988] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 180, "total": 473, "max": 2000, "response_preview": "**Ready to execute!**\n\n- **Calendar Event**: SafeExpress Daily Ops Sync  \n- **Date & Time**: Tomorrow at 9:00 AM  \n- **Duration**: 30 minutes  \n- **Attendees**: cm.carla03@gmail.com  \n- **Description*..."}
+[2026-04-23 23:26:57.062] [INFO] [req_20260423152642_d9bb1119] [T:556cf94c]   BOT RESP: "**Ready to execute!**
+
+- **Calendar Event**: SafeExpress Daily Ops Sync  
+- **Date & Time**: Tomorro..."
+[2026-04-23 23:26:57.084] [PRINT] 
+[2026-04-23 23:26:57.084] [PRINT] ============================================================
+[2026-04-23 23:26:57.103] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 23:26:57.122] [PRINT] ============================================================
+[2026-04-23 23:26:57.143] [PRINT]   LLM calls:        4
+[2026-04-23 23:26:57.167] [PRINT]   Total input:      5,384 tokens
+[2026-04-23 23:26:57.188] [PRINT]   Total output:     565 tokens
+[2026-04-23 23:26:57.206] [PRINT]   Total tokens:     5,949 tokens
+[2026-04-23 23:26:57.222] [PRINT]   Cached tokens:    1,536 (28.5% of input)
+[2026-04-23 23:26:57.237] [PRINT]   Estimated cost:   $0.0020
+[2026-04-23 23:26:57.259] [PRINT]   Total duration:   14446ms (14.4s)
+[2026-04-23 23:26:57.278] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-23 23:26:57.299] [PRINT]   Breakdown by call:
+[2026-04-23 23:26:57.320] [PRINT]     1. gpt-4o-mini      in=922    out=40    $0.0002 1974ms
+[2026-04-23 23:26:57.349] [PRINT]     2. gpt-4o-mini      in=1664   out=19    (cached=1536) $0.0001 1814ms
+[2026-04-23 23:26:57.372] [PRINT]     3. gpt-4.1-mini     in=2386   out=344   $0.0015 4412ms
+[2026-04-23 23:26:57.400] [PRINT]     4. gpt-4o-mini      in=412    out=162   $0.0002 4084ms
+[2026-04-23 23:26:57.432] [PRINT] ============================================================
+[2026-04-23 23:27:00.469] [INFO] [req_20260423152642_d9bb1119] [T:556cf94c] ← RESPONSE: 200 (23032ms)
+[2026-04-23 23:27:00.472] [INFO] [req_20260423152642_d9bb1119] [T:556cf94c] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 23:27:00.493] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:27:13.029] [INFO] [req_20260423152642_d9bb1119] [T:556cf94c] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_556cf94c/messages  | {"query": null}
+[2026-04-23 23:27:18.238] [INFO] [req_20260423152718_2604c660] [T:556cf94c]   USER MSG: "yes"
+[2026-04-23 23:27:18.253] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:27:18.261] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:27:18.295] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:27:18.324] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:27:18.338] [PRINT]   User: yes
+[2026-04-23 23:27:18.353] [PRINT]   ConversationState:
+[2026-04-23 23:27:18.371] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["send_draft_email", "create_draft_email", "search_drafts"], "calendar_agent": ["create_event", "update_event", "list_events"], "docs_agent": ["create_doc", "list_my_docs", "create_doc_with_content"]}, "calendar_event": {"title": "SafeExpress Daily Ops Sync", "date_time": "tomorrow 9:00 AM", "duration_minutes": 30, "attendees": ["cm.carla03@gmail.com"], "description_includes_doc_link": true}, "google_doc": {"title": "SafeExpress Daily Ops Sync", "sections": ["Yesterday\u2019s Issues", "Today\u2019s Priorities", "Blockers"]}, "notification_email": {"to": "cm.carla03@gmail.com", "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM", "body": "Invitation to the meeting with details about the doc in the event description."}}
+[2026-04-23 23:27:18.392] [PRINT]     missing_fields: []
+[2026-04-23 23:27:18.411] [PRINT]     intent: "ready_to_execute"
+[2026-04-23 23:27:18.428] [PRINT]     clarification_question: null
+[2026-04-23 23:27:18.448] [PRINT]     ready_for_execution: false
+[2026-04-23 23:27:18.468] [PRINT]     execution_summary: "Create calendar event 'SafeExpress Daily Ops Sync' for tomorrow at 9:00 AM for 30 minutes with attendee cm.carla03@gmail.com, create Google Doc 'SafeExpress Daily Ops Sync' with specified sections, include the doc link in the event description, and send a notification email to cm.carla03@gmail.com with the given subject and body."
+[2026-04-23 23:27:18.490] [PRINT]     execution_mode: "standard"
+[2026-04-23 23:27:18.523] [PRINT]     execution_history: []
+[2026-04-23 23:27:18.552] [PRINT]     completed_tasks: []
+[2026-04-23 23:27:18.578] [PRINT]     has_executed: false
+[2026-04-23 23:27:18.602] [PRINT]     last_executed_at: null
+[2026-04-23 23:27:18.629] [PRINT]     last_execution_status: null
+[2026-04-23 23:27:18.654] [PRINT]     last_execution_message: null
+[2026-04-23 23:27:18.676] [PRINT]     executing: false
+[2026-04-23 23:27:18.702] [PRINT]     pending_actions: []
+[2026-04-23 23:27:18.728] [PRINT]     workflow_paused: false
+[2026-04-23 23:27:18.749] [PRINT]     remaining_steps: []
+[2026-04-23 23:27:18.774] [PRINT]     workflow_context: null
+[2026-04-23 23:27:18.798] [PRINT]     disambiguation_options: []
+[2026-04-23 23:27:18.820] [PRINT]     disambiguation_variable: null
+[2026-04-23 23:27:18.839] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:27:18.864] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_556cf94c, msg=yes
+[2026-04-23 23:27:18.867] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 479, "max": 2000}
+[2026-04-23 23:27:18.885] [INFO] [-]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-23 23:27:18.889] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-23 23:27:18.891] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Create calendar event 'SafeExpress Daily Ops Sync' for tomorrow at 9:00 AM for 30 minutes with attendee cm.carla03@gmail.com, create Google Doc 'SafeExpress Daily Ops Sync' with specified sections, include the doc link in the event description, and send a notification email to cm.carla03@gmail.com with the given subject and
+[2026-04-23 23:27:22.231] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=412 out=155 | $0.0002 | 3236ms | cumulative: in=412 out=155 total=567 $0.0002
+[2026-04-23 23:27:22.264] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 175, "total": 654, "max": 2000, "response_preview": "**Ready to execute!**\n\n- **Calendar Event**: SafeExpress Daily Ops Sync\n- **Date & Time**: Tomorrow at 9:00 AM\n- **Duration**: 30 minutes\n- **Attendees**: cm.carla03@gmail.com\n- **Description**: Inclu..."}
+[2026-04-23 23:27:22.340] [INFO] [req_20260423152718_2604c660] [T:556cf94c]   BOT RESP [READY TO EXECUTE]: "**Ready to execute!**
+
+- **Calendar Event**: SafeExpress Daily Ops Sync
+- **Date & Time**: Tomorrow ..."
+[2026-04-23 23:27:22.341] [PRINT] Thread bfc86262-160a-4d55-a8b5-13de48606736_556cf94c ready - executing workflow...
+[2026-04-23 23:27:22.355] [INFO] [req_20260423152718_2604c660] [T:556cf94c]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-23 23:27:22.389] [INFO] [req_20260423152718_2604c660] [T:556cf94c]   WORKFLOW START: "Create calendar event 'SafeExpress Daily Ops Sync' for tomorrow at 9:00 AM for 3..." (0 steps)
+[2026-04-23 23:27:22.390] [PRINT]  Date context: today=2026-04-23
+[2026-04-23 23:27:22.406] [PRINT]  Starting workflow execution (mode=standard)...
+[2026-04-23 23:27:22.421] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-23 23:27:22.424] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-23 23:27:22.442] [PRINT] 
+[2026-04-23 23:27:22.442] [PRINT] ============================================================
+[2026-04-23 23:27:22.459] [PRINT] SUPERVISOR NODE - Planning Phase
+[2026-04-23 23:27:22.477] [PRINT] ============================================================
+[2026-04-23 23:27:22.495] [PRINT] User Input: Create calendar event 'SafeExpress Daily Ops Sync' for tomorrow at 9:00 AM for 30 minutes with attendee cm.carla03@gmail.com, create Google Doc 'SafeExpress Daily Ops Sync' with specified sections, include the doc link in the event description, and send a notification email to cm.carla03@gmail.com with the given subject and body.
+[2026-04-23 23:27:22.495] [PRINT] 
+[2026-04-23 23:27:22.495] [PRINT] Parameters:
+[2026-04-23 23:27:22.495] [PRINT] - calendar_event: {
+[2026-04-23 23:27:22.495] [PRINT]   "title": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:27:22.495] [PRINT]   "date_time": "tomorrow 9:00 AM",
+[2026-04-23 23:27:22.495] [PRINT]   "duration_minutes": 30,
+[2026-04-23 23:27:22.495] [PRINT]   "attendees": [
+[2026-04-23 23:27:22.495] [PRINT]     "cm.carla03@gmail.com"
+[2026-04-23 23:27:22.495] [PRINT]   ],
+[2026-04-23 23:27:22.495] [PRINT]   "description_includes_doc_link": true
+[2026-04-23 23:27:22.495] [PRINT] }
+[2026-04-23 23:27:22.495] [PRINT] - google_doc: {
+[2026-04-23 23:27:22.495] [PRINT]   "title": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:27:22.495] [PRINT]   "sections": [
+[2026-04-23 23:27:22.495] [PRINT]     "Yesterday\u2019s Issues",
+[2026-04-23 23:27:22.495] [PRINT]     "Today\u2019s Priorities",
+[2026-04-23 23:27:22.495] [PRINT]     "Blockers"
+[2026-04-23 23:27:22.495] [PRINT]   ]
+[2026-04-23 23:27:22.495] [PRINT] }
+[2026-04-23 23:27:22.495] [PRINT] - notification_email: {
+[2026-04-23 23:27:22.495] [PRINT]   "to": "cm.carla03@gmail.com",
+[2026-04-23 23:27:22.495] [PRINT]   "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM",
+[2026-04-23 23:27:22.495] [PRINT]   "body": "Invitation to the meeting with details about the doc in the event description."
+[2026-04-23 23:27:22.495] [PRINT] }
+[2026-04-23 23:27:22.514] [INFO] [-]   STEP [supervisor_node]: Planning for: Create calendar event 'SafeExpress Daily Ops Sync' for tomorrow at 9:00 AM for 3
+[2026-04-23 23:27:22.515] [PRINT] Context dates: today=2026-04-23
+[2026-04-23 23:27:22.544] [PRINT] Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-23 23:27:22.564] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['gmail_agent', 'calendar_agent', 'docs_agent']
+[2026-04-23 23:27:22.565] [PRINT] Relevant agents: ['gmail_agent', 'calendar_agent', 'docs_agent', 'llm_tool']
+[2026-04-23 23:27:22.581] [PRINT] Filtered tools: {'gmail_agent': ['send_draft_email', 'create_draft_email', 'search_drafts'], 'calendar_agent': ['create_event', 'list_events', 'update_event'], 'docs_agent': ['create_doc', 'list_my_docs', 'create_doc_with_content']}
+[2026-04-23 23:27:22.602] [PRINT] Calling LLM to generate multi-step plan...
+[2026-04-23 23:27:22.622] [PRINT] Token optimization:
+[2026-04-23 23:27:22.641] [PRINT]    Agents: 4/7
+[2026-04-23 23:27:22.659] [PRINT]    Tools: 9/63
+[2026-04-23 23:27:22.678] [PRINT]    Context size: 11,078 chars (~2,769 tokens)
+[2026-04-23 23:27:22.700] [INFO] [-]   STEP [plan_generation_start]: agents=4/7, tools=9/63, context_tokens~2769
+[2026-04-23 23:27:29.393] [PRINT]  OK [supervisor] gpt-4.1 | plan_generation | in=6212 out=330 | $0.0151 | 6566ms | cumulative: in=6624 out=485 total=7109 $0.0152
+[2026-04-23 23:27:29.412] [PRINT] Plan generated successfully!
+[2026-04-23 23:27:29.427] [PRINT] 
+[2026-04-23 23:27:29.427] [PRINT] Generated Plan:
+[2026-04-23 23:27:29.427] [PRINT] {
+[2026-04-23 23:27:29.427] [PRINT]   "steps": [
+[2026-04-23 23:27:29.427] [PRINT]     {
+[2026-04-23 23:27:29.427] [PRINT]       "agent": "docs_agent",
+[2026-04-23 23:27:29.427] [PRINT]       "tool": "create_doc_with_content",
+[2026-04-23 23:27:29.427] [PRINT]       "inputs": {
+[2026-04-23 23:27:29.427] [PRINT]         "title": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:27:29.427] [PRINT]         "text": "SafeExpress Daily Ops Sync\n\nYesterday\u2019s Issues\n\nToday\u2019s Priorities\n\nBlockers"
+[2026-04-23 23:27:29.427] [PRINT]       },
+[2026-04-23 23:27:29.427] [PRINT]       "output_variables": {
+[2026-04-23 23:27:29.427] [PRINT]         "doc_url": "document_url"
+[2026-04-23 23:27:29.427] [PRINT]       },
+[2026-04-23 23:27:29.427] [PRINT]       "description": "Create a Google Doc titled 'SafeExpress Daily Ops Sync' with the specified sections and capture its URL."
+[2026-04-23 23:27:29.427] [PRINT]     },
+[2026-04-23 23:27:29.427] [PRINT]     {
+[2026-04-23 23:27:29.427] [PRINT]       "agent": "calendar_agent",
+[2026-04-23 23:27:29.427] [PRINT]       "tool": "create_event",
+[2026-04-23 23:27:29.427] [PRINT]       "inputs": {
+[2026-04-23 23:27:29.427] [PRINT]         "summary": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:27:29.427] [PRINT]         "start_time": "tomorrow 9:00 AM",
+[2026-04-23 23:27:29.427] [PRINT]         "end_time": "tomorrow 9:30 AM",
+[2026-04-23 23:27:29.427] [PRINT]         "attendees": [
+[2026-04-23 23:27:29.427] [PRINT]           "cm.carla03@gmail.com"
+[2026-04-23 23:27:29.427] [PRINT]         ],
+[2026-04-23 23:27:29.427] [PRINT]         "description": "Google Doc for meeting notes: {{ doc_url }}"
+[2026-04-23 23:27:29.427] [PRINT]       },
+[2026-04-23 23:27:29.427] [PRINT]       "output_variables": {
+[2026-04-23 23:27:29.427] [PRINT]         "event_url": "event_url"
+[2026-04-23 23:27:29.427] [PRINT]       },
+[2026-04-23 23:27:29.427] [PRINT]       "description": "Create the calendar event for tomorrow at 9:00 AM for 30 minutes, include the doc link in the description, and invite cm.carla03@gmail.com."
+[2026-04-23 23:27:29.427] [PRINT]     },
+[2026-04-23 23:27:29.427] [PRINT]     {
+[2026-04-23 23:27:29.427] [PRINT]       "agent": "gmail_agent",
+[2026-04-23 23:27:29.427] [PRINT]       "tool": "create_draft_email",
+[2026-04-23 23:27:29.427] [PRINT]       "inputs": {
+[2026-04-23 23:27:29.427] [PRINT]         "to": "cm.carla03@gmail.com",
+[2026-04-23 23:27:29.427] [PRINT]         "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM",
+[2026-04-23 23:27:29.427] [PRINT]         "body": "Invitation to the meeting with details about the doc in the event description."
+[2026-04-23 23:27:29.427] [PRINT]       },
+[2026-04-23 23:27:29.427] [PRINT]       "output_variables": {
+[2026-04-23 23:27:29.427] [PRINT]         "draft_id": "draft_id"
+[2026-04-23 23:27:29.427] [PRINT]       },
+[2026-04-23 23:27:29.427] [PRINT]       "description": "Create a draft notification email to cm.carla03@gmail.com with the provided subject and body."
+[2026-04-23 23:27:29.427] [PRINT]     },
+[2026-04-23 23:27:29.427] [PRINT]     {
+[2026-04-23 23:27:29.427] [PRINT]       "agent": "gmail_agent",
+[2026-04-23 23:27:29.427] [PRINT]       "tool": "send_draft_email",
+[2026-04-23 23:27:29.427] [PRINT]       "inputs": {
+[2026-04-23 23:27:29.427] [PRINT]         "draft_id": "{{ draft_id }}"
+[2026-04-23 23:27:29.427] [PRINT]       },
+[2026-04-23 23:27:29.427] [PRINT]       "output_variables": {},
+[2026-04-23 23:27:29.427] [PRINT]       "description": "Send the notification email to cm.carla03@gmail.com."
+[2026-04-23 23:27:29.427] [PRINT]     }
+[2026-04-23 23:27:29.427] [PRINT]   ]
+[2026-04-23 23:27:29.427] [PRINT] }
+[2026-04-23 23:27:29.444] [INFO] [-]   STEP [plan_generated]: 4 steps: docs_agent.create_doc_with_content, calendar_agent.create_event, gmail_agent.create_draft_email, gmail_agent.send_draft_email
+[2026-04-23 23:27:29.447] [PRINT] 
+[2026-04-23 23:27:29.447] [PRINT] Plan saved to: C:\Users\Carlos Miguel Carla\Documents\GitHub\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-23 23:27:29.464] [PRINT] ============================================================
+[2026-04-23 23:27:29.483] [PRINT] 
+[2026-04-23 23:27:29.483] [PRINT] ============================================================
+[2026-04-23 23:27:29.500] [PRINT] ORCHESTRATOR NODE - Execution Phase
+[2026-04-23 23:27:29.518] [PRINT] ============================================================
+[2026-04-23 23:27:29.537] [PRINT] Found 4 steps to execute
+[2026-04-23 23:27:29.554] [INFO] [-]   STEP [orchestrator_node]: 4 steps to execute
+[2026-04-23 23:27:29.555] [PRINT] 
+[2026-04-23 23:27:29.555] [PRINT] INITIAL CONTEXT:
+[2026-04-23 23:27:29.574] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:29.590] [PRINT]    today_date: 2026-04-23
+[2026-04-23 23:27:29.610] [PRINT]    _cached_tool_filter: dict (length: 3)
+[2026-04-23 23:27:29.630] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:29.653] [PRINT] Pre-flight credential check passed (5 fields)
+[2026-04-23 23:27:29.682] [PRINT] 
+[2026-04-23 23:27:29.682] [PRINT] ============================================================
+[2026-04-23 23:27:29.713] [PRINT] Step 1/4: docs_agent.create_doc_with_content
+[2026-04-23 23:27:29.751] [PRINT] Description: Create a Google Doc titled 'SafeExpress Daily Ops Sync' with the specified sections and capture its URL.
+[2026-04-23 23:27:29.795] [PRINT] ============================================================
+[2026-04-23 23:27:29.863] [PRINT] Risk Level: moderate
+[2026-04-23 23:27:29.891] [PRINT] 
+[2026-04-23 23:27:29.891] [PRINT] Substituting variables in inputs...
+[2026-04-23 23:27:29.916] [PRINT]    Original inputs: {
+[2026-04-23 23:27:29.916] [PRINT]       "title": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:27:29.916] [PRINT]       "text": "SafeExpress Daily Ops Sync\n\nYesterday\u2019s Issues\n\nToday\u2019s Priorities\n\nBlockers"
+[2026-04-23 23:27:29.916] [PRINT] }
+[2026-04-23 23:27:29.942] [PRINT]    Substituted inputs: {
+[2026-04-23 23:27:29.942] [PRINT]       "title": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:27:29.942] [PRINT]       "text": "SafeExpress Daily Ops Sync\n\nYesterday\u2019s Issues\n\nToday\u2019s Priorities\n\nBlockers"
+[2026-04-23 23:27:29.942] [PRINT] }
+[2026-04-23 23:27:29.960] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-23 23:27:29.982] [INFO] [-]   STEP [variable_substitution]: step 1: docs_agent.create_doc_with_content
+    ↳ {"inputs": {"title": "SafeExpress Daily Ops Sync", "text": "SafeExpress Daily Ops Sync\n\nYesterday’s Issues\n\nToday’s Priorities\n\nBlockers"}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-23 23:27:29.984] [PRINT] 
+[2026-04-23 23:27:29.984] [PRINT] Calling agent microservice: http://localhost:8002/execute_task
+[2026-04-23 23:27:30.003] [PRINT] 
+[2026-04-23 23:27:30.003] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-23 23:27:30.023] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:30.049] [PRINT]    Tool: create_doc_with_content
+[2026-04-23 23:27:30.078] [PRINT]    Inputs keys: ['title', 'text']
+[2026-04-23 23:27:30.112] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-23 23:27:30.146] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-23 23:27:30.172] [PRINT]    Payload size: 807 bytes
+[2026-04-23 23:27:30.207] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:30.239] [PRINT] 
+[2026-04-23 23:27:30.239] [PRINT] Sending request to agent...
+[2026-04-23 23:27:30.267] [PRINT]    URL: http://localhost:8002/execute_task
+[2026-04-23 23:27:30.297] [PRINT]    Timeout: 320 seconds
+[2026-04-23 23:27:30.318] [PRINT]    Max retries: 3
+[2026-04-23 23:27:30.338] [PRINT] Attempt 1/3 calling http://localhost:8002/execute_task
+[2026-04-23 23:27:30.361] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 23:27:42.821] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 23:27:42.911] [PRINT] ⏱ Agent call completed in 12672.14ms
+[2026-04-23 23:27:42.985] [PRINT] Agent response received
+[2026-04-23 23:27:43.052] [AGENT] [-]   AGENT:  docs_agent.create_doc_with_content (12672ms)  | {"title": "SafeExpress Daily Ops Sync", "text": "SafeExpress Daily Ops Sync\n\nYesterday’s Issues\n\nToday’s Priorities\n\nBlockers"}
+[2026-04-23 23:27:43.056] [PRINT] 
+[2026-04-23 23:27:43.056] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:43.119] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-23 23:27:43.185] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:43.256] [PRINT] {
+[2026-04-23 23:27:43.256] [PRINT]   "success": true,
+[2026-04-23 23:27:43.256] [PRINT]   "result": {
+[2026-04-23 23:27:43.256] [PRINT]     "success": true,
+[2026-04-23 23:27:43.256] [PRINT]     "document_id": "1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA",
+[2026-04-23 23:27:43.256] [PRINT]     "document_url": "https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit",
+[2026-04-23 23:27:43.256] [PRINT]     "title": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:27:43.256] [PRINT]     "text_length": 76,
+[2026-04-23 23:27:43.256] [PRINT]     "folder_id": null,
+[2026-04-23 23:27:43.256] [PRINT]     "folder_moved": false,
+[2026-04-23 23:27:43.256] [PRINT]     "folder_move_error": null
+[2026-04-23 23:27:43.256] [PRINT]   },
+[2026-04-23 23:27:43.256] [PRINT]   "raw_response": "{\"success\": true, \"document_id\": \"1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA\", \"document_url\": \"https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit\", \"title\": \"SafeExpress Daily Ops Sync\", \"text_length\": 76, \"folder_id\": null, \"folder_moved\": false, \"folder_move_error\": null}",
+[2026-04-23 23:27:43.256] [PRINT]   "error": null
+[2026-04-23 23:27:43.256] [PRINT] }
+[2026-04-23 23:27:43.353] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:43.492] [PRINT] 
+[2026-04-23 23:27:43.492] [PRINT] Variables added to context:
+[2026-04-23 23:27:43.603] [PRINT]    doc_url = https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit (from document_url)
+[2026-04-23 23:27:43.686] [PRINT] 
+[2026-04-23 23:27:43.686] [PRINT] CONTEXT AFTER STEP 1:
+[2026-04-23 23:27:43.723] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:43.754] [PRINT]    today_date: 2026-04-23
+[2026-04-23 23:27:43.788] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'calendar_agent', 'docs_agent']
+[2026-04-23 23:27:43.820] [PRINT]    step_1_docs_agent: Dict with keys: ['document_id', 'document_url', 'title', 'text_length', 'folder_id', 'folder_moved', 'folder_move_error']
+[2026-04-23 23:27:43.856] [PRINT]    doc_url: https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit
+[2026-04-23 23:27:43.889] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:44.005] [PRINT] 
+[2026-04-23 23:27:44.005] [PRINT] ============================================================
+[2026-04-23 23:27:44.055] [PRINT] Step 2/4: calendar_agent.create_event
+[2026-04-23 23:27:44.094] [PRINT] Description: Create the calendar event for tomorrow at 9:00 AM for 30 minutes, include the doc link in the description, and invite cm.carla03@gmail.com.
+[2026-04-23 23:27:44.153] [PRINT] ============================================================
+[2026-04-23 23:27:44.273] [PRINT] Risk Level: moderate
+[2026-04-23 23:27:44.339] [PRINT] 
+[2026-04-23 23:27:44.339] [PRINT] Substituting variables in inputs...
+[2026-04-23 23:27:44.400] [PRINT]    Original inputs: {
+[2026-04-23 23:27:44.400] [PRINT]       "summary": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:27:44.400] [PRINT]       "start_time": "tomorrow 9:00 AM",
+[2026-04-23 23:27:44.400] [PRINT]       "end_time": "tomorrow 9:30 AM",
+[2026-04-23 23:27:44.400] [PRINT]       "attendees": [
+[2026-04-23 23:27:44.400] [PRINT]             "cm.carla03@gmail.com"
+[2026-04-23 23:27:44.400] [PRINT]       ],
+[2026-04-23 23:27:44.400] [PRINT]       "description": "Google Doc for meeting notes: {{ doc_url }}"
+[2026-04-23 23:27:44.400] [PRINT] }
+[2026-04-23 23:27:44.475] [PRINT]    Substituted inputs: {
+[2026-04-23 23:27:44.475] [PRINT]       "summary": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:27:44.475] [PRINT]       "start_time": "tomorrow 9:00 AM",
+[2026-04-23 23:27:44.475] [PRINT]       "end_time": "tomorrow 9:30 AM",
+[2026-04-23 23:27:44.475] [PRINT]       "attendees": [
+[2026-04-23 23:27:44.475] [PRINT]             "cm.carla03@gmail.com"
+[2026-04-23 23:27:44.475] [PRINT]       ],
+[2026-04-23 23:27:44.475] [PRINT]       "description": "Google Doc for meeting notes: https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit"
+[2026-04-23 23:27:44.475] [PRINT] }
+[2026-04-23 23:27:44.518] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_docs_agent', 'doc_url']
+[2026-04-23 23:27:44.561] [INFO] [-]   STEP [variable_substitution]: step 2: calendar_agent.create_event
+    ↳ {"inputs": {"summary": "SafeExpress Daily Ops Sync", "start_time": "tomorrow 9:00 AM", "end_time": "tomorrow 9:30 AM", "attendees": ["cm.carla03@gmail.com"], "description": "Google Doc for meeting notes: https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit"}, "context_keys": ["today_date", "_cached_tool_filter", "step_1_docs_agent", "doc_url"]}
+[2026-04-23 23:27:44.567] [PRINT] 
+[2026-04-23 23:27:44.567] [PRINT] Calling agent microservice: http://localhost:8005/execute_task
+[2026-04-23 23:27:44.622] [PRINT] 
+[2026-04-23 23:27:44.622] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-23 23:27:44.725] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:44.760] [PRINT]    Tool: create_event
+[2026-04-23 23:27:44.799] [PRINT]    Inputs keys: ['summary', 'start_time', 'end_time', 'attendees', 'description']
+[2026-04-23 23:27:44.854] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-23 23:27:44.895] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-23 23:27:44.925] [PRINT]    Payload size: 932 bytes
+[2026-04-23 23:27:44.974] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:27:45.032] [PRINT] 
+[2026-04-23 23:27:45.032] [PRINT] Sending request to agent...
+[2026-04-23 23:27:45.075] [PRINT]    URL: http://localhost:8005/execute_task
+[2026-04-23 23:27:45.128] [PRINT]    Timeout: 320 seconds
+[2026-04-23 23:27:45.164] [PRINT]    Max retries: 3
+[2026-04-23 23:27:45.210] [PRINT] Attempt 1/3 calling http://localhost:8005/execute_task
+[2026-04-23 23:27:45.264] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 23:28:07.396] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 23:28:07.449] [PRINT] ⏱ Agent call completed in 22418.38ms
+[2026-04-23 23:28:07.499] [PRINT] Agent response received
+[2026-04-23 23:28:07.552] [AGENT] [-]   AGENT:  calendar_agent.create_event (22418ms)
+    ↳ {"summary": "SafeExpress Daily Ops Sync", "start_time": "tomorrow 9:00 AM", "end_time": "tomorrow 9:30 AM", "attendees": "['cm.carla03@gmail.com']", "description": "Google Doc for meeting notes: https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7Al..."}
+[2026-04-23 23:28:07.557] [PRINT] 
+[2026-04-23 23:28:07.557] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:07.611] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-23 23:28:07.650] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:07.700] [PRINT] {
+[2026-04-23 23:28:07.700] [PRINT]   "success": true,
+[2026-04-23 23:28:07.700] [PRINT]   "event_id": "n1tjn2s2fpb880b70oi5gv000c",
+[2026-04-23 23:28:07.700] [PRINT]   "event_url": "https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-23 23:28:07.700] [PRINT]   "meet_link": null,
+[2026-04-23 23:28:07.700] [PRINT]   "message": "Successfully created event 'SafeExpress Daily Ops Sync' from tomorrow 9:00 AM to tomorrow 9:30 AM\nInvitations sent to: cm.carla03@gmail.com\nView event: https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-23 23:28:07.700] [PRINT]   "error": null
+[2026-04-23 23:28:07.700] [PRINT] }
+[2026-04-23 23:28:07.735] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:07.767] [PRINT] 
+[2026-04-23 23:28:07.767] [PRINT] Variables added to context:
+[2026-04-23 23:28:07.801] [PRINT]    event_url = https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA (from event_url)
+[2026-04-23 23:28:07.842] [PRINT] 
+[2026-04-23 23:28:07.842] [PRINT] CONTEXT AFTER STEP 2:
+[2026-04-23 23:28:07.882] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:07.926] [PRINT]    today_date: 2026-04-23
+[2026-04-23 23:28:07.962] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'calendar_agent', 'docs_agent']
+[2026-04-23 23:28:08.018] [PRINT]    step_1_docs_agent: Dict with keys: ['document_id', 'document_url', 'title', 'text_length', 'folder_id', 'folder_moved', 'folder_move_error']
+[2026-04-23 23:28:08.081] [PRINT]    doc_url: https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit
+[2026-04-23 23:28:08.112] [PRINT]    step_2_calendar_agent: Dict with keys: ['event_id', 'event_url', 'meet_link', 'message']
+[2026-04-23 23:28:08.171] [PRINT]    event_url: https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA
+[2026-04-23 23:28:08.227] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:08.345] [PRINT] 
+[2026-04-23 23:28:08.345] [PRINT] ============================================================
+[2026-04-23 23:28:08.395] [PRINT] Step 3/4: gmail_agent.create_draft_email
+[2026-04-23 23:28:08.457] [PRINT] Description: Create a draft notification email to cm.carla03@gmail.com with the provided subject and body.
+[2026-04-23 23:28:08.511] [PRINT] ============================================================
+[2026-04-23 23:28:08.587] [PRINT] Risk Level: moderate
+[2026-04-23 23:28:08.642] [PRINT] 
+[2026-04-23 23:28:08.642] [PRINT] Substituting variables in inputs...
+[2026-04-23 23:28:08.681] [PRINT]    Original inputs: {
+[2026-04-23 23:28:08.681] [PRINT]       "to": "cm.carla03@gmail.com",
+[2026-04-23 23:28:08.681] [PRINT]       "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM",
+[2026-04-23 23:28:08.681] [PRINT]       "body": "Invitation to the meeting with details about the doc in the event description."
+[2026-04-23 23:28:08.681] [PRINT] }
+[2026-04-23 23:28:08.718] [PRINT]    Substituted inputs: {
+[2026-04-23 23:28:08.718] [PRINT]       "to": "cm.carla03@gmail.com",
+[2026-04-23 23:28:08.718] [PRINT]       "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM",
+[2026-04-23 23:28:08.718] [PRINT]       "body": "Invitation to the meeting with details about the doc in the event description."
+[2026-04-23 23:28:08.718] [PRINT] }
+[2026-04-23 23:28:08.765] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_docs_agent', 'doc_url', 'step_2_calendar_agent', 'event_url']
+[2026-04-23 23:28:08.799] [INFO] [-]   STEP [variable_substitution]: step 3: gmail_agent.create_draft_email
+    ↳ {"inputs": {"to": "cm.carla03@gmail.com", "subject": "SafeExpress Daily Ops Sync — Tomorrow at 9:00 AM", "body": "Invitation to the meeting with details about the doc in the event description."}, "context_keys": ["today_date", "_cached_tool_filter", "step_1_docs_agent", "doc_url", "step_2_calendar_agent", "event_url"]}
+[2026-04-23 23:28:08.801] [PRINT] 
+[2026-04-23 23:28:08.801] [PRINT] Calling agent microservice: http://localhost:8000/execute_task
+[2026-04-23 23:28:08.832] [PRINT] 
+[2026-04-23 23:28:08.832] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-23 23:28:08.863] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:08.890] [PRINT]    Tool: create_draft_email
+[2026-04-23 23:28:08.923] [PRINT]    Inputs keys: ['to', 'subject', 'body']
+[2026-04-23 23:28:08.959] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-23 23:28:08.991] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-23 23:28:09.044] [PRINT]    Payload size: 847 bytes
+[2026-04-23 23:28:09.080] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:09.119] [PRINT] 
+[2026-04-23 23:28:09.119] [PRINT] Sending request to agent...
+[2026-04-23 23:28:09.160] [PRINT]    URL: http://localhost:8000/execute_task
+[2026-04-23 23:28:09.197] [PRINT]    Timeout: 320 seconds
+[2026-04-23 23:28:09.243] [PRINT]    Max retries: 3
+[2026-04-23 23:28:09.297] [PRINT] Attempt 1/3 calling http://localhost:8000/execute_task
+[2026-04-23 23:28:09.347] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 23:28:22.708] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 23:28:22.778] [PRINT] ⏱ Agent call completed in 13660.68ms
+[2026-04-23 23:28:22.814] [PRINT] Agent response received
+[2026-04-23 23:28:22.832] [AGENT] [-]   AGENT:  gmail_agent.create_draft_email (13661ms)  | {"to": "cm.carla03@gmail.com", "subject": "SafeExpress Daily Ops Sync — Tomorrow at 9:00 AM", "body": "Invitation to the meeting with details about the doc in the event description."}
+[2026-04-23 23:28:22.834] [PRINT] 
+[2026-04-23 23:28:22.834] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:22.850] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-23 23:28:22.867] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:22.885] [PRINT] {
+[2026-04-23 23:28:22.885] [PRINT]   "success": true,
+[2026-04-23 23:28:22.885] [PRINT]   "draft_id": "r-7932764486271983742",
+[2026-04-23 23:28:22.885] [PRINT]   "message_id": "19dbaf4dce439361",
+[2026-04-23 23:28:22.885] [PRINT]   "to": "cm.carla03@gmail.com",
+[2026-04-23 23:28:22.885] [PRINT]   "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM",
+[2026-04-23 23:28:22.885] [PRINT]   "body": "Invitation to the meeting with details about the doc in the event description.\n\n--- \nThis is written by Assistant Agent",
+[2026-04-23 23:28:22.885] [PRINT]   "error": null
+[2026-04-23 23:28:22.885] [PRINT] }
+[2026-04-23 23:28:22.906] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:22.923] [PRINT] 
+[2026-04-23 23:28:22.923] [PRINT] Variables added to context:
+[2026-04-23 23:28:22.941] [PRINT]    draft_id = r-7932764486271983742 (from draft_id)
+[2026-04-23 23:28:22.958] [PRINT] 
+[2026-04-23 23:28:22.958] [PRINT] CONTEXT AFTER STEP 3:
+[2026-04-23 23:28:22.973] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:22.988] [PRINT]    today_date: 2026-04-23
+[2026-04-23 23:28:23.005] [PRINT]    _cached_tool_filter: Dict with keys: ['gmail_agent', 'calendar_agent', 'docs_agent']
+[2026-04-23 23:28:23.023] [PRINT]    step_1_docs_agent: Dict with keys: ['document_id', 'document_url', 'title', 'text_length', 'folder_id', 'folder_moved', 'folder_move_error']
+[2026-04-23 23:28:23.041] [PRINT]    doc_url: https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit
+[2026-04-23 23:28:23.069] [PRINT]    step_2_calendar_agent: Dict with keys: ['event_id', 'event_url', 'meet_link', 'message']
+[2026-04-23 23:28:23.097] [PRINT]    event_url: https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA
+[2026-04-23 23:28:23.124] [PRINT]    step_3_gmail_agent: Dict with keys: ['draft_id', 'message_id', 'to', 'subject', 'body']
+[2026-04-23 23:28:23.159] [PRINT]    draft_id: r-7932764486271983742
+[2026-04-23 23:28:23.194] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 23:28:23.266] [PRINT] 
+[2026-04-23 23:28:23.266] [PRINT] ============================================================
+[2026-04-23 23:28:23.295] [PRINT] Step 4/4: gmail_agent.send_draft_email
+[2026-04-23 23:28:23.323] [PRINT] Description: Send the notification email to cm.carla03@gmail.com.
+[2026-04-23 23:28:23.344] [PRINT] ============================================================
+[2026-04-23 23:28:23.384] [PRINT] Risk Level: dangerous
+[2026-04-23 23:28:23.416] [PRINT] ⏸ PAUSED - Action requires approval!
+[2026-04-23 23:28:23.464] [PRINT] Stored pending action: action_f90a4172 (gmail_agent.send_draft_email)
+[2026-04-23 23:28:23.493] [PRINT] Approval required for action: action_f90a4172
+[2026-04-23 23:28:23.509] [PRINT]    Details: {
+[2026-04-23 23:28:23.509] [PRINT]     "step_number": 4,
+[2026-04-23 23:28:23.509] [PRINT]     "total_steps": 4,
+[2026-04-23 23:28:23.509] [PRINT]     "agent": "gmail_agent",
+[2026-04-23 23:28:23.509] [PRINT]     "tool": "send_draft_email",
+[2026-04-23 23:28:23.509] [PRINT]     "description": "Send the notification email to cm.carla03@gmail.com.",
+[2026-04-23 23:28:23.509] [PRINT]     "inputs": {
+[2026-04-23 23:28:23.509] [PRINT]         "draft_id": "r-7932764486271983742"
+[2026-04-23 23:28:23.509] [PRINT]     },
+[2026-04-23 23:28:23.509] [PRINT]     "output_variables": {},
+[2026-04-23 23:28:23.509] [PRINT]     "risk_level": "dangerous"
+[2026-04-23 23:28:23.509] [PRINT] }
+[2026-04-23 23:28:23.525] [PRINT] ⏸ WORKFLOW PAUSED — waiting for chat-based approval
+[2026-04-23 23:28:23.544] [PRINT] 
+[2026-04-23 23:28:23.544] [PRINT]  Workflow paused: Workflow paused — action requires approval
+[2026-04-23 23:28:23.559] [INFO] [-]   WORKFLOW END: paused_for_approval (3/4 steps)
+[2026-04-23 23:28:23.560] [PRINT] 
+[2026-04-23 23:28:23.560] [PRINT]  Generated Plan:
+[2026-04-23 23:28:23.560] [PRINT] {
+[2026-04-23 23:28:23.560] [PRINT]   "steps": [
+[2026-04-23 23:28:23.560] [PRINT]     {
+[2026-04-23 23:28:23.560] [PRINT]       "agent": "docs_agent",
+[2026-04-23 23:28:23.560] [PRINT]       "tool": "create_doc_with_content",
+[2026-04-23 23:28:23.560] [PRINT]       "inputs": {
+[2026-04-23 23:28:23.560] [PRINT]         "title": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:28:23.560] [PRINT]         "text": "SafeExpress Daily Ops Sync\n\nYesterday\u2019s Issues\n\nToday\u2019s Priorities\n\nBlockers"
+[2026-04-23 23:28:23.560] [PRINT]       },
+[2026-04-23 23:28:23.560] [PRINT]       "output_variables": {
+[2026-04-23 23:28:23.560] [PRINT]         "doc_url": "document_url"
+[2026-04-23 23:28:23.560] [PRINT]       },
+[2026-04-23 23:28:23.560] [PRINT]       "description": "Create a Google Doc titled 'SafeExpress Daily Ops Sync' with the specified sections and capture its URL."
+[2026-04-23 23:28:23.560] [PRINT]     },
+[2026-04-23 23:28:23.560] [PRINT]     {
+[2026-04-23 23:28:23.560] [PRINT]       "agent": "calendar_agent",
+[2026-04-23 23:28:23.560] [PRINT]       "tool": "create_event",
+[2026-04-23 23:28:23.560] [PRINT]       "inputs": {
+[2026-04-23 23:28:23.560] [PRINT]         "summary": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:28:23.560] [PRINT]         "start_time": "tomorrow 9:00 AM",
+[2026-04-23 23:28:23.560] [PRINT]         "end_time": "tomorrow 9:30 AM",
+[2026-04-23 23:28:23.560] [PRINT]         "attendees": [
+[2026-04-23 23:28:23.560] [PRINT]           "cm.carla03@gmail.com"
+[2026-04-23 23:28:23.560] [PRINT]         ],
+[2026-04-23 23:28:23.560] [PRINT]         "description": "Google Doc for meeting notes: {{ doc_url }}"
+[2026-04-23 23:28:23.560] [PRINT]       },
+[2026-04-23 23:28:23.560] [PRINT]       "output_variables": {
+[2026-04-23 23:28:23.560] [PRINT]         "event_url": "event_url"
+[2026-04-23 23:28:23.560] [PRINT]       },
+[2026-04-23 23:28:23.560] [PRINT]       "description": "Create the calendar event for tomorrow at 9:00 AM for 30 minutes, include the doc link in the description, and invite cm.carla03@gmail.com."
+[2026-04-23 23:28:23.560] [PRINT]     },
+[2026-04-23 23:28:23.560] [PRINT]     {
+[2026-04-23 23:28:23.560] [PRINT]       "agent": "gmail_agent",
+[2026-04-23 23:28:23.560] [PRINT]       "tool": "create_draft_email",
+[2026-04-23 23:28:23.560] [PRINT]       "inputs": {
+[2026-04-23 23:28:23.560] [PRINT]         "to": "cm.carla03@gmail.com",
+[2026-04-23 23:28:23.560] [PRINT]         "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM",
+[2026-04-23 23:28:23.560] [PRINT]         "body": "Invitation to the meeting with details about the doc in the event description."
+[2026-04-23 23:28:23.560] [PRINT]       },
+[2026-04-23 23:28:23.560] [PRINT]       "output_variables": {
+[2026-04-23 23:28:23.560] [PRINT]         "draft_id": "draft_id"
+[2026-04-23 23:28:23.560] [PRINT]       },
+[2026-04-23 23:28:23.560] [PRINT]       "description": "Create a draft notification email to cm.carla03@gmail.com with the provided subject and body."
+[2026-04-23 23:28:23.560] [PRINT]     },
+[2026-04-23 23:28:23.560] [PRINT]     {
+[2026-04-23 23:28:23.560] [PRINT]       "agent": "gmail_agent",
+[2026-04-23 23:28:23.560] [PRINT]       "tool": "send_draft_email",
+[2026-04-23 23:28:23.560] [PRINT]       "inputs": {
+[2026-04-23 23:28:23.560] [PRINT]         "draft_id": "{{ draft_id }}"
+[2026-04-23 23:28:23.560] [PRINT]       },
+[2026-04-23 23:28:23.560] [PRINT]       "output_variables": {},
+[2026-04-23 23:28:23.560] [PRINT]       "description": "Send the notification email to cm.carla03@gmail.com."
+[2026-04-23 23:28:23.560] [PRINT]     }
+[2026-04-23 23:28:23.560] [PRINT]   ]
+[2026-04-23 23:28:23.560] [PRINT] }
+[2026-04-23 23:28:23.576] [PRINT] 
+[2026-04-23 23:28:23.576] [PRINT]  Final Context: {
+[2026-04-23 23:28:23.576] [PRINT]   "today_date": "2026-04-23",
+[2026-04-23 23:28:23.576] [PRINT]   "_cached_tool_filter": {
+[2026-04-23 23:28:23.576] [PRINT]     "gmail_agent": [
+[2026-04-23 23:28:23.576] [PRINT]       "send_draft_email",
+[2026-04-23 23:28:23.576] [PRINT]       "create_draft_email",
+[2026-04-23 23:28:23.576] [PRINT]       "search_drafts"
+[2026-04-23 23:28:23.576] [PRINT]     ],
+[2026-04-23 23:28:23.576] [PRINT]     "calendar_agent": [
+[2026-04-23 23:28:23.576] [PRINT]       "create_event",
+[2026-04-23 23:28:23.576] [PRINT]       "list_events",
+[2026-04-23 23:28:23.576] [PRINT]       "update_event"
+[2026-04-23 23:28:23.576] [PRINT]     ],
+[2026-04-23 23:28:23.576] [PRINT]     "docs_agent": [
+[2026-04-23 23:28:23.576] [PRINT]       "create_doc",
+[2026-04-23 23:28:23.576] [PRINT]       "list_my_docs",
+[2026-04-23 23:28:23.576] [PRINT]       "create_doc_with_content"
+[2026-04-23 23:28:23.576] [PRINT]     ]
+[2026-04-23 23:28:23.576] [PRINT]   },
+[2026-04-23 23:28:23.576] [PRINT]   "step_1_docs_agent": {
+[2026-04-23 23:28:23.576] [PRINT]     "document_id": "1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA",
+[2026-04-23 23:28:23.576] [PRINT]     "document_url": "https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit",
+[2026-04-23 23:28:23.576] [PRINT]     "title": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:28:23.576] [PRINT]     "text_length": 76,
+[2026-04-23 23:28:23.576] [PRINT]     "folder_id": null,
+[2026-04-23 23:28:23.576] [PRINT]     "folder_moved": false,
+[2026-04-23 23:28:23.576] [PRINT]     "folder_move_error": null
+[2026-04-23 23:28:23.576] [PRINT]   },
+[2026-04-23 23:28:23.576] [PRINT]   "doc_url": "https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit",
+[2026-04-23 23:28:23.576] [PRINT]   "step_2_calendar_agent": {
+[2026-04-23 23:28:23.576] [PRINT]     "event_id": "n1tjn2s2fpb880b70oi5gv000c",
+[2026-04-23 23:28:23.576] [PRINT]     "event_url": "https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-23 23:28:23.576] [PRINT]     "meet_link": null,
+[2026-04-23 23:28:23.576] [PRINT]     "message": "Successfully created event 'SafeExpress Daily Ops Sync' from tomorrow 9:00 AM to tomorrow 9:30 AM\nInvitations sent to: cm.carla03@gmail.com\nView event: https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA"
+[2026-04-23 23:28:23.576] [PRINT]   },
+[2026-04-23 23:28:23.576] [PRINT]   "event_url": "https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-23 23:28:23.576] [PRINT]   "step_3_gmail_agent": {
+[2026-04-23 23:28:23.576] [PRINT]     "draft_id": "r-7932764486271983742",
+[2026-04-23 23:28:23.576] [PRINT]     "message_id": "19dbaf4dce439361",
+[2026-04-23 23:28:23.576] [PRINT]     "to": "cm.carla03@gmail.com",
+[2026-04-23 23:28:23.576] [PRINT]     "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM",
+[2026-04-23 23:28:23.576] [PRINT]     "body": "Invitation to the meeting with details about the doc in the event description.\n\n--- \nThis is written by Assistant Agent"
+[2026-04-23 23:28:23.576] [PRINT]   },
+[2026-04-23 23:28:23.576] [PRINT]   "draft_id": "r-7932764486271983742",
+[2026-04-23 23:28:23.576] [PRINT]   "results": [
+[2026-04-23 23:28:23.576] [PRINT]     {
+[2026-04-23 23:28:23.576] [PRINT]       "step": 1,
+[2026-04-23 23:28:23.576] [PRINT]       "agent": "docs_agent",
+[2026-04-23 23:28:23.576] [PRINT]       "tool": "create_doc_with_content",
+[2026-04-23 23:28:23.576] [PRINT]       "description": "Create a Google Doc titled 'SafeExpress Daily Ops Sync' with the specified sections and capture its URL.",
+[2026-04-23 23:28:23.576] [PRINT]       "inputs": {
+[2026-04-23 23:28:23.576] [PRINT]         "title": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:28:23.576] [PRINT]         "text": "SafeExpress Daily Ops Sync\n\nYesterday\u2019s Issues\n\nToday\u2019s Priorities\n\nBlockers"
+[2026-04-23 23:28:23.576] [PRINT]       },
+[2026-04-23 23:28:23.576] [PRINT]       "output": {
+[2026-04-23 23:28:23.576] [PRINT]         "success": true,
+[2026-04-23 23:28:23.576] [PRINT]         "document_id": "1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA",
+[2026-04-23 23:28:23.576] [PRINT]         "document_url": "https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit",
+[2026-04-23 23:28:23.576] [PRINT]         "title": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:28:23.576] [PRINT]         "text_length": 76,
+[2026-04-23 23:28:23.576] [PRINT]         "folder_id": null,
+[2026-04-23 23:28:23.576] [PRINT]         "folder_moved": false,
+[2026-04-23 23:28:23.576] [PRINT]         "folder_move_error": null
+[2026-04-23 23:28:23.576] [PRINT]       },
+[2026-04-23 23:28:23.576] [PRINT]       "status": "success"
+[2026-04-23 23:28:23.576] [PRINT]     },
+[2026-04-23 23:28:23.576] [PRINT]     {
+[2026-04-23 23:28:23.576] [PRINT]       "step": 2,
+[2026-04-23 23:28:23.576] [PRINT]       "agent": "calendar_agent",
+[2026-04-23 23:28:23.576] [PRINT]       "tool": "create_event",
+[2026-04-23 23:28:23.576] [PRINT]       "description": "Create the calendar event for tomorrow at 9:00 AM for 30 minutes, include the doc link in the description, and invite cm.carla03@gmail.com.",
+[2026-04-23 23:28:23.576] [PRINT]       "inputs": {
+[2026-04-23 23:28:23.576] [PRINT]         "summary": "SafeExpress Daily Ops Sync",
+[2026-04-23 23:28:23.576] [PRINT]         "start_time": "tomorrow 9:00 AM",
+[2026-04-23 23:28:23.576] [PRINT]         "end_time": "tomorrow 9:30 AM",
+[2026-04-23 23:28:23.576] [PRINT]         "attendees": [
+[2026-04-23 23:28:23.576] [PRINT]           "cm.carla03@gmail.com"
+[2026-04-23 23:28:23.576] [PRINT]         ],
+[2026-04-23 23:28:23.576] [PRINT]         "description": "Google Doc for meeting notes: https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit"
+[2026-04-23 23:28:23.576] [PRINT]       },
+[2026-04-23 23:28:23.576] [PRINT]       "output": {
+[2026-04-23 23:28:23.576] [PRINT]         "success": true,
+[2026-04-23 23:28:23.576] [PRINT]         "event_id": "n1tjn2s2fpb880b70oi5gv000c",
+[2026-04-23 23:28:23.576] [PRINT]         "event_url": "https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-23 23:28:23.576] [PRINT]         "meet_link": null,
+[2026-04-23 23:28:23.576] [PRINT]         "message": "Successfully created event 'SafeExpress Daily Ops Sync' from tomorrow 9:00 AM to tomorrow 9:30 AM\nInvitations sent to: cm.carla03@gmail.com\nView event: https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA",
+[2026-04-23 23:28:23.576] [PRINT]         "error": null
+[2026-04-23 23:28:23.576] [PRINT]       },
+[2026-04-23 23:28:23.576] [PRINT]       "status": "success"
+[2026-04-23 23:28:23.576] [PRINT]     },
+[2026-04-23 23:28:23.576] [PRINT]     {
+[2026-04-23 23:28:23.576] [PRINT]       "step": 3,
+[2026-04-23 23:28:23.576] [PRINT]       "agent": "gmail_agent",
+[2026-04-23 23:28:23.576] [PRINT]       "tool": "create_draft_email",
+[2026-04-23 23:28:23.576] [PRINT]       "description": "Create a draft notification email to cm.carla03@gmail.com with the provided subject and body.",
+[2026-04-23 23:28:23.576] [PRINT]       "inputs": {
+[2026-04-23 23:28:23.576] [PRINT]         "to": "cm.carla03@gmail.com",
+[2026-04-23 23:28:23.576] [PRINT]         "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM",
+[2026-04-23 23:28:23.576] [PRINT]         "body": "Invitation to the meeting with details about the doc in the event description."
+[2026-04-23 23:28:23.576] [PRINT]       },
+[2026-04-23 23:28:23.576] [PRINT]       "output": {
+[2026-04-23 23:28:23.576] [PRINT]         "success": true,
+[2026-04-23 23:28:23.576] [PRINT]         "draft_id": "r-7932764486271983742",
+[2026-04-23 23:28:23.576] [PRINT]         "message_id": "19dbaf4dce439361",
+[2026-04-23 23:28:23.576] [PRINT]         "to": "cm.carla03@gmail.com",
+[2026-04-23 23:28:23.576] [PRINT]         "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM",
+[2026-04-23 23:28:23.576] [PRINT]         "body": "Invitation to the meeting with details about the doc in the event description.\n\n--- \nThis is written by Assistant Agent",
+[2026-04-23 23:28:23.576] [PRINT]         "error": null
+[2026-04-23 23:28:23.576] [PRINT]       },
+[2026-04-23 23:28:23.576] [PRINT]       "status": "success"
+[2026-04-23 23:28:23.576] [PRINT]     },
+[2026-04-23 23:28:23.576] [PRINT]     {
+[2026-04-23 23:28:23.576] [PRINT]       "step": 4,
+[2026-04-23 23:28:23.576] [PRINT]       "agent": "gmail_agent",
+[2026-04-23 23:28:23.576] [PRINT]       "tool": "send_draft_email",
+[2026-04-23 23:28:23.576] [PRINT]       "status": "pending_approval",
+[2026-04-23 23:28:23.576] [PRINT]       "action_id": "action_f90a4172",
+[2026-04-23 23:28:23.576] [PRINT]       "description": "Send the notification email to cm.carla03@gmail.com."
+[2026-04-23 23:28:23.576] [PRINT]     }
+[2026-04-23 23:28:23.576] [PRINT]   ],
+[2026-04-23 23:28:23.576] [PRINT]   "paused_for_approval": true,
+[2026-04-23 23:28:23.576] [PRINT]   "pending_action": {
+[2026-04-23 23:28:23.576] [PRINT]     "step_number": 4,
+[2026-04-23 23:28:23.576] [PRINT]     "total_steps": 4,
+[2026-04-23 23:28:23.576] [PRINT]     "agent": "gmail_agent",
+[2026-04-23 23:28:23.576] [PRINT]     "tool": "send_draft_email",
+[2026-04-23 23:28:23.576] [PRINT]     "description": "Send the notification email to cm.carla03@gmail.com.",
+[2026-04-23 23:28:23.576] [PRINT]     "inputs": {
+[2026-04-23 23:28:23.576] [PRINT]       "draft_id": "r-7932764486271983742"
+[2026-04-23 23:28:23.576] [PRINT]     },
+[2026-04-23 23:28:23.576] [PRINT]     "output_variables": {},
+[2026-04-23 23:28:23.576] [PRINT]     "risk_level": "dangerous"
+[2026-04-23 23:28:23.576] [PRINT]   },
+[2026-04-23 23:28:23.576] [PRINT]   "pending_action_id": "action_f90a4172",
+[2026-04-23 23:28:23.576] [PRINT]   "remaining_steps": []
+[2026-04-23 23:28:23.576] [PRINT] }
+[2026-04-23 23:28:23.592] [INFO] [req_20260423152718_2604c660] [T:556cf94c]   STEP [workflow_paused]: Workflow paused — action requires chat approval
+[2026-04-23 23:28:23.666] [PRINT] 
+[2026-04-23 23:28:23.666] [PRINT] ============================================================
+[2026-04-23 23:28:23.682] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 23:28:23.698] [PRINT] ============================================================
+[2026-04-23 23:28:23.718] [PRINT]   LLM calls:        2
+[2026-04-23 23:28:23.737] [PRINT]   Total input:      6,624 tokens
+[2026-04-23 23:28:23.772] [PRINT]   Total output:     485 tokens
+[2026-04-23 23:28:23.799] [PRINT]   Total tokens:     7,109 tokens
+[2026-04-23 23:28:23.816] [PRINT]   Estimated cost:   $0.0152
+[2026-04-23 23:28:23.831] [PRINT]   Total duration:   65467ms (65.5s)
+[2026-04-23 23:28:23.846] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-23 23:28:23.861] [PRINT]   Breakdown by call:
+[2026-04-23 23:28:23.878] [PRINT]     1. gpt-4o-mini      in=412    out=155   $0.0002 3236ms
+[2026-04-23 23:28:23.895] [PRINT]     2. gpt-4.1          in=6212   out=330   $0.0151 6566ms
+[2026-04-23 23:28:23.913] [PRINT] ============================================================
+[2026-04-23 23:28:23.945] [INFO] [req_20260423152718_2604c660] [T:556cf94c] ← RESPONSE: 200 (70916ms)
+[2026-04-23 23:28:23.946] [INFO] [req_20260423152718_2604c660] [T:556cf94c] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 23:28:23.952] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:28:29.373] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:28:29.434] [INFO] [req_20260423152718_2604c660] [T:556cf94c] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_556cf94c/messages  | {"query": null}
+[2026-04-23 23:28:34.571] [INFO] [req_20260423152834_83318ff9] [T:556cf94c]   USER MSG: "yes"
+[2026-04-23 23:28:34.579] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:28:34.601] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:28:34.621] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:28:34.635] [PRINT]   User: yes
+[2026-04-23 23:28:34.655] [PRINT]   ConversationState:
+[2026-04-23 23:28:34.672] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["send_draft_email", "create_draft_email", "search_drafts"], "calendar_agent": ["create_event", "list_events", "update_event"], "docs_agent": ["create_doc", "list_my_docs", "create_doc_with_content"]}, "calendar_event": {"title": "SafeExpress Daily Ops Sync", "date_time": "tomorrow 9:00 AM", "duration_minutes": 30, "attendees": ["cm.carla03@gmail.com"], "description_includes_doc_link": true}, "google_doc": {"title": "SafeExpress Daily Ops Sync", "sections": ["Yesterday\u2019s Issues", "Today\u2019s Priorities", "Blockers"]}, "notification_email": {"to": "cm.carla03@gmail.com", "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM", "body": "Invitation to the meeting with details about the doc in the event description."}}
+[2026-04-23 23:28:34.695] [PRINT]     missing_fields: []
+[2026-04-23 23:28:34.717] [PRINT]     intent: "ready_to_execute"
+[2026-04-23 23:28:34.737] [PRINT]     clarification_question: null
+[2026-04-23 23:28:34.756] [PRINT]     ready_for_execution: false
+[2026-04-23 23:28:34.776] [PRINT]     execution_summary: "Create calendar event 'SafeExpress Daily Ops Sync' for tomorrow at 9:00 AM for 30 minutes with attendee cm.carla03@gmail.com, create Google Doc 'SafeExpress Daily Ops Sync' with specified sections, include the doc link in the event description, and send a notification email to cm.carla03@gmail.com with the given subject and body."
+[2026-04-23 23:28:34.797] [PRINT]     execution_mode: "standard"
+[2026-04-23 23:28:34.818] [PRINT]     execution_history: []
+[2026-04-23 23:28:34.839] [PRINT]     completed_tasks: []
+[2026-04-23 23:28:34.858] [PRINT]     has_executed: false
+[2026-04-23 23:28:34.880] [PRINT]     last_executed_at: null
+[2026-04-23 23:28:34.902] [PRINT]     last_execution_status: null
+[2026-04-23 23:28:34.923] [PRINT]     last_execution_message: null
+[2026-04-23 23:28:34.943] [PRINT]     executing: false
+[2026-04-23 23:28:34.961] [PRINT]     pending_actions: [{"action_id": "action_f90a4172", "step_number": 4, "total_steps": 4, "agent": "gmail_agent", "tool": "send_draft_email", "description": "Send the notification email to cm.carla03@gmail.com.", "inputs": {"draft_id": "r-7932764486271983742"}, "output_variables": {}, "risk_level": "dangerous"}]
+[2026-04-23 23:28:34.978] [PRINT]     workflow_paused: true
+[2026-04-23 23:28:34.994] [PRINT]     remaining_steps: []
+[2026-04-23 23:28:35.010] [PRINT]     workflow_context: {"today_date": "2026-04-23", "_cached_tool_filter": {"gmail_agent": ["send_draft_email", "create_draft_email", "search_drafts"], "calendar_agent": ["create_event", "list_events", "update_event"], "docs_agent": ["create_doc", "list_my_docs", "create_doc_with_content"]}, "step_1_docs_agent": {"document_id": "1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA", "document_url": "https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit", "title": "SafeExpress Daily Ops Sync", "text_length": 76, "folder_id": null, "folder_moved": false, "folder_move_error": null}, "doc_url": "https://docs.google.com/document/d/1jkx6QfuClGCYSOWDvO0iYZyaZjP64ht7AlEtYYb1qmA/edit", "step_2_calendar_agent": {"event_id": "n1tjn2s2fpb880b70oi5gv000c", "event_url": "https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA", "meet_link": null, "message": "Successfully created event 'SafeExpress Daily Ops Sync' from tomorrow 9:00 AM to tomorrow 9:30 AM\nInvitations sent to: cm.carla03@gmail.com\nView event: https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA"}, "event_url": "https://www.google.com/calendar/event?eid=bjF0am4yczJmcGI4ODBiNzBvaTVndjAwMGMgY2FybG9zbWlndWVsLmNhcmxhLmNpY3NAdXN0LmVkdS5waA", "step_3_gmail_agent": {"draft_id": "r-7932764486271983742", "message_id": "19dbaf4dce439361", "to": "cm.carla03@gmail.com", "subject": "SafeExpress Daily Ops Sync \u2014 Tomorrow at 9:00 AM", "body": "Invitation to the meeting with details about the doc in the event description.\n\n--- \nThis is written by Assistant Agent"}, "draft_id": "r-7932764486271983742", "_execution_mode": "standard"}
+[2026-04-23 23:28:35.028] [PRINT]     disambiguation_options: []
+[2026-04-23 23:28:35.046] [PRINT]     disambiguation_variable: null
+[2026-04-23 23:28:35.062] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 23:28:35.080] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_556cf94c, msg=yes
+[2026-04-23 23:28:35.081] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 660, "max": 2000}
+[2026-04-23 23:28:35.095] [INFO] [-]   STEP [tier0]: pending action APPROVED via chat: action_f90a4172
+[2026-04-23 23:28:35.099] [INFO] [-]   ANALYSIS: intent=ConversationIntent.SMALL_TALK, ready=False  | {"missing_fields": []}
+[2026-04-23 23:28:35.100] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.SMALL_TALK
+    ↳ {"intent": "ConversationIntent.SMALL_TALK", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": null, "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["send_draft_email", "create_draft_email", "search_drafts"], "calendar_agent": ["create_event", "list_events", "update_event"], "docs_agent": ["create_doc", "list_my_docs", "create_doc_with_content"]}, "calendar_event": {"title": "SafeEx
+[2026-04-23 23:28:35.101] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 9, "total": 669, "max": 2000, "response_preview": "Executing approved action..."}
+[2026-04-23 23:28:35.150] [INFO] [req_20260423152834_83318ff9] [T:556cf94c]   BOT RESP: "Executing approved action..."
+[2026-04-23 23:28:35.151] [PRINT] Chat-based approval for action action_f90a4172
+[2026-04-23 23:28:35.166] [INFO] [req_20260423152834_83318ff9] [T:556cf94c]   STEP [chat_approval]: Executing approved action: action_f90a4172
+[2026-04-23 23:28:35.209] [PRINT] Attempt 1/3 calling http://localhost:8000/execute_task
+[2026-04-23 23:28:35.237] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 23:28:43.127] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 23:28:43.171] [PRINT] Action executed: True
+[2026-04-23 23:28:43.400] [PRINT] 
+[2026-04-23 23:28:43.400] [PRINT] ============================================================
+[2026-04-23 23:28:43.451] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 23:28:43.500] [PRINT] ============================================================
+[2026-04-23 23:28:43.541] [PRINT]   No LLM calls made in this request.
+[2026-04-23 23:28:43.588] [PRINT] ============================================================
+[2026-04-23 23:28:43.676] [INFO] [req_20260423152834_83318ff9] [T:556cf94c] ← RESPONSE: 200 (14242ms)
+[2026-04-23 23:28:43.678] [INFO] [req_20260423152834_83318ff9] [T:556cf94c] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 23:28:43.688] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_556cf94c
+[2026-04-23 23:34:29.600] [INFO] [req_20260423152834_83318ff9] [T:556cf94c] → REQUEST: PUT /threads/bfc86262-160a-4d55-a8b5-13de48606736_556cf94c  | {"query": null}
+[2026-04-23 23:34:29.652] [INFO] [req_20260423152834_83318ff9] [T:556cf94c] ← RESPONSE: 200 (52ms)
+[2026-04-23 23:34:29.653] [INFO] [req_20260423152834_83318ff9] [T:556cf94c] ─────────: ──────────────────────────────────────────────────

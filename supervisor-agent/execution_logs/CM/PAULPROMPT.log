@@ -1,0 +1,526 @@
+[2026-04-23 22:19:56.603] [INFO] [req_20260423141157_c0238137] [T:6806d843] → REQUEST: POST /actions/cleanup  | {"query": null}
+[2026-04-23 22:19:56.670] [INFO] [req_20260423141157_c0238137] [T:6806d843] ← RESPONSE: 200 (67ms)
+[2026-04-23 22:19:56.674] [INFO] [req_20260423141157_c0238137] [T:6806d843] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 22:20:00.486] [INFO] [req_20260423141157_c0238137] [T:6806d843] → REQUEST: POST /threads  | {"query": null}
+[2026-04-23 22:20:00.488] [INFO] [req_20260423141157_c0238137] [T:new]   STEP [create_thread]: user=bfc86262-160a-4d55-a8b5-13de48606736, has_message=True
+[2026-04-23 22:20:05.741] [PRINT]  Created thread: bfc86262-160a-4d55-a8b5-13de48606736_67e941fe for user: bfc86262-160a-4d55-a8b5-13de48606736
+[2026-04-23 22:20:05.785] [PRINT]  Created new thread: bfc86262-160a-4d55-a8b5-13de48606736_67e941fe for user: bfc86262-160a-4d55-a8b5-13de48606736 with title: None
+[2026-04-23 22:20:05.837] [PRINT] Saved conversation state to SQLite: bfc86262-160a-4d55-a8b5-13de48606736_67e941fe
+[2026-04-23 22:20:05.970] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 22:20:06.103] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_67e941fe
+[2026-04-23 22:20:06.318] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 22:20:06.525] [PRINT]   User: Can you find a delivery order named Delivery Order to 168? and then I want you to extract the data from those PDFs and a...
+[2026-04-23 22:20:06.655] [PRINT]   ConversationState:
+[2026-04-23 22:20:06.728] [PRINT]     extracted_info: {}
+[2026-04-23 22:20:06.802] [PRINT]     missing_fields: []
+[2026-04-23 22:20:06.901] [PRINT]     intent: null
+[2026-04-23 22:20:06.949] [PRINT]     clarification_question: null
+[2026-04-23 22:20:07.016] [PRINT]     ready_for_execution: false
+[2026-04-23 22:20:07.112] [PRINT]     execution_summary: null
+[2026-04-23 22:20:07.169] [PRINT]     execution_mode: "standard"
+[2026-04-23 22:20:07.200] [PRINT]     execution_history: []
+[2026-04-23 22:20:07.238] [PRINT]     completed_tasks: []
+[2026-04-23 22:20:07.282] [PRINT]     has_executed: false
+[2026-04-23 22:20:07.331] [PRINT]     last_executed_at: null
+[2026-04-23 22:20:07.390] [PRINT]     last_execution_status: null
+[2026-04-23 22:20:07.427] [PRINT]     last_execution_message: null
+[2026-04-23 22:20:07.467] [PRINT]     executing: false
+[2026-04-23 22:20:07.507] [PRINT]     pending_actions: []
+[2026-04-23 22:20:07.563] [PRINT]     workflow_paused: false
+[2026-04-23 22:20:07.615] [PRINT]     remaining_steps: []
+[2026-04-23 22:20:07.668] [PRINT]     workflow_context: null
+[2026-04-23 22:20:07.720] [PRINT]     disambiguation_options: []
+[2026-04-23 22:20:07.783] [PRINT]     disambiguation_variable: null
+[2026-04-23 22:20:07.848] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 22:20:07.969] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_67e941fe, msg=Can you find a delivery order named Delivery Order to 168? and then I want you t
+[2026-04-23 22:20:07.973] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 40, "total": 40, "max": 2000}
+[2026-04-23 22:20:08.007] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-23 22:20:08.010] [PRINT] 
+[2026-04-23 22:20:08.010] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:20:08.051] [PRINT] TIER 0.5 — Building prompt
+[2026-04-23 22:20:08.091] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:20:08.135] [PRINT]    bot_signal : (none)
+[2026-04-23 22:20:08.179] [PRINT]    state_block: (none)
+[2026-04-23 22:20:08.228] [PRINT]    file_context: (none)
+[2026-04-23 22:20:08.287] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:20:10.597] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=729 out=68 | $0.0002 | 2167ms | cumulative: in=729 out=68 total=797 $0.0002
+[2026-04-23 22:20:10.657] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "", "raw_response": "{\n    \"category\": \"task_request\",\n    \"query_scope\": \"specific\",\n    \"needs_enrichment\": true,\n    \"tasks\": [\n        \"find delivery order named Delivery Order to 168\",\n        \"extract data from PDFs\",\n        \"apply data to Google Sheets\"\n    ],\n    \"file_context_needed\": true\n}"}
+[2026-04-23 22:20:10.662] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-04-23 22:20:10.666] [PRINT] 
+[2026-04-23 22:20:10.666] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:20:10.731] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-23 22:20:10.799] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:20:10.856] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-23 22:20:10.864] [PRINT] 
+[2026-04-23 22:20:10.864] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 22:20:10.902] [PRINT] BUILDING LLM CONTEXT
+[2026-04-23 22:20:10.939] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 22:20:10.988] [PRINT]    Summary: none
+[2026-04-23 22:20:11.046] [PRINT]    Recent messages: 1
+[2026-04-23 22:20:11.099] [PRINT]       USER: Can you find a delivery order named Delivery Order to 168? and then I want you t...
+[2026-04-23 22:20:11.134] [PRINT] 
+[2026-04-23 22:20:11.134] [PRINT]    Final context: 182 chars (~45 tokens)
+[2026-04-23 22:20:11.166] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 22:20:11.196] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=1, ~45 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 182, "context_tokens_est": 45}
+[2026-04-23 22:20:11.198] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-23 22:20:12.507] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1651 out=41 | $0.0003 | 1206ms | cumulative: in=2380 out=109 total=2489 $0.0004
+[2026-04-23 22:20:12.542] [PRINT]    relevant_agents: ['gmail_agent', 'mapping_agent', 'sheets_agent', 'drive_agent', 'llm_tool']
+[2026-04-23 22:20:12.575] [PRINT]    capabilities (top-level): ['**GMAIL_AGENT:**', '**MAPPING_AGENT:**', '**SHEETS_AGENT:**', '**DRIVE_AGENT:**', '**LLM_TOOL:**']
+[2026-04-23 22:20:12.607] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["gmail_agent", "mapping_agent", "sheets_agent", "drive_agent", "llm_tool"]}
+[2026-04-23 22:20:12.609] [PRINT]    user_prompt (361 chars):
+[2026-04-23 22:20:12.636] [PRINT]      RECENT CONVERSATION:
+[2026-04-23 22:20:12.677] [PRINT]      USER: Can you find a delivery order named Delivery Order to 168? and then I want you to extract the data from those PDFs and apply that data to my google sheets.
+[2026-04-23 22:20:12.832] [PRINT]      
+[2026-04-23 22:20:12.863] [PRINT]      CURRENT USER MESSAGE: Can you find a delivery order named Delivery Order to 168? and then I want you to extract the data from those PDFs and apply that data to my google sheets.
+[2026-04-23 22:20:12.896] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:20:34.543] [PRINT]  OK [1] gpt-5-mini | tier_1_full_analysis | in=2148 out=1644, cached=1792 | $0.0034 | 21472ms | cumulative: in=4528 out=1753 total=6281 $0.0038
+[2026-04-23 22:20:34.579] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "process_delivery_order", "missing_fields": ["sheet_name_or_url"], "clarification_question": "Which Google Sheet should I write the parsed delivery-order data to? Please provide the sheet name or the sheet URL.", "execution_ready": false, "reasoning": "You asked me to find delivery orders named \"Delivery Order to 168\", parse the PDFs, and write the extracted data into your Google Sheets. To run the delivery-order pipeline I can 
+[2026-04-23 22:20:34.583] [INFO] [-]   ANALYSIS: intent=ConversationIntent.NEEDS_CLARIFICATION, ready=False  | {"missing_fields": ["sheet_name_or_url"]}
+[2026-04-23 22:20:34.585] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.NEEDS_CLARIFICATION
+    ↳ {"intent": "ConversationIntent.NEEDS_CLARIFICATION", "task_type": "N/A", "missing_fields": ["sheet_name_or_url"], "clarification_question": "Which Google Sheet should I write the parsed delivery-order data to? Please provide the sheet name or the sheet URL.", "ready_for_execution": false, "execution_summary": "Parse delivery-order PDFs and write to '[sheet_name]'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachme
+[2026-04-23 22:20:34.586] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 47, "total": 87, "max": 2000, "response_preview": "Which Google Sheet should I write the parsed delivery-order data to? Please provide the sheet name or the sheet URL.\n\n**What I have so far:**\n- **Search Query:** Delivery Order to 168\n"}
+[2026-04-23 22:20:34.715] [PRINT] 
+[2026-04-23 22:20:34.715] [PRINT] ============================================================
+[2026-04-23 22:20:34.742] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 22:20:34.775] [PRINT] ============================================================
+[2026-04-23 22:20:34.802] [PRINT]   LLM calls:        3
+[2026-04-23 22:20:34.835] [PRINT]   Total input:      4,528 tokens
+[2026-04-23 22:20:34.872] [PRINT]   Total output:     1,753 tokens
+[2026-04-23 22:20:34.906] [PRINT]   Total tokens:     6,281 tokens
+[2026-04-23 22:20:34.944] [PRINT]   Cached tokens:    1,792 (39.6% of input)
+[2026-04-23 22:20:34.976] [PRINT]   Estimated cost:   $0.0038
+[2026-04-23 22:20:35.013] [PRINT]   Total duration:   28869ms (28.9s)
+[2026-04-23 22:20:35.092] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-23 22:20:35.172] [PRINT]   Breakdown by call:
+[2026-04-23 22:20:35.257] [PRINT]     1. gpt-4o-mini      in=729    out=68    $0.0002 2167ms
+[2026-04-23 22:20:35.379] [PRINT]     2. gpt-4o-mini      in=1651   out=41    $0.0003 1206ms
+[2026-04-23 22:20:35.457] [PRINT]     3. gpt-5-mini       in=2148   out=1644  (cached=1792) $0.0034 21472ms
+[2026-04-23 22:20:35.518] [PRINT] ============================================================
+[2026-04-23 22:20:38.483] [INFO] [req_20260423142005_fded1c4c] [T:new] ← RESPONSE: 200 (37997ms)
+[2026-04-23 22:20:38.489] [INFO] [req_20260423142005_fded1c4c] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 22:22:59.593] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_67e941fe
+[2026-04-23 22:22:59.800] [INFO] [req_20260423142005_fded1c4c] [T:new] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_67e941fe/messages  | {"query": null}
+[2026-04-23 22:23:05.415] [INFO] [req_20260423142305_9a90eada] [T:67e941fe]   USER MSG: "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0"
+[2026-04-23 22:23:05.433] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 22:23:05.470] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_67e941fe
+[2026-04-23 22:23:05.491] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 22:23:05.509] [PRINT]   User: https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0
+[2026-04-23 22:23:05.529] [PRINT]   ConversationState:
+[2026-04-23 22:23:05.556] [PRINT]     extracted_info: {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["validate_delivery_sheet", "preview_delivery_order_insertion", "write_delivery_order_data"], "drive_agent": ["search_files"]}, "search_query": "Delivery Order to 168"}
+[2026-04-23 22:23:05.585] [PRINT]     missing_fields: ["sheet_name_or_url"]
+[2026-04-23 22:23:05.614] [PRINT]     intent: "needs_clarification"
+[2026-04-23 22:23:05.638] [PRINT]     clarification_question: "Which Google Sheet should I write the parsed delivery-order data to? Please provide the sheet name or the sheet URL."
+[2026-04-23 22:23:05.659] [PRINT]     ready_for_execution: false
+[2026-04-23 22:23:05.683] [PRINT]     execution_summary: "Parse delivery-order PDFs and write to '[sheet_name]'"
+[2026-04-23 22:23:05.706] [PRINT]     execution_mode: "standard"
+[2026-04-23 22:23:05.740] [PRINT]     execution_history: []
+[2026-04-23 22:23:05.775] [PRINT]     completed_tasks: []
+[2026-04-23 22:23:05.813] [PRINT]     has_executed: false
+[2026-04-23 22:23:05.849] [PRINT]     last_executed_at: null
+[2026-04-23 22:23:05.887] [PRINT]     last_execution_status: null
+[2026-04-23 22:23:05.916] [PRINT]     last_execution_message: null
+[2026-04-23 22:23:05.941] [PRINT]     executing: false
+[2026-04-23 22:23:05.961] [PRINT]     pending_actions: []
+[2026-04-23 22:23:05.981] [PRINT]     workflow_paused: false
+[2026-04-23 22:23:06.003] [PRINT]     remaining_steps: []
+[2026-04-23 22:23:06.024] [PRINT]     workflow_context: null
+[2026-04-23 22:23:06.044] [PRINT]     disambiguation_options: []
+[2026-04-23 22:23:06.059] [PRINT]     disambiguation_variable: null
+[2026-04-23 22:23:06.076] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 22:23:06.089] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_67e941fe, msg=https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx4
+[2026-04-23 22:23:06.090] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 54, "total": 141, "max": 2000}
+[2026-04-23 22:23:06.102] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check
+    ↳ {"extracted_info": {"_cached_tool_filter": {"gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"], "sheets_agent": ["validate_delivery_sheet", "preview_delivery_order_insertion", "write_delivery_order_data"], "drive_agent": ["search_files"]}, "search_query": "Delivery Order to 168"}, "missing_fields": ["sheet_name_or_url"], "first_missing_field": "sheet_name_or_url", "awaiting_confirmation": false, "awaiting_clarificatio
+[2026-04-23 22:23:06.103] [PRINT] 
+[2026-04-23 22:23:06.103] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:23:06.121] [PRINT] TIER 0.5 — Building prompt
+[2026-04-23 22:23:06.142] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:23:06.157] [PRINT]    bot_signal : PHASE: Awaiting answer — bot asked: "Which Google Sheet should I write the parsed delivery-order data to? Please provide the sheet name or the sheet URL."
+[2026-04-23 22:23:06.175] [PRINT]    state_block: TASK FIELDS: [_cached_tool_filter, search_query] — missing: [sheet_name_or_url]
+[2026-04-23 22:23:06.193] [PRINT]    file_context: (none)
+[2026-04-23 22:23:06.212] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:23:08.072] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=881 out=42 | $0.0002 | 1766ms | cumulative: in=881 out=42 total=923 $0.0002
+[2026-04-23 22:23:08.090] [INFO] [-]   STEP [tier0.5]: category: FOLLOWUP_ANSWER, confidence: high
+    ↳ {"reasoning": "The user provided a specific URL for the Google Sheet, directly answering the bot's question.", "raw_response": "{\n    \"category\": \"followup_answer\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user provided a specific URL for the Google Sheet, directly answering the bot's question.\"\n}"}
+[2026-04-23 22:23:08.090] [INFO] [-]   STEP [tier0.5]: complex followup answer — proceeding to full analysis
+[2026-04-23 22:23:08.091] [PRINT] 
+[2026-04-23 22:23:08.091] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:23:08.109] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-23 22:23:08.123] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:23:08.141] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-23 22:23:08.142] [PRINT] 
+[2026-04-23 22:23:08.142] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 22:23:08.157] [PRINT] BUILDING LLM CONTEXT
+[2026-04-23 22:23:08.173] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 22:23:08.190] [PRINT]    Summary: none
+[2026-04-23 22:23:08.208] [PRINT]    Recent messages: 3
+[2026-04-23 22:23:08.228] [PRINT]       USER: Can you find a delivery order named Delivery Order to 168? and then I want you t...
+[2026-04-23 22:23:08.249] [PRINT]       ASSISTANT: Which Google Sheet should I write the parsed delivery-order data to? Please prov...
+[2026-04-23 22:23:08.274] [PRINT]       USER: https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx4...
+[2026-04-23 22:23:08.305] [PRINT] 
+[2026-04-23 22:23:08.305] [PRINT]    Final context: 485 chars (~121 tokens)
+[2026-04-23 22:23:08.345] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-23 22:23:08.375] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=3, ~121 tokens  | {"has_summary": false, "recent_messages": 3, "context_chars": 485, "context_tokens_est": 121}
+[2026-04-23 22:23:08.377] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-23 22:23:09.915] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1664 out=10, cached=1536 | $0.0001 | 1461ms | cumulative: in=2545 out=52 total=2597 $0.0003
+[2026-04-23 22:23:09.936] [PRINT]    relevant_agents: ['sheets_agent', 'drive_agent', 'gmail_agent', 'mapping_agent']
+[2026-04-23 22:23:09.955] [PRINT]    capabilities (top-level): ['**SHEETS_AGENT:**', '**DRIVE_AGENT:**', '**GMAIL_AGENT:**', '**MAPPING_AGENT:**']
+[2026-04-23 22:23:09.972] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["sheets_agent", "drive_agent", "gmail_agent", "mapping_agent"]}
+[2026-04-23 22:23:09.973] [PRINT]    user_prompt (609 chars):
+[2026-04-23 22:23:09.989] [PRINT]      RECENT CONVERSATION:
+[2026-04-23 22:23:10.006] [PRINT]      USER: Can you find a delivery order named Delivery Order to 168? and then I want you to extract the data from those PDFs and apply that data to my google sheets.
+[2026-04-23 22:23:10.034] [PRINT]      ASSISTANT: Which Google Sheet should I write the parsed delivery-order data to? Please provide the sheet name or the sheet URL.
+[2026-04-23 22:23:10.056] [PRINT]      
+[2026-04-23 22:23:10.084] [PRINT]      **What I have so far:**
+[2026-04-23 22:23:10.112] [PRINT]      - **Search Query:** Delivery Order to 168
+[2026-04-23 22:23:10.133] [PRINT]      
+[2026-04-23 22:23:10.159] [PRINT]      USER: https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0
+[2026-04-23 22:23:10.179] [PRINT]      
+[2026-04-23 22:23:10.198] [PRINT]      CURRENT USER ...
+[2026-04-23 22:23:10.220] [PRINT] ──────────────────────────────────────────────────
+[2026-04-23 22:23:22.147] [PRINT]  OK [1] gpt-5-mini | tier_1_full_analysis | in=2242 out=1032, cached=1792 | $0.0022 | 11791ms | cumulative: in=4787 out=1084 total=5871 $0.0025
+[2026-04-23 22:23:22.227] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "process_delivery_order", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user previously asked to find delivery-order PDFs matching the search query 'Delivery Order to 168' and extract their data into a Google Sheet. The user has now provided the target Google Sheet UR", "extracted_info": {"sheet_url": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44u
+[2026-04-23 22:23:22.244] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-23 22:23:22.246] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Parse delivery-order PDFs and write to 'https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0' filtered by 'Delivery Order to 168'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"sheets_agent": ["read_sheet", "preview_delivery_order_insertion", "val
+[2026-04-23 22:23:24.028] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=303 out=84 | $0.0001 | 1726ms | cumulative: in=5090 out=1168 total=6258 $0.0026
+[2026-04-23 22:23:24.046] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 116, "total": 257, "max": 2000, "response_preview": "**Ready to execute!**\n\n- Task: Parse delivery-order PDFs\n- Filter: Delivery Order to 168\n- Destination: [Google Spreadsheet](https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMq..."}
+[2026-04-23 22:23:24.099] [INFO] [req_20260423142305_9a90eada] [T:67e941fe]   BOT RESP: "**Ready to execute!**
+
+- Task: Parse delivery-order PDFs
+- Filter: Delivery Order to 168
+- Destinati..."
+[2026-04-23 22:23:24.121] [PRINT] 
+[2026-04-23 22:23:24.121] [PRINT] ============================================================
+[2026-04-23 22:23:24.137] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 22:23:24.154] [PRINT] ============================================================
+[2026-04-23 22:23:24.171] [PRINT]   LLM calls:        4
+[2026-04-23 22:23:24.189] [PRINT]   Total input:      5,090 tokens
+[2026-04-23 22:23:24.207] [PRINT]   Total output:     1,168 tokens
+[2026-04-23 22:23:24.227] [PRINT]   Total tokens:     6,258 tokens
+[2026-04-23 22:23:24.248] [PRINT]   Cached tokens:    3,328 (65.4% of input)
+[2026-04-23 22:23:24.267] [PRINT]   Estimated cost:   $0.0026
+[2026-04-23 22:23:24.284] [PRINT]   Total duration:   18764ms (18.8s)
+[2026-04-23 22:23:24.301] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-23 22:23:24.318] [PRINT]   Breakdown by call:
+[2026-04-23 22:23:24.334] [PRINT]     1. gpt-4o-mini      in=881    out=42    $0.0002 1766ms
+[2026-04-23 22:23:24.353] [PRINT]     2. gpt-4o-mini      in=1664   out=10    (cached=1536) $0.0001 1461ms
+[2026-04-23 22:23:24.370] [PRINT]     3. gpt-5-mini       in=2242   out=1032  (cached=1792) $0.0022 11791ms
+[2026-04-23 22:23:24.387] [PRINT]     4. gpt-4o-mini      in=303    out=84    $0.0001 1726ms
+[2026-04-23 22:23:24.404] [PRINT] ============================================================
+[2026-04-23 22:23:28.036] [INFO] [req_20260423142305_9a90eada] [T:67e941fe] ← RESPONSE: 200 (28236ms)
+[2026-04-23 22:23:28.038] [INFO] [req_20260423142305_9a90eada] [T:67e941fe] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 22:23:28.047] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_67e941fe
+[2026-04-23 22:23:55.443] [INFO] [req_20260423142305_9a90eada] [T:67e941fe] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_67e941fe/messages  | {"query": null}
+[2026-04-23 22:24:00.873] [INFO] [req_20260423142400_f5669047] [T:67e941fe]   USER MSG: "yes"
+[2026-04-23 22:24:00.888] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 22:24:00.894] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_67e941fe
+[2026-04-23 22:24:00.930] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_67e941fe
+[2026-04-23 22:24:00.961] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 22:24:00.988] [PRINT]   User: yes
+[2026-04-23 22:24:01.027] [PRINT]   ConversationState:
+[2026-04-23 22:24:01.061] [PRINT]     extracted_info: {"_cached_tool_filter": {"sheets_agent": ["read_sheet", "preview_delivery_order_insertion", "validate_delivery_sheet", "write_delivery_order_data"], "drive_agent": ["search_files"], "gmail_agent": ["search_emails_with_delivery_order_attachments", "search_emails"], "mapping_agent": ["parse_delivery_order_pdfs"]}, "search_query": "Delivery Order to 168", "sheet_url": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0", "email_filter": "Delivery Order to 168"}
+[2026-04-23 22:24:01.090] [PRINT]     missing_fields: []
+[2026-04-23 22:24:01.117] [PRINT]     intent: "ready_to_execute"
+[2026-04-23 22:24:01.140] [PRINT]     clarification_question: null
+[2026-04-23 22:24:01.160] [PRINT]     ready_for_execution: false
+[2026-04-23 22:24:01.180] [PRINT]     execution_summary: "Parse delivery-order PDFs and write to 'https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0' filtered by 'Delivery Order to 168'"
+[2026-04-23 22:24:01.205] [PRINT]     execution_mode: "standard"
+[2026-04-23 22:24:01.229] [PRINT]     execution_history: []
+[2026-04-23 22:24:01.256] [PRINT]     completed_tasks: []
+[2026-04-23 22:24:01.288] [PRINT]     has_executed: false
+[2026-04-23 22:24:01.318] [PRINT]     last_executed_at: null
+[2026-04-23 22:24:01.353] [PRINT]     last_execution_status: null
+[2026-04-23 22:24:01.382] [PRINT]     last_execution_message: null
+[2026-04-23 22:24:01.411] [PRINT]     executing: false
+[2026-04-23 22:24:01.426] [PRINT]     pending_actions: []
+[2026-04-23 22:24:01.444] [PRINT]     workflow_paused: false
+[2026-04-23 22:24:01.460] [PRINT]     remaining_steps: []
+[2026-04-23 22:24:01.478] [PRINT]     workflow_context: null
+[2026-04-23 22:24:01.494] [PRINT]     disambiguation_options: []
+[2026-04-23 22:24:01.510] [PRINT]     disambiguation_variable: null
+[2026-04-23 22:24:01.529] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-23 22:24:01.545] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_67e941fe, msg=yes
+[2026-04-23 22:24:01.546] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 263, "max": 2000}
+[2026-04-23 22:24:01.560] [INFO] [-]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-23 22:24:01.563] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-23 22:24:01.564] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Parse delivery-order PDFs and write to 'https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0' filtered by 'Delivery Order to 168'", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"sheets_agent": ["read_sheet", "preview_delivery_order_insertion", "vali
+[2026-04-23 22:24:04.560] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=303 out=79 | $0.0001 | 2936ms | cumulative: in=303 out=79 total=382 $0.0001
+[2026-04-23 22:24:04.581] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 111, "total": 374, "max": 2000, "response_preview": "**Ready to execute!**\n\n- Task: Parse delivery-order PDFs and write to Google Sheets\n- Filter: Delivery Order to 168\n- Sheet URL: [Google Sheets Link](https://docs.google.com/spreadsheets/d/14KA6vyTlXe..."}
+[2026-04-23 22:24:04.643] [INFO] [req_20260423142400_f5669047] [T:67e941fe]   BOT RESP [READY TO EXECUTE]: "**Ready to execute!**
+
+- Task: Parse delivery-order PDFs and write to Google Sheets
+- Filter: Delive..."
+[2026-04-23 22:24:04.644] [PRINT] Thread bfc86262-160a-4d55-a8b5-13de48606736_67e941fe ready - executing workflow...
+[2026-04-23 22:24:04.663] [INFO] [req_20260423142400_f5669047] [T:67e941fe]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-23 22:24:04.705] [INFO] [req_20260423142400_f5669047] [T:67e941fe]   WORKFLOW START: "Parse delivery-order PDFs and write to 'https://docs.google.com/spreadsheets/d/1..." (0 steps)
+[2026-04-23 22:24:04.706] [PRINT]  Date context: today=2026-04-23
+[2026-04-23 22:24:04.723] [PRINT]  Starting workflow execution (mode=standard)...
+[2026-04-23 22:24:04.741] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-23 22:24:04.743] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-23 22:24:04.761] [PRINT] 
+[2026-04-23 22:24:04.761] [PRINT] ============================================================
+[2026-04-23 22:24:04.779] [PRINT] SUPERVISOR NODE - Planning Phase
+[2026-04-23 22:24:04.804] [PRINT] ============================================================
+[2026-04-23 22:24:04.824] [PRINT] User Input: Parse delivery-order PDFs and write to 'https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0' filtered by 'Delivery Order to 168'
+[2026-04-23 22:24:04.824] [PRINT] 
+[2026-04-23 22:24:04.824] [PRINT] Parameters:
+[2026-04-23 22:24:04.824] [PRINT] - search_query: Delivery Order to 168
+[2026-04-23 22:24:04.824] [PRINT] - sheet_url: https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0
+[2026-04-23 22:24:04.824] [PRINT] - email_filter: Delivery Order to 168
+[2026-04-23 22:24:04.845] [INFO] [-]   STEP [supervisor_node]: Planning for: Parse delivery-order PDFs and write to 'https://docs.google.com/spreadsheets/d/1
+[2026-04-23 22:24:04.846] [PRINT] Context dates: today=2026-04-23
+[2026-04-23 22:24:04.876] [PRINT] Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-23 22:24:04.902] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['sheets_agent', 'drive_agent', 'gmail_agent', 'mapping_agent']
+[2026-04-23 22:24:04.903] [PRINT] Relevant agents: ['sheets_agent', 'drive_agent', 'gmail_agent', 'mapping_agent', 'llm_tool']
+[2026-04-23 22:24:04.921] [PRINT] Filtered tools: {'sheets_agent': ['read_sheet', 'preview_delivery_order_insertion', 'validate_delivery_sheet', 'write_delivery_order_data'], 'drive_agent': ['search_files'], 'gmail_agent': ['search_emails', 'search_emails_with_delivery_order_attachments'], 'mapping_agent': ['parse_delivery_order_pdfs']}
+[2026-04-23 22:24:04.942] [PRINT] Calling LLM to generate multi-step plan...
+[2026-04-23 22:24:04.961] [PRINT] Token optimization:
+[2026-04-23 22:24:04.979] [PRINT]    Agents: 5/7
+[2026-04-23 22:24:04.996] [PRINT]    Tools: 8/63
+[2026-04-23 22:24:05.017] [PRINT]    Context size: 9,836 chars (~2,459 tokens)
+[2026-04-23 22:24:05.039] [INFO] [-]   STEP [plan_generation_start]: agents=5/7, tools=8/63, context_tokens~2459
+[2026-04-23 22:24:38.513] [PRINT]  OK [supervisor] gpt-5 | plan_generation | in=5851 out=2427 | $0.0316 | 33375ms | cumulative: in=6154 out=2506 total=8660 $0.0317
+[2026-04-23 22:24:38.553] [PRINT] Plan generated successfully!
+[2026-04-23 22:24:38.580] [PRINT] 
+[2026-04-23 22:24:38.580] [PRINT] Generated Plan:
+[2026-04-23 22:24:38.580] [PRINT] {
+[2026-04-23 22:24:38.580] [PRINT]   "steps": [
+[2026-04-23 22:24:38.580] [PRINT]     {
+[2026-04-23 22:24:38.580] [PRINT]       "agent": "gmail_agent",
+[2026-04-23 22:24:38.580] [PRINT]       "tool": "search_emails_with_delivery_order_attachments",
+[2026-04-23 22:24:38.580] [PRINT]       "inputs": {
+[2026-04-23 22:24:38.580] [PRINT]         "query": "Delivery Order to 168 has:attachment",
+[2026-04-23 22:24:38.580] [PRINT]         "max_results": 10,
+[2026-04-23 22:24:38.580] [PRINT]         "download_attachments": true
+[2026-04-23 22:24:38.580] [PRINT]       },
+[2026-04-23 22:24:38.580] [PRINT]       "output_variables": {
+[2026-04-23 22:24:38.580] [PRINT]         "emails_with_attachments": "emails_with_attachments"
+[2026-04-23 22:24:38.580] [PRINT]       },
+[2026-04-23 22:24:38.580] [PRINT]       "description": "Search Gmail for emails matching the filter 'Delivery Order to 168' and download attachments."
+[2026-04-23 22:24:38.580] [PRINT]     },
+[2026-04-23 22:24:38.580] [PRINT]     {
+[2026-04-23 22:24:38.580] [PRINT]       "agent": "mapping_agent",
+[2026-04-23 22:24:38.580] [PRINT]       "tool": "parse_delivery_order_pdfs",
+[2026-04-23 22:24:38.580] [PRINT]       "inputs": {
+[2026-04-23 22:24:38.580] [PRINT]         "file_paths": "{{{ emails_with_attachments }}}"
+[2026-04-23 22:24:38.580] [PRINT]       },
+[2026-04-23 22:24:38.580] [PRINT]       "output_variables": {
+[2026-04-23 22:24:38.580] [PRINT]         "parsed_orders": "parsed_orders"
+[2026-04-23 22:24:38.580] [PRINT]       },
+[2026-04-23 22:24:38.580] [PRINT]       "description": "Parse downloaded delivery-order PDFs into structured requisition rows."
+[2026-04-23 22:24:38.580] [PRINT]     },
+[2026-04-23 22:24:38.580] [PRINT]     {
+[2026-04-23 22:24:38.580] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 22:24:38.580] [PRINT]       "tool": "validate_delivery_sheet",
+[2026-04-23 22:24:38.580] [PRINT]       "inputs": {
+[2026-04-23 22:24:38.580] [PRINT]         "sheet_id": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0"
+[2026-04-23 22:24:38.580] [PRINT]       },
+[2026-04-23 22:24:38.580] [PRINT]       "output_variables": {},
+[2026-04-23 22:24:38.580] [PRINT]       "description": "Validate that the provided Google Sheet matches the required template and has write access."
+[2026-04-23 22:24:38.580] [PRINT]     },
+[2026-04-23 22:24:38.580] [PRINT]     {
+[2026-04-23 22:24:38.580] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 22:24:38.580] [PRINT]       "tool": "preview_delivery_order_insertion",
+[2026-04-23 22:24:38.580] [PRINT]       "inputs": {
+[2026-04-23 22:24:38.580] [PRINT]         "sheet_id": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0",
+[2026-04-23 22:24:38.580] [PRINT]         "parsed_orders": "{{{ parsed_orders }}}"
+[2026-04-23 22:24:38.580] [PRINT]       },
+[2026-04-23 22:24:38.580] [PRINT]       "output_variables": {},
+[2026-04-23 22:24:38.580] [PRINT]       "description": "Generate a preview of rows to be appended (checks duplicates, missing data, and target tabs)."
+[2026-04-23 22:24:38.580] [PRINT]     },
+[2026-04-23 22:24:38.580] [PRINT]     {
+[2026-04-23 22:24:38.580] [PRINT]       "agent": "sheets_agent",
+[2026-04-23 22:24:38.580] [PRINT]       "tool": "write_delivery_order_data",
+[2026-04-23 22:24:38.580] [PRINT]       "inputs": {
+[2026-04-23 22:24:38.580] [PRINT]         "sheet_id": "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0",
+[2026-04-23 22:24:38.580] [PRINT]         "parsed_orders": "{{{ parsed_orders }}}"
+[2026-04-23 22:24:38.580] [PRINT]       },
+[2026-04-23 22:24:38.580] [PRINT]       "output_variables": {},
+[2026-04-23 22:24:38.580] [PRINT]       "description": "Append the parsed delivery-order rows into the Google Sheet (requires approval)."
+[2026-04-23 22:24:38.580] [PRINT]     }
+[2026-04-23 22:24:38.580] [PRINT]   ]
+[2026-04-23 22:24:38.580] [PRINT] }
+[2026-04-23 22:24:38.595] [INFO] [-]   STEP [plan_generated]: 5 steps: gmail_agent.search_emails_with_delivery_order_attachments, mapping_agent.parse_delivery_order_pdfs, sheets_agent.validate_delivery_sheet, sheets_agent.preview_delivery_order_insertion, sheets_agent.write_delivery_order_data
+[2026-04-23 22:24:38.598] [PRINT] 
+[2026-04-23 22:24:38.598] [PRINT] Plan saved to: C:\Users\Carlos Miguel Carla\Documents\GitHub\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-23 22:24:38.614] [PRINT] ============================================================
+[2026-04-23 22:24:38.631] [PRINT] 
+[2026-04-23 22:24:38.631] [PRINT] ============================================================
+[2026-04-23 22:24:38.648] [PRINT] ORCHESTRATOR NODE - Execution Phase
+[2026-04-23 22:24:38.667] [PRINT] ============================================================
+[2026-04-23 22:24:38.684] [PRINT] Found 5 steps to execute
+[2026-04-23 22:24:38.703] [INFO] [-]   STEP [orchestrator_node]: 5 steps to execute
+[2026-04-23 22:24:38.704] [PRINT] 
+[2026-04-23 22:24:38.704] [PRINT] INITIAL CONTEXT:
+[2026-04-23 22:24:38.723] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 22:24:38.744] [PRINT]    today_date: 2026-04-23
+[2026-04-23 22:24:38.773] [PRINT]    _cached_tool_filter: dict (length: 4)
+[2026-04-23 22:24:38.798] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 22:24:38.818] [PRINT] Pre-flight credential check passed (5 fields)
+[2026-04-23 22:24:38.844] [PRINT] 
+[2026-04-23 22:24:38.844] [PRINT] ============================================================
+[2026-04-23 22:24:38.866] [PRINT] Step 1/5: gmail_agent.search_emails_with_delivery_order_attachments
+[2026-04-23 22:24:38.887] [PRINT] Description: Search Gmail for emails matching the filter 'Delivery Order to 168' and download attachments.
+[2026-04-23 22:24:38.909] [PRINT] ============================================================
+[2026-04-23 22:24:38.949] [PRINT] Risk Level: safe
+[2026-04-23 22:24:38.969] [PRINT] 
+[2026-04-23 22:24:38.969] [PRINT] Substituting variables in inputs...
+[2026-04-23 22:24:38.986] [PRINT]    Original inputs: {
+[2026-04-23 22:24:38.986] [PRINT]       "query": "Delivery Order to 168 has:attachment",
+[2026-04-23 22:24:38.986] [PRINT]       "max_results": 10,
+[2026-04-23 22:24:38.986] [PRINT]       "download_attachments": true
+[2026-04-23 22:24:38.986] [PRINT] }
+[2026-04-23 22:24:39.012] [PRINT]    Substituted inputs: {
+[2026-04-23 22:24:39.012] [PRINT]       "query": "Delivery Order to 168 has:attachment",
+[2026-04-23 22:24:39.012] [PRINT]       "max_results": 10,
+[2026-04-23 22:24:39.012] [PRINT]       "download_attachments": true
+[2026-04-23 22:24:39.012] [PRINT] }
+[2026-04-23 22:24:39.032] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-23 22:24:39.053] [INFO] [-]   STEP [variable_substitution]: step 1: gmail_agent.search_emails_with_delivery_order_attachments  | {"inputs": {"query": "Delivery Order to 168 has:attachment", "max_results": 10, "download_attachments": true}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-23 22:24:39.054] [PRINT] 
+[2026-04-23 22:24:39.054] [PRINT] Calling agent microservice: http://localhost:8000/execute_task
+[2026-04-23 22:24:39.079] [PRINT] 
+[2026-04-23 22:24:39.079] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-23 22:24:39.097] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 22:24:39.113] [PRINT]    Tool: search_emails_with_delivery_order_attachments
+[2026-04-23 22:24:39.131] [PRINT]    Inputs keys: ['query', 'max_results', 'download_attachments']
+[2026-04-23 22:24:39.152] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-23 22:24:39.176] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-23 22:24:39.204] [PRINT]    Payload size: 784 bytes
+[2026-04-23 22:24:39.231] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 22:24:39.251] [PRINT] 
+[2026-04-23 22:24:39.251] [PRINT] Sending request to agent...
+[2026-04-23 22:24:39.276] [PRINT]    URL: http://localhost:8000/execute_task
+[2026-04-23 22:24:39.300] [PRINT]    Timeout: 320 seconds
+[2026-04-23 22:24:39.318] [PRINT]    Max retries: 3
+[2026-04-23 22:24:39.335] [PRINT] Attempt 1/3 calling http://localhost:8000/execute_task
+[2026-04-23 22:24:39.354] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-23 22:25:59.474] [PRINT] Agent call succeeded on attempt 1
+[2026-04-23 22:25:59.510] [PRINT] ⏱ Agent call completed in 80259.82ms
+[2026-04-23 22:25:59.555] [PRINT] Agent response received
+[2026-04-23 22:25:59.607] [AGENT] [-]   AGENT:  gmail_agent.search_emails_with_delivery_order_attachments (80260ms)  | {"query": "Delivery Order to 168 has:attachment", "max_results": "10", "download_attachments": "True"}
+[2026-04-23 22:25:59.609] [PRINT] 
+[2026-04-23 22:25:59.609] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 22:25:59.644] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-23 22:25:59.677] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 22:25:59.706] [PRINT] {
+[2026-04-23 22:25:59.706] [PRINT]   "success": true,
+[2026-04-23 22:25:59.706] [PRINT]   "emails_with_attachments": [
+[2026-04-23 22:25:59.706] [PRINT]     {
+[2026-04-23 22:25:59.706] [PRINT]       "message_id": "19dbab41714fa833",
+[2026-04-23 22:25:59.706] [PRINT]       "from": "Kita <pchua5644@gmail.com>",
+[2026-04-23 22:25:59.706] [PRINT]       "subject": "Delivery Order to 168",
+[2026-04-23 22:25:59.706] [PRINT]       "date": "Thu, 23 Apr 2026 22:17:25 +0800",
+[2026-04-23 22:25:59.706] [PRINT]       "timestamp": "2026-04-23T22:17:25",
+[2026-04-23 22:25:59.706] [PRINT]       "internal_date_ms": "1776953845000",
+[2026-04-23 22:25:59.706] [PRINT]       "attachments": [
+[2026-04-23 22:25:59.706] [PRINT]         {
+[2026-04-23 22:25:59.706] [PRINT]           "filename": "Order List (2).pdf",
+[2026-04-23 22:25:59.706] [PRINT]           "attachment_id": "ANGjdJ_aO91QspmVC8VOlf-vho07vUeJJdVl1q93hBMCUoUkFpS63Pwm635eCrMPXLT1bVHw16_CpiePejVV9_UpumIcmtCPiCS00iT0TthNTvP3IzFjbtb-BFuIV9ADrVdp_gIbZQWImg7pM6ToSvU-F6gfsjm56lr11TsuW_s5qEGKhZLEJPSyshh4teV1WkRQCswF-wHJrUxioFSrziA9uc5EII5S8qFL4sQVPXbtdKGneDclfmpmq-AJ4OAhH85rGq-YWPGHt_BQd4AA1_yWvl7enQczcXrgiHvNhpsSyvzZfCeaOhWuER7Eaa9PlfFLk-of6PR-bZQhL1RdOfXaXBatN8ehojlSQUCSWc51ZjndAel8vrf9mv5G9vmK1ExWHfV9YTI6mj3QrMNf",
+[2026-04-23 22:25:59.706] [PRINT]           "mime_type": "application/pdf",
+[2026-04-23 22:25:59.706] [PRINT]           "size": 90330,
+[2026-04-23 22:25:59.706] [PRINT]           "file_path": "C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4\\19dbab41714fa833\\Order List (2).pdf"
+[2026-04-23 22:25:59.706] [PRINT]         },
+[2026-04-23 22:25:59.706] [PRINT]         {
+[2026-04-23 22:25:59.706] [PRINT]           "filename": "Food_DELIVERY_ORDER (1).pdf",
+[2026-04-23 22:25:59.706] [PRINT]           "attachment_id": "ANGjdJ-sfhLG79nCc9iHOGS40j1BfgDANjPlMyehcMSddrvy5ZFIuOJfARlLn9msNtt7ethw0HGchhEHmF3iXzdUq7O1QFUfos4IM5QS7nScWX1X6SIycG0MFVpwsCOG-Zic8zAG4dZsKO-29FZgycv1f0gZP9mkvSUxcg2qf4S1bf1DV4fhlB9Jl2S7XBS5ZiFIYNhcfaeKvNrqtyDrnw0Jx6wKcJYE5Vr_Siu91NaO7uOx55Zgn8z8Y6VVKLxqyxHSSwGcXQXlJHiHa_GMU5boC1W2MZ3o-KC2bkxIzmL4Gt6LQLXnCXjBjl-GgE7Ed6Wadf9adM2rLY9J1U9j6kzZXgvEppBgxkEKlr_Gswukj7yHfnUx58YLF2jCQFhlJwQK0AEQkjAhujZ8NWaj",
+[2026-04-23 22:25:59.706] [PRINT]           "mime_type": "application/pdf",
+[2026-04-23 22:25:59.706] [PRINT]           "size": 84650,
+[2026-04-23 22:25:59.706] [PRINT]           "file_path": "C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4\\19dbab41714fa833\\Food_DELIVERY_ORDER (1).pdf"
+[2026-04-23 22:25:59.706] [PRINT]         },
+[2026-04-23 22:25:59.706] [PRINT]         {
+[2026-04-23 22:25:59.706] [PRINT]           "filename": "Tech_DELIVERY_ORDER (1).pdf",
+[2026-04-23 22:25:59.706] [PRINT]           "attachment_id": "ANGjdJ_O0RmsnKCMMyBpRS6-wtBkjGf6zV0Ef20YdUhnOY4jf-O82AsrIot9aN3LHx66Li5VSxDPcFySznFuUz0JnSG-Ncw4l6gRIKF934cW3dFaLhudWMTO2xPoAIPJiw4xiwcs8FwMXHKBEdbpb3CgcU3jvFTIyIh6m0lPs8jjXvvfojHdIHJBxKQhealw4WXhHmGTYOE7WOwgBWZQqS6LGcQnitvvEu8nwy4bXieR8JC3vpH2HuIiKPCmNxH8kkIj3zV1FRlNVz9hT25NjT-PhvTV3XBYNI9qGqQ8ib_doI9rHYFa9-g29xU3VvGkCleGCFkW7FzdTk_YQAkvRQ741CpJZpYKza-ttF_Tw1MNhTGcEfNGWqgFj5XIPvZOI-eN9tc1MdELyR28NKPW",
+[2026-04-23 22:25:59.706] [PRINT]           "mime_type": "application/pdf",
+[2026-04-23 22:25:59.706] [PRINT]           "size": 85791,
+[2026-04-23 22:25:59.706] [PRINT]           "file_path": "C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4\\19dbab41714fa833\\Tech_DELIVERY_ORDER (1).pdf"
+[2026-04-23 22:25:59.706] [PRINT]         }
+[2026-04-23 22:25:59.706] [PRINT]       ],
+[2026-04-23 22:25:59.706] [PRINT]       "attachment_count": 3
+[2026-04-23 22:25:59.706] [PRINT]     },
+[2026-04-23 22:25:59.706] [PRINT]     {
+[2026-04-23 22:25:59.706] [PRINT]       "message_id": "19ae8d8b5041b63d",
+[2026-04-23 22:25:59.706] [PRINT]       "from": "CARLOS MIGUEL CARLA <carlosmiguel.carla.cics@ust.edu.ph>",
+[2026-04-23 22:25:59.706] [PRINT]       "subject": "Re: [4ITD] GROUP 3 Capstone Revision",
+[2026-04-23 22:25:59.706] [PRINT]       "date": "Thu, 4 Dec 2025 18:11:45 +0800",
+[2026-04-23 22:25:59.706] [PRINT]       "timestamp": "2025-12-04T18:11:45",
+[2026-04-23 22:25:59.706] [PRINT]       "internal_date_ms": "1764843105000",
+[2026-04-23 22:25:59.706] [PRINT]       "attachments": [
+[2026-04-23 22:25:59.706] [PRINT]         {
+[2026-04-23 22:25:59.706] [PRINT]           "filename": "SafexpressOps_ An Agentic AI Platform for Intelligent Workflow Automation and Company-Aware Operational Analytics.pdf",
+[2026-04-23 22:25:59.706] [PRINT]           "attachment_id": "ANGjdJ-5HhTzfEC0w0niBGykAeay0Jd3Xdw10428Kpt9TapdaVaFqwgFaQa8RNaOY7XleCMI6hGzHc4ra34-fYqnhKKi53Hr5QHKdVTOhh1F5NSwcjZMoLHVZ17cwlFh571vtAeZbMK1aETtt_Fu7Ngx3Tl_-KsVc6yM9s85Im3xvbE1DhntCn0tD1AtHKfbVXDOhwB1EUhGB6jCBBZq7KLMA9X8WOmY0Lggumz67xOKbD6-h48N1fgLqPvH3hG_2raW9uYCtKyLnor5inJCdFXNV3WZ6kli8wB7RDFlN8tBzq-z-MjG1ulqm1A1-9U",
+[2026-04-23 22:25:59.706] [PRINT]           "mime_type": "application/pdf",
+[2026-04-23 22:25:59.706] [PRINT]           "size": 11588746,
+[2026-04-23 22:25:59.706] [PRINT]           "file_path": "C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4\\19ae8d8b5041b63d\\SafexpressOps_ An Agentic AI Platform for Intelligent Workflow Automation and Company-Aware Operational Analytics.pdf"
+[2026-04-23 22:25:59.706] [PRINT]         },
+[2026-04-23 22:25:59.706] [PRINT]         {
+[2026-04-23 22:25:59.706] [PRINT]           "filename": "GROUP 3 - REVISION MATRIX.pdf",
+[2026-04-23 22:25:59.706] [PRINT]           "attachment_id": "ANGjdJ9U8iojutYkM_JaqaJ48sFs3ngN_bpm6HMhTdzoGNIRBQowg1aH-kpF328uiB65hlkgwWu8rENuNhKvk6g-eBRsxN_P3lvH7nHrAG8rod4sQN8PlTNtGlXO9nkJrNWpZ_YAt5vkshDAKUAMlYmm4syGTkMJUAMAIZYDUmXaxGa5EWsHTbH_XdIGikU4Q8dMdcbbdwbAZ29rqLOKtskJ87Xu2Sb9btcB1xDC8Dvd6R0rZrX1UL6v5ZtPfbIjB4kcnSqkJV-Cuhyjvr4CBZ8u4vzFxaI5DQzUw_-W0A4LH1AfbEDfT2f7cCmTf6s",
+[2026-04-23 22:25:59.706] [PRINT]           "mime_type": "application/pdf",
+[2026-04-23 22:25:59.706] [PRINT]           "size": 916964,
+[2026-04-23 22:25:59.706] [PRINT]           "file_path": "C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4\\19ae8d8b5041b63d\\GROUP 3 - REVISION MATRIX.pdf"
+[2026-04-23 22:25:59.706] [PRINT]         }
+[2026-04-23 22:25:59.706] [PRINT]       ],
+[2026-04-23 22:25:59.706] [PRINT]       "attachment_count": 2
+[2026-04-23 22:25:59.706] [PRINT]     }
+[2026-04-23 22:25:59.706] [PRINT]   ],
+[2026-04-23 22:25:59.706] [PRINT]   "total_emails_found": 2,
+[2026-04-23 22:25:59.706] [PRINT]   "total_attachments_downloaded": 5,
+[2026-04-23 22:25:59.706] [PRINT]   "temp_directory": "C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4",
+[2026-04-23 22:25:59.706] [PRINT]   "query": "Delivery Order to 168 has:attachment",
+[2026-04-23 22:25:59.706] [PRINT]   "download_attachments": true,
+[2026-04-23 22:25:59.706] [PRINT]   "error": null
+[2026-04-23 22:25:59.706] [PRINT] }
+[2026-04-23 22:25:59.740] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 22:25:59.777] [PRINT] 
+[2026-04-23 22:25:59.777] [PRINT] Variables added to context:
+[2026-04-23 22:25:59.819] [PRINT]    emails_with_attachments = [{'message_id': '19dbab41714fa833', 'from': 'Kita <pchua5644@gmail.com>', 'subject': 'Delivery Order to 168', 'date': 'Thu, 23 Apr 2026 22:17:25 +0800', 'timestamp': '2026-04-23T22:17:25', 'internal_date_ms': '1776953845000', 'attachments': [{'filename': 'Order List (2).pdf', 'attachment_id': 'ANGjdJ_aO91QspmVC8VOlf-vho07vUeJJdVl1q93hBMCUoUkFpS63Pwm635eCrMPXLT1bVHw16_CpiePejVV9_UpumIcmtCPiCS00iT0TthNTvP3IzFjbtb-BFuIV9ADrVdp_gIbZQWImg7pM6ToSvU-F6gfsjm56lr11TsuW_s5qEGKhZLEJPSyshh4teV1WkRQCswF-wHJrUxioFSrziA9uc5EII5S8qFL4sQVPXbtdKGneDclfmpmq-AJ4OAhH85rGq-YWPGHt_BQd4AA1_yWvl7enQczcXrgiHvNhpsSyvzZfCeaOhWuER7Eaa9PlfFLk-of6PR-bZQhL1RdOfXaXBatN8ehojlSQUCSWc51ZjndAel8vrf9mv5G9vmK1ExWHfV9YTI6mj3QrMNf', 'mime_type': 'application/pdf', 'size': 90330, 'file_path': 'C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4\\19dbab41714fa833\\Order List (2).pdf'}, {'filename': 'Food_DELIVERY_ORDER (1).pdf', 'attachment_id': 'ANGjdJ-sfhLG79nCc9iHOGS40j1BfgDANjPlMyehcMSddrvy5ZFIuOJfARlLn9msNtt7ethw0HGchhEHmF3iXzdUq7O1QFUfos4IM5QS7nScWX1X6SIycG0MFVpwsCOG-Zic8zAG4dZsKO-29FZgycv1f0gZP9mkvSUxcg2qf4S1bf1DV4fhlB9Jl2S7XBS5ZiFIYNhcfaeKvNrqtyDrnw0Jx6wKcJYE5Vr_Siu91NaO7uOx55Zgn8z8Y6VVKLxqyxHSSwGcXQXlJHiHa_GMU5boC1W2MZ3o-KC2bkxIzmL4Gt6LQLXnCXjBjl-GgE7Ed6Wadf9adM2rLY9J1U9j6kzZXgvEppBgxkEKlr_Gswukj7yHfnUx58YLF2jCQFhlJwQK0AEQkjAhujZ8NWaj', 'mime_type': 'application/pdf', 'size': 84650, 'file_path': 'C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4\\19dbab41714fa833\\Food_DELIVERY_ORDER (1).pdf'}, {'filename': 'Tech_DELIVERY_ORDER (1).pdf', 'attachment_id': 'ANGjdJ_O0RmsnKCMMyBpRS6-wtBkjGf6zV0Ef20YdUhnOY4jf-O82AsrIot9aN3LHx66Li5VSxDPcFySznFuUz0JnSG-Ncw4l6gRIKF934cW3dFaLhudWMTO2xPoAIPJiw4xiwcs8FwMXHKBEdbpb3CgcU3jvFTIyIh6m0lPs8jjXvvfojHdIHJBxKQhealw4WXhHmGTYOE7WOwgBWZQqS6LGcQnitvvEu8nwy4bXieR8JC3vpH2HuIiKPCmNxH8kkIj3zV1FRlNVz9hT25NjT-PhvTV3XBYNI9qGqQ8ib_doI9rHYFa9-g29xU3VvGkCleGCFkW7FzdTk_YQAkvRQ741CpJZpYKza-ttF_Tw1MNhTGcEfNGWqgFj5XIPvZOI-eN9tc1MdELyR28NKPW', 'mime_type': 'application/pdf', 'size': 85791, 'file_path': 'C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4\\19dbab41714fa833\\Tech_DELIVERY_ORDER (1).pdf'}], 'attachment_count': 3}, {'message_id': '19ae8d8b5041b63d', 'from': 'CARLOS MIGUEL CARLA <carlosmiguel.carla.cics@ust.edu.ph>', 'subject': 'Re: [4ITD] GROUP 3 Capstone Revision', 'date': 'Thu, 4 Dec 2025 18:11:45 +0800', 'timestamp': '2025-12-04T18:11:45', 'internal_date_ms': '1764843105000', 'attachments': [{'filename': 'SafexpressOps_ An Agentic AI Platform for Intelligent Workflow Automation and Company-Aware Operational Analytics.pdf', 'attachment_id': 'ANGjdJ-5HhTzfEC0w0niBGykAeay0Jd3Xdw10428Kpt9TapdaVaFqwgFaQa8RNaOY7XleCMI6hGzHc4ra34-fYqnhKKi53Hr5QHKdVTOhh1F5NSwcjZMoLHVZ17cwlFh571vtAeZbMK1aETtt_Fu7Ngx3Tl_-KsVc6yM9s85Im3xvbE1DhntCn0tD1AtHKfbVXDOhwB1EUhGB6jCBBZq7KLMA9X8WOmY0Lggumz67xOKbD6-h48N1fgLqPvH3hG_2raW9uYCtKyLnor5inJCdFXNV3WZ6kli8wB7RDFlN8tBzq-z-MjG1ulqm1A1-9U', 'mime_type': 'application/pdf', 'size': 11588746, 'file_path': 'C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4\\19ae8d8b5041b63d\\SafexpressOps_ An Agentic AI Platform for Intelligent Workflow Automation and Company-Aware Operational Analytics.pdf'}, {'filename': 'GROUP 3 - REVISION MATRIX.pdf', 'attachment_id': 'ANGjdJ9U8iojutYkM_JaqaJ48sFs3ngN_bpm6HMhTdzoGNIRBQowg1aH-kpF328uiB65hlkgwWu8rENuNhKvk6g-eBRsxN_P3lvH7nHrAG8rod4sQN8PlTNtGlXO9nkJrNWpZ_YAt5vkshDAKUAMlYmm4syGTkMJUAMAIZYDUmXaxGa5EWsHTbH_XdIGikU4Q8dMdcbbdwbAZ29rqLOKtskJ87Xu2Sb9btcB1xDC8Dvd6R0rZrX1UL6v5ZtPfbIjB4kcnSqkJV-Cuhyjvr4CBZ8u4vzFxaI5DQzUw_-W0A4LH1AfbEDfT2f7cCmTf6s', 'mime_type': 'application/pdf', 'size': 916964, 'file_path': 'C:\\Users\\CARLOS~1\\AppData\\Local\\Temp\\gmail_delivery_orders_xd9kvru4\\19ae8d8b5041b63d\\GROUP 3 - REVISION MATRIX.pdf'}], 'attachment_count': 2}] (from emails_with_attachments)
+[2026-04-23 22:25:59.869] [PRINT] 
+[2026-04-23 22:25:59.869] [PRINT] CONTEXT AFTER STEP 1:
+[2026-04-23 22:25:59.922] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 22:25:59.954] [PRINT]    today_date: 2026-04-23
+[2026-04-23 22:25:59.987] [PRINT]    _cached_tool_filter: Dict with keys: ['sheets_agent', 'drive_agent', 'gmail_agent', 'mapping_agent']
+[2026-04-23 22:26:00.036] [PRINT]    step_1_gmail_agent: Dict with keys: ['emails_with_attachments', 'total_emails_found', 'total_attachments_downloaded', 'temp_directory', 'query', 'download_attachments']
+[2026-04-23 22:26:00.078] [PRINT]    emails_with_attachments: Array[2 items]
+[2026-04-23 22:26:00.121] [PRINT]       └─ First item keys: ['message_id', 'from', 'subject', 'date', 'timestamp', 'internal_date_ms', 'attachments', 'attachment_count']
+[2026-04-23 22:26:00.166] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-23 22:26:00.255] [PRINT] 
+[2026-04-23 22:26:00.255] [PRINT] ============================================================
+[2026-04-23 22:26:00.294] [PRINT] Step 2/5: mapping_agent.parse_delivery_order_pdfs
+[2026-04-23 22:26:00.348] [PRINT] Description: Parse downloaded delivery-order PDFs into structured requisition rows.
+[2026-04-23 22:26:00.382] [PRINT] ============================================================
+[2026-04-23 22:26:00.464] [PRINT] Risk Level: safe
+[2026-04-23 22:26:00.516] [PRINT] 
+[2026-04-23 22:26:00.516] [PRINT] Substituting variables in inputs...
+[2026-04-23 22:26:00.561] [PRINT]    Original inputs: {
+[2026-04-23 22:26:00.561] [PRINT]       "file_paths": "{{{ emails_with_attachments }}}"
+[2026-04-23 22:26:00.561] [PRINT] }
+[2026-04-23 22:26:00.640] [ERROR] [req_20260423142400_f5669047] [T:67e941fe]  ERROR: Workflow execution failed | TemplateSyntaxError: expected token ':', got '}'
+[2026-04-23 22:26:00.642] [INFO] [req_20260423142400_f5669047] [T:67e941fe]   INFO: Memory: added assistant message
+    ↳ {"tokens": 47, "total": 421, "max": 2000, "response_preview": "**Unable to complete your request**\n\n**Issue:** Authentication failed with the service.\n**Suggestion:** Your access may have expired. Please try reconnecting your account.\n\n\n---\n*Original request: \"yo..."}
+[2026-04-23 22:26:00.755] [PRINT] 
+[2026-04-23 22:26:00.755] [PRINT] ============================================================
+[2026-04-23 22:26:00.778] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-23 22:26:00.803] [PRINT] ============================================================
+[2026-04-23 22:26:00.827] [PRINT]   LLM calls:        2
+[2026-04-23 22:26:00.854] [PRINT]   Total input:      6,154 tokens
+[2026-04-23 22:26:00.883] [PRINT]   Total output:     2,506 tokens
+[2026-04-23 22:26:00.908] [PRINT]   Total tokens:     8,660 tokens
+[2026-04-23 22:26:00.948] [PRINT]   Estimated cost:   $0.0317
+[2026-04-23 22:26:00.984] [PRINT]   Total duration:   119909ms (119.9s)
+[2026-04-23 22:26:01.014] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-23 22:26:01.073] [PRINT]   Breakdown by call:
+[2026-04-23 22:26:01.103] [PRINT]     1. gpt-4o-mini      in=303    out=79    $0.0001 2936ms
+[2026-04-23 22:26:01.130] [PRINT]     2. gpt-5            in=5851   out=2427  $0.0316 33375ms
+[2026-04-23 22:26:01.160] [PRINT] ============================================================
+[2026-04-23 22:26:01.215] [INFO] [req_20260423142400_f5669047] [T:67e941fe] ← RESPONSE: 200 (125772ms)
+[2026-04-23 22:26:01.216] [INFO] [req_20260423142400_f5669047] [T:67e941fe] ─────────: ──────────────────────────────────────────────────
+[2026-04-23 22:26:01.315] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_67e941fe
