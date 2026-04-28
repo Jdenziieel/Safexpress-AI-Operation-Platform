@@ -960,6 +960,580 @@ def add_sheet_tab(
         return {"success": False, "error": f"Failed to add sheet tab: {str(e)}"}
 
 
+def mirror_tabs(
+    source_sheet_id: str,
+    target_sheet_id: str,
+    create_missing: bool = True,
+    clear_existing: bool = True,
+    copy_data: bool = True,
+    include_tabs: Optional[List[str]] = None,
+    exclude_tabs: Optional[List[str]] = None,
+    tab_mapping: Optional[Dict[str, str]] = None,
+    credentials_dict: Optional[CredentialsDict] = None,
+) -> Dict[str, Any]:
+    """
+    Mirror all tabs (or a filtered subset) from a source spreadsheet to a
+    target spreadsheet in a single tool call.
+
+    This is the compound tool that solves the "for each tab, copy it to
+    the target" pattern that the static plan format cannot express via
+    composition (DEMO SHEET 1.2.log root cause). The orchestrator emits
+    ONE step calling mirror_tabs; the per-tab loop runs inside this
+    function.
+
+    Behavior per tab (in order):
+      1. Resolve the destination tab name. By default the source tab
+         name is reused on the target. If a `tab_mapping` entry exists
+         for the source tab (case-insensitive key match), the mapped
+         value is used as the target tab name instead — this enables
+         the "put Source.A into Target.B" rename case without touching
+         the source spreadsheet.
+      2. If the destination tab is missing from the target AND
+         create_missing is True → add it via batchUpdate(addSheet).
+         If create_missing is False → skip the tab and record
+         status="skipped_missing".
+      3. If the destination tab exists in the target AND clear_existing
+         is True → clear all values via spreadsheets.values.clear. Cell
+         formatting and conditional rules are preserved by Sheets'
+         clear() semantics.
+      4. If copy_data is True → read all values from the source tab and
+         write them to the destination tab in a single update() call.
+         Formulas are read with valueRenderOption="UNFORMATTED_VALUE"
+         so we copy literal cell contents (formulas survive, dates
+         remain serial), and write with valueInputOption="USER_ENTERED"
+         so the target re-parses formulas. Cells beyond the source
+         range are NOT touched on the target — pair with
+         clear_existing=True for a true overwrite.
+
+    Per-tab failures are non-fatal. The function aggregates per-tab
+    results and reports overall success only if at least one tab
+    succeeded with no errors. The plan continues to the next tab after
+    a per-tab error, so a transient permission glitch on one tab does
+    not lose progress on the others.
+
+    Args:
+        source_sheet_id: Google Sheets ID or full URL of the source
+            spreadsheet. URL is auto-parsed via _extract_sheet_id.
+        target_sheet_id: Google Sheets ID or full URL of the target
+            spreadsheet. Must differ from source_sheet_id.
+        create_missing: When True, missing destination tabs are created
+            in the target. Default True. Set to False for the "only
+            mirror tabs that already exist on both sides" pattern —
+            unmatched source tabs are skipped with
+            status="skipped_missing".
+        clear_existing: When True, existing destination tabs in the
+            target are cleared (values only — formatting preserved)
+            before the source data is written. Default True. Setting
+            this False with copy_data=True will MERGE the source over
+            the existing target data cell-for-cell, leaving any cells
+            outside the source range untouched — usually NOT what the
+            user wants.
+        copy_data: When True, source tab values are written to the
+            destination tab. Default True. Set False to ONLY create
+            missing tabs without copying data (rare).
+        include_tabs: Optional whitelist — only tab names in this list
+            are mirrored. Match is case-insensitive against SOURCE tab
+            titles (i.e. you whitelist what to copy FROM). When None or
+            empty, all source tabs are considered. Ignored when
+            tab_mapping is provided (mapping doubles as a whitelist).
+        exclude_tabs: Optional blacklist — tab names in this list are
+            skipped. Case-insensitive. Applied after include_tabs.
+            Ignored when tab_mapping is provided.
+        tab_mapping: Optional {source_name: target_name} dict for the
+            "put Source.A into Target.B" rename case. When provided,
+            ONLY mappings in this dict are processed — unmapped source
+            tabs are NOT mirrored even if they share a name with a
+            target tab. Source-name lookup is case-insensitive; the
+            target-name value is used verbatim (preserves user's
+            preferred case). When the source tab named in a mapping
+            does not exist on the source spreadsheet, the mapping is
+            skipped with status="skipped_source_missing". When None or
+            empty, the default same-name behavior applies and all
+            source tabs are processed (subject to include/exclude).
+        credentials_dict: Google OAuth credentials.
+
+    Returns:
+        Dictionary with overall summary plus per-tab detail. See the
+        "Returns" entry in agent_capabilities_v3 for the full schema.
+    """
+    try:
+        if not credentials_dict:
+            return {"success": False, "error": "Credentials required"}
+
+        source_sheet_id = _extract_sheet_id(source_sheet_id)
+        target_sheet_id = _extract_sheet_id(target_sheet_id)
+
+        if source_sheet_id == target_sheet_id:
+            return {
+                "success": False,
+                "error": (
+                    "source_sheet_id and target_sheet_id must differ — "
+                    "mirror_tabs cannot mirror a spreadsheet onto itself."
+                ),
+                "error_type": "bad_input",
+            }
+
+        # Normalize the optional filter lists once. We compare against
+        # source titles in lowercase, so pre-lowercase the filter sets.
+        include_lower = {
+            (name or "").strip().lower() for name in (include_tabs or [])
+            if isinstance(name, str) and name.strip()
+        }
+        exclude_lower = {
+            (name or "").strip().lower() for name in (exclude_tabs or [])
+            if isinstance(name, str) and name.strip()
+        }
+
+        # Normalize tab_mapping: lowercase the source-side keys for
+        # case-insensitive lookup; preserve target-side values verbatim
+        # so the user's preferred case is honored on the target.
+        # Skip empty/whitespace keys or values defensively — those would
+        # produce undefined behavior (empty target tab name) and are
+        # almost certainly user error.
+        mapping_lower: Dict[str, str] = {}
+        if tab_mapping:
+            for src_name, tgt_name in tab_mapping.items():
+                if not isinstance(src_name, str) or not isinstance(tgt_name, str):
+                    continue
+                src_clean = src_name.strip()
+                tgt_clean = tgt_name.strip()
+                if not src_clean or not tgt_clean:
+                    continue
+                mapping_lower[src_clean.lower()] = tgt_clean
+
+        # Surface a warning when both tab_mapping and include/exclude
+        # filters are passed — mapping wins, but we tell the caller.
+        warnings: List[str] = []
+        if mapping_lower and (include_lower or exclude_lower):
+            warnings.append(
+                "tab_mapping was provided alongside include_tabs/exclude_tabs; "
+                "the mapping takes precedence and the include/exclude "
+                "filters are ignored for this run."
+            )
+
+        # Surface a warning when tab_mapping has duplicate target names
+        # (e.g. {"A": "X", "B": "X"}). Each iteration over a duplicate
+        # target overwrites the previous iteration's data, so the user
+        # ends up with only the LAST source's data in that target. This
+        # is almost always a user error worth flagging up-front.
+        if mapping_lower:
+            target_counts: Dict[str, List[str]] = {}
+            for src_lower, tgt_name in mapping_lower.items():
+                target_counts.setdefault(tgt_name.lower(), []).append(src_lower)
+            duplicates = {
+                k: v for k, v in target_counts.items() if len(v) > 1
+            }
+            if duplicates:
+                dup_summary = "; ".join(
+                    f"{k!r} ← {', '.join(v)}" for k, v in duplicates.items()
+                )
+                warnings.append(
+                    f"tab_mapping has duplicate target names: {dup_summary}. "
+                    f"Each target tab will end up with the data from the "
+                    f"LAST mapped source; earlier sources' data WILL BE "
+                    f"OVERWRITTEN. If you wanted distinct target tabs, "
+                    f"give each mapping a unique target name."
+                )
+
+        service = create_sheets_service(credentials_dict)
+
+        source_meta = service.spreadsheets().get(
+            spreadsheetId=source_sheet_id
+        ).execute()
+        target_meta = service.spreadsheets().get(
+            spreadsheetId=target_sheet_id
+        ).execute()
+
+        source_sheets = source_meta.get("sheets", [])
+        target_sheets = target_meta.get("sheets", [])
+        source_title = source_meta.get("properties", {}).get("title", "")
+        target_title = target_meta.get("properties", {}).get("title", "")
+
+        # Build a lowercase->original map of source titles so we can
+        # honor a tab_mapping key like "food" against a real source tab
+        # titled "Food" without requiring exact-case input from the user.
+        source_titles_lower = {
+            s.get("properties", {}).get("title", "").lower(): s.get("properties", {}).get("title", "")
+            for s in source_sheets
+        }
+        target_titles_lower = {
+            s.get("properties", {}).get("title", "").lower(): s.get("properties", {})
+            for s in target_sheets
+        }
+
+        tabs_processed: List[Dict[str, Any]] = []
+        tabs_total = 0
+        tabs_succeeded = 0
+        tabs_failed = 0
+        tabs_created = 0
+        tabs_cleared = 0
+        rows_total = 0
+
+        # Compute the iteration list. When tab_mapping is provided we
+        # iterate the mapping (so the user's enumerated rename pairs
+        # drive the loop). Otherwise we iterate all source tabs and
+        # apply include/exclude filters.
+        # Each element is a tuple (source_title, dest_title,
+        # source_missing) where source_missing=True means the user
+        # named a source tab in tab_mapping that doesn't exist on the
+        # source — we still record it as a per-tab result with status
+        # "skipped_source_missing" so the user can see the typo.
+        iteration_list: List[Tuple[str, str, bool]] = []
+
+        if mapping_lower:
+            for src_lower, tgt_name in mapping_lower.items():
+                if src_lower in source_titles_lower:
+                    iteration_list.append(
+                        (source_titles_lower[src_lower], tgt_name, False)
+                    )
+                else:
+                    # Use the user's original key casing in the result so
+                    # the message matches what they typed.
+                    user_key = next(
+                        (k for k in (tab_mapping or {}).keys()
+                         if isinstance(k, str) and k.strip().lower() == src_lower),
+                        src_lower,
+                    )
+                    iteration_list.append((user_key, tgt_name, True))
+        else:
+            for src_sheet in source_sheets:
+                src_props = src_sheet.get("properties", {})
+                src_title = src_props.get("title", "")
+                src_title_lower = src_title.lower()
+                if include_lower and src_title_lower not in include_lower:
+                    continue
+                if src_title_lower in exclude_lower:
+                    continue
+                iteration_list.append((src_title, src_title, False))
+
+        for src_title, dest_title, src_missing in iteration_list:
+            tabs_total += 1
+            tab_result: Dict[str, Any] = {
+                "tab_name": src_title,
+                "target_tab_name": dest_title,
+                "created": False,
+                "cleared": False,
+                "rows_copied": 0,
+                "columns_copied": 0,
+                "status": "pending",
+                "error": None,
+            }
+
+            # Pre-flight: the user's tab_mapping referenced a source tab
+            # that doesn't exist. Record and move on.
+            if src_missing:
+                tab_result["status"] = "skipped_source_missing"
+                tab_result["error"] = (
+                    f"Source tab '{src_title}' was named in tab_mapping "
+                    f"but does not exist on the source spreadsheet — "
+                    f"check the spelling (case-insensitive)."
+                )
+                tabs_processed.append(tab_result)
+                continue
+
+            try:
+                dest_lower = dest_title.lower()
+                exists_in_target = dest_lower in target_titles_lower
+
+                # Step 1 — ensure the destination tab exists in the target.
+                if not exists_in_target:
+                    if not create_missing:
+                        tab_result["status"] = "skipped_missing"
+                        tab_result["error"] = (
+                            f"Destination tab '{dest_title}' is missing "
+                            f"from the target and create_missing=False — "
+                            f"skipped."
+                        )
+                        tabs_processed.append(tab_result)
+                        continue
+
+                    add_request = {
+                        "requests": [
+                            {"addSheet": {"properties": {"title": dest_title}}}
+                        ]
+                    }
+                    try:
+                        service.spreadsheets().batchUpdate(
+                            spreadsheetId=target_sheet_id,
+                            body=add_request,
+                        ).execute()
+                        tab_result["created"] = True
+                        tabs_created += 1
+                    except HttpError as add_err:
+                        # Race condition: tab created between our get() and
+                        # our addSheet(). Treat as exists_in_target.
+                        if "already exists" in str(add_err).lower():
+                            warnings.append(
+                                f"Tab '{dest_title}' was created by another "
+                                f"process during mirror_tabs — proceeding "
+                                f"with the existing tab."
+                            )
+                            exists_in_target = True
+                        else:
+                            raise
+
+                # Step 2 — read source data BEFORE clearing the target.
+                # Doing the source read first protects the target from
+                # being stranded in a cleared state if the source read
+                # fails (insufficient permission, network blip, source
+                # tab renamed mid-flight). The clear step has been
+                # known to leave a target tab empty if the subsequent
+                # source read errored — this ordering prevents that
+                # data-loss window.
+                source_values = None
+                if copy_data:
+                    try:
+                        read_result = service.spreadsheets().values().get(
+                            spreadsheetId=source_sheet_id,
+                            range=src_title,
+                            valueRenderOption="UNFORMATTED_VALUE",
+                            dateTimeRenderOption="SERIAL_NUMBER",
+                        ).execute()
+                        source_values = read_result.get("values", [])
+                    except HttpError as read_err:
+                        # Abort BEFORE clearing the target so we don't
+                        # destroy data we cannot replace.
+                        tab_result["status"] = "error"
+                        tab_result["error"] = (
+                            f"Could not read source tab '{src_title}': "
+                            f"{read_err}. Target tab was NOT cleared."
+                        )
+                        tabs_failed += 1
+                        tabs_processed.append(tab_result)
+                        continue
+
+                # Step 3 — clear existing data when requested.
+                # Skip if the tab was JUST created (it's already empty).
+                # Now that the source read has succeeded (or copy_data
+                # is False), it's safe to clear the target.
+                if exists_in_target and clear_existing and not tab_result["created"]:
+                    try:
+                        service.spreadsheets().values().clear(
+                            spreadsheetId=target_sheet_id,
+                            range=dest_title,
+                            body={},
+                        ).execute()
+                        tab_result["cleared"] = True
+                        tabs_cleared += 1
+                    except HttpError as clear_err:
+                        # Not fatal — the tab is there but we couldn't
+                        # clear it. Most common cause: insufficient edit
+                        # permission on a specific tab. Log a warning,
+                        # try the write anyway (it'll merge on top of
+                        # whatever's there).
+                        warnings.append(
+                            f"Could not clear existing data in target tab "
+                            f"'{dest_title}' before write: {clear_err}"
+                        )
+
+                # Step 4 — write source values to destination.
+                if copy_data and source_values:
+                    try:
+                        service.spreadsheets().values().update(
+                            spreadsheetId=target_sheet_id,
+                            range=f"{dest_title}!A1",
+                            valueInputOption="USER_ENTERED",
+                            body={"values": source_values},
+                        ).execute()
+                        tab_result["rows_copied"] = len(source_values)
+                        tab_result["columns_copied"] = (
+                            max((len(row) for row in source_values), default=0)
+                        )
+                        rows_total += len(source_values)
+                    except HttpError as write_err:
+                        # The clear succeeded but the write failed —
+                        # the target tab is now empty and we couldn't
+                        # restore it. Surface this loudly so the user
+                        # knows manual recovery is needed.
+                        tab_result["status"] = "error"
+                        tab_result["error"] = (
+                            f"Wrote NOTHING to target tab '{dest_title}' — "
+                            f"the tab was cleared but the subsequent write "
+                            f"failed: {write_err}. Target tab is now EMPTY; "
+                            f"manual recovery may be needed."
+                        )
+                        tabs_failed += 1
+                        tabs_processed.append(tab_result)
+                        continue
+                elif copy_data and not source_values:
+                    # Empty source tab — record but don't error.
+                    tab_result["rows_copied"] = 0
+                    tab_result["columns_copied"] = 0
+
+                tab_result["status"] = "success"
+                tabs_succeeded += 1
+
+            except HttpError as he:
+                tab_result["status"] = "error"
+                tab_result["error"] = f"Google Sheets API error: {he}"
+                tabs_failed += 1
+            except Exception as he:
+                tab_result["status"] = "error"
+                tab_result["error"] = f"Failed to mirror tab: {he}"
+                tabs_failed += 1
+
+            tabs_processed.append(tab_result)
+
+        # Build the summary message. Overall success requires:
+        #   - No HTTP/Sheets failures (tabs_failed == 0), AND
+        #   - At least one tab made it through (tabs_succeeded > 0)
+        #     OR the only "skips" were intentional (create_missing=False
+        #     with no matching target tab — the user explicitly opted
+        #     out of new-tab creation, so 0-of-N is the correct outcome).
+        # When ALL skips are typos (tab_mapping referenced source tabs
+        # that don't exist) and nothing else succeeded, we mark this as
+        # a hard failure so the user notices and corrects. Mixed cases
+        # (1 success + 1 typo) stay successful but we add a warning.
+        tabs_skipped_typo = sum(
+            1 for t in tabs_processed
+            if (t.get("status") or "") == "skipped_source_missing"
+        )
+        tabs_skipped_missing = sum(
+            1 for t in tabs_processed
+            if (t.get("status") or "") == "skipped_missing"
+        )
+        tabs_skipped = tabs_skipped_typo + tabs_skipped_missing
+
+        overall_success = (
+            tabs_failed == 0
+            and (tabs_succeeded > 0 or tabs_skipped_typo == 0)
+        )
+
+        # If there are typo skips but at least one tab succeeded,
+        # surface them as a warning so the user is alerted without
+        # downgrading the run to a failure.
+        if tabs_skipped_typo > 0 and tabs_succeeded > 0:
+            warnings.append(
+                f"{tabs_skipped_typo} tab_mapping entry/entries referenced "
+                f"source tabs that don't exist (typo?) — those entries "
+                f"were skipped. See per-tab `skipped_source_missing` "
+                f"status for details."
+            )
+
+        # Format-aware skip hint reused by several branches.
+        def _skip_hint(prefix: str) -> str:
+            parts = []
+            if tabs_skipped_missing:
+                parts.append(f"{tabs_skipped_missing} skipped (no target match)")
+            if tabs_skipped_typo:
+                parts.append(f"{tabs_skipped_typo} typo'd source name(s)")
+            return f"{prefix}{', '.join(parts)}" if parts else ""
+
+        if tabs_total == 0:
+            message = (
+                "No source tabs matched the include/exclude filters — "
+                "nothing was mirrored."
+            )
+            error_type = None
+        elif tabs_succeeded == 0 and tabs_failed == 0:
+            # Nothing actually executed — every iteration was a skip.
+            if tabs_skipped_typo > 0 and tabs_skipped_missing == 0:
+                message = (
+                    f"Could not mirror any tabs from '{source_title}' to "
+                    f"'{target_title}' — all {tabs_skipped_typo} "
+                    f"tab_mapping entries referenced source tabs that "
+                    f"do not exist. Check the spelling (matching is "
+                    f"case-insensitive)."
+                )
+                error_type = "bad_input"
+            elif tabs_skipped_typo > 0 and tabs_skipped_missing > 0:
+                message = (
+                    f"Mirrored 0 of {tabs_total} tab(s) from "
+                    f"'{source_title}' to '{target_title}' — "
+                    f"{tabs_skipped_typo} tab_mapping entry/entries "
+                    f"referenced unknown source tabs (typo?), and "
+                    f"{tabs_skipped_missing} other tab(s) had no "
+                    f"matching target with create_missing=False."
+                )
+                error_type = "bad_input"
+            else:
+                # Pure intentional skips — every source tab was missing
+                # from the target and create_missing=False.
+                message = (
+                    f"Mirrored 0 of {tabs_total} tab(s) from "
+                    f"'{source_title}' to '{target_title}' — all "
+                    f"{tabs_total} source tab(s) were missing from the "
+                    f"target and create_missing=False, so no new tabs "
+                    f"were created and no data was written."
+                )
+                error_type = None
+        elif tabs_failed == 0:
+            # At least one success; possibly some skips. Skips are
+            # surfaced via warnings + per-tab status, so the message
+            # stays in the "success" framing.
+            hint = _skip_hint(" — ")
+            verb = "Successfully mirrored" if not tabs_skipped else "Mirrored"
+            message = (
+                f"{verb} {tabs_succeeded} of {tabs_total} tab(s) "
+                f"from '{source_title}' to '{target_title}'{hint}."
+            )
+            error_type = None
+        elif tabs_succeeded == 0:
+            # Pure failures, possibly with skips.
+            hint = _skip_hint(", ")
+            message = (
+                f"Failed to mirror any tabs from '{source_title}' to "
+                f"'{target_title}' — {tabs_failed} tab(s) errored"
+                f"{hint}."
+            )
+            error_type = "partial_failure"
+        else:
+            # Mixed: some succeeded, some failed, possibly some skipped.
+            hint = _skip_hint(", ")
+            message = (
+                f"Partially mirrored {tabs_succeeded} of {tabs_total} "
+                f"tab(s) from '{source_title}' to '{target_title}' — "
+                f"{tabs_failed} failed{hint}."
+            )
+            error_type = "partial_failure"
+
+        # error string mirrors error_type for downstream consumers
+        # (summarization service categorizes via _categorize_error).
+        # When success is True the per-tab warnings already capture any
+        # non-fatal skips, so error stays None.
+        if overall_success:
+            error_msg = None
+        elif tabs_failed > 0:
+            error_msg = (
+                f"{tabs_failed} of {tabs_total} tab(s) failed during mirror"
+            )
+        else:
+            # tabs_failed == 0, tabs_succeeded == 0, tabs_skipped_typo > 0:
+            # all-typo case (no legit work done).
+            error_msg = (
+                f"{tabs_skipped_typo} tab_mapping entry/entries "
+                f"referenced unknown source tabs and nothing was mirrored"
+            )
+
+        return {
+            "success": overall_success,
+            "source_sheet_id": source_sheet_id,
+            "target_sheet_id": target_sheet_id,
+            "source_title": source_title,
+            "target_title": target_title,
+            "tabs_processed": tabs_processed,
+            "tabs_total": tabs_total,
+            "tabs_succeeded": tabs_succeeded,
+            "tabs_failed": tabs_failed,
+            "tabs_skipped": tabs_skipped,
+            "tabs_created": tabs_created,
+            "tabs_cleared": tabs_cleared,
+            "rows_total": rows_total,
+            "warnings": warnings,
+            "message": message,
+            "error": error_msg,
+            "error_type": error_type,
+        }
+
+    except HttpError as e:
+        return {
+            "success": False,
+            "error": f"Google Sheets API error: {str(e)}",
+        }
+    except Exception as e:
+        return {"success": False, "error": f"Failed to mirror tabs: {str(e)}"}
+
+
 def clear_sheet(
     sheet_id: str,
     range_name: Optional[str] = None,
@@ -2848,6 +3422,10 @@ TOOL_REGISTRY = {
     "add_sheet_tab": {
         "func": add_sheet_tab,
         "description": "Idempotently add a new tab to an existing spreadsheet",
+    },
+    "mirror_tabs": {
+        "func": mirror_tabs,
+        "description": "Copy all (or filtered) tabs from a source spreadsheet to a target spreadsheet, creating missing tabs and optionally clearing existing data",
     },
     "clear_sheet": {
         "func": clear_sheet,

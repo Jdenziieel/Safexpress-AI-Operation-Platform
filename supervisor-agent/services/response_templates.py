@@ -696,6 +696,165 @@ def _format_add_sheet_tab(output: dict) -> str:
     return text
 
 
+def _format_mirror_tabs(output: dict) -> str:
+    """Format sheets_agent.mirror_tabs result.
+
+    Renders a compact per-tab block plus an aggregate summary. Each tab
+    line shows what happened (created / cleared / copied) so the user can
+    verify the intended outcome without opening Sheets. Skipped/errored
+    tabs are surfaced inline rather than buried in a `warnings` field.
+
+    Header logic mirrors the function-side message logic in
+    sheets_agent_api.mirror_tabs so the per-tab block matches the
+    aggregate summary the user sees. Specifically: an all-skipped run
+    (tabs_succeeded == 0 AND tabs_failed == 0 AND tabs_skipped > 0) is
+    reported as "Mirrored 0 of N — all skipped" rather than the
+    legacy "Mirrored 0 of N tab(s)" which was indistinguishable from
+    "happy path with zero work".
+    """
+    source_title = output.get("source_title") or "(unknown source)"
+    target_title = output.get("target_title") or "(unknown target)"
+    tabs_processed = output.get("tabs_processed") or []
+    tabs_total = output.get("tabs_total") or 0
+    tabs_succeeded = output.get("tabs_succeeded") or 0
+    tabs_failed = output.get("tabs_failed") or 0
+    tabs_created = output.get("tabs_created") or 0
+    tabs_cleared = output.get("tabs_cleared") or 0
+    rows_total = output.get("rows_total") or 0
+    warnings = output.get("warnings") or []
+
+    # Defensive: derive skip counts from per-tab status when the
+    # function-side `tabs_skipped` field is missing (e.g. a stale
+    # response from a sub-agent that pre-dates Fix 2).
+    tabs_skipped_typo = sum(
+        1 for t in tabs_processed
+        if isinstance(t, dict) and (t.get("status") or "") == "skipped_source_missing"
+    )
+    tabs_skipped_missing = sum(
+        1 for t in tabs_processed
+        if isinstance(t, dict) and (t.get("status") or "") == "skipped_missing"
+    )
+    tabs_skipped = output.get("tabs_skipped")
+    if tabs_skipped is None:
+        tabs_skipped = tabs_skipped_typo + tabs_skipped_missing
+
+    if tabs_total == 0:
+        return (
+            f"Nothing to mirror from **{source_title}** to **{target_title}** — "
+            f"no source tabs matched the include/exclude filters."
+        )
+
+    if tabs_succeeded == 0 and tabs_failed == 0:
+        # Every iteration was a skip — distinguish typo case (user
+        # error) from intentional case (create_missing=False). The
+        # function returns success=True for the intentional case so
+        # the formatter must not paint it as a failure.
+        if tabs_skipped_typo > 0 and tabs_skipped_missing == 0:
+            header = (
+                f"Could not mirror any tabs from **{source_title}** to "
+                f"**{target_title}** — all {tabs_skipped_typo} "
+                f"tab_mapping entry/entries referenced source tabs that "
+                f"do not exist. Check the spelling."
+            )
+        elif tabs_skipped_typo > 0 and tabs_skipped_missing > 0:
+            header = (
+                f"Mirrored **0** of **{tabs_total}** tab(s) — "
+                f"{tabs_skipped_typo} typo'd source name(s), and "
+                f"{tabs_skipped_missing} tab(s) had no matching target "
+                f"with create_missing=False."
+            )
+        else:
+            header = (
+                f"Mirrored **0** of **{tabs_total}** tab(s) — all "
+                f"{tabs_total} source tab(s) were missing from "
+                f"**{target_title}** and create_missing=False, so no new "
+                f"tabs were created and no data was written."
+            )
+    elif tabs_failed == 0:
+        skip_hint = ""
+        if tabs_skipped:
+            parts = []
+            if tabs_skipped_missing:
+                parts.append(f"{tabs_skipped_missing} skipped (no target match)")
+            if tabs_skipped_typo:
+                parts.append(f"{tabs_skipped_typo} typo'd source name(s)")
+            skip_hint = " — " + ", ".join(parts) if parts else ""
+        header = (
+            f"Mirrored **{tabs_succeeded}** of **{tabs_total}** tab(s) "
+            f"from **{source_title}** to **{target_title}**{skip_hint}."
+        )
+    elif tabs_succeeded == 0:
+        skip_hint = f", {tabs_skipped} skipped" if tabs_skipped else ""
+        header = (
+            f"Failed to mirror any tabs from **{source_title}** to "
+            f"**{target_title}** — {tabs_failed} tab(s) errored{skip_hint}."
+        )
+    else:
+        skip_hint = f", {tabs_skipped} skipped" if tabs_skipped else ""
+        header = (
+            f"Partially mirrored {tabs_succeeded} of {tabs_total} tab(s) "
+            f"from **{source_title}** to **{target_title}** — "
+            f"{tabs_failed} failed{skip_hint}."
+        )
+
+    lines = [header]
+
+    summary_bits = []
+    if tabs_created:
+        summary_bits.append(f"created **{tabs_created}**")
+    if tabs_cleared:
+        summary_bits.append(f"cleared **{tabs_cleared}**")
+    if rows_total:
+        summary_bits.append(f"copied **{rows_total:,}** row(s) total")
+    if summary_bits:
+        lines.append("Summary: " + ", ".join(summary_bits) + ".")
+
+    lines.append("")
+    lines.append("**Per-tab results:**")
+    for tab in tabs_processed:
+        src_name = tab.get("tab_name") or "(unnamed)"
+        tgt_name = tab.get("target_tab_name") or src_name
+        # Show "Source → Target" when names differ (tab_mapping case);
+        # collapse to a single name when same-name (default behavior)
+        # so the line stays concise for the common case.
+        if tgt_name and tgt_name.lower() != src_name.lower():
+            label = f"**{src_name}** → **{tgt_name}**"
+        else:
+            label = f"**{src_name}**"
+        status = tab.get("status")
+        rows = tab.get("rows_copied") or 0
+        cols = tab.get("columns_copied") or 0
+        if status == "success":
+            actions = []
+            if tab.get("created"):
+                actions.append("created")
+            if tab.get("cleared"):
+                actions.append("cleared")
+            if rows:
+                actions.append(f"copied {rows:,} row(s) × {cols} col(s)")
+            action_str = ", ".join(actions) if actions else "no changes"
+            lines.append(f"- {label} — {action_str}.")
+        elif status == "skipped_missing":
+            err = tab.get("error") or "skipped"
+            lines.append(f"- {label} — skipped: {err}")
+        elif status == "skipped_source_missing":
+            err = tab.get("error") or "source tab not found"
+            lines.append(f"- {label} — skipped: {err}")
+        else:
+            err = tab.get("error") or "unknown error"
+            lines.append(f"- {label} — failed: {err}")
+
+    if warnings:
+        lines.append("")
+        lines.append("**Warnings:**")
+        for w in warnings[:5]:
+            lines.append(f"- {w}")
+        if len(warnings) > 5:
+            lines.append(f"- … and {len(warnings) - 5} more")
+
+    return "\n".join(lines)
+
+
 def _format_parse_delivery_order_pdfs(output: dict) -> str:
     """Deterministic summary for mapping_agent.parse_delivery_order_pdfs.
 
@@ -1084,6 +1243,14 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         # call per response.
         "type": "action",
         "template": _format_add_sheet_tab,
+    },
+    ("sheets_agent", "mirror_tabs"): {
+        # Callable because the message has to render a per-tab loop with
+        # per-tab status (created/cleared/copied/skipped/error) — not
+        # expressible as a simple format string. Keeping this here avoids
+        # the LLM safety net for the common multi-tab mirror flow.
+        "type": "action",
+        "template": _format_mirror_tabs,
     },
     ("sheets_agent", "validate_delivery_sheet"): {
         "type": "action",

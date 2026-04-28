@@ -446,6 +446,188 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                 ):
                     sheets_tools_for_k.append("get_sheet_metadata")
 
+        # Block M (DEMO SHEET 1.2 fix): mirror-all-tabs safety net.
+        # When the user asks to copy / mirror / sync / replicate every
+        # tab from one spreadsheet to another, the planner cannot
+        # express that as a static plan because the per-tab loop
+        # depends on metadata that's only known at execution time
+        # (Invariant 7: ReAct disabled — no orchestrator for_each).
+        # In the DEMO SHEET 1.2 log the planner attempted to "meta-plan"
+        # this with 17 llm_tool.transform_text steps that described
+        # what should happen rather than executing real sheet ops, and
+        # zero data made it to the target. The fix is to expose a
+        # compound tool — sheets_agent.mirror_tabs — that runs the
+        # per-tab loop INSIDE the sub-agent. This block ensures the
+        # planner sees that tool whenever the request matches the
+        # mirror pattern.
+        # NOTE: `import re as _re` happens here (early in the function)
+        # so Block M can use _re without depending on the later
+        # folder-block import at line ~552 of the original file. Re-
+        # importing the same module at line 552 is harmless — Python's
+        # import machinery short-circuits on cached modules.
+        import re as _re
+        # Fires when the input matches ANY of:
+        #   - explicit verbs: "mirror tabs", "sync tabs", "replicate tabs"
+        #   - copy + scope quantifiers: "copy all tabs", "copy every tab",
+        #     "copy each tab", "copy the tabs"
+        #   - cross-spreadsheet phrasing: "(copy|move|transfer) … tabs …
+        #     (from|in) … to …" with both source and target referenced
+        # Companion: drive_agent.search_files is added so the planner
+        # can resolve sheet NAMES (the most common phrasing) to
+        # sheet IDs before calling mirror_tabs.
+        # Block M runs as a top-level block — it does NOT require
+        # sheets_agent to already be in validated, because the
+        # classifier often misroutes mirror requests to llm_tool only
+        # (the meta-planning failure mode in the original log).
+        # Direct keyword set — substring match, case-insensitive
+        # (input_lower already applied). The four "the tabs" variants
+        # (mirror/sync/replicate/duplicate the tabs) were added after the
+        # overlap-simulation suite caught a gap on "Sync the tabs between
+        # source and target" — that phrasing fails the broad pattern's
+        # "from ... to" requirement, and the keyword "sync tabs" doesn't
+        # match the literal "sync the tabs" substring (the article "the"
+        # breaks adjacency). Adding "the tabs" variants keeps the keyword
+        # path as the primary trigger and avoids forcing all callers
+        # through the broad-pattern alternative.
+        _MIRROR_TABS_DIRECT_KEYWORDS = (
+            "mirror tabs", "mirror all tabs", "mirror every tab", "mirror the tabs",
+            "sync tabs", "sync all tabs", "sync every tab", "sync the tabs",
+            "replicate tabs", "replicate all tabs", "replicate every tab", "replicate the tabs",
+            "duplicate tabs", "duplicate all tabs", "duplicate every tab", "duplicate the tabs",
+            "copy all tabs", "copy every tab", "copy each tab",
+            "copy the tabs", "copy all the tabs",
+            "copy tabs from", "copy all tabs from",
+            "copy contents of all tabs", "copy contents from all tabs",
+            "copy data from all tabs", "copy all data and tabs",
+            "copy all tabs and contents", "copy tabs and contents",
+            "copy tabs and data", "copy all tabs and data",
+            "all tabs and contents", "all tabs and data",
+        )
+        # Broad pattern — verb + tab quantifier + cross-spreadsheet
+        # connector. Two connector forms are accepted:
+        #   - "from|in|of … to" (e.g. "copy all tabs from A to B")
+        #   - "between … and" (e.g. "sync all tabs between A and B")
+        # Verbs include the standard set plus "clone" and "back up" —
+        # both are common synonyms for "duplicate / copy" in a sheets
+        # context (e.g. "clone all tabs from prod to staging" or "back
+        # up every tab from main to archive"). Two-word "back up" needs
+        # to match both "back up" (verb + adverb) and "backup" (single
+        # word) so we use `back\s*up` in a non-capturing group.
+        # The 80-char inner gap intentionally allows intervening
+        # adjectives ("the source spreadsheet") and short clause
+        # fragments without spanning sentence boundaries (the gap is
+        # `[^.]{0,80}` — period-bounded). Period boundaries prevent the
+        # pattern from accidentally matching across two unrelated
+        # sentences in a multi-clause request.
+        _MIRROR_TABS_BROAD_PATTERN = _re.compile(
+            r"\b(?:copy|move|transfer|mirror|sync|replicate|duplicate|clone|back\s*up|backup)\b"
+            r"[^.]{0,80}\b(?:all|every|each|the)\s+tabs?\b"
+            r"[^.]{0,80}"
+            r"(?:"
+            r"\b(?:from|in|of)\b[^.]{0,80}\bto\b"
+            r"|"
+            r"\bbetween\b[^.]{0,80}\band\b"
+            r")",
+            _re.IGNORECASE,
+        )
+        # Explicit mapping pattern: "put the [SrcTab] tab into the
+        # [TgtTab] tab" / "copy [SrcTab] tab to [TgtTab] tab" / "map
+        # [X] to [Y]". Catches the rename case where source and target
+        # tab names diverge (e.g. "put the Food tab from sheet A into
+        # the Groceries tab of sheet B"). Distinct from the broader
+        # mirror pattern above — does NOT require the "all/every/each"
+        # quantifier because explicit per-tab mappings are inherently
+        # enumerated.
+        _MIRROR_TABS_MAPPING_PATTERN = _re.compile(
+            r"\b(?:put|copy|move|map|transfer)\b"
+            r"[^.]{0,40}\b(?:the\s+)?(?:[a-z0-9_\-]+\s+)?tab\b"
+            r"[^.]{0,80}\b(?:in(?:to)?|to)\b"
+            r"[^.]{0,40}\b(?:the\s+)?(?:[a-z0-9_\-]+\s+)?tab\b",
+            _re.IGNORECASE,
+        )
+        # Defensive guard: STRONG delivery-order signals — phrasings
+        # that unambiguously indicate the delivery-order pipeline (Rule
+        # 16) rather than a generic sheet-to-sheet mirror. A user who
+        # says "process this delivery order PDF" or "extract from
+        # delivery order" is invoking Block G's territory, not Block
+        # M's, even if their phrasing happens to include "tabs"
+        # somewhere.
+        #
+        # The previous implementation used a tuple of phrases that
+        # included bare "delivery order" / "purchase order". Those
+        # could appear in legitimate spreadsheet NAMES (e.g.
+        # "Delivery Order Log Sheet", "Purchase Order Master"), causing
+        # false negatives for users who wanted to mirror tabs of such a
+        # sheet. The regex below only fires on phrasings that combine
+        # the noun with a workflow signal (PDF/form/email file
+        # markers, or process/extract/parse/handle verbs).
+        #
+        # Three alternations:
+        #   (a) bare "po pdf|form|attachment" — workflow file markers
+        #       that wouldn't appear in a legitimate sheet name
+        #   (b) "delivery|purchase order pdf|form|attachment|email" —
+        #       the DO/PO noun paired with a file marker
+        #   (c) "process|extract|parse|handle [the/this/an/from] +
+        #       delivery-order|purchase-order|requisition list" — verb
+        #       paired with the workflow noun phrase
+        #
+        # NOT matched (so Block M can still fire):
+        #   - "Mirror all tabs from Delivery Order Log to Archive"
+        #     (no PDF/form/email after "Order Log", no verb before)
+        #   - "Mirror tabs from Purchase Order Master to Backup"
+        #   - "Process the delivery confirmations" (no DO/PO noun)
+        _DELIVERY_ORDER_WORKFLOW_PATTERN = _re.compile(
+            r"\b(?:"
+            r"po\s+(?:pdf|form|attachment)"
+            r"|"
+            r"(?:delivery|purchase)[-\s]?order\s+(?:pdf|form|attachment|email)"
+            r"|"
+            r"(?:process|extract|parse|handle)\s+"
+            r"(?:(?:the|this|that|a|an|from(?:\s+(?:the|this))?)\s+)?"
+            r"(?:delivery[-\s]?order|purchase[-\s]?order|requisition\s+list)"
+            r")\b",
+            _re.IGNORECASE,
+        )
+        mentions_mirror_direct = any(
+            kw in input_lower for kw in _MIRROR_TABS_DIRECT_KEYWORDS
+        )
+        mentions_mirror_pattern = bool(
+            _MIRROR_TABS_BROAD_PATTERN.search(input_lower)
+        )
+        mentions_mapping_pattern = bool(
+            _MIRROR_TABS_MAPPING_PATTERN.search(input_lower)
+        )
+        is_delivery_order_workflow = bool(
+            _DELIVERY_ORDER_WORKFLOW_PATTERN.search(input_lower)
+        )
+        if (
+            (mentions_mirror_direct or mentions_mirror_pattern or mentions_mapping_pattern)
+            and not is_delivery_order_workflow
+        ):
+            sheets_caps_for_m = agent_capabilities.get("sheets_agent", {}).get("tools", {})
+            if "mirror_tabs" in sheets_caps_for_m:
+                sheets_tools_for_m = validated.setdefault("sheets_agent", [])
+                if "mirror_tabs" not in sheets_tools_for_m:
+                    sheets_tools_for_m.append("mirror_tabs")
+                # Companion: source/target sheet names → IDs via Drive
+                # search. Without this the planner has no way to resolve
+                # "PMRL" → spreadsheet ID. (Invariant 13 covers URL inputs;
+                # this covers the bare-name case which is the more common
+                # phrasing.)
+                drive_caps_for_m = agent_capabilities.get("drive_agent", {}).get("tools", {})
+                if "search_files" in drive_caps_for_m:
+                    drive_tools_for_m = validated.setdefault("drive_agent", [])
+                    if "search_files" not in drive_tools_for_m:
+                        drive_tools_for_m.append("search_files")
+                # Companion: get_sheet_metadata is occasionally useful
+                # downstream of mirror_tabs (e.g. user asks to "tell me
+                # what tabs got mirrored" as a follow-up). Cheap to add.
+                if (
+                    "get_sheet_metadata" in sheets_caps_for_m
+                    and "get_sheet_metadata" not in validated["sheets_agent"]
+                ):
+                    validated["sheets_agent"].append("get_sheet_metadata")
+
         # "Put X in folder Y" safety net: when the user asks to create a
         # sheet or doc AND references a folder, the planner needs a way to
         # resolve the folder name to a folder_id. Without this, Tier 1 may

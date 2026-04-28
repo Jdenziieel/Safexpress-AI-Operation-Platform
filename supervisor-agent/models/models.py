@@ -180,6 +180,22 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     "upload_mapped_data": ActionRiskLevel.DANGEROUS,
     "update_by_date_match": ActionRiskLevel.DANGEROUS,
     "write_delivery_order_data": ActionRiskLevel.DANGEROUS,
+    # mirror_tabs is a compound that can clear AND overwrite multiple tabs
+    # at once. Even though clear_sheet alone is CRITICAL, mirror_tabs is
+    # rated DANGEROUS rather than CRITICAL because:
+    #  (a) the user's intent for a "mirror" / "copy all tabs" request
+    #      is EXPLICITLY to overwrite the target — it's not destructive
+    #      surprise like a stray clear_sheet; and
+    #  (b) DANGEROUS already pauses once via requires_approval (line ~795
+    #      in supervisor_agent.py) so the user gets an explicit
+    #      "approve mirroring N tabs from <source> to <target>?" prompt
+    #      naming both spreadsheets before any clear/write executes.
+    # CRITICAL would add a SECOND confirmation flow (typed "CONFIRM" UI
+    # step on top of the standard pause — per requires_approval
+    # docstring) which adds friction without proportional safety, since
+    # the standard pause already surfaces source AND target by name and
+    # the per-tab response shows exactly which tabs were touched.
+    "mirror_tabs": ActionRiskLevel.DANGEROUS,
 
     # ===============================================================
     # CRITICAL — permanent data loss
