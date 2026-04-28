@@ -41,6 +41,7 @@ class SummarizationService:
         final_context: Dict[str, Any],
         execution_status: str,
         execution_message: str,
+        original_request_override: Optional[str] = None,
     ) -> str:
         """
         Generate a human-friendly summary of the execution results.
@@ -48,13 +49,31 @@ class SummarizationService:
         For ERRORS / NO-RESULTS: structured templates (no LLM).
         For SUCCESS: deterministic per-step templates, composed together.
         Falls back to LLM only when a template is missing.
+
+        Args:
+            original_request_override: Caller-supplied snapshot of the
+                user's original task (typically conversation_state.execution_summary
+                captured BEFORE _clear_workflow_state wipes it). When provided,
+                this takes priority over the now-cleared state fields and powers
+                the "**You asked:**" footer in error / no-results responses.
+                Without this, the summarizer can only fall back to the literal
+                placeholder "your request" because both extracted_info and
+                execution_summary are wiped before this method runs (see
+                routes/threads.py: _clear_workflow_state at line 625 runs
+                BEFORE summarize_execution at line 648). When both override
+                and state are empty, the footer is hidden entirely so the
+                user is not shown a meaningless "You asked: your request".
         """
 
-        original_request = conversation_state.extracted_info.get(
-            "original_message", "your request"
-        )
-        if not original_request or original_request == "your request":
-            original_request = conversation_state.execution_summary or "your request"
+        original_request = ""
+        if original_request_override and original_request_override.strip():
+            original_request = original_request_override.strip()
+        else:
+            stored = conversation_state.extracted_info.get("original_message")
+            if stored and isinstance(stored, str) and stored.strip() and stored != "your request":
+                original_request = stored.strip()
+            elif conversation_state.execution_summary:
+                original_request = conversation_state.execution_summary.strip()
 
         # ==============================================================
         # Fast paths: error / no-results (unchanged, no LLM)
@@ -123,7 +142,7 @@ class SummarizationService:
             formatted_steps.append((step, text))
 
         if not formatted_steps:
-            return f"Completed: {original_request}"
+            return f"Completed: {original_request}" if original_request else "Completed."
 
         trace.step("response_composer", "template formatting", {
             "total_steps": len(formatted_steps),
@@ -488,11 +507,16 @@ class SummarizationService:
                     f"{failed_step.get('description', failed_step.get('tool', 'Unknown'))}"
                 )
 
-        lines.append("\n---")
-        if original_request and original_request.strip():
-            truncated = original_request[:100]
-            ellipsis = "..." if len(original_request) > 100 else ""
-            lines.append(f"**You asked:** {truncated}{ellipsis}")
+        # Footer is gated on real content — when the upstream lookup couldn't
+        # recover the original task wording (e.g. _clear_workflow_state ran
+        # before this method, see Invariant 3), skip the footer entirely
+        # rather than show a meaningless "**You asked:** your request" line.
+        # Both the open horizontal rule AND the footer line are gated together
+        # so the response doesn't end with a dangling "---".
+        footer_text = self._build_you_asked_footer(original_request)
+        if footer_text:
+            lines.append("\n---")
+            lines.append(footer_text)
 
         return "\n".join(lines)
 
@@ -561,13 +585,35 @@ class SummarizationService:
                         lines.append("\n**Inputs used:**")
                         lines.extend(generic_filter_lines)
 
-        lines.append("\n---")
-        if original_request and original_request.strip():
-            truncated = original_request[:100]
-            ellipsis = "..." if len(original_request) > 100 else ""
-            lines.append(f"**You asked:** {truncated}{ellipsis}")
+        # Same gating as _format_error_response — see comment there. We avoid
+        # rendering "**You asked:** your request" when the original task text
+        # is unavailable.
+        footer_text = self._build_you_asked_footer(original_request)
+        if footer_text:
+            lines.append("\n---")
+            lines.append(footer_text)
 
         return "\n".join(lines)
+
+    @staticmethod
+    def _build_you_asked_footer(original_request: str) -> Optional[str]:
+        """Render the "**You asked:** ..." footer line, OR return None when
+        there is nothing meaningful to show.
+
+        Returns None for: empty string, whitespace-only, or the legacy
+        placeholder string "your request" (defensive — newer code paths
+        already produce "" instead, but older state may still surface the
+        placeholder). The caller should skip both the footer line AND the
+        preceding horizontal-rule separator when this returns None.
+        """
+        if not original_request:
+            return None
+        cleaned = original_request.strip()
+        if not cleaned or cleaned.lower() == "your request":
+            return None
+        truncated = cleaned[:100]
+        ellipsis = "..." if len(cleaned) > 100 else ""
+        return f"**You asked:** {truncated}{ellipsis}"
 
     @staticmethod
     def _render_gmail_filters(inputs: Dict[str, Any]) -> List[str]:
@@ -914,6 +960,28 @@ class SummarizationService:
         if not error_msg or not isinstance(error_msg, str):
             return error_msg
 
+        # Specific pattern: Google Sheets returns HTTP 400 with body
+        # "Unable to parse range: <X>" when the requested tab does not
+        # exist. The generic 400 message ("the request was invalid")
+        # is misleading here — the request was well-formed; the tab is
+        # the problem. Pull the tab name out and surface it directly so
+        # the user sees what's missing rather than a generic 400. We
+        # match this BEFORE the generic HttpError path so it takes
+        # precedence.
+        parse_range_match = re.search(
+            r"Unable to parse range:\s*([^\"'>\n]+?)(?:[\"'>\n]|$)",
+            error_msg,
+        )
+        if parse_range_match:
+            offending = parse_range_match.group(1).strip().rstrip(".")
+            if offending:
+                return (
+                    f"Google Sheets could not find the tab or range "
+                    f"`{offending}`. The tab may not exist in this "
+                    f"spreadsheet — check the tab name (case-sensitive) "
+                    f"or create it first."
+                )
+
         # Match patterns like:
         #   "Gmail API error: <HttpError 403 when requesting https://...>"
         #   "Google Sheets API error: <HttpError 429 when requesting ...>"
@@ -1060,7 +1128,16 @@ class SummarizationService:
             return "auth"
         elif any(
             term in error_lower
-            for term in ["not found", "404", "does not exist", "invalid id"]
+            for term in [
+                "not found", "404", "does not exist", "invalid id",
+                # Google Sheets emits HTTP 400 "Unable to parse range: <X>"
+                # when the requested tab is missing — semantically a "not
+                # found" condition rather than a malformed-request bug.
+                # Routing it here surfaces the friendlier "could not be
+                # found / verify the ID or name" message rather than the
+                # raw HttpError repr that the `unknown` branch would dump.
+                "unable to parse range",
+            ]
         ):
             return "not_found"
         elif any(

@@ -667,6 +667,35 @@ def _format_upload_mapped_data(output: dict) -> str:
     return text
 
 
+def _format_add_sheet_tab(output: dict) -> str:
+    """Format sheets_agent.add_sheet_tab result.
+
+    Three branches mirror the tool's three success paths:
+      * created=True + headers_applied=True -> "Added tab X (headers seeded)"
+      * created=True + headers_applied=False -> "Added tab X"
+      * created=False (idempotent no-op) -> "Tab X already existed"
+    A non-empty `warning` field (e.g. headers write failed after the tab was
+    created) is appended on its own line so the user knows the tab was
+    created but the row-1 seeding fell through.
+    """
+    tab_name = output.get("tab_name") or "(unnamed)"
+    created = bool(output.get("created"))
+    headers_applied = bool(output.get("headers_applied"))
+    warning = output.get("warning")
+
+    if not created:
+        text = f"Tab **{tab_name}** already existed in the spreadsheet — no change made."
+    else:
+        text = f"Added tab **{tab_name}** to the spreadsheet."
+        if headers_applied:
+            text += " Headers seeded in row 1."
+
+    if warning:
+        text += f"\nNote: {warning}"
+
+    return text
+
+
 def _format_parse_delivery_order_pdfs(output: dict) -> str:
     """Deterministic summary for mapping_agent.parse_delivery_order_pdfs.
 
@@ -1046,6 +1075,15 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         # message verifiable without clicking through to the Drive URL.
         "type": "action",
         "template": "Created spreadsheet **{title}**: {sheet_url}",
+    },
+    ("sheets_agent", "add_sheet_tab"): {
+        # Callable so the message branches between created / already-existed
+        # / created-with-headers without needing three static templates.
+        # Without this entry every successful add_sheet_tab step would fall
+        # through to the LLM safety net (gpt-4o-mini), costing an extra LLM
+        # call per response.
+        "type": "action",
+        "template": _format_add_sheet_tab,
     },
     ("sheets_agent", "validate_delivery_sheet"): {
         "type": "action",

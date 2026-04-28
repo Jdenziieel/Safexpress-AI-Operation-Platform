@@ -17160,3 +17160,2218 @@ Parameters:
 [2026-04-27 23:38:57.014] [PRINT] OVERALL:
 [2026-04-27 23:38:57.027] [PRINT]  
 [2026-04-27 23:38:57.039] [PRINT] PASS
+[2026-04-28 13:56:08.361] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-28 13:56:08.524] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-28 13:56:08.542] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-28 13:56:08.557] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-28 13:56:08.578] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-28 13:56:08.628] [PRINT] 
+[2026-04-28 13:56:08.628] [PRINT] ======================================================================
+[2026-04-28 13:56:08.647] [PRINT] 1. Single-step success (create_event)
+[2026-04-28 13:56:08.666] [PRINT] ======================================================================
+[2026-04-28 13:56:09.138] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 13:56:09.139] [PRINT] 
+[2026-04-28 13:56:09.139] [PRINT] --- friendly_summary persisted to memory ---
+[2026-04-28 13:56:09.157] [PRINT] Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 13:56:09.157] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 13:56:09.157] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 13:56:09.181] [PRINT] --- end friendly_summary persisted to memory ---
+[2026-04-28 13:56:09.200] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 17, "total": 17, "max": 1000000}
+[2026-04-28 13:56:09.201] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 58, "total": 75, "max": 1000000, "response_preview": "Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM\nInvitations sent to: alice@example.com\nView event: https://calendar.google.com/event?eid=evt_abc123"}
+[2026-04-28 13:56:09.202] [PRINT] 
+[2026-04-28 13:56:09.202] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:09.217] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 13:56:09.234] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:09.256] [PRINT]    Summary: none
+[2026-04-28 13:56:09.285] [PRINT]    Recent messages: 2
+[2026-04-28 13:56:09.304] [PRINT]       USER: Schedule a demo sync tomorrow at 2pm with Alice.
+[2026-04-28 13:56:09.320] [PRINT]       ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM...
+[2026-04-28 13:56:09.337] [PRINT] 
+[2026-04-28 13:56:09.337] [PRINT]    Final context: 267 chars (~66 tokens)
+[2026-04-28 13:56:09.353] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:09.368] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~66 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 267, "context_tokens_est": 66}
+[2026-04-28 13:56:09.372] [PRINT] 
+[2026-04-28 13:56:09.372] [PRINT] --- Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 13:56:09.394] [PRINT] RECENT CONVERSATION:
+[2026-04-28 13:56:09.394] [PRINT] USER: Schedule a demo sync tomorrow at 2pm with Alice.
+[2026-04-28 13:56:09.394] [PRINT] ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 13:56:09.394] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 13:56:09.394] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 13:56:09.394] [PRINT] 
+[2026-04-28 13:56:09.394] [PRINT] 
+[2026-04-28 13:56:09.394] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 13:56:09.394] [PRINT] - [2026-04-28T00:00:00Z] calendar_agent.create_event: summary: Demo Sync, start_time: 2026-04-28T14:00:00 -> success: event_id: evt_abc123
+[2026-04-28 13:56:09.394] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 13:56:09.394] [PRINT] 
+[2026-04-28 13:56:09.394] [PRINT] CURRENT USER MESSAGE: Move that event to 4pm instead.
+[2026-04-28 13:56:09.416] [PRINT] --- end Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 13:56:09.436] [PRINT] 
+[2026-04-28 13:56:09.436] [PRINT]   Result for 1. Single-step success (create_event):
+[2026-04-28 13:56:09.460] [PRINT]     [OK] event_id reachable
+[2026-04-28 13:56:09.474] [PRINT]     [OK] event URL reachable
+[2026-04-28 13:56:09.490] [PRINT]     [OK] humanized date preserved
+[2026-04-28 13:56:09.506] [PRINT]     [OK] event title preserved
+[2026-04-28 13:56:09.522] [PRINT]     [OK] attendee preserved
+[2026-04-28 13:56:09.540] [PRINT]     [OK] completed_tasks holds event_id
+[2026-04-28 13:56:09.561] [PRINT]     [OK] follow-up message included
+[2026-04-28 13:56:09.583] [PRINT]   -> All 7 checks passed.
+[2026-04-28 13:56:09.606] [PRINT] 
+[2026-04-28 13:56:09.606] [PRINT] ======================================================================
+[2026-04-28 13:56:09.627] [PRINT] 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs
+[2026-04-28 13:56:09.641] [PRINT] ======================================================================
+[2026-04-28 13:56:09.653] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 3, "all_templated": true}
+[2026-04-28 13:56:09.655] [PRINT] 
+[2026-04-28 13:56:09.655] [PRINT] --- friendly_summary ---
+[2026-04-28 13:56:09.671] [PRINT] Here's what I did across these steps:
+[2026-04-28 13:56:09.671] [PRINT] 
+[2026-04-28 13:56:09.671] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 13:56:09.671] [PRINT] Created folder: Finance
+[2026-04-28 13:56:09.671] [PRINT] 
+[2026-04-28 13:56:09.671] [PRINT] **Step 2 — Create Q1 Budget spreadsheet:**
+[2026-04-28 13:56:09.671] [PRINT] Created spreadsheet **Q1 Budget**: https://docs.google.com/spreadsheets/d/sheet_q1abc/edit
+[2026-04-28 13:56:09.671] [PRINT] 
+[2026-04-28 13:56:09.671] [PRINT] **Step 3 — Create Q1 Plan doc with content:**
+[2026-04-28 13:56:09.671] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 13:56:09.671] [PRINT] 
+[2026-04-28 13:56:09.671] [PRINT] All set.
+[2026-04-28 13:56:09.687] [PRINT] --- end friendly_summary ---
+[2026-04-28 13:56:09.706] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 29, "total": 29, "max": 1000000}
+[2026-04-28 13:56:09.708] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 103, "total": 132, "max": 1000000, "response_preview": "Here's what I did across these steps:\n\n**Step 1 — Create Finance folder:**\nCreated folder: Finance\n\n**Step 2 — Create Q1 Budget spreadsheet:**\nCreated spreadsheet **Q1 Budget**: https://docs.google.co..."}
+[2026-04-28 13:56:09.709] [PRINT] 
+[2026-04-28 13:56:09.709] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:09.728] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 13:56:09.748] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:09.764] [PRINT]    Summary: none
+[2026-04-28 13:56:09.779] [PRINT]    Recent messages: 2
+[2026-04-28 13:56:09.797] [PRINT]       USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc wi...
+[2026-04-28 13:56:09.812] [PRINT]       ASSISTANT: Here's what I did across these steps:
+[2026-04-28 13:56:09.812] [PRINT] 
+[2026-04-28 13:56:09.812] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 13:56:09.812] [PRINT] Creat...
+[2026-04-28 13:56:09.827] [PRINT] 
+[2026-04-28 13:56:09.827] [PRINT]    Final context: 510 chars (~127 tokens)
+[2026-04-28 13:56:09.844] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:09.862] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~127 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 510, "context_tokens_est": 127}
+[2026-04-28 13:56:09.864] [PRINT] 
+[2026-04-28 13:56:09.864] [PRINT] --- Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 13:56:09.878] [PRINT] RECENT CONVERSATION:
+[2026-04-28 13:56:09.878] [PRINT] USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc with some content.
+[2026-04-28 13:56:09.878] [PRINT] ASSISTANT: Here's what I did across these steps:
+[2026-04-28 13:56:09.878] [PRINT] 
+[2026-04-28 13:56:09.878] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 13:56:09.878] [PRINT] Created folder: Finance
+[2026-04-28 13:56:09.878] [PRINT] 
+[2026-04-28 13:56:09.878] [PRINT] **Step 2 — Create Q1 Budget spreadsheet:**
+[2026-04-28 13:56:09.878] [PRINT] Created spreadsheet **Q1 Budget**: https://docs.google.com/spreadsheets/d/sheet_q1abc/edit
+[2026-04-28 13:56:09.878] [PRINT] 
+[2026-04-28 13:56:09.878] [PRINT] **Step 3 — Create Q1 Plan doc with content:**
+[2026-04-28 13:56:09.878] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 13:56:09.878] [PRINT] 
+[2026-04-28 13:56:09.878] [PRINT] All set.
+[2026-04-28 13:56:09.878] [PRINT] 
+[2026-04-28 13:56:09.878] [PRINT] 
+[2026-04-28 13:56:09.878] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 13:56:09.878] [PRINT] - [2026-04-28T00:00:00Z] drive_agent.create_folder: folder_path: Finance -> success: folder_id: folder_xyz
+[2026-04-28 13:56:09.878] [PRINT] - [2026-04-28T00:00:00Z] sheets_agent.create_sheet: title: Q1 Budget -> success: title: Q1 Budget
+[2026-04-28 13:56:09.878] [PRINT] - [2026-04-28T00:00:00Z] docs_agent.create_doc_with_content: title: Q1 Plan -> success: document_id: doc_q1plan, document_url: https://docs.google.com/document/d/doc_q, title: Q1 Plan
+[2026-04-28 13:56:09.878] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 13:56:09.878] [PRINT] 
+[2026-04-28 13:56:09.878] [PRINT] CURRENT USER MESSAGE: Now share the doc with bob@example.com.
+[2026-04-28 13:56:09.897] [PRINT] --- end Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 13:56:09.918] [PRINT] 
+[2026-04-28 13:56:09.918] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:09.937] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 13:56:09.957] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:09.979] [PRINT]    Summary: none
+[2026-04-28 13:56:10.000] [PRINT]    Recent messages: 2
+[2026-04-28 13:56:10.021] [PRINT]       USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc wi...
+[2026-04-28 13:56:10.040] [PRINT]       ASSISTANT: Here's what I did across these steps:
+[2026-04-28 13:56:10.040] [PRINT] 
+[2026-04-28 13:56:10.040] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 13:56:10.040] [PRINT] Creat...
+[2026-04-28 13:56:10.055] [PRINT] 
+[2026-04-28 13:56:10.055] [PRINT]    Final context: 510 chars (~127 tokens)
+[2026-04-28 13:56:10.070] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:10.085] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~127 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 510, "context_tokens_est": 127}
+[2026-04-28 13:56:10.086] [PRINT] 
+[2026-04-28 13:56:10.086] [PRINT]   Result for 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs:
+[2026-04-28 13:56:10.103] [PRINT]     [OK] narrator opener present
+[2026-04-28 13:56:10.124] [PRINT]     [OK] narrator closer present
+[2026-04-28 13:56:10.144] [PRINT]     [OK] step 1 heading present
+[2026-04-28 13:56:10.159] [PRINT]     [OK] sheet URL in memory text
+[2026-04-28 13:56:10.172] [PRINT]     [OK] doc URL in memory text
+[2026-04-28 13:56:10.193] [PRINT]     [OK] folder_id surfaces via completed_tasks
+[2026-04-28 13:56:10.207] [PRINT]     [OK] folder_id reachable end-to-end
+[2026-04-28 13:56:10.222] [PRINT]     [OK] sheet_id reachable end-to-end
+[2026-04-28 13:56:10.242] [PRINT]     [OK] doc_id reachable end-to-end
+[2026-04-28 13:56:10.258] [PRINT]     [OK] doc id surfaces via completed_tasks (priority_keys)
+[2026-04-28 13:56:10.275] [PRINT]   -> All 10 checks passed.
+[2026-04-28 13:56:10.290] [PRINT] 
+[2026-04-28 13:56:10.290] [PRINT] ======================================================================
+[2026-04-28 13:56:10.305] [PRINT] 3. Pause path — real _build_rich_approval_message + completed bullets
+[2026-04-28 13:56:10.324] [PRINT] ======================================================================
+[2026-04-28 13:56:10.340] [PRINT] 
+[2026-04-28 13:56:10.340] [PRINT] --- _render_completed_so_far block ---
+[2026-04-28 13:56:10.355] [PRINT] 
+[2026-04-28 13:56:10.355] [PRINT] **Completed so far:**
+[2026-04-28 13:56:10.355] [PRINT] - Found 2 emails
+[2026-04-28 13:56:10.369] [PRINT] --- end _render_completed_so_far block ---
+[2026-04-28 13:56:10.387] [PRINT] 
+[2026-04-28 13:56:10.387] [PRINT] --- full pause message persisted to memory ---
+[2026-04-28 13:56:10.407] [PRINT] **Completed so far:**
+[2026-04-28 13:56:10.407] [PRINT] - Found 2 emails
+[2026-04-28 13:56:10.407] [PRINT] 
+[2026-04-28 13:56:10.407] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-28 13:56:10.407] [PRINT] 
+[2026-04-28 13:56:10.407] [PRINT] Step 2 of 2
+[2026-04-28 13:56:10.407] [PRINT] 
+[2026-04-28 13:56:10.407] [PRINT] **Reply to the first Acme invoice email**
+[2026-04-28 13:56:10.407] [PRINT] 
+[2026-04-28 13:56:10.407] [PRINT] **Replying to Email**
+[2026-04-28 13:56:10.407] [PRINT] - **Original subject:** Re: Acme invoice #0
+[2026-04-28 13:56:10.407] [PRINT] - **Original sender:** sender0@example.com
+[2026-04-28 13:56:10.407] [PRINT] - **Original date:** 2026-04-26
+[2026-04-28 13:56:10.407] [PRINT] - **Reply preview:**
+[2026-04-28 13:56:10.407] [PRINT]   > Acknowledged — we'll process this shortly.
+[2026-04-28 13:56:10.407] [PRINT] 
+[2026-04-28 13:56:10.407] [PRINT] ---
+[2026-04-28 13:56:10.407] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-28 13:56:10.425] [PRINT] --- end full pause message persisted to memory ---
+[2026-04-28 13:56:10.444] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 19, "total": 19, "max": 1000000}
+[2026-04-28 13:56:10.446] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 123, "total": 142, "max": 1000000, "response_preview": "**Completed so far:**\n- Found 2 emails\n\n**Action Requires Approval** — DANGEROUS\n\nStep 2 of 2\n\n**Reply to the first Acme invoice email**\n\n**Replying to Email**\n- **Original subject:** Re: Acme invoice..."}
+[2026-04-28 13:56:10.448] [PRINT] 
+[2026-04-28 13:56:10.448] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:10.460] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 13:56:10.477] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:10.492] [PRINT]    Summary: none
+[2026-04-28 13:56:10.511] [PRINT]    Recent messages: 2
+[2026-04-28 13:56:10.531] [PRINT]       USER: Find emails about the Acme invoice and reply to the first one.
+[2026-04-28 13:56:10.555] [PRINT]       ASSISTANT: **Completed so far:**
+[2026-04-28 13:56:10.555] [PRINT] - Found 2 emails
+[2026-04-28 13:56:10.555] [PRINT] 
+[2026-04-28 13:56:10.555] [PRINT] **Action Requires Approval** — DANGEROUS...
+[2026-04-28 13:56:10.579] [PRINT] 
+[2026-04-28 13:56:10.579] [PRINT]    Final context: 504 chars (~126 tokens)
+[2026-04-28 13:56:10.602] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:10.623] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~126 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 504, "context_tokens_est": 126}
+[2026-04-28 13:56:10.624] [PRINT] 
+[2026-04-28 13:56:10.624] [PRINT] --- Tier 1 user_prompt while paused ---
+[2026-04-28 13:56:10.641] [PRINT] RECENT CONVERSATION:
+[2026-04-28 13:56:10.641] [PRINT] USER: Find emails about the Acme invoice and reply to the first one.
+[2026-04-28 13:56:10.641] [PRINT] ASSISTANT: **Completed so far:**
+[2026-04-28 13:56:10.641] [PRINT] - Found 2 emails
+[2026-04-28 13:56:10.641] [PRINT] 
+[2026-04-28 13:56:10.641] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-28 13:56:10.641] [PRINT] 
+[2026-04-28 13:56:10.641] [PRINT] Step 2 of 2
+[2026-04-28 13:56:10.641] [PRINT] 
+[2026-04-28 13:56:10.641] [PRINT] **Reply to the first Acme invoice email**
+[2026-04-28 13:56:10.641] [PRINT] 
+[2026-04-28 13:56:10.641] [PRINT] **Replying to Email**
+[2026-04-28 13:56:10.641] [PRINT] - **Original subject:** Re: Acme invoice #0
+[2026-04-28 13:56:10.641] [PRINT] - **Original sender:** sender0@example.com
+[2026-04-28 13:56:10.641] [PRINT] - **Original date:** 2026-04-26
+[2026-04-28 13:56:10.641] [PRINT] - **Reply preview:**
+[2026-04-28 13:56:10.641] [PRINT]   > Acknowledged — we'll process this shortly.
+[2026-04-28 13:56:10.641] [PRINT] 
+[2026-04-28 13:56:10.641] [PRINT] ---
+[2026-04-28 13:56:10.641] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-28 13:56:10.641] [PRINT] 
+[2026-04-28 13:56:10.641] [PRINT] CURRENT USER MESSAGE: Yes, send the reply.
+[2026-04-28 13:56:10.654] [PRINT] --- end Tier 1 user_prompt while paused ---
+[2026-04-28 13:56:10.668] [PRINT] 
+[2026-04-28 13:56:10.668] [PRINT]   Result for 3. Pause path — real _build_rich_approval_message + completed bullets:
+[2026-04-28 13:56:10.681] [PRINT]     [OK] Completed-so-far header present
+[2026-04-28 13:56:10.694] [PRINT]     [OK] compact bullet uses dash prefix
+[2026-04-28 13:56:10.712] [PRINT]     [OK] search count surfaced
+[2026-04-28 13:56:10.723] [PRINT]     [OK] approval scaffolding kept
+[2026-04-28 13:56:10.735] [PRINT]     [OK] step number rendered
+[2026-04-28 13:56:10.751] [PRINT]     [OK] approval description rendered
+[2026-04-28 13:56:10.767] [PRINT]     [OK] display_context: subject surfaced
+[2026-04-28 13:56:10.783] [PRINT]     [OK] display_context: sender surfaced
+[2026-04-28 13:56:10.800] [PRINT]     [OK] approval footer present
+[2026-04-28 13:56:10.815] [PRINT]     [OK] original user query reachable
+[2026-04-28 13:56:10.833] [PRINT]   -> All 10 checks passed.
+[2026-04-28 13:56:10.845] [PRINT] 
+[2026-04-28 13:56:10.845] [PRINT] ======================================================================
+[2026-04-28 13:56:10.862] [PRINT] 4. Resume after approval — multi-step rendering preserves URLs
+[2026-04-28 13:56:10.886] [PRINT] ======================================================================
+[2026-04-28 13:56:10.905] [PRINT] 
+[2026-04-28 13:56:10.905] [PRINT] --- resume rendering output (persisted to memory) ---
+[2026-04-28 13:56:10.928] [PRINT] 
+[2026-04-28 13:56:10.928] [PRINT] **Step 1 — Create Q1 Plan doc with content:**
+[2026-04-28 13:56:10.928] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 13:56:10.928] [PRINT] 
+[2026-04-28 13:56:10.928] [PRINT] **Step 2 — Schedule Demo Sync at 2:00 PM tomorrow:**
+[2026-04-28 13:56:10.928] [PRINT] Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 13:56:10.928] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 13:56:10.928] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 13:56:10.928] [PRINT] 
+[2026-04-28 13:56:10.928] [PRINT] 
+[2026-04-28 13:56:10.928] [PRINT] All steps completed! Is there anything else I can help with?
+[2026-04-28 13:56:10.945] [PRINT] --- end resume rendering output (persisted to memory) ---
+[2026-04-28 13:56:10.965] [PRINT] 
+[2026-04-28 13:56:10.965] [PRINT]   Result for 4. Resume after approval — multi-step rendering preserves URLs:
+[2026-04-28 13:56:10.981] [PRINT]     [OK] doc URL preserved in resume
+[2026-04-28 13:56:10.998] [PRINT]     [OK] event URL preserved in resume
+[2026-04-28 13:56:11.016] [PRINT]     [OK] humanized date preserved
+[2026-04-28 13:56:11.032] [PRINT]     [OK] step heading shape correct
+[2026-04-28 13:56:11.051] [PRINT]     [OK] step heading shape correct (2)
+[2026-04-28 13:56:11.071] [PRINT]   -> All 5 checks passed.
+[2026-04-28 13:56:11.090] [PRINT] 
+[2026-04-28 13:56:11.090] [PRINT] ======================================================================
+[2026-04-28 13:56:11.108] [PRINT] 5. Error path — humanizer + 'You asked' footer
+[2026-04-28 13:56:11.125] [PRINT] ======================================================================
+[2026-04-28 13:56:11.139] [PRINT] 
+[2026-04-28 13:56:11.139] [PRINT] --- error friendly_summary ---
+[2026-04-28 13:56:11.152] [PRINT] **Unable to complete your request**
+[2026-04-28 13:56:11.152] [PRINT] 
+[2026-04-28 13:56:11.152] [PRINT] **Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.
+[2026-04-28 13:56:11.152] [PRINT] **Suggestion:** Your access may have expired. Please try reconnecting your account.
+[2026-04-28 13:56:11.152] [PRINT] 
+[2026-04-28 13:56:11.152] [PRINT] **Failed at step 1:** Schedule team sync
+[2026-04-28 13:56:11.152] [PRINT] 
+[2026-04-28 13:56:11.152] [PRINT] ---
+[2026-04-28 13:56:11.152] [PRINT] **You asked:** Schedule a team sync tomorrow at 2pm.
+[2026-04-28 13:56:11.165] [PRINT] --- end error friendly_summary ---
+[2026-04-28 13:56:11.178] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 15, "total": 15, "max": 1000000}
+[2026-04-28 13:56:11.179] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 79, "total": 94, "max": 1000000, "response_preview": "**Unable to complete your request**\n\n**Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.\n**Suggestion:** Your access may have expired...."}
+[2026-04-28 13:56:11.181] [PRINT] 
+[2026-04-28 13:56:11.181] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:11.200] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 13:56:11.215] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:11.228] [PRINT]    Summary: none
+[2026-04-28 13:56:11.244] [PRINT]    Recent messages: 2
+[2026-04-28 13:56:11.260] [PRINT]       USER: Schedule a team sync tomorrow at 2pm.
+[2026-04-28 13:56:11.273] [PRINT]       ASSISTANT: **Unable to complete your request**
+[2026-04-28 13:56:11.273] [PRINT] 
+[2026-04-28 13:56:11.273] [PRINT] **Issue:** Calendar API returned HTTP 403: ...
+[2026-04-28 13:56:11.289] [PRINT] 
+[2026-04-28 13:56:11.289] [PRINT]    Final context: 414 chars (~103 tokens)
+[2026-04-28 13:56:11.306] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:11.323] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~103 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 414, "context_tokens_est": 103}
+[2026-04-28 13:56:11.325] [PRINT] 
+[2026-04-28 13:56:11.325] [PRINT] --- Tier 1 user_prompt after error ---
+[2026-04-28 13:56:11.339] [PRINT] RECENT CONVERSATION:
+[2026-04-28 13:56:11.339] [PRINT] USER: Schedule a team sync tomorrow at 2pm.
+[2026-04-28 13:56:11.339] [PRINT] ASSISTANT: **Unable to complete your request**
+[2026-04-28 13:56:11.339] [PRINT] 
+[2026-04-28 13:56:11.339] [PRINT] **Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.
+[2026-04-28 13:56:11.339] [PRINT] **Suggestion:** Your access may have expired. Please try reconnecting your account.
+[2026-04-28 13:56:11.339] [PRINT] 
+[2026-04-28 13:56:11.339] [PRINT] **Failed at step 1:** Schedule team sync
+[2026-04-28 13:56:11.339] [PRINT] 
+[2026-04-28 13:56:11.339] [PRINT] ---
+[2026-04-28 13:56:11.339] [PRINT] **You asked:** Schedule a team sync tomorrow at 2pm.
+[2026-04-28 13:56:11.339] [PRINT] 
+[2026-04-28 13:56:11.339] [PRINT] CURRENT USER MESSAGE: Try again with a different calendar then.
+[2026-04-28 13:56:11.354] [PRINT] --- end Tier 1 user_prompt after error ---
+[2026-04-28 13:56:11.367] [PRINT] 
+[2026-04-28 13:56:11.367] [PRINT]   Result for 5. Error path — humanizer + 'You asked' footer:
+[2026-04-28 13:56:11.381] [PRINT]     [OK] permission verdict present
+[2026-04-28 13:56:11.397] [PRINT]     [OK] 'You asked' footer present
+[2026-04-28 13:56:11.412] [PRINT]     [OK] user request echoed
+[2026-04-28 13:56:11.431] [PRINT]     [OK] HttpError repr stripped
+[2026-04-28 13:56:11.452] [PRINT]     [OK] URL stripped from displayed err
+[2026-04-28 13:56:11.467] [PRINT]     [OK] Tier 1 still sees user goal
+[2026-04-28 13:56:11.482] [PRINT]     [OK] follow-up reaches Tier 1
+[2026-04-28 13:56:11.499] [PRINT]   -> All 7 checks passed.
+[2026-04-28 13:56:11.514] [PRINT] 
+[2026-04-28 13:56:11.514] [PRINT] ======================================================================
+[2026-04-28 13:56:11.534] [PRINT] 6. No-results path — filter-aware hints
+[2026-04-28 13:56:11.550] [PRINT] ======================================================================
+[2026-04-28 13:56:11.568] [PRINT] 
+[2026-04-28 13:56:11.568] [PRINT] --- no-results friendly_summary ---
+[2026-04-28 13:56:11.585] [PRINT] **Search completed — No results found**
+[2026-04-28 13:56:11.585] [PRINT] 
+[2026-04-28 13:56:11.585] [PRINT] No emails were found matching your search criteria.
+[2026-04-28 13:56:11.585] [PRINT] 
+[2026-04-28 13:56:11.585] [PRINT] **Filters used:**
+[2026-04-28 13:56:11.585] [PRINT] - Search query: `invoice`
+[2026-04-28 13:56:11.585] [PRINT] - From: `acme@example.com`
+[2026-04-28 13:56:11.585] [PRINT] - After: `2026-01-01`
+[2026-04-28 13:56:11.585] [PRINT] 
+[2026-04-28 13:56:11.585] [PRINT] **Suggestions:**
+[2026-04-28 13:56:11.585] [PRINT] - Double-check the sender's email address for a typo or wrong domain.
+[2026-04-28 13:56:11.585] [PRINT] - Try removing the start-date filter to include older messages.
+[2026-04-28 13:56:11.585] [PRINT] 
+[2026-04-28 13:56:11.585] [PRINT] ---
+[2026-04-28 13:56:11.585] [PRINT] **You asked:** Find emails from acme@example.com about invoices since January.
+[2026-04-28 13:56:11.605] [PRINT] --- end no-results friendly_summary ---
+[2026-04-28 13:56:11.631] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 17, "total": 17, "max": 1000000}
+[2026-04-28 13:56:11.633] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 102, "total": 119, "max": 1000000, "response_preview": "**Search completed — No results found**\n\nNo emails were found matching your search criteria.\n\n**Filters used:**\n- Search query: `invoice`\n- From: `acme@example.com`\n- After: `2026-01-01`\n\n**Suggestion..."}
+[2026-04-28 13:56:11.636] [PRINT] 
+[2026-04-28 13:56:11.636] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:11.654] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 13:56:11.672] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:11.685] [PRINT]    Summary: none
+[2026-04-28 13:56:11.700] [PRINT]    Recent messages: 2
+[2026-04-28 13:56:11.719] [PRINT]       USER: Find emails from acme@example.com about invoices since January.
+[2026-04-28 13:56:11.730] [PRINT]       ASSISTANT: **Search completed — No results found**
+[2026-04-28 13:56:11.730] [PRINT] 
+[2026-04-28 13:56:11.730] [PRINT] No emails were found matching your sear...
+[2026-04-28 13:56:11.742] [PRINT] 
+[2026-04-28 13:56:11.742] [PRINT]    Final context: 524 chars (~131 tokens)
+[2026-04-28 13:56:11.758] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:11.771] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~131 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 524, "context_tokens_est": 131}
+[2026-04-28 13:56:11.772] [PRINT] 
+[2026-04-28 13:56:11.772] [PRINT] --- Tier 1 user_prompt after no-results ---
+[2026-04-28 13:56:11.787] [PRINT] RECENT CONVERSATION:
+[2026-04-28 13:56:11.787] [PRINT] USER: Find emails from acme@example.com about invoices since January.
+[2026-04-28 13:56:11.787] [PRINT] ASSISTANT: **Search completed — No results found**
+[2026-04-28 13:56:11.787] [PRINT] 
+[2026-04-28 13:56:11.787] [PRINT] No emails were found matching your search criteria.
+[2026-04-28 13:56:11.787] [PRINT] 
+[2026-04-28 13:56:11.787] [PRINT] **Filters used:**
+[2026-04-28 13:56:11.787] [PRINT] - Search query: `invoice`
+[2026-04-28 13:56:11.787] [PRINT] - From: `acme@example.com`
+[2026-04-28 13:56:11.787] [PRINT] - After: `2026-01-01`
+[2026-04-28 13:56:11.787] [PRINT] 
+[2026-04-28 13:56:11.787] [PRINT] **Suggestions:**
+[2026-04-28 13:56:11.787] [PRINT] - Double-check the sender's email address for a typo or wrong domain.
+[2026-04-28 13:56:11.787] [PRINT] - Try removing the start-date filter to include older messages.
+[2026-04-28 13:56:11.787] [PRINT] 
+[2026-04-28 13:56:11.787] [PRINT] ---
+[2026-04-28 13:56:11.787] [PRINT] **You asked:** Find emails from acme@example.com about invoices since January.
+[2026-04-28 13:56:11.787] [PRINT] 
+[2026-04-28 13:56:11.787] [PRINT] 
+[2026-04-28 13:56:11.787] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 13:56:11.787] [PRINT] - [2026-04-28T00:00:00Z] gmail_agent.search_emails: query: invoice -> no_results: count: 0
+[2026-04-28 13:56:11.787] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 13:56:11.787] [PRINT] 
+[2026-04-28 13:56:11.787] [PRINT] CURRENT USER MESSAGE: Try the last 6 months instead.
+[2026-04-28 13:56:11.805] [PRINT] --- end Tier 1 user_prompt after no-results ---
+[2026-04-28 13:56:11.827] [PRINT] 
+[2026-04-28 13:56:11.827] [PRINT]   Result for 6. No-results path — filter-aware hints:
+[2026-04-28 13:56:11.844] [PRINT]     [OK] no-results header
+[2026-04-28 13:56:11.859] [PRINT]     [OK] filter block present
+[2026-04-28 13:56:11.873] [PRINT]     [OK] sender filter rendered
+[2026-04-28 13:56:11.889] [PRINT]     [OK] date filter rendered
+[2026-04-28 13:56:11.900] [PRINT]     [OK] hints block present
+[2026-04-28 13:56:11.915] [PRINT]     [OK] 'You asked' footer present
+[2026-04-28 13:56:11.929] [PRINT]     [OK] completed_tasks has search input
+[2026-04-28 13:56:11.943] [PRINT]     [OK] Tier 1 sees status no_results
+[2026-04-28 13:56:11.959] [PRINT]   -> All 8 checks passed.
+[2026-04-28 13:56:11.976] [PRINT] 
+[2026-04-28 13:56:11.976] [PRINT] ======================================================================
+[2026-04-28 13:56:11.995] [PRINT] 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1
+[2026-04-28 13:56:12.013] [PRINT] ======================================================================
+[2026-04-28 13:56:12.027] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 13:56:12.028] [PRINT] 
+[2026-04-28 13:56:12.028] [PRINT] --- turn 1 friendly_summary ---
+[2026-04-28 13:56:12.047] [PRINT] Created folder: Finance
+[2026-04-28 13:56:12.062] [PRINT] --- end turn 1 friendly_summary ---
+[2026-04-28 13:56:12.076] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 11, "total": 11, "max": 1000000}
+[2026-04-28 13:56:12.076] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 9, "total": 20, "max": 1000000, "response_preview": "Created folder: Finance"}
+[2026-04-28 13:56:12.077] [PRINT] 
+[2026-04-28 13:56:12.077] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:12.089] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 13:56:12.108] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:12.129] [PRINT]    Summary: none
+[2026-04-28 13:56:12.150] [PRINT]    Recent messages: 2
+[2026-04-28 13:56:12.170] [PRINT]       USER: Create a folder called Finance.
+[2026-04-28 13:56:12.194] [PRINT]       ASSISTANT: Created folder: Finance
+[2026-04-28 13:56:12.215] [PRINT] 
+[2026-04-28 13:56:12.215] [PRINT]    Final context: 93 chars (~23 tokens)
+[2026-04-28 13:56:12.237] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:12.254] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~23 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 93, "context_tokens_est": 23}
+[2026-04-28 13:56:12.255] [PRINT] 
+[2026-04-28 13:56:12.255] [PRINT] --- turn 2 Tier 1 user_prompt (after turn 1 success) ---
+[2026-04-28 13:56:12.271] [PRINT] RECENT CONVERSATION:
+[2026-04-28 13:56:12.271] [PRINT] USER: Create a folder called Finance.
+[2026-04-28 13:56:12.271] [PRINT] ASSISTANT: Created folder: Finance
+[2026-04-28 13:56:12.271] [PRINT] 
+[2026-04-28 13:56:12.271] [PRINT] 
+[2026-04-28 13:56:12.271] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 13:56:12.271] [PRINT] - [2026-04-28T00:00:00Z] drive_agent.create_folder: folder_path: Finance -> success: folder_id: folder_xyz
+[2026-04-28 13:56:12.271] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 13:56:12.271] [PRINT] 
+[2026-04-28 13:56:12.271] [PRINT] CURRENT USER MESSAGE: Now create a Q1 Budget sheet inside it.
+[2026-04-28 13:56:12.291] [PRINT] --- end turn 2 Tier 1 user_prompt (after turn 1 success) ---
+[2026-04-28 13:56:12.307] [PRINT] 
+[2026-04-28 13:56:12.307] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:12.321] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 13:56:12.337] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:12.351] [PRINT]    Summary: none
+[2026-04-28 13:56:12.369] [PRINT]    Recent messages: 2
+[2026-04-28 13:56:12.381] [PRINT]       USER: Create a folder called Finance.
+[2026-04-28 13:56:12.396] [PRINT]       ASSISTANT: Created folder: Finance
+[2026-04-28 13:56:12.417] [PRINT] 
+[2026-04-28 13:56:12.417] [PRINT]    Final context: 93 chars (~23 tokens)
+[2026-04-28 13:56:12.431] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:12.444] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~23 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 93, "context_tokens_est": 23}
+[2026-04-28 13:56:12.445] [PRINT] 
+[2026-04-28 13:56:12.445] [PRINT]   Result for 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1:
+[2026-04-28 13:56:12.459] [PRINT]     [OK] memory carries folder name
+[2026-04-28 13:56:12.475] [PRINT]     [OK] memory does NOT need folder_id (template intentionally omits it)
+[2026-04-28 13:56:12.493] [PRINT]     [OK] completed_tasks carries folder_id
+[2026-04-28 13:56:12.507] [PRINT]     [OK] completed_tasks carries agent.tool
+[2026-04-28 13:56:12.524] [PRINT]     [OK] completed_tasks status success
+[2026-04-28 13:56:12.540] [PRINT]     [OK] completed_tasks param surfaced
+[2026-04-28 13:56:12.557] [PRINT]     [OK] turn 2 user msg reaches Tier 1
+[2026-04-28 13:56:12.578] [PRINT]     [OK] both channels combine to make folder reachable
+[2026-04-28 13:56:12.597] [PRINT]   -> All 8 checks passed.
+[2026-04-28 13:56:12.614] [PRINT] 
+[2026-04-28 13:56:12.614] [PRINT] ======================================================================
+[2026-04-28 13:56:12.634] [PRINT] 8. Calendar humanized dates survive in memory
+[2026-04-28 13:56:12.649] [PRINT] ======================================================================
+[2026-04-28 13:56:12.665] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 13:56:12.666] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 14, "total": 14, "max": 1000000}
+[2026-04-28 13:56:12.667] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 58, "total": 72, "max": 1000000, "response_preview": "Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM\nInvitations sent to: alice@example.com\nView event: https://calendar.google.com/event?eid=evt_abc123"}
+[2026-04-28 13:56:12.667] [PRINT] 
+[2026-04-28 13:56:12.667] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:12.681] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 13:56:12.699] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:12.716] [PRINT]    Summary: none
+[2026-04-28 13:56:12.729] [PRINT]    Recent messages: 2
+[2026-04-28 13:56:12.744] [PRINT]       USER: Schedule Demo Sync at 2pm tomorrow.
+[2026-04-28 13:56:12.763] [PRINT]       ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM...
+[2026-04-28 13:56:12.784] [PRINT] 
+[2026-04-28 13:56:12.784] [PRINT]    Final context: 254 chars (~63 tokens)
+[2026-04-28 13:56:12.802] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 13:56:12.814] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~63 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 254, "context_tokens_est": 63}
+[2026-04-28 13:56:12.815] [PRINT] 
+[2026-04-28 13:56:12.815] [PRINT] --- memory history_text ---
+[2026-04-28 13:56:12.830] [PRINT] RECENT CONVERSATION:
+[2026-04-28 13:56:12.830] [PRINT] USER: Schedule Demo Sync at 2pm tomorrow.
+[2026-04-28 13:56:12.830] [PRINT] ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 13:56:12.830] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 13:56:12.830] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 13:56:12.850] [PRINT] --- end memory history_text ---
+[2026-04-28 13:56:12.870] [PRINT] 
+[2026-04-28 13:56:12.870] [PRINT]   Result for 8. Calendar humanized dates survive in memory:
+[2026-04-28 13:56:12.888] [PRINT]     [OK] month name present
+[2026-04-28 13:56:12.903] [PRINT]     [OK] year present
+[2026-04-28 13:56:12.919] [PRINT]     [OK] 12-hour clock present
+[2026-04-28 13:56:12.935] [PRINT]     [OK] raw ISO NOT present
+[2026-04-28 13:56:12.948] [PRINT]     [OK] Z-suffixed ISO NOT present
+[2026-04-28 13:56:12.964] [PRINT]   -> All 5 checks passed.
+[2026-04-28 13:56:12.978] [PRINT] 
+[2026-04-28 13:56:12.978] [PRINT] ======================================================================
+[2026-04-28 13:56:12.994] [PRINT] CROSS-TURN CONTEXT REGRESSION SUMMARY
+[2026-04-28 13:56:13.011] [PRINT] ======================================================================
+[2026-04-28 13:56:13.026] [PRINT]   [PASS] 1. Single-step success (create_event)
+[2026-04-28 13:56:13.041] [PRINT]   [PASS] 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs
+[2026-04-28 13:56:13.055] [PRINT]   [PASS] 3. Pause path — real _build_rich_approval_message + completed bullets
+[2026-04-28 13:56:13.071] [PRINT]   [PASS] 4. Resume after approval — multi-step rendering preserves URLs
+[2026-04-28 13:56:13.082] [PRINT]   [PASS] 5. Error path — humanizer + 'You asked' footer
+[2026-04-28 13:56:13.098] [PRINT]   [PASS] 6. No-results path — filter-aware hints
+[2026-04-28 13:56:13.116] [PRINT]   [PASS] 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1
+[2026-04-28 13:56:13.141] [PRINT]   [PASS] 8. Calendar humanized dates survive in memory
+[2026-04-28 13:56:13.154] [PRINT] ----------------------------------------------------------------------
+[2026-04-28 13:56:13.166] [PRINT]   8/8 scenarios passed.
+[2026-04-28 13:59:20.627] [PRINT] ============================================================
+[2026-04-28 13:59:20.681] [PRINT] FOOTER FIX VERIFICATION
+[2026-04-28 13:59:20.702] [PRINT] ============================================================
+[2026-04-28 13:59:20.712] [PRINT] SCENARIO A: override provided (production threads.py path)
+[2026-04-28 13:59:20.722] [PRINT] ------------------------------------------------------------
+[2026-04-28 13:59:20.735] [PRINT] **Unable to complete your request**
+[2026-04-28 13:59:20.735] [PRINT] 
+[2026-04-28 13:59:20.735] [PRINT] **Issue:** Google Sheets API returned HTTP 400: The request was invalid. The selected resource may have unexpected formatting or missing fields.
+[2026-04-28 13:59:20.735] [PRINT] 
+[2026-04-28 13:59:20.735] [PRINT] ---
+[2026-04-28 13:59:20.735] [PRINT] **What was completed before the error:**
+[2026-04-28 13:59:20.735] [PRINT] - Read source
+[2026-04-28 13:59:20.735] [PRINT] - transform_text
+[2026-04-28 13:59:20.735] [PRINT] 
+[2026-04-28 13:59:20.735] [PRINT] **Failed at step 4:** Check Food tab
+[2026-04-28 13:59:20.735] [PRINT] 
+[2026-04-28 13:59:20.735] [PRINT] ---
+[2026-04-28 13:59:20.735] [PRINT] **You asked:** Extract data from source sheet and paste into destination sheet with Food and Non-Food tabs
+[2026-04-28 13:59:20.750] [PRINT] CHECK A1: 'your request' placeholder NOT present   ->  PASS
+[2026-04-28 13:59:20.767] [PRINT] CHECK A2: real task summary IS rendered             ->  PASS
+[2026-04-28 13:59:20.781] [PRINT] SCENARIO B: no override + cleared state (pre-fix worst case)
+[2026-04-28 13:59:20.800] [PRINT] ------------------------------------------------------------
+[2026-04-28 13:59:20.813] [PRINT] **Unable to complete your request**
+[2026-04-28 13:59:20.813] [PRINT] 
+[2026-04-28 13:59:20.813] [PRINT] **Issue:** Google Sheets API returned HTTP 400: The request was invalid. The selected resource may have unexpected formatting or missing fields.
+[2026-04-28 13:59:20.813] [PRINT] 
+[2026-04-28 13:59:20.813] [PRINT] ---
+[2026-04-28 13:59:20.813] [PRINT] **What was completed before the error:**
+[2026-04-28 13:59:20.813] [PRINT] - Read source
+[2026-04-28 13:59:20.813] [PRINT] - transform_text
+[2026-04-28 13:59:20.813] [PRINT] 
+[2026-04-28 13:59:20.813] [PRINT] **Failed at step 4:** Check Food tab
+[2026-04-28 13:59:20.828] [PRINT] CHECK B1: '**You asked:**' footer fully suppressed  ->  PASS
+[2026-04-28 13:59:20.847] [PRINT] SCENARIO C: legacy state with extracted_info[original_message]
+[2026-04-28 13:59:20.865] [PRINT] ------------------------------------------------------------
+[2026-04-28 13:59:20.878] [PRINT] CHECK C1: legacy state still produces footer       ->  PASS
+[2026-04-28 13:59:20.897] [PRINT] SCENARIO D: defensive — literal 'your request' in state
+[2026-04-28 13:59:20.912] [PRINT] ------------------------------------------------------------
+[2026-04-28 13:59:20.926] [PRINT] CHECK D1: defensive placeholder filter works       ->  PASS
+[2026-04-28 13:59:20.942] [PRINT] ============================================================
+[2026-04-28 13:59:20.965] [PRINT] ALL FOOTER CHECKS PASSED
+[2026-04-28 13:59:20.984] [PRINT] ============================================================
+[2026-04-28 14:03:16.367] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-28 14:03:16.510] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-28 14:03:16.521] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-28 14:03:16.532] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-28 14:03:16.551] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-28 14:03:16.609] [PRINT] 
+[2026-04-28 14:03:16.609] [PRINT] ======================================================================
+[2026-04-28 14:03:16.621] [PRINT] 1. Single-step success (create_event)
+[2026-04-28 14:03:16.636] [PRINT] ======================================================================
+[2026-04-28 14:03:17.144] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 14:03:17.146] [PRINT] 
+[2026-04-28 14:03:17.146] [PRINT] --- friendly_summary persisted to memory ---
+[2026-04-28 14:03:17.172] [PRINT] Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:03:17.172] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:03:17.172] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:03:17.196] [PRINT] --- end friendly_summary persisted to memory ---
+[2026-04-28 14:03:17.216] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 17, "total": 17, "max": 1000000}
+[2026-04-28 14:03:17.217] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 58, "total": 75, "max": 1000000, "response_preview": "Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM\nInvitations sent to: alice@example.com\nView event: https://calendar.google.com/event?eid=evt_abc123"}
+[2026-04-28 14:03:17.220] [PRINT] 
+[2026-04-28 14:03:17.220] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:17.240] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:03:17.262] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:17.284] [PRINT]    Summary: none
+[2026-04-28 14:03:17.308] [PRINT]    Recent messages: 2
+[2026-04-28 14:03:17.327] [PRINT]       USER: Schedule a demo sync tomorrow at 2pm with Alice.
+[2026-04-28 14:03:17.337] [PRINT]       ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM...
+[2026-04-28 14:03:17.352] [PRINT] 
+[2026-04-28 14:03:17.352] [PRINT]    Final context: 267 chars (~66 tokens)
+[2026-04-28 14:03:17.367] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:17.382] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~66 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 267, "context_tokens_est": 66}
+[2026-04-28 14:03:17.383] [PRINT] 
+[2026-04-28 14:03:17.383] [PRINT] --- Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:03:17.401] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:03:17.401] [PRINT] USER: Schedule a demo sync tomorrow at 2pm with Alice.
+[2026-04-28 14:03:17.401] [PRINT] ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:03:17.401] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:03:17.401] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:03:17.401] [PRINT] 
+[2026-04-28 14:03:17.401] [PRINT] 
+[2026-04-28 14:03:17.401] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:03:17.401] [PRINT] - [2026-04-28T00:00:00Z] calendar_agent.create_event: summary: Demo Sync, start_time: 2026-04-28T14:00:00 -> success: event_id: evt_abc123
+[2026-04-28 14:03:17.401] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:03:17.401] [PRINT] 
+[2026-04-28 14:03:17.401] [PRINT] CURRENT USER MESSAGE: Move that event to 4pm instead.
+[2026-04-28 14:03:17.413] [PRINT] --- end Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:03:17.430] [PRINT] 
+[2026-04-28 14:03:17.430] [PRINT]   Result for 1. Single-step success (create_event):
+[2026-04-28 14:03:17.451] [PRINT]     [OK] event_id reachable
+[2026-04-28 14:03:17.471] [PRINT]     [OK] event URL reachable
+[2026-04-28 14:03:17.485] [PRINT]     [OK] humanized date preserved
+[2026-04-28 14:03:17.500] [PRINT]     [OK] event title preserved
+[2026-04-28 14:03:17.513] [PRINT]     [OK] attendee preserved
+[2026-04-28 14:03:17.527] [PRINT]     [OK] completed_tasks holds event_id
+[2026-04-28 14:03:17.537] [PRINT]     [OK] follow-up message included
+[2026-04-28 14:03:17.549] [PRINT]   -> All 7 checks passed.
+[2026-04-28 14:03:17.566] [PRINT] 
+[2026-04-28 14:03:17.566] [PRINT] ======================================================================
+[2026-04-28 14:03:17.588] [PRINT] 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs
+[2026-04-28 14:03:17.608] [PRINT] ======================================================================
+[2026-04-28 14:03:17.631] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 3, "all_templated": true}
+[2026-04-28 14:03:17.632] [PRINT] 
+[2026-04-28 14:03:17.632] [PRINT] --- friendly_summary ---
+[2026-04-28 14:03:17.646] [PRINT] Here's what I did across these steps:
+[2026-04-28 14:03:17.646] [PRINT] 
+[2026-04-28 14:03:17.646] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:03:17.646] [PRINT] Created folder: Finance
+[2026-04-28 14:03:17.646] [PRINT] 
+[2026-04-28 14:03:17.646] [PRINT] **Step 2 — Create Q1 Budget spreadsheet:**
+[2026-04-28 14:03:17.646] [PRINT] Created spreadsheet **Q1 Budget**: https://docs.google.com/spreadsheets/d/sheet_q1abc/edit
+[2026-04-28 14:03:17.646] [PRINT] 
+[2026-04-28 14:03:17.646] [PRINT] **Step 3 — Create Q1 Plan doc with content:**
+[2026-04-28 14:03:17.646] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 14:03:17.646] [PRINT] 
+[2026-04-28 14:03:17.646] [PRINT] All set.
+[2026-04-28 14:03:17.663] [PRINT] --- end friendly_summary ---
+[2026-04-28 14:03:17.684] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 29, "total": 29, "max": 1000000}
+[2026-04-28 14:03:17.689] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 103, "total": 132, "max": 1000000, "response_preview": "Here's what I did across these steps:\n\n**Step 1 — Create Finance folder:**\nCreated folder: Finance\n\n**Step 2 — Create Q1 Budget spreadsheet:**\nCreated spreadsheet **Q1 Budget**: https://docs.google.co..."}
+[2026-04-28 14:03:17.692] [PRINT] 
+[2026-04-28 14:03:17.692] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:17.716] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:03:17.732] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:17.750] [PRINT]    Summary: none
+[2026-04-28 14:03:17.769] [PRINT]    Recent messages: 2
+[2026-04-28 14:03:17.784] [PRINT]       USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc wi...
+[2026-04-28 14:03:17.803] [PRINT]       ASSISTANT: Here's what I did across these steps:
+[2026-04-28 14:03:17.803] [PRINT] 
+[2026-04-28 14:03:17.803] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:03:17.803] [PRINT] Creat...
+[2026-04-28 14:03:17.823] [PRINT] 
+[2026-04-28 14:03:17.823] [PRINT]    Final context: 510 chars (~127 tokens)
+[2026-04-28 14:03:17.842] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:17.860] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~127 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 510, "context_tokens_est": 127}
+[2026-04-28 14:03:17.861] [PRINT] 
+[2026-04-28 14:03:17.861] [PRINT] --- Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:03:17.878] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:03:17.878] [PRINT] USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc with some content.
+[2026-04-28 14:03:17.878] [PRINT] ASSISTANT: Here's what I did across these steps:
+[2026-04-28 14:03:17.878] [PRINT] 
+[2026-04-28 14:03:17.878] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:03:17.878] [PRINT] Created folder: Finance
+[2026-04-28 14:03:17.878] [PRINT] 
+[2026-04-28 14:03:17.878] [PRINT] **Step 2 — Create Q1 Budget spreadsheet:**
+[2026-04-28 14:03:17.878] [PRINT] Created spreadsheet **Q1 Budget**: https://docs.google.com/spreadsheets/d/sheet_q1abc/edit
+[2026-04-28 14:03:17.878] [PRINT] 
+[2026-04-28 14:03:17.878] [PRINT] **Step 3 — Create Q1 Plan doc with content:**
+[2026-04-28 14:03:17.878] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 14:03:17.878] [PRINT] 
+[2026-04-28 14:03:17.878] [PRINT] All set.
+[2026-04-28 14:03:17.878] [PRINT] 
+[2026-04-28 14:03:17.878] [PRINT] 
+[2026-04-28 14:03:17.878] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:03:17.878] [PRINT] - [2026-04-28T00:00:00Z] drive_agent.create_folder: folder_path: Finance -> success: folder_id: folder_xyz
+[2026-04-28 14:03:17.878] [PRINT] - [2026-04-28T00:00:00Z] sheets_agent.create_sheet: title: Q1 Budget -> success: title: Q1 Budget
+[2026-04-28 14:03:17.878] [PRINT] - [2026-04-28T00:00:00Z] docs_agent.create_doc_with_content: title: Q1 Plan -> success: document_id: doc_q1plan, document_url: https://docs.google.com/document/d/doc_q, title: Q1 Plan
+[2026-04-28 14:03:17.878] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:03:17.878] [PRINT] 
+[2026-04-28 14:03:17.878] [PRINT] CURRENT USER MESSAGE: Now share the doc with bob@example.com.
+[2026-04-28 14:03:17.892] [PRINT] --- end Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:03:17.904] [PRINT] 
+[2026-04-28 14:03:17.904] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:17.917] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:03:17.930] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:17.947] [PRINT]    Summary: none
+[2026-04-28 14:03:17.966] [PRINT]    Recent messages: 2
+[2026-04-28 14:03:17.985] [PRINT]       USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc wi...
+[2026-04-28 14:03:17.999] [PRINT]       ASSISTANT: Here's what I did across these steps:
+[2026-04-28 14:03:17.999] [PRINT] 
+[2026-04-28 14:03:17.999] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:03:17.999] [PRINT] Creat...
+[2026-04-28 14:03:18.016] [PRINT] 
+[2026-04-28 14:03:18.016] [PRINT]    Final context: 510 chars (~127 tokens)
+[2026-04-28 14:03:18.028] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:18.039] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~127 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 510, "context_tokens_est": 127}
+[2026-04-28 14:03:18.040] [PRINT] 
+[2026-04-28 14:03:18.040] [PRINT]   Result for 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs:
+[2026-04-28 14:03:18.059] [PRINT]     [OK] narrator opener present
+[2026-04-28 14:03:18.072] [PRINT]     [OK] narrator closer present
+[2026-04-28 14:03:18.086] [PRINT]     [OK] step 1 heading present
+[2026-04-28 14:03:18.106] [PRINT]     [OK] sheet URL in memory text
+[2026-04-28 14:03:18.123] [PRINT]     [OK] doc URL in memory text
+[2026-04-28 14:03:18.146] [PRINT]     [OK] folder_id surfaces via completed_tasks
+[2026-04-28 14:03:18.161] [PRINT]     [OK] folder_id reachable end-to-end
+[2026-04-28 14:03:18.174] [PRINT]     [OK] sheet_id reachable end-to-end
+[2026-04-28 14:03:18.189] [PRINT]     [OK] doc_id reachable end-to-end
+[2026-04-28 14:03:18.211] [PRINT]     [OK] doc id surfaces via completed_tasks (priority_keys)
+[2026-04-28 14:03:18.230] [PRINT]   -> All 10 checks passed.
+[2026-04-28 14:03:18.242] [PRINT] 
+[2026-04-28 14:03:18.242] [PRINT] ======================================================================
+[2026-04-28 14:03:18.256] [PRINT] 3. Pause path — real _build_rich_approval_message + completed bullets
+[2026-04-28 14:03:18.274] [PRINT] ======================================================================
+[2026-04-28 14:03:18.289] [PRINT] 
+[2026-04-28 14:03:18.289] [PRINT] --- _render_completed_so_far block ---
+[2026-04-28 14:03:18.309] [PRINT] 
+[2026-04-28 14:03:18.309] [PRINT] **Completed so far:**
+[2026-04-28 14:03:18.309] [PRINT] - Found 2 emails
+[2026-04-28 14:03:18.326] [PRINT] --- end _render_completed_so_far block ---
+[2026-04-28 14:03:18.345] [PRINT] 
+[2026-04-28 14:03:18.345] [PRINT] --- full pause message persisted to memory ---
+[2026-04-28 14:03:18.362] [PRINT] **Completed so far:**
+[2026-04-28 14:03:18.362] [PRINT] - Found 2 emails
+[2026-04-28 14:03:18.362] [PRINT] 
+[2026-04-28 14:03:18.362] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-28 14:03:18.362] [PRINT] 
+[2026-04-28 14:03:18.362] [PRINT] Step 2 of 2
+[2026-04-28 14:03:18.362] [PRINT] 
+[2026-04-28 14:03:18.362] [PRINT] **Reply to the first Acme invoice email**
+[2026-04-28 14:03:18.362] [PRINT] 
+[2026-04-28 14:03:18.362] [PRINT] **Replying to Email**
+[2026-04-28 14:03:18.362] [PRINT] - **Original subject:** Re: Acme invoice #0
+[2026-04-28 14:03:18.362] [PRINT] - **Original sender:** sender0@example.com
+[2026-04-28 14:03:18.362] [PRINT] - **Original date:** 2026-04-26
+[2026-04-28 14:03:18.362] [PRINT] - **Reply preview:**
+[2026-04-28 14:03:18.362] [PRINT]   > Acknowledged — we'll process this shortly.
+[2026-04-28 14:03:18.362] [PRINT] 
+[2026-04-28 14:03:18.362] [PRINT] ---
+[2026-04-28 14:03:18.362] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-28 14:03:18.376] [PRINT] --- end full pause message persisted to memory ---
+[2026-04-28 14:03:18.392] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 19, "total": 19, "max": 1000000}
+[2026-04-28 14:03:18.394] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 123, "total": 142, "max": 1000000, "response_preview": "**Completed so far:**\n- Found 2 emails\n\n**Action Requires Approval** — DANGEROUS\n\nStep 2 of 2\n\n**Reply to the first Acme invoice email**\n\n**Replying to Email**\n- **Original subject:** Re: Acme invoice..."}
+[2026-04-28 14:03:18.396] [PRINT] 
+[2026-04-28 14:03:18.396] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:18.414] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:03:18.430] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:18.448] [PRINT]    Summary: none
+[2026-04-28 14:03:18.467] [PRINT]    Recent messages: 2
+[2026-04-28 14:03:18.485] [PRINT]       USER: Find emails about the Acme invoice and reply to the first one.
+[2026-04-28 14:03:18.500] [PRINT]       ASSISTANT: **Completed so far:**
+[2026-04-28 14:03:18.500] [PRINT] - Found 2 emails
+[2026-04-28 14:03:18.500] [PRINT] 
+[2026-04-28 14:03:18.500] [PRINT] **Action Requires Approval** — DANGEROUS...
+[2026-04-28 14:03:18.517] [PRINT] 
+[2026-04-28 14:03:18.517] [PRINT]    Final context: 504 chars (~126 tokens)
+[2026-04-28 14:03:18.534] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:18.546] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~126 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 504, "context_tokens_est": 126}
+[2026-04-28 14:03:18.547] [PRINT] 
+[2026-04-28 14:03:18.547] [PRINT] --- Tier 1 user_prompt while paused ---
+[2026-04-28 14:03:18.562] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:03:18.562] [PRINT] USER: Find emails about the Acme invoice and reply to the first one.
+[2026-04-28 14:03:18.562] [PRINT] ASSISTANT: **Completed so far:**
+[2026-04-28 14:03:18.562] [PRINT] - Found 2 emails
+[2026-04-28 14:03:18.562] [PRINT] 
+[2026-04-28 14:03:18.562] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-28 14:03:18.562] [PRINT] 
+[2026-04-28 14:03:18.562] [PRINT] Step 2 of 2
+[2026-04-28 14:03:18.562] [PRINT] 
+[2026-04-28 14:03:18.562] [PRINT] **Reply to the first Acme invoice email**
+[2026-04-28 14:03:18.562] [PRINT] 
+[2026-04-28 14:03:18.562] [PRINT] **Replying to Email**
+[2026-04-28 14:03:18.562] [PRINT] - **Original subject:** Re: Acme invoice #0
+[2026-04-28 14:03:18.562] [PRINT] - **Original sender:** sender0@example.com
+[2026-04-28 14:03:18.562] [PRINT] - **Original date:** 2026-04-26
+[2026-04-28 14:03:18.562] [PRINT] - **Reply preview:**
+[2026-04-28 14:03:18.562] [PRINT]   > Acknowledged — we'll process this shortly.
+[2026-04-28 14:03:18.562] [PRINT] 
+[2026-04-28 14:03:18.562] [PRINT] ---
+[2026-04-28 14:03:18.562] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-28 14:03:18.562] [PRINT] 
+[2026-04-28 14:03:18.562] [PRINT] CURRENT USER MESSAGE: Yes, send the reply.
+[2026-04-28 14:03:18.573] [PRINT] --- end Tier 1 user_prompt while paused ---
+[2026-04-28 14:03:18.584] [PRINT] 
+[2026-04-28 14:03:18.584] [PRINT]   Result for 3. Pause path — real _build_rich_approval_message + completed bullets:
+[2026-04-28 14:03:18.599] [PRINT]     [OK] Completed-so-far header present
+[2026-04-28 14:03:18.612] [PRINT]     [OK] compact bullet uses dash prefix
+[2026-04-28 14:03:18.627] [PRINT]     [OK] search count surfaced
+[2026-04-28 14:03:18.643] [PRINT]     [OK] approval scaffolding kept
+[2026-04-28 14:03:18.666] [PRINT]     [OK] step number rendered
+[2026-04-28 14:03:18.685] [PRINT]     [OK] approval description rendered
+[2026-04-28 14:03:18.701] [PRINT]     [OK] display_context: subject surfaced
+[2026-04-28 14:03:18.718] [PRINT]     [OK] display_context: sender surfaced
+[2026-04-28 14:03:18.738] [PRINT]     [OK] approval footer present
+[2026-04-28 14:03:18.754] [PRINT]     [OK] original user query reachable
+[2026-04-28 14:03:18.773] [PRINT]   -> All 10 checks passed.
+[2026-04-28 14:03:18.792] [PRINT] 
+[2026-04-28 14:03:18.792] [PRINT] ======================================================================
+[2026-04-28 14:03:18.805] [PRINT] 4. Resume after approval — multi-step rendering preserves URLs
+[2026-04-28 14:03:18.819] [PRINT] ======================================================================
+[2026-04-28 14:03:18.838] [PRINT] 
+[2026-04-28 14:03:18.838] [PRINT] --- resume rendering output (persisted to memory) ---
+[2026-04-28 14:03:18.851] [PRINT] 
+[2026-04-28 14:03:18.851] [PRINT] **Step 1 — Create Q1 Plan doc with content:**
+[2026-04-28 14:03:18.851] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 14:03:18.851] [PRINT] 
+[2026-04-28 14:03:18.851] [PRINT] **Step 2 — Schedule Demo Sync at 2:00 PM tomorrow:**
+[2026-04-28 14:03:18.851] [PRINT] Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:03:18.851] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:03:18.851] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:03:18.851] [PRINT] 
+[2026-04-28 14:03:18.851] [PRINT] 
+[2026-04-28 14:03:18.851] [PRINT] All steps completed! Is there anything else I can help with?
+[2026-04-28 14:03:18.865] [PRINT] --- end resume rendering output (persisted to memory) ---
+[2026-04-28 14:03:18.880] [PRINT] 
+[2026-04-28 14:03:18.880] [PRINT]   Result for 4. Resume after approval — multi-step rendering preserves URLs:
+[2026-04-28 14:03:18.894] [PRINT]     [OK] doc URL preserved in resume
+[2026-04-28 14:03:18.909] [PRINT]     [OK] event URL preserved in resume
+[2026-04-28 14:03:18.928] [PRINT]     [OK] humanized date preserved
+[2026-04-28 14:03:18.946] [PRINT]     [OK] step heading shape correct
+[2026-04-28 14:03:18.964] [PRINT]     [OK] step heading shape correct (2)
+[2026-04-28 14:03:18.982] [PRINT]   -> All 5 checks passed.
+[2026-04-28 14:03:19.002] [PRINT] 
+[2026-04-28 14:03:19.002] [PRINT] ======================================================================
+[2026-04-28 14:03:19.017] [PRINT] 5. Error path — humanizer + 'You asked' footer
+[2026-04-28 14:03:19.031] [PRINT] ======================================================================
+[2026-04-28 14:03:19.048] [PRINT] 
+[2026-04-28 14:03:19.048] [PRINT] --- error friendly_summary ---
+[2026-04-28 14:03:19.075] [PRINT] **Unable to complete your request**
+[2026-04-28 14:03:19.075] [PRINT] 
+[2026-04-28 14:03:19.075] [PRINT] **Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.
+[2026-04-28 14:03:19.075] [PRINT] **Suggestion:** Your access may have expired. Please try reconnecting your account.
+[2026-04-28 14:03:19.075] [PRINT] 
+[2026-04-28 14:03:19.075] [PRINT] **Failed at step 1:** Schedule team sync
+[2026-04-28 14:03:19.075] [PRINT] 
+[2026-04-28 14:03:19.075] [PRINT] ---
+[2026-04-28 14:03:19.075] [PRINT] **You asked:** Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:03:19.096] [PRINT] --- end error friendly_summary ---
+[2026-04-28 14:03:19.109] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 15, "total": 15, "max": 1000000}
+[2026-04-28 14:03:19.110] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 79, "total": 94, "max": 1000000, "response_preview": "**Unable to complete your request**\n\n**Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.\n**Suggestion:** Your access may have expired...."}
+[2026-04-28 14:03:19.112] [PRINT] 
+[2026-04-28 14:03:19.112] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:19.132] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:03:19.149] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:19.160] [PRINT]    Summary: none
+[2026-04-28 14:03:19.175] [PRINT]    Recent messages: 2
+[2026-04-28 14:03:19.190] [PRINT]       USER: Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:03:19.207] [PRINT]       ASSISTANT: **Unable to complete your request**
+[2026-04-28 14:03:19.207] [PRINT] 
+[2026-04-28 14:03:19.207] [PRINT] **Issue:** Calendar API returned HTTP 403: ...
+[2026-04-28 14:03:19.217] [PRINT] 
+[2026-04-28 14:03:19.217] [PRINT]    Final context: 414 chars (~103 tokens)
+[2026-04-28 14:03:19.232] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:19.246] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~103 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 414, "context_tokens_est": 103}
+[2026-04-28 14:03:19.247] [PRINT] 
+[2026-04-28 14:03:19.247] [PRINT] --- Tier 1 user_prompt after error ---
+[2026-04-28 14:03:19.261] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:03:19.261] [PRINT] USER: Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:03:19.261] [PRINT] ASSISTANT: **Unable to complete your request**
+[2026-04-28 14:03:19.261] [PRINT] 
+[2026-04-28 14:03:19.261] [PRINT] **Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.
+[2026-04-28 14:03:19.261] [PRINT] **Suggestion:** Your access may have expired. Please try reconnecting your account.
+[2026-04-28 14:03:19.261] [PRINT] 
+[2026-04-28 14:03:19.261] [PRINT] **Failed at step 1:** Schedule team sync
+[2026-04-28 14:03:19.261] [PRINT] 
+[2026-04-28 14:03:19.261] [PRINT] ---
+[2026-04-28 14:03:19.261] [PRINT] **You asked:** Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:03:19.261] [PRINT] 
+[2026-04-28 14:03:19.261] [PRINT] CURRENT USER MESSAGE: Try again with a different calendar then.
+[2026-04-28 14:03:19.272] [PRINT] --- end Tier 1 user_prompt after error ---
+[2026-04-28 14:03:19.284] [PRINT] 
+[2026-04-28 14:03:19.284] [PRINT]   Result for 5. Error path — humanizer + 'You asked' footer:
+[2026-04-28 14:03:19.297] [PRINT]     [OK] permission verdict present
+[2026-04-28 14:03:19.313] [PRINT]     [OK] 'You asked' footer present
+[2026-04-28 14:03:19.328] [PRINT]     [OK] user request echoed
+[2026-04-28 14:03:19.344] [PRINT]     [OK] HttpError repr stripped
+[2026-04-28 14:03:19.363] [PRINT]     [OK] URL stripped from displayed err
+[2026-04-28 14:03:19.381] [PRINT]     [OK] Tier 1 still sees user goal
+[2026-04-28 14:03:19.404] [PRINT]     [OK] follow-up reaches Tier 1
+[2026-04-28 14:03:19.423] [PRINT]   -> All 7 checks passed.
+[2026-04-28 14:03:19.444] [PRINT] 
+[2026-04-28 14:03:19.444] [PRINT] ======================================================================
+[2026-04-28 14:03:19.457] [PRINT] 6. No-results path — filter-aware hints
+[2026-04-28 14:03:19.476] [PRINT] ======================================================================
+[2026-04-28 14:03:19.491] [PRINT] 
+[2026-04-28 14:03:19.491] [PRINT] --- no-results friendly_summary ---
+[2026-04-28 14:03:19.506] [PRINT] **Search completed — No results found**
+[2026-04-28 14:03:19.506] [PRINT] 
+[2026-04-28 14:03:19.506] [PRINT] No emails were found matching your search criteria.
+[2026-04-28 14:03:19.506] [PRINT] 
+[2026-04-28 14:03:19.506] [PRINT] **Filters used:**
+[2026-04-28 14:03:19.506] [PRINT] - Search query: `invoice`
+[2026-04-28 14:03:19.506] [PRINT] - From: `acme@example.com`
+[2026-04-28 14:03:19.506] [PRINT] - After: `2026-01-01`
+[2026-04-28 14:03:19.506] [PRINT] 
+[2026-04-28 14:03:19.506] [PRINT] **Suggestions:**
+[2026-04-28 14:03:19.506] [PRINT] - Double-check the sender's email address for a typo or wrong domain.
+[2026-04-28 14:03:19.506] [PRINT] - Try removing the start-date filter to include older messages.
+[2026-04-28 14:03:19.506] [PRINT] 
+[2026-04-28 14:03:19.506] [PRINT] ---
+[2026-04-28 14:03:19.506] [PRINT] **You asked:** Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:03:19.518] [PRINT] --- end no-results friendly_summary ---
+[2026-04-28 14:03:19.535] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 17, "total": 17, "max": 1000000}
+[2026-04-28 14:03:19.538] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 102, "total": 119, "max": 1000000, "response_preview": "**Search completed — No results found**\n\nNo emails were found matching your search criteria.\n\n**Filters used:**\n- Search query: `invoice`\n- From: `acme@example.com`\n- After: `2026-01-01`\n\n**Suggestion..."}
+[2026-04-28 14:03:19.539] [PRINT] 
+[2026-04-28 14:03:19.539] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:19.558] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:03:19.574] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:19.591] [PRINT]    Summary: none
+[2026-04-28 14:03:19.607] [PRINT]    Recent messages: 2
+[2026-04-28 14:03:19.623] [PRINT]       USER: Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:03:19.639] [PRINT]       ASSISTANT: **Search completed — No results found**
+[2026-04-28 14:03:19.639] [PRINT] 
+[2026-04-28 14:03:19.639] [PRINT] No emails were found matching your sear...
+[2026-04-28 14:03:19.654] [PRINT] 
+[2026-04-28 14:03:19.654] [PRINT]    Final context: 524 chars (~131 tokens)
+[2026-04-28 14:03:19.669] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:19.681] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~131 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 524, "context_tokens_est": 131}
+[2026-04-28 14:03:19.683] [PRINT] 
+[2026-04-28 14:03:19.683] [PRINT] --- Tier 1 user_prompt after no-results ---
+[2026-04-28 14:03:19.699] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:03:19.699] [PRINT] USER: Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:03:19.699] [PRINT] ASSISTANT: **Search completed — No results found**
+[2026-04-28 14:03:19.699] [PRINT] 
+[2026-04-28 14:03:19.699] [PRINT] No emails were found matching your search criteria.
+[2026-04-28 14:03:19.699] [PRINT] 
+[2026-04-28 14:03:19.699] [PRINT] **Filters used:**
+[2026-04-28 14:03:19.699] [PRINT] - Search query: `invoice`
+[2026-04-28 14:03:19.699] [PRINT] - From: `acme@example.com`
+[2026-04-28 14:03:19.699] [PRINT] - After: `2026-01-01`
+[2026-04-28 14:03:19.699] [PRINT] 
+[2026-04-28 14:03:19.699] [PRINT] **Suggestions:**
+[2026-04-28 14:03:19.699] [PRINT] - Double-check the sender's email address for a typo or wrong domain.
+[2026-04-28 14:03:19.699] [PRINT] - Try removing the start-date filter to include older messages.
+[2026-04-28 14:03:19.699] [PRINT] 
+[2026-04-28 14:03:19.699] [PRINT] ---
+[2026-04-28 14:03:19.699] [PRINT] **You asked:** Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:03:19.699] [PRINT] 
+[2026-04-28 14:03:19.699] [PRINT] 
+[2026-04-28 14:03:19.699] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:03:19.699] [PRINT] - [2026-04-28T00:00:00Z] gmail_agent.search_emails: query: invoice -> no_results: count: 0
+[2026-04-28 14:03:19.699] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:03:19.699] [PRINT] 
+[2026-04-28 14:03:19.699] [PRINT] CURRENT USER MESSAGE: Try the last 6 months instead.
+[2026-04-28 14:03:19.717] [PRINT] --- end Tier 1 user_prompt after no-results ---
+[2026-04-28 14:03:19.726] [PRINT] 
+[2026-04-28 14:03:19.726] [PRINT]   Result for 6. No-results path — filter-aware hints:
+[2026-04-28 14:03:19.739] [PRINT]     [OK] no-results header
+[2026-04-28 14:03:19.754] [PRINT]     [OK] filter block present
+[2026-04-28 14:03:19.768] [PRINT]     [OK] sender filter rendered
+[2026-04-28 14:03:19.780] [PRINT]     [OK] date filter rendered
+[2026-04-28 14:03:19.791] [PRINT]     [OK] hints block present
+[2026-04-28 14:03:19.804] [PRINT]     [OK] 'You asked' footer present
+[2026-04-28 14:03:19.822] [PRINT]     [OK] completed_tasks has search input
+[2026-04-28 14:03:19.840] [PRINT]     [OK] Tier 1 sees status no_results
+[2026-04-28 14:03:19.857] [PRINT]   -> All 8 checks passed.
+[2026-04-28 14:03:19.875] [PRINT] 
+[2026-04-28 14:03:19.875] [PRINT] ======================================================================
+[2026-04-28 14:03:19.895] [PRINT] 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1
+[2026-04-28 14:03:19.911] [PRINT] ======================================================================
+[2026-04-28 14:03:19.927] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 14:03:19.928] [PRINT] 
+[2026-04-28 14:03:19.928] [PRINT] --- turn 1 friendly_summary ---
+[2026-04-28 14:03:19.947] [PRINT] Created folder: Finance
+[2026-04-28 14:03:19.962] [PRINT] --- end turn 1 friendly_summary ---
+[2026-04-28 14:03:19.973] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 11, "total": 11, "max": 1000000}
+[2026-04-28 14:03:19.974] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 9, "total": 20, "max": 1000000, "response_preview": "Created folder: Finance"}
+[2026-04-28 14:03:19.975] [PRINT] 
+[2026-04-28 14:03:19.975] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:19.988] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:03:20.005] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:20.021] [PRINT]    Summary: none
+[2026-04-28 14:03:20.034] [PRINT]    Recent messages: 2
+[2026-04-28 14:03:20.046] [PRINT]       USER: Create a folder called Finance.
+[2026-04-28 14:03:20.061] [PRINT]       ASSISTANT: Created folder: Finance
+[2026-04-28 14:03:20.082] [PRINT] 
+[2026-04-28 14:03:20.082] [PRINT]    Final context: 93 chars (~23 tokens)
+[2026-04-28 14:03:20.100] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:20.115] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~23 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 93, "context_tokens_est": 23}
+[2026-04-28 14:03:20.116] [PRINT] 
+[2026-04-28 14:03:20.116] [PRINT] --- turn 2 Tier 1 user_prompt (after turn 1 success) ---
+[2026-04-28 14:03:20.135] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:03:20.135] [PRINT] USER: Create a folder called Finance.
+[2026-04-28 14:03:20.135] [PRINT] ASSISTANT: Created folder: Finance
+[2026-04-28 14:03:20.135] [PRINT] 
+[2026-04-28 14:03:20.135] [PRINT] 
+[2026-04-28 14:03:20.135] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:03:20.135] [PRINT] - [2026-04-28T00:00:00Z] drive_agent.create_folder: folder_path: Finance -> success: folder_id: folder_xyz
+[2026-04-28 14:03:20.135] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:03:20.135] [PRINT] 
+[2026-04-28 14:03:20.135] [PRINT] CURRENT USER MESSAGE: Now create a Q1 Budget sheet inside it.
+[2026-04-28 14:03:20.150] [PRINT] --- end turn 2 Tier 1 user_prompt (after turn 1 success) ---
+[2026-04-28 14:03:20.163] [PRINT] 
+[2026-04-28 14:03:20.163] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:20.180] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:03:20.196] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:20.214] [PRINT]    Summary: none
+[2026-04-28 14:03:20.227] [PRINT]    Recent messages: 2
+[2026-04-28 14:03:20.242] [PRINT]       USER: Create a folder called Finance.
+[2026-04-28 14:03:20.263] [PRINT]       ASSISTANT: Created folder: Finance
+[2026-04-28 14:03:20.280] [PRINT] 
+[2026-04-28 14:03:20.280] [PRINT]    Final context: 93 chars (~23 tokens)
+[2026-04-28 14:03:20.298] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:20.316] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~23 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 93, "context_tokens_est": 23}
+[2026-04-28 14:03:20.318] [PRINT] 
+[2026-04-28 14:03:20.318] [PRINT]   Result for 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1:
+[2026-04-28 14:03:20.333] [PRINT]     [OK] memory carries folder name
+[2026-04-28 14:03:20.351] [PRINT]     [OK] memory does NOT need folder_id (template intentionally omits it)
+[2026-04-28 14:03:20.361] [PRINT]     [OK] completed_tasks carries folder_id
+[2026-04-28 14:03:20.375] [PRINT]     [OK] completed_tasks carries agent.tool
+[2026-04-28 14:03:20.395] [PRINT]     [OK] completed_tasks status success
+[2026-04-28 14:03:20.411] [PRINT]     [OK] completed_tasks param surfaced
+[2026-04-28 14:03:20.429] [PRINT]     [OK] turn 2 user msg reaches Tier 1
+[2026-04-28 14:03:20.449] [PRINT]     [OK] both channels combine to make folder reachable
+[2026-04-28 14:03:20.467] [PRINT]   -> All 8 checks passed.
+[2026-04-28 14:03:20.488] [PRINT] 
+[2026-04-28 14:03:20.488] [PRINT] ======================================================================
+[2026-04-28 14:03:20.504] [PRINT] 8. Calendar humanized dates survive in memory
+[2026-04-28 14:03:20.520] [PRINT] ======================================================================
+[2026-04-28 14:03:20.537] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 14:03:20.539] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 14, "total": 14, "max": 1000000}
+[2026-04-28 14:03:20.541] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 58, "total": 72, "max": 1000000, "response_preview": "Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM\nInvitations sent to: alice@example.com\nView event: https://calendar.google.com/event?eid=evt_abc123"}
+[2026-04-28 14:03:20.542] [PRINT] 
+[2026-04-28 14:03:20.542] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:20.557] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:03:20.575] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:20.592] [PRINT]    Summary: none
+[2026-04-28 14:03:20.606] [PRINT]    Recent messages: 2
+[2026-04-28 14:03:20.624] [PRINT]       USER: Schedule Demo Sync at 2pm tomorrow.
+[2026-04-28 14:03:20.641] [PRINT]       ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM...
+[2026-04-28 14:03:20.661] [PRINT] 
+[2026-04-28 14:03:20.661] [PRINT]    Final context: 254 chars (~63 tokens)
+[2026-04-28 14:03:20.681] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:03:20.696] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~63 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 254, "context_tokens_est": 63}
+[2026-04-28 14:03:20.698] [PRINT] 
+[2026-04-28 14:03:20.698] [PRINT] --- memory history_text ---
+[2026-04-28 14:03:20.718] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:03:20.718] [PRINT] USER: Schedule Demo Sync at 2pm tomorrow.
+[2026-04-28 14:03:20.718] [PRINT] ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:03:20.718] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:03:20.718] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:03:20.738] [PRINT] --- end memory history_text ---
+[2026-04-28 14:03:20.760] [PRINT] 
+[2026-04-28 14:03:20.760] [PRINT]   Result for 8. Calendar humanized dates survive in memory:
+[2026-04-28 14:03:20.778] [PRINT]     [OK] month name present
+[2026-04-28 14:03:20.793] [PRINT]     [OK] year present
+[2026-04-28 14:03:20.810] [PRINT]     [OK] 12-hour clock present
+[2026-04-28 14:03:20.827] [PRINT]     [OK] raw ISO NOT present
+[2026-04-28 14:03:20.845] [PRINT]     [OK] Z-suffixed ISO NOT present
+[2026-04-28 14:03:20.861] [PRINT]   -> All 5 checks passed.
+[2026-04-28 14:03:20.875] [PRINT] 
+[2026-04-28 14:03:20.875] [PRINT] ======================================================================
+[2026-04-28 14:03:20.889] [PRINT] CROSS-TURN CONTEXT REGRESSION SUMMARY
+[2026-04-28 14:03:20.907] [PRINT] ======================================================================
+[2026-04-28 14:03:20.922] [PRINT]   [PASS] 1. Single-step success (create_event)
+[2026-04-28 14:03:20.936] [PRINT]   [PASS] 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs
+[2026-04-28 14:03:20.954] [PRINT]   [PASS] 3. Pause path — real _build_rich_approval_message + completed bullets
+[2026-04-28 14:03:20.968] [PRINT]   [PASS] 4. Resume after approval — multi-step rendering preserves URLs
+[2026-04-28 14:03:20.982] [PRINT]   [PASS] 5. Error path — humanizer + 'You asked' footer
+[2026-04-28 14:03:20.998] [PRINT]   [PASS] 6. No-results path — filter-aware hints
+[2026-04-28 14:03:21.014] [PRINT]   [PASS] 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1
+[2026-04-28 14:03:21.035] [PRINT]   [PASS] 8. Calendar humanized dates survive in memory
+[2026-04-28 14:03:21.048] [PRINT] ----------------------------------------------------------------------
+[2026-04-28 14:03:21.063] [PRINT]   8/8 scenarios passed.
+[2026-04-28 14:19:42.765] [PRINT] ============================================================
+[2026-04-28 14:19:42.787] [PRINT] FOOTER FIX VERIFICATION
+[2026-04-28 14:19:42.799] [PRINT] ============================================================
+[2026-04-28 14:19:42.809] [PRINT] SCENARIO A: override provided (production threads.py path)
+[2026-04-28 14:19:42.818] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:19:42.832] [PRINT] **Unable to complete your request**
+[2026-04-28 14:19:42.832] [PRINT] 
+[2026-04-28 14:19:42.832] [PRINT] **Issue:** Google Sheets API returned HTTP 400: The request was invalid. The selected resource may have unexpected formatting or missing fields.
+[2026-04-28 14:19:42.832] [PRINT] ---
+[2026-04-28 14:19:42.832] [PRINT] **What was completed before the error:**
+[2026-04-28 14:19:42.832] [PRINT] - Read source
+[2026-04-28 14:19:42.832] [PRINT] - transform_text
+[2026-04-28 14:19:42.832] [PRINT] 
+[2026-04-28 14:19:42.832] [PRINT] **Failed at step 4:** Check Food tab
+[2026-04-28 14:19:42.832] [PRINT] 
+[2026-04-28 14:19:42.832] [PRINT] ---
+[2026-04-28 14:19:42.832] [PRINT] **You asked:** Extract data from source sheet and paste into destination sheet with Food and Non-Food tabs
+[2026-04-28 14:19:42.851] [PRINT] CHECK A1: 'your request' placeholder NOT present   ->  PASS
+[2026-04-28 14:19:42.870] [PRINT] CHECK A2: real task summary IS rendered             ->  PASS
+[2026-04-28 14:19:42.883] [PRINT] SCENARIO B: no override + cleared state (pre-fix worst case)
+[2026-04-28 14:19:42.894] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:19:42.906] [PRINT] **Unable to complete your request**
+[2026-04-28 14:19:42.906] [PRINT] 
+[2026-04-28 14:19:42.906] [PRINT] **Issue:** Google Sheets API returned HTTP 400: The request was invalid. The selected resource may have unexpected formatting or missing fields.
+[2026-04-28 14:19:42.906] [PRINT] ---
+[2026-04-28 14:19:42.906] [PRINT] **What was completed before the error:**
+[2026-04-28 14:19:42.906] [PRINT] - Read source
+[2026-04-28 14:19:42.906] [PRINT] - transform_text
+[2026-04-28 14:19:42.906] [PRINT] 
+[2026-04-28 14:19:42.906] [PRINT] **Failed at step 4:** Check Food tab
+[2026-04-28 14:19:42.927] [PRINT] CHECK B1: '**You asked:**' footer fully suppressed  ->  PASS
+[2026-04-28 14:19:42.943] [PRINT] SCENARIO C: legacy state with extracted_info[original_message]
+[2026-04-28 14:19:42.959] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:19:42.976] [PRINT] CHECK C1: legacy state still produces footer       ->  PASS
+[2026-04-28 14:19:42.997] [PRINT] SCENARIO D: defensive — literal 'your request' in state
+[2026-04-28 14:19:43.014] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:19:43.028] [PRINT] CHECK D1: defensive placeholder filter works       ->  PASS
+[2026-04-28 14:19:43.045] [PRINT] ============================================================
+[2026-04-28 14:19:43.055] [PRINT] ALL FOOTER CHECKS PASSED
+[2026-04-28 14:19:43.068] [PRINT] ============================================================
+[2026-04-28 14:21:49.893] [PRINT] ============================================================
+[2026-04-28 14:21:49.932] [PRINT] FOOTER FIX VERIFICATION
+[2026-04-28 14:21:49.951] [PRINT] ============================================================
+[2026-04-28 14:21:49.975] [PRINT] SCENARIO A: override provided (production threads.py path)
+[2026-04-28 14:21:49.991] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:21:50.004] [PRINT] **Unable to complete your request**
+[2026-04-28 14:21:50.004] [PRINT] 
+[2026-04-28 14:21:50.004] [PRINT] **Issue:** Google Sheets could not find the tab or range `Food`. The tab may not exist in this spreadsheet — check the tab name (case-sensitive) or create it first.
+[2026-04-28 14:21:50.004] [PRINT] ---
+[2026-04-28 14:21:50.004] [PRINT] **What was completed before the error:**
+[2026-04-28 14:21:50.004] [PRINT] - Read source
+[2026-04-28 14:21:50.004] [PRINT] - transform_text
+[2026-04-28 14:21:50.004] [PRINT] 
+[2026-04-28 14:21:50.004] [PRINT] **Failed at step 4:** Check Food tab
+[2026-04-28 14:21:50.004] [PRINT] 
+[2026-04-28 14:21:50.004] [PRINT] ---
+[2026-04-28 14:21:50.004] [PRINT] **You asked:** Extract data from source sheet and paste into destination sheet with Food and Non-Food tabs
+[2026-04-28 14:21:50.014] [PRINT] CHECK A1: 'your request' placeholder NOT present   ->  PASS
+[2026-04-28 14:21:50.023] [PRINT] CHECK A2: real task summary IS rendered             ->  PASS
+[2026-04-28 14:21:50.030] [PRINT] SCENARIO B: no override + cleared state (pre-fix worst case)
+[2026-04-28 14:21:50.038] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:21:50.046] [PRINT] **Unable to complete your request**
+[2026-04-28 14:21:50.046] [PRINT] 
+[2026-04-28 14:21:50.046] [PRINT] **Issue:** Google Sheets could not find the tab or range `Food`. The tab may not exist in this spreadsheet — check the tab name (case-sensitive) or create it first.
+[2026-04-28 14:21:50.046] [PRINT] ---
+[2026-04-28 14:21:50.046] [PRINT] **What was completed before the error:**
+[2026-04-28 14:21:50.046] [PRINT] - Read source
+[2026-04-28 14:21:50.046] [PRINT] - transform_text
+[2026-04-28 14:21:50.046] [PRINT] 
+[2026-04-28 14:21:50.046] [PRINT] **Failed at step 4:** Check Food tab
+[2026-04-28 14:21:50.054] [PRINT] CHECK B1: '**You asked:**' footer fully suppressed  ->  PASS
+[2026-04-28 14:21:50.062] [PRINT] SCENARIO C: legacy state with extracted_info[original_message]
+[2026-04-28 14:21:50.070] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:21:50.078] [PRINT] CHECK C1: legacy state still produces footer       ->  PASS
+[2026-04-28 14:21:50.087] [PRINT] SCENARIO D: defensive — literal 'your request' in state
+[2026-04-28 14:21:50.094] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:21:50.101] [PRINT] CHECK D1: defensive placeholder filter works       ->  PASS
+[2026-04-28 14:21:50.113] [PRINT] ============================================================
+[2026-04-28 14:21:50.123] [PRINT] ALL FOOTER CHECKS PASSED
+[2026-04-28 14:21:50.130] [PRINT] ============================================================
+[2026-04-28 14:22:21.523] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-28 14:22:21.647] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-28 14:22:21.661] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-28 14:22:21.675] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-28 14:22:21.692] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-28 14:22:21.738] [PRINT] 
+[2026-04-28 14:22:21.738] [PRINT] ======================================================================
+[2026-04-28 14:22:21.754] [PRINT] 1. Single-step success (create_event)
+[2026-04-28 14:22:21.765] [PRINT] ======================================================================
+[2026-04-28 14:22:22.044] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 14:22:22.045] [PRINT] 
+[2026-04-28 14:22:22.045] [PRINT] --- friendly_summary persisted to memory ---
+[2026-04-28 14:22:22.055] [PRINT] Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:22:22.055] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:22:22.055] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:22:22.064] [PRINT] --- end friendly_summary persisted to memory ---
+[2026-04-28 14:22:22.074] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 17, "total": 17, "max": 1000000}
+[2026-04-28 14:22:22.075] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 58, "total": 75, "max": 1000000, "response_preview": "Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM\nInvitations sent to: alice@example.com\nView event: https://calendar.google.com/event?eid=evt_abc123"}
+[2026-04-28 14:22:22.075] [PRINT] 
+[2026-04-28 14:22:22.075] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.083] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:22:22.091] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.101] [PRINT]    Summary: none
+[2026-04-28 14:22:22.112] [PRINT]    Recent messages: 2
+[2026-04-28 14:22:22.125] [PRINT]       USER: Schedule a demo sync tomorrow at 2pm with Alice.
+[2026-04-28 14:22:22.136] [PRINT]       ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM...
+[2026-04-28 14:22:22.148] [PRINT] 
+[2026-04-28 14:22:22.148] [PRINT]    Final context: 267 chars (~66 tokens)
+[2026-04-28 14:22:22.160] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.168] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~66 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 267, "context_tokens_est": 66}
+[2026-04-28 14:22:22.169] [PRINT] 
+[2026-04-28 14:22:22.169] [PRINT] --- Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:22:22.179] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:22:22.179] [PRINT] USER: Schedule a demo sync tomorrow at 2pm with Alice.
+[2026-04-28 14:22:22.179] [PRINT] ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:22:22.179] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:22:22.179] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:22:22.179] [PRINT] 
+[2026-04-28 14:22:22.179] [PRINT] 
+[2026-04-28 14:22:22.179] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:22:22.179] [PRINT] - [2026-04-28T00:00:00Z] calendar_agent.create_event: summary: Demo Sync, start_time: 2026-04-28T14:00:00 -> success: event_id: evt_abc123
+[2026-04-28 14:22:22.179] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:22:22.179] [PRINT] 
+[2026-04-28 14:22:22.179] [PRINT] CURRENT USER MESSAGE: Move that event to 4pm instead.
+[2026-04-28 14:22:22.190] [PRINT] --- end Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:22:22.200] [PRINT] 
+[2026-04-28 14:22:22.200] [PRINT]   Result for 1. Single-step success (create_event):
+[2026-04-28 14:22:22.213] [PRINT]     [OK] event_id reachable
+[2026-04-28 14:22:22.224] [PRINT]     [OK] event URL reachable
+[2026-04-28 14:22:22.232] [PRINT]     [OK] humanized date preserved
+[2026-04-28 14:22:22.241] [PRINT]     [OK] event title preserved
+[2026-04-28 14:22:22.249] [PRINT]     [OK] attendee preserved
+[2026-04-28 14:22:22.260] [PRINT]     [OK] completed_tasks holds event_id
+[2026-04-28 14:22:22.270] [PRINT]     [OK] follow-up message included
+[2026-04-28 14:22:22.279] [PRINT]   -> All 7 checks passed.
+[2026-04-28 14:22:22.289] [PRINT] 
+[2026-04-28 14:22:22.289] [PRINT] ======================================================================
+[2026-04-28 14:22:22.297] [PRINT] 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs
+[2026-04-28 14:22:22.309] [PRINT] ======================================================================
+[2026-04-28 14:22:22.319] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 3, "all_templated": true}
+[2026-04-28 14:22:22.320] [PRINT] 
+[2026-04-28 14:22:22.320] [PRINT] --- friendly_summary ---
+[2026-04-28 14:22:22.328] [PRINT] Here's what I did across these steps:
+[2026-04-28 14:22:22.328] [PRINT] 
+[2026-04-28 14:22:22.328] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:22:22.328] [PRINT] Created folder: Finance
+[2026-04-28 14:22:22.328] [PRINT] 
+[2026-04-28 14:22:22.328] [PRINT] **Step 2 — Create Q1 Budget spreadsheet:**
+[2026-04-28 14:22:22.328] [PRINT] Created spreadsheet **Q1 Budget**: https://docs.google.com/spreadsheets/d/sheet_q1abc/edit
+[2026-04-28 14:22:22.328] [PRINT] 
+[2026-04-28 14:22:22.328] [PRINT] **Step 3 — Create Q1 Plan doc with content:**
+[2026-04-28 14:22:22.328] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 14:22:22.328] [PRINT] 
+[2026-04-28 14:22:22.328] [PRINT] All set.
+[2026-04-28 14:22:22.338] [PRINT] --- end friendly_summary ---
+[2026-04-28 14:22:22.350] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 29, "total": 29, "max": 1000000}
+[2026-04-28 14:22:22.351] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 103, "total": 132, "max": 1000000, "response_preview": "Here's what I did across these steps:\n\n**Step 1 — Create Finance folder:**\nCreated folder: Finance\n\n**Step 2 — Create Q1 Budget spreadsheet:**\nCreated spreadsheet **Q1 Budget**: https://docs.google.co..."}
+[2026-04-28 14:22:22.351] [PRINT] 
+[2026-04-28 14:22:22.351] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.362] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:22:22.374] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.385] [PRINT]    Summary: none
+[2026-04-28 14:22:22.397] [PRINT]    Recent messages: 2
+[2026-04-28 14:22:22.409] [PRINT]       USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc wi...
+[2026-04-28 14:22:22.422] [PRINT]       ASSISTANT: Here's what I did across these steps:
+[2026-04-28 14:22:22.422] [PRINT] 
+[2026-04-28 14:22:22.422] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:22:22.422] [PRINT] Creat...
+[2026-04-28 14:22:22.435] [PRINT] 
+[2026-04-28 14:22:22.435] [PRINT]    Final context: 510 chars (~127 tokens)
+[2026-04-28 14:22:22.451] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.462] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~127 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 510, "context_tokens_est": 127}
+[2026-04-28 14:22:22.463] [PRINT] 
+[2026-04-28 14:22:22.463] [PRINT] --- Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:22:22.475] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:22:22.475] [PRINT] USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc with some content.
+[2026-04-28 14:22:22.475] [PRINT] ASSISTANT: Here's what I did across these steps:
+[2026-04-28 14:22:22.475] [PRINT] 
+[2026-04-28 14:22:22.475] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:22:22.475] [PRINT] Created folder: Finance
+[2026-04-28 14:22:22.475] [PRINT] 
+[2026-04-28 14:22:22.475] [PRINT] **Step 2 — Create Q1 Budget spreadsheet:**
+[2026-04-28 14:22:22.475] [PRINT] Created spreadsheet **Q1 Budget**: https://docs.google.com/spreadsheets/d/sheet_q1abc/edit
+[2026-04-28 14:22:22.475] [PRINT] 
+[2026-04-28 14:22:22.475] [PRINT] **Step 3 — Create Q1 Plan doc with content:**
+[2026-04-28 14:22:22.475] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 14:22:22.475] [PRINT] 
+[2026-04-28 14:22:22.475] [PRINT] All set.
+[2026-04-28 14:22:22.475] [PRINT] 
+[2026-04-28 14:22:22.475] [PRINT] 
+[2026-04-28 14:22:22.475] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:22:22.475] [PRINT] - [2026-04-28T00:00:00Z] drive_agent.create_folder: folder_path: Finance -> success: folder_id: folder_xyz
+[2026-04-28 14:22:22.475] [PRINT] - [2026-04-28T00:00:00Z] sheets_agent.create_sheet: title: Q1 Budget -> success: title: Q1 Budget
+[2026-04-28 14:22:22.475] [PRINT] - [2026-04-28T00:00:00Z] docs_agent.create_doc_with_content: title: Q1 Plan -> success: document_id: doc_q1plan, document_url: https://docs.google.com/document/d/doc_q, title: Q1 Plan
+[2026-04-28 14:22:22.475] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:22:22.475] [PRINT] 
+[2026-04-28 14:22:22.475] [PRINT] CURRENT USER MESSAGE: Now share the doc with bob@example.com.
+[2026-04-28 14:22:22.493] [PRINT] --- end Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:22:22.507] [PRINT] 
+[2026-04-28 14:22:22.507] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.517] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:22:22.531] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.544] [PRINT]    Summary: none
+[2026-04-28 14:22:22.555] [PRINT]    Recent messages: 2
+[2026-04-28 14:22:22.564] [PRINT]       USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc wi...
+[2026-04-28 14:22:22.579] [PRINT]       ASSISTANT: Here's what I did across these steps:
+[2026-04-28 14:22:22.579] [PRINT] 
+[2026-04-28 14:22:22.579] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:22:22.579] [PRINT] Creat...
+[2026-04-28 14:22:22.592] [PRINT] 
+[2026-04-28 14:22:22.592] [PRINT]    Final context: 510 chars (~127 tokens)
+[2026-04-28 14:22:22.602] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.612] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~127 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 510, "context_tokens_est": 127}
+[2026-04-28 14:22:22.613] [PRINT] 
+[2026-04-28 14:22:22.613] [PRINT]   Result for 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs:
+[2026-04-28 14:22:22.624] [PRINT]     [OK] narrator opener present
+[2026-04-28 14:22:22.634] [PRINT]     [OK] narrator closer present
+[2026-04-28 14:22:22.645] [PRINT]     [OK] step 1 heading present
+[2026-04-28 14:22:22.654] [PRINT]     [OK] sheet URL in memory text
+[2026-04-28 14:22:22.662] [PRINT]     [OK] doc URL in memory text
+[2026-04-28 14:22:22.670] [PRINT]     [OK] folder_id surfaces via completed_tasks
+[2026-04-28 14:22:22.682] [PRINT]     [OK] folder_id reachable end-to-end
+[2026-04-28 14:22:22.692] [PRINT]     [OK] sheet_id reachable end-to-end
+[2026-04-28 14:22:22.703] [PRINT]     [OK] doc_id reachable end-to-end
+[2026-04-28 14:22:22.715] [PRINT]     [OK] doc id surfaces via completed_tasks (priority_keys)
+[2026-04-28 14:22:22.728] [PRINT]   -> All 10 checks passed.
+[2026-04-28 14:22:22.741] [PRINT] 
+[2026-04-28 14:22:22.741] [PRINT] ======================================================================
+[2026-04-28 14:22:22.755] [PRINT] 3. Pause path — real _build_rich_approval_message + completed bullets
+[2026-04-28 14:22:22.767] [PRINT] ======================================================================
+[2026-04-28 14:22:22.779] [PRINT] 
+[2026-04-28 14:22:22.779] [PRINT] --- _render_completed_so_far block ---
+[2026-04-28 14:22:22.792] [PRINT] 
+[2026-04-28 14:22:22.792] [PRINT] **Completed so far:**
+[2026-04-28 14:22:22.792] [PRINT] - Found 2 emails
+[2026-04-28 14:22:22.801] [PRINT] --- end _render_completed_so_far block ---
+[2026-04-28 14:22:22.812] [PRINT] 
+[2026-04-28 14:22:22.812] [PRINT] --- full pause message persisted to memory ---
+[2026-04-28 14:22:22.820] [PRINT] **Completed so far:**
+[2026-04-28 14:22:22.820] [PRINT] - Found 2 emails
+[2026-04-28 14:22:22.820] [PRINT] 
+[2026-04-28 14:22:22.820] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-28 14:22:22.820] [PRINT] 
+[2026-04-28 14:22:22.820] [PRINT] Step 2 of 2
+[2026-04-28 14:22:22.820] [PRINT] 
+[2026-04-28 14:22:22.820] [PRINT] **Reply to the first Acme invoice email**
+[2026-04-28 14:22:22.820] [PRINT] 
+[2026-04-28 14:22:22.820] [PRINT] **Replying to Email**
+[2026-04-28 14:22:22.820] [PRINT] - **Original subject:** Re: Acme invoice #0
+[2026-04-28 14:22:22.820] [PRINT] - **Original sender:** sender0@example.com
+[2026-04-28 14:22:22.820] [PRINT] - **Original date:** 2026-04-26
+[2026-04-28 14:22:22.820] [PRINT] - **Reply preview:**
+[2026-04-28 14:22:22.820] [PRINT]   > Acknowledged — we'll process this shortly.
+[2026-04-28 14:22:22.820] [PRINT] 
+[2026-04-28 14:22:22.820] [PRINT] ---
+[2026-04-28 14:22:22.820] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-28 14:22:22.829] [PRINT] --- end full pause message persisted to memory ---
+[2026-04-28 14:22:22.838] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 19, "total": 19, "max": 1000000}
+[2026-04-28 14:22:22.839] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 123, "total": 142, "max": 1000000, "response_preview": "**Completed so far:**\n- Found 2 emails\n\n**Action Requires Approval** — DANGEROUS\n\nStep 2 of 2\n\n**Reply to the first Acme invoice email**\n\n**Replying to Email**\n- **Original subject:** Re: Acme invoice..."}
+[2026-04-28 14:22:22.840] [PRINT] 
+[2026-04-28 14:22:22.840] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.848] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:22:22.861] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.874] [PRINT]    Summary: none
+[2026-04-28 14:22:22.888] [PRINT]    Recent messages: 2
+[2026-04-28 14:22:22.901] [PRINT]       USER: Find emails about the Acme invoice and reply to the first one.
+[2026-04-28 14:22:22.917] [PRINT]       ASSISTANT: **Completed so far:**
+[2026-04-28 14:22:22.917] [PRINT] - Found 2 emails
+[2026-04-28 14:22:22.917] [PRINT] 
+[2026-04-28 14:22:22.917] [PRINT] **Action Requires Approval** — DANGEROUS...
+[2026-04-28 14:22:22.929] [PRINT] 
+[2026-04-28 14:22:22.929] [PRINT]    Final context: 504 chars (~126 tokens)
+[2026-04-28 14:22:22.940] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:22.953] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~126 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 504, "context_tokens_est": 126}
+[2026-04-28 14:22:22.954] [PRINT] 
+[2026-04-28 14:22:22.954] [PRINT] --- Tier 1 user_prompt while paused ---
+[2026-04-28 14:22:22.966] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:22:22.966] [PRINT] USER: Find emails about the Acme invoice and reply to the first one.
+[2026-04-28 14:22:22.966] [PRINT] ASSISTANT: **Completed so far:**
+[2026-04-28 14:22:22.966] [PRINT] - Found 2 emails
+[2026-04-28 14:22:22.966] [PRINT] 
+[2026-04-28 14:22:22.966] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-28 14:22:22.966] [PRINT] 
+[2026-04-28 14:22:22.966] [PRINT] Step 2 of 2
+[2026-04-28 14:22:22.966] [PRINT] 
+[2026-04-28 14:22:22.966] [PRINT] **Reply to the first Acme invoice email**
+[2026-04-28 14:22:22.966] [PRINT] 
+[2026-04-28 14:22:22.966] [PRINT] **Replying to Email**
+[2026-04-28 14:22:22.966] [PRINT] - **Original subject:** Re: Acme invoice #0
+[2026-04-28 14:22:22.966] [PRINT] - **Original sender:** sender0@example.com
+[2026-04-28 14:22:22.966] [PRINT] - **Original date:** 2026-04-26
+[2026-04-28 14:22:22.966] [PRINT] - **Reply preview:**
+[2026-04-28 14:22:22.966] [PRINT]   > Acknowledged — we'll process this shortly.
+[2026-04-28 14:22:22.966] [PRINT] 
+[2026-04-28 14:22:22.966] [PRINT] ---
+[2026-04-28 14:22:22.966] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-28 14:22:22.966] [PRINT] 
+[2026-04-28 14:22:22.966] [PRINT] CURRENT USER MESSAGE: Yes, send the reply.
+[2026-04-28 14:22:22.978] [PRINT] --- end Tier 1 user_prompt while paused ---
+[2026-04-28 14:22:22.988] [PRINT] 
+[2026-04-28 14:22:22.988] [PRINT]   Result for 3. Pause path — real _build_rich_approval_message + completed bullets:
+[2026-04-28 14:22:22.999] [PRINT]     [OK] Completed-so-far header present
+[2026-04-28 14:22:23.008] [PRINT]     [OK] compact bullet uses dash prefix
+[2026-04-28 14:22:23.017] [PRINT]     [OK] search count surfaced
+[2026-04-28 14:22:23.026] [PRINT]     [OK] approval scaffolding kept
+[2026-04-28 14:22:23.035] [PRINT]     [OK] step number rendered
+[2026-04-28 14:22:23.046] [PRINT]     [OK] approval description rendered
+[2026-04-28 14:22:23.059] [PRINT]     [OK] display_context: subject surfaced
+[2026-04-28 14:22:23.069] [PRINT]     [OK] display_context: sender surfaced
+[2026-04-28 14:22:23.079] [PRINT]     [OK] approval footer present
+[2026-04-28 14:22:23.089] [PRINT]     [OK] original user query reachable
+[2026-04-28 14:22:23.100] [PRINT]   -> All 10 checks passed.
+[2026-04-28 14:22:23.115] [PRINT] 
+[2026-04-28 14:22:23.115] [PRINT] ======================================================================
+[2026-04-28 14:22:23.130] [PRINT] 4. Resume after approval — multi-step rendering preserves URLs
+[2026-04-28 14:22:23.141] [PRINT] ======================================================================
+[2026-04-28 14:22:23.152] [PRINT] 
+[2026-04-28 14:22:23.152] [PRINT] --- resume rendering output (persisted to memory) ---
+[2026-04-28 14:22:23.169] [PRINT] 
+[2026-04-28 14:22:23.169] [PRINT] **Step 1 — Create Q1 Plan doc with content:**
+[2026-04-28 14:22:23.169] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 14:22:23.169] [PRINT] 
+[2026-04-28 14:22:23.169] [PRINT] **Step 2 — Schedule Demo Sync at 2:00 PM tomorrow:**
+[2026-04-28 14:22:23.169] [PRINT] Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:22:23.169] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:22:23.169] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:22:23.169] [PRINT] 
+[2026-04-28 14:22:23.169] [PRINT] 
+[2026-04-28 14:22:23.169] [PRINT] All steps completed! Is there anything else I can help with?
+[2026-04-28 14:22:23.186] [PRINT] --- end resume rendering output (persisted to memory) ---
+[2026-04-28 14:22:23.198] [PRINT] 
+[2026-04-28 14:22:23.198] [PRINT]   Result for 4. Resume after approval — multi-step rendering preserves URLs:
+[2026-04-28 14:22:23.211] [PRINT]     [OK] doc URL preserved in resume
+[2026-04-28 14:22:23.223] [PRINT]     [OK] event URL preserved in resume
+[2026-04-28 14:22:23.239] [PRINT]     [OK] humanized date preserved
+[2026-04-28 14:22:23.252] [PRINT]     [OK] step heading shape correct
+[2026-04-28 14:22:23.261] [PRINT]     [OK] step heading shape correct (2)
+[2026-04-28 14:22:23.273] [PRINT]   -> All 5 checks passed.
+[2026-04-28 14:22:23.290] [PRINT] 
+[2026-04-28 14:22:23.290] [PRINT] ======================================================================
+[2026-04-28 14:22:23.301] [PRINT] 5. Error path — humanizer + 'You asked' footer
+[2026-04-28 14:22:23.317] [PRINT] ======================================================================
+[2026-04-28 14:22:23.332] [PRINT] 
+[2026-04-28 14:22:23.332] [PRINT] --- error friendly_summary ---
+[2026-04-28 14:22:23.349] [PRINT] **Unable to complete your request**
+[2026-04-28 14:22:23.349] [PRINT] 
+[2026-04-28 14:22:23.349] [PRINT] **Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.
+[2026-04-28 14:22:23.349] [PRINT] **Suggestion:** Your access may have expired. Please try reconnecting your account.
+[2026-04-28 14:22:23.349] [PRINT] 
+[2026-04-28 14:22:23.349] [PRINT] **Failed at step 1:** Schedule team sync
+[2026-04-28 14:22:23.349] [PRINT] 
+[2026-04-28 14:22:23.349] [PRINT] ---
+[2026-04-28 14:22:23.349] [PRINT] **You asked:** Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:22:23.364] [PRINT] --- end error friendly_summary ---
+[2026-04-28 14:22:23.378] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 15, "total": 15, "max": 1000000}
+[2026-04-28 14:22:23.380] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 79, "total": 94, "max": 1000000, "response_preview": "**Unable to complete your request**\n\n**Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.\n**Suggestion:** Your access may have expired...."}
+[2026-04-28 14:22:23.381] [PRINT] 
+[2026-04-28 14:22:23.381] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:23.395] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:22:23.408] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:23.421] [PRINT]    Summary: none
+[2026-04-28 14:22:23.433] [PRINT]    Recent messages: 2
+[2026-04-28 14:22:23.443] [PRINT]       USER: Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:22:23.453] [PRINT]       ASSISTANT: **Unable to complete your request**
+[2026-04-28 14:22:23.453] [PRINT] 
+[2026-04-28 14:22:23.453] [PRINT] **Issue:** Calendar API returned HTTP 403: ...
+[2026-04-28 14:22:23.464] [PRINT] 
+[2026-04-28 14:22:23.464] [PRINT]    Final context: 414 chars (~103 tokens)
+[2026-04-28 14:22:23.475] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:23.485] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~103 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 414, "context_tokens_est": 103}
+[2026-04-28 14:22:23.486] [PRINT] 
+[2026-04-28 14:22:23.486] [PRINT] --- Tier 1 user_prompt after error ---
+[2026-04-28 14:22:23.495] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:22:23.495] [PRINT] USER: Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:22:23.495] [PRINT] ASSISTANT: **Unable to complete your request**
+[2026-04-28 14:22:23.495] [PRINT] 
+[2026-04-28 14:22:23.495] [PRINT] **Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.
+[2026-04-28 14:22:23.495] [PRINT] **Suggestion:** Your access may have expired. Please try reconnecting your account.
+[2026-04-28 14:22:23.495] [PRINT] 
+[2026-04-28 14:22:23.495] [PRINT] **Failed at step 1:** Schedule team sync
+[2026-04-28 14:22:23.495] [PRINT] 
+[2026-04-28 14:22:23.495] [PRINT] ---
+[2026-04-28 14:22:23.495] [PRINT] **You asked:** Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:22:23.495] [PRINT] 
+[2026-04-28 14:22:23.495] [PRINT] CURRENT USER MESSAGE: Try again with a different calendar then.
+[2026-04-28 14:22:23.505] [PRINT] --- end Tier 1 user_prompt after error ---
+[2026-04-28 14:22:23.514] [PRINT] 
+[2026-04-28 14:22:23.514] [PRINT]   Result for 5. Error path — humanizer + 'You asked' footer:
+[2026-04-28 14:22:23.524] [PRINT]     [OK] permission verdict present
+[2026-04-28 14:22:23.537] [PRINT]     [OK] 'You asked' footer present
+[2026-04-28 14:22:23.549] [PRINT]     [OK] user request echoed
+[2026-04-28 14:22:23.564] [PRINT]     [OK] HttpError repr stripped
+[2026-04-28 14:22:23.577] [PRINT]     [OK] URL stripped from displayed err
+[2026-04-28 14:22:23.590] [PRINT]     [OK] Tier 1 still sees user goal
+[2026-04-28 14:22:23.602] [PRINT]     [OK] follow-up reaches Tier 1
+[2026-04-28 14:22:23.610] [PRINT]   -> All 7 checks passed.
+[2026-04-28 14:22:23.620] [PRINT] 
+[2026-04-28 14:22:23.620] [PRINT] ======================================================================
+[2026-04-28 14:22:23.634] [PRINT] 6. No-results path — filter-aware hints
+[2026-04-28 14:22:23.645] [PRINT] ======================================================================
+[2026-04-28 14:22:23.661] [PRINT] 
+[2026-04-28 14:22:23.661] [PRINT] --- no-results friendly_summary ---
+[2026-04-28 14:22:23.675] [PRINT] **Search completed — No results found**
+[2026-04-28 14:22:23.675] [PRINT] 
+[2026-04-28 14:22:23.675] [PRINT] No emails were found matching your search criteria.
+[2026-04-28 14:22:23.675] [PRINT] 
+[2026-04-28 14:22:23.675] [PRINT] **Filters used:**
+[2026-04-28 14:22:23.675] [PRINT] - Search query: `invoice`
+[2026-04-28 14:22:23.675] [PRINT] - From: `acme@example.com`
+[2026-04-28 14:22:23.675] [PRINT] - After: `2026-01-01`
+[2026-04-28 14:22:23.675] [PRINT] 
+[2026-04-28 14:22:23.675] [PRINT] **Suggestions:**
+[2026-04-28 14:22:23.675] [PRINT] - Double-check the sender's email address for a typo or wrong domain.
+[2026-04-28 14:22:23.675] [PRINT] - Try removing the start-date filter to include older messages.
+[2026-04-28 14:22:23.675] [PRINT] 
+[2026-04-28 14:22:23.675] [PRINT] ---
+[2026-04-28 14:22:23.675] [PRINT] **You asked:** Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:22:23.688] [PRINT] --- end no-results friendly_summary ---
+[2026-04-28 14:22:23.699] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 17, "total": 17, "max": 1000000}
+[2026-04-28 14:22:23.700] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 102, "total": 119, "max": 1000000, "response_preview": "**Search completed — No results found**\n\nNo emails were found matching your search criteria.\n\n**Filters used:**\n- Search query: `invoice`\n- From: `acme@example.com`\n- After: `2026-01-01`\n\n**Suggestion..."}
+[2026-04-28 14:22:23.701] [PRINT] 
+[2026-04-28 14:22:23.701] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:23.711] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:22:23.719] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:23.726] [PRINT]    Summary: none
+[2026-04-28 14:22:23.734] [PRINT]    Recent messages: 2
+[2026-04-28 14:22:23.741] [PRINT]       USER: Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:22:23.751] [PRINT]       ASSISTANT: **Search completed — No results found**
+[2026-04-28 14:22:23.751] [PRINT] 
+[2026-04-28 14:22:23.751] [PRINT] No emails were found matching your sear...
+[2026-04-28 14:22:23.759] [PRINT] 
+[2026-04-28 14:22:23.759] [PRINT]    Final context: 524 chars (~131 tokens)
+[2026-04-28 14:22:23.768] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:23.774] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~131 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 524, "context_tokens_est": 131}
+[2026-04-28 14:22:23.775] [PRINT] 
+[2026-04-28 14:22:23.775] [PRINT] --- Tier 1 user_prompt after no-results ---
+[2026-04-28 14:22:23.784] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:22:23.784] [PRINT] USER: Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:22:23.784] [PRINT] ASSISTANT: **Search completed — No results found**
+[2026-04-28 14:22:23.784] [PRINT] 
+[2026-04-28 14:22:23.784] [PRINT] No emails were found matching your search criteria.
+[2026-04-28 14:22:23.784] [PRINT] 
+[2026-04-28 14:22:23.784] [PRINT] **Filters used:**
+[2026-04-28 14:22:23.784] [PRINT] - Search query: `invoice`
+[2026-04-28 14:22:23.784] [PRINT] - From: `acme@example.com`
+[2026-04-28 14:22:23.784] [PRINT] - After: `2026-01-01`
+[2026-04-28 14:22:23.784] [PRINT] 
+[2026-04-28 14:22:23.784] [PRINT] **Suggestions:**
+[2026-04-28 14:22:23.784] [PRINT] - Double-check the sender's email address for a typo or wrong domain.
+[2026-04-28 14:22:23.784] [PRINT] - Try removing the start-date filter to include older messages.
+[2026-04-28 14:22:23.784] [PRINT] 
+[2026-04-28 14:22:23.784] [PRINT] ---
+[2026-04-28 14:22:23.784] [PRINT] **You asked:** Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:22:23.784] [PRINT] 
+[2026-04-28 14:22:23.784] [PRINT] 
+[2026-04-28 14:22:23.784] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:22:23.784] [PRINT] - [2026-04-28T00:00:00Z] gmail_agent.search_emails: query: invoice -> no_results: count: 0
+[2026-04-28 14:22:23.784] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:22:23.784] [PRINT] 
+[2026-04-28 14:22:23.784] [PRINT] CURRENT USER MESSAGE: Try the last 6 months instead.
+[2026-04-28 14:22:23.792] [PRINT] --- end Tier 1 user_prompt after no-results ---
+[2026-04-28 14:22:23.800] [PRINT] 
+[2026-04-28 14:22:23.800] [PRINT]   Result for 6. No-results path — filter-aware hints:
+[2026-04-28 14:22:23.807] [PRINT]     [OK] no-results header
+[2026-04-28 14:22:23.815] [PRINT]     [OK] filter block present
+[2026-04-28 14:22:23.823] [PRINT]     [OK] sender filter rendered
+[2026-04-28 14:22:23.831] [PRINT]     [OK] date filter rendered
+[2026-04-28 14:22:23.843] [PRINT]     [OK] hints block present
+[2026-04-28 14:22:23.853] [PRINT]     [OK] 'You asked' footer present
+[2026-04-28 14:22:23.864] [PRINT]     [OK] completed_tasks has search input
+[2026-04-28 14:22:23.874] [PRINT]     [OK] Tier 1 sees status no_results
+[2026-04-28 14:22:23.881] [PRINT]   -> All 8 checks passed.
+[2026-04-28 14:22:23.888] [PRINT] 
+[2026-04-28 14:22:23.888] [PRINT] ======================================================================
+[2026-04-28 14:22:23.896] [PRINT] 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1
+[2026-04-28 14:22:23.905] [PRINT] ======================================================================
+[2026-04-28 14:22:23.913] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 14:22:23.914] [PRINT] 
+[2026-04-28 14:22:23.914] [PRINT] --- turn 1 friendly_summary ---
+[2026-04-28 14:22:23.924] [PRINT] Created folder: Finance
+[2026-04-28 14:22:23.937] [PRINT] --- end turn 1 friendly_summary ---
+[2026-04-28 14:22:23.945] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 11, "total": 11, "max": 1000000}
+[2026-04-28 14:22:23.946] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 9, "total": 20, "max": 1000000, "response_preview": "Created folder: Finance"}
+[2026-04-28 14:22:23.947] [PRINT] 
+[2026-04-28 14:22:23.947] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:23.957] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:22:23.968] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:23.979] [PRINT]    Summary: none
+[2026-04-28 14:22:23.991] [PRINT]    Recent messages: 2
+[2026-04-28 14:22:24.003] [PRINT]       USER: Create a folder called Finance.
+[2026-04-28 14:22:24.012] [PRINT]       ASSISTANT: Created folder: Finance
+[2026-04-28 14:22:24.022] [PRINT] 
+[2026-04-28 14:22:24.022] [PRINT]    Final context: 93 chars (~23 tokens)
+[2026-04-28 14:22:24.033] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:24.042] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~23 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 93, "context_tokens_est": 23}
+[2026-04-28 14:22:24.043] [PRINT] 
+[2026-04-28 14:22:24.043] [PRINT] --- turn 2 Tier 1 user_prompt (after turn 1 success) ---
+[2026-04-28 14:22:24.052] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:22:24.052] [PRINT] USER: Create a folder called Finance.
+[2026-04-28 14:22:24.052] [PRINT] ASSISTANT: Created folder: Finance
+[2026-04-28 14:22:24.052] [PRINT] 
+[2026-04-28 14:22:24.052] [PRINT] 
+[2026-04-28 14:22:24.052] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:22:24.052] [PRINT] - [2026-04-28T00:00:00Z] drive_agent.create_folder: folder_path: Finance -> success: folder_id: folder_xyz
+[2026-04-28 14:22:24.052] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:22:24.052] [PRINT] 
+[2026-04-28 14:22:24.052] [PRINT] CURRENT USER MESSAGE: Now create a Q1 Budget sheet inside it.
+[2026-04-28 14:22:24.062] [PRINT] --- end turn 2 Tier 1 user_prompt (after turn 1 success) ---
+[2026-04-28 14:22:24.071] [PRINT] 
+[2026-04-28 14:22:24.071] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:24.078] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:22:24.087] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:24.098] [PRINT]    Summary: none
+[2026-04-28 14:22:24.112] [PRINT]    Recent messages: 2
+[2026-04-28 14:22:24.125] [PRINT]       USER: Create a folder called Finance.
+[2026-04-28 14:22:24.139] [PRINT]       ASSISTANT: Created folder: Finance
+[2026-04-28 14:22:24.154] [PRINT] 
+[2026-04-28 14:22:24.154] [PRINT]    Final context: 93 chars (~23 tokens)
+[2026-04-28 14:22:24.171] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:24.186] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~23 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 93, "context_tokens_est": 23}
+[2026-04-28 14:22:24.188] [PRINT] 
+[2026-04-28 14:22:24.188] [PRINT]   Result for 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1:
+[2026-04-28 14:22:24.202] [PRINT]     [OK] memory carries folder name
+[2026-04-28 14:22:24.217] [PRINT]     [OK] memory does NOT need folder_id (template intentionally omits it)
+[2026-04-28 14:22:24.231] [PRINT]     [OK] completed_tasks carries folder_id
+[2026-04-28 14:22:24.241] [PRINT]     [OK] completed_tasks carries agent.tool
+[2026-04-28 14:22:24.251] [PRINT]     [OK] completed_tasks status success
+[2026-04-28 14:22:24.260] [PRINT]     [OK] completed_tasks param surfaced
+[2026-04-28 14:22:24.267] [PRINT]     [OK] turn 2 user msg reaches Tier 1
+[2026-04-28 14:22:24.276] [PRINT]     [OK] both channels combine to make folder reachable
+[2026-04-28 14:22:24.282] [PRINT]   -> All 8 checks passed.
+[2026-04-28 14:22:24.290] [PRINT] 
+[2026-04-28 14:22:24.290] [PRINT] ======================================================================
+[2026-04-28 14:22:24.296] [PRINT] 8. Calendar humanized dates survive in memory
+[2026-04-28 14:22:24.303] [PRINT] ======================================================================
+[2026-04-28 14:22:24.311] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 14:22:24.311] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 14, "total": 14, "max": 1000000}
+[2026-04-28 14:22:24.312] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 58, "total": 72, "max": 1000000, "response_preview": "Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM\nInvitations sent to: alice@example.com\nView event: https://calendar.google.com/event?eid=evt_abc123"}
+[2026-04-28 14:22:24.312] [PRINT] 
+[2026-04-28 14:22:24.312] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:24.319] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:22:24.325] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:24.333] [PRINT]    Summary: none
+[2026-04-28 14:22:24.341] [PRINT]    Recent messages: 2
+[2026-04-28 14:22:24.350] [PRINT]       USER: Schedule Demo Sync at 2pm tomorrow.
+[2026-04-28 14:22:24.357] [PRINT]       ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM...
+[2026-04-28 14:22:24.364] [PRINT] 
+[2026-04-28 14:22:24.364] [PRINT]    Final context: 254 chars (~63 tokens)
+[2026-04-28 14:22:24.373] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:22:24.380] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~63 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 254, "context_tokens_est": 63}
+[2026-04-28 14:22:24.381] [PRINT] 
+[2026-04-28 14:22:24.381] [PRINT] --- memory history_text ---
+[2026-04-28 14:22:24.390] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:22:24.390] [PRINT] USER: Schedule Demo Sync at 2pm tomorrow.
+[2026-04-28 14:22:24.390] [PRINT] ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:22:24.390] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:22:24.390] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:22:24.399] [PRINT] --- end memory history_text ---
+[2026-04-28 14:22:24.407] [PRINT] 
+[2026-04-28 14:22:24.407] [PRINT]   Result for 8. Calendar humanized dates survive in memory:
+[2026-04-28 14:22:24.414] [PRINT]     [OK] month name present
+[2026-04-28 14:22:24.422] [PRINT]     [OK] year present
+[2026-04-28 14:22:24.430] [PRINT]     [OK] 12-hour clock present
+[2026-04-28 14:22:24.437] [PRINT]     [OK] raw ISO NOT present
+[2026-04-28 14:22:24.446] [PRINT]     [OK] Z-suffixed ISO NOT present
+[2026-04-28 14:22:24.454] [PRINT]   -> All 5 checks passed.
+[2026-04-28 14:22:24.461] [PRINT] 
+[2026-04-28 14:22:24.461] [PRINT] ======================================================================
+[2026-04-28 14:22:24.469] [PRINT] CROSS-TURN CONTEXT REGRESSION SUMMARY
+[2026-04-28 14:22:24.476] [PRINT] ======================================================================
+[2026-04-28 14:22:24.483] [PRINT]   [PASS] 1. Single-step success (create_event)
+[2026-04-28 14:22:24.492] [PRINT]   [PASS] 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs
+[2026-04-28 14:22:24.506] [PRINT]   [PASS] 3. Pause path — real _build_rich_approval_message + completed bullets
+[2026-04-28 14:22:24.517] [PRINT]   [PASS] 4. Resume after approval — multi-step rendering preserves URLs
+[2026-04-28 14:22:24.531] [PRINT]   [PASS] 5. Error path — humanizer + 'You asked' footer
+[2026-04-28 14:22:24.561] [PRINT]   [PASS] 6. No-results path — filter-aware hints
+[2026-04-28 14:22:24.571] [PRINT]   [PASS] 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1
+[2026-04-28 14:22:24.582] [PRINT]   [PASS] 8. Calendar humanized dates survive in memory
+[2026-04-28 14:22:24.595] [PRINT] ----------------------------------------------------------------------
+[2026-04-28 14:22:24.605] [PRINT]   8/8 scenarios passed.
+[2026-04-28 14:22:46.135] [PRINT] Created with headers:
+[2026-04-28 14:22:46.161] [PRINT]  
+[2026-04-28 14:22:46.178] [PRINT] 'Added tab **Food** to the spreadsheet. Headers seeded in row 1.'
+[2026-04-28 14:22:46.200] [PRINT] Created without headers:
+[2026-04-28 14:22:46.221] [PRINT]  
+[2026-04-28 14:22:46.243] [PRINT] 'Added tab **Non-Food** to the spreadsheet.'
+[2026-04-28 14:22:46.263] [PRINT] Idempotent:
+[2026-04-28 14:22:46.279] [PRINT]  
+[2026-04-28 14:22:46.306] [PRINT] 'Tab **Existing** already existed in the spreadsheet — no change made.'
+[2026-04-28 14:22:46.331] [PRINT] With warning:
+[2026-04-28 14:22:46.354] [PRINT]  
+[2026-04-28 14:22:46.361] [PRINT] 'Added tab **Q1** to the spreadsheet.\nNote: Tab Q1 was created, but writing the header row failed: 403'
+[2026-04-28 14:22:46.368] [PRINT] All template scenarios PASS
+[2026-04-28 14:27:03.871] [PRINT] ============================================================
+[2026-04-28 14:27:03.899] [PRINT] TAB-HANDLING FIX VERIFICATION
+[2026-04-28 14:27:03.912] [PRINT] ============================================================
+[2026-04-28 14:27:03.924] [PRINT] 
+[2026-04-28 14:27:03.924] [PRINT] All checks passed:
+[2026-04-28 14:27:03.938] [PRINT]   [OK] add_sheet_tab declared in agent_capabilities_v3
+[2026-04-28 14:27:03.963] [PRINT]   [OK] add_sheet_tab function + TOOL_REGISTRY entry in sheets_agent_api
+[2026-04-28 14:27:03.976] [PRINT]   [OK] read_sheet now returns error_type='tab_not_found' for missing tabs
+[2026-04-28 14:27:03.992] [PRINT]   [OK] tool_filter Block L injects on TestURLERR pattern
+[2026-04-28 14:27:04.009] [PRINT]   [OK] tool_filter Block L does NOT over-inject on routine sheet writes
+[2026-04-28 14:27:04.018] [PRINT]   [OK] tool_filter Block L does NOT fire when only one signal is present
+[2026-04-28 14:27:04.027] [PRINT]   [OK] supervisor planner Rule 19 added with add_sheet_tab guidance
+[2026-04-28 14:27:04.040] [PRINT]   [OK] supervisor planner Rule 17 has Rule 19 escape clause
+[2026-04-28 14:27:04.051] [PRINT]   [OK] add_sheet_tab registered as MODERATE in ACTION_RISK_LEVELS
+[2026-04-28 14:27:04.067] [PRINT]   [OK] response_templates has add_sheet_tab formatter (no LLM safety net)
+[2026-04-28 14:27:04.078] [PRINT]   [OK] _humanize_api_error surfaces missing tab name from parse-range error
+[2026-04-28 14:27:22.716] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-04-28 14:27:22.790] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-04-28 14:27:22.798] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-04-28 14:27:22.808] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-04-28 14:27:22.816] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-04-28 14:27:22.841] [PRINT] 
+[2026-04-28 14:27:22.841] [PRINT] ======================================================================
+[2026-04-28 14:27:22.860] [PRINT] 1. Single-step success (create_event)
+[2026-04-28 14:27:22.870] [PRINT] ======================================================================
+[2026-04-28 14:27:23.210] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 14:27:23.212] [PRINT] 
+[2026-04-28 14:27:23.212] [PRINT] --- friendly_summary persisted to memory ---
+[2026-04-28 14:27:23.229] [PRINT] Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:27:23.229] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:27:23.229] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:27:23.246] [PRINT] --- end friendly_summary persisted to memory ---
+[2026-04-28 14:27:23.264] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 17, "total": 17, "max": 1000000}
+[2026-04-28 14:27:23.266] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 58, "total": 75, "max": 1000000, "response_preview": "Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM\nInvitations sent to: alice@example.com\nView event: https://calendar.google.com/event?eid=evt_abc123"}
+[2026-04-28 14:27:23.267] [PRINT] 
+[2026-04-28 14:27:23.267] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:23.282] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:27:23.295] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:23.312] [PRINT]    Summary: none
+[2026-04-28 14:27:23.324] [PRINT]    Recent messages: 2
+[2026-04-28 14:27:23.341] [PRINT]       USER: Schedule a demo sync tomorrow at 2pm with Alice.
+[2026-04-28 14:27:23.355] [PRINT]       ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM...
+[2026-04-28 14:27:23.371] [PRINT] 
+[2026-04-28 14:27:23.371] [PRINT]    Final context: 267 chars (~66 tokens)
+[2026-04-28 14:27:23.381] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:23.394] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~66 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 267, "context_tokens_est": 66}
+[2026-04-28 14:27:23.395] [PRINT] 
+[2026-04-28 14:27:23.395] [PRINT] --- Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:27:23.408] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:27:23.408] [PRINT] USER: Schedule a demo sync tomorrow at 2pm with Alice.
+[2026-04-28 14:27:23.408] [PRINT] ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:27:23.408] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:27:23.408] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:27:23.408] [PRINT] 
+[2026-04-28 14:27:23.408] [PRINT] 
+[2026-04-28 14:27:23.408] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:27:23.408] [PRINT] - [2026-04-28T00:00:00Z] calendar_agent.create_event: summary: Demo Sync, start_time: 2026-04-28T14:00:00 -> success: event_id: evt_abc123
+[2026-04-28 14:27:23.408] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:27:23.408] [PRINT] 
+[2026-04-28 14:27:23.408] [PRINT] CURRENT USER MESSAGE: Move that event to 4pm instead.
+[2026-04-28 14:27:23.423] [PRINT] --- end Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:27:23.433] [PRINT] 
+[2026-04-28 14:27:23.433] [PRINT]   Result for 1. Single-step success (create_event):
+[2026-04-28 14:27:23.448] [PRINT]     [OK] event_id reachable
+[2026-04-28 14:27:23.463] [PRINT]     [OK] event URL reachable
+[2026-04-28 14:27:23.477] [PRINT]     [OK] humanized date preserved
+[2026-04-28 14:27:23.497] [PRINT]     [OK] event title preserved
+[2026-04-28 14:27:23.508] [PRINT]     [OK] attendee preserved
+[2026-04-28 14:27:23.516] [PRINT]     [OK] completed_tasks holds event_id
+[2026-04-28 14:27:23.527] [PRINT]     [OK] follow-up message included
+[2026-04-28 14:27:23.544] [PRINT]   -> All 7 checks passed.
+[2026-04-28 14:27:23.557] [PRINT] 
+[2026-04-28 14:27:23.557] [PRINT] ======================================================================
+[2026-04-28 14:27:23.571] [PRINT] 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs
+[2026-04-28 14:27:23.584] [PRINT] ======================================================================
+[2026-04-28 14:27:23.597] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 3, "all_templated": true}
+[2026-04-28 14:27:23.598] [PRINT] 
+[2026-04-28 14:27:23.598] [PRINT] --- friendly_summary ---
+[2026-04-28 14:27:23.612] [PRINT] Here's what I did across these steps:
+[2026-04-28 14:27:23.612] [PRINT] 
+[2026-04-28 14:27:23.612] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:27:23.612] [PRINT] Created folder: Finance
+[2026-04-28 14:27:23.612] [PRINT] 
+[2026-04-28 14:27:23.612] [PRINT] **Step 2 — Create Q1 Budget spreadsheet:**
+[2026-04-28 14:27:23.612] [PRINT] Created spreadsheet **Q1 Budget**: https://docs.google.com/spreadsheets/d/sheet_q1abc/edit
+[2026-04-28 14:27:23.612] [PRINT] 
+[2026-04-28 14:27:23.612] [PRINT] **Step 3 — Create Q1 Plan doc with content:**
+[2026-04-28 14:27:23.612] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 14:27:23.612] [PRINT] 
+[2026-04-28 14:27:23.612] [PRINT] All set.
+[2026-04-28 14:27:23.622] [PRINT] --- end friendly_summary ---
+[2026-04-28 14:27:23.635] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 29, "total": 29, "max": 1000000}
+[2026-04-28 14:27:23.637] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 103, "total": 132, "max": 1000000, "response_preview": "Here's what I did across these steps:\n\n**Step 1 — Create Finance folder:**\nCreated folder: Finance\n\n**Step 2 — Create Q1 Budget spreadsheet:**\nCreated spreadsheet **Q1 Budget**: https://docs.google.co..."}
+[2026-04-28 14:27:23.638] [PRINT] 
+[2026-04-28 14:27:23.638] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:23.650] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:27:23.661] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:23.670] [PRINT]    Summary: none
+[2026-04-28 14:27:23.679] [PRINT]    Recent messages: 2
+[2026-04-28 14:27:23.686] [PRINT]       USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc wi...
+[2026-04-28 14:27:23.694] [PRINT]       ASSISTANT: Here's what I did across these steps:
+[2026-04-28 14:27:23.694] [PRINT] 
+[2026-04-28 14:27:23.694] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:27:23.694] [PRINT] Creat...
+[2026-04-28 14:27:23.701] [PRINT] 
+[2026-04-28 14:27:23.701] [PRINT]    Final context: 510 chars (~127 tokens)
+[2026-04-28 14:27:23.707] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:23.713] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~127 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 510, "context_tokens_est": 127}
+[2026-04-28 14:27:23.714] [PRINT] 
+[2026-04-28 14:27:23.714] [PRINT] --- Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:27:23.722] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:27:23.722] [PRINT] USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc with some content.
+[2026-04-28 14:27:23.722] [PRINT] ASSISTANT: Here's what I did across these steps:
+[2026-04-28 14:27:23.722] [PRINT] 
+[2026-04-28 14:27:23.722] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:27:23.722] [PRINT] Created folder: Finance
+[2026-04-28 14:27:23.722] [PRINT] 
+[2026-04-28 14:27:23.722] [PRINT] **Step 2 — Create Q1 Budget spreadsheet:**
+[2026-04-28 14:27:23.722] [PRINT] Created spreadsheet **Q1 Budget**: https://docs.google.com/spreadsheets/d/sheet_q1abc/edit
+[2026-04-28 14:27:23.722] [PRINT] 
+[2026-04-28 14:27:23.722] [PRINT] **Step 3 — Create Q1 Plan doc with content:**
+[2026-04-28 14:27:23.722] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 14:27:23.722] [PRINT] 
+[2026-04-28 14:27:23.722] [PRINT] All set.
+[2026-04-28 14:27:23.722] [PRINT] 
+[2026-04-28 14:27:23.722] [PRINT] 
+[2026-04-28 14:27:23.722] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:27:23.722] [PRINT] - [2026-04-28T00:00:00Z] drive_agent.create_folder: folder_path: Finance -> success: folder_id: folder_xyz
+[2026-04-28 14:27:23.722] [PRINT] - [2026-04-28T00:00:00Z] sheets_agent.create_sheet: title: Q1 Budget -> success: title: Q1 Budget
+[2026-04-28 14:27:23.722] [PRINT] - [2026-04-28T00:00:00Z] docs_agent.create_doc_with_content: title: Q1 Plan -> success: document_id: doc_q1plan, document_url: https://docs.google.com/document/d/doc_q, title: Q1 Plan
+[2026-04-28 14:27:23.722] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:27:23.722] [PRINT] 
+[2026-04-28 14:27:23.722] [PRINT] CURRENT USER MESSAGE: Now share the doc with bob@example.com.
+[2026-04-28 14:27:23.731] [PRINT] --- end Tier 1 user_prompt for follow-up turn ---
+[2026-04-28 14:27:23.739] [PRINT] 
+[2026-04-28 14:27:23.739] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:23.745] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:27:23.752] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:23.757] [PRINT]    Summary: none
+[2026-04-28 14:27:23.765] [PRINT]    Recent messages: 2
+[2026-04-28 14:27:23.772] [PRINT]       USER: Create a Finance folder, then a Q1 Budget sheet inside it, then a Q1 Plan doc wi...
+[2026-04-28 14:27:23.779] [PRINT]       ASSISTANT: Here's what I did across these steps:
+[2026-04-28 14:27:23.779] [PRINT] 
+[2026-04-28 14:27:23.779] [PRINT] **Step 1 — Create Finance folder:**
+[2026-04-28 14:27:23.779] [PRINT] Creat...
+[2026-04-28 14:27:23.786] [PRINT] 
+[2026-04-28 14:27:23.786] [PRINT]    Final context: 510 chars (~127 tokens)
+[2026-04-28 14:27:23.794] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:23.803] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~127 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 510, "context_tokens_est": 127}
+[2026-04-28 14:27:23.804] [PRINT] 
+[2026-04-28 14:27:23.804] [PRINT]   Result for 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs:
+[2026-04-28 14:27:23.811] [PRINT]     [OK] narrator opener present
+[2026-04-28 14:27:23.820] [PRINT]     [OK] narrator closer present
+[2026-04-28 14:27:23.831] [PRINT]     [OK] step 1 heading present
+[2026-04-28 14:27:23.842] [PRINT]     [OK] sheet URL in memory text
+[2026-04-28 14:27:23.852] [PRINT]     [OK] doc URL in memory text
+[2026-04-28 14:27:23.861] [PRINT]     [OK] folder_id surfaces via completed_tasks
+[2026-04-28 14:27:23.872] [PRINT]     [OK] folder_id reachable end-to-end
+[2026-04-28 14:27:23.881] [PRINT]     [OK] sheet_id reachable end-to-end
+[2026-04-28 14:27:23.890] [PRINT]     [OK] doc_id reachable end-to-end
+[2026-04-28 14:27:23.898] [PRINT]     [OK] doc id surfaces via completed_tasks (priority_keys)
+[2026-04-28 14:27:23.907] [PRINT]   -> All 10 checks passed.
+[2026-04-28 14:27:23.914] [PRINT] 
+[2026-04-28 14:27:23.914] [PRINT] ======================================================================
+[2026-04-28 14:27:23.921] [PRINT] 3. Pause path — real _build_rich_approval_message + completed bullets
+[2026-04-28 14:27:23.930] [PRINT] ======================================================================
+[2026-04-28 14:27:23.939] [PRINT] 
+[2026-04-28 14:27:23.939] [PRINT] --- _render_completed_so_far block ---
+[2026-04-28 14:27:23.948] [PRINT] 
+[2026-04-28 14:27:23.948] [PRINT] **Completed so far:**
+[2026-04-28 14:27:23.948] [PRINT] - Found 2 emails
+[2026-04-28 14:27:23.958] [PRINT] --- end _render_completed_so_far block ---
+[2026-04-28 14:27:23.970] [PRINT] 
+[2026-04-28 14:27:23.970] [PRINT] --- full pause message persisted to memory ---
+[2026-04-28 14:27:23.985] [PRINT] **Completed so far:**
+[2026-04-28 14:27:23.985] [PRINT] - Found 2 emails
+[2026-04-28 14:27:23.985] [PRINT] 
+[2026-04-28 14:27:23.985] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-28 14:27:23.985] [PRINT] 
+[2026-04-28 14:27:23.985] [PRINT] Step 2 of 2
+[2026-04-28 14:27:23.985] [PRINT] 
+[2026-04-28 14:27:23.985] [PRINT] **Reply to the first Acme invoice email**
+[2026-04-28 14:27:23.985] [PRINT] 
+[2026-04-28 14:27:23.985] [PRINT] **Replying to Email**
+[2026-04-28 14:27:23.985] [PRINT] - **Original subject:** Re: Acme invoice #0
+[2026-04-28 14:27:23.985] [PRINT] - **Original sender:** sender0@example.com
+[2026-04-28 14:27:23.985] [PRINT] - **Original date:** 2026-04-26
+[2026-04-28 14:27:23.985] [PRINT] - **Reply preview:**
+[2026-04-28 14:27:23.985] [PRINT]   > Acknowledged — we'll process this shortly.
+[2026-04-28 14:27:23.985] [PRINT] 
+[2026-04-28 14:27:23.985] [PRINT] ---
+[2026-04-28 14:27:23.985] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-28 14:27:23.999] [PRINT] --- end full pause message persisted to memory ---
+[2026-04-28 14:27:24.015] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 19, "total": 19, "max": 1000000}
+[2026-04-28 14:27:24.016] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 123, "total": 142, "max": 1000000, "response_preview": "**Completed so far:**\n- Found 2 emails\n\n**Action Requires Approval** — DANGEROUS\n\nStep 2 of 2\n\n**Reply to the first Acme invoice email**\n\n**Replying to Email**\n- **Original subject:** Re: Acme invoice..."}
+[2026-04-28 14:27:24.017] [PRINT] 
+[2026-04-28 14:27:24.017] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:24.029] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:27:24.045] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:24.056] [PRINT]    Summary: none
+[2026-04-28 14:27:24.069] [PRINT]    Recent messages: 2
+[2026-04-28 14:27:24.082] [PRINT]       USER: Find emails about the Acme invoice and reply to the first one.
+[2026-04-28 14:27:24.094] [PRINT]       ASSISTANT: **Completed so far:**
+[2026-04-28 14:27:24.094] [PRINT] - Found 2 emails
+[2026-04-28 14:27:24.094] [PRINT] 
+[2026-04-28 14:27:24.094] [PRINT] **Action Requires Approval** — DANGEROUS...
+[2026-04-28 14:27:24.102] [PRINT] 
+[2026-04-28 14:27:24.102] [PRINT]    Final context: 504 chars (~126 tokens)
+[2026-04-28 14:27:24.116] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:24.127] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~126 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 504, "context_tokens_est": 126}
+[2026-04-28 14:27:24.128] [PRINT] 
+[2026-04-28 14:27:24.128] [PRINT] --- Tier 1 user_prompt while paused ---
+[2026-04-28 14:27:24.136] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:27:24.136] [PRINT] USER: Find emails about the Acme invoice and reply to the first one.
+[2026-04-28 14:27:24.136] [PRINT] ASSISTANT: **Completed so far:**
+[2026-04-28 14:27:24.136] [PRINT] - Found 2 emails
+[2026-04-28 14:27:24.136] [PRINT] 
+[2026-04-28 14:27:24.136] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-04-28 14:27:24.136] [PRINT] 
+[2026-04-28 14:27:24.136] [PRINT] Step 2 of 2
+[2026-04-28 14:27:24.136] [PRINT] 
+[2026-04-28 14:27:24.136] [PRINT] **Reply to the first Acme invoice email**
+[2026-04-28 14:27:24.136] [PRINT] 
+[2026-04-28 14:27:24.136] [PRINT] **Replying to Email**
+[2026-04-28 14:27:24.136] [PRINT] - **Original subject:** Re: Acme invoice #0
+[2026-04-28 14:27:24.136] [PRINT] - **Original sender:** sender0@example.com
+[2026-04-28 14:27:24.136] [PRINT] - **Original date:** 2026-04-26
+[2026-04-28 14:27:24.136] [PRINT] - **Reply preview:**
+[2026-04-28 14:27:24.136] [PRINT]   > Acknowledged — we'll process this shortly.
+[2026-04-28 14:27:24.136] [PRINT] 
+[2026-04-28 14:27:24.136] [PRINT] ---
+[2026-04-28 14:27:24.136] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-04-28 14:27:24.136] [PRINT] 
+[2026-04-28 14:27:24.136] [PRINT] CURRENT USER MESSAGE: Yes, send the reply.
+[2026-04-28 14:27:24.146] [PRINT] --- end Tier 1 user_prompt while paused ---
+[2026-04-28 14:27:24.155] [PRINT] 
+[2026-04-28 14:27:24.155] [PRINT]   Result for 3. Pause path — real _build_rich_approval_message + completed bullets:
+[2026-04-28 14:27:24.165] [PRINT]     [OK] Completed-so-far header present
+[2026-04-28 14:27:24.175] [PRINT]     [OK] compact bullet uses dash prefix
+[2026-04-28 14:27:24.186] [PRINT]     [OK] search count surfaced
+[2026-04-28 14:27:24.197] [PRINT]     [OK] approval scaffolding kept
+[2026-04-28 14:27:24.208] [PRINT]     [OK] step number rendered
+[2026-04-28 14:27:24.218] [PRINT]     [OK] approval description rendered
+[2026-04-28 14:27:24.230] [PRINT]     [OK] display_context: subject surfaced
+[2026-04-28 14:27:24.239] [PRINT]     [OK] display_context: sender surfaced
+[2026-04-28 14:27:24.253] [PRINT]     [OK] approval footer present
+[2026-04-28 14:27:24.266] [PRINT]     [OK] original user query reachable
+[2026-04-28 14:27:24.280] [PRINT]   -> All 10 checks passed.
+[2026-04-28 14:27:24.293] [PRINT] 
+[2026-04-28 14:27:24.293] [PRINT] ======================================================================
+[2026-04-28 14:27:24.304] [PRINT] 4. Resume after approval — multi-step rendering preserves URLs
+[2026-04-28 14:27:24.318] [PRINT] ======================================================================
+[2026-04-28 14:27:24.326] [PRINT] 
+[2026-04-28 14:27:24.326] [PRINT] --- resume rendering output (persisted to memory) ---
+[2026-04-28 14:27:24.337] [PRINT] 
+[2026-04-28 14:27:24.337] [PRINT] **Step 1 — Create Q1 Plan doc with content:**
+[2026-04-28 14:27:24.337] [PRINT] Created **Q1 Plan** with content: https://docs.google.com/document/d/doc_q1plan/edit
+[2026-04-28 14:27:24.337] [PRINT] 
+[2026-04-28 14:27:24.337] [PRINT] **Step 2 — Schedule Demo Sync at 2:00 PM tomorrow:**
+[2026-04-28 14:27:24.337] [PRINT] Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:27:24.337] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:27:24.337] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:27:24.337] [PRINT] 
+[2026-04-28 14:27:24.337] [PRINT] 
+[2026-04-28 14:27:24.337] [PRINT] All steps completed! Is there anything else I can help with?
+[2026-04-28 14:27:24.348] [PRINT] --- end resume rendering output (persisted to memory) ---
+[2026-04-28 14:27:24.356] [PRINT] 
+[2026-04-28 14:27:24.356] [PRINT]   Result for 4. Resume after approval — multi-step rendering preserves URLs:
+[2026-04-28 14:27:24.366] [PRINT]     [OK] doc URL preserved in resume
+[2026-04-28 14:27:24.375] [PRINT]     [OK] event URL preserved in resume
+[2026-04-28 14:27:24.382] [PRINT]     [OK] humanized date preserved
+[2026-04-28 14:27:24.389] [PRINT]     [OK] step heading shape correct
+[2026-04-28 14:27:24.399] [PRINT]     [OK] step heading shape correct (2)
+[2026-04-28 14:27:24.407] [PRINT]   -> All 5 checks passed.
+[2026-04-28 14:27:24.415] [PRINT] 
+[2026-04-28 14:27:24.415] [PRINT] ======================================================================
+[2026-04-28 14:27:24.422] [PRINT] 5. Error path — humanizer + 'You asked' footer
+[2026-04-28 14:27:24.429] [PRINT] ======================================================================
+[2026-04-28 14:27:24.436] [PRINT] 
+[2026-04-28 14:27:24.436] [PRINT] --- error friendly_summary ---
+[2026-04-28 14:27:24.445] [PRINT] **Unable to complete your request**
+[2026-04-28 14:27:24.445] [PRINT] 
+[2026-04-28 14:27:24.445] [PRINT] **Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.
+[2026-04-28 14:27:24.445] [PRINT] **Suggestion:** Your access may have expired. Please try reconnecting your account.
+[2026-04-28 14:27:24.445] [PRINT] 
+[2026-04-28 14:27:24.445] [PRINT] **Failed at step 1:** Schedule team sync
+[2026-04-28 14:27:24.445] [PRINT] 
+[2026-04-28 14:27:24.445] [PRINT] ---
+[2026-04-28 14:27:24.445] [PRINT] **You asked:** Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:27:24.453] [PRINT] --- end error friendly_summary ---
+[2026-04-28 14:27:24.462] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 15, "total": 15, "max": 1000000}
+[2026-04-28 14:27:24.463] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 79, "total": 94, "max": 1000000, "response_preview": "**Unable to complete your request**\n\n**Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.\n**Suggestion:** Your access may have expired...."}
+[2026-04-28 14:27:24.463] [PRINT] 
+[2026-04-28 14:27:24.463] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:24.470] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:27:24.478] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:24.486] [PRINT]    Summary: none
+[2026-04-28 14:27:24.494] [PRINT]    Recent messages: 2
+[2026-04-28 14:27:24.503] [PRINT]       USER: Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:27:24.512] [PRINT]       ASSISTANT: **Unable to complete your request**
+[2026-04-28 14:27:24.512] [PRINT] 
+[2026-04-28 14:27:24.512] [PRINT] **Issue:** Calendar API returned HTTP 403: ...
+[2026-04-28 14:27:24.524] [PRINT] 
+[2026-04-28 14:27:24.524] [PRINT]    Final context: 414 chars (~103 tokens)
+[2026-04-28 14:27:24.535] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:24.544] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~103 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 414, "context_tokens_est": 103}
+[2026-04-28 14:27:24.545] [PRINT] 
+[2026-04-28 14:27:24.545] [PRINT] --- Tier 1 user_prompt after error ---
+[2026-04-28 14:27:24.559] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:27:24.559] [PRINT] USER: Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:27:24.559] [PRINT] ASSISTANT: **Unable to complete your request**
+[2026-04-28 14:27:24.559] [PRINT] 
+[2026-04-28 14:27:24.559] [PRINT] **Issue:** Calendar API returned HTTP 403: You don't have permission to perform this action on the selected resource.
+[2026-04-28 14:27:24.559] [PRINT] **Suggestion:** Your access may have expired. Please try reconnecting your account.
+[2026-04-28 14:27:24.559] [PRINT] 
+[2026-04-28 14:27:24.559] [PRINT] **Failed at step 1:** Schedule team sync
+[2026-04-28 14:27:24.559] [PRINT] 
+[2026-04-28 14:27:24.559] [PRINT] ---
+[2026-04-28 14:27:24.559] [PRINT] **You asked:** Schedule a team sync tomorrow at 2pm.
+[2026-04-28 14:27:24.559] [PRINT] 
+[2026-04-28 14:27:24.559] [PRINT] CURRENT USER MESSAGE: Try again with a different calendar then.
+[2026-04-28 14:27:24.574] [PRINT] --- end Tier 1 user_prompt after error ---
+[2026-04-28 14:27:24.587] [PRINT] 
+[2026-04-28 14:27:24.587] [PRINT]   Result for 5. Error path — humanizer + 'You asked' footer:
+[2026-04-28 14:27:24.602] [PRINT]     [OK] permission verdict present
+[2026-04-28 14:27:24.614] [PRINT]     [OK] 'You asked' footer present
+[2026-04-28 14:27:24.628] [PRINT]     [OK] user request echoed
+[2026-04-28 14:27:24.640] [PRINT]     [OK] HttpError repr stripped
+[2026-04-28 14:27:24.651] [PRINT]     [OK] URL stripped from displayed err
+[2026-04-28 14:27:24.666] [PRINT]     [OK] Tier 1 still sees user goal
+[2026-04-28 14:27:24.677] [PRINT]     [OK] follow-up reaches Tier 1
+[2026-04-28 14:27:24.687] [PRINT]   -> All 7 checks passed.
+[2026-04-28 14:27:24.696] [PRINT] 
+[2026-04-28 14:27:24.696] [PRINT] ======================================================================
+[2026-04-28 14:27:24.704] [PRINT] 6. No-results path — filter-aware hints
+[2026-04-28 14:27:24.714] [PRINT] ======================================================================
+[2026-04-28 14:27:24.724] [PRINT] 
+[2026-04-28 14:27:24.724] [PRINT] --- no-results friendly_summary ---
+[2026-04-28 14:27:24.735] [PRINT] **Search completed — No results found**
+[2026-04-28 14:27:24.735] [PRINT] 
+[2026-04-28 14:27:24.735] [PRINT] No emails were found matching your search criteria.
+[2026-04-28 14:27:24.735] [PRINT] 
+[2026-04-28 14:27:24.735] [PRINT] **Filters used:**
+[2026-04-28 14:27:24.735] [PRINT] - Search query: `invoice`
+[2026-04-28 14:27:24.735] [PRINT] - From: `acme@example.com`
+[2026-04-28 14:27:24.735] [PRINT] - After: `2026-01-01`
+[2026-04-28 14:27:24.735] [PRINT] 
+[2026-04-28 14:27:24.735] [PRINT] **Suggestions:**
+[2026-04-28 14:27:24.735] [PRINT] - Double-check the sender's email address for a typo or wrong domain.
+[2026-04-28 14:27:24.735] [PRINT] - Try removing the start-date filter to include older messages.
+[2026-04-28 14:27:24.735] [PRINT] 
+[2026-04-28 14:27:24.735] [PRINT] ---
+[2026-04-28 14:27:24.735] [PRINT] **You asked:** Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:27:24.749] [PRINT] --- end no-results friendly_summary ---
+[2026-04-28 14:27:24.762] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 17, "total": 17, "max": 1000000}
+[2026-04-28 14:27:24.763] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 102, "total": 119, "max": 1000000, "response_preview": "**Search completed — No results found**\n\nNo emails were found matching your search criteria.\n\n**Filters used:**\n- Search query: `invoice`\n- From: `acme@example.com`\n- After: `2026-01-01`\n\n**Suggestion..."}
+[2026-04-28 14:27:24.764] [PRINT] 
+[2026-04-28 14:27:24.764] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:24.778] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:27:24.794] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:24.808] [PRINT]    Summary: none
+[2026-04-28 14:27:24.823] [PRINT]    Recent messages: 2
+[2026-04-28 14:27:24.836] [PRINT]       USER: Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:27:24.848] [PRINT]       ASSISTANT: **Search completed — No results found**
+[2026-04-28 14:27:24.848] [PRINT] 
+[2026-04-28 14:27:24.848] [PRINT] No emails were found matching your sear...
+[2026-04-28 14:27:24.859] [PRINT] 
+[2026-04-28 14:27:24.859] [PRINT]    Final context: 524 chars (~131 tokens)
+[2026-04-28 14:27:24.871] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:24.882] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~131 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 524, "context_tokens_est": 131}
+[2026-04-28 14:27:24.882] [PRINT] 
+[2026-04-28 14:27:24.882] [PRINT] --- Tier 1 user_prompt after no-results ---
+[2026-04-28 14:27:24.893] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:27:24.893] [PRINT] USER: Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:27:24.893] [PRINT] ASSISTANT: **Search completed — No results found**
+[2026-04-28 14:27:24.893] [PRINT] 
+[2026-04-28 14:27:24.893] [PRINT] No emails were found matching your search criteria.
+[2026-04-28 14:27:24.893] [PRINT] 
+[2026-04-28 14:27:24.893] [PRINT] **Filters used:**
+[2026-04-28 14:27:24.893] [PRINT] - Search query: `invoice`
+[2026-04-28 14:27:24.893] [PRINT] - From: `acme@example.com`
+[2026-04-28 14:27:24.893] [PRINT] - After: `2026-01-01`
+[2026-04-28 14:27:24.893] [PRINT] 
+[2026-04-28 14:27:24.893] [PRINT] **Suggestions:**
+[2026-04-28 14:27:24.893] [PRINT] - Double-check the sender's email address for a typo or wrong domain.
+[2026-04-28 14:27:24.893] [PRINT] - Try removing the start-date filter to include older messages.
+[2026-04-28 14:27:24.893] [PRINT] 
+[2026-04-28 14:27:24.893] [PRINT] ---
+[2026-04-28 14:27:24.893] [PRINT] **You asked:** Find emails from acme@example.com about invoices since January.
+[2026-04-28 14:27:24.893] [PRINT] 
+[2026-04-28 14:27:24.893] [PRINT] 
+[2026-04-28 14:27:24.893] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:27:24.893] [PRINT] - [2026-04-28T00:00:00Z] gmail_agent.search_emails: query: invoice -> no_results: count: 0
+[2026-04-28 14:27:24.893] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:27:24.893] [PRINT] 
+[2026-04-28 14:27:24.893] [PRINT] CURRENT USER MESSAGE: Try the last 6 months instead.
+[2026-04-28 14:27:24.902] [PRINT] --- end Tier 1 user_prompt after no-results ---
+[2026-04-28 14:27:24.914] [PRINT] 
+[2026-04-28 14:27:24.914] [PRINT]   Result for 6. No-results path — filter-aware hints:
+[2026-04-28 14:27:24.921] [PRINT]     [OK] no-results header
+[2026-04-28 14:27:24.931] [PRINT]     [OK] filter block present
+[2026-04-28 14:27:24.940] [PRINT]     [OK] sender filter rendered
+[2026-04-28 14:27:24.947] [PRINT]     [OK] date filter rendered
+[2026-04-28 14:27:24.953] [PRINT]     [OK] hints block present
+[2026-04-28 14:27:24.959] [PRINT]     [OK] 'You asked' footer present
+[2026-04-28 14:27:24.966] [PRINT]     [OK] completed_tasks has search input
+[2026-04-28 14:27:24.973] [PRINT]     [OK] Tier 1 sees status no_results
+[2026-04-28 14:27:24.980] [PRINT]   -> All 8 checks passed.
+[2026-04-28 14:27:24.986] [PRINT] 
+[2026-04-28 14:27:24.986] [PRINT] ======================================================================
+[2026-04-28 14:27:24.992] [PRINT] 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1
+[2026-04-28 14:27:24.999] [PRINT] ======================================================================
+[2026-04-28 14:27:25.005] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 14:27:25.005] [PRINT] 
+[2026-04-28 14:27:25.005] [PRINT] --- turn 1 friendly_summary ---
+[2026-04-28 14:27:25.012] [PRINT] Created folder: Finance
+[2026-04-28 14:27:25.018] [PRINT] --- end turn 1 friendly_summary ---
+[2026-04-28 14:27:25.025] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 11, "total": 11, "max": 1000000}
+[2026-04-28 14:27:25.026] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 9, "total": 20, "max": 1000000, "response_preview": "Created folder: Finance"}
+[2026-04-28 14:27:25.027] [PRINT] 
+[2026-04-28 14:27:25.027] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:25.034] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:27:25.044] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:25.053] [PRINT]    Summary: none
+[2026-04-28 14:27:25.063] [PRINT]    Recent messages: 2
+[2026-04-28 14:27:25.072] [PRINT]       USER: Create a folder called Finance.
+[2026-04-28 14:27:25.080] [PRINT]       ASSISTANT: Created folder: Finance
+[2026-04-28 14:27:25.087] [PRINT] 
+[2026-04-28 14:27:25.087] [PRINT]    Final context: 93 chars (~23 tokens)
+[2026-04-28 14:27:25.094] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:25.101] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~23 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 93, "context_tokens_est": 23}
+[2026-04-28 14:27:25.101] [PRINT] 
+[2026-04-28 14:27:25.101] [PRINT] --- turn 2 Tier 1 user_prompt (after turn 1 success) ---
+[2026-04-28 14:27:25.108] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:27:25.108] [PRINT] USER: Create a folder called Finance.
+[2026-04-28 14:27:25.108] [PRINT] ASSISTANT: Created folder: Finance
+[2026-04-28 14:27:25.108] [PRINT] 
+[2026-04-28 14:27:25.108] [PRINT] 
+[2026-04-28 14:27:25.108] [PRINT] COMPLETED TASKS (most recent):
+[2026-04-28 14:27:25.108] [PRINT] - [2026-04-28T00:00:00Z] drive_agent.create_folder: folder_path: Finance -> success: folder_id: folder_xyz
+[2026-04-28 14:27:25.108] [PRINT] User may be referencing or modifying a previous task.
+[2026-04-28 14:27:25.108] [PRINT] 
+[2026-04-28 14:27:25.108] [PRINT] CURRENT USER MESSAGE: Now create a Q1 Budget sheet inside it.
+[2026-04-28 14:27:25.114] [PRINT] --- end turn 2 Tier 1 user_prompt (after turn 1 success) ---
+[2026-04-28 14:27:25.121] [PRINT] 
+[2026-04-28 14:27:25.121] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:25.127] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:27:25.134] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:25.140] [PRINT]    Summary: none
+[2026-04-28 14:27:25.147] [PRINT]    Recent messages: 2
+[2026-04-28 14:27:25.154] [PRINT]       USER: Create a folder called Finance.
+[2026-04-28 14:27:25.162] [PRINT]       ASSISTANT: Created folder: Finance
+[2026-04-28 14:27:25.169] [PRINT] 
+[2026-04-28 14:27:25.169] [PRINT]    Final context: 93 chars (~23 tokens)
+[2026-04-28 14:27:25.175] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:25.182] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~23 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 93, "context_tokens_est": 23}
+[2026-04-28 14:27:25.183] [PRINT] 
+[2026-04-28 14:27:25.183] [PRINT]   Result for 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1:
+[2026-04-28 14:27:25.191] [PRINT]     [OK] memory carries folder name
+[2026-04-28 14:27:25.201] [PRINT]     [OK] memory does NOT need folder_id (template intentionally omits it)
+[2026-04-28 14:27:25.209] [PRINT]     [OK] completed_tasks carries folder_id
+[2026-04-28 14:27:25.217] [PRINT]     [OK] completed_tasks carries agent.tool
+[2026-04-28 14:27:25.224] [PRINT]     [OK] completed_tasks status success
+[2026-04-28 14:27:25.232] [PRINT]     [OK] completed_tasks param surfaced
+[2026-04-28 14:27:25.240] [PRINT]     [OK] turn 2 user msg reaches Tier 1
+[2026-04-28 14:27:25.247] [PRINT]     [OK] both channels combine to make folder reachable
+[2026-04-28 14:27:25.255] [PRINT]   -> All 8 checks passed.
+[2026-04-28 14:27:25.263] [PRINT] 
+[2026-04-28 14:27:25.263] [PRINT] ======================================================================
+[2026-04-28 14:27:25.271] [PRINT] 8. Calendar humanized dates survive in memory
+[2026-04-28 14:27:25.279] [PRINT] ======================================================================
+[2026-04-28 14:27:25.287] [INFO] [-]   STEP [response_composer]: template formatting  | {"total_steps": 1, "all_templated": true}
+[2026-04-28 14:27:25.288] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 14, "total": 14, "max": 1000000}
+[2026-04-28 14:27:25.289] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 58, "total": 72, "max": 1000000, "response_preview": "Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM\nInvitations sent to: alice@example.com\nView event: https://calendar.google.com/event?eid=evt_abc123"}
+[2026-04-28 14:27:25.289] [PRINT] 
+[2026-04-28 14:27:25.289] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:25.305] [PRINT] BUILDING LLM CONTEXT
+[2026-04-28 14:27:25.314] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:25.321] [PRINT]    Summary: none
+[2026-04-28 14:27:25.328] [PRINT]    Recent messages: 2
+[2026-04-28 14:27:25.336] [PRINT]       USER: Schedule Demo Sync at 2pm tomorrow.
+[2026-04-28 14:27:25.343] [PRINT]       ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM...
+[2026-04-28 14:27:25.356] [PRINT] 
+[2026-04-28 14:27:25.356] [PRINT]    Final context: 254 chars (~63 tokens)
+[2026-04-28 14:27:25.372] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-28 14:27:25.389] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=2, ~63 tokens  | {"has_summary": false, "recent_messages": 2, "context_chars": 254, "context_tokens_est": 63}
+[2026-04-28 14:27:25.390] [PRINT] 
+[2026-04-28 14:27:25.390] [PRINT] --- memory history_text ---
+[2026-04-28 14:27:25.398] [PRINT] RECENT CONVERSATION:
+[2026-04-28 14:27:25.398] [PRINT] USER: Schedule Demo Sync at 2pm tomorrow.
+[2026-04-28 14:27:25.398] [PRINT] ASSISTANT: Successfully created event 'Demo Sync' on April 28, 2026 from 2:00 PM to 2:30 PM
+[2026-04-28 14:27:25.398] [PRINT] Invitations sent to: alice@example.com
+[2026-04-28 14:27:25.398] [PRINT] View event: https://calendar.google.com/event?eid=evt_abc123
+[2026-04-28 14:27:25.406] [PRINT] --- end memory history_text ---
+[2026-04-28 14:27:25.416] [PRINT] 
+[2026-04-28 14:27:25.416] [PRINT]   Result for 8. Calendar humanized dates survive in memory:
+[2026-04-28 14:27:25.426] [PRINT]     [OK] month name present
+[2026-04-28 14:27:25.435] [PRINT]     [OK] year present
+[2026-04-28 14:27:25.443] [PRINT]     [OK] 12-hour clock present
+[2026-04-28 14:27:25.451] [PRINT]     [OK] raw ISO NOT present
+[2026-04-28 14:27:25.458] [PRINT]     [OK] Z-suffixed ISO NOT present
+[2026-04-28 14:27:25.466] [PRINT]   -> All 5 checks passed.
+[2026-04-28 14:27:25.474] [PRINT] 
+[2026-04-28 14:27:25.474] [PRINT] ======================================================================
+[2026-04-28 14:27:25.481] [PRINT] CROSS-TURN CONTEXT REGRESSION SUMMARY
+[2026-04-28 14:27:25.488] [PRINT] ======================================================================
+[2026-04-28 14:27:25.495] [PRINT]   [PASS] 1. Single-step success (create_event)
+[2026-04-28 14:27:25.504] [PRINT]   [PASS] 2. Multi-step success — G6 narrator preserves all 3 IDs/URLs
+[2026-04-28 14:27:25.510] [PRINT]   [PASS] 3. Pause path — real _build_rich_approval_message + completed bullets
+[2026-04-28 14:27:25.518] [PRINT]   [PASS] 4. Resume after approval — multi-step rendering preserves URLs
+[2026-04-28 14:27:25.528] [PRINT]   [PASS] 5. Error path — humanizer + 'You asked' footer
+[2026-04-28 14:27:25.538] [PRINT]   [PASS] 6. No-results path — filter-aware hints
+[2026-04-28 14:27:25.546] [PRINT]   [PASS] 7. Cross-turn handoff — turn 1 ID visible to turn 2 Tier 1
+[2026-04-28 14:27:25.555] [PRINT]   [PASS] 8. Calendar humanized dates survive in memory
+[2026-04-28 14:27:25.562] [PRINT] ----------------------------------------------------------------------
+[2026-04-28 14:27:25.570] [PRINT]   8/8 scenarios passed.
+[2026-04-28 14:27:37.685] [PRINT] ============================================================
+[2026-04-28 14:27:37.706] [PRINT] FOOTER FIX VERIFICATION
+[2026-04-28 14:27:37.725] [PRINT] ============================================================
+[2026-04-28 14:27:37.749] [PRINT] SCENARIO A: override provided (production threads.py path)
+[2026-04-28 14:27:37.769] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:27:37.790] [PRINT] **Unable to complete your request**
+[2026-04-28 14:27:37.790] [PRINT] 
+[2026-04-28 14:27:37.790] [PRINT] **Issue:** Google Sheets could not find the tab or range `Food`. The tab may not exist in this spreadsheet — check the tab name (case-sensitive) or create it first.
+[2026-04-28 14:27:37.790] [PRINT] ---
+[2026-04-28 14:27:37.790] [PRINT] **What was completed before the error:**
+[2026-04-28 14:27:37.790] [PRINT] - Read source
+[2026-04-28 14:27:37.790] [PRINT] - transform_text
+[2026-04-28 14:27:37.790] [PRINT] 
+[2026-04-28 14:27:37.790] [PRINT] **Failed at step 4:** Check Food tab
+[2026-04-28 14:27:37.790] [PRINT] 
+[2026-04-28 14:27:37.790] [PRINT] ---
+[2026-04-28 14:27:37.790] [PRINT] **You asked:** Extract data from source sheet and paste into destination sheet with Food and Non-Food tabs
+[2026-04-28 14:27:37.809] [PRINT] CHECK A1: 'your request' placeholder NOT present   ->  PASS
+[2026-04-28 14:27:37.825] [PRINT] CHECK A2: real task summary IS rendered             ->  PASS
+[2026-04-28 14:27:37.840] [PRINT] SCENARIO B: no override + cleared state (pre-fix worst case)
+[2026-04-28 14:27:37.852] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:27:37.865] [PRINT] **Unable to complete your request**
+[2026-04-28 14:27:37.865] [PRINT] 
+[2026-04-28 14:27:37.865] [PRINT] **Issue:** Google Sheets could not find the tab or range `Food`. The tab may not exist in this spreadsheet — check the tab name (case-sensitive) or create it first.
+[2026-04-28 14:27:37.865] [PRINT] ---
+[2026-04-28 14:27:37.865] [PRINT] **What was completed before the error:**
+[2026-04-28 14:27:37.865] [PRINT] - Read source
+[2026-04-28 14:27:37.865] [PRINT] - transform_text
+[2026-04-28 14:27:37.865] [PRINT] 
+[2026-04-28 14:27:37.865] [PRINT] **Failed at step 4:** Check Food tab
+[2026-04-28 14:27:37.880] [PRINT] CHECK B1: '**You asked:**' footer fully suppressed  ->  PASS
+[2026-04-28 14:27:37.891] [PRINT] SCENARIO C: legacy state with extracted_info[original_message]
+[2026-04-28 14:27:37.907] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:27:37.918] [PRINT] CHECK C1: legacy state still produces footer       ->  PASS
+[2026-04-28 14:27:37.932] [PRINT] SCENARIO D: defensive — literal 'your request' in state
+[2026-04-28 14:27:37.944] [PRINT] ------------------------------------------------------------
+[2026-04-28 14:27:37.961] [PRINT] CHECK D1: defensive placeholder filter works       ->  PASS
+[2026-04-28 14:27:37.975] [PRINT] ============================================================
+[2026-04-28 14:27:37.984] [PRINT] ALL FOOTER CHECKS PASSED
+[2026-04-28 14:27:37.997] [PRINT] ============================================================

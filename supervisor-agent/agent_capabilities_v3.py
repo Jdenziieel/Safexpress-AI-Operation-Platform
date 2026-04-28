@@ -414,6 +414,17 @@ agent_capabilities = {
                 "returns_detail": "sheets is an array of {sheet_id, title, index, row_count, column_count}.",
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
+            "add_sheet_tab": {
+                "description": "Idempotently add a NEW TAB to an EXISTING spreadsheet. Distinct from create_sheet (which makes a brand-new spreadsheet). Use for the 'create the X / Y tabs if they don't exist' pattern. If a tab with the same title (case-insensitive) already exists, returns success with created=False — no error, no duplicate. Accepts the spreadsheet ID OR a full spreadsheet URL. NEVER use create_sheet for this — that creates an unrelated new spreadsheet.",
+                "args": {
+                    "sheet_id": "str (required) — Google Sheets ID or URL of the EXISTING spreadsheet that should receive the new tab.",
+                    "tab_name": "str (required) — title for the new tab (e.g. 'Food', 'Non-Food', 'Q1 Data'). One tab per call — emit one step per tab when several are needed. Whitespace-trimmed; cannot be empty.",
+                    "headers": "List[str] (optional) — column names to seed row 1 of the newly-created tab. Skipped on the idempotent no-op branch (tab already existed) — use ensure_headers separately to backfill row 1 of an existing tab.",
+                },
+                "returns": ["success", "created", "tab_name", "tab_id", "sheet_id", "headers_applied", "warning", "message", "error", "error_type"],
+                "returns_detail": "created=True when a fresh tab was added; created=False when the tab already existed (idempotent no-op). tab_id is the numeric gid of the resolved tab. headers_applied=True only on the create branch when the optional headers arg was non-empty.",
+                "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
+            },
             "get_sheet_headers": {
                 "description": "Return the header row (row 1) of a specific tab. Useful before column-mapping or before update_sheet to align incoming data. Accepts the spreadsheet ID OR a full spreadsheet URL. Returns an EMPTY headers list when the tab is fresh (row 1 blank) — the planner should pair with ensure_headers to seed row 1 in that case (see Rule 17).",
                 "args": {

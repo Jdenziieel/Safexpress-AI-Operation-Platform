@@ -391,6 +391,61 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                         if companion not in sheets_tools_for_k and companion in sheets_caps_for_k:
                             sheets_tools_for_k.append(companion)
 
+            # Block L (TestURLERR fix): tab-creation safety net.
+            # When the user asks for data to land in named tabs of an
+            # EXISTING spreadsheet and explicitly says to create the tabs
+            # if they don't exist, the classifier must offer add_sheet_tab
+            # to the planner — without it, the planner improvises by
+            # using read_sheet as an existence probe (which raises HTTP 400
+            # on missing tabs and stops the workflow) or by creating a
+            # disposable temporary spreadsheet via create_sheet (wasted
+            # Drive bloat, and the temp tabs aren't even in the user's
+            # destination).
+            # The block fires only when BOTH signals are present:
+            #   (a) the input mentions tabs in the multi-tab sense (the
+            #       Block H tab keywords like "tabs ", "tab named", "tab
+            #       called"), AND
+            #   (b) the input has a conditional-create phrasing like "if
+            #       missing", "if it doesn't have", "create them",
+            #       "create if".
+            # This conservative gating avoids over-injection on routine
+            # single-tab read/write requests where the user already
+            # provided the tab name and isn't asking for tab creation.
+            # Companion: also injects get_sheet_metadata so the planner
+            # can emit a list-tabs step when the response composer
+            # benefits from a "tabs found" line.
+            _TAB_REFERENCE_KEYWORDS = (
+                " tabs ", " tabs,", " tabs.", " tab named ", " tab called ",
+                "sheet tabs", "sheet tab ",
+                "tabs like ", "tabs named ", "tabs called ",
+            )
+            _TAB_CONDITIONAL_CREATE_KEYWORDS = (
+                "create them",
+                "create the tabs", "create the tab", "create tabs", "create tab ",
+                "add them", "add the tabs", "add the tab", "add tabs", "add a tab ",
+                "make them", "make the tabs", "make the tab",
+                "if missing", "if it's missing", "if its missing",
+                "if not exist", "if they don't exist", "if it doesn't exist",
+                "if doesn't have", "if doesnt have", "if it doesn't have", "if it doesnt have",
+                "if there's no", "if there is no", "if not present",
+                "doesn't have ", "doesnt have ",
+            )
+            mentions_tabs = any(kw in input_lower for kw in _TAB_REFERENCE_KEYWORDS)
+            asks_conditional_tab_create = any(
+                kw in input_lower for kw in _TAB_CONDITIONAL_CREATE_KEYWORDS
+            )
+            if mentions_tabs and asks_conditional_tab_create:
+                if (
+                    "add_sheet_tab" not in sheets_tools_for_k
+                    and "add_sheet_tab" in sheets_caps_for_k
+                ):
+                    sheets_tools_for_k.append("add_sheet_tab")
+                if (
+                    "get_sheet_metadata" not in sheets_tools_for_k
+                    and "get_sheet_metadata" in sheets_caps_for_k
+                ):
+                    sheets_tools_for_k.append("get_sheet_metadata")
+
         # "Put X in folder Y" safety net: when the user asks to create a
         # sheet or doc AND references a folder, the planner needs a way to
         # resolve the folder name to a folder_id. Without this, Tier 1 may

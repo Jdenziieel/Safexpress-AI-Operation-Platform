@@ -247,6 +247,7 @@ def read_sheet(
     Returns:
         Dictionary with sheet data
     """
+    effective_range: Optional[str] = None
     try:
         if not credentials_dict:
             return {"success": False, "error": "Credentials required"}
@@ -287,7 +288,26 @@ def read_sheet(
         }
 
     except HttpError as e:
-        return {"success": False, "error": f"Google Sheets API error: {str(e)}"}
+        # Google Sheets returns HTTP 400 with body "Unable to parse range:
+        # <X>" when the requested tab does not exist in the spreadsheet.
+        # The literal HTTP 400 reads as a generic "bad request" error to
+        # downstream consumers, so we tag it with `error_type='tab_not_found'`
+        # so the planner / response composer can distinguish "the tab is
+        # missing" (recoverable — call add_sheet_tab and retry) from a
+        # truly bad request (malformed sheet ID, etc.). Backwards-compatible:
+        # callers that ignore `error_type` still see the same `error` string.
+        # `effective_range` is pre-bound to None at the top of this function
+        # so the response shape stays consistent even if _apply_tab_to_range
+        # itself raised before computing it.
+        err_str = str(e)
+        if "Unable to parse range" in err_str:
+            return {
+                "success": False,
+                "error": f"Google Sheets API error: {err_str}",
+                "error_type": "tab_not_found",
+                "requested_range": effective_range or range_name,
+            }
+        return {"success": False, "error": f"Google Sheets API error: {err_str}"}
     except Exception as e:
         return {"success": False, "error": f"Failed to read sheet: {str(e)}"}
 
@@ -745,6 +765,199 @@ def get_sheet_metadata(
         return {"success": False, "error": f"Google Sheets API error: {str(e)}"}
     except Exception as e:
         return {"success": False, "error": f"Failed to get metadata: {str(e)}"}
+
+
+def add_sheet_tab(
+    sheet_id: str,
+    tab_name: str,
+    headers: Optional[List[str]] = None,
+    credentials_dict: Optional[CredentialsDict] = None,
+) -> Dict[str, Any]:
+    """
+    Add a new tab (worksheet) to an EXISTING Google Spreadsheet.
+
+    Idempotent: if a tab with the same title (case-insensitive) already
+    exists, the tool returns success with `created=False` and surfaces the
+    existing tab's metadata. This matches the planner's needs for "create
+    these tabs if they don't exist" workflows — call once per desired tab,
+    no need for a pre-flight existence check via get_sheet_metadata.
+
+    NOT to be confused with `create_sheet`, which creates a brand-new
+    SPREADSHEET (with tabs inside it). `add_sheet_tab` adds a tab to an
+    already-existing spreadsheet identified by `sheet_id`.
+
+    Args:
+        sheet_id: Google Sheets ID, or a full spreadsheet URL. URLs are
+            auto-parsed via `_extract_sheet_id` (invariant 13). The
+            `?gid=` portion is ignored — that identifies a tab, but
+            this tool ADDS a tab.
+        tab_name: Title of the new tab (e.g. "Food", "Non-Food", "Q1 Data").
+            Whitespace-trimmed. Must be non-empty after stripping.
+            Existence check is case-insensitive against existing tab
+            titles, but the new tab is created with the exact casing
+            provided.
+        headers: Optional list of column header strings to seed row 1
+            of the newly-created tab. Skipped on the idempotent no-op
+            branch (tab already existed) — the existing tab's headers
+            are NOT touched. Use `ensure_headers` separately for that.
+        credentials_dict: Google OAuth credentials.
+
+    Returns:
+        Dictionary with:
+            - success: True on both create and idempotent no-op.
+            - created: True if a new tab was added, False if it already
+              existed. Lets the caller distinguish the branches without
+              parsing the message.
+            - tab_name: The resolved (existing or newly-created) tab
+              title with original casing.
+            - tab_id: Numeric sheet ID of the tab (the `gid` value).
+            - sheet_id: Spreadsheet ID after URL normalization.
+            - headers_applied: True if headers were written to row 1
+              (only on the create branch with headers provided).
+            - message: Human-readable status line.
+            - error / error_type: Populated on failure.
+    """
+    try:
+        if not credentials_dict:
+            return {"success": False, "error": "Credentials required"}
+
+        if not isinstance(tab_name, str):
+            return {
+                "success": False,
+                "error": f"tab_name must be a string, got {type(tab_name).__name__}",
+                "error_type": "bad_input",
+            }
+        cleaned_tab = tab_name.strip()
+        if not cleaned_tab:
+            return {
+                "success": False,
+                "error": "tab_name cannot be empty or whitespace-only",
+                "error_type": "bad_input",
+            }
+
+        sheet_id = _extract_sheet_id(sheet_id)
+        service = create_sheets_service(credentials_dict)
+
+        # Idempotent existence check — if the tab is already present, skip
+        # the addSheet call. We compare case-insensitively (matches Google
+        # Sheets' UI behavior where tab titles are case-preserving but
+        # uniqueness is not strictly case-sensitive on the user side).
+        existing_meta = service.spreadsheets().get(spreadsheetId=sheet_id).execute()
+        target_lower = cleaned_tab.lower()
+        for sheet in existing_meta.get("sheets", []):
+            props = sheet.get("properties", {})
+            existing_title = props.get("title", "")
+            if existing_title.lower() == target_lower:
+                return {
+                    "success": True,
+                    "created": False,
+                    "tab_name": existing_title,
+                    "tab_id": props.get("sheetId"),
+                    "sheet_id": sheet_id,
+                    "headers_applied": False,
+                    "warning": None,
+                    "message": (
+                        f"Tab '{existing_title}' already exists in the "
+                        f"spreadsheet — no change made."
+                    ),
+                }
+
+        # Tab does not exist — add it via batchUpdate(addSheet).
+        batch_request = {
+            "requests": [
+                {
+                    "addSheet": {
+                        "properties": {"title": cleaned_tab}
+                    }
+                }
+            ]
+        }
+        batch_response = (
+            service.spreadsheets()
+            .batchUpdate(spreadsheetId=sheet_id, body=batch_request)
+            .execute()
+        )
+
+        replies = batch_response.get("replies", [])
+        new_tab_id: Optional[int] = None
+        new_tab_title: str = cleaned_tab
+        if replies and isinstance(replies[0], dict):
+            add_reply = replies[0].get("addSheet", {})
+            new_props = add_reply.get("properties", {})
+            new_tab_id = new_props.get("sheetId")
+            new_tab_title = new_props.get("title", cleaned_tab)
+
+        # Optional headers seeding for the new tab. Failure here is
+        # logged into the response (warning + headers_applied=False)
+        # rather than aborting the workflow — the tab itself was
+        # successfully created and the caller may want to retry just
+        # the headers via ensure_headers.
+        headers_applied = False
+        headers_warning: Optional[str] = None
+        if headers:
+            try:
+                normalized_headers: List[str] = []
+                for h in headers:
+                    if h is None:
+                        normalized_headers.append("")
+                    else:
+                        normalized_headers.append(str(h))
+                if any(h.strip() for h in normalized_headers):
+                    service.spreadsheets().values().update(
+                        spreadsheetId=sheet_id,
+                        range=f"{new_tab_title}!A1",
+                        valueInputOption="RAW",
+                        body={"values": [normalized_headers]},
+                    ).execute()
+                    headers_applied = True
+            except HttpError as he:
+                headers_warning = (
+                    f"Tab '{new_tab_title}' was created, but writing the "
+                    f"header row failed: {he}"
+                )
+            except Exception as he:
+                headers_warning = (
+                    f"Tab '{new_tab_title}' was created, but writing the "
+                    f"header row failed: {he}"
+                )
+
+        message = f"Tab '{new_tab_title}' added to the spreadsheet."
+        if headers_applied:
+            message += f" Headers ({len(headers or [])} columns) seeded in row 1."
+        elif headers_warning:
+            message += f" {headers_warning}"
+
+        return {
+            "success": True,
+            "created": True,
+            "tab_name": new_tab_title,
+            "tab_id": new_tab_id,
+            "sheet_id": sheet_id,
+            "headers_applied": headers_applied,
+            "warning": headers_warning,
+            "message": message,
+        }
+
+    except HttpError as e:
+        # Google's "addSheet" with a duplicate title returns 400 with a
+        # message like "A sheet with the name 'Food' already exists".
+        # That branch should have been caught by our pre-check above, but
+        # we surface a clean error_type if it slips through (e.g. due to
+        # a race condition where the tab was created between our get()
+        # and our batchUpdate()).
+        err_str = str(e)
+        if "already exists" in err_str.lower():
+            return {
+                "success": False,
+                "error": f"Tab creation conflict: {err_str}",
+                "error_type": "duplicate_tab",
+            }
+        return {
+            "success": False,
+            "error": f"Google Sheets API error: {err_str}",
+        }
+    except Exception as e:
+        return {"success": False, "error": f"Failed to add sheet tab: {str(e)}"}
 
 
 def clear_sheet(
@@ -2631,6 +2844,10 @@ TOOL_REGISTRY = {
     "get_sheet_metadata": {
         "func": get_sheet_metadata,
         "description": "Get spreadsheet metadata (sheets, row counts)",
+    },
+    "add_sheet_tab": {
+        "func": add_sheet_tab,
+        "description": "Idempotently add a new tab to an existing spreadsheet",
     },
     "clear_sheet": {
         "func": clear_sheet,

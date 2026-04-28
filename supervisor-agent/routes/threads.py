@@ -645,11 +645,18 @@ async def _run_workflow_and_update_state(conversation_state, thread_id: str = No
     await broadcast_progress(thread_id, 0, 0, "Preparing your response...", status="composing")
 
     # Generate user-friendly summary
+    # We pass the preserved execution_summary (captured at the top of this
+    # function BEFORE _clear_workflow_state wiped it) so the summarizer can
+    # render a meaningful "**You asked:** ..." footer in error / no-results
+    # responses. Without this override, the summarizer falls back to the
+    # cleared state fields which are now empty — producing the broken
+    # "**You asked:** your request" footer that this fix addresses.
     friendly_summary = conversational_agent.summarization_service.summarize_execution(
         conversation_state=conversation_state,
         final_context=final_context,
         execution_status=status,
         execution_message=message_text,
+        original_request_override=original_execution_summary,
     )
 
     # NOTE on persistence:

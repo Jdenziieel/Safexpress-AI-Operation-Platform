@@ -144,9 +144,14 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     "create_folder": ActionRiskLevel.MODERATE,
     "rename_file": ActionRiskLevel.MODERATE,
     "move_file": ActionRiskLevel.MODERATE,
-    # Sheets (new spreadsheet)
+    # Sheets (new spreadsheet, idempotent tab creation)
     "create_sheet": ActionRiskLevel.MODERATE,
     "ensure_headers": ActionRiskLevel.MODERATE,
+    # add_sheet_tab is idempotent (no-op when the tab already exists) and
+    # creates only an empty tab structure — no row data is written unless
+    # the optional `headers` arg seeds row 1, which is also idempotent in
+    # spirit (same shape every time). Reversible via Sheets version history.
+    "add_sheet_tab": ActionRiskLevel.MODERATE,
     # Calendar (new or modified event; update_event rewrites but events
     # have change history and attendee notifications can be recalled)
     "create_event": ActionRiskLevel.MODERATE,
