@@ -667,6 +667,55 @@ def _format_upload_mapped_data(output: dict) -> str:
     return text
 
 
+def _format_find_or_create_sheet(output: dict) -> str:
+    """Format sheets_agent.find_or_create_sheet result.
+
+    Two branches mirror the tool's idempotent contract:
+      * existed=False -> "Created spreadsheet **<title>**: <url>"
+        (visually identical to create_sheet's template so the user
+        cannot tell they happened to take the create branch — except
+        for the bonus "no existing copy was found" reassurance carried
+        in the tool's `message` field).
+      * existed=True  -> "Used existing spreadsheet **<title>**: <url>
+        (didn't create a duplicate)" with a duplicates_found callout
+        when >1 same-titled sheets pre-existed.
+
+    Why a callable instead of a static format string: `existed=True`
+    needs a different message ("found and reused, didn't create") than
+    `existed=False` ("created fresh"), AND duplicates_found > 1 needs
+    a tidy-up nudge. A static template can't branch.
+    """
+    title = output.get("title") or "(untitled)"
+    sheet_url = output.get("sheet_url") or ""
+    existed = bool(output.get("existed"))
+    duplicates_found = int(output.get("duplicates_found") or 0)
+    warning = output.get("warning")
+
+    if not existed:
+        text = f"Created spreadsheet **{title}**: {sheet_url}"
+        text += "\n*(No existing copy was found — this is a fresh one.)*"
+        if warning:
+            text += f"\nNote: {warning}"
+        return text
+
+    if duplicates_found > 1:
+        text = (
+            f"Found existing spreadsheet **{title}** "
+            f"({duplicates_found} matches in your Drive — using the "
+            f"most recently modified): {sheet_url}\n"
+            f"*Skipped creating a duplicate, as you requested.*"
+        )
+    else:
+        text = (
+            f"Found existing spreadsheet **{title}**: {sheet_url}\n"
+            f"*Skipped creating a duplicate — using the existing one as "
+            f"you requested.*"
+        )
+    if warning:
+        text += f"\nNote: {warning}"
+    return text
+
+
 def _format_add_sheet_tab(output: dict) -> str:
     """Format sheets_agent.add_sheet_tab result.
 
@@ -1234,6 +1283,16 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         # message verifiable without clicking through to the Drive URL.
         "type": "action",
         "template": "Created spreadsheet **{title}**: {sheet_url}",
+    },
+    ("sheets_agent", "find_or_create_sheet"): {
+        # Callable so the message branches between the existed=True
+        # (duplicate-prevention reuse) and existed=False (fresh create)
+        # paths. Without this entry the LLM safety net would compose a
+        # generic "Created spreadsheet" line on the existed=True branch
+        # and the user would never see that the duplicate prevention
+        # actually fired.
+        "type": "action",
+        "template": _format_find_or_create_sheet,
     },
     ("sheets_agent", "add_sheet_tab"): {
         # Callable so the message branches between created / already-existed

@@ -226,6 +226,246 @@ def create_sheet(
         return {"success": False, "error": f"Failed to create sheet: {str(e)}"}
 
 
+def find_or_create_sheet(
+    title: str,
+    sheet_names: Optional[List[str]] = None,
+    initial_data: Any = None,
+    folder_id: Optional[str] = None,
+    credentials_dict: Optional[CredentialsDict] = None,
+) -> Dict[str, Any]:
+    """
+    Find an existing Google Spreadsheet by EXACT title, or create a new one
+    when no match exists. Idempotent — safe to re-run without producing
+    duplicate spreadsheets.
+
+    Use this instead of `create_sheet` when the user asks for duplicate-
+    prevention semantics ("don't create if it already exists", "use the
+    existing one if there is one", "reject duplicate sends", "treat as
+    already processed if the same request comes in again", "find or
+    create"). Mechanically equivalent to a Drive `name=` exact-match
+    pre-flight followed by `create_sheet` only on miss; this tool packages
+    both into one atomic step so the planner does not need a fragile two-
+    step chain that loses the `existed` flag.
+
+    Match semantics:
+      * `name = '<title>'` — full-string equality on the spreadsheet's
+        Drive name (case-sensitive — Drive's `name = 'X'` is exact). DOES
+        NOT use name-contains semantics (so "ASDWER" does not match
+        "ASDWER backup" or "old ASDWER").
+      * Restricted to `mimeType = 'application/vnd.google-apps.spreadsheet'`
+        so a doc/folder/file with the same title never collides.
+      * Excludes trashed files — a deleted "ASDWER" in the bin does not
+        prevent a fresh creation.
+      * Optionally scoped to `folder_id` so two sheets named the same in
+        DIFFERENT folders do not collide.
+
+    On match (>= 1 existing):
+      * `existed=True`, `sheet_id`/`sheet_url` point at the most recently
+        modified match, `duplicates_found` reports how many sheets share
+        the title. When duplicates_found > 1, `warning` surfaces a tidy-
+        up suggestion. The user-facing `message` is sentence-style and
+        explains the duplicate prevention happened.
+
+    On no match:
+      * Delegates to `create_sheet` to do the actual work (sheet_names,
+        initial_data, folder_id are passed through unchanged), then
+        returns `existed=False` with the new sheet's metadata.
+
+    On Drive lookup failure:
+      * Returns `success=False` with `error_type='lookup_failed'` rather
+        than silently falling through to creation. The duplicate-prevention
+        contract requires the lookup to succeed before we can guarantee
+        no duplicate is created — silently bypassing the check would be
+        worse than reporting the failure.
+
+    Args:
+        title: Exact spreadsheet title to look for / create. Whitespace
+            is stripped on both sides; case is preserved for the create
+            branch and matched verbatim on the lookup branch.
+        sheet_names: Forwarded to `create_sheet` on miss. Ignored on hit
+            (the existing sheet's tabs are not modified).
+        initial_data: Forwarded to `create_sheet` on miss. Ignored on hit
+            (no data is written into the existing sheet — that would be a
+            destructive surprise and violates the idempotent contract).
+        folder_id: Drive folder ID to (a) restrict the lookup scope and
+            (b) reparent the sheet on create-miss. Pass the resolved
+            folder ID, not a path. URL-shaped values are not extracted
+            here — resolve to a bare ID via `drive_agent.get_folder_info`
+            in a prior step.
+        credentials_dict: Google OAuth credentials.
+
+    Returns:
+        success: bool
+        existed: bool — True if an existing spreadsheet was found and
+            returned; False if a new one was created.
+        sheet_id: str — Drive ID of the spreadsheet (existing or new).
+        sheet_url: str — Web view URL.
+        title: str — The title actually used (whitespace-stripped).
+        folder_id: str | None — folder_id input echoed back.
+        folder_moved: bool (only on create-miss) — whether the new sheet
+            was successfully reparented into the requested folder.
+        modified_time: str | None (only on hit) — ISO-8601 modifiedTime
+            of the matched sheet.
+        duplicates_found: int — count of pre-existing matches found
+            during the lookup (0 when create branch was taken).
+        warning: str | None — tidy-up advice when duplicates_found > 1,
+            or the create-branch's `warning` (e.g. folder move failed).
+        message: str — Sentence-style user-facing summary suitable for
+            direct rendering in chat.
+        error / error_type: present only on failure.
+    """
+    try:
+        if not credentials_dict:
+            return {
+                "success": False,
+                "error": "Credentials required",
+                "error_type": "auth",
+            }
+
+        if title is None or not str(title).strip():
+            return {
+                "success": False,
+                "error": "title is required",
+                "error_type": "bad_input",
+            }
+        title = str(title).strip()
+
+        # Pre-flight existence check via Drive. Exact match on name +
+        # spreadsheet mimeType. We deliberately escape both backslash and
+        # single quote in the title for the Drive query string — a title
+        # containing a literal apostrophe (e.g. "Q1'26 Budget") would
+        # otherwise produce a malformed Drive query and 400.
+        drive = create_drive_service(credentials_dict)
+        safe_title = title.replace("\\", "\\\\").replace("'", "\\'")
+        query_parts = [
+            f"name = '{safe_title}'",
+            "mimeType = 'application/vnd.google-apps.spreadsheet'",
+            "trashed = false",
+        ]
+        if folder_id:
+            query_parts.append(f"'{folder_id}' in parents")
+        query = " and ".join(query_parts)
+
+        try:
+            list_result = drive.files().list(
+                q=query,
+                fields="files(id, name, modifiedTime, webViewLink, parents)",
+                orderBy="modifiedTime desc",
+                pageSize=10,
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True,
+            ).execute()
+            existing = list_result.get("files", []) or []
+        except Exception as search_err:
+            # Hard fail: we cannot guarantee no-duplicate without a
+            # successful lookup, so we surface the error rather than
+            # silently creating.
+            return {
+                "success": False,
+                "error": (
+                    "Couldn't check Drive for an existing spreadsheet "
+                    f"with the title '{title}': {search_err}"
+                ),
+                "error_type": "lookup_failed",
+                "title": title,
+                "folder_id": folder_id,
+            }
+
+        if existing:
+            chosen = existing[0]  # most recently modified per orderBy
+            chosen_id = chosen["id"]
+            chosen_url = (
+                chosen.get("webViewLink")
+                or f"https://docs.google.com/spreadsheets/d/{chosen_id}/edit"
+            )
+            duplicates_count = len(existing)
+
+            if duplicates_count > 1:
+                user_message = (
+                    f"A spreadsheet titled \"{title}\" already exists in "
+                    f"your Drive ({duplicates_count} matches found). To "
+                    f"prevent creating yet another duplicate, I'm reusing "
+                    f"the most recently modified one."
+                )
+                warning = (
+                    f"Found {duplicates_count} existing spreadsheets sharing "
+                    f"the title \"{title}\". You may want to rename or remove "
+                    f"the older copies to keep your Drive tidy."
+                )
+            else:
+                user_message = (
+                    f"A spreadsheet titled \"{title}\" already exists in "
+                    f"your Drive — I'm using the existing one instead of "
+                    f"creating a duplicate."
+                )
+                warning = None
+
+            return {
+                "success": True,
+                "existed": True,
+                "sheet_id": chosen_id,
+                "sheet_url": chosen_url,
+                "title": title,
+                "folder_id": folder_id,
+                "modified_time": chosen.get("modifiedTime"),
+                "duplicates_found": duplicates_count,
+                "warning": warning,
+                "message": user_message,
+            }
+
+        # No match — delegate to create_sheet so we don't duplicate the
+        # creation logic (folder reparenting, initial_data coercion,
+        # sheet_names handling, etc.).
+        result = create_sheet(
+            title=title,
+            sheet_names=sheet_names,
+            initial_data=initial_data,
+            folder_id=folder_id,
+            credentials_dict=credentials_dict,
+        )
+        if not result.get("success"):
+            # Bubble create_sheet's failure up untouched (preserves its
+            # error/error_type/HTTP-error wording).
+            return result
+
+        new_message = (
+            f"Created a new spreadsheet titled \"{title}\" — no existing "
+            f"copy was found in your Drive, so this is a fresh one."
+        )
+        if result.get("folder_moved"):
+            new_message += " It's been placed in the requested folder."
+        elif result.get("warning"):
+            new_message += f" Note: {result['warning']}"
+
+        return {
+            "success": True,
+            "existed": False,
+            "sheet_id": result.get("sheet_id"),
+            "sheet_url": result.get("sheet_url"),
+            "title": title,
+            "folder_id": result.get("folder_id"),
+            "folder_moved": result.get("folder_moved", False),
+            "duplicates_found": 0,
+            "warning": result.get("warning"),
+            "message": new_message,
+        }
+
+    except HttpError as e:
+        return {
+            "success": False,
+            "error": f"Google Sheets API error: {str(e)}",
+            "error_type": "api_error",
+            "title": title if isinstance(title, str) else None,
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"find_or_create_sheet failed: {str(e)}",
+            "error_type": "internal",
+            "title": title if isinstance(title, str) else None,
+        }
+
+
 def read_sheet(
     sheet_id: str,
     range_name: Optional[str] = None,
@@ -3401,6 +3641,14 @@ TOOL_REGISTRY = {
     "create_sheet": {
         "func": create_sheet,
         "description": "Create a new Google Spreadsheet",
+    },
+    "find_or_create_sheet": {
+        "func": find_or_create_sheet,
+        "description": (
+            "Find an existing Google Spreadsheet by exact title (Drive name="
+            " match), or create a new one only when no match exists. "
+            "Idempotent — use for duplicate-prevention semantics."
+        ),
     },
     "read_sheet": {"func": read_sheet, "description": "Read data from a Google Sheet"},
     "update_sheet": {

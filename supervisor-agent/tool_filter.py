@@ -446,6 +446,60 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                 ):
                     sheets_tools_for_k.append("get_sheet_metadata")
 
+            # Block N (Google Sheet Duplicate fix): duplicate-prevention
+            # safety net. When the user expresses any "don't create a
+            # duplicate" intent AND a sheet creation is in scope (either
+            # create_sheet is selected or Block H injected it), inject
+            # find_or_create_sheet ALONGSIDE create_sheet so the planner
+            # has the idempotent option available. Rule 21 in the planner
+            # prompt steers the choice toward find_or_create_sheet when
+            # the duplicate-prevention intent is present; we do not
+            # remove create_sheet from the toolbox because a single
+            # request may legitimately involve BOTH a duplicate-protected
+            # sheet AND a separate brand-new sheet (rare, but the planner
+            # should not be artificially constrained).
+            #
+            # Keyword list is intentionally narrow to avoid false
+            # positives. Phrases that fire it:
+            #   * any mention of the word "duplicate" — covers "no
+            #     duplicates", "don't accept duplicate sends", "duplicate
+            #     entries", "block duplicate", "reject duplicate".
+            #   * "already exists" / "already created" / "already
+            #     processed" — covers "treat as already processed if the
+            #     same request comes in again".
+            #   * "if it exists" / "if one exists" — covers "use the
+            #     existing one if it exists".
+            #   * "find or create" / "find-or-create" — explicit naming.
+            #   * "use the existing" / "reuse" — explicit reuse intent.
+            # Bare " same " is NOT included — too noisy ("same time",
+            # "same day", "same person" are all unrelated).
+            _DEDUP_PREVENTION_KEYWORDS = (
+                "duplicate",        # catches all "duplicate" phrasings
+                "already exists",
+                "already created",
+                "already processed",
+                "if it exists",
+                "if one exists",
+                "find or create",
+                "find-or-create",
+                "use the existing",
+                "use existing sheet",
+                " reuse ",
+                "do not create another",
+                "don't create another",
+                "dont create another",
+            )
+            wants_dedup_prevention = any(
+                kw in input_lower for kw in _DEDUP_PREVENTION_KEYWORDS
+            )
+            has_create_sheet_in_scope = "create_sheet" in sheets_tools_for_k
+            if wants_dedup_prevention and has_create_sheet_in_scope:
+                if (
+                    "find_or_create_sheet" not in sheets_tools_for_k
+                    and "find_or_create_sheet" in sheets_caps_for_k
+                ):
+                    sheets_tools_for_k.append("find_or_create_sheet")
+
         # Block M (DEMO SHEET 1.2 fix): mirror-all-tabs safety net.
         # When the user asks to copy / mirror / sync / replicate every
         # tab from one spreadsheet to another, the planner cannot

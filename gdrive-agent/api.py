@@ -21,6 +21,14 @@ _DRIVE_FILE_URL_RE = re.compile(r"/file/d/([A-Za-z0-9_-]+)")
 _DRIVE_DOC_URL_RE = re.compile(r"/document/d/([A-Za-z0-9_-]+)")
 _DRIVE_SHEET_URL_RE = re.compile(r"/spreadsheets/d/([A-Za-z0-9_-]+)")
 
+# Drive/Docs/Sheets file IDs are typically 28-44 chars of [A-Za-z0-9_-]
+# (folders 33+, documents/spreadsheets 44). We accept 25-80 chars as a
+# permissive lower/upper bound. Realistic file NAMES rarely match this
+# pattern because they usually contain spaces, punctuation, or are shorter.
+# False positives are harmless: the caller validates via files().get() and
+# falls through to name-contains search on any error.
+_GOOGLE_FILE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{25,80}$")
+
 
 def _extract_drive_file_id(file_id_or_url: str) -> str:
     """Extract a Drive file ID from a URL or return the input as-is.
@@ -38,6 +46,22 @@ def _extract_drive_file_id(file_id_or_url: str) -> str:
         if match:
             return match.group(1)
     return file_id_or_url.strip()
+
+
+def _looks_like_drive_id(s: str) -> bool:
+    """Return True if `s` is shaped like a Google Drive file ID.
+
+    Used by search_files_tool to short-circuit name-based search when the
+    caller (or the planner) passes what is actually a Drive ID extracted
+    from a URL. Drive's name-contains query never matches a 44-char ID
+    against a real file name, so without this short-circuit a URL-paste
+    workflow ends with `results=[]` and downstream tools receive an empty
+    sheet_id (the DEMO root cause: log shows mirror_tabs called with
+    source_sheet_id="" → HTTP 404).
+    """
+    if not s or " " in s:
+        return False
+    return bool(_GOOGLE_FILE_ID_RE.match(s))
 
 # Import your existing tools (supervisor-compatible versions)
 from tools import (
@@ -484,6 +508,52 @@ def search_files_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
 
         created_after = inputs.get("created_after")
         created_before = inputs.get("created_before")
+
+        # ID short-circuit: when search_term is a Drive/Docs/Sheets URL or
+        # bare file ID, resolve it directly via files().get() instead of
+        # running a name-contains query that will never match (a 44-char
+        # random ID does not appear inside real file names). This handles
+        # the common URL-paste path where Tier 1 strips a pasted Sheet/Doc
+        # URL down to its bare ID and stores it under a *_name key — the
+        # planner then emits the ID as a search_term, the name-contains
+        # search returns 0 results, and downstream sheet-id consumers
+        # receive an empty string (-> HTTP 404 from Google's API).
+        # Skipped when a date window is supplied (the user clearly wanted
+        # a search, not a direct lookup).
+        normalized = _extract_drive_file_id(search_term)
+        if (
+            not (created_after or created_before)
+            and _looks_like_drive_id(normalized)
+        ):
+            try:
+                meta = service.files().get(
+                    fileId=normalized,
+                    fields=(
+                        "id, name, mimeType, size, createdTime, "
+                        "modifiedTime, webViewLink, parents"
+                    ),
+                    supportsAllDrives=True,
+                ).execute()
+                return {
+                    "success": True,
+                    "results": [meta],
+                    "count": 1,
+                    "search_term": search_term,
+                    "message": (
+                        f"Resolved by ID: "
+                        f"{meta.get('name') or normalized}"
+                    ),
+                    "error": None,
+                    "resolved_by": "id",  # diagnostic
+                }
+            except Exception:
+                # Fall through to name-search. Reasons this can fire:
+                # (a) the input is actually a name that happens to match
+                #     the ID-shape regex, (b) the ID is invalid/typo'd,
+                #     (c) the user lacks access. In all three cases we
+                #     prefer the name-search path's empty-result message
+                #     over a hard error here.
+                pass
 
         # The impl normalizes / validates the bounds internally and returns a
         # structured failure dict on ValueError — no need to pre-validate here.

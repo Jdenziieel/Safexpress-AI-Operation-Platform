@@ -1807,3 +1807,28 @@ Task Confirmation:
 [2026-04-29 12:19:08.885] [INFO] [req_20260429041850_57d48047] [T:5647190f] ← RESPONSE: 200 (23805ms)
 [2026-04-29 12:19:08.887] [INFO] [req_20260429041850_57d48047] [T:5647190f] ─────────: ──────────────────────────────────────────────────
 [2026-04-29 12:19:08.898] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_5647190f
+[2026-04-29 13:40:05.640] [PRINT] ====================================================================================================
+[2026-04-29 13:40:05.674] [PRINT] 1. existed=False (fresh create, no folder)
+[2026-04-29 13:40:05.691] [PRINT] ----------------------------------------------------------------------------------------------------
+[2026-04-29 13:40:05.709] [PRINT] Created spreadsheet **ASDWER**: https://docs.google.com/spreadsheets/d/abc123/edit
+[2026-04-29 13:40:05.709] [PRINT] *(No existing copy was found — this is a fresh one.)*
+[2026-04-29 13:40:05.724] [PRINT] 2. existed=False with folder warning (move failed)
+[2026-04-29 13:40:05.740] [PRINT] ----------------------------------------------------------------------------------------------------
+[2026-04-29 13:40:05.754] [PRINT] Created spreadsheet **ASDWER**: https://docs.google.com/spreadsheets/d/abc123/edit
+[2026-04-29 13:40:05.754] [PRINT] *(No existing copy was found — this is a fresh one.)*
+[2026-04-29 13:40:05.754] [PRINT] Note: Sheet created but move to folder 'fold1' failed: 403 Forbidden
+[2026-04-29 13:40:05.769] [PRINT] 3. existed=True (single match)
+[2026-04-29 13:40:05.779] [PRINT] ----------------------------------------------------------------------------------------------------
+[2026-04-29 13:40:05.790] [PRINT] Found existing spreadsheet **ASDWER**: https://docs.google.com/spreadsheets/d/old-id-1/edit
+[2026-04-29 13:40:05.790] [PRINT] *Skipped creating a duplicate — using the existing one as you requested.*
+[2026-04-29 13:40:05.802] [PRINT] 4. existed=True (3 matches — tidy-up nudge)
+[2026-04-29 13:40:05.812] [PRINT] ----------------------------------------------------------------------------------------------------
+[2026-04-29 13:40:05.819] [PRINT] Found existing spreadsheet **ASDWER** (3 matches in your Drive — using the most recently modified): https://docs.google.com/spreadsheets/d/newest-id/edit
+[2026-04-29 13:40:05.819] [PRINT] *Skipped creating a duplicate, as you requested.*
+[2026-04-29 13:40:05.819] [PRINT] Note: Found 3 existing spreadsheets sharing the title "ASDWER". You may want to rename or remove the older copies to keep your Drive tidy.
+[2026-04-29 13:40:05.829] [PRINT] 5. defensive: missing existed (treated as create branch)
+[2026-04-29 13:40:05.840] [PRINT] ----------------------------------------------------------------------------------------------------
+[2026-04-29 13:40:05.847] [PRINT] Created spreadsheet **Edge**: https://docs.google.com/spreadsheets/d/x/edit
+[2026-04-29 13:40:05.847] [PRINT] *(No existing copy was found — this is a fresh one.)*
+[2026-04-29 13:40:05.856] [PRINT] ====================================================================================================
+[2026-04-29 13:40:05.865] [PRINT] ALL RENDERED

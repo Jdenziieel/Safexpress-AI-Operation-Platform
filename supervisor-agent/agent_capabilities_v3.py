@@ -364,7 +364,7 @@ agent_capabilities = {
                 "can_be_derived_from": {"sheet_id": "drive_agent.search_files"},
             },
             "create_sheet": {
-                "description": "Create a new Google Spreadsheet, optionally inside a specific Drive folder. If folder_id is given, the sheet is reparented via Drive API after creation.",
+                "description": "Create a new Google Spreadsheet, optionally inside a specific Drive folder. If folder_id is given, the sheet is reparented via Drive API after creation. ALWAYS creates a brand-new spreadsheet — does NOT check whether a sheet with the same title already exists. Use sheets_agent.find_or_create_sheet instead when the user asks for duplicate prevention (Rule 21).",
                 "args": {
                     "title": "str (required) — spreadsheet name",
                     "sheet_names": "List[str] (optional) — tab names (default: ['Sheet1']). DO NOT use 'tabs' — the argument name is 'sheet_names'.",
@@ -372,6 +372,18 @@ agent_capabilities = {
                     "folder_id": "str (optional) — Drive folder ID to place the sheet in. Resolve via drive_agent.get_folder_info (strict) or drive_agent.create_folder (explicit create) in an earlier step. DO NOT use 'folder_path' — this tool does not accept that argument. If you only have a folder path, resolve it first via drive_agent.get_folder_info or drive_agent.create_folder and wire the folder_id output here via {{ folder_id }}.",
                 },
                 "returns": ["success", "sheet_id", "sheet_url", "title", "folder_id", "folder_moved", "warning", "message"],
+                "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info|drive_agent.create_folder"},
+            },
+            "find_or_create_sheet": {
+                "description": "Idempotent sibling of create_sheet. Looks up an EXISTING Google Spreadsheet by EXACT title (Drive `name=` exact-match, restricted to spreadsheet mimeType, excludes trashed). If a match exists, returns the existing sheet's id/url with `existed=True` — does NOT create a duplicate, does NOT modify the existing sheet's tabs or data. If no match exists, delegates to create_sheet (forwards sheet_names, initial_data, folder_id) and returns the new sheet with `existed=False`. Use this whenever the user asks for duplicate prevention: 'don't create if it already exists', 'use the existing one if there is one', 'reject duplicate sends', 'treat as already processed', 'find or create', or any phrasing that says the same request running twice should NOT produce two artifacts. Drive lookup is scoped to folder_id when provided so two same-named sheets in different folders don't collide. NEVER use plain create_sheet when the user has expressed any duplicate-blocking intent — that ALWAYS creates a fresh sheet and silently produces a duplicate on the second run.",
+                "args": {
+                    "title": "str (required) — exact spreadsheet title to look for / create. Whitespace is stripped. Case-sensitive on the Drive lookup side; preserved verbatim on the create side. NEVER pass a wildcard or substring here — Drive's `name=` is full-string equality.",
+                    "sheet_names": "List[str] (optional) — tab names. Forwarded to create_sheet on miss. IGNORED on hit (existing sheet's tabs are preserved). DO NOT use 'tabs'.",
+                    "initial_data": "List[List[Any]] (optional) — 2D rows for the first tab. Forwarded to create_sheet on miss. IGNORED on hit (would be a destructive surprise, violates idempotent contract). DO NOT use 'rows' or 'values'.",
+                    "folder_id": "str (optional) — Drive folder ID. Used (a) to scope the duplicate-detection lookup to that folder so same-named sheets in different folders don't conflict, and (b) to reparent the new sheet on miss. Resolve via drive_agent.get_folder_info / drive_agent.create_folder in a prior step. DO NOT use 'folder_path'.",
+                },
+                "returns": ["success", "existed", "sheet_id", "sheet_url", "title", "folder_id", "folder_moved", "modified_time", "duplicates_found", "warning", "message", "error", "error_type"],
+                "returns_detail": "existed=True when an existing sheet was reused (no creation happened). existed=False when a fresh sheet was created. duplicates_found is the count of pre-existing matches in the lookup; >1 indicates the user already had multiple same-named sheets and the most-recently-modified one was chosen. modified_time is populated only on hit. message is sentence-style and ready to show in chat. On lookup failure (Drive API error during the existence check) returns success=False with error_type='lookup_failed' rather than silently creating — duplicate prevention is a hard contract.",
                 "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info|drive_agent.create_folder"},
             },
             "read_sheet": {
@@ -673,14 +685,14 @@ agent_capabilities = {
                 "can_be_derived_from": {"folder_id": "drive_agent.get_folder_info"},
             },
             "search_files": {
-                "description": "Search files by name across the user's whole Drive (all folders). Returns files the user has access to. Optional createdTime bounds scope results to a date window — e.g. 'files created this month', 'this quarter', 'since my last review'.",
+                "description": "Search files by name across the user's whole Drive (all folders). Returns files the user has access to. Optional createdTime bounds scope results to a date window — e.g. 'files created this month', 'this quarter', 'since my last review'. ID/URL short-circuit: when search_term is itself a Google Drive/Docs/Sheets ID or URL (and no date window is set), the tool resolves directly via files().get() and returns a single-result list — so passing an already-known ID/URL through this tool is safe (single API hop, no name-contains miss).",
                 "args": {
-                    "search_term": "str (required) — keywords to match against file NAMES (uses Drive `name contains` semantics, case-insensitive). Does NOT match inside file bodies/content. Partial matches are OK, e.g. search_term='Q1' matches 'Q1 Budget.xlsx'.",
+                    "search_term": "str (required) — keywords to match against file NAMES (uses Drive `name contains` semantics, case-insensitive). Does NOT match inside file bodies/content. Partial matches are OK, e.g. search_term='Q1' matches 'Q1 Budget.xlsx'. ALSO accepts a Drive/Docs/Sheets file ID or URL — those are auto-detected and resolved via files().get() instead of name-search.",
                     "created_after": "str (optional) — ISO-8601 date ('YYYY-MM-DD') or datetime ('YYYY-MM-DDTHH:MM:SS'). INCLUSIVE lower bound on createdTime. Compute bounds yourself from today_date (e.g. 'this month' → first-of-current-month). Drive does NOT accept natural-language strings like 'this month'.",
                     "created_before": "str (optional) — ISO-8601 date or datetime. EXCLUSIVE upper bound on createdTime. Pair with created_after to form a half-open [after, before) window. For 'April 2026': created_after='2026-04-01' + created_before='2026-05-01' — no double-counting at month boundaries.",
                 },
-                "returns": ["success", "results", "count", "search_term", "message", "error"],
-                "returns_detail": "results is an array; each result has: id, name, mimeType, size, createdTime, webViewLink, parents",
+                "returns": ["success", "results", "count", "search_term", "message", "error", "resolved_by"],
+                "returns_detail": "results is an array; each result has: id, name, mimeType, size, createdTime, webViewLink, parents. Optional `resolved_by='id'` flag is present when the input was an ID/URL and the result came from files().get() instead of name-search.",
                 "note": "Date bounds must be pre-computed by the planner from today_date and passed as ISO strings. The agent will NOT parse natural-language like 'this month' / 'last week' / 'yesterday'. Malformed dates return success=false with a clear error; no Drive call is made.",
             },
             "get_folder_info": {
