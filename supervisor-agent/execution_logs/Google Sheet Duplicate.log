@@ -1,0 +1,656 @@
+[2026-04-29 12:05:24.225] [INFO] [req_20260429040414_351ec4df] [T:8a534380] → REQUEST: POST /threads  | {"query": null}
+[2026-04-29 12:05:24.236] [INFO] [req_20260429040414_351ec4df] [T:new]   STEP [create_thread]: user=bfc86262-160a-4d55-a8b5-13de48606736, has_message=True
+[2026-04-29 12:05:30.753] [PRINT]  Created thread: bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a for user: bfc86262-160a-4d55-a8b5-13de48606736
+[2026-04-29 12:05:30.792] [PRINT]  Created new thread: bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a for user: bfc86262-160a-4d55-a8b5-13de48606736 with title: None
+[2026-04-29 12:05:30.819] [PRINT] Saved conversation state to SQLite: bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a
+[2026-04-29 12:05:30.842] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-29 12:05:30.856] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a
+[2026-04-29 12:05:30.874] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-29 12:05:30.895] [PRINT]   User: Review this Google Sheets "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=...
+[2026-04-29 12:05:30.915] [PRINT]   ConversationState:
+[2026-04-29 12:05:30.941] [PRINT]     extracted_info: {}
+[2026-04-29 12:05:30.964] [PRINT]     missing_fields: []
+[2026-04-29 12:05:30.978] [PRINT]     intent: null
+[2026-04-29 12:05:30.994] [PRINT]     clarification_question: null
+[2026-04-29 12:05:31.006] [PRINT]     ready_for_execution: false
+[2026-04-29 12:05:31.022] [PRINT]     execution_summary: null
+[2026-04-29 12:05:31.035] [PRINT]     execution_mode: "standard"
+[2026-04-29 12:05:31.048] [PRINT]     execution_history: []
+[2026-04-29 12:05:31.064] [PRINT]     completed_tasks: []
+[2026-04-29 12:05:31.077] [PRINT]     has_executed: false
+[2026-04-29 12:05:31.093] [PRINT]     last_executed_at: null
+[2026-04-29 12:05:31.109] [PRINT]     last_execution_status: null
+[2026-04-29 12:05:31.125] [PRINT]     last_execution_message: null
+[2026-04-29 12:05:31.143] [PRINT]     executing: false
+[2026-04-29 12:05:31.161] [PRINT]     pending_actions: []
+[2026-04-29 12:05:31.181] [PRINT]     workflow_paused: false
+[2026-04-29 12:05:31.204] [PRINT]     remaining_steps: []
+[2026-04-29 12:05:31.228] [PRINT]     workflow_context: null
+[2026-04-29 12:05:31.248] [PRINT]     disambiguation_options: []
+[2026-04-29 12:05:31.268] [PRINT]     disambiguation_variable: null
+[2026-04-29 12:05:31.286] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-29 12:05:31.300] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a, msg=Review this Google Sheets "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5T
+[2026-04-29 12:05:32.406] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 281, "total": 281, "max": 2000}
+[2026-04-29 12:05:32.426] [INFO] [-]   STEP [tier0.5_state]: conversation state before unified check  | {"extracted_info": {}, "missing_fields": [], "first_missing_field": null, "awaiting_confirmation": false, "awaiting_clarification": false}
+[2026-04-29 12:05:32.453] [PRINT] 
+[2026-04-29 12:05:32.453] [PRINT] ──────────────────────────────────────────────────
+[2026-04-29 12:05:32.466] [PRINT] TIER 0.5 — Building prompt
+[2026-04-29 12:05:32.484] [PRINT] ──────────────────────────────────────────────────
+[2026-04-29 12:05:32.497] [PRINT]    bot_signal : (none)
+[2026-04-29 12:05:32.511] [PRINT]    state_block: (none)
+[2026-04-29 12:05:32.524] [PRINT]    file_context: (none)
+[2026-04-29 12:05:32.540] [PRINT] ──────────────────────────────────────────────────
+[2026-04-29 12:05:34.812] [PRINT]  OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=969 out=51 | $0.0002 | 2199ms | cumulative: in=969 out=51 total=1020 $0.0002
+[2026-04-29 12:05:34.840] [INFO] [-]   STEP [tier0.5]: category: TASK_REQUEST, confidence: high
+    ↳ {"reasoning": "The user is requesting a specific action to transfer content from one Google Sheets file to another, with detailed instructions on how to handle the data.", "raw_response": "{\n    \"category\": \"task_request\",\n    \"confidence\": \"high\",\n    \"reasoning\": \"The user is requesting a specific action to transfer content from one Google Sheets file to another, with detailed instructions on how to handle the data.\"\n}"}
+[2026-04-29 12:05:34.841] [INFO] [-]   STEP [tier0.5]: task_request — proceeding to full analysis  | {"query_scope": "specific", "has_enrichment": false}
+[2026-04-29 12:05:34.843] [PRINT] 
+[2026-04-29 12:05:34.843] [PRINT] ──────────────────────────────────────────────────
+[2026-04-29 12:05:34.857] [PRINT] TIER 1 — Full Task Analysis
+[2026-04-29 12:05:34.870] [PRINT] ──────────────────────────────────────────────────
+[2026-04-29 12:05:34.896] [INFO] [-]   STEP [tier1]: performing full task analysis with capabilities
+[2026-04-29 12:05:34.899] [PRINT] 
+[2026-04-29 12:05:34.899] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-29 12:05:34.921] [PRINT] BUILDING LLM CONTEXT
+[2026-04-29 12:05:34.936] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-29 12:05:34.951] [PRINT]    Summary: none
+[2026-04-29 12:05:34.966] [PRINT]    Recent messages: 1
+[2026-04-29 12:05:34.977] [PRINT]       USER: Review this Google Sheets "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5T...
+[2026-04-29 12:05:34.988] [PRINT] 
+[2026-04-29 12:05:34.988] [PRINT]    Final context: 1243 chars (~310 tokens)
+[2026-04-29 12:05:35.000] [PRINT] ───────────────────────────────────────────────────────
+[2026-04-29 12:05:35.017] [INFO] [-]   STEP [context_built]: context assembled: summary=no, msgs=1, ~310 tokens  | {"has_summary": false, "recent_messages": 1, "context_chars": 1243, "context_tokens_est": 310}
+[2026-04-29 12:05:35.018] [INFO] [-]   STEP [query_scope]: using scope from Tier 0.5: specific
+[2026-04-29 12:05:36.355] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1978 out=21 | $0.0003 | 1243ms | cumulative: in=2947 out=72 total=3019 $0.0005
+[2026-04-29 12:05:36.408] [PRINT]    relevant_agents: ['sheets_agent', 'gmail_agent', 'drive_agent', 'llm_tool']
+[2026-04-29 12:05:36.419] [PRINT]    capabilities (top-level): ['**SHEETS_AGENT:**', '**GMAIL_AGENT:**', '**DRIVE_AGENT:**', '**LLM_TOOL:**']
+[2026-04-29 12:05:36.430] [INFO] [-]   STEP [capabilities]: query is SPECIFIC — filtered to agents  | {"agents": ["sheets_agent", "gmail_agent", "drive_agent", "llm_tool"]}
+[2026-04-29 12:05:36.430] [PRINT]    user_prompt (2483 chars):
+[2026-04-29 12:05:36.440] [PRINT]      RECENT CONVERSATION:
+[2026-04-29 12:05:36.451] [PRINT]      USER: Review this Google Sheets "https://docs.google.com/spreadsheets/d/14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA/edit?gid=0#gid=0" and use it as the source file. Create a target file named "ASDWER". Transfer all content from the source file to the target file, including every sheet tab in the source. The target file must contain the same sheet tabs as the source, with corresponding data in each tab. If both the sheet URL and a sheet name are provided, check them separate...
+[2026-04-29 12:05:36.462] [PRINT] ──────────────────────────────────────────────────
+[2026-04-29 12:05:40.580] [PRINT]  OK [1] gpt-4.1-mini | tier_1_full_analysis | in=2942 out=241, cached=1024 | $0.0013 | 4014ms | cumulative: in=5889 out=313 total=6202 $0.0017
+[2026-04-29 12:05:40.594] [INFO] [-]   STEP [analysis_result]: intent=ConversationIntent.READY_TO_EXECUTE, ready=True
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "copy_existing_file_to_document", "missing_fields": [], "clarification_question": null, "execution_ready": true, "reasoning": "The user provided a Google Sheets URL as the source file and a new target file name 'ASDWER'. The task is to copy all sheet tabs and their data from the source to the target, ensuring headers match an", "extracted_info": {"file_name": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA", "new_title": "ASDWER"}}
+[2026-04-29 12:05:40.596] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-29 12:05:40.597] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": "Find file '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA' and create new document 'ASDWER' with all sheet tabs and data copied, headers matched, and duplicate requests blocked.", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"sheets_agent": ["create_sheet", "mirror_tabs", "get_sheet_metadata", "ap
+[2026-04-29 12:05:42.585] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=262 out=81 | $0.0001 | 1937ms | cumulative: in=6151 out=394 total=6545 $0.0018
+[2026-04-29 12:05:42.605] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 112, "total": 393, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- File to be processed: 14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA\n- New document title: ASDWER\n- Actions to be taken:\n  - Copy all sheet tabs and data\n  -..."}
+[2026-04-29 12:05:42.673] [INFO] [req_20260429040530_6ffd1193] [T:new]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 112, "total": 393, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- File to be processed: 14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA\n- New document title: ASDWER\n- Actions to be taken:\n  - Copy all sheet tabs and data\n  -..."}
+[2026-04-29 12:05:42.743] [PRINT] 
+[2026-04-29 12:05:42.743] [PRINT] ============================================================
+[2026-04-29 12:05:42.758] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-29 12:05:42.776] [PRINT] ============================================================
+[2026-04-29 12:05:42.791] [PRINT]   LLM calls:        4
+[2026-04-29 12:05:42.806] [PRINT]   Total input:      6,151 tokens
+[2026-04-29 12:05:42.821] [PRINT]   Total output:     394 tokens
+[2026-04-29 12:05:42.835] [PRINT]   Total tokens:     6,545 tokens
+[2026-04-29 12:05:42.848] [PRINT]   Cached tokens:    1,024 (16.6% of input)
+[2026-04-29 12:05:42.862] [PRINT]   Estimated cost:   $0.0018
+[2026-04-29 12:05:42.875] [PRINT]   Total duration:   11911ms (11.9s)
+[2026-04-29 12:05:42.888] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-29 12:05:42.899] [PRINT]   Breakdown by call:
+[2026-04-29 12:05:42.911] [PRINT]     1. gpt-4o-mini      in=969    out=51    $0.0002 2199ms
+[2026-04-29 12:05:42.924] [PRINT]     2. gpt-4o-mini      in=1978   out=21    $0.0003 1243ms
+[2026-04-29 12:05:42.936] [PRINT]     3. gpt-4.1-mini     in=2942   out=241   (cached=1024) $0.0013 4014ms
+[2026-04-29 12:05:42.948] [PRINT]     4. gpt-4o-mini      in=262    out=81    $0.0001 1937ms
+[2026-04-29 12:05:42.962] [PRINT] ============================================================
+[2026-04-29 12:05:46.591] [INFO] [req_20260429040530_6ffd1193] [T:new] ← RESPONSE: 200 (22366ms)
+[2026-04-29 12:05:46.593] [INFO] [req_20260429040530_6ffd1193] [T:new] ─────────: ──────────────────────────────────────────────────
+[2026-04-29 12:06:28.792] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a
+[2026-04-29 12:06:28.835] [INFO] [req_20260429040530_6ffd1193] [T:new] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a/messages  | {"query": null}
+[2026-04-29 12:06:33.865] [INFO] [req_20260429040633_2a1e5287] [T:d2f4ff4a]   USER MSG: "yes"
+[2026-04-29 12:06:33.878] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-29 12:06:33.933] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a
+[2026-04-29 12:06:33.985] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-29 12:06:34.028] [PRINT]   User: yes
+[2026-04-29 12:06:34.097] [PRINT]   ConversationState:
+[2026-04-29 12:06:34.139] [PRINT]     extracted_info: {"_cached_tool_filter": {"sheets_agent": ["create_sheet", "mirror_tabs", "get_sheet_metadata", "append_rows", "get_sheet_headers", "ensure_headers"], "gmail_agent": ["create_draft_email", "send_draft_email", "search_drafts"], "drive_agent": ["search_files"]}, "file_name": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA", "new_title": "ASDWER"}
+[2026-04-29 12:06:34.168] [PRINT]     missing_fields: []
+[2026-04-29 12:06:34.211] [PRINT]     intent: "ready_to_execute"
+[2026-04-29 12:06:34.249] [PRINT]     clarification_question: null
+[2026-04-29 12:06:34.309] [PRINT]     ready_for_execution: false
+[2026-04-29 12:06:34.385] [PRINT]     execution_summary: "Find file '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA' and create new document 'ASDWER' with all sheet tabs and data copied, headers matched, and duplicate requests blocked."
+[2026-04-29 12:06:34.430] [PRINT]     execution_mode: "standard"
+[2026-04-29 12:06:34.463] [PRINT]     execution_history: []
+[2026-04-29 12:06:34.517] [PRINT]     completed_tasks: []
+[2026-04-29 12:06:34.568] [PRINT]     has_executed: false
+[2026-04-29 12:06:34.603] [PRINT]     last_executed_at: null
+[2026-04-29 12:06:34.644] [PRINT]     last_execution_status: null
+[2026-04-29 12:06:34.680] [PRINT]     last_execution_message: null
+[2026-04-29 12:06:34.730] [PRINT]     executing: false
+[2026-04-29 12:06:34.770] [PRINT]     pending_actions: []
+[2026-04-29 12:06:34.802] [PRINT]     workflow_paused: false
+[2026-04-29 12:06:34.851] [PRINT]     remaining_steps: []
+[2026-04-29 12:06:34.880] [PRINT]     workflow_context: null
+[2026-04-29 12:06:34.912] [PRINT]     disambiguation_options: []
+[2026-04-29 12:06:34.965] [PRINT]     disambiguation_variable: null
+[2026-04-29 12:06:35.018] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-29 12:06:35.066] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a, msg=yes
+[2026-04-29 12:06:37.533] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 399, "max": 2000}
+[2026-04-29 12:06:37.590] [INFO] [-]   STEP [tier0]: bare confirmation — skipping Tier 0.5
+[2026-04-29 12:06:37.599] [INFO] [-]   ANALYSIS: intent=ConversationIntent.READY_TO_EXECUTE, ready=True  | {"missing_fields": []}
+[2026-04-29 12:06:37.600] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.READY_TO_EXECUTE
+    ↳ {"intent": "ConversationIntent.READY_TO_EXECUTE", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": true, "execution_summary": "Find file '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA' and create new document 'ASDWER' with all sheet tabs and data copied, headers matched, and duplicate requests blocked.", "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"sheets_agent": ["get_sheet_headers", "create_sheet", "append_rows", "ensu
+[2026-04-29 12:06:40.312] [PRINT]  OK [formatter] gpt-4o-mini | confirmation_formatter | in=262 out=88 | $0.0001 | 2570ms | cumulative: in=262 out=88 total=350 $0.0001
+[2026-04-29 12:06:40.371] [INFO] [-]   INFO: Memory: added assistant message
+    ↳ {"tokens": 119, "total": 518, "max": 2000, "response_preview": "**Ready to execute!**\n\nTask Confirmation:\n\n- **File to be processed:** 14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA\n- **New document title:** ASDWER\n- **Actions to be taken:**\n  - Copy all sheet tabs ..."}
+[2026-04-29 12:06:40.530] [INFO] [req_20260429040633_2a1e5287] [T:d2f4ff4a]   BOT RESP [READY TO EXECUTE]: "**Ready to execute!**
+
+Task Confirmation:
+
+- **File to be processed:** 14KA6vyTlXeH5TKlpGOnHdmijP866..."
+[2026-04-29 12:06:40.533] [PRINT] Thread bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a ready - executing workflow...
+[2026-04-29 12:06:40.583] [INFO] [req_20260429040633_2a1e5287] [T:d2f4ff4a]   DECISION [ready_for_execution]: YES — executing workflow
+[2026-04-29 12:06:40.684] [INFO] [req_20260429040633_2a1e5287] [T:d2f4ff4a]   WORKFLOW START: "Find file '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA' and create new document..." (0 steps)
+[2026-04-29 12:06:40.686] [PRINT]  Date context: today=2026-04-29
+[2026-04-29 12:06:40.716] [PRINT]  Starting workflow execution (mode=standard)...
+[2026-04-29 12:06:40.761] [INFO] [-]   STEP [workflow_invoke]: LangGraph workflow.invoke() starting (mode=standard)
+[2026-04-29 12:06:40.765] [PRINT] >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+[2026-04-29 12:06:40.817] [PRINT] 
+[2026-04-29 12:06:40.817] [PRINT] ============================================================
+[2026-04-29 12:06:40.863] [PRINT] SUPERVISOR NODE - Planning Phase
+[2026-04-29 12:06:40.894] [PRINT] ============================================================
+[2026-04-29 12:06:40.933] [PRINT] User Input: Find file '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA' and create new document 'ASDWER' with all sheet tabs and data copied, headers matched, and duplicate requests blocked.
+[2026-04-29 12:06:40.933] [PRINT] 
+[2026-04-29 12:06:40.933] [PRINT] Parameters:
+[2026-04-29 12:06:40.933] [PRINT] - file_name: 14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA
+[2026-04-29 12:06:40.933] [PRINT] - new_title: ASDWER
+[2026-04-29 12:06:40.983] [INFO] [-]   STEP [supervisor_node]: Planning for: Find file '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA' and create new document
+[2026-04-29 12:06:40.985] [PRINT] Context dates: today=2026-04-29
+[2026-04-29 12:06:41.022] [PRINT] Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+[2026-04-29 12:06:41.053] [INFO] [-]   STEP [agent_filtering]: reused cached filter, agents=['sheets_agent', 'gmail_agent', 'drive_agent']
+[2026-04-29 12:06:41.055] [PRINT] Relevant agents: ['sheets_agent', 'gmail_agent', 'drive_agent', 'llm_tool']
+[2026-04-29 12:06:41.094] [PRINT] Filtered tools: {'sheets_agent': ['get_sheet_headers', 'create_sheet', 'append_rows', 'ensure_headers', 'mirror_tabs', 'get_sheet_metadata'], 'gmail_agent': ['search_drafts', 'send_draft_email', 'create_draft_email'], 'drive_agent': ['search_files']}
+[2026-04-29 12:06:41.126] [PRINT] Calling LLM to generate multi-step plan...
+[2026-04-29 12:06:41.166] [PRINT] Token optimization:
+[2026-04-29 12:06:41.204] [PRINT]    Agents: 4/7
+[2026-04-29 12:06:41.233] [PRINT]    Tools: 10/66
+[2026-04-29 12:06:41.258] [PRINT]    Context size: 20,347 chars (~5,086 tokens)
+[2026-04-29 12:06:41.321] [INFO] [-]   STEP [plan_generation_start]: agents=4/7, tools=10/66, context_tokens~5086
+[2026-04-29 12:06:44.377] [PRINT]  OK [supervisor] gpt-4.1 | plan_generation | in=12084 out=205, cached=11264 | $0.0089 | 2882ms | cumulative: in=12346 out=293 total=12639 $0.0090
+[2026-04-29 12:06:44.443] [PRINT] Plan generated successfully!
+[2026-04-29 12:06:44.503] [PRINT] 
+[2026-04-29 12:06:44.503] [PRINT] Generated Plan:
+[2026-04-29 12:06:44.503] [PRINT] {
+[2026-04-29 12:06:44.503] [PRINT]   "steps": [
+[2026-04-29 12:06:44.503] [PRINT]     {
+[2026-04-29 12:06:44.503] [PRINT]       "agent": "drive_agent",
+[2026-04-29 12:06:44.503] [PRINT]       "tool": "search_files",
+[2026-04-29 12:06:44.503] [PRINT]       "inputs": {
+[2026-04-29 12:06:44.503] [PRINT]         "search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA"
+[2026-04-29 12:06:44.503] [PRINT]       },
+[2026-04-29 12:06:44.503] [PRINT]       "output_variables": {
+[2026-04-29 12:06:44.503] [PRINT]         "source_sheet_id": "results[0].id"
+[2026-04-29 12:06:44.503] [PRINT]       },
+[2026-04-29 12:06:44.503] [PRINT]       "description": "Find the source spreadsheet by its file name or ID."
+[2026-04-29 12:06:44.503] [PRINT]     },
+[2026-04-29 12:06:44.503] [PRINT]     {
+[2026-04-29 12:06:44.503] [PRINT]       "agent": "sheets_agent",
+[2026-04-29 12:06:44.503] [PRINT]       "tool": "create_sheet",
+[2026-04-29 12:06:44.503] [PRINT]       "inputs": {
+[2026-04-29 12:06:44.503] [PRINT]         "title": "ASDWER"
+[2026-04-29 12:06:44.503] [PRINT]       },
+[2026-04-29 12:06:44.503] [PRINT]       "output_variables": {
+[2026-04-29 12:06:44.503] [PRINT]         "target_sheet_id": "sheet_id"
+[2026-04-29 12:06:44.503] [PRINT]       },
+[2026-04-29 12:06:44.503] [PRINT]       "description": "Create a new spreadsheet titled 'ASDWER'."
+[2026-04-29 12:06:44.503] [PRINT]     },
+[2026-04-29 12:06:44.503] [PRINT]     {
+[2026-04-29 12:06:44.503] [PRINT]       "agent": "sheets_agent",
+[2026-04-29 12:06:44.503] [PRINT]       "tool": "mirror_tabs",
+[2026-04-29 12:06:44.503] [PRINT]       "inputs": {
+[2026-04-29 12:06:44.503] [PRINT]         "source_sheet_id": "{{ source_sheet_id }}",
+[2026-04-29 12:06:44.503] [PRINT]         "target_sheet_id": "{{ target_sheet_id }}",
+[2026-04-29 12:06:44.503] [PRINT]         "create_missing": true,
+[2026-04-29 12:06:44.503] [PRINT]         "clear_existing": true,
+[2026-04-29 12:06:44.503] [PRINT]         "copy_data": true
+[2026-04-29 12:06:44.503] [PRINT]       },
+[2026-04-29 12:06:44.503] [PRINT]       "output_variables": {},
+[2026-04-29 12:06:44.503] [PRINT]       "description": "Copy all tabs and data from the source sheet to the new sheet, matching headers and clearing any existing data in the target tabs."
+[2026-04-29 12:06:44.503] [PRINT]     }
+[2026-04-29 12:06:44.503] [PRINT]   ]
+[2026-04-29 12:06:44.503] [PRINT] }
+[2026-04-29 12:06:44.550] [INFO] [-]   STEP [plan_generated]: 3 steps: drive_agent.search_files, sheets_agent.create_sheet, sheets_agent.mirror_tabs
+[2026-04-29 12:06:44.560] [PRINT] 
+[2026-04-29 12:06:44.560] [PRINT] Plan saved to: C:\Users\Carlos Miguel Carla\Documents\GitHub\Ai-Agents\supervisor-agent\agent_outputs\supervisor_plan.json
+[2026-04-29 12:06:44.620] [PRINT] ============================================================
+[2026-04-29 12:06:44.680] [PRINT] 
+[2026-04-29 12:06:44.680] [PRINT] ============================================================
+[2026-04-29 12:06:44.713] [PRINT] ORCHESTRATOR NODE - Execution Phase
+[2026-04-29 12:06:44.752] [PRINT] ============================================================
+[2026-04-29 12:06:44.783] [PRINT] Found 3 steps to execute
+[2026-04-29 12:06:44.843] [INFO] [-]   STEP [orchestrator_node]: 3 steps to execute
+[2026-04-29 12:06:44.855] [PRINT] 
+[2026-04-29 12:06:44.855] [PRINT] INITIAL CONTEXT:
+[2026-04-29 12:06:44.939] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:44.977] [PRINT]    today_date: 2026-04-29
+[2026-04-29 12:06:45.023] [PRINT]    _cached_tool_filter: dict (length: 3)
+[2026-04-29 12:06:45.062] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:45.091] [PRINT] Pre-flight credential check passed (5 fields)
+[2026-04-29 12:06:45.173] [PRINT] 
+[2026-04-29 12:06:45.173] [PRINT] ============================================================
+[2026-04-29 12:06:45.279] [PRINT] Step 1/3: drive_agent.search_files
+[2026-04-29 12:06:45.390] [PRINT] Description: Find the source spreadsheet by its file name or ID.
+[2026-04-29 12:06:45.513] [PRINT] ============================================================
+[2026-04-29 12:06:45.746] [PRINT] Risk Level: safe
+[2026-04-29 12:06:45.796] [PRINT] 
+[2026-04-29 12:06:45.796] [PRINT] Substituting variables in inputs...
+[2026-04-29 12:06:45.833] [PRINT]    Original inputs: {
+[2026-04-29 12:06:45.833] [PRINT]       "search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA"
+[2026-04-29 12:06:45.833] [PRINT] }
+[2026-04-29 12:06:45.885] [PRINT]    Substituted inputs: {
+[2026-04-29 12:06:45.885] [PRINT]       "search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA"
+[2026-04-29 12:06:45.885] [PRINT] }
+[2026-04-29 12:06:45.922] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter']
+[2026-04-29 12:06:45.964] [INFO] [-]   STEP [variable_substitution]: step 1: drive_agent.search_files  | {"inputs": {"search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA"}, "context_keys": ["today_date", "_cached_tool_filter"]}
+[2026-04-29 12:06:45.969] [PRINT] 
+[2026-04-29 12:06:45.969] [PRINT] Calling agent microservice: http://localhost:8006/execute_task
+[2026-04-29 12:06:46.013] [PRINT] 
+[2026-04-29 12:06:46.013] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-29 12:06:46.042] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:46.067] [PRINT]    Tool: search_files
+[2026-04-29 12:06:46.096] [PRINT]    Inputs keys: ['search_term']
+[2026-04-29 12:06:46.126] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-29 12:06:46.152] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-29 12:06:46.192] [PRINT]    Payload size: 716 bytes
+[2026-04-29 12:06:46.223] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:46.251] [PRINT] 
+[2026-04-29 12:06:46.251] [PRINT] Sending request to agent...
+[2026-04-29 12:06:46.278] [PRINT]    URL: http://localhost:8006/execute_task
+[2026-04-29 12:06:46.306] [PRINT]    Timeout: 320 seconds
+[2026-04-29 12:06:46.336] [PRINT]    Max retries: 3
+[2026-04-29 12:06:46.374] [PRINT] Attempt 1/3 calling http://localhost:8006/execute_task
+[2026-04-29 12:06:46.421] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-29 12:06:54.611] [PRINT] Agent call succeeded on attempt 1
+[2026-04-29 12:06:54.670] [PRINT] ⏱ Agent call completed in 8419.98ms
+[2026-04-29 12:06:54.721] [PRINT] Agent response received
+[2026-04-29 12:06:54.758] [AGENT] [-]   AGENT:  drive_agent.search_files (8420ms)  | {"search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA"}
+[2026-04-29 12:06:54.761] [PRINT] 
+[2026-04-29 12:06:54.761] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:54.801] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-29 12:06:54.848] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:54.916] [PRINT] {
+[2026-04-29 12:06:54.916] [PRINT]   "success": true,
+[2026-04-29 12:06:54.916] [PRINT]   "results": [],
+[2026-04-29 12:06:54.916] [PRINT]   "count": 0,
+[2026-04-29 12:06:54.916] [PRINT]   "search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-29 12:06:54.916] [PRINT]   "message": "No files found matching '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA'",
+[2026-04-29 12:06:54.916] [PRINT]   "error": null
+[2026-04-29 12:06:54.916] [PRINT] }
+[2026-04-29 12:06:54.983] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:55.026] [PRINT] 
+[2026-04-29 12:06:55.026] [PRINT] Variables added to context:
+[2026-04-29 12:06:55.091] [PRINT]    source_sheet_id = NOT FOUND (looking for results[0].id in result)
+[2026-04-29 12:06:55.154] [PRINT] 
+[2026-04-29 12:06:55.154] [PRINT] CONTEXT AFTER STEP 1:
+[2026-04-29 12:06:55.204] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:55.241] [PRINT]    today_date: 2026-04-29
+[2026-04-29 12:06:55.271] [PRINT]    _cached_tool_filter: Dict with keys: ['sheets_agent', 'gmail_agent', 'drive_agent']
+[2026-04-29 12:06:55.305] [PRINT]    step_1_drive_agent: Dict with keys: ['results', 'count', 'search_term', 'message']
+[2026-04-29 12:06:55.367] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:55.747] [PRINT] 
+[2026-04-29 12:06:55.747] [PRINT] ============================================================
+[2026-04-29 12:06:55.880] [PRINT] Step 2/3: sheets_agent.create_sheet
+[2026-04-29 12:06:55.979] [PRINT] Description: Create a new spreadsheet titled 'ASDWER'.
+[2026-04-29 12:06:56.066] [PRINT] ============================================================
+[2026-04-29 12:06:56.147] [PRINT] Risk Level: moderate
+[2026-04-29 12:06:56.180] [PRINT] 
+[2026-04-29 12:06:56.180] [PRINT] Substituting variables in inputs...
+[2026-04-29 12:06:56.212] [PRINT]    Original inputs: {
+[2026-04-29 12:06:56.212] [PRINT]       "title": "ASDWER"
+[2026-04-29 12:06:56.212] [PRINT] }
+[2026-04-29 12:06:56.270] [PRINT]    Substituted inputs: {
+[2026-04-29 12:06:56.270] [PRINT]       "title": "ASDWER"
+[2026-04-29 12:06:56.270] [PRINT] }
+[2026-04-29 12:06:56.316] [PRINT]    Available context variables: ['today_date', '_cached_tool_filter', 'step_1_drive_agent']
+[2026-04-29 12:06:56.366] [INFO] [-]   STEP [variable_substitution]: step 2: sheets_agent.create_sheet  | {"inputs": {"title": "ASDWER"}, "context_keys": ["today_date", "_cached_tool_filter", "step_1_drive_agent"]}
+[2026-04-29 12:06:56.370] [PRINT] 
+[2026-04-29 12:06:56.370] [PRINT] Calling agent microservice: http://localhost:8003/execute_task
+[2026-04-29 12:06:56.404] [PRINT] 
+[2026-04-29 12:06:56.404] [PRINT] REQUEST PAYLOAD STRUCTURE:
+[2026-04-29 12:06:56.446] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:56.506] [PRINT]    Tool: create_sheet
+[2026-04-29 12:06:56.598] [PRINT]    Inputs keys: ['title']
+[2026-04-29 12:06:56.631] [PRINT]    Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+[2026-04-29 12:06:56.666] [PRINT]    Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+[2026-04-29 12:06:56.715] [PRINT]    Payload size: 672 bytes
+[2026-04-29 12:06:56.809] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:06:56.889] [PRINT] 
+[2026-04-29 12:06:56.889] [PRINT] Sending request to agent...
+[2026-04-29 12:06:56.966] [PRINT]    URL: http://localhost:8003/execute_task
+[2026-04-29 12:06:57.011] [PRINT]    Timeout: 320 seconds
+[2026-04-29 12:06:57.045] [PRINT]    Max retries: 3
+[2026-04-29 12:06:57.081] [PRINT] Attempt 1/3 calling http://localhost:8003/execute_task
+[2026-04-29 12:06:57.131] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-29 12:07:06.739] [PRINT] Agent call succeeded on attempt 1
+[2026-04-29 12:07:06.814] [PRINT] ⏱ Agent call completed in 9935.47ms
+[2026-04-29 12:07:06.866] [PRINT] Agent response received
+[2026-04-29 12:07:06.923] [AGENT] [-]   AGENT:  sheets_agent.create_sheet (9935ms)  | {"title": "ASDWER"}
+[2026-04-29 12:07:06.931] [PRINT] 
+[2026-04-29 12:07:06.931] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:07:06.977] [PRINT] FULL AGENT RESPONSE DATA:
+[2026-04-29 12:07:07.025] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:07:07.055] [PRINT] {
+[2026-04-29 12:07:07.055] [PRINT]   "success": true,
+[2026-04-29 12:07:07.055] [PRINT]   "result": {
+[2026-04-29 12:07:07.055] [PRINT]     "success": true,
+[2026-04-29 12:07:07.055] [PRINT]     "sheet_id": "1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc",
+[2026-04-29 12:07:07.055] [PRINT]     "sheet_url": "https://docs.google.com/spreadsheets/d/1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc/edit?ouid=104306131081910008548",
+[2026-04-29 12:07:07.055] [PRINT]     "title": "ASDWER",
+[2026-04-29 12:07:07.055] [PRINT]     "folder_id": null,
+[2026-04-29 12:07:07.055] [PRINT]     "folder_moved": false,
+[2026-04-29 12:07:07.055] [PRINT]     "warning": null,
+[2026-04-29 12:07:07.055] [PRINT]     "message": "Created spreadsheet: ASDWER"
+[2026-04-29 12:07:07.055] [PRINT]   },
+[2026-04-29 12:07:07.055] [PRINT]   "error": null,
+[2026-04-29 12:07:07.055] [PRINT]   "error_type": null
+[2026-04-29 12:07:07.055] [PRINT] }
+[2026-04-29 12:07:07.102] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:07:07.132] [PRINT] 
+[2026-04-29 12:07:07.132] [PRINT] Variables added to context:
+[2026-04-29 12:07:07.171] [PRINT]    target_sheet_id = 1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc (from sheet_id)
+[2026-04-29 12:07:07.209] [PRINT] 
+[2026-04-29 12:07:07.209] [PRINT] CONTEXT AFTER STEP 2:
+[2026-04-29 12:07:07.244] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:07:07.270] [PRINT]    today_date: 2026-04-29
+[2026-04-29 12:07:07.298] [PRINT]    _cached_tool_filter: Dict with keys: ['sheets_agent', 'gmail_agent', 'drive_agent']
+[2026-04-29 12:07:07.382] [PRINT]    step_1_drive_agent: Dict with keys: ['results', 'count', 'search_term', 'message']
+[2026-04-29 12:07:07.422] [PRINT]    step_2_sheets_agent: Dict with keys: ['sheet_id', 'sheet_url', 'title', 'folder_id', 'folder_moved', 'warning', 'message']
+[2026-04-29 12:07:07.689] [PRINT]    target_sheet_id: 1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc
+[2026-04-29 12:07:07.821] [PRINT] ────────────────────────────────────────────────────────────
+[2026-04-29 12:07:08.032] [PRINT] 
+[2026-04-29 12:07:08.032] [PRINT] ============================================================
+[2026-04-29 12:07:08.059] [PRINT] Step 3/3: sheets_agent.mirror_tabs
+[2026-04-29 12:07:08.096] [PRINT] Description: Copy all tabs and data from the source sheet to the new sheet, matching headers and clearing any existing data in the target tabs.
+[2026-04-29 12:07:08.123] [PRINT] ============================================================
+[2026-04-29 12:07:08.198] [PRINT] Risk Level: dangerous
+[2026-04-29 12:07:08.233] [PRINT] ⏸ PAUSED - Action requires approval!
+[2026-04-29 12:07:08.343] [PRINT] Stored pending action: action_ea4c8c4a (sheets_agent.mirror_tabs)
+[2026-04-29 12:07:08.410] [PRINT] Approval required for action: action_ea4c8c4a
+[2026-04-29 12:07:08.457] [PRINT]    Details: {
+[2026-04-29 12:07:08.457] [PRINT]     "step_number": 3,
+[2026-04-29 12:07:08.457] [PRINT]     "total_steps": 3,
+[2026-04-29 12:07:08.457] [PRINT]     "agent": "sheets_agent",
+[2026-04-29 12:07:08.457] [PRINT]     "tool": "mirror_tabs",
+[2026-04-29 12:07:08.457] [PRINT]     "description": "Copy all tabs and data from the source sheet to the new sheet, matching headers and clearing any existing data in the target tabs.",
+[2026-04-29 12:07:08.457] [PRINT]     "inputs": {
+[2026-04-29 12:07:08.457] [PRINT]         "source_sheet_id": "",
+[2026-04-29 12:07:08.457] [PRINT]         "target_sheet_id": "1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc",
+[2026-04-29 12:07:08.457] [PRINT]         "create_missing": true,
+[2026-04-29 12:07:08.457] [PRINT]         "clear_existing": true,
+[2026-04-29 12:07:08.457] [PRINT]         "copy_data": true
+[2026-04-29 12:07:08.457] [PRINT]     },
+[2026-04-29 12:07:08.457] [PRINT]     "output_variables": {},
+[2026-04-29 12:07:08.457] [PRINT]     "risk_level": "dangerous"
+[2026-04-29 12:07:08.457] [PRINT] }
+[2026-04-29 12:07:08.489] [PRINT] ⏸ WORKFLOW PAUSED — waiting for chat-based approval
+[2026-04-29 12:07:08.562] [PRINT] 
+[2026-04-29 12:07:08.562] [PRINT]  Workflow paused: Workflow paused — action requires approval
+[2026-04-29 12:07:08.613] [INFO] [-]   WORKFLOW END: paused_for_approval (2/3 steps)
+[2026-04-29 12:07:08.619] [PRINT] 
+[2026-04-29 12:07:08.619] [PRINT]  Generated Plan:
+[2026-04-29 12:07:08.619] [PRINT] {
+[2026-04-29 12:07:08.619] [PRINT]   "steps": [
+[2026-04-29 12:07:08.619] [PRINT]     {
+[2026-04-29 12:07:08.619] [PRINT]       "agent": "drive_agent",
+[2026-04-29 12:07:08.619] [PRINT]       "tool": "search_files",
+[2026-04-29 12:07:08.619] [PRINT]       "inputs": {
+[2026-04-29 12:07:08.619] [PRINT]         "search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA"
+[2026-04-29 12:07:08.619] [PRINT]       },
+[2026-04-29 12:07:08.619] [PRINT]       "output_variables": {
+[2026-04-29 12:07:08.619] [PRINT]         "source_sheet_id": "results[0].id"
+[2026-04-29 12:07:08.619] [PRINT]       },
+[2026-04-29 12:07:08.619] [PRINT]       "description": "Find the source spreadsheet by its file name or ID."
+[2026-04-29 12:07:08.619] [PRINT]     },
+[2026-04-29 12:07:08.619] [PRINT]     {
+[2026-04-29 12:07:08.619] [PRINT]       "agent": "sheets_agent",
+[2026-04-29 12:07:08.619] [PRINT]       "tool": "create_sheet",
+[2026-04-29 12:07:08.619] [PRINT]       "inputs": {
+[2026-04-29 12:07:08.619] [PRINT]         "title": "ASDWER"
+[2026-04-29 12:07:08.619] [PRINT]       },
+[2026-04-29 12:07:08.619] [PRINT]       "output_variables": {
+[2026-04-29 12:07:08.619] [PRINT]         "target_sheet_id": "sheet_id"
+[2026-04-29 12:07:08.619] [PRINT]       },
+[2026-04-29 12:07:08.619] [PRINT]       "description": "Create a new spreadsheet titled 'ASDWER'."
+[2026-04-29 12:07:08.619] [PRINT]     },
+[2026-04-29 12:07:08.619] [PRINT]     {
+[2026-04-29 12:07:08.619] [PRINT]       "agent": "sheets_agent",
+[2026-04-29 12:07:08.619] [PRINT]       "tool": "mirror_tabs",
+[2026-04-29 12:07:08.619] [PRINT]       "inputs": {
+[2026-04-29 12:07:08.619] [PRINT]         "source_sheet_id": "{{ source_sheet_id }}",
+[2026-04-29 12:07:08.619] [PRINT]         "target_sheet_id": "{{ target_sheet_id }}",
+[2026-04-29 12:07:08.619] [PRINT]         "create_missing": true,
+[2026-04-29 12:07:08.619] [PRINT]         "clear_existing": true,
+[2026-04-29 12:07:08.619] [PRINT]         "copy_data": true
+[2026-04-29 12:07:08.619] [PRINT]       },
+[2026-04-29 12:07:08.619] [PRINT]       "output_variables": {},
+[2026-04-29 12:07:08.619] [PRINT]       "description": "Copy all tabs and data from the source sheet to the new sheet, matching headers and clearing any existing data in the target tabs."
+[2026-04-29 12:07:08.619] [PRINT]     }
+[2026-04-29 12:07:08.619] [PRINT]   ]
+[2026-04-29 12:07:08.619] [PRINT] }
+[2026-04-29 12:07:08.671] [PRINT] 
+[2026-04-29 12:07:08.671] [PRINT]  Final Context: {
+[2026-04-29 12:07:08.671] [PRINT]   "today_date": "2026-04-29",
+[2026-04-29 12:07:08.671] [PRINT]   "_cached_tool_filter": {
+[2026-04-29 12:07:08.671] [PRINT]     "sheets_agent": [
+[2026-04-29 12:07:08.671] [PRINT]       "get_sheet_headers",
+[2026-04-29 12:07:08.671] [PRINT]       "create_sheet",
+[2026-04-29 12:07:08.671] [PRINT]       "append_rows",
+[2026-04-29 12:07:08.671] [PRINT]       "ensure_headers",
+[2026-04-29 12:07:08.671] [PRINT]       "mirror_tabs",
+[2026-04-29 12:07:08.671] [PRINT]       "get_sheet_metadata"
+[2026-04-29 12:07:08.671] [PRINT]     ],
+[2026-04-29 12:07:08.671] [PRINT]     "gmail_agent": [
+[2026-04-29 12:07:08.671] [PRINT]       "search_drafts",
+[2026-04-29 12:07:08.671] [PRINT]       "send_draft_email",
+[2026-04-29 12:07:08.671] [PRINT]       "create_draft_email"
+[2026-04-29 12:07:08.671] [PRINT]     ],
+[2026-04-29 12:07:08.671] [PRINT]     "drive_agent": [
+[2026-04-29 12:07:08.671] [PRINT]       "search_files"
+[2026-04-29 12:07:08.671] [PRINT]     ]
+[2026-04-29 12:07:08.671] [PRINT]   },
+[2026-04-29 12:07:08.671] [PRINT]   "step_1_drive_agent": {
+[2026-04-29 12:07:08.671] [PRINT]     "results": [],
+[2026-04-29 12:07:08.671] [PRINT]     "count": 0,
+[2026-04-29 12:07:08.671] [PRINT]     "search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-29 12:07:08.671] [PRINT]     "message": "No files found matching '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA'"
+[2026-04-29 12:07:08.671] [PRINT]   },
+[2026-04-29 12:07:08.671] [PRINT]   "step_2_sheets_agent": {
+[2026-04-29 12:07:08.671] [PRINT]     "sheet_id": "1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc",
+[2026-04-29 12:07:08.671] [PRINT]     "sheet_url": "https://docs.google.com/spreadsheets/d/1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc/edit?ouid=104306131081910008548",
+[2026-04-29 12:07:08.671] [PRINT]     "title": "ASDWER",
+[2026-04-29 12:07:08.671] [PRINT]     "folder_id": null,
+[2026-04-29 12:07:08.671] [PRINT]     "folder_moved": false,
+[2026-04-29 12:07:08.671] [PRINT]     "warning": null,
+[2026-04-29 12:07:08.671] [PRINT]     "message": "Created spreadsheet: ASDWER"
+[2026-04-29 12:07:08.671] [PRINT]   },
+[2026-04-29 12:07:08.671] [PRINT]   "target_sheet_id": "1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc",
+[2026-04-29 12:07:08.671] [PRINT]   "results": [
+[2026-04-29 12:07:08.671] [PRINT]     {
+[2026-04-29 12:07:08.671] [PRINT]       "step": 1,
+[2026-04-29 12:07:08.671] [PRINT]       "agent": "drive_agent",
+[2026-04-29 12:07:08.671] [PRINT]       "tool": "search_files",
+[2026-04-29 12:07:08.671] [PRINT]       "description": "Find the source spreadsheet by its file name or ID.",
+[2026-04-29 12:07:08.671] [PRINT]       "inputs": {
+[2026-04-29 12:07:08.671] [PRINT]         "search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA"
+[2026-04-29 12:07:08.671] [PRINT]       },
+[2026-04-29 12:07:08.671] [PRINT]       "output": {
+[2026-04-29 12:07:08.671] [PRINT]         "success": true,
+[2026-04-29 12:07:08.671] [PRINT]         "results": [],
+[2026-04-29 12:07:08.671] [PRINT]         "count": 0,
+[2026-04-29 12:07:08.671] [PRINT]         "search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA",
+[2026-04-29 12:07:08.671] [PRINT]         "message": "No files found matching '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA'",
+[2026-04-29 12:07:08.671] [PRINT]         "error": null
+[2026-04-29 12:07:08.671] [PRINT]       },
+[2026-04-29 12:07:08.671] [PRINT]       "status": "success"
+[2026-04-29 12:07:08.671] [PRINT]     },
+[2026-04-29 12:07:08.671] [PRINT]     {
+[2026-04-29 12:07:08.671] [PRINT]       "step": 2,
+[2026-04-29 12:07:08.671] [PRINT]       "agent": "sheets_agent",
+[2026-04-29 12:07:08.671] [PRINT]       "tool": "create_sheet",
+[2026-04-29 12:07:08.671] [PRINT]       "description": "Create a new spreadsheet titled 'ASDWER'.",
+[2026-04-29 12:07:08.671] [PRINT]       "inputs": {
+[2026-04-29 12:07:08.671] [PRINT]         "title": "ASDWER"
+[2026-04-29 12:07:08.671] [PRINT]       },
+[2026-04-29 12:07:08.671] [PRINT]       "output": {
+[2026-04-29 12:07:08.671] [PRINT]         "success": true,
+[2026-04-29 12:07:08.671] [PRINT]         "sheet_id": "1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc",
+[2026-04-29 12:07:08.671] [PRINT]         "sheet_url": "https://docs.google.com/spreadsheets/d/1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc/edit?ouid=104306131081910008548",
+[2026-04-29 12:07:08.671] [PRINT]         "title": "ASDWER",
+[2026-04-29 12:07:08.671] [PRINT]         "folder_id": null,
+[2026-04-29 12:07:08.671] [PRINT]         "folder_moved": false,
+[2026-04-29 12:07:08.671] [PRINT]         "warning": null,
+[2026-04-29 12:07:08.671] [PRINT]         "message": "Created spreadsheet: ASDWER"
+[2026-04-29 12:07:08.671] [PRINT]       },
+[2026-04-29 12:07:08.671] [PRINT]       "status": "success"
+[2026-04-29 12:07:08.671] [PRINT]     },
+[2026-04-29 12:07:08.671] [PRINT]     {
+[2026-04-29 12:07:08.671] [PRINT]       "step": 3,
+[2026-04-29 12:07:08.671] [PRINT]       "agent": "sheets_agent",
+[2026-04-29 12:07:08.671] [PRINT]       "tool": "mirror_tabs",
+[2026-04-29 12:07:08.671] [PRINT]       "status": "pending_approval",
+[2026-04-29 12:07:08.671] [PRINT]       "action_id": "action_ea4c8c4a",
+[2026-04-29 12:07:08.671] [PRINT]       "description": "Copy all tabs and data from the source sheet to the new sheet, matching headers and clearing any existing data in the target tabs."
+[2026-04-29 12:07:08.671] [PRINT]     }
+[2026-04-29 12:07:08.671] [PRINT]   ],
+[2026-04-29 12:07:08.671] [PRINT]   "paused_for_approval": true,
+[2026-04-29 12:07:08.671] [PRINT]   "pending_action": {
+[2026-04-29 12:07:08.671] [PRINT]     "step_number": 3,
+[2026-04-29 12:07:08.671] [PRINT]     "total_steps": 3,
+[2026-04-29 12:07:08.671] [PRINT]     "agent": "sheets_agent",
+[2026-04-29 12:07:08.671] [PRINT]     "tool": "mirror_tabs",
+[2026-04-29 12:07:08.671] [PRINT]     "description": "Copy all tabs and data from the source sheet to the new sheet, matching headers and clearing any existing data in the target tabs.",
+[2026-04-29 12:07:08.671] [PRINT]     "inputs": {
+[2026-04-29 12:07:08.671] [PRINT]       "source_sheet_id": "",
+[2026-04-29 12:07:08.671] [PRINT]       "target_sheet_id": "1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc",
+[2026-04-29 12:07:08.671] [PRINT]       "create_missing": true,
+[2026-04-29 12:07:08.671] [PRINT]       "clear_existing": true,
+[2026-04-29 12:07:08.671] [PRINT]       "copy_data": true
+[2026-04-29 12:07:08.671] [PRINT]     },
+[2026-04-29 12:07:08.671] [PRINT]     "output_variables": {},
+[2026-04-29 12:07:08.671] [PRINT]     "risk_level": "dangerous"
+[2026-04-29 12:07:08.671] [PRINT]   },
+[2026-04-29 12:07:08.671] [PRINT]   "pending_action_id": "action_ea4c8c4a",
+[2026-04-29 12:07:08.671] [PRINT]   "remaining_steps": []
+[2026-04-29 12:07:08.671] [PRINT] }
+[2026-04-29 12:07:08.732] [INFO] [req_20260429040633_2a1e5287] [T:d2f4ff4a]   STEP [workflow_paused]: Workflow paused — action requires chat approval
+[2026-04-29 12:07:08.942] [INFO] [req_20260429040633_2a1e5287] [T:d2f4ff4a]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 204, "total": 603, "max": 2000, "response_preview": "**Completed so far:**\n- No files found.\n- Created spreadsheet **ASDWER**: https://docs.google.com/spreadsheets/d/1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc/edit?ouid=104306131081910008548\n\n**Action ..."}
+[2026-04-29 12:07:09.119] [PRINT] 
+[2026-04-29 12:07:09.119] [PRINT] ============================================================
+[2026-04-29 12:07:09.140] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-29 12:07:09.171] [PRINT] ============================================================
+[2026-04-29 12:07:09.195] [PRINT]   LLM calls:        2
+[2026-04-29 12:07:09.229] [PRINT]   Total input:      12,346 tokens
+[2026-04-29 12:07:09.272] [PRINT]   Total output:     293 tokens
+[2026-04-29 12:07:09.326] [PRINT]   Total tokens:     12,639 tokens
+[2026-04-29 12:07:09.356] [PRINT]   Cached tokens:    11,264 (91.2% of input)
+[2026-04-29 12:07:09.386] [PRINT]   Estimated cost:   $0.0090
+[2026-04-29 12:07:09.446] [PRINT]   Total duration:   35290ms (35.3s)
+[2026-04-29 12:07:09.477] [PRINT]   ────────────────────────────────────────────────────────
+[2026-04-29 12:07:09.512] [PRINT]   Breakdown by call:
+[2026-04-29 12:07:09.595] [PRINT]     1. gpt-4o-mini      in=262    out=88    $0.0001 2570ms
+[2026-04-29 12:07:09.644] [PRINT]     2. gpt-4.1          in=12084  out=205   (cached=11264) $0.0089 2882ms
+[2026-04-29 12:07:09.686] [PRINT] ============================================================
+[2026-04-29 12:07:09.758] [INFO] [req_20260429040633_2a1e5287] [T:d2f4ff4a] ← RESPONSE: 200 (40923ms)
+[2026-04-29 12:07:09.762] [INFO] [req_20260429040633_2a1e5287] [T:d2f4ff4a] ─────────: ──────────────────────────────────────────────────
+[2026-04-29 12:07:09.771] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a
+[2026-04-29 12:07:15.512] [INFO] [req_20260429040633_2a1e5287] [T:d2f4ff4a] → REQUEST: POST /threads/bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a/messages  | {"query": null}
+[2026-04-29 12:07:20.521] [INFO] [req_20260429040720_b9bc855c] [T:d2f4ff4a]   USER MSG: "yes"
+[2026-04-29 12:07:20.556] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-29 12:07:20.563] [PRINT] WebSocket connected for thread: bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a
+[2026-04-29 12:07:20.622] [PRINT]   NEW MESSAGE  |  thread: bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a
+[2026-04-29 12:07:20.662] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-29 12:07:20.687] [PRINT]   User: yes
+[2026-04-29 12:07:20.716] [PRINT]   ConversationState:
+[2026-04-29 12:07:20.763] [PRINT]     extracted_info: {"_cached_tool_filter": {"sheets_agent": ["get_sheet_headers", "create_sheet", "append_rows", "ensure_headers", "mirror_tabs", "get_sheet_metadata"], "gmail_agent": ["search_drafts", "send_draft_email", "create_draft_email"], "drive_agent": ["search_files"]}, "file_name": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA", "new_title": "ASDWER"}
+[2026-04-29 12:07:20.807] [PRINT]     missing_fields: []
+[2026-04-29 12:07:20.857] [PRINT]     intent: "ready_to_execute"
+[2026-04-29 12:07:20.916] [PRINT]     clarification_question: null
+[2026-04-29 12:07:20.959] [PRINT]     ready_for_execution: false
+[2026-04-29 12:07:20.993] [PRINT]     execution_summary: "Find file '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA' and create new document 'ASDWER' with all sheet tabs and data copied, headers matched, and duplicate requests blocked."
+[2026-04-29 12:07:21.041] [PRINT]     execution_mode: "standard"
+[2026-04-29 12:07:21.083] [PRINT]     execution_history: []
+[2026-04-29 12:07:21.122] [PRINT]     completed_tasks: []
+[2026-04-29 12:07:21.194] [PRINT]     has_executed: false
+[2026-04-29 12:07:21.257] [PRINT]     last_executed_at: null
+[2026-04-29 12:07:21.361] [PRINT]     last_execution_status: null
+[2026-04-29 12:07:21.505] [PRINT]     last_execution_message: null
+[2026-04-29 12:07:21.818] [PRINT]     executing: false
+[2026-04-29 12:07:21.962] [PRINT]     pending_actions: [{"action_id": "action_ea4c8c4a", "step_number": 3, "total_steps": 3, "agent": "sheets_agent", "tool": "mirror_tabs", "description": "Copy all tabs and data from the source sheet to the new sheet, matching headers and clearing any existing data in the target tabs.", "inputs": {"source_sheet_id": "", "target_sheet_id": "1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc", "create_missing": true, "clear_existing": true, "copy_data": true}, "output_variables": {}, "risk_level": "dangerous"}]
+[2026-04-29 12:07:22.040] [PRINT]     workflow_paused: true
+[2026-04-29 12:07:22.096] [PRINT]     remaining_steps: []
+[2026-04-29 12:07:22.170] [PRINT]     workflow_context: {"today_date": "2026-04-29", "_cached_tool_filter": {"sheets_agent": ["get_sheet_headers", "create_sheet", "append_rows", "ensure_headers", "mirror_tabs", "get_sheet_metadata"], "gmail_agent": ["search_drafts", "send_draft_email", "create_draft_email"], "drive_agent": ["search_files"]}, "step_1_drive_agent": {"results": [], "count": 0, "search_term": "14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA", "message": "No files found matching '14KA6vyTlXeH5TKlpGOnHdmijP8662j8LOMqqUNx44uA'"}, "step_2_sheets_agent": {"sheet_id": "1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc", "sheet_url": "https://docs.google.com/spreadsheets/d/1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc/edit?ouid=104306131081910008548", "title": "ASDWER", "folder_id": null, "folder_moved": false, "warning": null, "message": "Created spreadsheet: ASDWER"}, "target_sheet_id": "1gcRWwjxlmMagZVJElDhW7GkLu4j76QEKwe_-sGYYWIc", "_execution_mode": "standard"}
+[2026-04-29 12:07:22.223] [PRINT]     disambiguation_options: []
+[2026-04-29 12:07:22.293] [PRINT]     disambiguation_variable: null
+[2026-04-29 12:07:22.347] [PRINT] ══════════════════════════════════════════════════════════════════════
+[2026-04-29 12:07:22.386] [INFO] [-]   STEP [new_message]: thread=bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a, msg=yes
+[2026-04-29 12:07:24.637] [INFO] [-]   INFO: Memory: added user message  | {"tokens": 6, "total": 609, "max": 2000}
+[2026-04-29 12:07:24.694] [INFO] [-]   STEP [tier0]: pending action APPROVED via chat: action_ea4c8c4a
+[2026-04-29 12:07:24.717] [INFO] [-]   ANALYSIS: intent=ConversationIntent.SMALL_TALK, ready=False  | {"missing_fields": []}
+[2026-04-29 12:07:24.723] [INFO] [-]   STEP [conversation_state]: intent=ConversationIntent.SMALL_TALK
+    ↳ {"intent": "ConversationIntent.SMALL_TALK", "task_type": "N/A", "missing_fields": [], "clarification_question": null, "ready_for_execution": false, "execution_summary": null, "execution_mode": "standard", "extracted_info": {"_cached_tool_filter": {"sheets_agent": ["get_sheet_headers", "create_sheet", "append_rows", "ensure_headers", "mirror_tabs", "get_sheet_metadata"], "gmail_agent": ["search_drafts", "send_draft_email", "create_draft_email"], "drive_agent": ["search_files"]}, "file_name": "14K
+[2026-04-29 12:07:24.728] [INFO] [-]   INFO: Memory: added assistant message  | {"tokens": 9, "total": 618, "max": 2000, "response_preview": "Executing approved action..."}
+[2026-04-29 12:07:24.872] [INFO] [req_20260429040720_b9bc855c] [T:d2f4ff4a]   BOT RESP: "Executing approved action..."
+[2026-04-29 12:07:24.874] [PRINT] Chat-based approval for action action_ea4c8c4a
+[2026-04-29 12:07:24.940] [INFO] [req_20260429040720_b9bc855c] [T:d2f4ff4a]   STEP [chat_approval]: Executing approved action: action_ea4c8c4a
+[2026-04-29 12:07:25.031] [PRINT] Attempt 1/3 calling http://localhost:8003/execute_task
+[2026-04-29 12:07:25.061] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-29 12:07:33.484] [PRINT] Agent reported error: Google Sheets API error: <HttpError 404 when requesting https://sheets.googleapis.com/v4/spreadsheets/?alt=json returned "Not Found". Details: "<!DOCTYPE html>
+[2026-04-29 12:07:33.484] [PRINT] <html lang=en>
+[2026-04-29 12:07:33.484] [PRINT]   <meta charset=utf-8>
+[2026-04-29 12:07:33.484] [PRINT]   <meta name=viewport content="initial-scale=1, minimum-scale=1, width=device-width">
+[2026-04-29 12:07:33.484] [PRINT]   <title>Error 404 (Not Found)!!1</title>
+[2026-04-29 12:07:33.484] [PRINT]   <style>
+[2026-04-29 12:07:33.484] [PRINT]     *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/branding/googlelogo/1x/googlelogo_color_150x54dp.png) no-repeat;margin-left:-5px}@media only screen and (min-resolution:192dpi){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat 0% 0%/100% 100%;-moz-border-image:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) 0}}@media only screen and (-webkit-min-device-pixel-ratio:2){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat;-webkit-background-size:100% 100%}}#logo{display:inline-block;height:54px;width:150px}
+[2026-04-29 12:07:33.484] [PRINT]   </style>
+[2026-04-29 12:07:33.484] [PRINT]   <a href=//www.google.com/><span id=logo aria-label=Google></span></a>
+[2026-04-29 12:07:33.484] [PRINT]   <p><b>404.</b> <ins>That’s an error.</ins>
+[2026-04-29 12:07:33.484] [PRINT]   <p>The requested URL <code>/v4/spreadsheets/?alt=json</code> was not found on this server.  <ins>That’s all we know.</ins>
+[2026-04-29 12:07:33.484] [PRINT] ">
+[2026-04-29 12:07:33.566] [PRINT]    Retrying in 1.0s...
+[2026-04-29 12:07:34.603] [PRINT] Attempt 2/3 calling http://localhost:8003/execute_task
+[2026-04-29 12:07:34.642] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-29 12:07:44.262] [PRINT] Agent reported error: Google Sheets API error: <HttpError 404 when requesting https://sheets.googleapis.com/v4/spreadsheets/?alt=json returned "Not Found". Details: "<!DOCTYPE html>
+[2026-04-29 12:07:44.262] [PRINT] <html lang=en>
+[2026-04-29 12:07:44.262] [PRINT]   <meta charset=utf-8>
+[2026-04-29 12:07:44.262] [PRINT]   <meta name=viewport content="initial-scale=1, minimum-scale=1, width=device-width">
+[2026-04-29 12:07:44.262] [PRINT]   <title>Error 404 (Not Found)!!1</title>
+[2026-04-29 12:07:44.262] [PRINT]   <style>
+[2026-04-29 12:07:44.262] [PRINT]     *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/branding/googlelogo/1x/googlelogo_color_150x54dp.png) no-repeat;margin-left:-5px}@media only screen and (min-resolution:192dpi){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat 0% 0%/100% 100%;-moz-border-image:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) 0}}@media only screen and (-webkit-min-device-pixel-ratio:2){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat;-webkit-background-size:100% 100%}}#logo{display:inline-block;height:54px;width:150px}
+[2026-04-29 12:07:44.262] [PRINT]   </style>
+[2026-04-29 12:07:44.262] [PRINT]   <a href=//www.google.com/><span id=logo aria-label=Google></span></a>
+[2026-04-29 12:07:44.262] [PRINT]   <p><b>404.</b> <ins>That’s an error.</ins>
+[2026-04-29 12:07:44.262] [PRINT]   <p>The requested URL <code>/v4/spreadsheets/?alt=json</code> was not found on this server.  <ins>That’s all we know.</ins>
+[2026-04-29 12:07:44.262] [PRINT] ">
+[2026-04-29 12:07:44.361] [PRINT]    Retrying in 2.0s...
+[2026-04-29 12:07:46.435] [PRINT] Attempt 3/3 calling http://localhost:8003/execute_task
+[2026-04-29 12:07:46.501] [PRINT]  ⏱ Timeout set to: 320.0 seconds
+[2026-04-29 12:07:55.571] [PRINT] Agent reported error: Google Sheets API error: <HttpError 404 when requesting https://sheets.googleapis.com/v4/spreadsheets/?alt=json returned "Not Found". Details: "<!DOCTYPE html>
+[2026-04-29 12:07:55.571] [PRINT] <html lang=en>
+[2026-04-29 12:07:55.571] [PRINT]   <meta charset=utf-8>
+[2026-04-29 12:07:55.571] [PRINT]   <meta name=viewport content="initial-scale=1, minimum-scale=1, width=device-width">
+[2026-04-29 12:07:55.571] [PRINT]   <title>Error 404 (Not Found)!!1</title>
+[2026-04-29 12:07:55.571] [PRINT]   <style>
+[2026-04-29 12:07:55.571] [PRINT]     *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/branding/googlelogo/1x/googlelogo_color_150x54dp.png) no-repeat;margin-left:-5px}@media only screen and (min-resolution:192dpi){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat 0% 0%/100% 100%;-moz-border-image:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) 0}}@media only screen and (-webkit-min-device-pixel-ratio:2){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat;-webkit-background-size:100% 100%}}#logo{display:inline-block;height:54px;width:150px}
+[2026-04-29 12:07:55.571] [PRINT]   </style>
+[2026-04-29 12:07:55.571] [PRINT]   <a href=//www.google.com/><span id=logo aria-label=Google></span></a>
+[2026-04-29 12:07:55.571] [PRINT]   <p><b>404.</b> <ins>That’s an error.</ins>
+[2026-04-29 12:07:55.571] [PRINT]   <p>The requested URL <code>/v4/spreadsheets/?alt=json</code> was not found on this server.  <ins>That’s all we know.</ins>
+[2026-04-29 12:07:55.571] [PRINT] ">
+[2026-04-29 12:07:55.666] [PRINT] Action executed: False
+[2026-04-29 12:07:55.925] [INFO] [req_20260429040720_b9bc855c] [T:d2f4ff4a]   INFO: Memory: replaced last assistant message
+    ↳ {"tokens": 94, "total": 703, "max": 2000, "response_preview": "**Action Failed — Copy all tabs and data from the source sheet to the new sheet, matching headers and clearing any existing data in the target tabs.**\n\n**Issue:** Google Sheets API returned HTTP 404: ..."}
+[2026-04-29 12:07:56.054] [PRINT] 
+[2026-04-29 12:07:56.054] [PRINT] ============================================================
+[2026-04-29 12:07:56.101] [PRINT]  REQUEST TOKEN SUMMARY
+[2026-04-29 12:07:56.136] [PRINT] ============================================================
+[2026-04-29 12:07:56.169] [PRINT]   No LLM calls made in this request.
+[2026-04-29 12:07:56.241] [PRINT] ============================================================
+[2026-04-29 12:07:56.320] [INFO] [req_20260429040720_b9bc855c] [T:d2f4ff4a] ← RESPONSE: 200 (40808ms)
+[2026-04-29 12:07:56.326] [INFO] [req_20260429040720_b9bc855c] [T:d2f4ff4a] ─────────: ──────────────────────────────────────────────────
+[2026-04-29 12:07:56.340] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_d2f4ff4a
