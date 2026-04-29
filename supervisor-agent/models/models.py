@@ -146,12 +146,6 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     "move_file": ActionRiskLevel.MODERATE,
     # Sheets (new spreadsheet, idempotent tab creation)
     "create_sheet": ActionRiskLevel.MODERATE,
-    # find_or_create_sheet is the idempotent sibling of create_sheet -
-    # it returns existing matches without modifying them, OR delegates
-    # to create_sheet on miss. Worst-case behavior is identical to
-    # create_sheet (a NEW sheet at user's Drive root or in a folder),
-    # so MODERATE matches. Auto-approved by default.
-    "find_or_create_sheet": ActionRiskLevel.MODERATE,
     "ensure_headers": ActionRiskLevel.MODERATE,
     # add_sheet_tab is idempotent (no-op when the tab already exists) and
     # creates only an empty tab structure — no row data is written unless
