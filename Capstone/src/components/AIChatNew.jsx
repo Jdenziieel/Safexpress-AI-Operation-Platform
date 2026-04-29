@@ -30,8 +30,7 @@ import {
   PenTool,
   Brain,
   FileText,
-  Image as ImageIcon,
-  MoreVertical
+  Image as ImageIcon
 } from "lucide-react";
 import { getUserFromToken, getUserUUID } from "../utils/tokenManager";
 import "../css/AIChatNew.css";
@@ -262,7 +261,6 @@ function AIChatNew() {
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [editingThreadId, setEditingThreadId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
-  const [openThreadMenuId, setOpenThreadMenuId] = useState(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -1171,6 +1169,19 @@ function AIChatNew() {
     "Help me organize my tasks for today",
   ];
 
+  if (isLoadingThread) {
+    return (
+      <div className="aichat-new-wrapper">
+        <div className="aichat-new-page">
+          <div className="loading-screen">
+            <Sparkles size={48} className="loading-icon" />
+            <p>Loading chat...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="aichat-page">
       <div className="aichat-container">
@@ -1180,7 +1191,8 @@ function AIChatNew() {
           <aside className={`threads-panel ${showThreads ? 'visible' : ''}`}>
           <div className="threads-panel-header">
             <h3>
-              Recents
+              <MessageSquare size={20} />
+              Conversations
             </h3>
             <button
               onClick={handleNewChat}
@@ -1207,11 +1219,12 @@ function AIChatNew() {
               threads.map((thread) => (
                 <div
                   key={thread.thread_id}
-                  className={`thread-card ${thread.thread_id === threadId ? 'active' : ''} ${openThreadMenuId === thread.thread_id ? 'menu-open' : ''}`}
+                  className={`thread-card ${thread.thread_id === threadId ? 'active' : ''}`}
                   onClick={() => handleThreadSelect(thread.thread_id)}
                 >
                   <div className="thread-card-content">
-                    <div className="thread-title-row">
+                    <div className="thread-card-header">
+                      <MessageSquare size={16} />
                       {editingThreadId === thread.thread_id ? (
                         <input
                           className="thread-title-input"
@@ -1226,60 +1239,40 @@ function AIChatNew() {
                           autoFocus
                         />
                       ) : (
-                        <span className="thread-title-text">
+                        <span className="thread-id">
                           {thread.title || thread.thread_id.substring(0, 12) + '...'}
                         </span>
                       )}
                     </div>
+                    <span className="thread-messages-count">
+                      {thread.message_count || 0} messages
+                    </span>
                   </div>
                   <div className="thread-card-actions">
-                    <button
-                      className="thread-action-btn thread-menu-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenThreadMenuId((current) => current === thread.thread_id ? null : thread.thread_id);
-                      }}
-                      title="More actions"
-                    >
-                      <MoreVertical size={14} />
-                    </button>
-                    {openThreadMenuId === thread.thread_id && (
-                      <div className="thread-action-menu" onClick={(e) => e.stopPropagation()}>
-                        {editingThreadId === thread.thread_id ? (
-                          <button
-                            className="thread-menu-item"
-                            onClick={() => {
-                              handleRenameThread(thread.thread_id);
-                              setOpenThreadMenuId(null);
-                            }}
-                          >
-                            <Check size={14} />
-                            <span>Save</span>
-                          </button>
-                        ) : (
-                          <button
-                            className="thread-menu-item"
-                            onClick={(e) => {
-                              startEditingTitle(thread.thread_id, thread.title || thread.thread_id.substring(0, 12), e);
-                              setOpenThreadMenuId(null);
-                            }}
-                          >
-                            <Pencil size={14} />
-                            <span>Rename</span>
-                          </button>
-                        )}
-                        <button
-                          className="thread-menu-item thread-menu-delete"
-                          onClick={(e) => {
-                            handleDeleteThread(thread.thread_id, e);
-                            setOpenThreadMenuId(null);
-                          }}
-                        >
-                          <Trash2 size={14} />
-                          <span>Delete</span>
-                        </button>
-                      </div>
+                    {editingThreadId === thread.thread_id ? (
+                      <button
+                        className="thread-action-btn thread-confirm-btn"
+                        onClick={(e) => { e.stopPropagation(); handleRenameThread(thread.thread_id); }}
+                        title="Save title"
+                      >
+                        <Check size={14} />
+                      </button>
+                    ) : (
+                      <button
+                        className="thread-action-btn thread-edit-btn"
+                        onClick={(e) => startEditingTitle(thread.thread_id, thread.title || thread.thread_id.substring(0, 12), e)}
+                        title="Rename conversation"
+                      >
+                        <Pencil size={14} />
+                      </button>
                     )}
+                    <button
+                      className="thread-action-btn thread-delete-btn"
+                      onClick={(e) => handleDeleteThread(thread.thread_id, e)}
+                      title="Delete conversation"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
               ))
@@ -1300,6 +1293,12 @@ function AIChatNew() {
               </button>
             </div>
             
+            {/* Token Usage Badge in Header */}
+            <div className="chat-header-center">
+              <QuotaWidget compact={true} />
+              <TokenUsageBadge usage={tokenUsage} />
+            </div>
+            
             <div className="chat-header-right">
             </div>
           </header>
@@ -1312,19 +1311,11 @@ function AIChatNew() {
           />
 
           <div className="chat-thread">
-            {isLoadingThread ? (
-              <div className="chat-loading-screen">
-                <div className="loading-screen">
-                  <Sparkles size={48} className="loading-icon" />
-                  <p>Loading chat...</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="chat-messages">
-                  {messages.length === 0 ? (
+            <div className="chat-messages">
+              {messages.length === 0 ? (
                 <div className="chat-welcome">
-                  
+                  <div className="chat-welcome-icon">
+                  </div>
                   <h2>Hello! How can I help you today?</h2>
                   <p>I can help you with Gmail, Google Docs, Drive, and more</p>
 
@@ -1341,70 +1332,70 @@ function AIChatNew() {
                     ))}
                   </div>
                 </div>
-                  ) : (
-                    <>
-                      {messages.map((message) => {
-                        return (
-                          <div
-                            key={message.id}
-                            className={`chat-message ${message.role} ${message.error ? 'error' : ''} ${message.info ? 'info' : ''}`}
+              ) : (
+                <>
+                  {messages.map((message) => {
+                    return (
+                      <div
+                        key={message.id}
+                        className={`chat-message ${message.role} ${message.error ? 'error' : ''} ${message.info ? 'info' : ''}`}
+                      >
+                        <div className="chat-message-avatar">
+                          {message.role === "user" ? (
+                            <User size={20} />
+                          ) : (
+                            <Bot size={20} />
+                          )}
+                        </div>
+                        <div className="chat-message-content">
+                          {message.file_name && (
+                            <AttachmentBadge
+                              fileName={message.file_name}
+                              fileType={message.file_type}
+                              fileSize={message.file_size}
+                            />
+                          )}
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkBreaks]}
+                            components={{
+                              a: ({ node, ...props }) => (
+                                <a {...props} target="_blank" rel="noreferrer noopener" />
+                              ),
+                            }}
                           >
-                            <div className="chat-message-avatar">
-                              {message.role === "user" ? (
-                                <User size={20} />
-                              ) : (
-                                <Bot size={20} />
+                            {message.content}
+                          </ReactMarkdown>
+                          {message.role === "assistant" &&
+                            isStreaming &&
+                            message.content && (
+                              <span className="cursor-blink">|</span>
+                            )}
+                          {/* Show token usage for execution completion messages */}
+                          {message.tokenUsage && message.tokenUsage.total_tokens > 0 && (
+                            <div className="message-token-usage">
+                              <Zap size={12} />
+                              <span>{message.tokenUsage.total_tokens.toLocaleString()} tokens</span>
+                              {message.tokenUsage.total_cost_usd > 0 && (
+                                <span>• ${message.tokenUsage.total_cost_usd.toFixed(4)}</span>
                               )}
                             </div>
-                            <div className="chat-message-content1">
-                              {message.file_name && (
-                                <AttachmentBadge
-                                  fileName={message.file_name}
-                                  fileType={message.file_type}
-                                  fileSize={message.file_size}
-                                />
-                              )}
-                              <ReactMarkdown
-                                remarkPlugins={[remarkGfm, remarkBreaks]}
-                                components={{
-                                  a: ({ node, ...props }) => (
-                                    <a {...props} target="_blank" rel="noreferrer noopener" />
-                                  ),
-                                }}
-                              >
-                                {message.content}
-                              </ReactMarkdown>
-                              {message.role === "assistant" &&
-                                isStreaming &&
-                                message.content && (
-                                  <span className="cursor-blink">|</span>
-                                )}
-                              {/* Show token usage for execution completion messages */}
-                              {message.tokenUsage && message.tokenUsage.total_tokens > 0 && (
-                                <div className="message-token-usage">
-                                  <Zap size={12} />
-                                  <span>{message.tokenUsage.total_tokens.toLocaleString()} tokens</span>
-                                  {message.tokenUsage.total_cost_usd > 0 && (
-                                    <span>• ${message.tokenUsage.total_cost_usd.toFixed(4)}</span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                      
-                      {/* Inline Progress Indicator - Shows during execution */}
-                      {inlineProgress && (
-                        <InlineChatProgress progress={inlineProgress} startTime={progressStartTime} />
-                      )}
-                      
-                      <div ref={messagesEndRef} />
-                    </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Inline Progress Indicator - Shows during execution */}
+                  {inlineProgress && (
+                    <InlineChatProgress progress={inlineProgress} startTime={progressStartTime} />
                   )}
-                </div>
+                  
+                  <div ref={messagesEndRef} />
+                </>
+              )}
+            </div>
 
-                <form onSubmit={handleSubmit} className="chat-composer">
+            <form onSubmit={handleSubmit} className="chat-composer">
               {attachedFiles.length > 0 && (
                 <div className="attached-files-preview">
                   {attachedFiles.map((file, index) => (
@@ -1454,7 +1445,7 @@ function AIChatNew() {
                   disabled={isStreaming || !input.trim()}
                   className="chat-composer-send"
                 >
-                  <Send size={22} />
+                  <Send size={50} />
                 </button>
               </div>
               <div className="chat-composer-footer">
@@ -1464,9 +1455,7 @@ function AIChatNew() {
                     : "Press Enter to send, Shift+Enter for new line"}
                 </span>
               </div>
-                </form>
-              </>
-            )}
+            </form>
           </div>
         </main>
 
