@@ -1,0 +1,13 @@
+﻿{
+    "items": [
+        {
+            "id": "tmp1if",
+            "name": "jwt-api-authorizer",
+            "type": "TOKEN",
+            "authType": "custom",
+            "authorizerUri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:055932374911:function:jwt-api-authorizer/invocations",
+            "identitySource": "method.request.header.Authorization",
+            "authorizerResultTtlInSeconds": 0
+        }
+    ]
+}

@@ -1,0 +1,3 @@
+# Brain-heavy: Tier 0/0.5/1 enrichment runs on uploaded file.
+# Shared brain layer covers langchain/langgraph/openai. multipart parsing
+# uses cgi from the stdlib so no extra deps are needed here.

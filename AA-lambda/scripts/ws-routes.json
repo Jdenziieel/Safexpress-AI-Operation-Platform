@@ -1,0 +1,40 @@
+﻿{
+    "Items": [
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "9tqzse3",
+            "RouteKey": "sendAgentMessage",
+            "Target": "integrations/pbaptj8"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "kkukbeh",
+            "RouteKey": "$default",
+            "Target": "integrations/hmtaiwd"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "ne0ppwt",
+            "RouteKey": "sendMessage",
+            "Target": "integrations/my0wa06"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "r22p9g2",
+            "RouteKey": "$disconnect",
+            "Target": "integrations/frmwoyl"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "CUSTOM",
+            "AuthorizerId": "milezo",
+            "RouteId": "umjl2gv",
+            "RouteKey": "$connect",
+            "Target": "integrations/ea6nzkr"
+        }
+    ]
+}

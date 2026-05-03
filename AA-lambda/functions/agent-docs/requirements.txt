@@ -1,0 +1,18 @@
+google-auth>=2.27.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+google-api-python-client>=2.119.0
+python-dotenv>=1.0.0
+fastapi>=0.110.0
+# api.py imports uvicorn at module level (dead in Lambda but the import
+# line fires on cold-start).
+uvicorn>=0.30.0
+pydantic>=2.5.0
+# LangChain stack — the docs agent's `task` path uses a ReAct agent.
+# Even though the supervisor only calls the `tool` path, we keep these
+# imports satisfied for parity with the local agent.
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-openai>=0.0.8
+langgraph>=0.0.40
+openai>=1.12.0

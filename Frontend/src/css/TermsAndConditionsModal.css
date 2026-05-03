@@ -1,0 +1,245 @@
+.tnc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.tnc-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+  overflow: hidden;
+  font-family: inherit;
+  color: #1e293b;
+}
+
+.tnc-header {
+  padding: 24px 28px 12px 28px;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.tnc-title {
+  margin: 0 0 6px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #26326e;
+}
+
+.tnc-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.tnc-version {
+  margin-top: 8px;
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #26326e;
+  background: #e0e7ff;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+}
+
+.tnc-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 20px 28px;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  color: #334155;
+  background: #ffffff;
+}
+
+.tnc-body h3 {
+  margin: 18px 0 6px 0;
+  font-size: 1.02rem;
+  color: #26326e;
+  font-weight: 700;
+}
+
+.tnc-body h3:first-child {
+  margin-top: 0;
+}
+
+.tnc-body p {
+  margin: 0 0 10px 0;
+}
+
+.tnc-body ul,
+.tnc-body ol {
+  margin: 4px 0 12px 0;
+  padding-left: 24px;
+}
+
+.tnc-body li {
+  margin: 4px 0;
+}
+
+.tnc-body strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.tnc-body code {
+  padding: 1px 6px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: #475569;
+}
+
+.tnc-list-alpha {
+  list-style: none;
+  padding-left: 32px;
+  counter-reset: alpha;
+}
+
+.tnc-list-alpha > li {
+  counter-increment: alpha;
+  position: relative;
+  margin: 6px 0;
+}
+
+.tnc-list-alpha > li::before {
+  content: "(" counter(alpha, lower-alpha) ")";
+  position: absolute;
+  left: -28px;
+  width: 24px;
+  text-align: right;
+  color: #475569;
+  font-weight: 500;
+}
+
+.tnc-scroll-hint {
+  padding: 10px 28px;
+  font-size: 0.85rem;
+  color: #b45309;
+  background: #fffbeb;
+  border-top: 1px solid #fde68a;
+  border-bottom: 1px solid #fde68a;
+  text-align: center;
+  font-weight: 500;
+}
+
+.tnc-error {
+  margin: 12px 28px 0 28px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 0.9rem;
+}
+
+.tnc-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 28px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #1e293b;
+  user-select: none;
+}
+
+.tnc-checkbox input[type='checkbox'] {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  accent-color: #26326e;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tnc-checkbox-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tnc-checkbox-disabled input[type='checkbox'] {
+  cursor: not-allowed;
+}
+
+.tnc-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 28px 20px 28px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.tnc-btn {
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tnc-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.tnc-btn-decline {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.tnc-btn-decline:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.tnc-btn-accept {
+  background: #26326e;
+  color: #ffffff;
+}
+
+.tnc-btn-accept:hover:not(:disabled) {
+  background: #1e2858;
+}
+
+@media (max-width: 540px) {
+  .tnc-modal {
+    max-height: 95vh;
+  }
+  .tnc-header,
+  .tnc-body,
+  .tnc-checkbox,
+  .tnc-actions,
+  .tnc-error,
+  .tnc-scroll-hint {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .tnc-actions {
+    flex-direction: column-reverse;
+  }
+  .tnc-btn {
+    width: 100%;
+  }
+}

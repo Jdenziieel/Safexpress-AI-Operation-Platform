@@ -1,0 +1,84 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DynamoDBSupTables",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:ap-southeast-1:*:table/Sup_*",
+        "arn:aws:dynamodb:ap-southeast-1:*:table/Sup_*/index/*",
+        "arn:aws:dynamodb:ap-southeast-1:*:table/SocialTokens",
+        "arn:aws:dynamodb:ap-southeast-1:*:table/SocialTokens/index/*",
+        "arn:aws:dynamodb:ap-southeast-1:*:table/KB_WebSocketConnections",
+        "arn:aws:dynamodb:ap-southeast-1:*:table/Users"
+      ]
+    },
+    {
+      "Sid": "S3TempUploads",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::frontend-safexpress",
+        "arn:aws:s3:::frontend-safexpress/*"
+      ]
+    },
+    {
+      "Sid": "SecretsRead",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:ap-southeast-1:*:secret:prod/app/openai-*",
+        "arn:aws:secretsmanager:ap-southeast-1:*:secret:prod/app/google-oauth-*"
+      ]
+    },
+    {
+      "Sid": "InvokeSubAgents",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": [
+        "arn:aws:lambda:ap-southeast-1:*:function:agent-gmail",
+        "arn:aws:lambda:ap-southeast-1:*:function:agent-docs",
+        "arn:aws:lambda:ap-southeast-1:*:function:agent-sheets",
+        "arn:aws:lambda:ap-southeast-1:*:function:agent-mapping",
+        "arn:aws:lambda:ap-southeast-1:*:function:agent-calendar",
+        "arn:aws:lambda:ap-southeast-1:*:function:agent-drive"
+      ]
+    },
+    {
+      "Sid": "WebSocketPushBack",
+      "Effect": "Allow",
+      "Action": [
+        "execute-api:ManageConnections"
+      ],
+      "Resource": "arn:aws:execute-api:ap-southeast-1:*:rjhzxw8sqj/*"
+    },
+    {
+      "Sid": "SESBudgetAlerts",
+      "Effect": "Allow",
+      "Action": [
+        "ses:SendEmail",
+        "ses:SendRawEmail"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

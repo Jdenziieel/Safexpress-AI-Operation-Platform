@@ -1,0 +1,2 @@
+# Brain-heavy: full ConversationalAgent + LangGraph workflow.
+# Shared brain layer covers langchain/langgraph/openai. No extra deps.

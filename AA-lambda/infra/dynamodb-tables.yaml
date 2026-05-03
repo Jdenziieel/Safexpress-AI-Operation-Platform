@@ -1,0 +1,210 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  AA-lambda Phase 0.A — Provisions the 12 Sup_* DynamoDB tables.
+  See AA-lambda/DYNAMODB_TABLES.md for canonical schema notes.
+  All tables use on-demand billing; matches the kb-* and Quota_* convention.
+
+Resources:
+
+  SupThreads:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_Threads
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: thread_id, AttributeType: S }
+        - { AttributeName: user_id, AttributeType: S }
+        - { AttributeName: updated_at, AttributeType: S }
+      KeySchema:
+        - { AttributeName: thread_id, KeyType: HASH }
+      GlobalSecondaryIndexes:
+        - IndexName: user_id-updated_at-index
+          KeySchema:
+            - { AttributeName: user_id, KeyType: HASH }
+            - { AttributeName: updated_at, KeyType: RANGE }
+          Projection: { ProjectionType: ALL }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+
+  SupThreadStates:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_ThreadStates
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: thread_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: thread_id, KeyType: HASH }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+
+  SupMemoryStates:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_MemoryStates
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: thread_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: thread_id, KeyType: HASH }
+
+  SupMessages:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_Messages
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: thread_id, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+      KeySchema:
+        - { AttributeName: thread_id, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+
+  SupConversationStates:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_ConversationStates
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: conversation_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: conversation_id, KeyType: HASH }
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+  SupLogs:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_Logs
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: log_id, AttributeType: S }
+        - { AttributeName: request_id, AttributeType: S }
+        - { AttributeName: timestamp, AttributeType: S }
+        - { AttributeName: level, AttributeType: S }
+      KeySchema:
+        - { AttributeName: log_id, KeyType: HASH }
+      GlobalSecondaryIndexes:
+        - IndexName: request_id-timestamp-index
+          KeySchema:
+            - { AttributeName: request_id, KeyType: HASH }
+            - { AttributeName: timestamp, KeyType: RANGE }
+          Projection: { ProjectionType: ALL }
+        - IndexName: level-timestamp-index
+          KeySchema:
+            - { AttributeName: level, KeyType: HASH }
+            - { AttributeName: timestamp, KeyType: RANGE }
+          Projection: { ProjectionType: ALL }
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+  SupLLMCalls:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_LLMCalls
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: call_id, AttributeType: S }
+        - { AttributeName: request_id, AttributeType: S }
+        - { AttributeName: user_id, AttributeType: S }
+        - { AttributeName: timestamp, AttributeType: S }
+      KeySchema:
+        - { AttributeName: call_id, KeyType: HASH }
+      GlobalSecondaryIndexes:
+        - IndexName: request_id-index
+          KeySchema:
+            - { AttributeName: request_id, KeyType: HASH }
+          Projection: { ProjectionType: ALL }
+        - IndexName: user_id-timestamp-index
+          KeySchema:
+            - { AttributeName: user_id, KeyType: HASH }
+            - { AttributeName: timestamp, KeyType: RANGE }
+          Projection: { ProjectionType: ALL }
+
+  SupAgentCalls:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_AgentCalls
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: call_id, AttributeType: S }
+        - { AttributeName: request_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: call_id, KeyType: HASH }
+      GlobalSecondaryIndexes:
+        - IndexName: request_id-index
+          KeySchema:
+            - { AttributeName: request_id, KeyType: HASH }
+          Projection: { ProjectionType: ALL }
+
+  SupRequestSummaries:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_RequestSummaries
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: request_id, AttributeType: S }
+        - { AttributeName: conversation_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: request_id, KeyType: HASH }
+      GlobalSecondaryIndexes:
+        - IndexName: conversation_id-index
+          KeySchema:
+            - { AttributeName: conversation_id, KeyType: HASH }
+          Projection: { ProjectionType: ALL }
+
+  SupPendingActions:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_PendingActions
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: action_id, AttributeType: S }
+        - { AttributeName: thread_id, AttributeType: S }
+        - { AttributeName: status, AttributeType: S }
+      KeySchema:
+        - { AttributeName: action_id, KeyType: HASH }
+      GlobalSecondaryIndexes:
+        - IndexName: thread_id-status-index
+          KeySchema:
+            - { AttributeName: thread_id, KeyType: HASH }
+            - { AttributeName: status, KeyType: RANGE }
+          Projection: { ProjectionType: ALL }
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+  SupModelPricing:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_ModelPricing
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: model, AttributeType: S }
+      KeySchema:
+        - { AttributeName: model, KeyType: HASH }
+
+  SupSystemSettings:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_SystemSettings
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: key, AttributeType: S }
+      KeySchema:
+        - { AttributeName: key, KeyType: HASH }
+
+Outputs:
+  ThreadsTableName:        { Value: !Ref SupThreads }
+  ThreadStatesTableName:   { Value: !Ref SupThreadStates }
+  MemoryStatesTableName:   { Value: !Ref SupMemoryStates }
+  MessagesTableName:       { Value: !Ref SupMessages }
+  ConvStatesTableName:     { Value: !Ref SupConversationStates }
+  LogsTableName:           { Value: !Ref SupLogs }
+  LLMCallsTableName:       { Value: !Ref SupLLMCalls }
+  AgentCallsTableName:     { Value: !Ref SupAgentCalls }
+  RequestSummariesName:    { Value: !Ref SupRequestSummaries }
+  PendingActionsName:      { Value: !Ref SupPendingActions }
+  ModelPricingName:        { Value: !Ref SupModelPricing }
+  SystemSettingsName:      { Value: !Ref SupSystemSettings }

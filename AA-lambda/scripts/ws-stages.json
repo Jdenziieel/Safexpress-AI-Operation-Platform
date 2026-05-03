@@ -1,0 +1,18 @@
+﻿{
+    "Items": [
+        {
+            "CreatedDate": "2026-01-18T13:46:10+00:00",
+            "DefaultRouteSettings": {
+                "DataTraceEnabled": false,
+                "DetailedMetricsEnabled": false,
+                "LoggingLevel": "OFF"
+            },
+            "DeploymentId": "nwcd37",
+            "LastUpdatedDate": "2026-04-30T07:32:02+00:00",
+            "RouteSettings": {},
+            "StageName": "prod",
+            "StageVariables": {},
+            "Tags": {}
+        }
+    ]
+}

@@ -1,0 +1,1119 @@
+/* Profile Page Container */
+.profile-page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  font-family: "Inter", sans-serif;
+  padding: 32px 0;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.profile-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-width: 0;
+  padding: 0 64px 48px 64px;
+  height: calc(100vh - 64px);
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-container::-webkit-scrollbar {
+  width: 0px;
+  display: none;
+}
+
+.profile-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Header */
+.profile-header {
+  margin-bottom: 32px;
+}
+
+.profile-title {
+  font-size: 2.4rem;
+  font-weight: 900;
+  margin-bottom: 2px;
+  letter-spacing: -1px;
+  color: #26326e;
+}
+
+.profile-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+  font-family: "Inter", sans-serif;
+}
+
+/* Profile Content */
+.profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Profile Card */
+.profile-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.profile-card-header {
+  padding: 32px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.profile-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.profile-avatar-large {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #26326e 0%, #465188 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(38, 50, 110, 0.2);
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-avatar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.profile-name-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #26326e;
+  margin: 0;
+  letter-spacing: -0.5px;
+  font-family: "Inter", sans-serif;
+}
+
+.profile-username {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
+  font-family: "Inter", sans-serif;
+}
+
+.profile-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #26326e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "Inter", sans-serif;
+}
+
+.profile-edit-btn:hover {
+  background: #465188;
+  box-shadow: 0 4px 12px rgba(38, 50, 110, 0.3);
+}
+
+.profile-edit-btn.editing {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.profile-edit-btn.editing:hover {
+  background: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Profile Card Body */
+.profile-card-body {
+  padding: 32px;
+}
+
+.profile-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #26326e;
+  margin: 0;
+  font-family: "Inter", sans-serif;
+}
+
+/* Profile Info Grid */
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.profile-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-info-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: "Inter", sans-serif;
+}
+
+.profile-info-label svg {
+  color: #26326e;
+}
+
+.profile-info-value {
+  font-size: 1rem;
+  color: #1f2937;
+  font-weight: 600;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-family: "Inter", sans-serif;
+}
+
+.profile-input {
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.profile-input:focus {
+  border-color: #26326e;
+  box-shadow: 0 0 0 3px rgba(38, 50, 110, 0.1);
+}
+
+.profile-role-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #26326e 0%, #465188 100%);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Profile Actions */
+.profile-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.profile-save-btn,
+.profile-cancel-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "Inter", sans-serif;
+}
+
+.profile-save-btn {
+  background: #26326e;
+  color: white;
+}
+
+.profile-save-btn:hover {
+  background: #465188;
+  box-shadow: 0 4px 12px rgba(38, 50, 110, 0.3);
+}
+
+.profile-cancel-btn {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.profile-cancel-btn:hover {
+  background: #d1d5db;
+}
+
+/* Account Information Notice */
+.profile-info-notice {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: #f0f9ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  align-items: flex-start;
+}
+
+.notice-icon {
+  color: #26326e;
+  flex-shrink: 0;
+}
+
+.profile-info-notice h4 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #26326e;
+  font-family: "Inter", sans-serif;
+}
+
+.profile-info-notice p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4b5563;
+  line-height: 1.6;
+  font-family: "Inter", sans-serif;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 0 16px 32px 16px;
+  }
+
+  .profile-card-header {
+    flex-direction: column;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .profile-avatar-section {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-edit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .profile-actions {
+    flex-direction: column;
+  }
+
+  .profile-save-btn,
+  .profile-cancel-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ─── Token Consumption section ─────────────────────────────────── */
+
+.token-card {
+  /* Card layout reuses the .profile-card frame; this just tunes spacing
+     and adds a couple of layout-specific affordances (sticky header
+     controls, tabular numerals so columns line up). */
+  font-variant-numeric: tabular-nums;
+}
+
+.token-card-header {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.profile-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  font-family: "Inter", sans-serif;
+}
+
+.card-title-icon {
+  color: #26326e;
+}
+
+.token-card-subtitle {
+  margin: 4px 0 0 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+  font-family: "Inter", sans-serif;
+}
+
+.token-card-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.token-window-select {
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 0.85rem;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+}
+
+.token-window-select:focus {
+  outline: 2px solid #26326e;
+  outline-offset: 1px;
+}
+
+.token-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #4b5563;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  user-select: none;
+}
+
+.token-toggle input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #26326e;
+}
+
+.token-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #26326e;
+  color: #ffffff;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.token-refresh-btn:hover:not(:disabled) {
+  background: #1f2756;
+}
+
+.token-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spin {
+  animation: token-spin 0.9s linear infinite;
+}
+
+@keyframes token-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.token-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.token-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+/* Summary tiles ----------------------------------------------- */
+.token-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.token-summary-tile {
+  background: #f8f9fb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.token-summary-tile.tone-warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.token-summary-tile.tone-critical {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.tile-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.tile-label-icon {
+  color: #6b7280;
+}
+
+.tile-value {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1.1;
+  word-break: break-word;
+}
+
+.tile-value-text {
+  text-transform: capitalize;
+}
+
+.tile-divider {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.tile-limit {
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+.tile-bar-track {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.tile-bar-fill {
+  height: 100%;
+  background: #26326e;
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.tile-bar-fill.tone-warning { background: #f59e0b; }
+.tile-bar-fill.tone-critical { background: #dc2626; }
+
+.tile-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.tile-meta-single {
+  justify-content: flex-start;
+}
+
+/* Window totals ----------------------------------------------- */
+.token-totals-row { display: flex; }
+
+.totals-card {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.totals-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.totals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+}
+
+.totals-num {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1.1;
+}
+
+.totals-cap {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* Daily chart ------------------------------------------------- */
+.token-chart-wrap {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.token-chart-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.token-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+  padding-bottom: 2px;
+}
+
+.chart-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  cursor: default;
+  min-width: 4px;
+}
+
+.chart-bar {
+  width: 100%;
+  background: linear-gradient(180deg, #4f5fa3 0%, #26326e 100%);
+  border-radius: 3px 3px 0 0;
+  transition: filter 0.15s ease;
+}
+
+.chart-col:hover .chart-bar {
+  filter: brightness(1.15);
+}
+
+.token-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+/* By service -------------------------------------------------- */
+.token-section { display: flex; flex-direction: column; gap: 10px; }
+
+.token-section-title {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1f2937;
+  font-family: "Inter", sans-serif;
+}
+
+/* When a hint follows the title, it should sit right next to the
+   text and PUSH the rest of the row (toggle, truncated-hint) over
+   to the right edge. We can't use justify-content: space-between
+   anymore (3+ items would be spread evenly instead of grouped). */
+.token-section-title > .token-section-hint {
+  margin-left: 4px;
+  margin-right: auto;
+}
+
+.token-truncated-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* Generic "context" hint sitting next to a section title — used for
+   the period-resets-excluded note on the By-service block, the
+   chart-grain hint, and the Monthly-history source hint. Smaller and
+   lighter than the title so it reads as metadata, not as a heading. */
+.token-section-hint {
+  font-size: 0.72rem;
+  color: #6b7280;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin-left: 6px;
+}
+
+.token-chart-grain-hint {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+/* Compact chart-only window selector. Visually understated next to
+   the chart title so it doesn't compete with the primary data-window
+   dropdown at the top of the panel. Sits at the right end of the
+   header via margin-left:auto. */
+.token-chart-window-select {
+  margin-left: auto;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.token-chart-window-select:hover:not(:disabled) {
+  border-color: #cbd5e1;
+}
+
+.token-chart-window-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.token-chart-window-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Recent activity pagination footer ──────────────────────────────
+   Server-driven pagination (lambda_user_history `?page` + `?page_size`).
+   Sits flush below the table; flex layout so info on the left and
+   controls on the right collapse vertically on tablet and below. */
+.token-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.token-pagination-info strong {
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.token-pagination-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.token-page-size-select {
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.token-page-size-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.token-page-size-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.token-page-btn {
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4338ca;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.token-page-btn:hover:not(:disabled) {
+  background: #e0e7ff;
+  border-color: #a5b4fc;
+}
+
+.token-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.token-page-indicator {
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 100px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+  .token-pagination {
+    justify-content: flex-start;
+  }
+  .token-pagination-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Inline toggle that lives next to the section title (e.g. "Show
+   details" on the Recent activity header). Styled compact so it
+   doesn't dominate the header row. */
+.token-toggle-inline {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #4b5563;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  cursor: pointer;
+}
+.token-toggle-inline input { margin: 0; transform: scale(0.9); }
+
+/* Pill that appears next to "SFXbot Chat" rows when one or more
+   internal embedding lookups were collapsed into the row. Visually
+   subdued so it reads as supplementary, not primary content. */
+.badge-rollup {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
+/* Monthly history (Fix B) ------------------------------------------ */
+.token-monthly-section .token-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.token-monthly-grid {
+  display: grid;
+  /* Each column is at least 80px wide. With 12 months that's a hard
+     floor of 960px before the grid wraps — fine on desktop, wraps
+     gracefully on tablet because of the 1fr cap. */
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 18px;
+  align-items: end;
+  min-height: 180px;
+}
+
+.token-monthly-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: "Inter", sans-serif;
+}
+
+.token-monthly-bar-track {
+  width: 100%;
+  max-width: 44px;
+  height: 110px;
+  background: rgba(99, 102, 241, 0.06);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.token-monthly-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, #6366f1 0%, #818cf8 100%);
+  border-radius: 8px;
+  transition: height 0.3s ease;
+}
+
+.token-monthly-col.is-live .token-monthly-bar-fill {
+  /* Diagonal stripes signal "in progress" without needing extra DOM */
+  background: repeating-linear-gradient(
+    135deg,
+    #6366f1 0 6px,
+    #818cf8 6px 12px
+  );
+}
+
+.token-monthly-num {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.token-monthly-label {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.token-monthly-live-pill {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #4338ca;
+  background: #eef2ff;
+  padding: 1px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.service-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.service-pill {
+  background: #f8f9fb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-width: 160px;
+  flex: 1 1 160px;
+  max-width: 240px;
+}
+
+.service-pill-name {
+  font-size: 0.78rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.service-pill-num {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-top: 2px;
+}
+
+.service-pill-meta {
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* Activity table --------------------------------------------- */
+.token-empty {
+  padding: 18px 0;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.88rem;
+}
+
+.token-log-table-wrap {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  /* Allow tables to scroll horizontally on very narrow screens
+     without breaking the rest of the page. */
+  overflow-x: auto;
+}
+
+.token-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-family: "Inter", sans-serif;
+}
+
+.token-log-table thead {
+  background: #f8f9fb;
+}
+
+.token-log-table th,
+.token-log-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #f0f1f5;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.token-log-table th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.token-log-table th.num,
+.token-log-table td.num {
+  text-align: right;
+}
+
+.token-log-table tr:last-child td {
+  border-bottom: none;
+}
+
+.token-log-table tbody tr:hover {
+  background: #fafbfd;
+}
+
+.token-log-table .strong { font-weight: 700; color: #1f2937; }
+.token-log-table .cost { color: #15803d; }
+.cell-when { color: #4b5563; }
+.cell-operation { font-weight: 600; color: #1f2937; }
+.cell-model { color: #6b7280; font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 0.78rem; }
+
+.row-reset {
+  background: #f0f9ff;
+}
+
+.row-reset:hover { background: #e0f2fe !important; }
+
+.row-record-only {
+  background: #fefce8;
+}
+
+.row-record-only:hover { background: #fef9c3 !important; }
+
+.badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+}
+
+.badge-audit {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fde68a;
+}
+
+.badge-reset {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+@media (max-width: 768px) {
+  .token-card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .token-card-controls {
+    justify-content: space-between;
+  }
+  .totals-grid { grid-template-columns: repeat(2, 1fr); }
+}

@@ -1,0 +1,33 @@
+# Lambda Docker image for the WebSocket chat path (supervisor-ws-chat).
+# Long timeout (5 min) and 2 GB memory configured at function level — this
+# image just bakes the runtime; provisioning is `aws lambda update-function-configuration`.
+#
+# Same heavy dependency set as the Dockerfile.lambda heavy variant
+# (langchain/langgraph/openai/tiktoken/jinja2 + the routes/* import chain)
+# because the WS chat handler runs the full Tier 0 / Tier 1 / planner
+# pipeline through `shared.routes.threads` helpers.
+#
+# Usage:
+#   docker build -t supervisor-ws-chat:latest -f Dockerfile.websocket .
+
+# syntax=docker/dockerfile:1.6
+FROM public.ecr.aws/lambda/python:3.12
+
+# --- Light + heavy + per-function deps ---
+# BuildKit cache mount: see comment in Dockerfile.lambda.
+COPY requirements.txt /var/task/requirements-light.txt
+COPY requirements-heavy.txt /var/task/requirements-heavy.txt
+COPY functions/supervisor-ws-chat/requirements.txt /var/task/requirements-fn.txt
+
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+    pip install --no-cache-dir -r /var/task/requirements-light.txt \
+ && pip install --no-cache-dir -r /var/task/requirements-heavy.txt \
+ && pip install --no-cache-dir -r /var/task/requirements-fn.txt
+
+# --- Brain ---
+COPY shared/ /var/task/shared/
+
+# --- Function code ---
+COPY functions/supervisor-ws-chat/ /var/task/
+
+CMD ["lambda_function.lambda_handler"]

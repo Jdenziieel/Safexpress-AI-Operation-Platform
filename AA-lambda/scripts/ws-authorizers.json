@@ -1,0 +1,13 @@
+﻿{
+    "Items": [
+        {
+            "AuthorizerId": "milezo",
+            "AuthorizerType": "REQUEST",
+            "AuthorizerUri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:055932374911:function:jwt-api-authorizer/invocations",
+            "IdentitySource": [
+                "route.request.querystring.token"
+            ],
+            "Name": "jwt-api-authorizer-ws"
+        }
+    ]
+}

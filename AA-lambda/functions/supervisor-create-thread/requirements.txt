@@ -1,0 +1,3 @@
+# Brain-heavy: Tier 0/0.5/1 enrichment runs on initial_message path.
+# Shared brain layer covers langchain/langgraph/openai. This file is for
+# function-only deps not in the shared brain.

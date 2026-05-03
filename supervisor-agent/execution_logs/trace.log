@@ -1807,3 +1807,296 @@ Task Confirmation:
 [2026-04-29 12:19:08.885] [INFO] [req_20260429041850_57d48047] [T:5647190f] ← RESPONSE: 200 (23805ms)
 [2026-04-29 12:19:08.887] [INFO] [req_20260429041850_57d48047] [T:5647190f] ─────────: ──────────────────────────────────────────────────
 [2026-04-29 12:19:08.898] [PRINT] WebSocket disconnected for thread: bfc86262-160a-4d55-a8b5-13de48606736_5647190f
+[2026-05-02 14:14:48.900] [PRINT] [ OK ] templates: delivery-order summary template removed
+[2026-05-02 14:14:48.969] [PRINT] [ OK ] tools.py: _process_delivery_order_workflow_impl removed
+[2026-05-02 14:14:48.980] [PRINT] [ OK ] tools.py: dead helpers removed (G12)
+[2026-05-02 14:14:48.989] [PRINT] [ OK ] api.py: TOOL_MAP no longer dispatches the broken tool
+[2026-05-02 14:14:48.995] [PRINT] ============================================================================
+[2026-05-02 14:14:49.003] [PRINT] Scenario 2 - G2: dead delivery_order_service is deleted
+[2026-05-02 14:14:49.012] [PRINT] ============================================================================
+[2026-05-02 14:14:49.023] [PRINT] [ OK ] __init__.py no longer imports DeliveryOrderService
+[2026-05-02 14:14:49.033] [PRINT] [ OK ] delivery_order_service.py file deleted
+[2026-05-02 14:14:49.041] [PRINT] [ OK ] services package still imports cleanly
+[2026-05-02 14:14:49.048] [PRINT] ============================================================================
+[2026-05-02 14:14:49.055] [PRINT] Scenario 3 - Block G safety net with realistic classifier misses
+[2026-05-02 14:14:49.062] [PRINT] ============================================================================
+[2026-05-02 14:14:51.631] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-05-02 14:14:51.677] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-05-02 14:14:51.701] [PRINT] [ OK ] Block G A: spaced 'delivery order'
+[2026-05-02 14:14:51.715] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-05-02 14:14:51.749] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-05-02 14:14:51.758] [PRINT] [ OK ] Block G B: hyphenated 'delivery-order'
+[2026-05-02 14:14:51.770] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-05-02 14:14:51.806] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-05-02 14:14:51.818] [PRINT] [ OK ] Block G C: bare 'requisition'
+[2026-05-02 14:14:51.827] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-05-02 14:14:51.857] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-05-02 14:14:51.869] [PRINT] [ OK ] Block G D: 'purchase-order'
+[2026-05-02 14:14:51.883] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-05-02 14:14:51.911] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-05-02 14:14:51.922] [PRINT] [ OK ] Block G E: 'po pdf' phrase
+[2026-05-02 14:14:51.937] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-05-02 14:14:51.966] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-05-02 14:14:51.975] [PRINT] [ OK ] Block G F: 'order list'
+[2026-05-02 14:14:51.985] [PRINT] [TOKEN REPORTING SKIPPED] No user_id in context
+[2026-05-02 14:14:52.029] [PRINT]  OK [classifier] gpt-4o-mini | agent_tool_classification | in=1 out=1 | $0.0000 | 0ms
+[2026-05-02 14:14:52.043] [PRINT] [ OK ] Block G negative control (no injection for non-delivery)
+[2026-05-02 14:14:52.056] [PRINT] ============================================================================
+[2026-05-02 14:14:52.067] [PRINT] Scenario 4 - Planner prompt exposes Rule 16 + Example 3
+[2026-05-02 14:14:52.079] [PRINT] ============================================================================
+[2026-05-02 14:14:52.095] [PRINT] [ OK ] planner prompt includes Rule 16 + Example 3 + all steering
+[2026-05-02 14:14:52.110] [PRINT] ============================================================================
+[2026-05-02 14:14:52.124] [PRINT] Scenario 5 - get_filtered_capabilities_v2 hides upload_mapped_data
+[2026-05-02 14:14:52.136] [PRINT] ============================================================================
+[2026-05-02 14:14:52.147] [PRINT] [ OK ] filtered caps shape is correct
+[2026-05-02 14:14:52.161] [PRINT] ============================================================================
+[2026-05-02 14:14:52.172] [PRINT] Scenario 6 - variable substitution round-trips list values correctly
+[2026-05-02 14:14:52.190] [PRINT] ============================================================================
+[2026-05-02 14:14:52.810] [PRINT] [ OK ] mapping_agent._flatten_file_paths decodes Jinja-stringified list
+[2026-05-02 14:14:52.896] [PRINT] [ OK ] sheets_agent._parse_orders_input decodes full Python repr (None/True/apostrophe)
+[2026-05-02 14:14:52.924] [PRINT] ============================================================================
+[2026-05-02 14:14:52.940] [PRINT] Scenario 7 - approval-branch substitution round-trips Python literals
+[2026-05-02 14:14:52.958] [PRINT] ============================================================================
+[2026-05-02 14:14:52.973] [PRINT] [ OK ] approval substitution (G6) round-trips Python list cleanly
+[2026-05-02 14:14:52.984] [PRINT] [ OK ] legacy approval substitution is demonstrably broken (as expected) - old code left parsed_orders as a raw string — G6 fix required
+[2026-05-02 14:14:52.994] [PRINT] ============================================================================
+[2026-05-02 14:14:53.005] [PRINT] Scenario 8 - G7 rich approval message renders readable summary
+[2026-05-02 14:14:53.014] [PRINT] ============================================================================
+[2026-05-02 14:14:53.027] [PRINT] [ OK ] approval message is readable, not a raw dump
+[2026-05-02 14:14:53.036] [PRINT] 
+[2026-05-02 14:14:53.036] [PRINT] --- approval message preview ---
+[2026-05-02 14:14:53.044] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-05-02 14:14:53.044] [PRINT] 
+[2026-05-02 14:14:53.044] [PRINT] Step 6 of 6
+[2026-05-02 14:14:53.044] [PRINT] 
+[2026-05-02 14:14:53.044] [PRINT] **Append the parsed delivery-order rows into the DO Tracker sheet**
+[2026-05-02 14:14:53.044] [PRINT] 
+[2026-05-02 14:14:53.044] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-05-02 14:14:53.044] [PRINT] - **Sheet ID:** 1A2B3C4D5E6F7G8H9I0J_real_sheet_id
+[2026-05-02 14:14:53.044] [PRINT] - **Orders to write:** 2
+[2026-05-02 14:14:53.044] [PRINT] - **Total line items:** 3
+[2026-05-02 14:14:53.044] [PRINT] - **Source files:** DO-2026-0417.pdf, requisition_april.pdf
+[2026-05-02 14:14:53.044] [PRINT] - **Sample header (order 1):** order_reference=DO-2026-0417, order_date=2026-04-17, vendor=Supplier's Co., urgent=True
+[2026-05-02 14:14:53.044] [PRINT] 
+[2026-05-02 14:14:53.044] [PRINT] ---
+[2026-05-02 14:14:53.044] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-05-02 14:14:53.090] [PRINT] --- end preview ---
+[2026-05-02 14:14:53.102] [PRINT] ============================================================================
+[2026-05-02 14:14:53.111] [PRINT] Scenario 9 - Full pipeline walkthrough across 3 user inputs
+[2026-05-02 14:14:53.117] [PRINT] ============================================================================
+[2026-05-02 14:14:56.107] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-05-02 14:14:56.221] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-05-02 14:14:56.233] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-05-02 14:14:56.240] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-05-02 14:14:56.251] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-05-02 14:14:56.272] [PRINT] [ OK ] Scenario A (sheet-by-name): all 6 steps wire cleanly
+[2026-05-02 14:14:56.291] [PRINT] [ OK ] Scenario B (uploaded file, bare string path): 5-step chain wires cleanly
+[2026-05-02 14:14:56.309] [PRINT] [ OK ] Scenario C (sheet URL pasted): 5-step chain skips drive lookup
+[2026-05-02 14:14:56.317] [PRINT] ============================================================================
+[2026-05-02 14:14:56.326] [PRINT] Scenario 10 - capability-schema guard against arg-name drift
+[2026-05-02 14:14:56.337] [PRINT] ============================================================================
+[2026-05-02 14:14:56.346] [PRINT] [ OK ] all sim plans use only capability-declared arg names
+[2026-05-02 14:14:56.361] [PRINT] [ OK ] planner prompt Example 3 uses only capability-declared arg names (6 steps checked)
+[2026-05-02 14:14:56.373] [PRINT] ============================================================================
+[2026-05-02 14:14:56.385] [PRINT] Scenario 11 - Rule 16 text forbids wrong search_files args
+[2026-05-02 14:14:56.401] [PRINT] ============================================================================
+[2026-05-02 14:14:56.416] [PRINT] [ OK ] Rule 16 search_files line uses correct args only
+[2026-05-02 14:14:56.430] [PRINT] [ OK ] Rule 16 uploaded_file guidance uses bare-string pattern
+[2026-05-02 14:14:56.444] [PRINT] ============================================================================
+[2026-05-02 14:14:56.457] [PRINT] Scenario 12 - mapping_agent.parse_delivery_order_pdfs halts cleanly on all-rejected
+[2026-05-02 14:14:56.470] [PRINT] ============================================================================
+[2026-05-02 14:14:56.485] [PRINT] [ OK ] parse_delivery_order_pdfs signals failure on all-rejected
+[2026-05-02 14:14:56.493] [PRINT] [ OK ] parse_delivery_order_pdfs still succeeds with partial wins
+[2026-05-02 14:14:56.503] [PRINT] ============================================================================
+[2026-05-02 14:14:56.514] [PRINT] Scenario 13 - Mapping agent ToolResponse exposes no_results top-level
+[2026-05-02 14:14:56.525] [PRINT] ============================================================================
+[2026-05-02 14:14:56.542] [PRINT] [ OK ] ToolResponse serialises no_results at top level
+[2026-05-02 14:14:56.557] [PRINT] [ OK ] orchestrator halt-branch would trigger on this response
+[2026-05-02 14:14:56.571] [PRINT] ============================================================================
+[2026-05-02 14:14:56.585] [PRINT] Scenario 14 - Tier 1 DELIVERY ORDER WORKFLOW requires write/parse verb
+[2026-05-02 14:14:56.599] [PRINT] ============================================================================
+[2026-05-02 14:14:56.610] [PRINT] [ OK ] Tier 1 DELIVERY ORDER WORKFLOW has verb-gate + negative case
+[2026-05-02 14:14:56.621] [PRINT] ============================================================================
+[2026-05-02 14:14:56.633] [PRINT] Scenario 15 - Approval message warns when parsed_orders is empty
+[2026-05-02 14:14:56.645] [PRINT] ============================================================================
+[2026-05-02 14:14:56.664] [PRINT] [ OK ] empty parsed_orders produces a loud approval message
+[2026-05-02 14:14:56.677] [PRINT] [ OK ] non-empty parsed_orders still shows detailed summary
+[2026-05-02 14:14:56.698] [PRINT] ============================================================================
+[2026-05-02 14:14:56.715] [PRINT] Scenario 16 - Mapping inference yields only FOOD / NON-FOOD / empty
+[2026-05-02 14:14:56.734] [PRINT] ============================================================================
+[2026-05-02 14:14:56.771] [PRINT] [ OK ] Mapping agent does NOT expose _infer_category_from_filename
+[2026-05-02 14:14:56.784] [PRINT] [ OK ] _infer_category_from_items only yields FOOD (or empty for TECH/unknown)
+[2026-05-02 14:14:56.798] [PRINT] [ OK ] _HEADER_PATTERNS['category'] is strict (FOOD / NON-FOOD only)
+[2026-05-02 14:14:56.808] [PRINT] [ OK ] _normalise_category accepts only FOOD / NON-FOOD variants
+[2026-05-02 14:14:56.820] [PRINT] ============================================================================
+[2026-05-02 14:14:56.831] [PRINT] Scenario 17 - _is_footer_row drops signature blocks, keeps real items
+[2026-05-02 14:14:56.842] [PRINT] ============================================================================
+[2026-05-02 14:14:56.863] [PRINT] [ OK ] _is_footer_row filters signatures without false positives
+[2026-05-02 14:14:56.878] [PRINT] [ OK ] _parse_single_pdf drops footer rows end-to-end (FOOD)
+[2026-05-02 14:14:56.891] [PRINT] [ OK ] _parse_single_pdf fills header.category=FOOD via item-code prefix (content)
+[2026-05-02 14:14:56.902] [PRINT] ============================================================================
+[2026-05-02 14:14:56.912] [PRINT] Scenario 18 - _resolve_tab_for_category is strictly FOOD / NON-FOOD
+[2026-05-02 14:14:56.925] [PRINT] ============================================================================
+[2026-05-02 14:14:56.944] [PRINT] [ OK ] _resolve_tab_for_category routes only FOOD / NON-FOOD, skips everything else
+[2026-05-02 14:14:56.957] [PRINT] ============================================================================
+[2026-05-02 14:14:56.970] [PRINT] Scenario 19 - preview_delivery_order_insertion routes strictly FOOD/NON-FOOD
+[2026-05-02 14:14:56.983] [PRINT] ============================================================================
+[2026-05-02 14:14:57.006] [PRINT] [ OK ] preview routes FOOD->Food and NON-FOOD->non-food
+[2026-05-02 14:14:57.020] [PRINT] [ OK ] preview skips TECH order (defensive) and routes others correctly
+[2026-05-02 14:14:57.036] [PRINT] [ OK ] preview hard-skips FOOD order when Food tab is absent
+[2026-05-02 14:14:57.054] [PRINT] ============================================================================
+[2026-05-02 14:14:57.069] [PRINT] Scenario 20 - Mapping parser rejects Tech requisition PDFs
+[2026-05-02 14:14:57.083] [PRINT] ============================================================================
+[2026-05-02 14:14:57.107] [PRINT] [ OK ] _parse_single_pdf rejects Tech requisition PDFs
+[2026-05-02 14:14:57.118] [PRINT] [ OK ] parse_delivery_order_pdfs keeps FOOD, rejects TECH on mixed batch
+[2026-05-02 14:14:57.132] [PRINT] ============================================================================
+[2026-05-02 14:14:57.144] [PRINT] Scenario 21 - Filename is ignored; category comes from content only
+[2026-05-02 14:14:57.158] [PRINT] ============================================================================
+[2026-05-02 14:14:57.181] [PRINT] [ OK ] Filename never overrides content in category detection
+[2026-05-02 14:14:57.195] [PRINT] ============================================================================
+[2026-05-02 14:14:57.206] [PRINT] Scenario 22 - Non-PDF files are rejected with 'Not a PDF file'
+[2026-05-02 14:14:57.217] [PRINT] ============================================================================
+[2026-05-02 14:14:57.237] [PRINT] [ OK ] Non-PDF uploads are rejected by file-type gate
+[2026-05-02 14:14:57.251] [PRINT] ============================================================================
+[2026-05-02 14:14:57.261] [PRINT] Scenario 23 - PDFs that don't match our template are rejected
+[2026-05-02 14:14:57.272] [PRINT] ============================================================================
+[2026-05-02 14:14:57.292] [PRINT] [ OK ] Wrong-template PDFs rejected before data parsing
+[2026-05-02 14:14:57.304] [PRINT] ============================================================================
+[2026-05-02 14:14:57.315] [PRINT] Scenario 24 - validate_delivery_sheet rejects wrong sheet with clear error
+[2026-05-02 14:14:57.326] [PRINT] ============================================================================
+[2026-05-02 14:14:57.355] [PRINT] [ OK ] validate_delivery_sheet flags wrong sheet with explicit 'different sheet' error
+[2026-05-02 14:14:57.367] [PRINT] [ OK ] validate_delivery_sheet flags header mismatch with actionable detail
+[2026-05-02 14:14:57.382] [PRINT] ============================================================================
+[2026-05-02 14:14:57.398] [PRINT] Scenario 25 - validate_delivery_sheet catches read-only sheet access
+[2026-05-02 14:14:57.413] [PRINT] ============================================================================
+[2026-05-02 14:14:57.437] [PRINT] [FAIL] validate_delivery_sheet catches read-only access with actionable error - error should recommend asking for Editor access, got: "Write permission check failed: HttpError.__init__() missing 1 required positional argument: 'content'"; error should call out read-only/Viewer, got: "Write permission check failed: HttpError.__init__() missing 1 required positional argument: 'content'"
+[2026-05-02 14:14:57.455] [PRINT] [ OK ] validate_delivery_sheet happy path still returns success=True
+[2026-05-02 14:14:57.469] [PRINT] ============================================================================
+[2026-05-02 14:14:57.484] [PRINT] Scenario 26 - write_delivery_order_data catches 403 on append with read_only error
+[2026-05-02 14:14:57.501] [PRINT] ============================================================================
+[2026-05-02 14:14:57.540] [PRINT] [FAIL] write_delivery_order_data surfaces read-only error on 403 during append - expected error_type='read_only', got None; error should mention read-only/Editor access, got: "Error writing to 'Food': HttpError.__init__() missing 1 required positional argument: 'content'"
+[2026-05-02 14:14:57.560] [PRINT] ============================================================================
+[2026-05-02 14:14:57.580] [PRINT] Scenario 27 - Bug 5: indexed output_var on name-based lookup triggers pause
+[2026-05-02 14:14:57.600] [PRINT] ============================================================================
+[2026-05-02 14:14:57.626] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-05-02 14:14:57.728] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-05-02 14:14:57.742] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-05-02 14:14:57.761] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-05-02 14:14:57.785] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-05-02 14:14:57.806] [PRINT] [ OK ] Bug 5 - search_files + 'results[0].id' + 2 matches -> pause - indexed extraction on name-based lookup now triggers disambiguation
+[2026-05-02 14:14:57.823] [PRINT] ============================================================================
+[2026-05-02 14:14:57.837] [PRINT] Scenario 28 - Bug 5: email search with 'emails[0].message_id' still auto-picks latest
+[2026-05-02 14:14:57.849] [PRINT] ============================================================================
+[2026-05-02 14:14:57.861] [PRINT] [ OK ] Bug 5 - search_emails + 'emails[0].message_id' NOT paused - email/draft searches keep 'latest' auto-selection semantics
+[2026-05-02 14:14:57.873] [PRINT] ============================================================================
+[2026-05-02 14:14:57.882] [PRINT] Scenario 29 - Bug 5: indexed output_var but no downstream use -> no pause
+[2026-05-02 14:14:57.892] [PRINT] ============================================================================
+[2026-05-02 14:14:57.899] [PRINT] [ OK ] Bug 5 - downstream-usage gate still blocks unused indexed var - Bug B.5 gate preserved — indexed var without downstream reference does not pause
+[2026-05-02 14:14:57.907] [PRINT] ============================================================================
+[2026-05-02 14:14:57.914] [PRINT] Scenario 30 - Bug 5: resume re-runs extraction against patched agent_result
+[2026-05-02 14:14:57.921] [PRINT] ============================================================================
+[2026-05-02 14:14:57.927] [PRINT] [ OK ] Bug 5 - resume: user picks option 2 -> sheet_id = 1bbb - extract_nested_value over patched agent_result correctly yields option 2's id
+[2026-05-02 14:14:57.933] [PRINT] ============================================================================
+[2026-05-02 14:14:57.939] [PRINT] Scenario 31 - Bug 5: whole-array pattern still works after resume
+[2026-05-02 14:14:57.945] [PRINT] ============================================================================
+[2026-05-02 14:14:57.951] [PRINT] [ OK ] Bug 5 - whole-array resume pattern still works - backwards-compatible with the {"results": "results"} pattern
+[2026-05-02 14:14:57.958] [PRINT] ============================================================================
+[2026-05-02 14:14:57.965] [PRINT] Scenario 32 - Bug 1: Tier 1 prompt keeps email_filter extraction rule
+[2026-05-02 14:14:57.974] [PRINT] ============================================================================
+[2026-05-02 14:14:57.981] [PRINT] [ OK ] Bug 1 - Tier 1 prompt carries email_filter extraction rule - multi-turn narrowing context is preserved for the planner
+[2026-05-02 14:14:57.988] [PRINT] ============================================================================
+[2026-05-02 14:14:57.994] [PRINT] Scenario 33 - Bug F: Planner Rule 16 wraps email_filter in subject:"..."
+[2026-05-02 14:14:58.002] [PRINT] ============================================================================
+[2026-05-02 14:14:58.010] [PRINT] [ OK ] Bug F - Planner Rule 16 wraps email_filter in subject:"..." - Rule 16 wraps email_filter as subject:"..."; fallback preserved for fresh turns
+[2026-05-02 14:14:58.016] [PRINT] ============================================================================
+[2026-05-02 14:14:58.022] [PRINT] Scenario 34 - Bug 1: build_supervisor_input emits email_filter to planner
+[2026-05-02 14:14:58.030] [PRINT] ============================================================================
+[2026-05-02 14:14:58.036] [PRINT] [ OK ] Bug 1 - build_supervisor_input surfaces email_filter - email_filter flows cleanly from extracted_info -> Parameters -> planner
+[2026-05-02 14:14:58.041] [PRINT] ============================================================================
+[2026-05-02 14:14:58.047] [PRINT] Scenario 35 - Silent-rejection: orchestrator attaches upstream_rejected_files on pause
+[2026-05-02 14:14:58.055] [PRINT] ============================================================================
+[2026-05-02 14:14:58.063] [PRINT] [ OK ] Scenario 35a - supervisor_agent.py contains upstream_rejected_files scan
+[2026-05-02 14:14:58.069] [PRINT] [ OK ] Scenario 35b - scan extracts rejected_files from step_N_mapping_agent
+[2026-05-02 14:14:58.076] [PRINT] [ OK ] Scenario 35c - scan returns [] when nothing was rejected (no regression)
+[2026-05-02 14:14:58.083] [PRINT] [ OK ] Scenario 35d - rejected_files deduped by filename across step namespaces
+[2026-05-02 14:14:58.089] [PRINT] [ OK ] Scenario 35e - scan ignores noisy values, skips non-step_* keys
+[2026-05-02 14:14:58.097] [PRINT] ============================================================================
+[2026-05-02 14:14:58.106] [PRINT] Scenario 36 - Approval message surfaces upstream_rejected_files warning
+[2026-05-02 14:14:58.114] [PRINT] ============================================================================
+[2026-05-02 14:14:58.125] [PRINT] [ OK ] Scenario 36a - approval message warns about skipped PDFs in partial-success case
+[2026-05-02 14:14:58.131] [PRINT] 
+[2026-05-02 14:14:58.131] [PRINT] --- approval message preview (partial success) ---
+[2026-05-02 14:14:58.140] [PRINT] **Action Requires Approval** — DANGEROUS
+[2026-05-02 14:14:58.140] [PRINT] 
+[2026-05-02 14:14:58.140] [PRINT] Step 6 of 6
+[2026-05-02 14:14:58.140] [PRINT] 
+[2026-05-02 14:14:58.140] [PRINT] **Append the parsed delivery-order rows into the sheet**
+[2026-05-02 14:14:58.140] [PRINT] 
+[2026-05-02 14:14:58.140] [PRINT] **Writing Delivery-Order Data to Sheet**
+[2026-05-02 14:14:58.140] [PRINT] - **Sheet ID:** 1SHEET_ID
+[2026-05-02 14:14:58.140] [PRINT] - **Orders to write:** 1
+[2026-05-02 14:14:58.140] [PRINT] - **Total line items:** 17
+[2026-05-02 14:14:58.140] [PRINT] - **Source files:** Food_DELIVERY_ORDER (1).pdf
+[2026-05-02 14:14:58.140] [PRINT] - **Sample header (order 1):** reference_number=DO-2026-01, category=FOOD
+[2026-05-02 14:14:58.140] [PRINT] 
+[2026-05-02 14:14:58.140] [PRINT] **Note — some attachments were skipped and will NOT be written:**
+[2026-05-02 14:14:58.140] [PRINT] - `Tech_DELIVERY_ORDER (1).pdf` — Category is not FOOD or NON-FOOD
+[2026-05-02 14:14:58.140] [PRINT] 
+[2026-05-02 14:14:58.140] [PRINT] ---
+[2026-05-02 14:14:58.140] [PRINT] Reply **"yes"** to proceed or **"cancel"** to stop.
+[2026-05-02 14:14:58.148] [PRINT] --- end preview ---
+[2026-05-02 14:14:58.158] [PRINT] [ OK ] Scenario 36b - approval message truncates >5 rejected files with footer
+[2026-05-02 14:14:58.169] [PRINT] ============================================================================
+[2026-05-02 14:14:58.178] [PRINT] Scenario 37 - Approval message unchanged when no PDFs were rejected
+[2026-05-02 14:14:58.185] [PRINT] ============================================================================
+[2026-05-02 14:14:58.195] [PRINT] [ OK ] Scenario 37 - approval message unchanged on no-rejection path
+[2026-05-02 14:14:58.203] [PRINT] [ OK ] Scenario 37b - empty upstream_rejected_files list renders no warning
+[2026-05-02 14:14:58.214] [PRINT] ============================================================================
+[2026-05-02 14:14:58.223] [PRINT] Scenario 38 - Final summary template lists rejected files
+[2026-05-02 14:14:58.235] [PRINT] ============================================================================
+[2026-05-02 14:14:58.248] [PRINT] [ OK ] Scenario 38a - parse_delivery_order_pdfs template lists skipped files
+[2026-05-02 14:14:58.258] [PRINT] 
+[2026-05-02 14:14:58.258] [PRINT] --- final summary preview (mixed) ---
+[2026-05-02 14:14:58.268] [PRINT] Parsed 1 delivery order(s), 1 file(s) rejected
+[2026-05-02 14:14:58.268] [PRINT] 
+[2026-05-02 14:14:58.268] [PRINT] **Skipped files:**
+[2026-05-02 14:14:58.268] [PRINT] - `Tech_DELIVERY_ORDER (1).pdf` — Category is not FOOD or NON-FOOD
+[2026-05-02 14:14:58.279] [PRINT] --- end preview ---
+[2026-05-02 14:14:58.293] [PRINT] [ OK ] Scenario 38b - final summary truncates >5 rejected files
+[2026-05-02 14:14:58.310] [PRINT] ============================================================================
+[2026-05-02 14:14:58.326] [PRINT] Scenario 39 - Final summary regression: no rejections + other templates still work
+[2026-05-02 14:14:58.341] [PRINT] ============================================================================
+[2026-05-02 14:14:58.355] [PRINT] [ OK ] Scenario 39a - clean parse renders legacy one-line summary
+[2026-05-02 14:14:58.366] [PRINT] [ OK ] Scenario 39b - static-string templates (reply_to_email) still render
+[2026-05-02 14:14:58.380] [PRINT] [ OK ] Scenario 39c - use_message templates still render after callable upgrade
+[2026-05-02 14:14:58.390] [PRINT] ============================================================================
+[2026-05-02 14:14:58.408] [PRINT] Scenario 40 - E2E: DeliveryTesting2PDFs2.log partial-rejection chain is no longer silent
+[2026-05-02 14:14:58.427] [PRINT] ============================================================================
+[2026-05-02 14:14:58.451] [PRINT] [ OK ] Scenario 40 - E2E chain surfaces partial rejection end-to-end - mapping → step_info scan → approval prompt → final summary all mention Tech PDF
+[2026-05-02 14:14:58.469] [PRINT] ============================================================================
+[2026-05-02 14:14:58.478] [PRINT] FINAL REPORT
+[2026-05-02 14:14:58.490] [PRINT] ============================================================================
+[2026-05-02 14:14:58.502] [PRINT] TOTAL: 81 checks — PASS: 79, FAIL: 2, INFO: 0
+[2026-05-02 14:14:58.523] [PRINT] FAILURES:
+[2026-05-02 14:14:58.540] [PRINT]   * validate_delivery_sheet catches read-only access with actionable error
+[2026-05-02 14:14:58.553] [PRINT]       error should recommend asking for Editor access, got: "Write permission check failed: HttpError.__init__() missing 1 required positional argument: 'content'"; error should call out read-only/Viewer, got: "Write permission check failed: HttpError.__init__() missing 1 required positional argument: 'content'"
+[2026-05-02 14:14:58.568] [PRINT]   * write_delivery_order_data surfaces read-only error on 403 during append
+[2026-05-02 14:14:58.583] [PRINT]       expected error_type='read_only', got None; error should mention read-only/Editor access, got: "Error writing to 'Food': HttpError.__init__() missing 1 required positional argument: 'content'"
+[2026-05-02 14:15:07.887] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-05-02 14:15:08.021] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-05-02 14:15:08.032] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-05-02 14:15:08.048] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-05-02 14:15:08.062] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-05-02 14:15:08.090] [PRINT]  SQLite thread manager initialized: threads.db
+[2026-05-02 14:15:08.161] [PRINT] Workflow graph compiled (FULL WORKFLOW)
+[2026-05-02 14:15:08.169] [PRINT]    Flow: supervisor → orchestrator → END
+[2026-05-02 14:15:08.178] [PRINT]    Plans saved to: C:\Users\Denz\Documents\tigers\Ai-Agents\supervisor-agent\agent_outputs/supervisor_plan.json
+[2026-05-02 14:15:08.190] [PRINT]    Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+[2026-05-02 14:15:08.204] [PRINT] [ OK ] Flaw D (Bug 5) - Drive 2-result ambiguity now pauses for user pick - orchestrator prompts user to choose between the 2 sheets instead of silently defaulting to results[0]
+[2026-05-02 14:15:08.220] [PRINT] ==============================================================================
+[2026-05-02 14:15:08.234] [PRINT] SUMMARY - post-fix replay of DeliveryOrder2Docuemnts
+[2026-05-02 14:15:08.250] [PRINT] ==============================================================================
+[2026-05-02 14:15:08.262] [PRINT]   PASS: 5
+[2026-05-02 14:15:08.280] [PRINT]   FAIL: 0
+[2026-05-02 14:15:08.295] [PRINT]   INFO: 0
+[2026-05-02 14:15:08.310] [PRINT]   All Flaws A-E that were observable in the old log are now blocked by the implemented fixes (Bug 5 included).

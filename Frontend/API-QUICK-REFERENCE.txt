@@ -1,0 +1,222 @@
+================================================================================
+FRONTEND API ENDPOINTS - QUICK REFERENCE
+================================================================================
+
+📋 ALL ENDPOINTS MAPPED TO LAMBDA FUNCTIONS
+Last Updated: January 30, 2026
+
+================================================================================
+✅ NEW METHODS ADDED
+================================================================================
+
+1. chatApi.getUserQuota()
+   Endpoint: GET /api/chat/quota
+   Lambda: chat-quota (chat_quota.zip)
+   Returns: { remaining_tokens, monthly_limit, current_usage, percentage_used, tier, resets_at }
+   
+2. kbApi.query(query, params)
+   Endpoint: POST /api/kb/query
+   Lambda: kb-query (kb_query.zip)
+   Returns: { answer, sources, usage: { total_tokens, cost_usd } }
+
+================================================================================
+⚠️ DEPRECATED METHODS (Still Work - Backward Compatible)
+================================================================================
+
+OLD                                 → NEW
+───────────────────────────────────────────────────────────────────────────
+chatApi.getUserTokens()             → chatApi.getUserQuota()
+chatApi.getSessionTokens(id)        → chatApi.getUserQuota()
+kbApi.search(query)                 → kbApi.query(query)
+kbApi.getDocument(id)               → kbApi.listDocuments() + filter
+
+All deprecated methods will log console warnings.
+
+================================================================================
+📊 COMPLETE ENDPOINT LIST (19 ENDPOINTS)
+================================================================================
+
+KB ENDPOINTS (4)
+────────────────────────────────────────────────────────────────────────────
+GET    /api/kb/list-kb                     → kb-list
+DELETE /api/kb/delete/{doc_id}             → kb-delete  
+POST   /api/kb/query                       → kb-query ✨ NEW
+GET    /api/kb/document-versions/{name}    → kb-versions
+
+CHAT ENDPOINTS (7)
+────────────────────────────────────────────────────────────────────────────
+POST   /api/chat/session/new               → chat-session-create
+POST   /api/chat/message                   → chat-message
+GET    /api/chat/sessions                  → chat-sessions
+GET    /api/chat/session/{id}/history      → chat-sessions
+DELETE /api/chat/session/{id}              → chat-session-update
+PATCH  /api/chat/session/{id}/title        → chat-session-update
+GET    /api/chat/quota                     → chat-quota ✨ NEW
+
+ADMIN ENDPOINTS (8)
+────────────────────────────────────────────────────────────────────────────
+GET    /api/kb-admin/health                → admin-health
+GET    /api/kb-admin/documents             → admin-documents
+GET    /api/kb-admin/weaviate-documents    → admin-documents
+GET    /api/kb-admin/chat-stats            → admin-stats
+GET    /api/kb-admin/costs                 → admin-stats
+GET    /api/kb-admin/errors                → admin-stats
+GET    /api/kb-admin/stats                 → admin-stats
+GET    /api/kb-admin/activity-logs         → admin-stats
+
+================================================================================
+🚀 QUICK USAGE EXAMPLES
+================================================================================
+
+// Get user quota (NEW)
+const quota = await chatApi.getUserQuota();
+console.log(`Remaining: ${quota.remaining_tokens} / ${quota.monthly_limit}`);
+console.log(`Tier: ${quota.tier}`);
+
+// Query knowledge base (NEW)
+const result = await kbApi.query('What is AI?', {
+  document_filter: ['doc-123'],
+  max_sources: 5,
+  include_sources: true
+});
+console.log(result.answer);
+console.log(`Cost: $${result.usage.cost_usd}`);
+
+// List documents
+const docs = await kbApi.listDocuments({
+  limit: 10,
+  offset: 0,
+  order_by: 'upload_date',
+  order_dir: 'DESC'
+});
+
+// Delete document
+await kbApi.deleteDocument('doc-123');
+
+// Create chat session
+const session = await chatApi.createSession('My Chat');
+
+// Send message
+const response = await chatApi.sendMessage(session.session_id, 'Hello!');
+
+// Get session history
+const history = await chatApi.getSessionHistory(session.session_id);
+
+// Delete session
+await chatApi.deleteSession(session.session_id);
+
+// Admin: Get health status
+const health = await kbApi.get('/api/kb-admin/health');
+console.log(health.indicator); // 🟢 🟡 🔴
+
+// Admin: Get costs
+const costs = await kbApi.get('/api/kb-admin/costs?days=30');
+
+================================================================================
+🔧 ENVIRONMENT SETUP
+================================================================================
+
+.env or .env.production:
+
+# Production (AWS API Gateway)
+VITE_API_URL=https://your-api-id.execute-api.region.amazonaws.com/prod
+
+# Local Development
+VITE_API_URL=http://localhost:8009
+
+================================================================================
+📁 FILES MODIFIED
+================================================================================
+
+1. Frontend/src/apiHelpers.js
+   - Added: getUserQuota(), query()
+   - Deprecated: getUserTokens(), search(), getSessionTokens(), getDocument()
+   - All deprecated methods still work (backward compatible)
+
+2. Frontend/FRONTEND_API_ENDPOINT_UPDATE.md (NEW)
+   - Complete documentation
+   - Migration guide
+   - Testing checklist
+
+3. Frontend/FRONTEND_UPDATE_SUMMARY.md (NEW)
+   - Change summary
+   - Benefits
+   - Next steps
+
+================================================================================
+✅ TESTING CHECKLIST
+================================================================================
+
+KB Operations:
+□ List documents with pagination
+□ Delete document
+□ Query knowledge base (NEW)
+□ View document versions
+
+Chat Operations:
+□ Create new session
+□ Send message and get AI response
+□ List all sessions
+□ View session history
+□ Update session title
+□ Delete session
+□ Check user quota (NEW)
+
+Admin Operations:
+□ View health status
+□ View chat statistics
+□ View cost breakdown
+□ View error logs
+□ View activity logs
+□ View Weaviate documents
+
+================================================================================
+⚠️ IMPORTANT NOTES
+================================================================================
+
+1. All endpoints use JWT authentication via Authorization header
+2. API Gateway handles CORS automatically
+3. Token refresh happens automatically on 401 errors
+4. All deprecated methods log console warnings
+5. No breaking changes - existing code continues to work
+6. Lambda functions require environment variables (see LAMBDA_ENVIRONMENT_VARIABLES.md)
+
+================================================================================
+🔍 TROUBLESHOOTING
+================================================================================
+
+Issue: "getUserTokens is deprecated" warning
+Solution: Update to chatApi.getUserQuota()
+
+Issue: "search is deprecated" warning  
+Solution: Update to kbApi.query()
+
+Issue: 401 Unauthorized errors
+Solution: Check JWT token in localStorage, verify authorizer Lambda
+
+Issue: 404 Not Found errors
+Solution: Verify API Gateway routes match endpoints above
+
+Issue: CORS errors
+Solution: Check API Gateway CORS configuration
+
+================================================================================
+📞 SUPPORT
+================================================================================
+
+Documentation:
+- FRONTEND_API_ENDPOINT_UPDATE.md - Complete endpoint reference
+- FRONTEND_UPDATE_SUMMARY.md - Update summary and migration guide
+- LAMBDA_ENVIRONMENT_VARIABLES.md - Lambda configuration
+
+Lambda Logs:
+- AWS CloudWatch → Log Groups → /aws/lambda/[function-name]
+
+API Gateway Logs:
+- AWS CloudWatch → Log Groups → API-Gateway-Execution-Logs
+
+================================================================================
+
+Generated: January 30, 2026
+Status: ✅ Complete
+All 19 endpoints verified and documented

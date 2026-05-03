@@ -1,0 +1,56 @@
+﻿{
+    "Items": [
+        {
+            "ConnectionType": "INTERNET",
+            "IntegrationId": "ea6nzkr",
+            "IntegrationMethod": "POST",
+            "IntegrationType": "AWS_PROXY",
+            "IntegrationUri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:055932374911:function:ws-connect/invocations",
+            "PassthroughBehavior": "WHEN_NO_MATCH",
+            "PayloadFormatVersion": "1.0",
+            "TimeoutInMillis": 29000
+        },
+        {
+            "ConnectionType": "INTERNET",
+            "IntegrationId": "frmwoyl",
+            "IntegrationMethod": "POST",
+            "IntegrationType": "AWS_PROXY",
+            "IntegrationUri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:055932374911:function:ws-disconnect/invocations",
+            "PassthroughBehavior": "WHEN_NO_MATCH",
+            "PayloadFormatVersion": "1.0",
+            "TimeoutInMillis": 29000
+        },
+        {
+            "ConnectionType": "INTERNET",
+            "IntegrationId": "hmtaiwd",
+            "IntegrationMethod": "POST",
+            "IntegrationType": "AWS_PROXY",
+            "IntegrationUri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:055932374911:function:ws-default/invocations",
+            "PassthroughBehavior": "WHEN_NO_MATCH",
+            "PayloadFormatVersion": "1.0",
+            "TimeoutInMillis": 29000
+        },
+        {
+            "ConnectionType": "INTERNET",
+            "IntegrationId": "my0wa06",
+            "IntegrationMethod": "POST",
+            "IntegrationType": "AWS_PROXY",
+            "IntegrationUri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:055932374911:function:ws-chat-stream/invocations",
+            "PassthroughBehavior": "WHEN_NO_MATCH",
+            "PayloadFormatVersion": "1.0",
+            "TimeoutInMillis": 29000
+        },
+        {
+            "ConnectionType": "INTERNET",
+            "ContentHandlingStrategy": "CONVERT_TO_TEXT",
+            "IntegrationId": "pbaptj8",
+            "IntegrationMethod": "POST",
+            "IntegrationResponseSelectionExpression": "${integration.response.body.errorMessage}",
+            "IntegrationType": "AWS",
+            "IntegrationUri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:055932374911:function:supervisor-ws-chat/invocations",
+            "PassthroughBehavior": "WHEN_NO_MATCH",
+            "PayloadFormatVersion": "1.0",
+            "TimeoutInMillis": 29000
+        }
+    ]
+}

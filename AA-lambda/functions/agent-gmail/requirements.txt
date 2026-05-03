@@ -1,0 +1,16 @@
+google-auth>=2.27.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+google-api-python-client>=2.119.0
+python-dotenv>=1.0.0
+openai>=1.12.0
+langchain>=0.1.0
+langchain-openai>=0.0.8
+langgraph>=0.0.40
+beautifulsoup4>=4.12.0
+# api.py imports `from fastapi import FastAPI, HTTPException` and uvicorn
+# at module level. Lambda never serves over uvicorn — handler is in
+# lambda_function.py — but the import lines fire on cold-start.
+fastapi>=0.110.0
+uvicorn>=0.30.0
+pydantic>=2.5.0

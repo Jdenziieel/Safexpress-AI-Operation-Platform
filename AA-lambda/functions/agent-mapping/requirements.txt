@@ -1,0 +1,13 @@
+openai>=1.12.0
+python-dotenv>=1.0.0
+fastapi>=0.110.0
+# uvicorn imported at the top of mapping_agent_api.py (legacy dev-server entry).
+# Lambda never .run()'s it but the import line still fires on cold-start.
+uvicorn>=0.30.0
+pydantic>=2.5.0
+# Heavy data + PDF parsing — this Lambda ships as an OCI/Docker image
+pdfplumber>=0.10.3
+pymupdf>=1.23.0
+pandas>=2.1.0
+numpy>=1.26.0
+openpyxl>=3.1.2

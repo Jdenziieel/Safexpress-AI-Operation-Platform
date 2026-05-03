@@ -1,0 +1,1139 @@
+﻿{
+    "items": [
+        {
+            "id": "0656tk",
+            "parentId": "j3drd0",
+            "pathPart": "dynamic-mapping",
+            "path": "/api/dynamic-mapping",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "09jxrw",
+            "parentId": "fln1rink1e",
+            "pathPart": "admin",
+            "path": "/admin"
+        },
+        {
+            "id": "0lkirq",
+            "parentId": "x8gcgi",
+            "pathPart": "metrics",
+            "path": "/agents/metrics",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "0wf66f",
+            "parentId": "tgm1sf",
+            "pathPart": "logs",
+            "path": "/api/quota/admin/logs",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "0wrall",
+            "parentId": "09jxrw",
+            "pathPart": "settings",
+            "path": "/admin/settings"
+        },
+        {
+            "id": "1295he",
+            "parentId": "90veqo",
+            "pathPart": "usage",
+            "path": "/api/quota/usage",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "2516bb",
+            "parentId": "tgm1sf",
+            "pathPart": "users",
+            "path": "/api/quota/admin/users",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "25grrl",
+            "parentId": "95zx97",
+            "pathPart": "user",
+            "path": "/api/auth/user",
+            "resourceMethods": {
+                "GET": {}
+            }
+        },
+        {
+            "id": "2iod06",
+            "parentId": "09jxrw",
+            "pathPart": "alerts",
+            "path": "/admin/alerts",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "2r79yy",
+            "parentId": "09jxrw",
+            "pathPart": "metrics",
+            "path": "/admin/metrics",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "2zyi92",
+            "parentId": "ipgb1y",
+            "pathPart": "restore",
+            "path": "/api/quota/admin/user/{user_id}/restore",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "33765d",
+            "parentId": "0wrall",
+            "pathPart": "budget",
+            "path": "/admin/settings/budget",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "3fcrip",
+            "parentId": "v3vppp",
+            "pathPart": "activity-logs",
+            "path": "/api/admin/activity-logs",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "3hbwel",
+            "parentId": "47tyle",
+            "pathPart": "{doc_id}",
+            "path": "/api/kb/delete/{doc_id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "3mxe6u",
+            "parentId": "j3drd0",
+            "pathPart": "abc",
+            "path": "/api/abc"
+        },
+        {
+            "id": "3zectj",
+            "parentId": "uwwje4",
+            "pathPart": "parse-pdf",
+            "path": "/api/pdf/parse-pdf",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "3zt8tg",
+            "parentId": "ipgb1y",
+            "pathPart": "deactivate",
+            "path": "/api/quota/admin/user/{user_id}/deactivate",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "43jcfq",
+            "parentId": "j3drd0",
+            "pathPart": "token",
+            "path": "/api/token",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "47tyle",
+            "parentId": "jiyjyu",
+            "pathPart": "delete",
+            "path": "/api/kb/delete",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "49q5fk",
+            "parentId": "a5mn76",
+            "pathPart": "title",
+            "path": "/api/chat/session/{session_id}/title",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "PATCH": {}
+            }
+        },
+        {
+            "id": "4a43yf",
+            "parentId": "bnyp9z",
+            "pathPart": "create-with-upload",
+            "path": "/threads/create-with-upload",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "4hzind",
+            "parentId": "k6mlai",
+            "pathPart": "chat-stats",
+            "path": "/api/kb-admin/chat-stats",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "4s2glv",
+            "parentId": "j3drd0",
+            "pathPart": "mapping",
+            "path": "/api/mapping"
+        },
+        {
+            "id": "5dzxyo",
+            "parentId": "fln1rink1e",
+            "pathPart": "workflow",
+            "path": "/workflow",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "5lwkp2",
+            "parentId": "64mh8o",
+            "pathPart": "new",
+            "path": "/api/chat/session/new",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "5p9780",
+            "parentId": "fln1rink1e",
+            "pathPart": "health",
+            "path": "/health",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "64mh8o",
+            "parentId": "zvn0qt",
+            "pathPart": "session",
+            "path": "/api/chat/session",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "6lm4fr",
+            "parentId": "jiyjyu",
+            "pathPart": "list-kb",
+            "path": "/api/kb/list-kb",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "6ren2j",
+            "parentId": "jiyjyu",
+            "pathPart": "upload-to-kb",
+            "path": "/api/kb/upload-to-kb",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "6ygg65",
+            "parentId": "k6mlai",
+            "pathPart": "health",
+            "path": "/api/kb-admin/health",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "7dkfaq",
+            "parentId": "4s2glv",
+            "pathPart": "merge",
+            "path": "/api/mapping/merge",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "80sgei",
+            "parentId": "zvn0qt",
+            "pathPart": "quota",
+            "path": "/api/chat/quota",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "8316b2",
+            "parentId": "ug2pi7",
+            "pathPart": "progress",
+            "path": "/threads/{thread_id}/progress",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "8f9ud5",
+            "parentId": "09jxrw",
+            "pathPart": "pricing",
+            "path": "/admin/pricing",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "8rzfs7",
+            "parentId": "zvn0qt",
+            "pathPart": "message",
+            "path": "/api/chat/message",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "8y1f0q",
+            "parentId": "fgtjo9",
+            "pathPart": "summary",
+            "path": "/admin/activity/summary",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "90veqo",
+            "parentId": "j3drd0",
+            "pathPart": "quota",
+            "path": "/api/quota",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "91rog8",
+            "parentId": "09jxrw",
+            "pathPart": "logs",
+            "path": "/admin/logs",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "95zx97",
+            "parentId": "j3drd0",
+            "pathPart": "auth",
+            "path": "/api/auth",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "96douu",
+            "parentId": "d8lplw",
+            "pathPart": "update-by-date",
+            "path": "/api/sheets/update-by-date",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "9mnx1r",
+            "parentId": "fln1rink1e",
+            "pathPart": "actions",
+            "path": "/actions"
+        },
+        {
+            "id": "a5mn76",
+            "parentId": "64mh8o",
+            "pathPart": "{session_id}",
+            "path": "/api/chat/session/{session_id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "a8o8n5",
+            "parentId": "bieu6a",
+            "pathPart": "{file_name}",
+            "path": "/api/kb/document-versions/{file_name}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "aduum7",
+            "parentId": "bnyp9z",
+            "pathPart": "search",
+            "path": "/threads/search",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "aua1dk",
+            "parentId": "d8lplw",
+            "pathPart": "read",
+            "path": "/api/sheets/read",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "bieu6a",
+            "parentId": "jiyjyu",
+            "pathPart": "document-versions",
+            "path": "/api/kb/document-versions",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "bk970c",
+            "parentId": "4s2glv",
+            "pathPart": "parse",
+            "path": "/api/mapping/parse",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "blg74e",
+            "parentId": "rjhk1j",
+            "pathPart": "{action_id}",
+            "path": "/action/approve/{action_id}",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "bnyp9z",
+            "parentId": "fln1rink1e",
+            "pathPart": "threads",
+            "path": "/threads",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "bto492",
+            "parentId": "k6mlai",
+            "pathPart": "activity-logs",
+            "path": "/api/kb-admin/activity-logs",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "btq88u",
+            "parentId": "jiyjyu",
+            "pathPart": "query",
+            "path": "/api/kb/query",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "bxcdv9",
+            "parentId": "ipgb1y",
+            "pathPart": "reset",
+            "path": "/api/quota/admin/user/{user_id}/reset",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "ch72f6",
+            "parentId": "tgm1sf",
+            "pathPart": "usage",
+            "path": "/api/quota/admin/usage",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "d8lplw",
+            "parentId": "j3drd0",
+            "pathPart": "sheets",
+            "path": "/api/sheets"
+        },
+        {
+            "id": "eplyhc",
+            "parentId": "tgm1sf",
+            "pathPart": "user",
+            "path": "/api/quota/admin/user",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "ewyuqo",
+            "parentId": "d8lplw",
+            "pathPart": "upload-multi",
+            "path": "/api/sheets/upload-multi",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "fcybbk",
+            "parentId": "43jcfq",
+            "pathPart": "refresh",
+            "path": "/api/token/refresh",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "fgtjo9",
+            "parentId": "09jxrw",
+            "pathPart": "activity",
+            "path": "/admin/activity",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "fln1rink1e",
+            "path": "/",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "fwx6mk",
+            "parentId": "jzd52z",
+            "pathPart": "onboard",
+            "path": "/api/users/onboard",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "fzxjny",
+            "parentId": "90veqo",
+            "pathPart": "report",
+            "path": "/api/quota/report",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "gfepao",
+            "parentId": "tgm1sf",
+            "pathPart": "top-users",
+            "path": "/api/quota/admin/top-users",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "hh3753",
+            "parentId": "09jxrw",
+            "pathPart": "usage",
+            "path": "/admin/usage"
+        },
+        {
+            "id": "hhsxs9",
+            "parentId": "qctqjv",
+            "pathPart": "search",
+            "path": "/logs/search",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "i4vbdr",
+            "parentId": "90veqo",
+            "pathPart": "balance",
+            "path": "/api/quota/balance",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "iibw09",
+            "parentId": "90veqo",
+            "pathPart": "me",
+            "path": "/api/quota/me",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "ipgb1y",
+            "parentId": "eplyhc",
+            "pathPart": "{user_id}",
+            "path": "/api/quota/admin/user/{user_id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "irl6bu",
+            "parentId": "ug2pi7",
+            "pathPart": "messages",
+            "path": "/threads/{thread_id}/messages",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "isetur",
+            "parentId": "irl6bu",
+            "pathPart": "upload",
+            "path": "/threads/{thread_id}/messages/upload",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "ixx5vr",
+            "parentId": "d8lplw",
+            "pathPart": "update",
+            "path": "/api/sheets/update",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "iz3df0",
+            "parentId": "ch72f6",
+            "pathPart": "{user_id}",
+            "path": "/api/quota/admin/usage/{user_id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "j3drd0",
+            "parentId": "fln1rink1e",
+            "pathPart": "api",
+            "path": "/api",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "jiyjyu",
+            "parentId": "j3drd0",
+            "pathPart": "kb",
+            "path": "/api/kb"
+        },
+        {
+            "id": "jrkxv6",
+            "parentId": "i4vbdr",
+            "pathPart": "{user_id}",
+            "path": "/api/quota/balance/{user_id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "jzd52z",
+            "parentId": "j3drd0",
+            "pathPart": "users",
+            "path": "/api/users",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "k6mlai",
+            "parentId": "j3drd0",
+            "pathPart": "kb-admin",
+            "path": "/api/kb-admin",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "k9g5v4",
+            "parentId": "y8vs97",
+            "pathPart": "preview",
+            "path": "/api/opr/preview",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "kan5uf",
+            "parentId": "d8lplw",
+            "pathPart": "preview",
+            "path": "/api/sheets/preview",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "kpudv7",
+            "parentId": "4s2glv",
+            "pathPart": "transform",
+            "path": "/api/mapping/transform",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "kw4jel",
+            "parentId": "iibw09",
+            "pathPart": "history",
+            "path": "/api/quota/me/history",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "llrqrg",
+            "parentId": "3mxe6u",
+            "pathPart": "analysis",
+            "path": "/api/abc/analysis",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "lviwkm",
+            "parentId": "hh3753",
+            "pathPart": "summary",
+            "path": "/admin/usage/summary",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "lwrmvm",
+            "parentId": "qctqjv",
+            "pathPart": "stats",
+            "path": "/logs/stats",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "maxj1i",
+            "parentId": "tkr0ow",
+            "pathPart": "{request_id}",
+            "path": "/logs/requests/{request_id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "mfqdsg",
+            "parentId": "tgm1sf",
+            "pathPart": "summary",
+            "path": "/api/quota/admin/summary",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "mv7rxe",
+            "parentId": "zvn0qt",
+            "pathPart": "sessions",
+            "path": "/api/chat/sessions",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "nuy9ag",
+            "parentId": "k6mlai",
+            "pathPart": "stats",
+            "path": "/api/kb-admin/stats",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "ousxx6",
+            "parentId": "tgm1sf",
+            "pathPart": "actions",
+            "path": "/api/quota/admin/actions",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "ps2pwl",
+            "parentId": "09jxrw",
+            "pathPart": "health",
+            "path": "/admin/health",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "qctqjv",
+            "parentId": "fln1rink1e",
+            "pathPart": "logs",
+            "path": "/logs",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "qcz0vi",
+            "parentId": "k6mlai",
+            "pathPart": "costs",
+            "path": "/api/kb-admin/costs",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "qh6ilf",
+            "parentId": "y8vs97",
+            "pathPart": "process",
+            "path": "/api/opr/process",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "rjhk1j",
+            "parentId": "ubz7mq",
+            "pathPart": "approve",
+            "path": "/action/approve"
+        },
+        {
+            "id": "rp3hcx",
+            "parentId": "ubz7mq",
+            "pathPart": "{action_id}",
+            "path": "/action/{action_id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "ryxndq",
+            "parentId": "a5mn76",
+            "pathPart": "history",
+            "path": "/api/chat/session/{session_id}/history",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "srou5o",
+            "parentId": "k6mlai",
+            "pathPart": "errors",
+            "path": "/api/kb-admin/errors",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "tgm1sf",
+            "parentId": "90veqo",
+            "pathPart": "admin",
+            "path": "/api/quota/admin",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "tjv1ep",
+            "parentId": "d8lplw",
+            "pathPart": "create",
+            "path": "/api/sheets/create",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "tkr0ow",
+            "parentId": "qctqjv",
+            "pathPart": "requests",
+            "path": "/logs/requests"
+        },
+        {
+            "id": "u40q48",
+            "parentId": "95zx97",
+            "pathPart": "google",
+            "path": "/api/auth/google",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "u5uofg",
+            "parentId": "90veqo",
+            "pathPart": "health",
+            "path": "/api/quota/health",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "ubz7mq",
+            "parentId": "fln1rink1e",
+            "pathPart": "action",
+            "path": "/action"
+        },
+        {
+            "id": "ug2pi7",
+            "parentId": "bnyp9z",
+            "pathPart": "{thread_id}",
+            "path": "/threads/{thread_id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "uwwje4",
+            "parentId": "j3drd0",
+            "pathPart": "pdf",
+            "path": "/api/pdf",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "v3vppp",
+            "parentId": "j3drd0",
+            "pathPart": "admin",
+            "path": "/api/admin",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "v3vs92",
+            "parentId": "eplyhc",
+            "pathPart": "create",
+            "path": "/api/quota/admin/user/create",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "v7kjfr",
+            "parentId": "k6mlai",
+            "pathPart": "weaviate-documents",
+            "path": "/api/kb-admin/weaviate-documents",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "vua8fy",
+            "parentId": "9mnx1r",
+            "pathPart": "cleanup",
+            "path": "/actions/cleanup",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "w7lt76",
+            "parentId": "8f9ud5",
+            "pathPart": "{model}",
+            "path": "/admin/pricing/{model}",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "wqikpn",
+            "parentId": "4s2glv",
+            "pathPart": "map-colunms",
+            "path": "/api/mapping/map-colunms",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "x8gcgi",
+            "parentId": "fln1rink1e",
+            "pathPart": "agents",
+            "path": "/agents"
+        },
+        {
+            "id": "y8vs97",
+            "parentId": "j3drd0",
+            "pathPart": "opr",
+            "path": "/api/opr"
+        },
+        {
+            "id": "ydimhh",
+            "parentId": "0656tk",
+            "pathPart": "upload",
+            "path": "/api/dynamic-mapping/upload",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "yyyc2q",
+            "parentId": "2r79yy",
+            "pathPart": "internal",
+            "path": "/admin/metrics/internal",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "yzleda",
+            "parentId": "k6mlai",
+            "pathPart": "documents",
+            "path": "/api/kb-admin/documents",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "z8dwiy",
+            "parentId": "90veqo",
+            "pathPart": "check",
+            "path": "/api/quota/check",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "zc9jt2",
+            "parentId": "9mnx1r",
+            "pathPart": "pending",
+            "path": "/actions/pending",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "zlbtf8",
+            "parentId": "95zx97",
+            "pathPart": "accept-terms",
+            "path": "/api/auth/accept-terms",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "zsxbvt",
+            "parentId": "jzd52z",
+            "pathPart": "{email}",
+            "path": "/api/users/{email}",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "PATCH": {}
+            }
+        },
+        {
+            "id": "zue0v7",
+            "parentId": "4s2glv",
+            "pathPart": "extract-dates",
+            "path": "/api/mapping/extract-dates",
+            "resourceMethods": {
+                "POST": {}
+            }
+        },
+        {
+            "id": "zvn0qt",
+            "parentId": "j3drd0",
+            "pathPart": "chat",
+            "path": "/api/chat",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        }
+    ]
+}

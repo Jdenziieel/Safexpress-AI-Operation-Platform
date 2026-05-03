@@ -1,0 +1,37 @@
+# LIGHT shared dependencies — installed into EVERY Lambda in the fleet,
+# whether ZIP or Docker. Kept deliberately small so the 31 light supervisor
+# functions can ship as ZIPs that fit well under Lambda's 250 MB unzipped
+# limit (typical light-function ZIP is ~30-50 MB).
+#
+# What lives here:
+#   - boto3 / botocore        — DynamoDB + S3 + apigatewaymanagementapi
+#   - pydantic                — models/models.py + Pydantic v2 model_dump
+#   - httpx / requests / urllib3 — outbound HTTP (quota service, sub-agent
+#                                   calls, connectivity checks). httpx is
+#                                   pulled in by shared/logging_config.py.
+#   - ulid-py                 — id generation
+#   - python-dotenv           — env loading (kept for parity with source)
+#
+# What does NOT live here (moved to requirements-heavy.txt):
+#   - langchain / langgraph / openai / tiktoken / jinja2 / fastapi /
+#     starlette / uvicorn / orjson / regex / pdfplumber / PyYAML / xxhash /
+#     zstandard / uuid_utils / tenacity / ormsgpack / MarkupSafe /
+#     python-multipart
+#
+# Heavy deps are installed only by the 5 brain Lambdas (Dockerfile.lambda
+# heavy variant + Dockerfile.websocket) — see requirements-heavy.txt.
+# Sub-agent images (gmail/docs/drive/sheets/calendar/mapping) install
+# their own per-function requirements.txt and never import the supervisor
+# brain, so they don't pull this file in either.
+
+# ---- Core AWS / runtime ----
+boto3>=1.34.0
+botocore>=1.34.0
+ulid-py>=1.1.0
+pydantic>=2.5.0,<3.0.0
+python-dotenv>=1.0.0
+
+# ---- HTTP clients (brain uses httpx; quota uses urllib stdlib) ----
+httpx>=0.28.0
+requests>=2.32.0
+urllib3>=2.0.0

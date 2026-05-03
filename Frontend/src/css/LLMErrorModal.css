@@ -1,0 +1,176 @@
+/* LLMErrorModal.css */
+
+.llm-error-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  overflow: hidden;
+}
+
+.llm-error-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  width: 90%;
+  max-width: 550px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.llm-error-modal-header {
+  display: flex;
+  background-color: #27336e;
+  color: white;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 28px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.llm-error-modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.llm-error-modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 24px 28px 28px 28px;
+}
+
+.llm-error-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 28px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.llm-error-modal-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.llm-error-modal-button:hover {
+  background: #f3f4f6;
+}
+
+.llm-error-modal-button.primary {
+  background: #27336e;
+  color: white;
+  border-color: #27336e;
+}
+
+.llm-error-modal-button.primary:hover {
+  background: #1e2754;
+}
+
+/* Icon and color specific styles */
+.llm-error-icon {
+  flex-shrink: 0;
+}
+
+.llm-error-modal-header.error {
+  background-color: #fef2f2; /* red-50 */
+  color: #991b1b; /* red-800 */
+  border-bottom-color: #fecaca; /* red-200 */
+}
+
+.llm-error-modal-header.warning {
+  background-color: #fffbeb; /* amber-50 */
+  color: #92400e; /* amber-800 */
+  border-bottom-color: #fde68a; /* amber-200 */
+}
+
+.llm-error-modal-header.info {
+  background-color: #eff6ff; /* blue-50 */
+  color: #1e40af; /* blue-800 */
+  border-bottom-color: #bfdbfe; /* blue-200 */
+}
+
+.llm-error-modal-header.quota {
+  background-color: #f5f3ff; /* violet-50 */
+  color: #5b21b6; /* violet-800 */
+  border-bottom-color: #ddd6fe; /* violet-200 */
+}
+
+.llm-error-modal-header.default {
+  background-color: #f9fafb; /* gray-50 */
+  color: #374151; /* gray-700 */
+  border-bottom-color: #e5e7eb; /* gray-200 */
+}
+
+.llm-error-content p {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.llm-error-content p:last-child {
+  margin-bottom: 0;
+}
+
+.llm-error-content strong {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.llm-error-suggestions {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.llm-error-suggestions h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 12px 0;
+}
+
+.llm-error-suggestions ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.llm-error-suggestions li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.llm-error-suggestions .suggestion-icon {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #27336e;
+}

@@ -1,0 +1,2 @@
+# Brain-heavy: full LangGraph workflow.invoke().
+# Shared brain layer covers langchain/langgraph/openai. No extra deps here.

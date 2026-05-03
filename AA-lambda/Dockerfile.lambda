@@ -1,0 +1,60 @@
+# Generic Lambda Docker image for the 5 HEAVY supervisor REST functions:
+#   supervisor-create-thread, supervisor-create-thread-upload,
+#   supervisor-action-approve, supervisor-workflow.
+#
+# The 31 light supervisor functions DO NOT use this Dockerfile — they ship
+# as ZIPs built by build-lambda.ps1, which installs only the light
+# `requirements.txt` (boto3 / pydantic / httpx). See DEPLOYMENT_GUIDE.md
+# §7 for the tiering rationale.
+#
+# Usage:
+#   docker build -t <name>:latest \
+#     --build-arg FUNCTION_NAME=<name> \
+#     -f Dockerfile.lambda .
+#
+# Build context MUST be the AA-lambda/ folder so both `shared/` and
+# `functions/<FUNCTION_NAME>/` are visible.
+
+# syntax=docker/dockerfile:1.6
+# `# syntax=` enables BuildKit's `--mount=type=cache` directive below.
+# Required so the per-function pip install reuses the wheel cache across
+# rebuilds — without it, every requirements.txt change re-downloads the
+# entire wheel set from PyPI (~30s of cold network I/O per function).
+#
+# Python 3.12 image runs on Amazon Linux 2023 (glibc 2.34) which can install
+# tiktoken/numpy/pandas wheels straight from PyPI's manylinux_2_28 set. The
+# 3.11 image runs on AL2 (glibc 2.26) and fails the tiktoken wheel check,
+# forcing a from-source build that needs Rust.
+FROM public.ecr.aws/lambda/python:3.12
+
+ARG FUNCTION_NAME
+ENV FUNCTION_NAME=${FUNCTION_NAME}
+
+# --- Light + heavy + per-function deps ---
+# Three layers, ordered by churn frequency (least → most). Editing the
+# brain code under `shared/` only invalidates layers AFTER the pip
+# installs, so wheel downloads stay cached across most changes.
+#
+# Cache mount target=/root/.cache/pip survives across builds and across all
+# functions that share this Dockerfile, so the very first build seeds the
+# cache and every subsequent rebuild — even when requirements.txt changes —
+# pulls wheels from local disk instead of PyPI. We still keep
+# `--no-cache-dir` on `pip install` itself so the FINAL image stays slim
+# (the cache lives outside the image, in BuildKit's storage).
+COPY requirements.txt /var/task/requirements-light.txt
+COPY requirements-heavy.txt /var/task/requirements-heavy.txt
+COPY functions/${FUNCTION_NAME}/requirements.txt /var/task/requirements-fn.txt
+
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+    pip install --no-cache-dir -r /var/task/requirements-light.txt \
+ && pip install --no-cache-dir -r /var/task/requirements-heavy.txt \
+ && pip install --no-cache-dir -r /var/task/requirements-fn.txt
+
+# --- Brain modules (shared/) — copied into /var/task/shared so the
+# function's lambda_function.py can `from shared import ...` directly.
+COPY shared/ /var/task/shared/
+
+# --- Function code (lambda_function.py is the entrypoint) ---
+COPY functions/${FUNCTION_NAME}/ /var/task/
+
+CMD ["lambda_function.lambda_handler"]

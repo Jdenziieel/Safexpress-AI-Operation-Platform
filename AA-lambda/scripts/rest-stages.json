@@ -1,0 +1,15 @@
+﻿{
+    "item": [
+        {
+            "deploymentId": "942x9z",
+            "stageName": "prod",
+            "cacheClusterEnabled": false,
+            "cacheClusterSize": "0.5",
+            "cacheClusterStatus": "NOT_AVAILABLE",
+            "methodSettings": {},
+            "tracingEnabled": false,
+            "createdDate": "2026-01-14T02:23:54+08:00",
+            "lastUpdatedDate": "2026-05-03T03:38:44+08:00"
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+google-auth>=2.27.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+google-api-python-client>=2.119.0
+python-dotenv>=1.0.0
+openai>=1.12.0
+# api.py imports `from fastapi import FastAPI` and uvicorn at module
+# level. Lambda never serves over uvicorn but the imports fire.
+fastapi>=0.110.0
+uvicorn>=0.30.0
+pydantic>=2.5.0
+# Heavy parsing dependencies — this Lambda ships as an OCI/Docker image
+pdfplumber>=0.10.3
+pymupdf>=1.23.0
+pandas>=2.1.0
+numpy>=1.26.0
+openpyxl>=3.1.2
+pillow>=10.2.0

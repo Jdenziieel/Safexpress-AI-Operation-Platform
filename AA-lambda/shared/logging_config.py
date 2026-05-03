@@ -42,6 +42,30 @@ _user_id_var: ContextVar[Optional[str]] = ContextVar('user_id', default=None)
 _token_summary_var: ContextVar[Optional[Any]] = ContextVar('token_summary', default=None)
 _start_time_var: ContextVar[Optional[float]] = ContextVar('start_time', default=None)
 
+# AA-lambda Phase 2.5.A: JWT propagated via contextvar so check_user_quota /
+# _report_quota_usage can attach `Authorization: Bearer <jwt>` without changing
+# the dozens of call sites in the brain.
+_jwt_var: ContextVar[Optional[str]] = ContextVar('jwt', default=None)
+
+# AA-lambda SocialTokens phase: the logged-in user's gmail (PK of the
+# `SocialTokens` DynamoDB table) flows through contextvars so
+# `config.get_google_credentials()` can resolve the right user's OAuth row
+# without changing any of the brain's call sites that hand a credentials_dict
+# to sub-agents.
+_user_email_var: ContextVar[Optional[str]] = ContextVar('user_email', default=None)
+
+
+def get_current_jwt() -> Optional[str]:
+    """Get the JWT for the current request (async-safe)."""
+    return _jwt_var.get()
+
+
+def get_current_user_email() -> Optional[str]:
+    """Get the authenticated user's gmail/email for the current request
+    (async-safe). Used by ``config.get_google_credentials()`` to look up the
+    right SocialTokens row."""
+    return _user_email_var.get()
+
 # Keep thread-local as fallback for non-async code
 _request_context = threading.local()
 
@@ -221,6 +245,15 @@ def check_user_quota(user_id: str, estimated_tokens: int = 1000) -> QuotaCheckRe
     if not user_id:
         return QuotaCheckResult(allowed=True)  # No user_id means anonymous, allow for now
     
+    # AA-lambda Phase 2.5.A: read JWT from contextvar; quota service requires
+    # Authorization: Bearer <jwt> per QUOTA_SERVICE_REFERENCE.md §3 + §7.1.
+    headers = {"Content-Type": "application/json"}
+    jwt = _jwt_var.get()
+    if jwt:
+        headers["Authorization"] = f"Bearer {jwt}"
+
+    service = os.environ.get("SERVICE_NAME", "supervisor")
+
     try:
         with httpx.Client(timeout=5.0) as client:
             response = client.post(
@@ -228,9 +261,10 @@ def check_user_quota(user_id: str, estimated_tokens: int = 1000) -> QuotaCheckRe
                 json={
                     "user_id": user_id,
                     "estimated_tokens": estimated_tokens,
-                    "service": "supervisor",
+                    "service": service,
                     "operation": "chat"
-                }
+                },
+                headers=headers,
             )
             
             # User not found = deactivated
@@ -303,6 +337,10 @@ def _report_quota_usage(
     if not QUOTA_ENABLED:
         return
 
+    # AA-lambda Phase 2.5.A: SERVICE_NAME env wins when caller passed default
+    if service in (None, "", "unknown"):
+        service = os.environ.get("SERVICE_NAME", "supervisor")
+
     payload = {
         "user_id": user_id,
         "service": service,
@@ -317,10 +355,19 @@ def _report_quota_usage(
         "tier": tier
     }
 
+    # AA-lambda Phase 2.5.A: read JWT from contextvar; closure copies the
+    # current value so the future's _send() doesn't race with context clear.
+    headers = {"Content-Type": "application/json"}
+    jwt_at_call = _jwt_var.get()
+    if jwt_at_call:
+        headers["Authorization"] = f"Bearer {jwt_at_call}"
+
     def _send():
         try:
             _get_quota_http_client().post(
-                f"{QUOTA_SERVICE_URL}/quota/report", json=payload
+                f"{QUOTA_SERVICE_URL}/quota/report",
+                json=payload,
+                headers=headers,
             )
         except Exception:
             pass
@@ -427,11 +474,21 @@ def set_request_context(
     request_id: Optional[str] = None,
     conversation_id: Optional[str] = None,
     thread_id: Optional[str] = None,
-    user_id: Optional[str] = None
+    user_id: Optional[str] = None,
+    jwt: Optional[str] = None,
+    user_email: Optional[str] = None,
 ):
     """
     Set request context (async-safe using contextvars).
     Useful for HTTP requests where context spans multiple function calls.
+
+    AA-lambda Phase 2.5.A: `jwt` keyword-only (default None) — backwards
+    compatible with all existing brain call sites. Quota helpers read it
+    via contextvar so we don't have to thread JWT through every LLM call.
+
+    AA-lambda SocialTokens phase: ``user_email`` keyword-only — the
+    authenticated user's gmail/email. ``config.get_google_credentials()``
+    reads it via contextvar to look up the SocialTokens row.
     """
     if request_id is None:
         request_id = generate_request_id()
@@ -441,6 +498,8 @@ def set_request_context(
     _conversation_id_var.set(conversation_id)
     _thread_id_var.set(thread_id)
     _user_id_var.set(user_id)
+    _jwt_var.set(jwt)
+    _user_email_var.set(user_email)
     _token_summary_var.set(RequestTokenSummary())
     _start_time_var.set(time.time())
     
@@ -449,6 +508,8 @@ def set_request_context(
     _request_context.conversation_id = conversation_id
     _request_context.thread_id = thread_id
     _request_context.user_id = user_id
+    _request_context.jwt = jwt
+    _request_context.user_email = user_email
     _request_context.token_summary = RequestTokenSummary()
     _request_context.start_time = time.time()
     
@@ -465,6 +526,8 @@ def clear_request_context():
     _conversation_id_var.set(None)
     _thread_id_var.set(None)
     _user_id_var.set(None)
+    _jwt_var.set(None)
+    _user_email_var.set(None)
     _token_summary_var.set(None)
     _start_time_var.set(None)
 
@@ -473,6 +536,8 @@ def clear_request_context():
     _request_context.conversation_id = None
     _request_context.thread_id = None
     _request_context.user_id = None
+    _request_context.jwt = None
+    _request_context.user_email = None
     _request_context.token_summary = None
     _request_context.start_time = None
 
@@ -1035,10 +1100,28 @@ def wrap_llm(llm, logger: StructuredLogger, component: str = "llm") -> TokenTrac
 # GLOBAL LOGGERS (Initialize in your modules)
 # ============================================================================
 
-# Default log file path - use absolute path relative to this file's directory
+# Default log file path - use absolute path relative to this file's directory.
+#
+# In AWS Lambda, /var/task (where this module lives) is read-only — only
+# /tmp is writable. ``AWS_LAMBDA_FUNCTION_NAME`` is set by the runtime,
+# which is how we detect we're inside Lambda. Every supervisor function
+# also writes structured rows to the ``Sup_Logs`` DynamoDB table via
+# ``dynamodb_log_storage`` and emits to stdout (which CloudWatch captures
+# automatically), so the on-disk JSONL file is a developer convenience
+# only. Failing the makedirs would crash module import on cold-start.
 import os as _os
-_LOG_DIR = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "agent_outputs")
-_os.makedirs(_LOG_DIR, exist_ok=True)
+_IS_LAMBDA = bool(_os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+if _IS_LAMBDA:
+    _LOG_DIR = "/tmp/agent_outputs"
+else:
+    _LOG_DIR = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "agent_outputs")
+try:
+    _os.makedirs(_LOG_DIR, exist_ok=True)
+except OSError:
+    # Fall through. ``StructuredLogger._log_to_file`` already wraps the
+    # actual append in try/except so the missing directory just becomes
+    # a silent no-op.
+    pass
 DEFAULT_LOG_FILE = _os.path.join(_LOG_DIR, "system_logs.jsonl")
 
 # Create default loggers for each component

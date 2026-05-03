@@ -1,0 +1,2 @@
+# Docker (heavy): action approval can resume a workflow that fires LLM calls.
+# Brain image bundles langchain/langgraph/openai. No extra deps here.
