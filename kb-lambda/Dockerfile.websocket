@@ -1,0 +1,83 @@
+# syntax=docker/dockerfile:1.4
+# WebSocket Lambda builder — uses BuildKit pip cache mount for faster rebuilds.
+# Use Amazon Linux 2 with Python 3.11 (matches Lambda runtime)
+FROM public.ecr.aws/lambda/python:3.11
+
+# Set working directory
+WORKDIR /build
+
+# Install zip utility
+RUN yum install -y zip
+
+# Install base WebSocket dependencies (shared across all WS functions).
+# BuildKit cache mount speeds up reinstalls by keeping pip's wheel cache.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install boto3>=1.28.0 -t /build/package
+
+# Install ws_chat_stream-specific dependencies (OpenAI, Weaviate v4, httpx)
+# These are only needed by ws_chat_stream but included in its zip
+# weaviate-client v4 is required to match the v4 schema (KnowledgeBase + Document collections)
+# OpenAI floor bumped to >=1.26.0 for stream_options={"include_usage": True}
+# (required by the token-logging-schema-alignment in lambda_ws_chat_stream.py)
+# packaging is explicitly pinned because weaviate-client imports it but doesn't
+# declare it (prevents ModuleNotFoundError on new Lambda runtimes).
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install \
+    openai>=1.26.0 \
+    httpx>=0.24.0 \
+    weaviate-client>=4.5.0 \
+    packaging>=21.0 \
+    -t /build/chat_stream_deps
+
+# Copy shared modules
+COPY shared/ /build/package/shared/
+
+# Copy function code
+COPY functions/ws_connect/ /build/functions/ws_connect/
+COPY functions/ws_disconnect/ /build/functions/ws_disconnect/
+COPY functions/ws_default/ /build/functions/ws_default/
+COPY functions/ws_chat_stream/ /build/functions/ws_chat_stream/
+
+# Build each WebSocket function separately.
+# Convention: each function is a copy of the shared package + its own .py
+# files, with the entry-point file ALSO copied to lambda_function.py so the
+# AWS Lambda handler can stay consistent (lambda_function.lambda_handler).
+# ws-connect
+RUN mkdir -p /build/ws-connect && \
+    cp -r /build/package/* /build/ws-connect/ && \
+    cp /build/functions/ws_connect/*.py /build/ws-connect/ && \
+    cp /build/ws-connect/lambda_ws_connect.py /build/ws-connect/lambda_function.py && \
+    cd /build/ws-connect && \
+    zip -r /build/ws-connect.zip . && \
+    echo "✅ ws-connect.zip created"
+
+# ws-disconnect
+RUN mkdir -p /build/ws-disconnect && \
+    cp -r /build/package/* /build/ws-disconnect/ && \
+    cp /build/functions/ws_disconnect/*.py /build/ws-disconnect/ && \
+    cp /build/ws-disconnect/lambda_ws_disconnect.py /build/ws-disconnect/lambda_function.py && \
+    cd /build/ws-disconnect && \
+    zip -r /build/ws-disconnect.zip . && \
+    echo "✅ ws-disconnect.zip created"
+
+# ws-default
+RUN mkdir -p /build/ws-default && \
+    cp -r /build/package/* /build/ws-default/ && \
+    cp /build/functions/ws_default/*.py /build/ws-default/ && \
+    cp /build/ws-default/lambda_ws_default.py /build/ws-default/lambda_function.py && \
+    cd /build/ws-default && \
+    zip -r /build/ws-default.zip . && \
+    echo "✅ ws-default.zip created"
+
+# ws-chat-stream (needs extra deps: openai, weaviate, httpx)
+RUN mkdir -p /build/ws-chat-stream && \
+    cp -r /build/package/* /build/ws-chat-stream/ && \
+    cp -r /build/chat_stream_deps/* /build/ws-chat-stream/ && \
+    cp /build/functions/ws_chat_stream/*.py /build/ws-chat-stream/ && \
+    cp /build/ws-chat-stream/lambda_ws_chat_stream.py /build/ws-chat-stream/lambda_function.py && \
+    cd /build/ws-chat-stream && \
+    zip -r /build/ws-chat-stream.zip . && \
+    echo "✅ ws-chat-stream.zip created"
+
+# Set entrypoint to list created ZIPs
+CMD ["sh", "-c", "ls -lh /build/*.zip"]

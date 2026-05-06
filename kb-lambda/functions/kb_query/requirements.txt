@@ -1,0 +1,15 @@
+# kb_query Lambda - Dependencies
+# Query knowledge base with hybrid search and AI answer
+
+# AWS SDK for DynamoDB logging
+boto3>=1.28.0
+
+# Weaviate client for hybrid search (v4 API)
+weaviate-client>=4.5.0
+
+# Explicit pin: weaviate-client 4.20+ imports 'packaging' without declaring it.
+# Required to prevent ModuleNotFoundError on newer Lambda runtimes.
+packaging>=21.0
+
+# OpenAI client for embeddings and answer generation
+openai>=1.12.0

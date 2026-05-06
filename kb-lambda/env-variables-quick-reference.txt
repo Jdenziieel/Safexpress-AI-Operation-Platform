@@ -1,0 +1,245 @@
+================================================================================
+LAMBDA ENVIRONMENT VARIABLES - QUICK COPY-PASTE REFERENCE
+================================================================================
+
+🧭 MODEL STRATEGY (last changed: 2026-04-24)
+--------------------------------------------------------------------------------
+Per the supervisor-agent model-change guide (the source of truth for token
+accounting across this capstone):
+
+  • Heavy, cacheable calls → gpt-4.1
+      - ws_chat_stream (big KB system prompt repeats every turn)
+      - chat_message (same)
+      - pdf_parse chunking + image analysis (system prompt repeats per image)
+    Why: 75% cache discount on the repeated system prompt + 1M context.
+
+  • Short, never-repeated calls → gpt-4o-mini
+      - session title generation
+      - pronoun/follow-up resolver (QUERY_RESOLVER_MODEL)
+      - chunk reranking (RERANK_MODEL)
+    Why: prompt changes every call, so caching can't help. gpt-4o-mini has
+    ~4x lower cold-prompt cost than gpt-4.1-mini on these shapes.
+
+All of the above are env-overridable — flip the env var, no redeploy needed.
+
+📋 COPY THIS FOR ALL 12 LAMBDA FUNCTIONS (Minimal Setup - No Quota):
+--------------------------------------------------------------------------------
+
+DOCUMENTS_TABLE=KB_Documents
+VERSIONS_TABLE=KB_DocumentVersions
+SESSIONS_TABLE=KB_ChatSessions
+MESSAGES_TABLE=KB_ChatMessages
+LOGS_TABLE=KB_Logs
+WEAVIATE_URL=your-cluster.weaviate.network
+WEAVIATE_API_KEY=your-weaviate-api-key-here
+OPENAI_API_KEY=sk-proj-your-openai-key-here
+# Primary KB answer model — gpt-4.1 gives a 75% cache discount on the big
+# repeatable system prompt + 1M context window. See kb-lambda/shared/openai_utils.py PRICING.
+OPENAI_MODEL=gpt-4.1
+# Main chat (ws_chat_stream + chat_message) model. Defaults to OPENAI_MODEL
+# if unset; set explicitly when you want to override chat independently.
+OPENAI_CHAT_MODEL=gpt-4.1
+# Short one-shot calls (session titles, pronoun/follow-up resolver,
+# reranking) — prompts change every call so caching can't help. gpt-4o-mini
+# has ~4x lower cold-prompt cost than gpt-4.1-mini for these.
+TITLE_MODEL=gpt-4o-mini
+QUERY_RESOLVER_MODEL=gpt-4o-mini
+RERANK_MODEL=gpt-4o-mini
+EMBEDDING_MODEL=text-embedding-3-small
+QUOTA_ENABLED=false
+KB_FILES_BUCKET=capstone-kb-files
+
+================================================================================
+
+📋 COPY THIS FOR FULL PRODUCTION (With Quota Service):
+--------------------------------------------------------------------------------
+
+DOCUMENTS_TABLE=KB_Documents
+VERSIONS_TABLE=KB_DocumentVersions
+SESSIONS_TABLE=KB_ChatSessions
+MESSAGES_TABLE=KB_ChatMessages
+LOGS_TABLE=KB_Logs
+WEAVIATE_URL=your-cluster.weaviate.network
+WEAVIATE_API_KEY=your-weaviate-api-key-here
+OPENAI_API_KEY=sk-proj-your-openai-key-here
+OPENAI_MODEL=gpt-4.1
+OPENAI_CHAT_MODEL=gpt-4.1
+TITLE_MODEL=gpt-4o-mini
+QUERY_RESOLVER_MODEL=gpt-4o-mini
+RERANK_MODEL=gpt-4o-mini
+EMBEDDING_MODEL=text-embedding-3-small
+QUOTA_SERVICE_URL=https://your-quota-service.com
+QUOTA_ENABLED=true
+KB_FILES_BUCKET=capstone-kb-files
+
+================================================================================
+
+🎯 FUNCTION-BY-FUNCTION REQUIREMENTS:
+--------------------------------------------------------------------------------
+
+Function: kb_list
+Variables: Core only (8 vars)
+└─ DOCUMENTS_TABLE, VERSIONS_TABLE, SESSIONS_TABLE, MESSAGES_TABLE, LOGS_TABLE
+   WEAVIATE_URL, WEAVIATE_API_KEY, OPENAI_API_KEY
+
+Function: kb_delete
+Variables: Core only (8 vars)
+└─ Same as kb_list
+
+Function: kb_query
+Variables: Core + AI models (10+ vars)
+└─ Core + OPENAI_MODEL, EMBEDDING_MODEL, RERANK_MODEL (optional, default gpt-4o-mini)
+
+Function: kb_versions
+Variables: Core only (8 vars)
+└─ Same as kb_list
+
+Function: chat_session_create
+Variables: Core + Quota (10 vars)
+└─ Core + QUOTA_SERVICE_URL, QUOTA_ENABLED
+
+Function: chat_message
+Variables: Core + Quota + AI (12+ vars) ⭐ MOST COMPLEX
+└─ Core + QUOTA_SERVICE_URL, QUOTA_ENABLED, OPENAI_MODEL, EMBEDDING_MODEL,
+   RERANK_MODEL (optional), QUERY_RESOLVER_MODEL (optional, default gpt-4o-mini)
+
+Function: ws_chat_stream
+Variables: Core + Quota + AI (12+ vars) — WebSocket streaming chat
+└─ Core + QUOTA_SERVICE_URL, QUOTA_ENABLED, OPENAI_CHAT_MODEL (default gpt-4.1),
+   TITLE_MODEL (default gpt-4o-mini), QUERY_RESOLVER_MODEL, RERANK_MODEL
+
+Function: pdf_parse
+Variables: Core + AI
+└─ Core + OPENAI_MODEL (default gpt-4.1, chunking+image-analysis),
+   OPENAI_MINI_MODEL (default gpt-4o-mini, short helper calls)
+
+Function: chat_sessions
+Variables: Core only (8 vars)
+└─ Same as kb_list
+
+Function: chat_session_update
+Variables: Core only (8 vars)
+└─ Same as kb_list
+
+Function: chat_quota
+Variables: Core + Quota (10 vars)
+└─ Core + QUOTA_SERVICE_URL, QUOTA_ENABLED
+
+Function: admin_health
+Variables: Core + S3 (9 vars)
+└─ Core + KB_FILES_BUCKET
+
+Function: admin_stats
+Variables: Core only (8 vars)
+└─ Same as kb_list
+
+Function: admin_documents
+Variables: Core only (8 vars)
+└─ Same as kb_list
+
+================================================================================
+
+🔑 REPLACE THESE VALUES WITH YOUR ACTUAL CREDENTIALS:
+--------------------------------------------------------------------------------
+
+your-cluster.weaviate.network
+  └─ Your Weaviate Cloud cluster URL (e.g., abc123.weaviate.network)
+
+your-weaviate-api-key-here
+  └─ API key from Weaviate Cloud console
+
+sk-proj-your-openai-key-here
+  └─ OpenAI API key from https://platform.openai.com/api-keys
+
+https://your-quota-service.com
+  └─ Your quota/token tracking service URL (if you have one)
+
+capstone-kb-files
+  └─ Your S3 bucket name for storing PDFs
+
+================================================================================
+
+📊 AWS LAMBDA NAMES MAPPING (from deploy-lambda.ps1):
+--------------------------------------------------------------------------------
+
+Local Folder Name          → AWS Lambda Function Name
+--------------------------------------------------------------------------------
+kb_list                    → kb-list
+kb_delete                  → kb-delete
+kb_query                   → kb-query
+kb_versions                → kb-versions
+chat_session_create        → chat-session-create
+chat_message               → chat-message
+chat_sessions              → chat-sessions
+chat_session_update        → chat-session-update
+chat_quota                 → chat-quota
+admin_health               → admin-health
+admin_stats                → admin-stats
+admin_documents            → admin-documents
+
+================================================================================
+
+⚡ QUICK AWS CLI BATCH UPDATE (Replace YOUR_VALUES):
+--------------------------------------------------------------------------------
+
+#!/bin/bash
+
+FUNCTIONS=(
+  "kb-list"
+  "kb-delete"
+  "kb-query"
+  "kb-versions"
+  "chat-session-create"
+  "chat-message"
+  "chat-sessions"
+  "chat-session-update"
+  "chat-quota"
+  "admin-health"
+  "admin-stats"
+  "admin-documents"
+)
+
+ENV_VARS='{
+  "DOCUMENTS_TABLE": "KB_Documents",
+  "VERSIONS_TABLE": "KB_DocumentVersions",
+  "SESSIONS_TABLE": "KB_ChatSessions",
+  "MESSAGES_TABLE": "KB_ChatMessages",
+  "LOGS_TABLE": "KB_Logs",
+  "WEAVIATE_URL": "YOUR_WEAVIATE_URL",
+  "WEAVIATE_API_KEY": "YOUR_WEAVIATE_KEY",
+  "OPENAI_API_KEY": "YOUR_OPENAI_KEY",
+  "OPENAI_MODEL": "gpt-4.1",
+  "OPENAI_CHAT_MODEL": "gpt-4.1",
+  "TITLE_MODEL": "gpt-4o-mini",
+  "QUERY_RESOLVER_MODEL": "gpt-4o-mini",
+  "RERANK_MODEL": "gpt-4o-mini",
+  "EMBEDDING_MODEL": "text-embedding-3-small",
+  "QUOTA_ENABLED": "false",
+  "KB_FILES_BUCKET": "capstone-kb-files"
+}'
+
+for FUNC in "${FUNCTIONS[@]}"; do
+  echo "Updating $FUNC..."
+  aws lambda update-function-configuration \
+    --function-name "$FUNC" \
+    --environment "Variables=$ENV_VARS"
+done
+
+echo "✅ All 12 functions updated!"
+
+================================================================================
+
+💡 TIPS:
+--------------------------------------------------------------------------------
+
+1. Start with QUOTA_ENABLED=false for testing
+2. Test each function individually before enabling quota
+3. Use AWS Secrets Manager for API keys in production
+4. All functions work with the same base environment variables
+5. Only 3 functions need QUOTA_SERVICE_URL (chat_session_create, chat_message, chat_quota)
+6. WEAVIATE_URL can be with or without https:// prefix
+
+================================================================================
+
+Generated: January 27, 2026
+For: kb-lambda Docker build deployment

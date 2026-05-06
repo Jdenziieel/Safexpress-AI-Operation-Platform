@@ -1,0 +1,12 @@
+# kb_list Lambda - Dependencies
+# List documents with pagination and filtering
+
+# AWS SDK for DynamoDB access
+boto3>=1.28.0
+
+# Weaviate client for chunk counts (v4 API)
+weaviate-client>=4.5.0
+
+# Explicit pin: weaviate-client 4.20+ imports 'packaging' without declaring it.
+# Required to prevent ModuleNotFoundError on newer Lambda runtimes.
+packaging>=21.0

@@ -1,0 +1,24 @@
+# ws_chat_stream Lambda - Dependencies
+# WebSocket chat streaming handler
+
+# AWS SDK for DynamoDB and API Gateway Management
+boto3>=1.28.0
+
+# HTTP client for quota service
+httpx>=0.24.0
+
+# Weaviate client for hybrid search (v4 API - matches actual v4 schema)
+weaviate-client>=4.5.0
+
+# Explicit pin: weaviate-client 4.20+ imports 'packaging' without declaring it.
+# Required to prevent ModuleNotFoundError on newer Lambda runtimes.
+packaging>=21.0
+
+# Protobuf - required by weaviate-client (fixes "No package metadata" warning)
+protobuf>=4.21.0
+
+# OpenAI client for streaming responses
+# Floor bumped to >=1.26.0 for stream_options={"include_usage": True}
+# which is required to report accurate prompt/completion tokens from the
+# final streaming chunk (token-logging-schema-alignment).
+openai>=1.26.0

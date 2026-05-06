@@ -1,0 +1,18 @@
+# chat_message Lambda - Dependencies
+# Process chat messages with KB search and AI response
+
+# AWS SDK for DynamoDB access
+boto3>=1.28.0
+
+# HTTP client for quota service calls
+httpx>=0.24.0
+
+# Weaviate client for hybrid search (v4 API)
+weaviate-client>=4.5.0
+
+# Explicit pin: weaviate-client 4.20+ imports 'packaging' without declaring it.
+# Required to prevent ModuleNotFoundError on newer Lambda runtimes.
+packaging>=21.0
+
+# OpenAI client for answer generation
+openai>=1.12.0

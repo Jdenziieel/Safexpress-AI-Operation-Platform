@@ -1,0 +1,5 @@
+# ws_connect Lambda - Dependencies
+# WebSocket connection handler
+
+# AWS SDK for DynamoDB and API Gateway Management
+boto3>=1.28.0

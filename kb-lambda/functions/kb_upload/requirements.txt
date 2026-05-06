@@ -1,0 +1,21 @@
+weaviate-client>=4.5.0
+
+# Explicit pin: weaviate-client 4.20+ imports 'packaging' at module load
+# (from packaging import version) but does not declare it as a dependency.
+# Without this, Lambda cold starts fail with ModuleNotFoundError: No module named 'packaging'
+# on newer Lambda runtimes (python:3.11.mainlinev2.v6+) that removed the implicit
+# system-level packaging module.
+packaging>=21.0
+
+# OpenAI client — required by the BYO-vector path:
+# upload_chunks_to_weaviate -> openai_utils.embed_texts -> openai.OpenAI
+# Without this, every upload falls back to "DynamoDB-only storage" and
+# search returns 0 results because chunks have no vectors in Weaviate.
+openai>=1.12.0
+
+# HTTP client used by shared/weaviate_utils._report_embedding_usage to log
+# embedding-call usage to the quota service (tier='embedding', record_only=True).
+# Note: weaviate-client v4 already pulls httpx transitively, but pinning it
+# explicitly here makes the dependency intent visible in the manifest and
+# guards against future weaviate-client versions that swap HTTP libraries.
+httpx>=0.24.0

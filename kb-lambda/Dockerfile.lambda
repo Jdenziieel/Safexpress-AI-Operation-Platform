@@ -1,0 +1,71 @@
+# syntax=docker/dockerfile:1.4
+# Universal Docker build for KB-Lambda functions (Amazon Linux 2023)
+# Usage: docker build --build-arg FUNCTION_NAME=kb_list -f Dockerfile.lambda -t lambda-builder .
+#
+# BuildKit cache mount is used on pip install to persist the wheel cache across
+# builds. First build populates the cache; subsequent builds reuse downloaded
+# wheels (big speedup in APAC where PyPI egress is ~300 KB/s). Requires BuildKit,
+# which is default-on in Docker Desktop.
+
+ARG FUNCTION_NAME=kb_list
+
+FROM public.ecr.aws/lambda/python:3.11 AS builder
+
+ARG FUNCTION_NAME
+
+# Install build dependencies
+RUN yum install -y zip gcc python3-devel
+
+# Create build directory
+WORKDIR /build
+
+# Copy shared modules first (cached layer)
+COPY shared/ /build/shared/
+
+# Copy function code
+COPY functions/${FUNCTION_NAME}/ /build/function/
+
+# Create package directory
+WORKDIR /build/package
+
+# Check if function has its own requirements.txt, otherwise use shared.
+# BuildKit cache mount (/root/.cache/pip) persists the wheel download cache
+# across builds. First build populates; subsequent builds reuse wheels.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    if [ -f /build/function/requirements.txt ]; then \
+        echo "Installing function-specific requirements..." && \
+        pip install --timeout=300 -r /build/function/requirements.txt -t /build/package/ ; \
+    elif [ -f /build/shared/requirements.txt ]; then \
+        echo "Installing shared requirements..." && \
+        pip install --timeout=300 -r /build/shared/requirements.txt -t /build/package/ ; \
+    else \
+        echo "No requirements.txt found, installing defaults..." && \
+        pip install --timeout=300 boto3 requests weaviate-client openai -t /build/package/ ; \
+    fi
+
+# Copy function code
+RUN cp -r /build/function/* /build/package/
+
+# Rename main handler to lambda_function.py for default handler compatibility
+RUN for f in /build/package/lambda_*.py; do cp "$f" /build/package/lambda_function.py; break; done
+
+# Copy shared modules to package
+RUN cp -r /build/shared /build/package/
+
+# Remove unnecessary files to reduce size
+# NOTE: Do NOT remove *.dist-info — weaviate-client needs package metadata at runtime
+RUN find /build/package -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true && \
+    find /build/package -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true && \
+    find /build/package -name "*.pyc" -delete 2>/dev/null || true && \
+    find /build/package -name "*.pyo" -delete 2>/dev/null || true
+
+# Create ZIP file
+WORKDIR /build/package
+RUN zip -r /build/lambda-function.zip .
+
+# Show package size
+RUN echo "Package size:" && du -h /build/lambda-function.zip
+
+# Export stage
+FROM scratch AS export
+COPY --from=builder /build/lambda-function.zip /

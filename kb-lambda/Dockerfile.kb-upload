@@ -1,0 +1,37 @@
+# syntax=docker/dockerfile:1.4
+# Multi-stage Docker build for kb-upload Lambda (Amazon Linux 2)
+FROM public.ecr.aws/lambda/python:3.11 AS builder
+
+# Install build dependencies
+RUN yum install -y zip gcc python3-devel
+
+# Copy shared modules and kb_upload function
+COPY shared/ /build/shared/
+COPY functions/kb_upload/ /build/kb_upload/
+
+# Create package directory
+WORKDIR /build/package
+
+# Install Python dependencies with increased timeout.
+# BuildKit cache mount persists pip's wheel cache across builds (faster rebuilds).
+COPY functions/kb_upload/requirements.txt /build/
+RUN --mount=type=cache,target=/root/.cache/pip \
+    (pip install --timeout=300 -r /build/requirements.txt -t /build/package/ || \
+     (echo "First attempt failed, retrying..." && pip install --timeout=300 -r /build/requirements.txt -t /build/package/))
+
+# Copy function code and shared modules
+RUN cp -r /build/kb_upload/* /build/package/ && \
+    cp -r /build/shared /build/package/
+
+# Remove unnecessary files to reduce size
+RUN find /build/package -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true
+RUN find /build/package -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+RUN find /build/package -name "*.pyc" -delete 2>/dev/null || true
+
+# Create ZIP file
+WORKDIR /build/package
+RUN zip -r /build/kb-upload.zip .
+
+# Runtime stage - just copy the ZIP
+FROM scratch AS export
+COPY --from=builder /build/kb-upload.zip /

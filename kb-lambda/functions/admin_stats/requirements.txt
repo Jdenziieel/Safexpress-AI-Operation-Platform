@@ -1,0 +1,5 @@
+# admin_stats Lambda - Dependencies
+# Admin statistics endpoints
+
+# AWS SDK for DynamoDB access
+boto3>=1.28.0

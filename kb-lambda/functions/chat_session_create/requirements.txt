@@ -1,0 +1,8 @@
+# chat_session_create Lambda - Dependencies
+# Create new chat sessions with quota check
+
+# AWS SDK for DynamoDB access
+boto3>=1.28.0
+
+# HTTP client for quota service calls
+httpx>=0.24.0

@@ -1,0 +1,15 @@
+# admin_health Lambda - Dependencies
+# System health check
+
+# AWS SDK for environment checks
+boto3>=1.28.0
+
+# Weaviate client for connection check (v4 API)
+weaviate-client>=4.5.0
+
+# Explicit pin: weaviate-client 4.20+ imports 'packaging' without declaring it.
+# Required to prevent ModuleNotFoundError on newer Lambda runtimes.
+packaging>=21.0
+
+# OpenAI client for connection check
+openai>=1.12.0

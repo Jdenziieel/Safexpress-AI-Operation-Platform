@@ -1,0 +1,26 @@
+# Knowledge Base Lambda - Shared Dependencies
+# These are installed into each Lambda package
+
+# AWS SDK
+boto3>=1.28.0
+
+# JWT handling
+PyJWT>=2.8.0
+
+# HTTP client for quota service calls
+httpx>=0.24.0
+
+# Weaviate client for vector DB
+weaviate-client>=4.5.0
+
+# OpenAI client
+openai>=1.12.0
+
+# PDF processing (for pdf-parse function)
+pdfplumber>=0.10.0
+
+# PyMuPDF for image extraction with bounding boxes
+# Note: This is a larger package and may need Lambda Layer for deployment
+PyMuPDF>=1.23.0
+
+# Note: PyMuPDF (fitz) is large (~15MB) - consider using Lambda Layer

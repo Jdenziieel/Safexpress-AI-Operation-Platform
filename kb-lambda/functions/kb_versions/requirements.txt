@@ -1,0 +1,5 @@
+# kb_versions Lambda - Dependencies
+# Get document version history
+
+# AWS SDK for DynamoDB access
+boto3>=1.28.0

@@ -1,0 +1,15 @@
+# pdf_parse Lambda - Dependencies
+# PDF parsing and text extraction
+
+# AWS SDK for S3 and Lambda invocation
+boto3>=1.28.0
+
+# PDF processing
+pdfplumber>=0.10.0
+
+# PyMuPDF - using binary wheel to avoid C++ compilation
+# Use pre-built wheel compatible with Lambda's Amazon Linux 2023
+pymupdf==1.24.14
+
+# OpenAI for document analysis (optional)
+openai>=1.12.0

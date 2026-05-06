@@ -1,0 +1,5 @@
+# chat_session_update Lambda - Dependencies
+# Update/Delete chat sessions
+
+# AWS SDK for DynamoDB access
+boto3>=1.28.0

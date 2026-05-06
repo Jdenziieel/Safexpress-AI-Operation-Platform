@@ -1,0 +1,49 @@
+# syntax=docker/dockerfile:1.4
+# pdf-parse Lambda builder — uses BuildKit pip cache mount for faster rebuilds.
+# Use Amazon Linux 2 with Python 3.11 (matches Lambda runtime)
+FROM public.ecr.aws/lambda/python:3.11
+
+# Set working directory
+WORKDIR /build
+
+# Install zip utility and system dependencies for PyMuPDF
+RUN yum install -y zip make
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install dependencies to /build/package
+# Use --only-binary to force binary wheels (no source compilation)
+# This avoids building PyMuPDF from source which needs complex build dependencies.
+# BuildKit cache mount persists the pip wheel cache across builds.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
+    (pip install --only-binary :all: -r requirements.txt -t /build/package || \
+     (echo "WARNING: Some packages don't have binary wheels, installing with source..." && \
+      pip install -r requirements.txt -t /build/package))
+
+# Copy shared modules
+COPY shared/ /build/package/shared/
+
+# Copy pdf-parse function code
+COPY functions/pdf_parse/ /build/functions/pdf_parse/
+
+# Build pdf-parse Lambda package
+RUN mkdir -p /build/pdf-parse && \
+    cp -r /build/package/* /build/pdf-parse/ && \
+    cp /build/functions/pdf_parse/*.py /build/pdf-parse/ && \
+    cd /build/pdf-parse && \
+    zip -r /build/pdf-parse.zip . && \
+    echo "✅ pdf-parse.zip created"
+
+# Create output directory
+RUN mkdir -p /output
+
+# Copy ZIP to output
+RUN cp /build/pdf-parse.zip /output/
+
+# Display package size
+RUN ls -lh /output/pdf-parse.zip
+
+# Default command
+CMD ["echo", "Build complete! Find pdf-parse.zip in the mounted output directory."]
