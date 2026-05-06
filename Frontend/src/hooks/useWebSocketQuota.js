@@ -27,7 +27,16 @@ const FALLBACK_POLL_INTERVAL = 120_000;   // 2 min — only when WS is down
 const WS_HEARTBEAT_INTERVAL  = 60_000;    // 1 min — keep-alive ping
 const RECONNECT_BASE_DELAY   = 2_000;     // 2 s — initial reconnect delay
 const MAX_RECONNECT_ATTEMPTS = 8;         // max retries before giving up
-const DEBOUNCE_REFRESH_MS    = 1_500;     // debounce rapid refresh events
+const DEBOUNCE_REFRESH_MS    = 500;       // first fetch — fast feedback, still coalesces rapid events
+// Second fetch — safety net for the supervisor-ws-chat flow where
+// `_report_quota_usage()` is fire-and-forget into a thread pool and
+// the WS `complete` push can race ahead of the quota-report HTTP
+// landing in UserQuotas. By 3.5s the supervisor's
+// flush_pending_quota_reports(timeout=3.0) has either succeeded or
+// timed out, so a fetch at this point is guaranteed to see the
+// final state (or the same stale state if the report was lost,
+// which is no worse than before).
+const FOLLOWUP_REFRESH_MS    = 3_500;
 
 /**
  * @param {string} userId   — UUID of the current user
@@ -48,6 +57,7 @@ export const useWebSocketQuota = (userId, userName) => {
   const heartbeatInterval    = useRef(null);
   const fallbackPollInterval = useRef(null);
   const debounceTimer        = useRef(null);
+  const followupTimer        = useRef(null);
   const isMounted            = useRef(true);
 
   // ── Logging helper ─────────────────────────────────────────────────────
@@ -104,12 +114,30 @@ export const useWebSocketQuota = (userId, userName) => {
     }
   }, [userId, userName, log, logWarn, logError]);
 
-  // ── Debounced refresh (coalesces rapid events) ─────────────────────────
+  // ── Debounced refresh — fast first fetch + safety-net follow-up ───────
+  // Why two fetches instead of one slow debounce?
+  //   The supervisor (AA-lambda/.../supervisor-ws-chat) emits the
+  //   `complete` WebSocket message BEFORE its async quota-report pool
+  //   has finished POSTing to /quota/report. A single 1500ms debounce
+  //   was either too slow for "real-time" UX or too fast to see the
+  //   freshly-written quota — depending on network jitter. The new
+  //   shape gives the user instant visual feedback (500ms) and a
+  //   guaranteed-fresh re-read once the backend's flush window has
+  //   elapsed (3500ms). Coalescing still works because each new
+  //   event clears both timers and re-arms them.
   const debouncedRefresh = useCallback((reason = 'event') => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    if (followupTimer.current) clearTimeout(followupTimer.current);
+
     debounceTimer.current = setTimeout(() => {
       fetchQuotaHTTP(reason);
+      debounceTimer.current = null;
     }, DEBOUNCE_REFRESH_MS);
+
+    followupTimer.current = setTimeout(() => {
+      fetchQuotaHTTP(`${reason}-followup`);
+      followupTimer.current = null;
+    }, FOLLOWUP_REFRESH_MS);
   }, [fetchQuotaHTTP]);
 
   // ── Public manual refresh ──────────────────────────────────────────────
@@ -321,6 +349,11 @@ export const useWebSocketQuota = (userId, userName) => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
       debounceTimer.current = null;
+    }
+
+    if (followupTimer.current) {
+      clearTimeout(followupTimer.current);
+      followupTimer.current = null;
     }
 
     if (wsRef.current) {

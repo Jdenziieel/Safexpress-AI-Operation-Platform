@@ -130,6 +130,7 @@ ACTION_RISK_LEVELS: Dict[str, ActionRiskLevel] = {
     # ===============================================================
     # Gmail
     "create_draft_email": ActionRiskLevel.MODERATE,  # draft, not sent
+    "create_draft_email_with_attachment": ActionRiskLevel.MODERATE,  # draft + attachment, not sent
     "add_label": ActionRiskLevel.MODERATE,
     "remove_label": ActionRiskLevel.MODERATE,
     # Docs (new doc; content additions to a NEW doc are still MODERATE)

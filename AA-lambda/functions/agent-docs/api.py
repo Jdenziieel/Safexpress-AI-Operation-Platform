@@ -220,7 +220,19 @@ async def execute_task(request: AgentTaskRequest):
                 print(f" Direct execution result:\n{result_text}")
                 
                 # Parse result (it returns a formatted string)
-                if "" in result_text:
+                # Success-detection: every impl error path returns a string that
+                # starts with "Error" (see tools.py error returns); every success
+                # path embeds either "Document ID:" or "PDF ID:". The original
+                # marker character that gated this branch was stripped at some
+                # point, leaving `if "" in result_text:` which is ALWAYS True
+                # in Python — every error was being silently flattened to a
+                # success=True response with document_id=None (Bug O wrapper).
+                _result_stripped = (result_text or "").lstrip()
+                _looks_like_error = _result_stripped.lower().startswith("error")
+                _has_success_marker = (
+                    "Document ID:" in result_text or "PDF ID:" in result_text
+                )
+                if (not _looks_like_error) and _has_success_marker:
                     # Extract document ID and URL from success message
                     import re
                     
@@ -272,7 +284,12 @@ async def execute_task(request: AgentTaskRequest):
                         raw_response=result_text
                     )
                 else:
-                    # Error case
+                    # Error case — impl returned an "Error: ..." string OR a
+                    # body without any success marker. Surface as a real
+                    # failure so the orchestrator marks the step failed and
+                    # the friendly summary renders the actual error to the
+                    # user instead of pretending the doc was created.
+                    print(f" Error path detected (looks_like_error={_looks_like_error}, has_marker={_has_success_marker})")
                     return AgentTaskResponse(
                         success=False,
                         result={},
@@ -332,7 +349,17 @@ async def execute_task(request: AgentTaskRequest):
                 
                 print(f" Direct execution result:\n{result_text}")
                 
-                if "" in result_text:
+                # Same Bug O wrapper fix as the create_from_uploaded_template
+                # branch above: the original marker character was stripped to
+                # an empty string, making `if "" in result_text:` always True
+                # and silently flattening every error (sanity-check abort,
+                # Drive 500, exception path) into success=True / document_id=None.
+                _result_stripped = (result_text or "").lstrip()
+                _looks_like_error = _result_stripped.lower().startswith("error")
+                _has_success_marker = (
+                    "Document ID:" in result_text or "PDF ID:" in result_text
+                )
+                if (not _looks_like_error) and _has_success_marker:
                     import re
                     
                     is_pdf = "PDF ID:" in result_text or output_format == "pdf"
@@ -368,6 +395,7 @@ async def execute_task(request: AgentTaskRequest):
                         raw_response=result_text
                     )
                 else:
+                    print(f" Error path detected (looks_like_error={_looks_like_error}, has_marker={_has_success_marker})")
                     return AgentTaskResponse(
                         success=False,
                         result={},

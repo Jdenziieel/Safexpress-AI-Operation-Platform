@@ -28,6 +28,7 @@ from tools import (
     _reply_to_email_impl,
     _forward_email_impl,
     _create_draft_email_impl,
+    _create_draft_email_with_attachment_impl,
     _send_draft_email_impl,
     _search_drafts_impl,
     _get_thread_conversation_impl,
@@ -45,6 +46,7 @@ TOOL_MAP = {
     "reply_to_email": _reply_to_email_impl,
     "forward_email": _forward_email_impl,
     "create_draft_email": _create_draft_email_impl,
+    "create_draft_email_with_attachment": _create_draft_email_with_attachment_impl,
     "send_draft_email": _send_draft_email_impl,
     "search_drafts": _search_drafts_impl,
     "get_thread_conversation": _get_thread_conversation_impl,
@@ -61,6 +63,7 @@ LLM_TOOLS = {
     "forward_email",
     "send_email",
     "create_draft_email",
+    "create_draft_email_with_attachment",
 }
 
 QUOTA_BASE = (os.environ.get("QUOTA_SERVICE_URL") or "").rstrip("/")

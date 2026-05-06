@@ -1,6 +1,7 @@
-# HEAVY add-on dependencies for the 5 supervisor "brain" Lambdas:
+# HEAVY add-on dependencies for the 6 supervisor "brain" Lambdas:
 #   - supervisor-create-thread
 #   - supervisor-create-thread-upload
+#   - supervisor-post-message-upload
 #   - supervisor-workflow
 #   - supervisor-action-approve
 #   - supervisor-ws-chat
@@ -8,7 +9,7 @@
 # These functions actually run the Tier 0 / 0.5 / 1 LLM enrichment, the
 # planner (`supervisor_agent.py`), or `shared.utils.call_agent_with_retry`
 # (which `import langchain_openai, tiktoken` at module top level). The
-# 31 light supervisor Lambdas never touch any of this and are shipped
+# 30 light supervisor Lambdas never touch any of this and are shipped
 # as ZIPs that install ONLY requirements.txt.
 #
 # Installed by Dockerfile.lambda + Dockerfile.websocket, in addition to

@@ -399,13 +399,32 @@ class SummarizationService:
                 error_msg = humanized
                 verbatim = self._is_verbatim_error_useful(error_msg)
 
-        if error_category == "auth":
+        if error_category == "insufficient_scope":
+            # The user's stored OAuth token is valid but lacks the API
+            # scope needed for this action. Reconnecting WITHOUT going
+            # through Google's consent screen again cannot fix this
+            # (Google's incremental authorization doesn't grant scopes
+            # the app didn't request); the user has to be re-prompted
+            # for the new scope set. After Login.jsx was patched in
+            # 2026-05-03 to request all Workspace scopes upfront, signing
+            # out + signing back in is enough — Google detects the
+            # changed scope set and shows the consent screen again.
+            if verbatim:
+                lines.append(f"**Issue:** {error_msg}")
+            else:
+                lines.append(
+                    "**Issue:** Your Google account has not granted the permissions needed for this action."
+                )
+            lines.append(
+                "**Suggestion:** Please sign out and sign in again — Google will prompt you to re-authorise the integration with the additional access it needs.\n"
+            )
+        elif error_category == "auth":
             if verbatim:
                 lines.append(f"**Issue:** {error_msg}")
             else:
                 lines.append("**Issue:** Authentication failed with the service.")
             lines.append(
-                "**Suggestion:** Your access may have expired. Please try reconnecting your account.\n"
+                "**Suggestion:** Your sign-in session may have expired. Please sign out and sign in again to refresh your access.\n"
             )
         elif error_category == "internal_template":
             # Caused when the planner's multi-step plan has a malformed Jinja
@@ -1113,16 +1132,54 @@ class SummarizationService:
         ):
             return "internal_template"
 
+        # Detect Google OAuth "ACCESS_TOKEN_SCOPE_INSUFFICIENT" responses
+        # BEFORE the generic auth bucket. These are distinct from "session
+        # expired" (which the auth branch handles): the token IS valid but
+        # was never granted the scope this API call requires. The fix is
+        # NOT "reconnect your account" (that just re-mints the same
+        # narrow-scope token if the frontend OAuth request didn't ask for
+        # the right scopes); it's a re-authorisation prompt that lets the
+        # user click through Google's incremental-consent screen.
+        # Trigger phrases sourced from real Google API HttpError repr bodies:
+        #   "Request had insufficient authentication scopes."
+        #   "ACCESS_TOKEN_SCOPE_INSUFFICIENT"
+        #   "Insufficient Permission" + reason "insufficientPermissions"
+        #   "invalid_scope" (during refresh-token round-trip)
+        # All match-keys are kept in the lower-case form because
+        # `error_lower` is already lowercased above.
         if any(
             term in error_lower
             for term in [
-                "auth", "credential", "unauthorized", "401", "403",
+                "insufficient authentication scopes",
+                "access_token_scope_insufficient",
+                "insufficientpermissions",
+                "insufficient permission",
+                "insufficient scope",
+                "invalid_scope",
+                "invalid scope",
+            ]
+        ):
+            return "insufficient_scope"
+
+        if any(
+            term in error_lower
+            for term in [
+                "auth", "credential", "unauthorized", "401",
+                # 403 was REMOVED here in 2026-05-03: a bare 403 means
+                # either insufficient_scope (caught above) or a resource
+                # ACL deny (caught by the `permission` branch below via
+                # "permission" / "denied" / "forbidden" / "access" keywords
+                # — which the post-humanization `_GOOGLE_API_HTTP_STATUS_MESSAGES[403]`
+                # text contains). Routing 403 to `auth` was sending users
+                # the misleading "your access may have expired, reconnect"
+                # message even when re-connecting could not have helped
+                # (token was valid, scope was missing).
                 # OAuth — compound phrases only. Bare "token" and "scope" were
                 # removed because "expected token ':'" (Jinja) and "out of
                 # scope" / "scope of work" (benign prose) both matched them.
                 "access token", "refresh token", "id token",
                 "oauth token", "bearer token", "api token",
-                "invalid_scope", "invalid scope", "insufficient scope",
+                "invalid_grant", "token expired", "token has expired",
             ]
         ):
             return "auth"
@@ -1154,7 +1211,17 @@ class SummarizationService:
             return "connection"
         elif any(
             term in error_lower
-            for term in ["permission", "denied", "forbidden", "access"]
+            for term in [
+                "permission", "denied", "forbidden", "access",
+                # 403 fallback (moved out of `auth` 2026-05-03). The
+                # humanized `_GOOGLE_API_HTTP_STATUS_MESSAGES[403]` text
+                # already contains "permission" so it would land here
+                # anyway after humanization, but categorisation runs on
+                # the RAW message (so HTTP status digits are still
+                # available) — without "403" here, a bare HttpError repr
+                # with no reason phrase would fall through to "unknown".
+                "403",
+            ]
         ):
             return "permission"
         elif any(

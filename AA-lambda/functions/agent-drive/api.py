@@ -16,6 +16,118 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload, MediaIoBase
 import io
 import tempfile
 
+# Cross-Lambda S3 transport for user uploads. Mirrors mapping_agent's
+# `_resolve_to_local_path` and gmail-agent's `_resolve_to_local_path`:
+# the supervisor stores user uploads in S3 (`temp-uploads/...` on
+# `frontend-safexpress`) and passes `file_path=s3://bucket/key` to this
+# Lambda. Drive's `upload_file_tool` then opens the freshly downloaded
+# file from /tmp instead of the bogus orchestrator-side `/tmp/tmp...`
+# path that doesn't exist on this container.
+try:
+    import boto3 as _boto3_mod
+    _s3_client = _boto3_mod.client("s3")
+except Exception as _boto_err:
+    _s3_client = None
+    print(f"[drive_agent] boto3 unavailable, S3 transport disabled: {_boto_err}")
+
+
+# Cross-Lambda transport for files that drive-agent DOWNLOADS (i.e. produces).
+# Mirrors gmail-agent/tools.py:_upload_attachment_to_s3 — when the orchestrator
+# wires the downloaded file into a different sub-agent (e.g. gmail_agent.create_draft_email_with_attachment
+# or mapping_agent.parse_file), that next Lambda runs in its OWN container with
+# an empty /tmp. Returning the local /tmp path always fails:
+# "File not found at /tmp/drive_download_xxx/..." (see Bug O).
+#
+# Fix: when running in Lambda, upload the freshly-downloaded file to S3 under
+# `<prefix>/<run-uuid>/<file_name>` and return that `s3://bucket/key` URL as
+# `local_path`. The downstream sub-agent's `_resolve_to_local_path` (already
+# present per Invariant 22) detects the scheme and downloads to its own /tmp
+# before reading.
+#
+# Bucket defaults to `frontend-safexpress` (the only bucket the
+# AA-Lambda-Execution-Role has S3 r/w on). Override via DRIVE_DOWNLOADS_BUCKET.
+DRIVE_DOWNLOADS_BUCKET = os.environ.get(
+    "DRIVE_DOWNLOADS_BUCKET", "frontend-safexpress"
+)
+DRIVE_DOWNLOADS_PREFIX = os.environ.get(
+    "DRIVE_DOWNLOADS_PREFIX", "drive-downloads"
+)
+
+
+def _is_running_in_lambda() -> bool:
+    return bool(os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+
+
+def _upload_download_to_s3(local_path: str, file_name: str) -> str:
+    """Upload a freshly-downloaded Drive file to S3 and return its s3:// URL.
+
+    Returns "" on any failure so the caller can fall back to the local /tmp
+    path (which only works in single-container dev). Prints the error so a
+    silent failure doesn't re-create the original cross-Lambda bug class.
+
+    Key layout: `<prefix>/<run-uuid>/<file_name>` — per-run UUID prevents
+    concurrent supervisor turns from clobbering each other's downloads if
+    they happen to fetch the same Drive file at the same instant.
+    """
+    if _s3_client is None:
+        return ""
+    try:
+        import uuid as _uuid_mod
+        run_id = _uuid_mod.uuid4().hex[:12]
+        # Sanitise filename — Drive can return weird characters that are fine
+        # for S3 keys but ugly downstream.
+        safe_name = file_name.replace("/", "_").replace("\\", "_")
+        key = f"{DRIVE_DOWNLOADS_PREFIX}/{run_id}/{safe_name}"
+        upload_kwargs = {
+            "Filename": local_path,
+            "Bucket": DRIVE_DOWNLOADS_BUCKET,
+            "Key": key,
+        }
+        # Best-effort Content-Type hint based on extension; S3 uploads work
+        # fine without it but downstream HEAD requests get a useful header.
+        lower = safe_name.lower()
+        if lower.endswith(".pdf"):
+            upload_kwargs["ExtraArgs"] = {"ContentType": "application/pdf"}
+        elif lower.endswith((".docx", ".doc")):
+            upload_kwargs["ExtraArgs"] = {"ContentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+        elif lower.endswith((".xlsx", ".xls")):
+            upload_kwargs["ExtraArgs"] = {"ContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+        _s3_client.upload_file(**upload_kwargs)
+        return f"s3://{DRIVE_DOWNLOADS_BUCKET}/{key}"
+    except Exception as e:
+        print(f"[drive_agent] S3 upload of download failed for {file_name}: {e}")
+        return ""
+
+
+def _resolve_to_local_path(file_path: str) -> str:
+    """Download an `s3://bucket/key` URL to /tmp and return the local path.
+
+    Returns the input unchanged for non-S3 paths so callers can reuse the
+    same call site for user-supplied local paths (legacy tests / dev mode)
+    and supervisor-injected `s3://` URLs (production). Returns "" on any
+    download failure so the caller's `os.path.exists` surfaces the error
+    pointing at an empty string instead of silently swallowing the issue.
+    """
+    if not isinstance(file_path, str) or not file_path.startswith("s3://"):
+        return file_path
+    if _s3_client is None:
+        print(f"[drive_agent] s3:// path provided but boto3 unavailable: {file_path}")
+        return ""
+    try:
+        without_scheme = file_path[len("s3://"):]
+        bucket, _, key = without_scheme.partition("/")
+        if not bucket or not key:
+            print(f"[drive_agent] malformed s3 url: {file_path}")
+            return ""
+        local_dir = "/tmp/drive_s3_in"
+        os.makedirs(local_dir, exist_ok=True)
+        local_path = os.path.join(local_dir, os.path.basename(key))
+        _s3_client.download_file(Bucket=bucket, Key=key, Filename=local_path)
+        return local_path
+    except Exception as e:
+        print(f"[drive_agent] S3 download failed for {file_path}: {e}")
+        return ""
+
 
 _DRIVE_FILE_URL_RE = re.compile(r"/file/d/([A-Za-z0-9_-]+)")
 _DRIVE_DOC_URL_RE = re.compile(r"/document/d/([A-Za-z0-9_-]+)")
@@ -207,6 +319,8 @@ def upload_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
             return {"success": False, "error": "file_path is required"}
         if not filename:
             return {"success": False, "error": "filename is required"}
+
+        file_path = _resolve_to_local_path(file_path)
 
         if not os.path.exists(file_path):
             return {"success": False, "error": f"File not found: {file_path}"}
@@ -645,7 +759,17 @@ def upload_template_tool(inputs: dict, credentials_dict: CredentialsDict) -> dic
             return {"success": False, "error": "file_path is required"}
         if not template_name:
             return {"success": False, "error": "template_name is required"}
-        
+
+        # Cross-Lambda transport: when the orchestrator hands an uploaded
+        # file to this Lambda it arrives as an `s3://bucket/key` URL, not
+        # a /tmp path (the supervisor and drive-agent run on different
+        # containers — see Invariant 22). Mirrors upload_file_tool's call
+        # at line 323. Without this, Bug J's Path B
+        # (template_with_data_workflow with an uploaded template) crashes
+        # at Step 1 with `File not found: s3://...` because os.path.exists
+        # below treats the URL as a literal path.
+        file_path = _resolve_to_local_path(file_path)
+
         if not os.path.exists(file_path):
             return {"success": False, "error": f"File not found: {file_path}"}
         
@@ -1146,15 +1270,36 @@ def download_file_tool(inputs: dict, credentials_dict: CredentialsDict) -> dict:
 
         size_bytes = os.path.getsize(local_path)
 
+        # ── Cross-Lambda transport ─────────────────────────────────────
+        # When running in Lambda, hand the file off via S3 because the
+        # next sub-agent (gmail / mapping / docs) runs in its own
+        # container with an empty /tmp. Mirrors gmail-agent's pattern
+        # for downloaded attachments. The local /tmp copy is left in
+        # place — harmless, and useful for any same-process reads
+        # before the orchestrator sees the result. See Invariant 22.
+        local_path_internal = local_path
+        s3_url = ""
+        if _is_running_in_lambda():
+            s3_url = _upload_download_to_s3(local_path, file_name)
+            if s3_url:
+                # Make `local_path` itself the s3:// URL so the planner's
+                # existing `{{ local_path }}` references in downstream
+                # steps Just Work without any plan-shape changes. The
+                # downstream sub-agent's _resolve_to_local_path() will
+                # download to its own /tmp before reading the file.
+                local_path = s3_url
+
         return {
             "success": True,
             "local_path": local_path,
+            "local_path_internal": local_path_internal,
+            "s3_url": s3_url or None,
             "file_id": file_id,
             "file_name": file_name,
             "mime_type": mime_type,
             "exported_as": exported_as,
             "size_bytes": size_bytes,
-            "message": f"Downloaded '{file_name}' to {local_path} ({size_bytes} bytes)",
+            "message": f"Downloaded '{file_name}' ({size_bytes} bytes) -> {local_path}",
             "error": None,
         }
 

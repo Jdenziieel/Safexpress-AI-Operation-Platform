@@ -431,7 +431,7 @@ PLANNING RULES:
    (a) User gave a folder name and did NOT ask to create it → step 1: drive_agent.get_folder_info(folder_path="X"). If it does not exist, this step errors out — surface that to the user via Rule 12's transform_text fallback; never fall back to create_folder silently.
    (b) User explicitly asked to create a new folder ("create a Finance folder and put X in it") → step 1: drive_agent.create_folder(folder_path="Finance") (idempotent find-or-create).
    In both cases, step 2 consumes {{{{ folder_id }}}} via output_variables {{"folder_id": "folder_id"}}. The same pattern applies to drive_agent.upload_file (folder_id) and drive_agent.move_file (folder_id) — always resolve the folder_id in a separate prior step, never pass a folder name into a mutation tool.
-15. STRICT TOOL/ARG ADHERENCE: Only use (agent, tool) combinations listed under "Available agents and tools:" below. Only use argument names declared in that tool's "args" dict. Do NOT invent tools you know from elsewhere (e.g. sheets_agent.create_sheet is NOT available unless it appears in the list below). Do NOT invent argument names — common traps: folder_path when the schema says folder_id, tabs when it says sheet_names, rows when it says initial_data, content when it says text or new_text, and for calendar_agent.update_event the mutation fields use a `new_` prefix (new_description / new_summary / new_start / new_end / new_location / new_attendees) — NEVER reuse create_event's bare names (description / summary / start_time / end_time / location / attendees), those will be silently dropped by the calendar agent and the event will update with zero changes. Also note: sheets_agent.upload_mapped_data.transformed_data is NOT the output of llm_tool.transform_text (the key collision is accidental). upload_mapped_data expects a JSON ARRAY OF ROW-OBJECTS (each row is a dict `{{column_name: value}}`) produced by mapping_agent.transform_data, whereas llm_tool.transform_text.transformed_content is a flat string (or a 2D JSON array when output_format="json_rows"). If the plan needs to push an llm_transform output into Sheets, use sheets_agent.append_rows / update_sheet / create_sheet (they accept 2D arrays via _coerce_rows), NOT upload_mapped_data. If a needed tool or argument is absent from the schema, fall back to Rule 12 (append an llm_tool.transform_text step explaining the gap) rather than guessing a name that "should" exist.
+15. STRICT TOOL/ARG ADHERENCE: Only use (agent, tool) combinations listed under "Available agents and tools:" below. Only use argument names declared in that tool's "args" dict. Do NOT invent tools you know from elsewhere (e.g. sheets_agent.create_sheet is NOT available unless it appears in the list below). Do NOT invent argument names — common traps: folder_path when the schema says folder_id, tabs when it says sheet_names, rows when it says initial_data, content when it says text or new_text, and for calendar_agent.update_event the mutation fields use a `new_` prefix (new_description / new_summary / new_start / new_end / new_location / new_attendees) — NEVER reuse create_event's bare names (description / summary / start_time / end_time / location / attendees), those will be silently dropped by the calendar agent and the event will update with zero changes. For gmail_agent: NEVER pass `draft_id` to send_email_with_attachment — that tool sends a NEW message and has no draft awareness; if the user wants a draft WITH an attachment, use `create_draft_email_with_attachment(to, subject, body, file_path)` as a SINGLE one-shot step (Gmail does not allow attaching files to a draft created via create_draft_email after the fact, so do NOT try `create_draft_email` followed by `send_email_with_attachment(draft_id=...)` — that pattern always fails with a TypeError). Also note: sheets_agent.upload_mapped_data.transformed_data is NOT the output of llm_tool.transform_text (the key collision is accidental). upload_mapped_data expects a JSON ARRAY OF ROW-OBJECTS (each row is a dict `{{column_name: value}}`) produced by mapping_agent.transform_data, whereas llm_tool.transform_text.transformed_content is a flat string (or a 2D JSON array when output_format="json_rows"). If the plan needs to push an llm_transform output into Sheets, use sheets_agent.append_rows / update_sheet / create_sheet (they accept 2D arrays via _coerce_rows), NOT upload_mapped_data. If a needed tool or argument is absent from the schema, fall back to Rule 12 (append an llm_tool.transform_text step explaining the gap) rather than guessing a name that "should" exist.
 16. DELIVERY-ORDER PIPELINE (task_type=process_delivery_order): chain EXACTLY these tools in order (A then B then C then D then E then F):
    A. Source PDFs — pick ONE path:
       - if uploaded_file is in context → SKIP this step; feed the BARE STRING "{{{{ uploaded_file.temp_path }}}}" as file_paths in step B (no brackets — the tool auto-wraps a single path into a list).
@@ -472,6 +472,18 @@ PLANNING RULES:
    Risk tier: mirror_tabs is DANGEROUS (writes + clears across multiple tabs in one call). The chat-level confirmation that runs before workflow execution names both source and target, so no mid-workflow approval pause is added on top of that — see ACTION_RISK_LEVELS for rationale.
    Precedence vs Rules 17, 18, 19: Rule 20 takes precedence over all three when the user asks for ALL tabs to be mirrored (catch-all phrases: "all", "every", "each", or just "the tabs" referring to the source's full tab set) OR when the user explicitly maps source tabs to differently-named target tabs. Rule 19 still wins for an enumerated tab list where the user is just creating tabs in ONE spreadsheet ("create the Food and Non-Food tabs in this destination if missing"), no source spreadsheet involved. Rule 17 still wins when the user provided one specific destination tab and just wants rows appended (no source spreadsheet, no mirror semantics). Rule 18 still wins when the user wants a brand-new spreadsheet created from inline data, not copied from an existing source.
    Precedence vs Rule 16 (delivery-order pipeline): Rule 16 ALWAYS takes precedence over Rule 20. mirror_tabs is for arbitrary sheet-to-sheet copies and DOES NOT APPLY to delivery-order processing. Signals for the delivery-order workflow ("process delivery order", "process this delivery order PDF", "extract from delivery order", "process the requisition", PDF attachments paired with delivery vocabulary) keep the planner on Rule 16's validate_delivery_sheet → preview_delivery_order_insertion → write_delivery_order_data chain, which enforces the fixed Food / Non-Food schema and runs deduplication. Even if the user's spreadsheet NAME contains "requisition" (e.g. "PRODUCTION MATERIALS REQUISITION LIST"), Rule 20 still applies for the mirror case as long as the verb is mirror/copy/sync ALL TABS and the request is between two existing spreadsheets — the spreadsheet name is data, not workflow intent.
+21. TEMPLATE + DATA → NEW DOC (two-source merge): when the user asks to create a NEW document FROM a template USING a separate data file (e.g. "use the X template and Y data and create a new doc out of it"), pick the path based on whether `uploaded_file` is in AVAILABLE CONTEXT VARIABLES:
+   PATH A — both files live in Drive (no `uploaded_file` in context):
+     Step 1: drive_agent.search_template_and_data(template_name="<template name>", data_name="<data name>") → output_variables {{"template_id": "template_file_id", "data_id": "data_file_id"}}
+     Step 2: docs_agent.create_from_template_and_data_ids(template_file_id="{{{{ template_id }}}}", data_file_id="{{{{ data_id }}}}", new_title="<new title>")
+   PATH B — user UPLOADED the template AND the data file is in Drive (`uploaded_file` IS in context):
+     Step 1: drive_agent.upload_template(file_path="{{{{ uploaded_file.temp_path }}}}", template_name="<template name from upload>") → output_variables {{"template_id": "file_id"}}
+     Step 2: drive_agent.search_files(search_term="<data name>") → output_variables {{"data_id": "results[0].id"}}
+     Step 3: docs_agent.create_from_template_and_data_ids(template_file_id="{{{{ template_id }}}}", data_file_id="{{{{ data_id }}}}", new_title="<new title>")
+   Anti-patterns (NEVER do these — observed planner failures):
+   (a) NEVER call drive_agent.search_template_and_data with the uploaded file's filename as template_name — the upload lives at uploaded_file.temp_path (e.g. /tmp/...), NOT in Drive, so the lookup returns "not found" and the workflow dies. Use Path B with upload_template instead.
+   (b) NEVER call docs_agent.create_from_uploaded_template for a two-source merge. That tool is single-source (it just copies one Drive file into a new Doc) and IGNORES any data file. Use create_from_template_and_data_ids — that's the actual two-source merge tool.
+   (c) NEVER omit the `inputs` field on a step "because the values aren't available yet". Resolve them first via a lookup step (per Rule 9) and reference the resolved variable. If the tools are not in the filter, fall back to Rule 12's transform_text "Note: I was unable to..." rather than emitting an `inputs`-less step (which crashes the planner with Pydantic validation errors).
 
 EXAMPLE 1 (ID resolution via output_variables):
 User: "Find the latest email from john@example.com and reply saying thanks"
@@ -560,6 +572,34 @@ User: "Parse delivery-order PDFs from my inbox and write them into my 'DO Tracke
       "inputs": {{"sheet_id": "{{{{ sheet_id }}}}", "parsed_orders": "{{{{ parsed_orders }}}}"}},
       "output_variables": {{}},
       "description": "Append the parsed delivery-order rows into the DO Tracker sheet (DANGEROUS — requires approval)"
+    }}}}
+  ]
+}}}}
+
+EXAMPLE 4 (Rule 21 PATH B — uploaded template + Drive data file → new merged doc):
+User uploaded "MinutesOfMeetingTEMP.docx.pdf" and asked: "Use this uploaded template and the data file TestData123 from my Drive and create a new doc named TestSigma"
+{{{{
+  "steps": [
+    {{{{
+      "agent": "drive_agent",
+      "tool": "upload_template",
+      "inputs": {{"file_path": "{{{{ uploaded_file.temp_path }}}}", "template_name": "MinutesOfMeetingTEMP"}},
+      "output_variables": {{"template_id": "file_id"}},
+      "description": "Push the uploaded template into Drive's Templates folder so the merge tool can consume it by ID"
+    }}}},
+    {{{{
+      "agent": "drive_agent",
+      "tool": "search_files",
+      "inputs": {{"search_term": "TestData123"}},
+      "output_variables": {{"data_id": "results[0].id"}},
+      "description": "Resolve the data file name 'TestData123' to a Drive file ID"
+    }}}},
+    {{{{
+      "agent": "docs_agent",
+      "tool": "create_from_template_and_data_ids",
+      "inputs": {{"template_file_id": "{{{{ template_id }}}}", "data_file_id": "{{{{ data_id }}}}", "new_title": "TestSigma"}},
+      "output_variables": {{}},
+      "description": "Merge the uploaded template with the Drive data file into a new doc titled 'TestSigma'"
     }}}}
   ]
 }}}}
@@ -840,6 +880,56 @@ class PendingAction:
 def generate_action_id() -> str:
     """Generate unique action ID"""
     return f"action_{uuid.uuid4().hex[:8]}"
+
+
+def _resolve_file_path_for_subagent(uploaded_file: Dict[str, Any], rendered_value: Optional[str]) -> str:
+    """Resolve `file_path` arg for a sub-agent call.
+
+    The orchestrator and sub-agents run in DIFFERENT Lambda containers with
+    isolated `/tmp` filesystems, so we must NEVER hand a sub-agent a local
+    path from the orchestrator's `/tmp` — it won't exist on the agent's
+    container. Instead we hand off via `s3://bucket/key` URLs and each
+    sub-agent has its own `_resolve_to_local_path()` helper that downloads
+    on its side (mirrors the gmail→mapping attachment pattern that already
+    works in production).
+
+    Resolution order (priority is deliberate — see Bug O for the regression
+    that motivated trusting pre-rendered s3:// URLs first):
+      1. If the rendered template literal is already an `s3://` URL, TRUST
+         IT and pass through. This handles the multi-file case where the
+         planner wired a different artifact into `file_path` (e.g. a
+         `drive_agent.download_file.local_path` that Fix B turned into an
+         `s3://` URL, or a `gmail.search_emails.attachments[i].file_path`
+         that gmail-agent already uploaded to S3). Without this, an
+         unconditional fallback to `uploaded_file`'s s3 URL would silently
+         swap the user's intended file for the upload — wrong file
+         attached, downloaded, etc.
+      2. Else if the upload has an `s3_key`, return its `s3://` URL.
+         Covers Bug O Scenario 1: planner emitted `{{ uploaded_file.temp_path }}`
+         which silently rendered to "" because storage_backend="s3"; we
+         fall back to the upload's canonical s3 reference.
+      3. Else fall back to local `temp_path` via `resolve_file_to_local_path`
+         — only correct in single-machine dev. On Lambda this would only
+         happen if env vars are misconfigured.
+
+    NOTE: a non-empty rendered value that does NOT start with `s3://` (e.g.
+    a literal `/tmp/...` path the planner produced from a same-container
+    step output) ALSO falls through to step 2/3. In Lambda mode that is
+    almost certainly an intra-container path that wouldn't survive the
+    cross-Lambda hop anyway — the upload's s3 URL is the safer guess. In
+    dev mode it's harmless because the resolver returns the same temp_path
+    value.
+    """
+    from s3_temp_storage import get_s3_url, resolve_file_to_local_path
+
+    if isinstance(rendered_value, str) and rendered_value.startswith("s3://"):
+        return rendered_value
+
+    s3_url = get_s3_url(uploaded_file)
+    if s3_url:
+        return s3_url
+
+    return resolve_file_to_local_path(uploaded_file)
 
 
 def extract_nested_value(data: dict, path: str):
@@ -1233,25 +1323,134 @@ def orchestrator_node(state: SharedState) -> SharedState:
             # the planner happened to hand-author as JSON. If both fail, keep the raw
             # string so the approval message still renders something.
             substituted_inputs = {}
-            for key, value in inputs.items():
-                if isinstance(value, str) and "{{" in value and "}}" in value:
-                    template = Template(value)
-                    rendered = template.render(**variable_context)
-                    stripped = rendered.strip()
-                    if stripped and stripped[0] in "[{":
-                        parsed: Any = None
-                        try:
-                            parsed = ast.literal_eval(stripped)
-                        except (ValueError, SyntaxError):
+            try:
+                for key, value in inputs.items():
+                    if isinstance(value, str) and "{{" in value and "}}" in value:
+                        template = Template(value)
+                        rendered = template.render(**variable_context)
+                        stripped = rendered.strip()
+                        if stripped and stripped[0] in "[{":
+                            parsed: Any = None
                             try:
-                                parsed = json.loads(stripped)
-                            except (json.JSONDecodeError, ValueError):
-                                parsed = None
-                        substituted_inputs[key] = parsed if parsed is not None else rendered
+                                parsed = ast.literal_eval(stripped)
+                            except (ValueError, SyntaxError):
+                                try:
+                                    parsed = json.loads(stripped)
+                                except (json.JSONDecodeError, ValueError):
+                                    parsed = None
+                            substituted_inputs[key] = parsed if parsed is not None else rendered
+                        else:
+                            substituted_inputs[key] = rendered
                     else:
-                        substituted_inputs[key] = rendered
+                        substituted_inputs[key] = value
+            except UndefinedError as e:
+                # Pause-time substitution failure — mirrors the execute-time
+                # UndefinedError handler at ~line 1407. Without this, an
+                # undefined variable referenced by a DANGEROUS/CRITICAL step's
+                # inputs (which substitute HERE, before the approval prompt
+                # is built) raises an unhandled exception that propagates up
+                # to _resume_remaining_steps's outer except and surfaces as
+                # the generic "Could not continue the workflow" message —
+                # even when the workflow is actually in a "ran out of items"
+                # terminal state (e.g. user said "reply to all" and the
+                # planner generated N speculative reply steps but only M<N
+                # emails actually existed at runtime).
+                missing_var = str(e).replace("'", "").split(" is ")[0] if " is " in str(e) else str(e)
+
+                # Detect the "ran out of items" sub-case: the input references
+                # an array index larger than the available list length. This
+                # signals the user's intent (e.g. "reply to all matching
+                # emails") was already satisfied by the prior steps and we
+                # should treat this as a graceful workflow completion, not
+                # an error. Distinguishes from the "missing variable" case
+                # where the variable was never set (e.g. search returned 0
+                # results and a downstream step needs the result).
+                error_is_no_more_items = False
+                try:
+                    for _key, _val in inputs.items():
+                        if not isinstance(_val, str):
+                            continue
+                        for _match in re.finditer(r"\{\{\s*(\w+)\s*\[\s*(\d+)\s*\]", _val):
+                            _var_name = _match.group(1)
+                            _idx = int(_match.group(2))
+                            _ctx_val = variable_context.get(_var_name)
+                            if isinstance(_ctx_val, list) and _idx >= len(_ctx_val):
+                                error_is_no_more_items = True
+                                break
+                        if error_is_no_more_items:
+                            break
+                except Exception:
+                    pass
+
+                no_results_steps = [r for r in results if r.get("status") == "no_results"]
+                if error_is_no_more_items:
+                    error_msg = "All available items have been processed."
+                elif no_results_steps:
+                    prior = no_results_steps[-1]
+                    prior_desc = prior.get("description", prior.get("tool", "a previous step"))
+                    error_msg = (
+                        f"Step {prior['step']} ({prior_desc}) returned no results, "
+                        f"so step {step_num} ({description}) could not proceed."
+                    )
                 else:
-                    substituted_inputs[key] = value
+                    error_msg = f"Step {step_num} ({description}) could not proceed — required data was not available from a previous step."
+
+                print(f"{error_msg}")
+                trace.error(
+                    f"Pause-time variable substitution failed at step {step_num}",
+                    data={
+                        "missing_var": missing_var,
+                        "error": str(e),
+                        "no_more_items": error_is_no_more_items,
+                    },
+                )
+
+                results.append({
+                    "step": step_num,
+                    "agent": agent_name,
+                    "tool": tool_name,
+                    "description": description,
+                    "status": "skipped",
+                    "error": error_msg,
+                })
+
+                variable_context["results"] = results
+                variable_context["stopped_at_step"] = step_num
+                variable_context["error"] = error_msg
+                variable_context["error_is_no_results"] = bool(no_results_steps)
+                variable_context["error_is_no_more_items"] = error_is_no_more_items
+
+                broadcast_ws_progress(
+                    step_num, len(plan), error_msg, agent_name, "skipped",
+                )
+
+                return {
+                    "final_context": variable_context,
+                    "context": variable_context,
+                    "results": results,
+                    "stopped_at_step": step_num,
+                    "error": error_msg,
+                }
+
+            # ── Apply file_path s3 resolution (mirrors execute-time path) ──
+            # This is the SECOND substitution site for `file_path` (per
+            # Invariant 14 / Bug F). Without this block, DANGEROUS file-bearing
+            # tools that approval-pause here (e.g. send_email_with_attachment,
+            # forward_email, send_email) get the raw rendered string into
+            # pending_actions[].inputs and later crash on dispatch via
+            # `execute_single_action` (routes/actions.py) — which forwards
+            # `inputs` straight to the sub-agent without any further
+            # translation. The same resolver semantics apply here as in the
+            # execute-time path: trust pre-rendered s3:// URLs (multi-file
+            # case), else fall back to uploaded_file's s3 URL when it has an
+            # s3_key (Bug O Scenario 1: empty render from undefined
+            # uploaded_file.temp_path on s3 storage), else local temp_path.
+            if "file_path" in substituted_inputs and "uploaded_file" in variable_context:
+                _fp = substituted_inputs["file_path"]
+                substituted_inputs["file_path"] = _resolve_file_path_for_subagent(
+                    variable_context["uploaded_file"],
+                    _fp if isinstance(_fp, str) else None,
+                )
 
             # Create action approval request
             action_id = generate_action_id()
@@ -1395,13 +1594,20 @@ def orchestrator_node(state: SharedState) -> SharedState:
                 if isinstance(value, str):
                     template = Template(value)
                     rendered = template.render(**variable_context)
-                    if key == "file_path" and rendered and "uploaded_file" in variable_context:
-                        from s3_temp_storage import resolve_file_to_local_path
-                        rendered = resolve_file_to_local_path(variable_context["uploaded_file"])
+                    # CRITICAL: do NOT gate the resolver on `rendered` being truthy.
+                    # When storage_backend="s3" the uploaded_file dict only carries
+                    # `s3_key` (no `temp_path`), so the planner's `{{ uploaded_file.temp_path }}`
+                    # template silently renders to "" via Jinja2's default Undefined
+                    # strategy. The old `and rendered` guard then skipped the resolver
+                    # and forwarded the empty string to the sub-agent — which crashed
+                    # with `File not found at `. Always invoking the resolver lets it
+                    # substitute the s3:// URL from `s3_key` regardless of whether
+                    # the planner's template happened to resolve.
+                    if key == "file_path" and "uploaded_file" in variable_context:
+                        rendered = _resolve_file_path_for_subagent(variable_context["uploaded_file"], rendered)
                     substituted_inputs[key] = rendered
                 elif key == "file_path" and "uploaded_file" in variable_context:
-                    from s3_temp_storage import resolve_file_to_local_path
-                    substituted_inputs[key] = resolve_file_to_local_path(variable_context["uploaded_file"])
+                    substituted_inputs[key] = _resolve_file_path_for_subagent(variable_context["uploaded_file"], None)
                 else:
                     substituted_inputs[key] = value
         except UndefinedError as e:

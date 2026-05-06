@@ -40,10 +40,12 @@ def get_calendar_service(credentials_dict: dict = None):
     # ── Option 1: Use credentials forwarded from the supervisor ──────────────
     if credentials_dict:
         # Do NOT pass scopes here -- the auth server determines the granted
-        # scopes (calendar.events + calendar.readonly).  Passing the local
-        # SCOPES (which includes the broader 'calendar' scope) would cause
-        # token refresh to fail with "invalid_scope" because Google rejects
-        # scope escalation during refresh.
+        # scopes from what the user consented to in the OAuth flow
+        # (Frontend/src/components/Login.jsx requests `calendar` (full) +
+        # `calendar.events` + `calendar.readonly`).  Passing scopes locally
+        # could cause token refresh to fail with "invalid_scope" because
+        # Google rejects scope escalation during refresh -- the granted
+        # scope set is fixed at consent time.
         creds = Credentials(
             token=credentials_dict.get("access_token"),
             refresh_token=credentials_dict.get("refresh_token"),
@@ -427,10 +429,179 @@ def create_event_impl(summary: str, start: str, end: str, emails: List[str],
         }
 
 
+def _format_event_row(event: dict, source_calendar_name: str = "") -> dict:
+    """Common per-event renderer used by both single-calendar and fan-out
+    paths so the output shape stays identical regardless of which calendar
+    served the row."""
+    start = event["start"].get("dateTime", event["start"].get("date"))
+    try:
+        parsed_start = parser.parse(start)
+        formatted_start = parsed_start.strftime("%B %d, %Y at %I:%M %p")
+    except Exception:
+        formatted_start = start
+
+    row = {
+        "event_id": event.get("id"),
+        "summary": event.get("summary", "No Title"),
+        "start": start,
+        "start_formatted": formatted_start,
+        "end": event["end"].get("dateTime", event["end"].get("date")),
+        "location": event.get("location", ""),
+        "attendees": [att.get("email") for att in event.get("attendees", [])],
+        "attendee_count": len(event.get("attendees", [])),
+    }
+    # Only stamp `calendar_name` on rows that came from the multi-calendar
+    # fan-out — single-calendar callers don't need this column and tests
+    # would be brittle to its presence.
+    if source_calendar_name:
+        row["calendar_name"] = source_calendar_name
+    return row
+
+
+def _search_events_all_calendars(service, max_results: int,
+                                  formatted_min: str, formatted_max: str,
+                                  credentials_dict: dict) -> Dict:
+    """Fan-out search across every calendar in the user's calendarList.
+
+    Iterates calendarList → events.list per calendar → merges, sorts by
+    start time, and truncates to `max_results`. Each row is annotated
+    with the source `calendar_name` so the user knows where it came
+    from. Per-calendar failures (e.g. a calendar the OAuth consent
+    doesn't cover) are logged and skipped, never aborted — partial
+    results are strictly better than zero results.
+    """
+    try:
+        cal_list_resp = service.calendarList().list().execute()
+        calendars = cal_list_resp.get("items", [])
+    except Exception as e:
+        return {
+            "success": False,
+            "events": [],
+            "count": 0,
+            "calendars_searched": 0,
+            "message": f"Failed to list calendars: {str(e)}",
+            "error": str(e),
+        }
+
+    if not calendars:
+        return {
+            "success": True,
+            "events": [],
+            "count": 0,
+            "calendars_searched": 0,
+            "message": "No calendars found on this Google account.",
+            "error": None,
+        }
+
+    all_events: list = []
+    seen_keys: set = set()
+    calendars_searched = 0
+    per_calendar_errors: list = []
+
+    # Per-calendar maxResults is bumped so that after global sort+truncate
+    # we still have a representative sample. Without this, a busy calendar
+    # could swamp quieter ones. Capped at 50 to keep the payload bounded.
+    per_cal_max = min(max(max_results * 2, 25), 50)
+
+    for cal in calendars:
+        cal_id = cal.get("id")
+        cal_name = cal.get("summaryOverride") or cal.get("summary") or cal_id or "Unknown"
+        if not cal_id:
+            continue
+
+        list_kwargs = dict(
+            calendarId=cal_id,
+            timeMin=formatted_min,
+            maxResults=per_cal_max,
+            singleEvents=True,
+            orderBy="startTime",
+        )
+        if formatted_max:
+            list_kwargs["timeMax"] = formatted_max
+
+        try:
+            resp = service.events().list(**list_kwargs).execute()
+        except Exception as e:
+            # Permission / scope errors on individual calendars are
+            # common (e.g. shared calendars the user can see but not
+            # query). Log and continue rather than failing the whole
+            # request.
+            print(f"[search_events fan-out] {cal_name} ({cal_id}): {e}")
+            per_calendar_errors.append({"calendar": cal_name, "error": str(e)})
+            continue
+
+        calendars_searched += 1
+        for event in resp.get("items", []):
+            # Dedupe across calendars: the same recurring meeting can
+            # appear in your primary AND in the organiser's shared
+            # calendar with different per-calendar IDs but the same
+            # iCalUID. Collapse to a single row, preferring the first
+            # one seen (calendarList order — primary first).
+            ical_uid = event.get("iCalUID")
+            dedupe_key = ical_uid or f"{cal_id}::{event.get('id')}"
+            if dedupe_key in seen_keys:
+                continue
+            seen_keys.add(dedupe_key)
+            all_events.append(_format_event_row(event, source_calendar_name=cal_name))
+
+    # Global sort by start time (stringly via ISO-8601 — Google returns
+    # start times in ISO format so lexical sort = chronological sort).
+    all_events.sort(key=lambda e: e.get("start") or "")
+    truncated = all_events[:max_results]
+
+    if not truncated:
+        return {
+            "success": True,
+            "events": [],
+            "count": 0,
+            "calendars_searched": calendars_searched,
+            "message": (
+                f"No upcoming events found across {calendars_searched} "
+                f"calendar{'s' if calendars_searched != 1 else ''}."
+            ),
+            "error": None,
+        }
+
+    output = [f"Upcoming events across {calendars_searched} calendars:\n"]
+    for i, evt in enumerate(truncated, 1):
+        attendee_info = (
+            f" ({evt['attendee_count']} attendees)"
+            if evt["attendee_count"] > 0 else ""
+        )
+        location_info = f"\n   Location: {evt['location']}" if evt["location"] else ""
+        cal_info = f"\n   Calendar: {evt.get('calendar_name', 'Unknown')}"
+        output.append(
+            f"{i}. {evt['summary']} - {evt['start_formatted']}{attendee_info}"
+            f"{location_info}{cal_info}\n   ID: {evt['event_id']}"
+        )
+
+    result = {
+        "success": True,
+        "events": truncated,
+        "count": len(truncated),
+        "calendars_searched": calendars_searched,
+        "message": "\n".join(output),
+        "error": None,
+    }
+    if per_calendar_errors:
+        # Surface per-calendar issues but don't fail the call. The
+        # supervisor's response template ignores this field today; it's
+        # here for log-side diagnostics.
+        result["partial_failures"] = per_calendar_errors
+    return result
+
+
 def search_events_impl(max_results: int = 5, calendar_id: str = None,
                        credentials_dict: dict = None,
                        time_min: str = None, time_max: str = None) -> Dict:
-    """Search upcoming events - RETURNS DICT with structured event data."""
+    """Search upcoming events - RETURNS DICT with structured event data.
+
+    Pass ``calendar_id="all"`` (case-insensitive) to fan out across
+    every calendar in the user's calendarList. Otherwise behaves as
+    before: queries the single calendar identified by `calendar_id`
+    (defaults to the env-configured ``GOOGLE_CALENDAR_ID``, usually
+    'primary').
+    """
     service = get_calendar_service(credentials_dict)
     cal_id = calendar_id or CALENDAR_ID
 
@@ -441,6 +612,20 @@ def search_events_impl(max_results: int = 5, calendar_id: str = None,
     else:
         formatted_min = datetime.now(pytz.timezone("Asia/Manila")).isoformat()
 
+    formatted_max = None
+    if time_max:
+        formatted_max = format_datetime(time_max)
+        if not formatted_max:
+            formatted_max = time_max
+
+    # Fan-out path — sentinel "all" (case-insensitive). Documented in
+    # agent_capabilities_v3.calendar_agent.list_events.calendar_name so
+    # the planner knows when to emit it.
+    if isinstance(cal_id, str) and cal_id.strip().lower() == "all":
+        return _search_events_all_calendars(
+            service, max_results, formatted_min, formatted_max, credentials_dict,
+        )
+
     list_kwargs = dict(
         calendarId=cal_id,
         timeMin=formatted_min,
@@ -448,9 +633,8 @@ def search_events_impl(max_results: int = 5, calendar_id: str = None,
         singleEvents=True,
         orderBy="startTime",
     )
-    if time_max:
-        formatted_max = format_datetime(time_max)
-        list_kwargs["timeMax"] = formatted_max if formatted_max else time_max
+    if formatted_max:
+        list_kwargs["timeMax"] = formatted_max
 
     try:
         events_result = service.events().list(**list_kwargs).execute()
@@ -465,25 +649,7 @@ def search_events_impl(max_results: int = 5, calendar_id: str = None,
                 "error": None
             }
 
-        structured_events = []
-        for event in events:
-            start = event["start"].get("dateTime", event["start"].get("date"))
-            try:
-                parsed_start = parser.parse(start)
-                formatted_start = parsed_start.strftime("%B %d, %Y at %I:%M %p")
-            except Exception:
-                formatted_start = start
-
-            structured_events.append({
-                "event_id": event.get('id'),
-                "summary": event.get('summary', 'No Title'),
-                "start": start,
-                "start_formatted": formatted_start,
-                "end": event["end"].get("dateTime", event["end"].get("date")),
-                "location": event.get("location", ""),
-                "attendees": [att.get("email") for att in event.get("attendees", [])],
-                "attendee_count": len(event.get("attendees", []))
-            })
+        structured_events = [_format_event_row(event) for event in events]
 
         output = ["Upcoming events:\n"]
         for i, evt in enumerate(structured_events, 1):

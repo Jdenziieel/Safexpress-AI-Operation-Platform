@@ -1,16 +1,37 @@
-# Deploy script with correct Content-Type headers
-# Replace YOUR_BUCKET_NAME with your actual S3 bucket name
-# Replace YOUR_DISTRIBUTION_ID with your CloudFront distribution ID
+# Deploy script with correct Content-Type headers.
+#
+# IMPORTANT — DO NOT add `--delete` to any aws s3 sync command in this script.
+# Both deployment buckets (safexpressops-frontend AND frontend-safexpress) are
+# SHARED with non-frontend prefixes:
+#   - uploads/...        → KB user-uploaded PDFs (NOT recoverable, versioning OFF)
+#   - lambda-packages/... → Lambda code-zip backups
+# A `--delete` sync would wipe those siblings. Stale frontend assets are
+# acceptable; lost user uploads are NOT. (Learned the hard way 2026-05-03 on
+# frontend-safexpress — two live KB documents and three orphan uploads were
+# permanently destroyed.)
+#
+# Known buckets / distributions:
+#   safexpressops-frontend → EASISGRLJMW51 → d235efx2egjlji.cloudfront.net
+#   frontend-safexpress    → E24R286JHHQ55F → d2q36i8ewtxnwb.cloudfront.net (current prod)
 
 param(
     [Parameter(Mandatory=$false)]
-    [string]$BucketName = "safexpressops-frontend",
-    
+    [ValidateSet("safexpressops-frontend", "frontend-safexpress")]
+    [string]$BucketName = "frontend-safexpress",
+
     [Parameter(Mandatory=$false)]
-    [string]$DistributionId = "EASISGRLJMW51"
+    [string]$DistributionId = ""
 )
 
-Write-Host "Starting deployment to S3 bucket: $BucketName" -ForegroundColor Green
+# Auto-resolve distribution id if caller passed only a bucket
+if ([string]::IsNullOrWhiteSpace($DistributionId)) {
+    $DistributionId = switch ($BucketName) {
+        "safexpressops-frontend" { "EASISGRLJMW51" }
+        "frontend-safexpress"    { "E24R286JHHQ55F" }
+    }
+}
+
+Write-Host "Starting deployment to S3 bucket: $BucketName (distribution: $DistributionId)" -ForegroundColor Green
 
 # Navigate to dist directory
 $distPath = "dist"

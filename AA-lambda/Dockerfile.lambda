@@ -1,9 +1,12 @@
 # Generic Lambda Docker image for the 5 HEAVY supervisor REST functions:
 #   supervisor-create-thread, supervisor-create-thread-upload,
-#   supervisor-action-approve, supervisor-workflow.
+#   supervisor-post-message-upload, supervisor-action-approve,
+#   supervisor-workflow.
+# (supervisor-ws-chat uses Dockerfile.websocket — same heavy stack but
+#  with a thinner WS-handler shim instead of the REST handler shim.)
 #
-# The 31 light supervisor functions DO NOT use this Dockerfile — they ship
-# as ZIPs built by build-lambda.ps1, which installs only the light
+# The 30 light supervisor functions DO NOT use this Dockerfile — they
+# ship as ZIPs built by build-lambda.ps1, which installs only the light
 # `requirements.txt` (boto3 / pydantic / httpx). See DEPLOYMENT_GUIDE.md
 # §7 for the tiering rationale.
 #

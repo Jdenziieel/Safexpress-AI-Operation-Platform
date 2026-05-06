@@ -104,6 +104,15 @@ def _quota_report(model: str, input_tokens: int, output_tokens: int, operation: 
             "input_tokens": int(input_tokens or 0),
             "output_tokens": int(output_tokens or 0),
             "operation": operation,
+            # tier='transform' surfaces this call under "LLM Transform"
+            # in LogsPage's Usage by Tier panel. Without it, every
+            # smart_column_mapping LLM fallback lands in the
+            # "Other / Unmapped" bucket because the frontend's
+            # getTierLabel maps tier=null → 'Other / Unmapped'
+            # (see Frontend/src/components/LogsPage.jsx:303-338).
+            # `transform` is a registered alias for `orchestrator`
+            # in that map (both render as "LLM Transform").
+            "tier": "transform",
             "request_id": _quota_ctx.get("request_id"),
         },
         _quota_ctx.get("jwt"),

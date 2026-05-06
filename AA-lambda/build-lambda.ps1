@@ -39,7 +39,13 @@ param(
     [string]$TemplateDir = ""
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
+# Switched from "Stop" 2026-05-03: pip-in-docker writes a benign
+# "Running pip as root" warning to stderr which PowerShell wraps as a
+# terminating ErrorRecord under "Stop" mode, killing the build before
+# the wheels finish copying out of the container. The script already
+# checks $LASTEXITCODE after each external command, so real failures
+# still bubble up via the explicit `throw` statements below.
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $FuncDir = Join-Path $Root "functions\$Function"

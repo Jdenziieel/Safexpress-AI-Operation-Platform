@@ -1,0 +1,12 @@
+1777962121238 START RequestId: 7b5c4cb3-c497-43b1-843f-a7228896ecbc Version: $LATEST
+1777962121503 Detected format: PDF
+1777962122747 Converting PDF to Google Docs format for editing...
+1777962127527 END RequestId: 7b5c4cb3-c497-43b1-843f-a7228896ecbc
+1777962127527 REPORT RequestId: 7b5c4cb3-c497-43b1-843f-a7228896ecbc	Duration: 6288.99 ms	Billed Duration: 8545 ms	Memory Size: 2048 MB	Max Memory Used: 153 MB	Init Duration: 2255.33 ms
+1777962452341 START RequestId: 9bf74a68-98c4-48b3-845b-5449b7261f42 Version: $LATEST
+1777962452402 Searching for template: 'MinutesOfMeetingTEMP'
+1777962452402 Searching for data: 'TestData123'
+1777962453437 Found template: MinutesOfMeetingTEMP (ID: 154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0)
+1777962453437 Found data: TestData123 (ID: 1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc)
+1777962453439 END RequestId: 9bf74a68-98c4-48b3-845b-5449b7261f42
+1777962453439 REPORT RequestId: 9bf74a68-98c4-48b3-845b-5449b7261f42	Duration: 1096.87 ms	Billed Duration: 1097 ms	Memory Size: 2048 MB	Max Memory Used: 155 MB

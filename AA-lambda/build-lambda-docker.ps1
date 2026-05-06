@@ -16,7 +16,7 @@
 #   - agent-drive       -> Dockerfile.drive-agent
 #   - agent-mapping     -> Dockerfile.mapping-agent
 #   - supervisor-ws-chat-> Dockerfile.websocket
-#   - 5 heavy supervisor-* -> Dockerfile.lambda  (FUNCTION_NAME build-arg)
+#   - 6 heavy supervisor-* -> Dockerfile.lambda  (FUNCTION_NAME build-arg)
 #
 # All 6 agent images are self-contained — they do NOT install the top-level
 # `requirements.txt` / `requirements-heavy.txt` and do NOT copy `shared/`.
@@ -41,18 +41,26 @@ param(
 $ErrorActionPreference = "Continue"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-# Image-mode (Docker) is intentionally restricted to the 11 functions
+# Image-mode (Docker) is intentionally restricted to the 12 functions
 # below. These are the heavy ones whose dependency footprints (LangGraph,
 # google-api-client, pandas, etc.) push the ZIP package above 50 MB or
 # need OS-level binaries. Every OTHER Lambda is ZIP-packaged via
 # build-lambda.ps1 / deploy-lambda.ps1: smaller cold-starts, faster
 # iteration, no ECR storage cost, no orphan-repo risk.
 #
-# If you genuinely need to add a 12th image-mode function, append it
+# If you genuinely need to add a 13th image-mode function, append it
 # here AND mirror the matching Dockerfile entry in dockerfileMap below.
 # The script aborts EARLY otherwise so an accidental
 # `.\build-lambda-docker.ps1 -Function supervisor-XYZ` can't silently
 # create a one-off ECR repo and waste ~80 MB of registry storage.
+#
+# The 6 supervisor-* image-mode lambdas (action-approve, create-thread,
+# create-thread-upload, post-message-upload, workflow, ws-chat) all
+# import `supervisor_agent` (the brain), which transitively imports
+# fastapi/starlette/uvicorn at module-top for source-parity with the
+# local dev FastAPI server. ZIP packaging would skip those wheels and
+# crash with `ModuleNotFoundError: No module named 'fastapi'` on the
+# very first request — see Bug I in `.cursor/rules/system-architecture.mdc`.
 $IMAGE_MODE_FUNCTIONS = @(
     "agent-calendar",
     "agent-docs",
@@ -63,6 +71,7 @@ $IMAGE_MODE_FUNCTIONS = @(
     "supervisor-action-approve",
     "supervisor-create-thread",
     "supervisor-create-thread-upload",
+    "supervisor-post-message-upload",
     "supervisor-workflow",
     "supervisor-ws-chat"
 )
@@ -70,7 +79,7 @@ $IMAGE_MODE_FUNCTIONS = @(
 if ($IMAGE_MODE_FUNCTIONS -notcontains $Function) {
     Write-Host ""
     Write-Host "[refused] '$Function' is NOT an image-mode Lambda." -ForegroundColor Red
-    Write-Host "  Image (Docker / ECR) is reserved for these 11 functions only:" -ForegroundColor Yellow
+    Write-Host "  Image (Docker / ECR) is reserved for these 12 functions only:" -ForegroundColor Yellow
     foreach ($fn in $IMAGE_MODE_FUNCTIONS) { Write-Host "    - $fn" -ForegroundColor Yellow }
     Write-Host ""
     Write-Host "  Use the ZIP path for everything else:" -ForegroundColor Cyan

@@ -143,6 +143,55 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                 if "search_drafts" in all_gmail:
                     gmail_tools.append("search_drafts")
 
+            # Block A extension — attachment-bearing email tools.
+            # Closes the capability gap that previously caused the planner
+            # to hallucinate `send_email_with_attachment(draft_id=...)` when
+            # the user wanted a DRAFT with an attached file: there is no
+            # post-creation "attach to draft" Gmail API, so a one-shot
+            # `create_draft_email_with_attachment` tool is required.
+            #
+            # Trigger on attach-keyword co-occurrence with email keywords
+            # (already gated by `gmail_agent in validated`). Inject the
+            # one-shot draft+attachment tool when draft phrasing is present,
+            # and the send+attachment tool when send phrasing is present.
+            # When the user uses ambiguous phrasing ("attach this PDF") and
+            # didn't say "draft" / "send", both are added so the planner
+            # can disambiguate against the rest of the user message.
+            _ATTACH_KEYWORDS = (
+                "attach", "attachment", "attached",
+                "with the file", "with this file", "with the pdf",
+            )
+            _DRAFT_PHRASE_KEYWORDS = (
+                "draft", "drafts", "gmaildraft", "gmail draft",
+                "as a draft", "as draft", "save as draft",
+            )
+            _SEND_PHRASE_KEYWORDS = (
+                "send", "send it", "send the email", "send out",
+                "ship", "deliver",
+            )
+            attach_present = any(kw in input_lower for kw in _ATTACH_KEYWORDS)
+            if attach_present:
+                gmail_caps = agent_capabilities.get("gmail_agent", {}).get("tools", {})
+                draft_present = any(kw in input_lower for kw in _DRAFT_PHRASE_KEYWORDS)
+                send_present = any(kw in input_lower for kw in _SEND_PHRASE_KEYWORDS)
+
+                if draft_present and "create_draft_email_with_attachment" in gmail_caps:
+                    if "create_draft_email_with_attachment" not in gmail_tools:
+                        gmail_tools.append("create_draft_email_with_attachment")
+
+                if send_present and "send_email_with_attachment" in gmail_caps:
+                    if "send_email_with_attachment" not in gmail_tools:
+                        gmail_tools.append("send_email_with_attachment")
+
+                # Ambiguous "attach" with neither draft nor send phrasing —
+                # offer both so the planner picks based on the rest of the
+                # user message + capability descriptions.
+                if not draft_present and not send_present:
+                    if "create_draft_email_with_attachment" in gmail_caps and "create_draft_email_with_attachment" not in gmail_tools:
+                        gmail_tools.append("create_draft_email_with_attachment")
+                    if "send_email_with_attachment" in gmail_caps and "send_email_with_attachment" not in gmail_tools:
+                        gmail_tools.append("send_email_with_attachment")
+
         # Docs agent safety net: whenever docs_agent is included, ensure
         # list_my_docs is present so the supervisor can resolve document
         # names to IDs (required by Rule 9 in the planning prompt).
@@ -627,6 +676,129 @@ def identify_agents_and_tools(user_input: str) -> Dict[str, List[str]]:
                     and "get_sheet_metadata" not in validated["sheets_agent"]
                 ):
                     validated["sheets_agent"].append("get_sheet_metadata")
+
+        # Block N (Bug J fix): template-with-data workflow tool completeness.
+        #
+        # When the user asks "create a new doc from <template> using <data>",
+        # the planner needs the FULL chain available so it can pick the
+        # right path based on whether the template is uploaded vs already
+        # in Drive. The classifier (gpt-4o-mini) routinely misses parts of
+        # this chain — observed failure modes:
+        #   - Test 1 (no upload, "use template MinutesOfMeetingTEMP and
+        #     data TestData123"): classifier returned only
+        #     {docs_agent: [create_from_template_and_data_ids,
+        #     list_my_docs]} with NO drive_agent at all. The merge tool
+        #     was present but the prerequisite Drive lookup was missing.
+        #   - Test 2 (uploaded template + Drive data): classifier returned
+        #     {drive_agent: [search_files], docs_agent:
+        #     [create_from_uploaded_template, list_my_docs]} — the
+        #     create_from_uploaded_template tool is single-source (it
+        #     copies one Drive file into a new doc, "uploaded" is a
+        #     misnomer for "an existing Drive file"); the actual two-
+        #     source merge tool create_from_template_and_data_ids was
+        #     missing entirely.
+        #
+        # Both failure modes manifest identically downstream: gpt-4.1
+        # tries to plan a workflow it cannot express with the available
+        # function schemas. It falls back to writing prose in the
+        # `description` field and omits `inputs` because no valid value
+        # exists. Pydantic then rejects the function call with
+        # "validation error: steps.N.inputs Field required" — observed
+        # with output_tokens=77/81/82 (vs ~127-144 on a properly-filled
+        # 2-step plan). With no planner retry layer, that's a hard fail.
+        #
+        # This block ensures all 4 tools needed for the two paths are
+        # available whenever the template+data co-occurrence is detected
+        # in the user input:
+        #   Path A — both files in Drive (no uploaded_file in context):
+        #     drive_agent.search_template_and_data → docs_agent.create_from_template_and_data_ids
+        #   Path B — uploaded template + data file in Drive:
+        #     drive_agent.upload_template → drive_agent.search_files →
+        #     docs_agent.create_from_template_and_data_ids
+        # The planner picks the path based on uploaded_file context
+        # (visible to it via context_vars_note in the system prompt) —
+        # see Rule 21 for the explicit decision guide.
+        #
+        # Detection: co-occurrence of a TEMPLATE noun phrase AND a
+        # DATA noun phrase in the user's input. Both halves must be
+        # present to fire — keeps the block off generic "create a doc"
+        # requests while still catching every real two-source merge.
+        # Conservative phrasing list — bare "data" alone is excluded
+        # to avoid firing on chatter like "summarize this data" where
+        # there's no template involved.
+        _TEMPLATE_REFERENCE_KEYWORDS = (
+            " template ", " template,", " template.",
+            " template named", " template called", " template titled",
+            "the template ", "this template", "uploaded template",
+            "as the template", "as a template", "for the template",
+            " format file ",
+        )
+        _DATA_FOR_TEMPLATE_KEYWORDS = (
+            " data ", " data,", " data.",
+            " data named", " data called", " data titled",
+            " data doc", " data document", " data file",
+            "for the data", "with the data", "using the data",
+            "the data doc", "the data document", "the data file",
+            " content file", "the content file",
+        )
+        mentions_template_for_merge = any(
+            kw in input_lower for kw in _TEMPLATE_REFERENCE_KEYWORDS
+        )
+        mentions_data_for_template = any(
+            kw in input_lower for kw in _DATA_FOR_TEMPLATE_KEYWORDS
+        )
+        if mentions_template_for_merge and mentions_data_for_template:
+            drive_caps_for_n = agent_capabilities.get("drive_agent", {}).get("tools", {})
+            docs_caps_for_n = agent_capabilities.get("docs_agent", {}).get("tools", {})
+            drive_tools_for_n = validated.setdefault("drive_agent", [])
+            docs_tools_for_n = validated.setdefault("docs_agent", [])
+
+            # Always-needed: the two-source merge tool.
+            if (
+                "create_from_template_and_data_ids" in docs_caps_for_n
+                and "create_from_template_and_data_ids" not in docs_tools_for_n
+            ):
+                docs_tools_for_n.append("create_from_template_and_data_ids")
+            # docs_agent.list_my_docs is already added by the docs_agent
+            # safety net above (line ~154); no need to re-add here.
+
+            # Path A: both files in Drive — search_template_and_data
+            # finds both in one call.
+            if (
+                "search_template_and_data" in drive_caps_for_n
+                and "search_template_and_data" not in drive_tools_for_n
+            ):
+                drive_tools_for_n.append("search_template_and_data")
+
+            # Path B step 1: uploaded template → push to Drive Templates
+            # folder. Harmless to include when no upload exists — the
+            # planner won't pick it because uploaded_file is absent from
+            # context.
+            if (
+                "upload_template" in drive_caps_for_n
+                and "upload_template" not in drive_tools_for_n
+            ):
+                drive_tools_for_n.append("upload_template")
+
+            # Path B step 2: data-file lookup. (Path A's
+            # search_template_and_data covers both lookups in one call;
+            # Path B needs search_files for the data half because the
+            # template half is the upload.)
+            if (
+                "search_files" in drive_caps_for_n
+                and "search_files" not in drive_tools_for_n
+            ):
+                drive_tools_for_n.append("search_files")
+
+            try:
+                logger.info(
+                    "[BlockN] template+data workflow tools injected "
+                    f"(template_kw_match=True, data_kw_match=True, "
+                    f"path_A_tools=[search_template_and_data, create_from_template_and_data_ids], "
+                    f"path_B_tools=[upload_template, search_files, create_from_template_and_data_ids])"
+                )
+            except Exception:
+                pass
 
         # "Put X in folder Y" safety net: when the user asks to create a
         # sheet or doc AND references a folder, the planner needs a way to

@@ -1,0 +1,81 @@
+1777962130444 START RequestId: f576ad19-8732-4155-9f4e-9a09bc0ab557 Version: $LATEST
+1777962130445 Direct execution (bypassing agent): create_from_uploaded_template
+1777962130445 Output format requested: google_docs
+1777962130445 ============================================================
+1777962130445 CREDENTIALS RECEIVED IN DOCS AGENT:
+1777962130445 ============================================================
+1777962130445 access_token: present
+1777962130445 refresh_token: present
+1777962130445 client_id: present
+1777962130445 client_secret: present
+1777962130445 ============================================================
+1777962131490 Template: MinutesOfMeetingTEMP (application/vnd.google-apps.document)
+1777962131490 Using Google Docs copy method
+1777962134997 Created copy: 1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc
+1777962134997 Direct execution result:
+1777962134997 Document created from uploaded template.
+1777962134997 Title: TestData123
+1777962134997 Document ID: 1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc
+1777962134997 URL: https://docs.google.com/document/d/1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc/edit
+1777962134997 Format: Google Docs (editable)
+1777962134997 Complete Result:
+1777962134997 {
+1777962134997 "success": true,
+1777962134997 "document_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc",
+1777962134997 "document_url": "https://docs.google.com/document/d/1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc/edit",
+1777962134997 "title": "TestData123",
+1777962134997 "template_used": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0",
+1777962134997 "format": "Google Docs",
+1777962134997 "editable": true
+1777962134997 }
+1777962134997 ============================================================
+1777962135000 END RequestId: f576ad19-8732-4155-9f4e-9a09bc0ab557
+1777962135000 REPORT RequestId: f576ad19-8732-4155-9f4e-9a09bc0ab557	Duration: 4554.92 ms	Billed Duration: 7194 ms	Memory Size: 2048 MB	Max Memory Used: 198 MB	Init Duration: 2638.57 ms
+1777962453484 START RequestId: 379ecf37-d38d-459f-9c43-af84880175eb Version: $LATEST
+1777962453486 Direct execution: create_from_template_and_data_ids
+1777962453486 ============================================================
+1777962453486 CREATE FROM TEMPLATE & DATA (USING IDs)
+1777962453486 ============================================================
+1777962453486 Template ID: 154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0
+1777962453486 Data ID: 1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc
+1777962453486 New Title: HelloTestTempandData
+1777962453486 Output Format: google_docs
+1777962453486 ============================================================
+1777962453574 Reading data file...
+1777962453959 Data file: TestData123 (Type: application/vnd.google-apps.document)
+1777962453959 Format: Google Docs → Exporting as plain text
+1777962454850 Read 336 characters from data file
+1777962455515 File: MinutesOfMeetingTEMP
+1777962455515 MIME Type: application/vnd.google-apps.document
+1777962455515 Type: Google Docs (native) → Using Docs API
+1777962456413 Detected blank line placeholder: 'Date:____' → [DATE]
+1777962456413 Detected blank line placeholder: 'Time:____' → [TIME]
+1777962456413 Detected blank line placeholder: 'Department:____' → [DEPARTMENT]
+1777962456413 Detected blank line placeholder: 'Attendees:____' → [ATTENDEES]
+1777962456413 Total placeholders found: ['ATTENDEES', 'DATE', 'DEPARTMENT', 'TIME']
+1777962456413 Found placeholders in template: ['ATTENDEES', 'DATE', 'DEPARTMENT', 'TIME']
+1777962456413 Matched: [DATE] = ______
+1777962456413 Matched: [TIME] = _____
+1777962456413 Matched: [DEPARTMENT] = _____
+1777962456413 Matched: [ATTENDEES] = _______
+1777962456413 Final placeholder mapping: ['DATE', 'TIME', 'DEPARTMENT', 'ATTENDEES']
+1777962456413 Creating document 'HelloTestTempandData' from template...
+1777962456798 Template: MinutesOfMeetingTEMP (application/vnd.google-apps.document)
+1777962456798 Using Google Docs copy method
+1777962460213 Created copy: 14H0KuV9E6wiZVv_t9sHuVV4ilsKmlJHB7A2FUNv3xtE
+1777962460973 Replaced 4 placeholders
+1777962460973 Document created: 14H0KuV9E6wiZVv_t9sHuVV4ilsKmlJHB7A2FUNv3xtE
+1777962460973 Checking for blank line placeholders...
+1777962461020 Building docs service with:
+1777962461020 - token: present
+1777962461020 - refresh_token: present
+1777962461020 - client_id: present
+1777962461020 - client_secret: present
+1777962461582 ℹ No blank line patterns found to replace
+1777962461582 Direct execution result:
+1777962461582 Document created successfully.
+1777962461582 Title: HelloTestTempandData
+1777962461582 Document ID: 14H0KuV9E6wiZVv_t9sHuVV4ilsKmlJHB7A2FUNv3xtE
+1777962461582 URL: https://docs.google.com/document/d/14H0KuV9E6wiZVv_t9sHuVV4ilsKmlJHB7A2FUNv3xtE/edit
+1777962461585 END RequestId: 379ecf37-d38d-459f-9c43-af84880175eb
+1777962461585 REPORT RequestId: 379ecf37-d38d-459f-9c43-af84880175eb	Duration: 8100.70 ms	Billed Duration: 8101 ms	Memory Size: 2048 MB	Max Memory Used: 271 MB

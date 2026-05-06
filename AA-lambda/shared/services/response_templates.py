@@ -19,8 +19,45 @@ from typing import Optional, Dict, Any
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _safe_format(template: str, data: dict) -> str:
-    return template.format_map(defaultdict(str, {k: v for k, v in data.items() if v is not None}))
+def _safe_format(template: str, data: dict, empty_placeholders: Optional[dict] = None) -> str:
+    """Substitute ``{field}`` placeholders in ``template`` from ``data``.
+
+    Two important behaviors beyond a stock ``str.format_map``:
+
+    1. **Empty values get user-friendly fallbacks (NOT bare empty strings).**
+       Many tool returns include keys whose value is an empty string when
+       the underlying entity has no data — Gmail metadata is the worst
+       offender here (a draft sent with no subject returns ``subject: ""``,
+       a metadata fetch race returns ``to: ""``). The legacy implementation
+       passed those through ``format_map`` unchanged, so a template like
+       ``"to: **{to}**"`` rendered as ``"to: ****"`` — visually
+       indistinguishable from PII redaction (reported by user 2026-05-03
+       with screenshot: "Why is on the done response we are PII to and
+       from when there has been confirmation above already").
+
+       ``empty_placeholders`` lets each template declare a per-field
+       fallback; for keys without a fallback we use ``"_(unspecified)_"``
+       so the markdown layer renders italic placeholder text rather than
+       phantom asterisks.
+
+    2. **Missing keys still default to empty.** ``defaultdict(str, ...)``
+       protects against KeyError when a tool's response shape changes
+       between minor versions (better to render
+       ``"Forwarded {subject}"`` literally than to crash the assistant
+       reply).
+    """
+    placeholders = empty_placeholders or {}
+    cleaned: dict = {}
+    for k, v in data.items():
+        if v is None or v == "":
+            fallback = placeholders.get(k, "_(unspecified)_")
+            if fallback is None:
+                cleaned[k] = ""
+            else:
+                cleaned[k] = fallback
+        else:
+            cleaned[k] = v
+    return template.format_map(defaultdict(str, cleaned))
 
 
 def _pluralize_header(template_def: dict, count: int) -> str:
@@ -932,18 +969,42 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
     ("gmail_agent", "reply_to_email"): {
         "type": "action",
         "template": "Replied to **{subject}** (to: {to})",
+        "empty_placeholders": {
+            "subject": "_(no subject)_",
+            "to": "_recipient_",
+        },
     },
     ("gmail_agent", "forward_email"): {
         "type": "action",
         "template": "Forwarded **{subject}** to **{to}**",
+        "empty_placeholders": {
+            "subject": "_(no subject)_",
+            "to": "_recipient_",
+        },
     },
     ("gmail_agent", "create_draft_email"): {
         "type": "action",
         "template": "Draft created for **{to}**, subject: **{subject}**",
+        "empty_placeholders": {
+            "subject": "_(no subject)_",
+            "to": "_recipient_",
+        },
     },
     ("gmail_agent", "send_draft_email"): {
+        # `to` and `subject` here come from a metadata-fetch *after* the
+        # send. Gmail occasionally returns those headers as empty
+        # strings (race between drafts.send and messages.get with
+        # metadata format) — without empty_placeholders the template
+        # would render "to: ****, subject: ****" which looks identical
+        # to PII redaction. Friendly italic placeholders make the
+        # render unambiguous: it's "we don't have these fields handy",
+        # NOT "we've masked your data".
         "type": "action",
         "template": "Draft sent — to: **{to}**, subject: **{subject}**",
+        "empty_placeholders": {
+            "subject": "_(no subject)_",
+            "to": "_recipient_",
+        },
     },
     ("gmail_agent", "search_drafts"): {
         "type": "query",
@@ -958,6 +1019,11 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
     ("gmail_agent", "send_email_with_attachment"): {
         "type": "action",
         "template": "Sent email to **{to}**, subject: **{subject}** (attachment: {attachment_name})",
+        "empty_placeholders": {
+            "subject": "_(no subject)_",
+            "to": "_recipient_",
+            "attachment_name": "_attachment_",
+        },
     },
     ("gmail_agent", "download_attachment"): {
         # Callable so we can render bytes via _format_size_bytes (e.g.
@@ -1005,8 +1071,32 @@ TOOL_TEMPLATES: Dict[tuple, dict] = {
         "template": "Created document **{title}**: {document_url}",
     },
     ("docs_agent", "list_my_docs"): {
-        "type": "action",
-        "use_message": True,
+        # The docs sub-agent's `_list_user_docs_impl` (functions/agent-docs/api.py
+        # `list_my_docs` branch, ~line 145) returns {"success": True,
+        # "documents": [{name,id,url,modified}, ...]} with NO `message`
+        # field. The legacy `use_message: True` template therefore fell
+        # through `_format_action`'s last branch and rendered the dead-air
+        # string "Action completed" for every successful list (reported by
+        # user 2026-05-03 with screenshot of two successive
+        # "list 3 of my latest documents" runs both showing only "Action
+        # completed"). Switched to a `query` template that renders the
+        # documents list using the same per-item rendering as
+        # drive_agent.list_files / calendar_agent.list_events.
+        #
+        # `count_key` is omitted — the impl doesn't set a `count` field;
+        # `_format_query_result` falls back to `len(items)` which is what
+        # we want here.
+        "type": "query",
+        "list_key": "documents",
+        "item_fields": ["name", "url", "modified"],
+        "link_fields": ["url"],
+        "noun_singular": "document",
+        "noun_plural": "documents",
+        "date_fields": ["modified"],
+        "empty_placeholders": {
+            "url": None,
+            "modified": None,
+        },
     },
     ("docs_agent", "extract_template_format"): {
         # Legacy template rendered the placeholder list as Python repr
@@ -1383,7 +1473,11 @@ def _format_action(template_def: dict, output: dict) -> str:
             if content_field and max_len and isinstance(out.get(content_field), str):
                 if len(out[content_field]) > max_len:
                     out[content_field] = out[content_field][:max_len] + "\n...[truncated]"
-            text = _safe_format(template_spec, out)
+            text = _safe_format(
+                template_spec,
+                out,
+                empty_placeholders=template_def.get("empty_placeholders"),
+            )
     else:
         text = "Action completed"
 

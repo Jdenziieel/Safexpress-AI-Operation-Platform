@@ -9,6 +9,49 @@ from googleapiclient.errors import HttpError
 from document_format_extractor import DocumentFormatExtractor
 from typing import Dict, Any, Optional
 
+# Cross-Lambda S3 transport for user uploads. Mirrors the helper in
+# mapping_agent_api.py / gmail-agent / drive-agent: the supervisor
+# stores user uploads in S3 (`temp-uploads/...` on `frontend-safexpress`)
+# and passes `file_path=s3://bucket/key` into tools that read local
+# files. `_read_file_content` (and indirectly `create_doc_with_content`
+# / `add_text_from_file`) calls `_resolve_to_local_path` first so the
+# subsequent `os.path.exists` / `pdfplumber.open` succeeds against a
+# real /tmp file on this container.
+try:
+    import boto3 as _boto3_mod
+    _s3_client = _boto3_mod.client("s3")
+except Exception as _boto_err:
+    _s3_client = None
+    print(f"[docs_agent] boto3 unavailable, S3 transport disabled: {_boto_err}")
+
+
+def _resolve_to_local_path(file_path: str) -> str:
+    """Download an `s3://bucket/key` URL to /tmp and return the local path.
+
+    Returns the input unchanged for non-S3 paths so tests / dev mode
+    that pass a raw local path still work. Returns "" on download
+    failure so the caller's `os.path.exists` flags the missing file.
+    """
+    if not isinstance(file_path, str) or not file_path.startswith("s3://"):
+        return file_path
+    if _s3_client is None:
+        print(f"[docs_agent] s3:// path provided but boto3 unavailable: {file_path}")
+        return ""
+    try:
+        without_scheme = file_path[len("s3://"):]
+        bucket, _, key = without_scheme.partition("/")
+        if not bucket or not key:
+            print(f"[docs_agent] malformed s3 url: {file_path}")
+            return ""
+        local_dir = "/tmp/docs_s3_in"
+        os.makedirs(local_dir, exist_ok=True)
+        local_path = os.path.join(local_dir, os.path.basename(key))
+        _s3_client.download_file(Bucket=bucket, Key=key, Filename=local_path)
+        return local_path
+    except Exception as e:
+        print(f"[docs_agent] S3 download failed for {file_path}: {e}")
+        return ""
+
 
 _DOC_URL_RE = re.compile(r"/document/d/([A-Za-z0-9_-]+)")
 _FILE_URL_RE = re.compile(r"/file/d/([A-Za-z0-9_-]+)")
@@ -1230,7 +1273,52 @@ def _create_from_template_and_data_ids_impl(
                         print(f" No data for [{placeholder}], leaving empty")
         
         print(f" Final placeholder mapping: {list(placeholder_values.keys())}")
-        
+
+        # Sanity check: detect when the data file is structurally identical
+        # to the template (every placeholder value is blank / whitespace /
+        # underscores / dashes only). Without this guard, a data file that
+        # is actually just an empty template clone — e.g.:
+        #   Date:____
+        #   Time:____
+        #   Department:____
+        #   Attendees:____
+        # would silently produce a "successful" doc with all-underscore
+        # values and the user would see no data appended despite a
+        # success message. This commonly fires when Drive's name-only
+        # search picks an empty template-copy that happens to share the
+        # name of the user's intended data file (see Bug O — the bogus
+        # `TestData123` polluted by an older single-source plan in the
+        # same Drive). Auto-filled DATE fields are excluded from the
+        # sentinel scan because a current-date value is real data.
+        import re as _re
+        _SENTINEL_PATTERN = _re.compile(r"^[\s_\-\.]*$")
+        non_autofilled = [p for p in placeholders if p not in ('DATE',)]
+        if non_autofilled:
+            sentinel_phs = [
+                p for p in non_autofilled
+                if _SENTINEL_PATTERN.match(str(placeholder_values.get(p, "") or ""))
+            ]
+            if len(sentinel_phs) == len(non_autofilled):
+                print(
+                    f" SANITY CHECK FAILED: every placeholder ({', '.join(sorted(sentinel_phs))}) "
+                    f"resolved to an empty / underscore value. Data file '{data_file_name}' "
+                    f"appears to be a template clone, not real data. Aborting."
+                )
+                return (
+                    f"Error: the data file '{data_file_name}' appears to be a template clone — "
+                    f"every placeholder ({', '.join(sorted(sentinel_phs))}) is blank or underscore-only "
+                    f"in the file's content. The merge would produce an empty document.\n\n"
+                    f"Common cause: Drive search returned a duplicate file with the same name as your "
+                    f"intended data file (e.g., a previous run that copied the template and saved it "
+                    f"under the data-file name). \n\n"
+                    f"To fix: \n"
+                    f"  1. Open Drive and confirm there is exactly ONE file named '{data_file_name}'. "
+                    f"If duplicates exist, delete or rename the empty one (it was likely placed in "
+                    f"the Templates folder).\n"
+                    f"  2. Make sure your real data file has actual values, e.g. "
+                    f"`Date: 2026-05-05`, `Time: 9:00 AM`, etc. — not just `Date:____`."
+                )
+
         # Step 4: Create document from template
         print(f" Creating document '{new_title}' from template...")
         result = extractor.create_from_template(
@@ -1376,6 +1464,8 @@ def _read_file_content(file_path: str) -> str:
     Raises ValueError for unsupported file types.
     """
     import os
+
+    file_path = _resolve_to_local_path(file_path)
 
     if not file_path or not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")

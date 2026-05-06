@@ -30,6 +30,13 @@ from smart_mapping_engine import (
 )
 
 
+_TEMPLATE_TOOLS = {
+    "save_mapping_template",
+    "load_mapping_template",
+    "list_mapping_templates",
+}
+
+
 def lambda_handler(event, context):
     body = json.loads(event["body"]) if isinstance(event.get("body"), str) else event
     tool = body.get("tool")
@@ -45,6 +52,14 @@ def lambda_handler(event, context):
     tool_info = TOOL_REGISTRY.get(tool)
     if not tool_info:
         return _err(400, f"Unknown tool: {tool}. Available: {list(TOOL_REGISTRY.keys())}")
+
+    # Forward user_id only into the 3 template tools — the others (parse_file,
+    # smart_column_mapping, etc.) are stateless and don't need it. Forwarding
+    # everywhere would force every tool signature to accept **kwargs which we
+    # explicitly avoid (see Bug E in system-architecture.mdc — silent kwarg
+    # drops are a documented failure mode).
+    if tool in _TEMPLATE_TOOLS and user_id and "user_id" not in inputs:
+        inputs["user_id"] = user_id
 
     set_quota_context(user_id=user_id, jwt=jwt, request_id=request_id)
     try:

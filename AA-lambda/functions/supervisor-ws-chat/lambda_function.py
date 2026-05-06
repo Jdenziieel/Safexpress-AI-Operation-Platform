@@ -252,6 +252,38 @@ async def _run_chat_flow(
         thread_id, 0, 0, "Analyzing your message...", status="analyzing"
     )
 
+    # === Auto-generate thread title on the FIRST real message ===
+    # supervisor-create-thread's "no initial_message" fast path (lines
+    # 89-117 in that file) creates the thread row with the default
+    # "New Conversation" title and skips title generation. The next
+    # path the user hits is here (sendAgentMessage WS), so this is the
+    # canonical place to backfill the title from the first message —
+    # otherwise every thread in the sidebar reads "New Conversation"
+    # forever (reported by user 2026-05-03 with two screenshots).
+    # Wrapped in try/except: a title-set failure must NEVER block chat.
+    #
+    # `generated_title` is captured at OUTER scope so we can ship it
+    # back on the final `complete` / `paused` push — without that,
+    # AIChatNew's sidebar would still show "New Conversation" until the
+    # next page-refresh fetches threads from DDB. Mirrors SFXBot's
+    # kb-lambda contract (`generated_title` field on the complete
+    # event), which is why SFXBot's sidebar live-updates and the AI
+    # Assistant's didn't (reported by user 2026-05-03 with screenshot).
+    generated_title: Optional[str] = None
+    try:
+        tm = conversational_agent.thread_service.thread_manager
+        meta = tm.get_thread(thread_id)
+        current_title = (getattr(meta, "title", "") or "").strip() if meta else ""
+        looks_default = current_title in ("", "New Conversation", "New Thread")
+        if looks_default and user_message and user_message.strip():
+            new_title = tm.auto_generate_title(user_message)
+            if new_title and new_title != current_title:
+                tm.update_thread(thread_id, title=new_title)
+                generated_title = new_title
+                print(f"[ws-chat] auto-titled thread {thread_id}: {new_title!r}")
+    except Exception as e:
+        print(f"[ws-chat] auto_generate_title failed (non-fatal): {e}")
+
     # process_message is sync; run in thread so the event loop stays free
     # to deliver WebSocket progress (matches source line 1677).
     response_text, conversation_state = await asyncio.to_thread(
@@ -315,6 +347,36 @@ async def _run_chat_flow(
 
     elapsed_ms = int((time.time() - started) * 1000)
 
+    # Flush quota reports BEFORE we tell the browser the workflow is done.
+    # Each LLM call inside the workflow submitted a fire-and-forget
+    # `_report_quota_usage()` future to a thread pool — the HTTP POST to
+    # /quota/report (which writes to UserQuotas) is in flight when we
+    # arrive here. If we push `complete` first and let the finally
+    # block flush, the browser's QuotaWidget refresh races and reads
+    # the OLD UserQuotas value. Bumping flush in front of the push
+    # gives the user a real-time-feeling sidebar (reported by user
+    # 2026-05-03: "Why is token quota widget not updating real time?").
+    # Cost: up to 3s of added latency on the WS round-trip — acceptable
+    # because the browser already shows the response text via the
+    # earlier broadcast_progress() / inline assistant message render;
+    # this only delays the "isStreaming = false" transition. The
+    # finally block still calls flush again as a safety net for any
+    # report submitted after this point (none today, but cheap insurance).
+    try:
+        from logging_config import flush_pending_quota_reports as _flush  # type: ignore
+
+        _flush(timeout=3.0)
+    except Exception as e:
+        print(f"[ws-chat] pre-push flush failed (non-fatal): {e}")
+
+    # Spread `generated_title` only when set so the WS payload stays
+    # tidy on follow-up turns (where the title was already user-set or
+    # already auto-generated). The frontend treats absence and `null`
+    # identically — "no title update for this push".
+    title_field: Dict[str, Any] = (
+        {"generated_title": generated_title} if generated_title else {}
+    )
+
     if paused and pending_action_id:
         _stash_connection_on_pending(pending_action_id, connection_id)
         _push(
@@ -326,6 +388,7 @@ async def _run_chat_flow(
                 conversation_state, "ready_for_execution", False
             ),
             elapsed_ms=elapsed_ms,
+            **title_field,
         )
         return
 
@@ -338,6 +401,7 @@ async def _run_chat_flow(
         ),
         status="success",
         elapsed_ms=elapsed_ms,
+        **title_field,
     )
 
 

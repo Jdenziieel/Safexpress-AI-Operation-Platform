@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Activity, Clock, CheckCircle, XCircle, AlertTriangle, RefreshCw,
   TrendingUp, TrendingDown, Server, Zap, BarChart3,
   Shield, DollarSign, Cpu, Edit3, Save, Calendar, AlertCircle,
-  Search, ChevronUp
+  Search, ChevronUp, FileText, MessageSquare, Bot
 } from 'lucide-react';
 import '../css/LogsPage.css';
-import { supervisorApi } from '../api';
+import { supervisorApi, kbApi } from '../api';
 
 // All requests below go through `supervisorApi` (axios instance in api.js)
 // which auto-attaches `Authorization: Bearer <JWT>` via its request
@@ -48,6 +48,31 @@ const TimePeriodSelector = ({ selectedPeriod, onPeriodChange }) => {
 };
 
 // =============================================================================
+// SHARED FORMATTERS
+// =============================================================================
+// Hoisted to module scope (was local to TokenCostTab) so the Performance
+// tab's KB Document/Chat Analytics blocks can render the same dollar-and-
+// token strings as the Token & Cost tab — keeps the two surfaces visually
+// consistent when admins switch tabs.
+const formatTokens = (t) => {
+  if (!t) return '0';
+  if (t >= 1_000_000) return `${(t / 1_000_000).toFixed(2)}M`;
+  if (t >= 1_000) return `${(t / 1_000).toFixed(1)}K`;
+  return t.toLocaleString();
+};
+
+const formatCost = (c) => {
+  if (!c) return '$0.00';
+  return `$${parseFloat(c).toFixed(4)}`;
+};
+
+const formatMs = (ms) => {
+  if (ms == null || ms === 0) return 'N/A';
+  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${Math.round(ms)}ms`;
+};
+
+// =============================================================================
 // STATS CARD COMPONENT
 // =============================================================================
 const StatsCard = ({ icon: Icon, title, value, subtitle, trend, trendDirection }) => (
@@ -74,23 +99,60 @@ const StatsCard = ({ icon: Icon, title, value, subtitle, trend, trendDirection }
 );
 
 // =============================================================================
-// USAGE TAB — Aggregated conversation/request counts
+// AI ASSISTANT ANALYTICS BLOCK
 // =============================================================================
-// Block of conversation-thread + request totals shown at the top of
-// the Performance tab.  Renamed from "Conversations" to "Conversation
-// Threads" because admins were reading "conversation" as a single
-// turn — but each row counts a UNIQUE thread_id (one user back-and-
-// forth = one thread regardless of how many messages it contains),
-// which is what the metric represents.
+// Block of conversation-thread + request totals from the AI Assistant
+// (supervisor-agent) surface.  Renamed from "Conversations" to
+// "Conversation Threads" because admins were reading "conversation" as
+// a single turn — but each row counts a UNIQUE thread_id (one user
+// back-and-forth = one thread regardless of how many messages it
+// contains), which is what the metric represents.
 //
-// The block stays as 3 fixed rolling windows (24h / 7d / 30d) on
-// purpose: those are operational SLOs (how many threads ran in the
-// last day vs. the last week) and admins want to compare them at a
-// glance.  The period selector at the top of the Admin Dashboard
-// drives the agent metrics BELOW this block, not these tiles — that
-// distinction is called out in the section subtitle so the user
-// doesn't expect the dropdown to change these numbers.
-const UsageBlock = ({ usageData, loading }) => {
+// Renamed again Mon-4-May from "Conversation Threads & Requests" to
+// "AI Assistant Analytics" so it parallels the "SFX Bot Chat
+// Analytics" + "Document Analytics" sections it now sits next to.
+// The page-level period selector still drives the window (1h/24h/
+// 7d/30d). The card subtitle keeps the explicit "Conversation
+// Threads" / "Requests" labels so admins still see what the two
+// numbers actually represent.
+//
+// As of Sun-3-May the block follows the period selector at the top of
+// the Admin Dashboard (was previously hard-coded to 24h/7d/30d side-
+// by-side, which left admins with 6 cards covering 3 windows and no
+// way to focus on the one they actually wanted). The selector emits
+// {1h, 24h, 7d, 30d}; the backend `/admin/usage/summary` only computes
+// {today (24h), this_week (7d), this_month (30d)}, so 1h falls back to
+// today with a small caveat in the subtitle (no separate 1h scan
+// today — the gain wouldn't be worth the table-scan cost).
+//
+// Position: moved Mon-4-May to render AFTER "SFX Bot Chat Analytics"
+// inside AgentPerformanceTab (was previously at the top above the
+// system-wide metrics). The new layout reads naturally as "system
+// metrics → KB document ingestion → SFX Bot end-user chat → AI
+// Assistant end-user chat", grouping the two end-user surfaces
+// together at the bottom.
+const PERIOD_TO_USAGE_KEY = {
+  '1h':  'today',
+  '24h': 'today',
+  '7d':  'this_week',
+  '30d': 'this_month',
+};
+
+const PERIOD_LABELS = {
+  '1h':  'last hour',
+  '24h': 'last 24 hours',
+  '7d':  'last 7 days',
+  '30d': 'last 30 days',
+};
+
+const PERIOD_ICONS = {
+  '1h':  Clock,
+  '24h': Clock,
+  '7d':  Calendar,
+  '30d': BarChart3,
+};
+
+const UsageBlock = ({ usageData, loading, timePeriod = '24h' }) => {
   if (loading) {
     return (
       <div className="token-tab-loading">
@@ -110,45 +172,45 @@ const UsageBlock = ({ usageData, loading }) => {
     );
   }
 
-  const periods = [
-    { key: 'today',      label: 'Today (24h)',     icon: Clock },
-    { key: 'this_week',  label: 'This Week (7d)',  icon: Calendar },
-    { key: 'this_month', label: 'This Month (30d)', icon: BarChart3 },
-  ];
+  const usageKey = PERIOD_TO_USAGE_KEY[timePeriod] || 'today';
+  const periodLabel = PERIOD_LABELS[timePeriod] || PERIOD_LABELS['24h'];
+  const Icon = PERIOD_ICONS[timePeriod] || Clock;
+  const d = usageData[usageKey] || {};
+  // 1h is a graceful-degradation case — backend has no per-hour
+  // bucket, so we show the 24h numbers and label them honestly.
+  // Any other selection matches the backend window exactly.
+  const isFallback = (timePeriod === '1h');
+  const cardLabel = isFallback ? 'last 24 hours' : periodLabel;
 
   return (
     <div className="usage-block">
-      <div className="services-header">
-        <h2><BarChart3 size={20} /> Conversation Threads &amp; Requests</h2>
+      <div className="services-header" style={{ marginTop: 40 }}>
+        <h2><BarChart3 size={20} /> AI Assistant Analytics</h2>
         <p>
-          Rolling totals across the last 24 hours, 7 days, and 30 days.
-          {' '}
-          <em style={{ color: '#94a3b8' }}>
-            (Independent of the period selector at the top &mdash; that
-            drives the agent metrics below.)
-          </em>
+          End-user AI Assistant chat activity for the <strong>{periodLabel}</strong>, driven by the period selector above.
+          {isFallback && (
+            <>
+              {' '}
+              <em style={{ color: '#94a3b8' }}>
+                (No per-hour window available &mdash; showing the 24h totals.)
+              </em>
+            </>
+          )}
         </p>
       </div>
       <div className="stats-grid" style={{ marginBottom: 32 }}>
-        {periods.map(p => {
-          const d = usageData[p.key] || {};
-          return (
-            <React.Fragment key={p.key}>
-              <StatsCard
-                icon={p.icon}
-                title={`Conversation Threads \u2014 ${p.label}`}
-                value={(d.conversations || 0).toLocaleString()}
-                subtitle="Unique threads (each is one user back-and-forth)"
-              />
-              <StatsCard
-                icon={Zap}
-                title={`Requests \u2014 ${p.label}`}
-                value={(d.requests || 0).toLocaleString()}
-                subtitle="Total user messages processed"
-              />
-            </React.Fragment>
-          );
-        })}
+        <StatsCard
+          icon={Icon}
+          title={`Conversation Threads \u2014 ${cardLabel}`}
+          value={(d.conversations || 0).toLocaleString()}
+          subtitle="Unique threads (each is one user back-and-forth)"
+        />
+        <StatsCard
+          icon={Zap}
+          title={`Requests \u2014 ${cardLabel}`}
+          value={(d.requests || 0).toLocaleString()}
+          subtitle="Total user messages processed"
+        />
       </div>
     </div>
   );
@@ -189,14 +251,15 @@ const BudgetBanner = ({ budget }) => {
 // =============================================================================
 // TOKEN USAGE + PRICING EDITOR + BUDGET TAB
 // =============================================================================
-const TokenCostTab = ({ tokenData, tokenLoading, pricingData, budgetData, onSaveRate, onSaveBudget }) => {
+// `budgetData` is still passed in (read-only) so the BudgetBanner at
+// the top of this tab can render warn/over-budget states. The editor
+// itself moved to the Token Management page (QuotaPage) on 2026-05-04
+// — see the comment around `<BudgetBanner>` below.
+const TokenCostTab = ({ tokenData, tokenLoading, pricingData, budgetData, onSaveRate }) => {
   const [editingModel, setEditingModel] = useState(null);
   const [editInputRate, setEditInputRate] = useState('');
   const [editOutputRate, setEditOutputRate] = useState('');
-  const [budgetInput, setBudgetInput] = useState('');
-  const [thresholdInput, setThresholdInput] = useState('');
   const [savingRate, setSavingRate] = useState(false);
-  const [savingBudget, setSavingBudget] = useState(false);
   // Model pricing table — search + pagination. The full pricing
   // table now spans 20+ models (gpt-4 / gpt-4o / gpt-4.1 / gpt-5.x /
   // o1 / o3 / o4 families) so a single scroll-forever list became
@@ -205,13 +268,6 @@ const TokenCostTab = ({ tokenData, tokenLoading, pricingData, budgetData, onSave
   const [pricingSearch, setPricingSearch] = useState('');
   const [pricingPage, setPricingPage] = useState(1);
   const PRICING_PAGE_SIZE = 8;
-
-  useEffect(() => {
-    if (budgetData) {
-      if (budgetData.monthly_budget_usd != null) setBudgetInput(String(budgetData.monthly_budget_usd));
-      if (budgetData.alert_threshold_pct != null) setThresholdInput(String(budgetData.alert_threshold_pct));
-    }
-  }, [budgetData]);
 
   const startEditing = (model) => {
     setEditingModel(model.model);
@@ -231,29 +287,6 @@ const TokenCostTab = ({ tokenData, tokenLoading, pricingData, budgetData, onSave
     await onSaveRate(modelName, inputRate, outputRate);
     setSavingRate(false);
     setEditingModel(null);
-  };
-
-  const handleSaveBudget = async () => {
-    const body = {};
-    const b = parseFloat(budgetInput);
-    const t = parseFloat(thresholdInput);
-    if (!isNaN(b)) body.monthly_budget_usd = b;
-    if (!isNaN(t)) body.alert_threshold_pct = t;
-    setSavingBudget(true);
-    await onSaveBudget(body);
-    setSavingBudget(false);
-  };
-
-  const formatTokens = (t) => {
-    if (!t) return '0';
-    if (t >= 1_000_000) return `${(t / 1_000_000).toFixed(2)}M`;
-    if (t >= 1_000) return `${(t / 1_000).toFixed(1)}K`;
-    return t.toLocaleString();
-  };
-
-  const formatCost = (c) => {
-    if (!c) return '$0.00';
-    return `$${parseFloat(c).toFixed(4)}`;
   };
 
   // Token summary from existing /logs/stats
@@ -313,6 +346,45 @@ const TokenCostTab = ({ tokenData, tokenLoading, pricingData, budgetData, onSave
     return models.filter((m) => (m.model || '').toLowerCase().includes(q));
   }, [models, pricingSearch]);
 
+  // Input / Output cost split for the "Estimated Cost" card subtitle.
+  // The backend stores total estimated_cost_usd per row but does NOT
+  // break it down by direction (the column was added before per-direction
+  // pricing existed). Compute it client-side from the per-model breakdown:
+  // if the model is in the pricing table, use its real input_rate_per_1k
+  // and output_rate_per_1k; if it isn't (e.g. a model that was used once
+  // and later removed from pricing), fall back to allocating its cost
+  // proportionally by token count so the two halves always sum back to
+  // the headline total. Empty / no-token rows are skipped to avoid
+  // divide-by-zero.
+  const costSplit = useMemo(() => {
+    const rateLookup = new Map(
+      models.map((m) => [
+        (m.model || '').toLowerCase(),
+        {
+          input: parseFloat(m.input_rate_per_1k) || 0,
+          output: parseFloat(m.output_rate_per_1k) || 0,
+        },
+      ])
+    );
+    let inputCost = 0;
+    let outputCost = 0;
+    for (const row of byModel) {
+      const inputTokens = parseInt(row.input_tokens || 0, 10) || 0;
+      const outputTokens = parseInt(row.output_tokens || 0, 10) || 0;
+      const rowCost = parseFloat(row.cost_usd || 0) || 0;
+      const rates = rateLookup.get((row.model || '').toLowerCase());
+      if (rates && (rates.input > 0 || rates.output > 0)) {
+        inputCost += (inputTokens / 1000) * rates.input;
+        outputCost += (outputTokens / 1000) * rates.output;
+      } else if (inputTokens + outputTokens > 0) {
+        const inShare = inputTokens / (inputTokens + outputTokens);
+        inputCost += rowCost * inShare;
+        outputCost += rowCost * (1 - inShare);
+      }
+    }
+    return { inputCost, outputCost };
+  }, [byModel, models]);
+
   const pricingTotalPages = Math.max(1, Math.ceil(filteredModels.length / PRICING_PAGE_SIZE));
   // Clamp current page when filter shrinks the list below the current page.
   const safePricingPage = Math.min(pricingPage, pricingTotalPages);
@@ -321,53 +393,13 @@ const TokenCostTab = ({ tokenData, tokenLoading, pricingData, budgetData, onSave
 
   return (
     <div className="token-usage-tab">
-      {/* Budget Banner */}
+      {/* Budget Banner — read-only on this page. The Monthly Budget
+          editor was moved to the Token Management page (QuotaPage)
+          on 2026-05-04 per user request so saving a budget produces an
+          audit row in the Admin Actions panel there. The banner stays
+          on the Admin Dashboard so a sudden warn/over-budget state is
+          still visible to anyone landing on this page. */}
       <BudgetBanner budget={budgetData} />
-
-      {/* Budget Controls */}
-      <div className="token-section">
-        <h2><DollarSign size={20} /> Monthly Budget</h2>
-        <div className="budget-controls">
-          <div className="budget-field">
-            <label>Monthly Budget (USD)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={budgetInput}
-              onChange={(e) => setBudgetInput(e.target.value)}
-              placeholder="e.g. 50.00"
-              className="budget-input"
-            />
-          </div>
-          <div className="budget-field">
-            <label>Alert Threshold (%)</label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              step="1"
-              value={thresholdInput}
-              onChange={(e) => setThresholdInput(e.target.value)}
-              placeholder="80"
-              className="budget-input"
-            />
-          </div>
-          <button
-            className="refresh-btn"
-            onClick={handleSaveBudget}
-            disabled={savingBudget}
-            style={{ alignSelf: 'flex-end' }}
-          >
-            <Save size={16} />
-            {savingBudget ? 'Saving...' : 'Save Budget'}
-          </button>
-          <div className="budget-spend">
-            <span className="budget-spend-label">Current Month Spend</span>
-            <span className="budget-spend-value">{formatCost(budgetData?.current_month_cost_usd)}</span>
-          </div>
-        </div>
-      </div>
 
       {/* Token Stats */}
       {tokenLoading ? (
@@ -380,7 +412,7 @@ const TokenCostTab = ({ tokenData, tokenLoading, pricingData, budgetData, onSave
           <div className="stats-grid">
             <StatsCard icon={Cpu} title="Total LLM Calls" value={(totals.total_calls || 0).toLocaleString()} subtitle={`${totals.successful_calls || 0} succeeded, ${totals.failed_calls || 0} failed`} />
             <StatsCard icon={Zap} title="Total Tokens" value={formatTokens(totals.total_tokens)} subtitle={`In: ${formatTokens(totals.total_input_tokens)} / Out: ${formatTokens(totals.total_output_tokens)}`} />
-            <StatsCard icon={DollarSign} title="Estimated Cost" value={formatCost(totals.total_cost_usd)} subtitle="Based on model pricing" />
+            <StatsCard icon={DollarSign} title="Estimated Cost" value={formatCost(totals.total_cost_usd)} subtitle={`In: ${formatCost(costSplit.inputCost)} / Out: ${formatCost(costSplit.outputCost)}`} />
             <StatsCard icon={Clock} title="Avg Latency" value={totals.avg_duration_ms ? `${(totals.avg_duration_ms / 1000).toFixed(2)}s` : 'N/A'} subtitle="Per LLM call" />
           </div>
 
@@ -616,7 +648,7 @@ const TokenCostTab = ({ tokenData, tokenLoading, pricingData, budgetData, onSave
 // =============================================================================
 // AGENT PERFORMANCE TAB (with system avg response time)
 // =============================================================================
-const AgentPerformanceTab = ({ metricsData, loading, timePeriod, internalMetrics, usageData, usageLoading }) => {
+const AgentPerformanceTab = ({ metricsData, loading, timePeriod, internalMetrics, usageData, usageLoading, kbStatsData, kbStatsLoading }) => {
   // Note: only the agent-metrics block is gated on `loading`. The
   // Conversation Threads block at the top has its own loading state
   // (via UsageBlock) so admins still see usage stats while the
@@ -626,11 +658,19 @@ const AgentPerformanceTab = ({ metricsData, loading, timePeriod, internalMetrics
   const agents = metricsData?.agents || {};
   const agentKeys = Object.keys(agents);
 
-  const formatMs = (ms) => {
-    if (ms == null || ms === 0) return 'N/A';
-    if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
-    return `${Math.round(ms)}ms`;
-  };
+  // KB analytics — pulled from /api/kb-admin/stats (kb-lambda
+  // admin_stats). Doc + chat stats refresh on the same period selector
+  // as everything else on the page so admins see "what happened in the
+  // last 24h / 7d / 30d" across both surfaces (AI Assistant + SFX Bot)
+  // in one place.
+  const kbDocs = kbStatsData?.documents || {};
+  const kbChat = kbStatsData?.chat || {};
+  const hasKbDocData =
+    (kbDocs.processed || 0) > 0 ||
+    (kbDocs.tokens || 0) > 0 ||
+    (kbDocs.failed || 0) > 0;
+  const hasKbChatData =
+    (kbChat.sessions || 0) > 0 || (kbChat.messages || 0) > 0;
 
   const getAgentDisplayName = (name) => {
     const nameMap = {
@@ -653,15 +693,6 @@ const AgentPerformanceTab = ({ metricsData, loading, timePeriod, internalMetrics
 
   return (
     <div className="agent-performance-tab">
-      {/* ── Usage block (the standalone "Usage" tab used to live here).
-            Promoted to the top of Performance per Sun-3-May feedback:
-            "nothing but usage is in the USAGE page" — having it as its
-            own tab created a click + an empty-feeling page.  The block
-            uses fixed rolling windows (Today / Week / Month) and
-            ignores the period selector on purpose, see UsageBlock for
-            rationale. */}
-      <UsageBlock usageData={usageData} loading={usageLoading} />
-
       {loading ? (
         <div className="token-tab-loading">
           <RefreshCw size={24} className="spin" />
@@ -789,6 +820,117 @@ const AgentPerformanceTab = ({ metricsData, loading, timePeriod, internalMetrics
           </div>
         </>
       )}
+
+      {/* ── Knowledge-base analytics ────────────────────────────────
+            Document + chat performance for the SFX Bot side of the
+            stack.  Token + cost numbers ALSO appear (de-duped) on the
+            Token & Cost tab via the UsageLogs merge in
+            dynamodb_log_storage.get_token_usage_stats.  Sourced from
+            kb-lambda's /api/kb-admin/stats endpoint.  Two separate
+            cards (one per surface) so admins can read each story
+            without one drowning the other. */}
+      <div className="services-header" style={{ marginTop: 40 }}>
+        <h2><FileText size={20} /> Document Analytics</h2>
+        <p>PDF ingestion + parse activity for the knowledge base ({PERIOD_LABELS[timePeriod] || timePeriod})</p>
+      </div>
+      {kbStatsLoading ? (
+        <div className="token-tab-loading">
+          <RefreshCw size={24} className="spin" />
+          <span>Loading document analytics...</span>
+        </div>
+      ) : hasKbDocData ? (
+        <div className="stats-grid" style={{ marginBottom: 32 }}>
+          <StatsCard
+            icon={FileText}
+            title="Documents Processed"
+            value={(kbDocs.processed || 0).toLocaleString()}
+            subtitle={`${kbDocs.successful || 0} succeeded, ${kbDocs.failed || 0} failed`}
+          />
+          <StatsCard
+            icon={BarChart3}
+            title="Chunks Created"
+            value={(kbDocs.chunks_created || 0).toLocaleString()}
+            subtitle="Indexed in Weaviate"
+          />
+          <StatsCard
+            icon={Zap}
+            title="Ingestion Tokens"
+            value={formatTokens(kbDocs.tokens || 0)}
+            subtitle={`Cost: ${formatCost(kbDocs.cost_usd || 0)}`}
+          />
+          <StatsCard
+            icon={Clock}
+            title="Avg Parse Time"
+            value={formatMs(kbDocs.avg_processing_time_ms)}
+            subtitle={`Success rate: ${(kbDocs.success_rate || 0).toFixed(1)}%`}
+          />
+        </div>
+      ) : (
+        <div className="no-data" style={{ marginBottom: 32 }}>
+          <FileText size={48} />
+          <p>No document ingestion in this period</p>
+          <span>Stats appear once admins upload PDFs to the knowledge base</span>
+        </div>
+      )}
+
+      <div className="services-header">
+        <h2><Bot size={20} /> SFX Bot Chat Analytics</h2>
+        <p>End-user RAG chat activity ({PERIOD_LABELS[timePeriod] || timePeriod})</p>
+      </div>
+      {kbStatsLoading ? (
+        <div className="token-tab-loading">
+          <RefreshCw size={24} className="spin" />
+          <span>Loading chat analytics...</span>
+        </div>
+      ) : hasKbChatData ? (
+        <div className="stats-grid">
+          <StatsCard
+            icon={MessageSquare}
+            title="Chat Sessions"
+            value={(kbChat.sessions || 0).toLocaleString()}
+            subtitle="Distinct conversations"
+          />
+          <StatsCard
+            icon={Activity}
+            title="Messages Exchanged"
+            value={(kbChat.messages || 0).toLocaleString()}
+            subtitle={
+              kbChat.sessions
+                ? `${(kbChat.messages / kbChat.sessions).toFixed(1)} avg per session`
+                : 'Across all sessions'
+            }
+          />
+          <StatsCard
+            icon={Zap}
+            title="Chat Tokens"
+            value={formatTokens(kbChat.tokens || 0)}
+            subtitle={`Cost: ${formatCost(kbChat.cost_usd || 0)}`}
+          />
+          <StatsCard
+            icon={Clock}
+            title="Avg Response Time"
+            value={formatMs(kbChat.avg_response_time_ms)}
+            subtitle="Per assistant reply"
+          />
+        </div>
+      ) : (
+        <div className="no-data">
+          <Bot size={48} />
+          <p>No SFX Bot chat activity in this period</p>
+          <span>Stats appear once users start asking questions of the bot</span>
+        </div>
+      )}
+
+      {/* ── AI Assistant Analytics ──────────────────────────────────
+            Conversation-thread + request totals from the AI Assistant
+            (supervisor-agent) surface. Placed AFTER "SFX Bot Chat
+            Analytics" so the two end-user chat surfaces sit side by
+            side at the bottom — Document Analytics (KB ingestion) →
+            SFX Bot Chat (KB end-user) → AI Assistant Analytics
+            (supervisor end-user).  Driven by the same `timePeriod`
+            selector at the top of the page; see UsageBlock for the
+            period-key mapping and the 1h fallback. */}
+      <UsageBlock usageData={usageData} loading={usageLoading} timePeriod={timePeriod} />
         </>
       )}
     </div>
@@ -821,8 +963,67 @@ const LogsPage = () => {
   const [metricsData, setMetricsData] = useState(null);
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [internalMetrics, setInternalMetrics] = useState(null);
+  // Knowledge-base stats — drives the "Document Analytics" + "SFX Bot Chat
+  // Analytics" sections inside the Performance tab.  Data shape matches
+  // kb-lambda/functions/admin_stats.get_combined_stats_handler:
+  //   { period, documents: {processed,chunks_created,tokens,cost_usd,
+  //       success_rate,successful,failed,avg_processing_time_ms},
+  //     chat:      {sessions,messages,tokens,cost_usd,
+  //       avg_response_time_ms},
+  //     totals:    {tokens,cost_usd} }
+  // Token+cost numbers ALSO appear (de-duped via the UsageLogs merge in
+  // dynamodb_log_storage.get_token_usage_stats) on the Token & Cost tab,
+  // so the two surfaces tell the same story from different angles:
+  // Performance = "what's the KB doing", Token & Cost = "what does it
+  // cost in dollars across every model and tier".
+  const [kbStatsData, setKbStatsData] = useState(null);
+  const [kbStatsLoading, setKbStatsLoading] = useState(false);
 
-  const refreshIntervalRef = useRef(null);
+  // Welcome line in the page header. Mirrors the pattern from
+  // Dashboard.jsx (the existing user-facing landing page) so the
+  // admin lands on a familiar greeting instead of a generic
+  // "Usage, costs, and agent performance for your AI assistant"
+  // subtitle that misrepresented the page (it covers KB ingestion +
+  // SFX Bot chat too, not just the AI Assistant). Falls back to
+  // "Admin" if localStorage.user is unparseable so the header
+  // never renders an empty span.
+  const [welcomeUser, setWelcomeUser] = useState({
+    name: 'Admin',
+    lastLogin: new Date().toLocaleString('en-US', {
+      month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
+    }),
+  });
+
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (!storedUser) return;
+      const userData = JSON.parse(storedUser);
+      // Priority match Dashboard.jsx: full Google `name` (first +
+      // middle), then `first_name`, then `username`. Two-word
+      // truncation so admins with long names don't blow out the
+      // header layout.
+      let displayName = 'Admin';
+      if (userData.name) {
+        const parts = userData.name.trim().split(/\s+/);
+        displayName = parts.length >= 2 ? `${parts[0]} ${parts[1]}` : parts[0];
+      } else if (userData.first_name) {
+        displayName = userData.first_name;
+      } else if (userData.username) {
+        displayName = userData.username;
+      }
+      setWelcomeUser((prev) => ({ ...prev, name: displayName }));
+    } catch (err) {
+      console.error('Error loading user info for LogsPage header:', err);
+    }
+  }, []);
+
+  // refreshIntervalRef used to drive a 30s polling loop here. Removed
+  // Sun-3-May per user feedback: "It keeps on reloading or something"
+  // — the silent refresh every 30 seconds rerendered the KPI tiles,
+  // re-paged the pricing table, and made the page feel jittery.
+  // Refresh is now manual only via the header button (which is always
+  // available + shows a spinning icon while in flight).
 
   // ── Data fetching ──
 
@@ -886,6 +1087,23 @@ const LogsPage = () => {
     }
   }, [timePeriod]);
 
+  // KB admin stats — separate API gateway (kbApi) because the
+  // knowledge-base service has its own gateway. Failure to fetch is
+  // non-fatal: the Performance tab degrades gracefully to "no KB data
+  // for this period" rather than blocking the supervisor sections.
+  const fetchKbStats = useCallback(async () => {
+    setKbStatsLoading(true);
+    try {
+      const res = await kbApi.get('/api/kb-admin/stats', { params: { period: timePeriod } });
+      setKbStatsData(res.data);
+    } catch (err) {
+      console.error('Error fetching KB admin stats:', err.response?.status, err);
+      setKbStatsData(null);
+    } finally {
+      setKbStatsLoading(false);
+    }
+  }, [timePeriod]);
+
   // ── Save handlers ──
 
   const handleSaveRate = async (model, inputRate, outputRate) => {
@@ -901,15 +1119,12 @@ const LogsPage = () => {
     }
   };
 
-  const handleSaveBudget = async (body) => {
-    try {
-      const res = await supervisorApi.put('/admin/settings/budget', body);
-      setBudgetData(res.data);
-    } catch (err) {
-      console.error('Error saving budget:', err.response?.status, err.response?.data ?? err);
-      setError('Failed to save budget. Please try again.');
-    }
-  };
+  // The budget save handler used to live here; it moved to
+  // QuotaPage.jsx along with the editor on 2026-05-04. We still
+  // fetch the budget here so the BudgetBanner at the top of the
+  // Token & Cost tab can render warn/over-budget states — admins
+  // landing on the Admin Dashboard see the same alert UI as on the
+  // Token Management page without an extra navigation step.
 
   // ── Refresh all ──
 
@@ -923,6 +1138,7 @@ const LogsPage = () => {
         fetchBudget(),
         fetchMetrics(),
         fetchInternalMetrics(),
+        fetchKbStats(),
       ]);
       setError(null);
     } catch (err) {
@@ -932,23 +1148,27 @@ const LogsPage = () => {
       setIsRefreshing(false);
       setLoading(false);
     }
-  }, [fetchUsageSummary, fetchTokenStats, fetchPricing, fetchBudget, fetchMetrics, fetchInternalMetrics]);
+  }, [fetchUsageSummary, fetchTokenStats, fetchPricing, fetchBudget, fetchMetrics, fetchInternalMetrics, fetchKbStats]);
 
   // ── Effects ──
 
-  useEffect(() => {
-    refreshAllData();
-    refreshIntervalRef.current = setInterval(refreshAllData, 30000);
-    return () => {
-      if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current);
-    };
-  }, [refreshAllData]);
+  // Initial load only. We deliberately disable the eslint deps warning
+  // here: `refreshAllData` IS in the dependency array, but it is wrapped
+  // in useCallback whose deps include `timePeriod` (via fetchTokenStats /
+  // fetchMetrics / fetchInternalMetrics). If we let this effect re-run on
+  // `refreshAllData` change, every time the user picks a new period the
+  // page would also re-fetch the period-INVARIANT calls (usage summary,
+  // pricing, budget) which is wasteful — the second useEffect below
+  // already handles the period-DEPENDENT refetch. So we mount-once.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { refreshAllData(); }, []);
 
   useEffect(() => {
     fetchTokenStats();
     fetchMetrics();
     fetchInternalMetrics();
-  }, [timePeriod, fetchTokenStats, fetchMetrics, fetchInternalMetrics]);
+    fetchKbStats();
+  }, [timePeriod, fetchTokenStats, fetchMetrics, fetchInternalMetrics, fetchKbStats]);
 
   // ── Render ──
 
@@ -972,8 +1192,19 @@ const LogsPage = () => {
             <Shield size={28} />
             Admin Dashboard
           </h1>
-          <p className="header-subtitle">
-            Usage, costs, and agent performance for your AI assistant
+          {/* Welcome line replaces the old "Usage, costs, and agent
+              performance for your AI assistant" subtitle (which
+              misdescribed the page — it covers KB ingestion + SFX
+              Bot chat in addition to the AI Assistant). Mirrors the
+              Dashboard.jsx welcome-title pattern so admins land on
+              a familiar greeting. The strong tags inherit
+              header-subtitle's color but render bold, matching the
+              Dashboard.jsx Last Login line exactly. */}
+          <p className="header-subtitle logs-welcome-line">
+            Welcome, <strong>{welcomeUser.name}</strong>
+          </p>
+          <p className="header-subtitle logs-last-login">
+            Last Login: <strong>{welcomeUser.lastLogin}</strong>
           </p>
         </div>
         <div className="header-actions">
@@ -1027,7 +1258,6 @@ const LogsPage = () => {
             pricingData={pricingData}
             budgetData={budgetData}
             onSaveRate={handleSaveRate}
-            onSaveBudget={handleSaveBudget}
           />
         )}
 
@@ -1039,6 +1269,8 @@ const LogsPage = () => {
             internalMetrics={internalMetrics}
             usageData={usageData}
             usageLoading={!usageData && loading}
+            kbStatsData={kbStatsData}
+            kbStatsLoading={kbStatsLoading}
           />
         )}
       </div>

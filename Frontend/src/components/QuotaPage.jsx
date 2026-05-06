@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, UserX, Search, Filter, Edit2, Trash2, RotateCcw, RefreshCw,
-  Activity, X, TrendingUp, AlertCircle, Clock, BarChart3
+  Activity, X, TrendingUp, AlertCircle, AlertTriangle, Clock, BarChart3,
+  Bot, DollarSign, Save
 } from 'lucide-react';
-import { isAdmin as checkIsAdmin, getUserFromToken, isAuthenticated } from '../utils/tokenManager';
-import { quotaApi } from '../api';
+import { isAdmin as checkIsAdmin, getUserFromToken, getUserUUID, isAuthenticated } from '../utils/tokenManager';
+import { quotaApi, supervisorApi } from '../api';
+import { dispatchQuotaRefresh } from '../hooks/useWebSocketQuota';
 import '../css/QuotaPage.css';
 
 const ActionButton = ({ icon: Icon, children, className = '', ...props }) => (
@@ -39,6 +41,201 @@ const TIER_CONFIG = {
   free: { limit: 100000, color: '#6b7280', label: 'Free' },
   pro: { limit: 1000000, color: '#6366f1', label: 'Pro' },
   enterprise: { limit: 10000000, color: '#f59e0b', label: 'Enterprise' }
+};
+
+// Compact USD formatter shared by the budget section. Mirrors what
+// LogsPage.formatCost does so the two pages render identical values
+// when an admin compares them. Prefer 4 decimal places for sub-$1
+// values (matches Token & Cost cells on the Admin Dashboard) and
+// fall back to "$0.00" for null/NaN so the UI never shows "undefined".
+const formatBudgetCost = (value) => {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return '$0.00';
+  return `$${num.toFixed(4)}`;
+};
+
+// =============================================================================
+// MONTHLY BUDGET — section component
+// =============================================================================
+//
+// Self-contained section with its own banner + editor. Mounted near the
+// top of the Token Management page (above User Quotas) so admins find
+// it before scrolling through the user table. Saving here is the ONLY
+// path that produces an "update_budget" row in the Admin Actions panel
+// below; the corresponding control on the Admin Dashboard (LogsPage)
+// was removed at the same time to avoid two-source-of-truth drift.
+//
+// Visual states (in priority order):
+//   1. budgetError       → red banner, replaces success indicator
+//   2. budget.over_budget → critical banner (>=100% spend)
+//   3. budget.alert_triggered → warning banner (>=alert_threshold_pct)
+//   4. budgetSavedAt set  → green "Saved" pill (auto-fades on next render)
+const BudgetSection = ({
+  budgetData,
+  budgetInput, setBudgetInput,
+  thresholdInput, setThresholdInput,
+  savingBudget, budgetError, budgetSavedAt, onSave,
+}) => {
+  const overBudget = !!budgetData?.over_budget;
+  const alertTriggered = !!budgetData?.alert_triggered;
+  const showSaved = !!budgetSavedAt && !budgetError && (Date.now() - budgetSavedAt < 4000);
+
+  return (
+    <div className="users-section budget-card-section" style={{ marginBottom: 24 }}>
+      <div className="users-header" style={{ alignItems: 'flex-start' }}>
+        <div>
+          <h2 className="section-title">
+            <DollarSign size={20} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+            Monthly Budget &amp; Alerts
+          </h2>
+          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.95rem' }}>
+            Set the platform-wide spend ceiling for the current month and the
+            percent at which an email alert is sent. Saved changes are recorded
+            in the Admin Actions panel below.
+          </p>
+        </div>
+      </div>
+
+      {/* Status banner — same color semantics as the Admin Dashboard
+          BudgetBanner so admins recognise the state at a glance. */}
+      {overBudget && (
+        <div className="quota-error-banner" style={{ background: '#fef2f2', borderColor: '#fecaca', color: '#991b1b', marginTop: 12 }}>
+          <AlertCircle size={18} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+          <span>
+            Over budget — spent {formatBudgetCost(budgetData?.current_month_cost_usd)}
+            {' of '}
+            {formatBudgetCost(budgetData?.monthly_budget_usd)}
+            {' ('}{budgetData?.pct_used ?? 0}%)
+          </span>
+        </div>
+      )}
+      {!overBudget && alertTriggered && (
+        <div className="quota-error-banner" style={{ background: '#fffbeb', borderColor: '#fde68a', color: '#92400e', marginTop: 12 }}>
+          <AlertTriangle size={18} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+          <span>
+            Budget warning — {budgetData?.pct_used ?? 0}% used
+            {' ('}{formatBudgetCost(budgetData?.current_month_cost_usd)}
+            {' of '}{formatBudgetCost(budgetData?.monthly_budget_usd)})
+          </span>
+        </div>
+      )}
+      {budgetError && (
+        <div className="quota-error-banner" style={{ marginTop: 12 }}>
+          <AlertCircle size={18} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+          <span>{budgetError}</span>
+        </div>
+      )}
+
+      {/* Editor — laid out horizontally on wide screens, wraps on narrow.
+          Inline styles keep this self-contained without touching
+          QuotaPage.css; if a future redesign needs richer styles we can
+          extract `.budget-controls` into the stylesheet then. */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 16,
+          alignItems: 'flex-end',
+          flexWrap: 'wrap',
+          padding: 20,
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: 8,
+          marginTop: 16,
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 180 }}>
+          <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: 600 }}>
+            Monthly Budget (USD)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={budgetInput}
+            onChange={(e) => setBudgetInput(e.target.value)}
+            placeholder="e.g. 50.00"
+            style={{
+              padding: '10px 12px',
+              border: '1px solid #cbd5e1',
+              borderRadius: 6,
+              fontSize: '0.95rem',
+            }}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 180 }}>
+          <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: 600 }}>
+            Alert Threshold (%)
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="1"
+            value={thresholdInput}
+            onChange={(e) => setThresholdInput(e.target.value)}
+            placeholder="80"
+            style={{
+              padding: '10px 12px',
+              border: '1px solid #cbd5e1',
+              borderRadius: 6,
+              fontSize: '0.95rem',
+            }}
+          />
+        </div>
+        <button
+          onClick={onSave}
+          disabled={savingBudget}
+          style={{
+            padding: '10px 18px',
+            background: savingBudget ? '#94a3b8' : '#26326e',
+            color: 'white',
+            border: 'none',
+            borderRadius: 6,
+            fontSize: '0.95rem',
+            fontWeight: 600,
+            cursor: savingBudget ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <Save size={16} />
+          {savingBudget ? 'Saving...' : 'Save Budget'}
+        </button>
+        {showSaved && (
+          <span
+            style={{
+              padding: '6px 12px',
+              background: '#dcfce7',
+              color: '#166534',
+              borderRadius: 999,
+              fontSize: '0.85rem',
+              fontWeight: 600,
+            }}
+          >
+            Saved — see Admin Actions below
+          </span>
+        )}
+        <div
+          style={{
+            marginLeft: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            gap: 4,
+            minWidth: 180,
+          }}
+        >
+          <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+            Current Month Spend
+          </span>
+          <span style={{ fontSize: '1.5rem', color: '#0f172a', fontWeight: 700 }}>
+            {formatBudgetCost(budgetData?.current_month_cost_usd)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 function QuotaPage() {
@@ -102,6 +299,20 @@ function QuotaPage() {
   // because the existing `/admin/summary` and `/admin/top-users`
   // endpoints take an `hours` query param. 720h = 30d default.
   const [platformWindowHours, setPlatformWindowHours] = useState(720);
+
+  // Monthly Budget — moved here from LogsPage (Admin Dashboard) per
+  // user request 2026-05-04. The same supervisor REST endpoint
+  // (PUT /admin/settings/budget on the supervisor API gateway, NOT
+  // quotaApi) backs both views, but Token Management is the canonical
+  // home now: saving here writes an audit row to QuotaAdminActions
+  // (via the budget-update Lambda) which the Admin Actions panel
+  // below picks up on refetch.
+  const [budgetData, setBudgetData] = useState(null);
+  const [budgetInput, setBudgetInput] = useState('');
+  const [thresholdInput, setThresholdInput] = useState('');
+  const [savingBudget, setSavingBudget] = useState(false);
+  const [budgetError, setBudgetError] = useState(null);
+  const [budgetSavedAt, setBudgetSavedAt] = useState(null);
 
   // Fetch all users (admin only)
   const fetchAllUsers = async () => {
@@ -185,6 +396,19 @@ function QuotaPage() {
     }
   };
 
+  // Fetch monthly budget — lives on the supervisor REST API (not the
+  // quota API gateway). Failure is non-fatal: the Token & Cost section
+  // below degrades to "loading" state and admins can still edit other
+  // pages.
+  const fetchBudget = async () => {
+    try {
+      const res = await supervisorApi.get('/admin/settings/budget');
+      setBudgetData(res.data);
+    } catch (err) {
+      console.error('Error fetching budget:', err.response?.status, err);
+    }
+  };
+
   // Refresh all data
   const refreshData = async () => {
     setLoading(true);
@@ -195,7 +419,8 @@ function QuotaPage() {
         fetchSummary(),
         fetchTopUsers(),
         fetchLogs(logsPage),
-        fetchAdminActions(adminActionsPage)
+        fetchAdminActions(adminActionsPage),
+        fetchBudget()
       ]);
     } catch (err) {
       setError('Failed to load data');
@@ -239,6 +464,58 @@ function QuotaPage() {
     }
   }, [showInactive]);
 
+  // Sync editable budget inputs whenever the server-side budget
+  // refreshes (initial fetch + post-save). Without this the two
+  // <input>s stay empty even though budgetData has values, which
+  // looks broken to admins.
+  useEffect(() => {
+    if (budgetData) {
+      if (budgetData.monthly_budget_usd != null) {
+        setBudgetInput(String(budgetData.monthly_budget_usd));
+      }
+      if (budgetData.alert_threshold_pct != null) {
+        setThresholdInput(String(budgetData.alert_threshold_pct));
+      }
+    }
+  }, [budgetData]);
+
+  // Save budget (PUT) → refresh both budget snapshot AND Admin
+  // Actions table so the audit row appears immediately. The Lambda
+  // (supervisor-admin-budget-update) writes to BOTH Sup_Logs and
+  // QuotaAdminActions — the latter is what the Admin Actions panel
+  // below reads from.
+  const handleSaveBudget = async () => {
+    const body = {};
+    const b = parseFloat(budgetInput);
+    const t = parseFloat(thresholdInput);
+    if (!isNaN(b)) body.monthly_budget_usd = b;
+    if (!isNaN(t)) body.alert_threshold_pct = t;
+    if (Object.keys(body).length === 0) {
+      setBudgetError('Enter a budget or threshold value to save.');
+      return;
+    }
+    setBudgetError(null);
+    setSavingBudget(true);
+    try {
+      const res = await supervisorApi.put('/admin/settings/budget', body);
+      setBudgetData(res.data);
+      setBudgetSavedAt(Date.now());
+      // Refetch the Admin Actions panel so the new audit row appears
+      // without requiring a full page refresh. Snap back to page 1
+      // because the new row is the most recent.
+      fetchAdminActions(1);
+    } catch (err) {
+      console.error('Error saving budget:', err.response?.status, err.response?.data ?? err);
+      setBudgetError(
+        err.response?.data?.error
+        || err.response?.data?.message
+        || 'Failed to save budget. Please try again.'
+      );
+    } finally {
+      setSavingBudget(false);
+    }
+  };
+
   // When the platform window changes (24h / 7d / 30d), refetch only the
   // two affected datasets — Users / Logs / Admin Actions don't depend
   // on this window so we don't pay for those scans again.
@@ -270,6 +547,18 @@ function QuotaPage() {
             : user
         )
       );
+      
+      // If the admin is editing their OWN row, the QuotaWidget mounted in
+      // the topbar is showing stale numbers (it only refreshes on chat
+      // completion or `quota:refresh` CustomEvents — see useWebSocketQuota.js).
+      // Push a refresh ping so the widget picks up the new tier/limit
+      // immediately. Other-user edits CANNOT be pushed cross-session
+      // from the frontend; that requires a backend WS push from
+      // quota-lambda → KB_WebSocketConnections (deferred — see message
+      // to user 2026-05-03).
+      if (String(userId) === String(getUserUUID())) {
+        dispatchQuotaRefresh('admin-self-tier-update');
+      }
       
       setEditingUser(null);
       setEditingField(null);
@@ -314,6 +603,12 @@ function QuotaPage() {
             : user
         )
       );
+      
+      // Self-edit → ping the topbar QuotaWidget. See handleUpdateTier
+      // for the full rationale.
+      if (String(userId) === String(getUserUUID())) {
+        dispatchQuotaRefresh('admin-self-limit-update');
+      }
       
       setEditingUser(null);
       setEditingField(null);
@@ -361,6 +656,11 @@ function QuotaPage() {
             : user
         )
       );
+      
+      // Self-edit → ping the topbar QuotaWidget. See handleUpdateTier.
+      if (String(userId) === String(getUserUUID())) {
+        dispatchQuotaRefresh('admin-self-reset-date-update');
+      }
       
       setEditingUser(null);
       setEditingField(null);
@@ -921,7 +1221,25 @@ function QuotaPage() {
           </div>
         )}
 
-
+        {/* Monthly Budget & Alerts (moved here from the Admin Dashboard
+            on 2026-05-04). Saving here triggers an audit row in
+            QuotaAdminActions which the Admin Actions panel below
+            reflects on its next refetch (handleSaveBudget calls
+            fetchAdminActions(1) immediately on success). The visual
+            alert banner mirrors the one on the Admin Dashboard so an
+            admin landing on either page sees the same warn/over-budget
+            state without needing to cross-navigate. */}
+        <BudgetSection
+          budgetData={budgetData}
+          budgetInput={budgetInput}
+          setBudgetInput={setBudgetInput}
+          thresholdInput={thresholdInput}
+          setThresholdInput={setThresholdInput}
+          savingBudget={savingBudget}
+          budgetError={budgetError}
+          budgetSavedAt={budgetSavedAt}
+          onSave={handleSaveBudget}
+        />
 
         {/* Users Table */}
         {users.length > 0 && (
@@ -2044,12 +2362,36 @@ const HISTORY_OPERATION_LABELS = {
   summarization:             'Summarization',
 };
 
+// Display labels for the `service` field on UsageLogs rows.
+//
+// The raw service tags come from quota-lambda/lambda_quota_report.py via the
+// SERVICE_NAME env on each Lambda OR an explicit `service` arg on the
+// /quota/report POST. Audited 2026-05-03:
+//   - supervisor               → AA-lambda/* default (env unset → fallback in
+//                                logging_config.py:342 → "supervisor")
+//   - knowledge-base           → kb-lambda/functions/ws_chat_stream
+//   - supervisor-agent-gmail   → agent-gmail Lambda (LLM signature pass on
+//                                outgoing emails — see api.py:109-143)
+//   - supervisor-agent-docs    → agent-docs Lambda (template understanding)
+//   - supervisor-agent-mapping → agent-mapping Lambda (smart_mapping_engine)
+//   - supervisor-agent-sheets/calendar/drive — env not set today, so they
+//                                report under "supervisor"; if you ever set
+//                                their SERVICE_NAME they'll appear here.
+//   - classifier               → reserved sub-tier of supervisor (currently
+//                                rolled into the parent)
+//   - system                   → period-reset audit rows (NOT real usage)
 const HISTORY_SERVICE_LABELS = {
   'knowledge-base': 'Knowledge Base',
   'knowledge_base': 'Knowledge Base',
   'classifier': 'Classifier',
   'system': 'Period Resets',
   'supervisor': 'AI Assistant',
+  'supervisor-agent-gmail':    'Gmail Agent',
+  'supervisor-agent-docs':     'Docs Agent',
+  'supervisor-agent-sheets':   'Sheets Agent',
+  'supervisor-agent-calendar': 'Calendar Agent',
+  'supervisor-agent-drive':    'Drive Agent',
+  'supervisor-agent-mapping':  'Mapping Agent',
 };
 
 // Centralised predicates so the modal and the Profile panel use the
@@ -2363,14 +2705,30 @@ const groupHistoryChatTurns = (logs) => {
 };
 
 // Service colour palette — used by the donut and the per-service legend.
-// Matches the existing tier / status palette in QuotaPage.css so the
-// modal feels native. Unknown services fall through to the last color.
+//
+// Picked so adjacent slices in the donut never share a hue (the previous
+// palette only declared 4 colors with `default` catching everything else,
+// which made AI Assistant + supervisor-agent-* slices indistinguishable —
+// reported by user 2026-05-03 with screenshot showing "AI Assist..." and
+// "supervisor..." rendering in nearly-identical slate gray).
+//
+// The brand navy (#26326e) is reserved for AI Assistant since it's the
+// primary surface; the agent-* family uses warmer / cooler accents that
+// stay legible against navy in the donut center label.
 const SERVICE_COLORS = {
-  'knowledge-base': '#6366f1',
-  'classifier':     '#10b981',
-  'system':         '#94a3b8',
-  'unknown':        '#f59e0b',
-  'default':        '#64748b',
+  'supervisor':                '#26326e',  // AI Assistant — brand navy
+  'knowledge-base':            '#6366f1',  // SFXBot — indigo
+  'knowledge_base':            '#6366f1',
+  'classifier':                '#10b981',  // green — sub-tier of supervisor
+  'supervisor-agent-gmail':    '#ef4444',  // red — Gmail's signature pass
+  'supervisor-agent-docs':     '#3b82f6',  // blue — Docs
+  'supervisor-agent-sheets':   '#22c55e',  // green — Sheets
+  'supervisor-agent-calendar': '#f97316',  // orange — Calendar
+  'supervisor-agent-drive':    '#eab308',  // amber — Drive
+  'supervisor-agent-mapping':  '#a855f7',  // purple — Mapping
+  'system':                    '#94a3b8',  // slate — audit/reset
+  'unknown':                   '#f59e0b',
+  'default':                   '#64748b',
 };
 
 const colorForService = (svc) => SERVICE_COLORS[svc] || SERVICE_COLORS.default;
@@ -2813,6 +3171,103 @@ function UserHistoryModal({ target, onClose }) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* AI Assistant activity — per-user mirror of the admin LogsPage
+              "Conversation Threads & Requests" block. Always rendered when
+              the new field is present so the section appears even at zero
+              counts (which is itself useful info: "this user never used
+              the AI Assistant in the last 30 days"). The 24h/7d/30d windows
+              are independent of the chart-window selector above — same
+              rolling totals discipline as the admin view. */}
+          {data?.ai_assistant_activity && (
+            <div className="history-ai-activity">
+              <div className="history-ai-activity-header">
+                <Activity size={14} /> AI Assistant activity
+                <span className="history-ai-activity-hint">
+                  · rolling totals for THIS user, independent of the window selector
+                </span>
+              </div>
+              <div className="history-ai-activity-grid">
+                {[
+                  { key: 'today',      label: 'Today (24h)' },
+                  { key: 'this_week',  label: 'This Week (7d)' },
+                  { key: 'this_month', label: 'This Month (30d)' },
+                ].map((p) => {
+                  const a = data.ai_assistant_activity[p.key] || {};
+                  return (
+                    <div key={p.key} className="history-ai-activity-tile">
+                      <div className="history-ai-activity-period">{p.label}</div>
+                      <div className="history-ai-activity-row">
+                        <span className="history-ai-activity-num">
+                          {(a.conversations || 0).toLocaleString()}
+                        </span>
+                        <span className="history-ai-activity-lbl">
+                          conversation{(a.conversations || 0) === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                      <div className="history-ai-activity-row">
+                        <span className="history-ai-activity-num">
+                          {(a.requests || 0).toLocaleString()}
+                        </span>
+                        <span className="history-ai-activity-lbl">
+                          request{(a.requests || 0) === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* SFXBot activity — exact same shape/layout as the AI Assistant
+              block above, just sourced from the `sfxbot_activity` field
+              (service=knowledge-base in UsageLogs). The `--sfxbot`
+              modifier shifts the icon + accent to indigo so the two
+              blocks read as related-but-distinct surfaces; the matching
+              indigo also lines up with the SFXBot pie-chart slice color
+              (SERVICE_COLORS['knowledge-base']) for consistency across
+              the page. */}
+          {data?.sfxbot_activity && (
+            <div className="history-ai-activity history-ai-activity--sfxbot">
+              <div className="history-ai-activity-header">
+                <Bot size={14} /> SFX Bot activity
+                <span className="history-ai-activity-hint">
+                  · rolling totals for THIS user, independent of the window selector
+                </span>
+              </div>
+              <div className="history-ai-activity-grid">
+                {[
+                  { key: 'today',      label: 'Today (24h)' },
+                  { key: 'this_week',  label: 'This Week (7d)' },
+                  { key: 'this_month', label: 'This Month (30d)' },
+                ].map((p) => {
+                  const a = data.sfxbot_activity[p.key] || {};
+                  return (
+                    <div key={p.key} className="history-ai-activity-tile">
+                      <div className="history-ai-activity-period">{p.label}</div>
+                      <div className="history-ai-activity-row">
+                        <span className="history-ai-activity-num">
+                          {(a.conversations || 0).toLocaleString()}
+                        </span>
+                        <span className="history-ai-activity-lbl">
+                          conversation{(a.conversations || 0) === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                      <div className="history-ai-activity-row">
+                        <span className="history-ai-activity-num">
+                          {(a.requests || 0).toLocaleString()}
+                        </span>
+                        <span className="history-ai-activity-lbl">
+                          request{(a.requests || 0) === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

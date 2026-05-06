@@ -230,6 +230,32 @@
   margin: 0;
 }
 
+/* Welcome + Last Login lines under the Admin Dashboard h1.
+   Mirrors Dashboard.jsx's welcome-title / welcome-last-login pair
+   but scaled for the smaller Admin header (28px h1 vs 2.4rem on
+   Dashboard.jsx). Tight vertical spacing so the two lines read as
+   a stacked unit, not two paragraphs. */
+.logs-welcome-line {
+  margin-top: 2px;
+  font-size: 15px;
+}
+
+.logs-welcome-line strong {
+  color: #26326e;
+  font-weight: 700;
+}
+
+.logs-last-login {
+  margin-top: 2px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.logs-last-login strong {
+  color: #6b7280;
+  font-weight: 600;
+}
+
 .header-actions {
   display: flex;
   align-items: center;

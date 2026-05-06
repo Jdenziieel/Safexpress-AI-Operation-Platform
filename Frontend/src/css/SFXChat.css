@@ -529,30 +529,27 @@
   justify-content: flex-start;
 }
 
-.message-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+/* Gemini-style assistant glyph for SFXBot — see AIChatNew.css for the
+   companion comment. The user-side avatar bubble was the prior chat's
+   single biggest "noise" element (32px solid navy circle on every user
+   row), so we drop it entirely. The assistant glyph is now a small
+   sparkle icon, not a filled circle, matching the AI-Assistant
+   surface so both bots speak the same visual language. */
+.message-glyph {
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.message.user .message-avatar {
-  background: #26326e;
-  color: white;
-  order: 2;
-  margin-left: 0.75rem;
-}
-
-.message.assistant .message-avatar {
-  background: #fcb117;
-  color: white;
   order: 1;
-  margin-right: 0.75rem;
+  margin-right: 0.6rem;
+  margin-top: 4px; /* visual baseline-align with first text line */
+  color: #26326e;
+}
+
+.message-glyph svg {
+  stroke: #26326e;
 }
 
 .message-content {

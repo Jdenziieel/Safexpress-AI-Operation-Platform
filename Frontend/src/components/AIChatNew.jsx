@@ -13,8 +13,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  User,
-  Bot,
   Menu,
   ListTodo,
   Paperclip,
@@ -35,7 +33,8 @@ import {
   X,
   Cpu,
   BarChart3,
-  AlertCircle
+  AlertCircle,
+  Square
 } from "lucide-react";
 import { getUserFromToken, getUserUUID } from "../utils/tokenManager";
 import "../css/AIChatNew.css";
@@ -44,6 +43,8 @@ import QuotaWidget from "./QuotaWidget";
 import QuotaExceededModal from "./QuotaExceededModal";
 import LLMErrorModal from "./LLMErrorModal";
 import useWebSocketAgent from "../hooks/useWebSocketAgent";
+import { dispatchQuotaRefresh } from "../hooks/useWebSocketQuota";
+import Swal from "sweetalert2";
 
 // Progress Step Component
 function ProgressStep({ step, isActive, isCompleted }) {
@@ -789,6 +790,25 @@ function AIChatNew() {
       applyAgentProgress(payload);
     });
 
+    // Live-update the sidebar when supervisor-ws-chat auto-titles the
+    // thread on its first real message. The supervisor sends
+    // `generated_title` on the FIRST `complete` / `paused` after the
+    // backfill (subsequent turns omit the field). Mirrors SFXBot's
+    // pattern — without this, AIChatNew's sidebar shows
+    // "New Conversation" until the next page refresh even though the
+    // DDB row was correctly updated. We key off `data.thread_id`
+    // (not the `threadId` closure) so a user who switched threads
+    // while the WS reply was in flight still sees the right thread
+    // get retitled.
+    const applyGeneratedTitle = (data) => {
+      const newTitle = data?.generated_title;
+      const targetThreadId = data?.thread_id;
+      if (!newTitle || !targetThreadId) return;
+      setThreads((prev) => prev.map((t) =>
+        t.thread_id === targetThreadId ? { ...t, title: newTitle } : t
+      ));
+    };
+
     agentWs.onPaused((data) => {
       // Workflow paused for HITL approval. The assistant message becomes
       // an explanatory placeholder; the actual approval prompt is fetched
@@ -802,8 +822,16 @@ function AIChatNew() {
       }
       setInlineProgress(null);
       setIsStreaming(false);
+      applyGeneratedTitle(data);
       // Pull the pending action so the existing approval UI picks it up.
       fetchPendingActions();
+      // Pause still consumes tokens for Tier 0/0.5/1 + planner before the
+      // pause point. The quota widget is on a SEPARATE WebSocket connection
+      // (useWebSocketQuota) so the supervisor's per-connection `paused`
+      // push only reaches the chat hook here — not the quota hook. Bridge
+      // the two via the shared `quota:refresh` CustomEvent so the sidebar
+      // KPI updates the moment the assistant pauses (mirrors SFXBot.jsx).
+      dispatchQuotaRefresh('ai-assistant-paused');
     });
 
     agentWs.onComplete((data) => {
@@ -817,6 +845,12 @@ function AIChatNew() {
       pendingAssistantIdRef.current = null;
       setInlineProgress(null);
       setIsStreaming(false);
+      applyGeneratedTitle(data);
+      // Same cross-hook bridge as the paused branch above. Without this
+      // the Token Usage widget stays stale until the next 2-minute
+      // fallback poll fires (or the user refreshes the page). Reported
+      // by user "Why is token quota widget not updating real time too?".
+      dispatchQuotaRefresh('ai-assistant-complete');
     });
 
     agentWs.onError((data) => {
@@ -1067,21 +1101,63 @@ function AIChatNew() {
 
   const handleDeleteThread = async (thread_id, e) => {
     e.stopPropagation();
-    
-    if (!confirm("Are you sure you want to delete this conversation?")) {
-      return;
-    }
-    
+
+    // Mirror SFXBot's `handleDeleteClick` styling so both surfaces feel
+    // consistent — same warning icon, same brand-navy cancel, same
+    // alarming-red confirm, same reverseButtons layout (cancel on the
+    // LEFT, destructive on the RIGHT). The native `confirm()` we used
+    // before was visually jarring against the rest of the app and
+    // failed accessibility heuristics on touch devices.
+    const thread = threads.find((t) => t.thread_id === thread_id);
+    const titleSnippet = thread?.title || `${thread_id.substring(0, 12)}…`;
+
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "Delete Conversation?",
+      html: `Are you sure you want to delete the conversation:<br><br><strong>"${titleSnippet}"</strong><br><br>This action cannot be undone.`,
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#26326e",
+      reverseButtons: true,
+      iconColor: "#fcb117",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await supervisorApi.delete(`/threads/${thread_id}`);
-      
       await fetchThreads();
-      
+
       if (thread_id === threadId) {
         await createNewThread();
       }
+
+      // Toast-style success that auto-dismisses — matches the
+      // post-delete confirmation in SFXBot but uses a less-intrusive
+      // toast variant since the sidebar already reflects the deletion
+      // visually (the row is gone). Heavier modal would feel redundant.
+      await Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Conversation deleted",
+        showConfirmButton: false,
+        timer: 2200,
+        timerProgressBar: true,
+      });
     } catch (error) {
       console.error("Error deleting thread:", error);
+      await Swal.fire({
+        icon: "error",
+        title: "Delete failed",
+        text:
+          error?.response?.data?.detail ||
+          error?.message ||
+          "An error occurred while deleting the conversation.",
+        confirmButtonColor: "#26326e",
+      });
     }
   };
 
@@ -1091,22 +1167,76 @@ function AIChatNew() {
     setEditingTitle(currentTitle || "");
   };
 
-  const handleRenameThread = async (thread_id) => {
+  // Set true while a PUT /threads/:id is in flight. Two distinct call
+  // sites can fire `handleRenameThread` for the SAME edit — the
+  // input's onKeyDown=Enter AND its onBlur (Enter blurs the input,
+  // which triggers blur, which would fire a second PUT). Without this
+  // guard you get duplicate API calls and a duplicate `await
+  // fetchThreads()`. The guard lets the first call own the save and
+  // the second one no-op, while still cleaning up the editing state
+  // exactly once.
+  const renamingRef = useRef(false);
+
+  const handleRenameThread = useCallback(async (thread_id) => {
+    if (renamingRef.current) return;
+    renamingRef.current = true;
+
     const trimmed = editingTitle.trim();
-    if (!trimmed) {
+    const original = threads.find((t) => t.thread_id === thread_id)?.title || "";
+
+    // Empty input or unchanged title → silent no-op (no PUT, no toast).
+    if (!trimmed || trimmed === original) {
       setEditingThreadId(null);
+      setEditingTitle("");
+      renamingRef.current = false;
       return;
     }
 
     try {
       await supervisorApi.put(`/threads/${thread_id}`, { title: trimmed });
-      await fetchThreads();
+      // Optimistic update — flip the local title immediately so the
+      // sidebar re-renders before the threads-fetch round-trip lands.
+      // Mirrors SFXBot's `handleSaveTitle` which does the same.
+      setThreads((prev) => prev.map((t) =>
+        t.thread_id === thread_id ? { ...t, title: trimmed } : t
+      ));
+      // Background refetch reconciles in case the backend normalized
+      // the title (trimmed whitespace, length cap, etc).
+      fetchThreads().catch(() => {});
     } catch (error) {
       console.error("Error renaming thread:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Rename failed",
+        text:
+          error?.response?.data?.detail ||
+          error?.message ||
+          "Could not rename the conversation. Please try again.",
+        confirmButtonColor: "#26326e",
+      });
     } finally {
       setEditingThreadId(null);
+      setEditingTitle("");
+      renamingRef.current = false;
     }
-  };
+  }, [editingTitle, threads]);
+
+  // Enter saves, Escape cancels — mirrors SFXBot's
+  // `handleTitleKeyDown`. preventDefault on Enter is important: some
+  // ancestor key handlers (e.g. textarea event delegation) would
+  // otherwise also see the keystroke.
+  const handleTitleKeyDown = useCallback((e, thread_id) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      handleRenameThread(thread_id);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      setEditingThreadId(null);
+      setEditingTitle("");
+    }
+  }, [handleRenameThread]);
 
   const loadOrCreateThread = async () => {
     setIsLoadingThread(true);
@@ -1347,6 +1477,14 @@ function AIChatNew() {
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     setAttachedFiles(prev => [...prev, ...files]);
+    // Clear the input value so picking the SAME file again (or re-picking a
+    // file the user just removed via the X chip) re-fires onChange. Without
+    // this reset, browsers suppress the change event when the new selection
+    // equals the previous one — which made the paperclip silently no-op
+    // until the user refreshed the page.
+    if (e.target) {
+      e.target.value = '';
+    }
   };
 
   const handleRemoveFile = (index) => {
@@ -1356,6 +1494,56 @@ function AIChatNew() {
   const handlePaperclipClick = () => {
     fileInputRef.current?.click();
   };
+
+  // Stop the in-flight supervisor run from the user's POV.
+  //
+  // The hook's `cancelStreaming()` flips a flag that swallows every
+  // post-cancel WS frame for this run; it deliberately does NOT close
+  // the socket (the AI Assistant uses one persistent WS across many
+  // messages — closing would force a fresh handshake on the next
+  // send). We then mirror that into local component state: stop the
+  // composer's "AI is thinking..." chrome, drop any in-progress
+  // assistant bubble that hasn't streamed any content yet, and stamp
+  // a "Stopped by user" marker on a half-streamed bubble so the user
+  // has a visual cue that the result they see is incomplete.
+  //
+  // Caveat documented at the hook: tool actions that already executed
+  // (sent emails, doc/calendar writes, drive moves) are NOT undone —
+  // there is no server-side cancel endpoint today. DANGEROUS-tier
+  // tools require explicit approval before executing so the blast
+  // radius is bounded; LLM-thinking and orchestrator-planning phases
+  // are the safe ones to stop and the common case for this button.
+  const handleStopStreaming = useCallback(() => {
+    try { agentWs.cancelStreaming(); } catch (_) { /* hook always defined */ }
+
+    const assistantId = pendingAssistantIdRef.current;
+    if (assistantId) {
+      setMessages((prev) => {
+        const target = prev.find((m) => m.id === assistantId);
+        if (!target) return prev;
+
+        const hasContent = (target.content || '').trim().length > 0;
+        if (!hasContent) {
+          // No streamed content yet — drop the empty placeholder so
+          // the user doesn't see a ghost "thinking..." bubble.
+          return prev.filter((m) => m.id !== assistantId);
+        }
+        // Some content already arrived — preserve it but mark as
+        // user-stopped so it's distinguishable from a clean finish.
+        return prev.map((m) =>
+          m.id === assistantId
+            ? { ...m, content: `${m.content}\n\n_⏹ Stopped by user._`, stopped: true }
+            : m
+        );
+      });
+    }
+
+    pendingAssistantIdRef.current = null;
+    setInlineProgress(null);
+    setExecutionProgress(null);
+    setProgressStartTime(null);
+    setIsStreaming(false);
+  }, [agentWs]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1870,13 +2058,11 @@ function AIChatNew() {
                           className="thread-title-input"
                           value={editingTitle}
                           onChange={(e) => setEditingTitle(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleRenameThread(thread.thread_id);
-                            if (e.key === "Escape") setEditingThreadId(null);
-                          }}
+                          onKeyDown={(e) => handleTitleKeyDown(e, thread.thread_id)}
                           onBlur={() => handleRenameThread(thread.thread_id)}
                           onClick={(e) => e.stopPropagation()}
                           autoFocus
+                          maxLength={200}
                         />
                       ) : (
                         <span className="thread-title-text">
@@ -2027,13 +2213,11 @@ function AIChatNew() {
                             key={message.id}
                             className={`chat-message ${message.role} ${message.error ? 'error' : ''} ${message.info ? 'info' : ''}`}
                           >
-                            <div className="chat-message-avatar">
-                              {message.role === "user" ? (
-                                <User size={20} />
-                              ) : (
-                                <Bot size={20} />
-                              )}
-                            </div>
+                            {message.role === "assistant" && (
+                              <div className="chat-message-glyph" aria-hidden="true">
+                                <Sparkles size={18} strokeWidth={1.75} />
+                              </div>
+                            )}
                             <div className="chat-message-content1">
                               {message.file_name && (
                                 <AttachmentBadge
@@ -2127,13 +2311,27 @@ function AIChatNew() {
                   disabled={isStreaming}
                   rows={1}
                 />
-                <button
-                  type="submit"
-                  disabled={isStreaming || !input.trim()}
-                  className="chat-composer-send"
-                >
-                  <Send size={22} />
-                </button>
+                {isStreaming ? (
+                  <button
+                    type="button"
+                    onClick={handleStopStreaming}
+                    className="chat-composer-send chat-composer-stop"
+                    title="Stop generating"
+                    aria-label="Stop generating"
+                  >
+                    <Square size={14} fill="currentColor" strokeWidth={0} />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!input.trim()}
+                    className="chat-composer-send"
+                    title="Send message"
+                    aria-label="Send message"
+                  >
+                    <Send size={18} />
+                  </button>
+                )}
               </div>
               <div className="chat-composer-footer">
                 <span>

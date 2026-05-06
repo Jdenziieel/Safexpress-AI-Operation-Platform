@@ -1,0 +1,600 @@
+1777964597034 START RequestId: 128cc68c-38ef-4aa3-8973-49b87040af54 Version: $LATEST
+1777964599894 DynamoDB thread manager initialized (region=ap-southeast-1)
+1777964599961 Workflow graph compiled (FULL WORKFLOW)
+1777964599961 Flow: supervisor → orchestrator → END
+1777964599961 Plans saved to: /tmp/agent_outputs/supervisor_plan.json
+1777964599961 Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+1777964600054 [ws-chat] auto-titled thread c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942: 'Can you use the template named MinutesOfMeetingTEM...'
+1777964600055 ══════════════════════════════════════════════════════════════════════
+1777964600055 NEW MESSAGE  |  thread: c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942
+1777964600055 ══════════════════════════════════════════════════════════════════════
+1777964600055 User: Can you use the template named MinutesOfMeetingTEMP and data doc named TestData123 and create a new doc out of it? Name ...
+1777964600055 ConversationState:
+1777964600055 extracted_info: {}
+1777964600055 missing_fields: []
+1777964600055 intent: null
+1777964600056 clarification_question: null
+1777964600056 ready_for_execution: false
+1777964600056 execution_summary: null
+1777964600056 execution_mode: "standard"
+1777964600056 execution_history: []
+1777964600056 completed_tasks: []
+1777964600056 has_executed: false
+1777964600056 last_executed_at: null
+1777964600056 last_execution_status: null
+1777964600056 last_execution_message: null
+1777964600056 executing: false
+1777964600056 pending_actions: []
+1777964600056 workflow_paused: false
+1777964600056 remaining_steps: []
+1777964600057 workflow_context: null
+1777964600057 disambiguation_options: []
+1777964600057 disambiguation_variable: null
+1777964600057 ══════════════════════════════════════════════════════════════════════
+1777964604743 ──────────────────────────────────────────────────
+1777964604743 TIER 0.5 — Building prompt
+1777964604743 ──────────────────────────────────────────────────
+1777964604743 bot_signal : (none)
+1777964604743 state_block: (none)
+1777964604743 file_context: (none)
+1777964604743 ──────────────────────────────────────────────────
+1777964607122 {"timestamp": "2026-05-05T07:03:27.122330Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_0.5_unified_check", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "tier_0.5_unified_check", "data": {"model": "gpt-4o-mini", "tier": "0.5", "input_tokens": 1012, "output_tokens": 43, "cached_tokens": 0, "total_tokens": 1055, "estimated_cost_usd": 0.000178, "duration_ms": 2250.29, "success": true, "prompt_summary": "Classifying: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 1055, "cumulative_cost_usd": 0.000178}}
+1777964607122 [INFO]	2026-05-05T07:03:27.122Z	128cc68c-38ef-4aa3-8973-49b87040af54	{"timestamp": "2026-05-05T07:03:27.122330Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_0.5_unified_check", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "tier_0.5_unified_check", "data": {"model": "gpt-4o-mini", "tier": "0.5", "input_tokens": 1012, "output_tokens": 43, "cached_tokens": 0, "total_tokens": 1055, "estimated_cost_usd": 0.000178, "duration_ms": 2250.29, "success": true, "prompt_summary": "Classifying: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 1055, "cumulative_cost_usd": 0.000178}}
+1777964607133 OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=1012 out=43 | $0.0002 | 2250ms | cumulative: in=1012 out=43 total=1055 $0.0002
+1777964607134 ──────────────────────────────────────────────────
+1777964607134 TIER 1 — Full Task Analysis
+1777964607134 ──────────────────────────────────────────────────
+1777964607134 ───────────────────────────────────────────────────────
+1777964607134 BUILDING LLM CONTEXT
+1777964607135 ───────────────────────────────────────────────────────
+1777964607135 Summary: none
+1777964607135 Recent messages: 1
+1777964607135 USER: Can you use the template named MinutesOfMeetingTEMP and data doc named TestData1...
+1777964607135 Final context: 184 chars (~46 tokens)
+1777964607135 ───────────────────────────────────────────────────────
+1777964608648 {"timestamp": "2026-05-05T07:03:28.647903Z", "level": "INFO", "logger": "utils", "message": "LLM call: agent_tool_classification", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "agent_tool_classification", "data": {"model": "gpt-4o-mini", "tier": "classifier", "input_tokens": 1874, "output_tokens": 15, "cached_tokens": 0, "total_tokens": 1889, "estimated_cost_usd": 0.00029, "duration_ms": 1511.42, "success": true, "prompt_summary": "Classifying agents+tools for: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 2944, "cumulative_cost_usd": 0.000468}}
+1777964608648 [INFO]	2026-05-05T07:03:28.648Z	128cc68c-38ef-4aa3-8973-49b87040af54	{"timestamp": "2026-05-05T07:03:28.647903Z", "level": "INFO", "logger": "utils", "message": "LLM call: agent_tool_classification", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "agent_tool_classification", "data": {"model": "gpt-4o-mini", "tier": "classifier", "input_tokens": 1874, "output_tokens": 15, "cached_tokens": 0, "total_tokens": 1889, "estimated_cost_usd": 0.00029, "duration_ms": 1511.42, "success": true, "prompt_summary": "Classifying agents+tools for: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 2944, "cumulative_cost_usd": 0.000468}}
+1777964608657 OK [classifier] gpt-4o-mini | agent_tool_classification | in=1874 out=15 | $0.0003 | 1511ms | cumulative: in=2886 out=58 total=2944 $0.0005
+1777964608659 {"timestamp": "2026-05-05T07:03:28.659126Z", "level": "INFO", "logger": "utils", "message": "[BlockN] template+data workflow tools injected (template_kw_match=True, data_kw_match=True, path_A_tools=[search_template_and_data, create_from_template_and_data_ids], path_B_tools=[upload_template, search_files, create_from_template_and_data_ids])", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942"}
+1777964608659 [INFO]	2026-05-05T07:03:28.659Z	128cc68c-38ef-4aa3-8973-49b87040af54	{"timestamp": "2026-05-05T07:03:28.659126Z", "level": "INFO", "logger": "utils", "message": "[BlockN] template+data workflow tools injected (template_kw_match=True, data_kw_match=True, path_A_tools=[search_template_and_data, create_from_template_and_data_ids], path_B_tools=[upload_template, search_files, create_from_template_and_data_ids])", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942"}
+1777964608660 relevant_agents: ['docs_agent', 'drive_agent', 'llm_tool']
+1777964608660 capabilities (top-level): ['**DOCS_AGENT:**', '**DRIVE_AGENT:**', '**LLM_TOOL:**']
+1777964608660 user_prompt (365 chars):
+1777964608660 RECENT CONVERSATION:
+1777964608660 USER: Can you use the template named MinutesOfMeetingTEMP and data doc named TestData123 and create a new doc out of it? Name the new document HelloTestTempandData
+1777964608660 CURRENT USER MESSAGE: Can you use the template named MinutesOfMeetingTEMP and data doc named TestData123 and create a new doc out of it? Name the new document HelloTestTempandData
+1777964608660 ──────────────────────────────────────────────────
+1777964611292 {"timestamp": "2026-05-05T07:03:31.291925Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_1_full_analysis", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "tier_1_full_analysis", "data": {"model": "gpt-4.1-mini", "tier": "1", "input_tokens": 2349, "output_tokens": 159, "cached_tokens": 0, "total_tokens": 2508, "estimated_cost_usd": 0.001194, "duration_ms": 2631.07, "success": true, "prompt_summary": "Analyzing: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 5452, "cumulative_cost_usd": 0.001662}}
+1777964611292 [INFO]	2026-05-05T07:03:31.291Z	128cc68c-38ef-4aa3-8973-49b87040af54	{"timestamp": "2026-05-05T07:03:31.291925Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_1_full_analysis", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "tier_1_full_analysis", "data": {"model": "gpt-4.1-mini", "tier": "1", "input_tokens": 2349, "output_tokens": 159, "cached_tokens": 0, "total_tokens": 2508, "estimated_cost_usd": 0.001194, "duration_ms": 2631.07, "success": true, "prompt_summary": "Analyzing: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 5452, "cumulative_cost_usd": 0.001662}}
+1777964611299 OK [1] gpt-4.1-mini | tier_1_full_analysis | in=2349 out=159 | $0.0012 | 2631ms | cumulative: in=5235 out=217 total=5452 $0.0017
+1777964612675 {"timestamp": "2026-05-05T07:03:32.675404Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: confirmation_formatter", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "confirmation_formatter", "data": {"model": "gpt-4o-mini", "tier": "formatter", "input_tokens": 210, "output_tokens": 38, "cached_tokens": 0, "total_tokens": 248, "estimated_cost_usd": 5.4e-05, "duration_ms": 1354.94, "success": true, "prompt_summary": "Formatting confirmation: Create HelloTestTempandData from MinutesOfMeetingT...", "cumulative_tokens": 5700, "cumulative_cost_usd": 0.001716}}
+1777964612676 [INFO]	2026-05-05T07:03:32.675Z	128cc68c-38ef-4aa3-8973-49b87040af54	{"timestamp": "2026-05-05T07:03:32.675404Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: confirmation_formatter", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "confirmation_formatter", "data": {"model": "gpt-4o-mini", "tier": "formatter", "input_tokens": 210, "output_tokens": 38, "cached_tokens": 0, "total_tokens": 248, "estimated_cost_usd": 5.4e-05, "duration_ms": 1354.94, "success": true, "prompt_summary": "Formatting confirmation: Create HelloTestTempandData from MinutesOfMeetingT...", "cumulative_tokens": 5700, "cumulative_cost_usd": 0.001716}}
+1777964612682 OK [formatter] gpt-4o-mini | confirmation_formatter | in=210 out=38 | $0.0001 | 1355ms | cumulative: in=5445 out=255 total=5700 $0.0017
+1777964612768 {"timestamp": "2026-05-05T07:03:32.767837Z", "level": "INFO", "logger": "supervisor_agent", "message": "Request completed", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "system", "operation": "request_complete", "data": {"request_complete": true, "total_duration_ms": 12806.29, "token_summary": {"total_input_tokens": 5445, "total_output_tokens": 255, "total_tokens": 5700, "total_cached_tokens": 0, "total_estimated_cost_usd": 0.001716, "cache_hit_rate": 0.0, "llm_call_count": 4, "calls": [{"model": "gpt-4o-mini", "input_tokens": 1012, "output_tokens": 43, "cached_tokens": 0, "total_tokens": 1055, "cost_usd": 0.000178, "duration_ms": 2250.29}, {"model": "gpt-4o-mini", "input_tokens": 1874, "output_tokens": 15, "cached_tokens": 0, "total_tokens": 1889, "cost_usd": 0.00029, "duration_ms": 1511.42}, {"model": "gpt-4.1-mini", "input_tokens": 2349, "output_tokens": 159, "cached_tokens": 0, "total_tokens": 2508, "cost_usd": 0.001194, "duration_ms": 2631.07}, {"model": "gpt-4o-mini", "input_tokens": 210, "output_tokens": 38, "cached_tokens": 0, "total_tokens": 248, "cost_usd": 5.4e-05, "duration_ms": 1354.94}]}}}
+1777964612768 [INFO]	2026-05-05T07:03:32.767Z	128cc68c-38ef-4aa3-8973-49b87040af54	{"timestamp": "2026-05-05T07:03:32.767837Z", "level": "INFO", "logger": "supervisor_agent", "message": "Request completed", "request_id": "req_20260505070319_90488ff1", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "system", "operation": "request_complete", "data": {"request_complete": true, "total_duration_ms": 12806.29, "token_summary": {"total_input_tokens": 5445, "total_output_tokens": 255, "total_tokens": 5700, "total_cached_tokens": 0, "total_estimated_cost_usd": 0.001716, "cache_hit_rate": 0.0, "llm_call_count": 4, "calls": [{"model": "gpt-4o-mini", "input_tokens": 1012, "output_tokens": 43, "cached_tokens": 0, "total_tokens": 1055, "cost_usd": 0.000178, "duration_ms": 2250.29}, {"model": "gpt-4o-mini", "input_tokens": 1874, "output_tokens": 15, "cached_tokens": 0, "total_tokens": 1889, "cost_usd": 0.00029, "duration_ms": 1511.42}, {"model": "gpt-4.1-mini", "input_tokens": 2349, "output_tokens": 159, "cached_tokens": 0, "total_tokens": 2508, "cost_usd": 0.001194, "duration_ms": 2631.07}, {"model": "gpt-4o-mini", "input_tokens": 210, "output_tokens": 38, "cached_tokens": 0, "total_tokens": 248, "cost_usd": 5.4e-05, "duration_ms": 1354.94}]}}}
+1777964612768 ============================================================
+1777964612768 REQUEST TOKEN SUMMARY
+1777964612768 ============================================================
+1777964612768 LLM calls:        4
+1777964612768 Total input:      5,445 tokens
+1777964612768 Total output:     255 tokens
+1777964612768 Total tokens:     5,700 tokens
+1777964612768 Estimated cost:   $0.0017
+1777964612768 Total duration:   12806ms (12.8s)
+1777964612768 ────────────────────────────────────────────────────────
+1777964612768 Breakdown by call:
+1777964612769 1. gpt-4o-mini      in=1012   out=43    $0.0002 2250ms
+1777964612769 2. gpt-4o-mini      in=1874   out=15    $0.0003 1511ms
+1777964612769 3. gpt-4.1-mini     in=2349   out=159   $0.0012 2631ms
+1777964612769 4. gpt-4o-mini      in=210    out=38    $0.0001 1355ms
+1777964612769 ============================================================
+1777964612780 END RequestId: 128cc68c-38ef-4aa3-8973-49b87040af54
+1777964612780 REPORT RequestId: 128cc68c-38ef-4aa3-8973-49b87040af54	Duration: 15745.40 ms	Billed Duration: 16816 ms	Memory Size: 2048 MB	Max Memory Used: 255 MB	Init Duration: 1069.95 ms
+1777964664374 START RequestId: 65b026b7-9595-47c7-aea9-64b03428bd1f Version: $LATEST
+1777964664480 ══════════════════════════════════════════════════════════════════════
+1777964664480 NEW MESSAGE  |  thread: c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942
+1777964664480 ══════════════════════════════════════════════════════════════════════
+1777964664480 User: yes
+1777964664480 ConversationState:
+1777964664480 extracted_info: {"_cached_tool_filter": {"docs_agent": ["create_from_template_and_data_ids", "list_my_docs"], "drive_agent": ["search_template_and_data", "upload_template", "search_files"]}, "template_name": "MinutesOfMeetingTEMP", "data_name": "TestData123", "new_title": "HelloTestTempandData"}
+1777964664480 missing_fields: []
+1777964664480 intent: "ready_to_execute"
+1777964664480 clarification_question: null
+1777964664480 ready_for_execution: false
+1777964664480 execution_summary: "Create HelloTestTempandData from MinutesOfMeetingTEMP using TestData123 data"
+1777964664480 execution_mode: "standard"
+1777964664481 execution_history: []
+1777964664481 completed_tasks: []
+1777964664481 has_executed: false
+1777964664481 last_executed_at: null
+1777964664481 last_execution_status: null
+1777964664481 last_execution_message: null
+1777964664481 executing: false
+1777964664481 pending_actions: []
+1777964664481 workflow_paused: false
+1777964664481 remaining_steps: []
+1777964664481 workflow_context: null
+1777964664481 disambiguation_options: []
+1777964664482 disambiguation_variable: null
+1777964664482 ══════════════════════════════════════════════════════════════════════
+1777964666661 {"timestamp": "2026-05-05T07:04:26.661286Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: confirmation_formatter", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "confirmation_formatter", "data": {"model": "gpt-4o-mini", "tier": "formatter", "input_tokens": 210, "output_tokens": 38, "cached_tokens": 0, "total_tokens": 248, "estimated_cost_usd": 5.4e-05, "duration_ms": 1618.88, "success": true, "prompt_summary": "Formatting confirmation: Create HelloTestTempandData from MinutesOfMeetingT...", "cumulative_tokens": 248, "cumulative_cost_usd": 5.4e-05}}
+1777964666662 [INFO]	2026-05-05T07:04:26.661Z	65b026b7-9595-47c7-aea9-64b03428bd1f	{"timestamp": "2026-05-05T07:04:26.661286Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: confirmation_formatter", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "confirmation_formatter", "data": {"model": "gpt-4o-mini", "tier": "formatter", "input_tokens": 210, "output_tokens": 38, "cached_tokens": 0, "total_tokens": 248, "estimated_cost_usd": 5.4e-05, "duration_ms": 1618.88, "success": true, "prompt_summary": "Formatting confirmation: Create HelloTestTempandData from MinutesOfMeetingT...", "cumulative_tokens": 248, "cumulative_cost_usd": 5.4e-05}}
+1777964666668 OK [formatter] gpt-4o-mini | confirmation_formatter | in=210 out=38 | $0.0001 | 1619ms | cumulative: in=210 out=38 total=248 $0.0001
+1777964666692 Thread c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942 ready - executing workflow...
+1777964666707 Date context: today=2026-05-05
+1777964666708 Starting workflow execution (mode=standard)...
+1777964666709 >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+1777964666709 ============================================================
+1777964666709 SUPERVISOR NODE - Planning Phase
+1777964666710 ============================================================
+1777964666710 User Input: Create HelloTestTempandData from MinutesOfMeetingTEMP using TestData123 data
+1777964666710 Parameters:
+1777964666710 - template_name: MinutesOfMeetingTEMP
+1777964666710 - data_name: TestData123
+1777964666710 - new_title: HelloTestTempandData
+1777964666710 Context dates: today=2026-05-05
+1777964666733 Reusing cached tool filter from Tier 1 (saved 1 LLM call)
+1777964666733 Relevant agents: ['docs_agent', 'drive_agent', 'llm_tool']
+1777964666733 Filtered tools: {'docs_agent': ['create_from_template_and_data_ids', 'list_my_docs'], 'drive_agent': ['upload_template', 'search_files', 'search_template_and_data']}
+1777964666747 Calling LLM to generate multi-step plan...
+1777964666747 Token optimization:
+1777964666747 Agents: 3/7
+1777964666747 Tools: 5/71
+1777964666747 Context size: 11,124 chars (~2,781 tokens)
+1777964668701 {"timestamp": "2026-05-05T07:04:28.700866Z", "level": "INFO", "logger": "supervisor_agent", "message": "LLM call: plan_generation", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "plan_generation", "data": {"model": "gpt-4.1", "tier": "planner", "input_tokens": 10847, "output_tokens": 152, "cached_tokens": 0, "total_tokens": 10999, "estimated_cost_usd": 0.02291, "duration_ms": 1935.91, "success": true, "prompt_summary": "Planning: Create HelloTestTempandData from MinutesOfMeetingT...", "cumulative_tokens": 11247, "cumulative_cost_usd": 0.022964}}
+1777964668701 [INFO]	2026-05-05T07:04:28.700Z	65b026b7-9595-47c7-aea9-64b03428bd1f	{"timestamp": "2026-05-05T07:04:28.700866Z", "level": "INFO", "logger": "supervisor_agent", "message": "LLM call: plan_generation", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "llm", "operation": "plan_generation", "data": {"model": "gpt-4.1", "tier": "planner", "input_tokens": 10847, "output_tokens": 152, "cached_tokens": 0, "total_tokens": 10999, "estimated_cost_usd": 0.02291, "duration_ms": 1935.91, "success": true, "prompt_summary": "Planning: Create HelloTestTempandData from MinutesOfMeetingT...", "cumulative_tokens": 11247, "cumulative_cost_usd": 0.022964}}
+1777964668708 OK [planner] gpt-4.1 | plan_generation | in=10847 out=152 | $0.0229 | 1936ms | cumulative: in=11057 out=190 total=11247 $0.0230
+1777964668708 Plan generated successfully!
+1777964668708 Generated Plan:
+1777964668708 {
+1777964668708 "steps": [
+1777964668708 {
+1777964668708 "agent": "drive_agent",
+1777964668708 "tool": "search_template_and_data",
+1777964668708 "inputs": {
+1777964668708 "template_name": "MinutesOfMeetingTEMP",
+1777964668708 "data_name": "TestData123"
+1777964668708 },
+1777964668708 "output_variables": {
+1777964668708 "template_id": "template_file_id",
+1777964668708 "data_id": "data_file_id"
+1777964668708 },
+1777964668708 "description": "Search Google Drive for both the template 'MinutesOfMeetingTEMP' and data file 'TestData123' to get their file IDs"
+1777964668708 },
+1777964668708 {
+1777964668708 "agent": "docs_agent",
+1777964668708 "tool": "create_from_template_and_data_ids",
+1777964668708 "inputs": {
+1777964668708 "template_file_id": "{{template_id}}",
+1777964668708 "data_file_id": "{{data_id}}",
+1777964668708 "new_title": "HelloTestTempandData"
+1777964668708 },
+1777964668708 "output_variables": {},
+1777964668708 "description": "Create a new document 'HelloTestTempandData' using the found template and data files"
+1777964668708 }
+1777964668708 ]
+1777964668708 }
+1777964668708 Plan saved to: /tmp/agent_outputs/supervisor_plan.json
+1777964668708 ============================================================
+1777964668710 ============================================================
+1777964668710 ORCHESTRATOR NODE - Execution Phase
+1777964668710 ============================================================
+1777964668710 Found 2 steps to execute
+1777964668710 INITIAL CONTEXT:
+1777964668710 ────────────────────────────────────────────────────────────
+1777964668710 today_date: 2026-05-05
+1777964668710 _cached_tool_filter: dict (length: 2)
+1777964668710 ────────────────────────────────────────────────────────────
+1777964668747 Pre-flight credential check passed (5 fields)
+1777964668747 ============================================================
+1777964668747 Step 1/2: drive_agent.search_template_and_data
+1777964668747 Description: Search Google Drive for both the template 'MinutesOfMeetingTEMP' and data file 'TestData123' to get their file IDs
+1777964668747 ============================================================
+1777964668747 {"timestamp": "2026-05-05T07:04:28.747466Z", "level": "PROGRESS", "logger": "orchestrator", "message": "Executing step: drive_agent.search_template_and_data", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "data": {"description": "Search Google Drive for both the template 'MinutesOfMeetingTEMP' and data file 'TestData123' to get their file IDs", "current_step": 1, "total_steps": 2, "step_name": "drive_agent.search_template_and_data", "steps_remaining": 1}}
+1777964668747 [INFO]	2026-05-05T07:04:28.747Z	65b026b7-9595-47c7-aea9-64b03428bd1f	{"timestamp": "2026-05-05T07:04:28.747466Z", "level": "PROGRESS", "logger": "orchestrator", "message": "Executing step: drive_agent.search_template_and_data", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "data": {"description": "Search Google Drive for both the template 'MinutesOfMeetingTEMP' and data file 'TestData123' to get their file IDs", "current_step": 1, "total_steps": 2, "step_name": "drive_agent.search_template_and_data", "steps_remaining": 1}}
+1777964668761 Risk Level: safe
+1777964668761 Substituting variables in inputs...
+1777964668761 Original inputs: {
+1777964668761 "template_name": "MinutesOfMeetingTEMP",
+1777964668761 "data_name": "TestData123"
+1777964668761 }
+1777964668764 Substituted inputs: {
+1777964668764 "template_name": "MinutesOfMeetingTEMP",
+1777964668764 "data_name": "TestData123"
+1777964668764 }
+1777964668764 Available context variables: ['today_date', '_cached_tool_filter']
+1777964668764 Calling agent microservice: agent-drive
+1777964668764 REQUEST PAYLOAD STRUCTURE:
+1777964668764 ────────────────────────────────────────────────────────────
+1777964668764 Tool: search_template_and_data
+1777964668764 Inputs keys: ['template_name', 'data_name']
+1777964668764 Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+1777964668765 Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+1777964668765 Payload size: 733 bytes
+1777964668765 ────────────────────────────────────────────────────────────
+1777964668765 Sending request to agent...
+1777964668765 URL: agent-drive
+1777964668765 Timeout: 320 seconds
+1777964668765 Max retries: 3
+1777964668782 Attempt 1/3 invoking lambda agent-drive
+1777964671698 Agent lambda succeeded on attempt 1
+1777964671698 ⏱ Agent call completed in 2933.05ms
+1777964671698 Agent response received
+1777964671698 ────────────────────────────────────────────────────────────
+1777964671698 FULL AGENT RESPONSE DATA:
+1777964671698 ────────────────────────────────────────────────────────────
+1777964671698 {
+1777964671698 "output": {
+1777964671698 "success": true,
+1777964671698 "template_file_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0",
+1777964671698 "template_file_name": "MinutesOfMeetingTEMP",
+1777964671698 "data_file_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc",
+1777964671698 "data_file_name": "TestData123",
+1777964671698 "message": "Found template 'MinutesOfMeetingTEMP' and data 'TestData123'",
+1777964671698 "error": null
+1777964671698 },
+1777964671698 "success": true,
+1777964671698 "template_file_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0",
+1777964671698 "template_file_name": "MinutesOfMeetingTEMP",
+1777964671698 "data_file_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc",
+1777964671698 "data_file_name": "TestData123",
+1777964671698 "message": "Found template 'MinutesOfMeetingTEMP' and data 'TestData123'",
+1777964671698 "error": null
+1777964671698 }
+1777964671699 ────────────────────────────────────────────────────────────
+1777964671699 Variables added to context:
+1777964671699 template_id = 154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0 (from template_file_id)
+1777964671699 data_id = 1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc (from data_file_id)
+1777964671699 CONTEXT AFTER STEP 1:
+1777964671699 ────────────────────────────────────────────────────────────
+1777964671699 today_date: 2026-05-05
+1777964671699 _cached_tool_filter: Dict with keys: ['docs_agent', 'drive_agent']
+1777964671699 step_1_drive_agent: Dict with keys: ['output', 'template_file_id', 'template_file_name', 'data_file_id', 'data_file_name', 'message']
+1777964671699 template_id: 154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0
+1777964671699 data_id: 1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc
+1777964671700 ────────────────────────────────────────────────────────────
+1777964671700 {"timestamp": "2026-05-05T07:04:31.700055Z", "level": "INFO", "logger": "orchestrator", "message": "Agent call: drive_agent.search_template_and_data (step 1/2)", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "orchestrator", "operation": "agent_call", "data": {"agent": "drive_agent", "tool": "search_template_and_data", "step": 1, "total_steps": 2, "duration_ms": 2933.05, "success": true, "inputs": {"template_name": "MinutesOfMeetingTEMP", "data_name": "TestData123"}, "output_summary": "Fields returned: ['output', 'success', 'template_file_id', 'template_file_name', 'data_file_id', 'data_file_name', 'message', 'error']"}}
+1777964671700 [INFO]	2026-05-05T07:04:31.700Z	65b026b7-9595-47c7-aea9-64b03428bd1f	{"timestamp": "2026-05-05T07:04:31.700055Z", "level": "INFO", "logger": "orchestrator", "message": "Agent call: drive_agent.search_template_and_data (step 1/2)", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "orchestrator", "operation": "agent_call", "data": {"agent": "drive_agent", "tool": "search_template_and_data", "step": 1, "total_steps": 2, "duration_ms": 2933.05, "success": true, "inputs": {"template_name": "MinutesOfMeetingTEMP", "data_name": "TestData123"}, "output_summary": "Fields returned: ['output', 'success', 'template_file_id', 'template_file_name', 'data_file_id', 'data_file_name', 'message', 'error']"}}
+1777964671709 ============================================================
+1777964671709 Step 2/2: docs_agent.create_from_template_and_data_ids
+1777964671710 Description: Create a new document 'HelloTestTempandData' using the found template and data files
+1777964671710 ============================================================
+1777964671710 {"timestamp": "2026-05-05T07:04:31.710146Z", "level": "PROGRESS", "logger": "orchestrator", "message": "Executing step: docs_agent.create_from_template_and_data_ids", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "data": {"description": "Create a new document 'HelloTestTempandData' using the found template and data files", "current_step": 2, "total_steps": 2, "step_name": "docs_agent.create_from_template_and_data_ids", "steps_remaining": 0}}
+1777964671710 [INFO]	2026-05-05T07:04:31.710Z	65b026b7-9595-47c7-aea9-64b03428bd1f	{"timestamp": "2026-05-05T07:04:31.710146Z", "level": "PROGRESS", "logger": "orchestrator", "message": "Executing step: docs_agent.create_from_template_and_data_ids", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "data": {"description": "Create a new document 'HelloTestTempandData' using the found template and data files", "current_step": 2, "total_steps": 2, "step_name": "docs_agent.create_from_template_and_data_ids", "steps_remaining": 0}}
+1777964671721 Risk Level: moderate
+1777964671721 Substituting variables in inputs...
+1777964671721 Original inputs: {
+1777964671721 "template_file_id": "{{template_id}}",
+1777964671721 "data_file_id": "{{data_id}}",
+1777964671721 "new_title": "HelloTestTempandData"
+1777964671721 }
+1777964671723 Substituted inputs: {
+1777964671723 "template_file_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0",
+1777964671723 "data_file_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc",
+1777964671723 "new_title": "HelloTestTempandData"
+1777964671723 }
+1777964671723 Available context variables: ['today_date', '_cached_tool_filter', 'step_1_drive_agent', 'template_id', 'data_id']
+1777964671723 Calling agent microservice: agent-docs
+1777964671723 REQUEST PAYLOAD STRUCTURE:
+1777964671723 ────────────────────────────────────────────────────────────
+1777964671724 Tool: create_from_template_and_data_ids
+1777964671724 Inputs keys: ['template_file_id', 'data_file_id', 'new_title']
+1777964671724 Credentials keys: ['access_token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
+1777964671724 Credentials types: {access_token: str, refresh_token: str, token_uri: str, client_id: str, client_secret: str}
+1777964671724 Payload size: 842 bytes
+1777964671724 ────────────────────────────────────────────────────────────
+1777964671724 Sending request to agent...
+1777964671724 URL: agent-docs
+1777964671724 Timeout: 320 seconds
+1777964671724 Max retries: 3
+1777964671724 Attempt 1/3 invoking lambda agent-docs
+1777964678767 Agent lambda succeeded on attempt 1
+1777964678767 ⏱ Agent call completed in 7042.64ms
+1777964678767 Agent response received
+1777964678767 ────────────────────────────────────────────────────────────
+1777964678767 FULL AGENT RESPONSE DATA:
+1777964678767 ────────────────────────────────────────────────────────────
+1777964678767 {
+1777964678767 "success": true,
+1777964678767 "result": {
+1777964678767 "success": true,
+1777964678767 "document_id": null,
+1777964678767 "document_url": null,
+1777964678767 "title": "HelloTestTempandData",
+1777964678767 "format": "Google Docs"
+1777964678767 },
+1777964678767 "raw_response": "Error: the data file 'TestData123' appears to be a template clone \u2014 every placeholder (ATTENDEES, DEPARTMENT, TIME) is blank or underscore-only in the file's content. The merge would produce an empty document.\n\nCommon cause: Drive search returned a duplicate file with the same name as your intended data file (e.g., a previous run that copied the template and saved it under the data-file name). \n\nTo fix: \n  1. Open Drive and confirm there is exactly ONE file named 'TestData123'. If duplicates exist, delete or rename the empty one (it was likely placed in the Templates folder).\n  2. Make sure your real data file has actual values, e.g. `Date: 2026-05-05`, `Time: 9:00 AM`, etc. \u2014 not just `Date:____`.",
+1777964678767 "error": null,
+1777964678767 "output": {
+1777964678767 "success": true,
+1777964678767 "document_id": null,
+1777964678767 "document_url": null,
+1777964678767 "title": "HelloTestTempandData",
+1777964678767 "format": "Google Docs"
+1777964678767 }
+1777964678767 }
+1777964678767 ────────────────────────────────────────────────────────────
+1777964678767 Variables added to context:
+1777964678767 CONTEXT AFTER STEP 2:
+1777964678767 ────────────────────────────────────────────────────────────
+1777964678767 today_date: 2026-05-05
+1777964678768 _cached_tool_filter: Dict with keys: ['docs_agent', 'drive_agent']
+1777964678768 step_1_drive_agent: Dict with keys: ['output', 'template_file_id', 'template_file_name', 'data_file_id', 'data_file_name', 'message']
+1777964678768 template_id: 154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0
+1777964678768 data_id: 1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc
+1777964678768 step_2_docs_agent: Dict with keys: ['document_id', 'document_url', 'title', 'format']
+1777964678768 ────────────────────────────────────────────────────────────
+1777964678768 {"timestamp": "2026-05-05T07:04:38.768391Z", "level": "INFO", "logger": "orchestrator", "message": "Agent call: docs_agent.create_from_template_and_data_ids (step 2/2)", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "orchestrator", "operation": "agent_call", "data": {"agent": "docs_agent", "tool": "create_from_template_and_data_ids", "step": 2, "total_steps": 2, "duration_ms": 7042.64, "success": true, "inputs": {"template_file_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0", "data_file_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc", "new_title": "HelloTestTempandData"}, "output_summary": "Fields returned: ['success', 'document_id', 'document_url', 'title', 'format']"}}
+1777964678768 [INFO]	2026-05-05T07:04:38.768Z	65b026b7-9595-47c7-aea9-64b03428bd1f	{"timestamp": "2026-05-05T07:04:38.768391Z", "level": "INFO", "logger": "orchestrator", "message": "Agent call: docs_agent.create_from_template_and_data_ids (step 2/2)", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "orchestrator", "operation": "agent_call", "data": {"agent": "docs_agent", "tool": "create_from_template_and_data_ids", "step": 2, "total_steps": 2, "duration_ms": 7042.64, "success": true, "inputs": {"template_file_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0", "data_file_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc", "new_title": "HelloTestTempandData"}, "output_summary": "Fields returned: ['success', 'document_id', 'document_url', 'title', 'format']"}}
+1777964678775 ============================================================
+1777964678775 ORCHESTRATOR COMPLETED
+1777964678775 ============================================================
+1777964678775 Total steps: 2
+1777964678775 Successful: 2
+1777964678775 No Results: 0
+1777964678775 Failed: 0
+1777964678775 ============================================================
+1777964678798 Workflow completed successfully
+1777964678798 Generated Plan:
+1777964678798 {
+1777964678798 "steps": [
+1777964678798 {
+1777964678798 "agent": "drive_agent",
+1777964678798 "tool": "search_template_and_data",
+1777964678798 "inputs": {
+1777964678798 "template_name": "MinutesOfMeetingTEMP",
+1777964678798 "data_name": "TestData123"
+1777964678798 },
+1777964678798 "output_variables": {
+1777964678798 "template_id": "template_file_id",
+1777964678798 "data_id": "data_file_id"
+1777964678798 },
+1777964678798 "description": "Search Google Drive for both the template 'MinutesOfMeetingTEMP' and data file 'TestData123' to get their file IDs"
+1777964678798 },
+1777964678798 {
+1777964678798 "agent": "docs_agent",
+1777964678798 "tool": "create_from_template_and_data_ids",
+1777964678798 "inputs": {
+1777964678798 "template_file_id": "{{template_id}}",
+1777964678798 "data_file_id": "{{data_id}}",
+1777964678798 "new_title": "HelloTestTempandData"
+1777964678798 },
+1777964678798 "output_variables": {},
+1777964678798 "description": "Create a new document 'HelloTestTempandData' using the found template and data files"
+1777964678798 }
+1777964678798 ]
+1777964678799 }
+1777964678799 Final Context: {
+1777964678799 "today_date": "2026-05-05",
+1777964678799 "_cached_tool_filter": {
+1777964678799 "docs_agent": [
+1777964678799 "create_from_template_and_data_ids",
+1777964678799 "list_my_docs"
+1777964678799 ],
+1777964678799 "drive_agent": [
+1777964678799 "upload_template",
+1777964678799 "search_files",
+1777964678799 "search_template_and_data"
+1777964678799 ]
+1777964678799 },
+1777964678799 "step_1_drive_agent": {
+1777964678799 "output": {
+1777964678799 "success": true,
+1777964678799 "template_file_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0",
+1777964678799 "template_file_name": "MinutesOfMeetingTEMP",
+1777964678799 "data_file_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc",
+1777964678799 "data_file_name": "TestData123",
+1777964678799 "message": "Found template 'MinutesOfMeetingTEMP' and data 'TestData123'",
+1777964678799 "error": null
+1777964678799 },
+1777964678799 "template_file_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0",
+1777964678799 "template_file_name": "MinutesOfMeetingTEMP",
+1777964678799 "data_file_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc",
+1777964678799 "data_file_name": "TestData123",
+1777964678799 "message": "Found template 'MinutesOfMeetingTEMP' and data 'TestData123'"
+1777964678799 },
+1777964678799 "template_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0",
+1777964678799 "data_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc",
+1777964678799 "step_2_docs_agent": {
+1777964678799 "document_id": null,
+1777964678799 "document_url": null,
+1777964678799 "title": "HelloTestTempandData",
+1777964678799 "format": "Google Docs"
+1777964678799 },
+1777964678799 "results": [
+1777964678799 {
+1777964678799 "step": 1,
+1777964678799 "agent": "drive_agent",
+1777964678799 "tool": "search_template_and_data",
+1777964678799 "description": "Search Google Drive for both the template 'MinutesOfMeetingTEMP' and data file 'TestData123' to get their file IDs",
+1777964678799 "inputs": {
+1777964678799 "template_name": "MinutesOfMeetingTEMP",
+1777964678799 "data_name": "TestData123"
+1777964678799 },
+1777964678799 "output": {
+1777964678799 "output": {
+1777964678799 "success": true,
+1777964678799 "template_file_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0",
+1777964678799 "template_file_name": "MinutesOfMeetingTEMP",
+1777964678799 "data_file_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc",
+1777964678799 "data_file_name": "TestData123",
+1777964678799 "message": "Found template 'MinutesOfMeetingTEMP' and data 'TestData123'",
+1777964678799 "error": null
+1777964678799 },
+1777964678799 "success": true,
+1777964678799 "template_file_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0",
+1777964678799 "template_file_name": "MinutesOfMeetingTEMP",
+1777964678799 "data_file_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc",
+1777964678799 "data_file_name": "TestData123",
+1777964678799 "message": "Found template 'MinutesOfMeetingTEMP' and data 'TestData123'",
+1777964678799 "error": null
+1777964678799 },
+1777964678799 "status": "success"
+1777964678799 },
+1777964678799 {
+1777964678799 "step": 2,
+1777964678799 "agent": "docs_agent",
+1777964678799 "tool": "create_from_template_and_data_ids",
+1777964678799 "description": "Create a new document 'HelloTestTempandData' using the found template and data files",
+1777964678799 "inputs": {
+1777964678799 "template_file_id": "154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0",
+1777964678799 "data_file_id": "1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc",
+1777964678799 "new_title": "HelloTestTempandData"
+1777964678799 },
+1777964678799 "output": {
+1777964678799 "success": true,
+1777964678799 "document_id": null,
+1777964678799 "document_url": null,
+1777964678799 "title": "HelloTestTempandData",
+1777964678799 "format": "Google Docs"
+1777964678799 },
+1777964678799 "status": "success"
+1777964678799 }
+1777964678799 ]
+1777964678799 }
+1777964678864 {"timestamp": "2026-05-05T07:04:38.864618Z", "level": "INFO", "logger": "supervisor_agent", "message": "Request completed", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "system", "operation": "request_complete", "data": {"request_complete": true, "total_duration_ms": 14409.93, "token_summary": {"total_input_tokens": 11057, "total_output_tokens": 190, "total_tokens": 11247, "total_cached_tokens": 0, "total_estimated_cost_usd": 0.022964, "cache_hit_rate": 0.0, "llm_call_count": 2, "calls": [{"model": "gpt-4o-mini", "input_tokens": 210, "output_tokens": 38, "cached_tokens": 0, "total_tokens": 248, "cost_usd": 5.4e-05, "duration_ms": 1618.88}, {"model": "gpt-4.1", "input_tokens": 10847, "output_tokens": 152, "cached_tokens": 0, "total_tokens": 10999, "cost_usd": 0.02291, "duration_ms": 1935.91}]}}}
+1777964678864 [INFO]	2026-05-05T07:04:38.864Z	65b026b7-9595-47c7-aea9-64b03428bd1f	{"timestamp": "2026-05-05T07:04:38.864618Z", "level": "INFO", "logger": "supervisor_agent", "message": "Request completed", "request_id": "req_20260505070424_1a47acf5", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_6c283942", "component": "system", "operation": "request_complete", "data": {"request_complete": true, "total_duration_ms": 14409.93, "token_summary": {"total_input_tokens": 11057, "total_output_tokens": 190, "total_tokens": 11247, "total_cached_tokens": 0, "total_estimated_cost_usd": 0.022964, "cache_hit_rate": 0.0, "llm_call_count": 2, "calls": [{"model": "gpt-4o-mini", "input_tokens": 210, "output_tokens": 38, "cached_tokens": 0, "total_tokens": 248, "cost_usd": 5.4e-05, "duration_ms": 1618.88}, {"model": "gpt-4.1", "input_tokens": 10847, "output_tokens": 152, "cached_tokens": 0, "total_tokens": 10999, "cost_usd": 0.02291, "duration_ms": 1935.91}]}}}
+1777964678865 ============================================================
+1777964678865 REQUEST TOKEN SUMMARY
+1777964678865 ============================================================
+1777964678865 LLM calls:        2
+1777964678865 Total input:      11,057 tokens
+1777964678865 Total output:     190 tokens
+1777964678865 Total tokens:     11,247 tokens
+1777964678865 Estimated cost:   $0.0230
+1777964678865 Total duration:   14410ms (14.4s)
+1777964678865 ────────────────────────────────────────────────────────
+1777964678865 Breakdown by call:
+1777964678865 1. gpt-4o-mini      in=210    out=38    $0.0001 1619ms
+1777964678865 2. gpt-4.1          in=10847  out=152   $0.0229 1936ms
+1777964678865 ============================================================
+1777964678873 END RequestId: 65b026b7-9595-47c7-aea9-64b03428bd1f
+1777964678873 REPORT RequestId: 65b026b7-9595-47c7-aea9-64b03428bd1f	Duration: 14498.04 ms	Billed Duration: 14499 ms	Memory Size: 2048 MB	Max Memory Used: 259 MB
+1777964718373 START RequestId: d015a949-6220-4297-9f99-36f00179d4f5 Version: $LATEST
+1777964718463 [ws-chat] auto-titled thread c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d: 'Can you use the template named MinutesOfMeetingTEM...'
+1777964718464 ══════════════════════════════════════════════════════════════════════
+1777964718464 NEW MESSAGE  |  thread: c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d
+1777964718464 ══════════════════════════════════════════════════════════════════════
+1777964718464 User: Can you use the template named MinutesOfMeetingTEMP and data doc named TestData123 and create a new doc out of it? Name ...
+1777964718464 ConversationState:
+1777964718464 extracted_info: {}
+1777964718464 missing_fields: []
+1777964718464 intent: null
+1777964718464 clarification_question: null
+1777964718465 ready_for_execution: false
+1777964718465 execution_summary: null
+1777964718465 execution_mode: "standard"
+1777964718465 execution_history: []
+1777964718465 completed_tasks: []
+1777964718465 has_executed: false
+1777964718465 last_executed_at: null
+1777964718465 last_execution_status: null
+1777964718465 last_execution_message: null
+1777964718465 executing: false
+1777964718465 pending_actions: []
+1777964718465 workflow_paused: false
+1777964718465 remaining_steps: []
+1777964718465 workflow_context: null
+1777964718465 disambiguation_options: []
+1777964718466 disambiguation_variable: null
+1777964718466 ══════════════════════════════════════════════════════════════════════
+1777964719121 ──────────────────────────────────────────────────
+1777964719121 TIER 0.5 — Building prompt
+1777964719121 ──────────────────────────────────────────────────
+1777964719121 bot_signal : (none)
+1777964719121 state_block: (none)
+1777964719121 file_context: (none)
+1777964719121 ──────────────────────────────────────────────────
+1777964720297 {"timestamp": "2026-05-05T07:05:20.297437Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_0.5_unified_check", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "llm", "operation": "tier_0.5_unified_check", "data": {"model": "gpt-4o-mini", "tier": "0.5", "input_tokens": 1013, "output_tokens": 43, "cached_tokens": 0, "total_tokens": 1056, "estimated_cost_usd": 0.000178, "duration_ms": 1175.5, "success": true, "prompt_summary": "Classifying: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 1056, "cumulative_cost_usd": 0.000178}}
+1777964720298 [INFO]	2026-05-05T07:05:20.297Z	d015a949-6220-4297-9f99-36f00179d4f5	{"timestamp": "2026-05-05T07:05:20.297437Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_0.5_unified_check", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "llm", "operation": "tier_0.5_unified_check", "data": {"model": "gpt-4o-mini", "tier": "0.5", "input_tokens": 1013, "output_tokens": 43, "cached_tokens": 0, "total_tokens": 1056, "estimated_cost_usd": 0.000178, "duration_ms": 1175.5, "success": true, "prompt_summary": "Classifying: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 1056, "cumulative_cost_usd": 0.000178}}
+1777964720304 OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=1013 out=43 | $0.0002 | 1176ms | cumulative: in=1013 out=43 total=1056 $0.0002
+1777964720305 ──────────────────────────────────────────────────
+1777964720305 TIER 1 — Full Task Analysis
+1777964720305 ──────────────────────────────────────────────────
+1777964720305 ───────────────────────────────────────────────────────
+1777964720305 BUILDING LLM CONTEXT
+1777964720305 ───────────────────────────────────────────────────────
+1777964720305 Summary: none
+1777964720305 Recent messages: 1
+1777964720305 USER: Can you use the template named MinutesOfMeetingTEMP and data doc named TestData1...
+1777964720305 Final context: 187 chars (~46 tokens)
+1777964720305 ───────────────────────────────────────────────────────
+1777964721143 {"timestamp": "2026-05-05T07:05:21.143268Z", "level": "INFO", "logger": "utils", "message": "LLM call: agent_tool_classification", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "llm", "operation": "agent_tool_classification", "data": {"model": "gpt-4o-mini", "tier": "classifier", "input_tokens": 1875, "output_tokens": 15, "cached_tokens": 1792, "total_tokens": 1890, "estimated_cost_usd": 0.000156, "duration_ms": 836.02, "success": true, "prompt_summary": "Classifying agents+tools for: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 2946, "cumulative_cost_usd": 0.000334}}
+1777964721144 [INFO]	2026-05-05T07:05:21.143Z	d015a949-6220-4297-9f99-36f00179d4f5	{"timestamp": "2026-05-05T07:05:21.143268Z", "level": "INFO", "logger": "utils", "message": "LLM call: agent_tool_classification", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "llm", "operation": "agent_tool_classification", "data": {"model": "gpt-4o-mini", "tier": "classifier", "input_tokens": 1875, "output_tokens": 15, "cached_tokens": 1792, "total_tokens": 1890, "estimated_cost_usd": 0.000156, "duration_ms": 836.02, "success": true, "prompt_summary": "Classifying agents+tools for: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 2946, "cumulative_cost_usd": 0.000334}}
+1777964721150 OK [classifier] gpt-4o-mini | agent_tool_classification | in=1875 out=15, cached=1792 | $0.0002 | 836ms | cumulative: in=2888 out=58 total=2946 $0.0003
+1777964721153 [INFO]	2026-05-05T07:05:21.150Z	d015a949-6220-4297-9f99-36f00179d4f5	{"timestamp": "2026-05-05T07:05:21.150120Z", "level": "INFO", "logger": "utils", "message": "[BlockN] template+data workflow tools injected (template_kw_match=True, data_kw_match=True, path_A_tools=[search_template_and_data, create_from_template_and_data_ids], path_B_tools=[upload_template, search_files, create_from_template_and_data_ids])", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d"}
+1777964721153 relevant_agents: ['docs_agent', 'drive_agent', 'llm_tool']
+1777964721153 capabilities (top-level): ['**DOCS_AGENT:**', '**DRIVE_AGENT:**', '**LLM_TOOL:**']
+1777964721153 user_prompt (371 chars):
+1777964721153 RECENT CONVERSATION:
+1777964721153 USER: Can you use the template named MinutesOfMeetingTEMP and data doc named TestData123 and create a new doc out of it? Name the new document HelloTestTempandData902
+1777964721153 CURRENT USER MESSAGE: Can you use the template named MinutesOfMeetingTEMP and data doc named TestData123 and create a new doc out of it? Name the new document HelloTestTempandData902
+1777964721153 ──────────────────────────────────────────────────
+1777964721153 {"timestamp": "2026-05-05T07:05:21.150120Z", "level": "INFO", "logger": "utils", "message": "[BlockN] template+data workflow tools injected (template_kw_match=True, data_kw_match=True, path_A_tools=[search_template_and_data, create_from_template_and_data_ids], path_B_tools=[upload_template, search_files, create_from_template_and_data_ids])", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d"}
+1777964724630 {"timestamp": "2026-05-05T07:05:24.629859Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_1_full_analysis", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "llm", "operation": "tier_1_full_analysis", "data": {"model": "gpt-4.1-mini", "tier": "1", "input_tokens": 2351, "output_tokens": 171, "cached_tokens": 2048, "total_tokens": 2522, "estimated_cost_usd": 0.0006, "duration_ms": 3478.51, "success": true, "prompt_summary": "Analyzing: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 5468, "cumulative_cost_usd": 0.000933}}
+1777964724630 [INFO]	2026-05-05T07:05:24.629Z	d015a949-6220-4297-9f99-36f00179d4f5	{"timestamp": "2026-05-05T07:05:24.629859Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_1_full_analysis", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "llm", "operation": "tier_1_full_analysis", "data": {"model": "gpt-4.1-mini", "tier": "1", "input_tokens": 2351, "output_tokens": 171, "cached_tokens": 2048, "total_tokens": 2522, "estimated_cost_usd": 0.0006, "duration_ms": 3478.51, "success": true, "prompt_summary": "Analyzing: Can you use the template named MinutesOfMeetingTEM...", "cumulative_tokens": 5468, "cumulative_cost_usd": 0.000933}}
+1777964724639 OK [1] gpt-4.1-mini | tier_1_full_analysis | in=2351 out=171, cached=2048 | $0.0006 | 3479ms | cumulative: in=5239 out=229 total=5468 $0.0009
+1777964725976 {"timestamp": "2026-05-05T07:05:25.976485Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: confirmation_formatter", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "llm", "operation": "confirmation_formatter", "data": {"model": "gpt-4o-mini", "tier": "formatter", "input_tokens": 212, "output_tokens": 39, "cached_tokens": 0, "total_tokens": 251, "estimated_cost_usd": 5.5e-05, "duration_ms": 1323.76, "success": true, "prompt_summary": "Formatting confirmation: Create HelloTestTempandData902 from MinutesOfMeeti...", "cumulative_tokens": 5719, "cumulative_cost_usd": 0.000988}}
+1777964725977 [INFO]	2026-05-05T07:05:25.976Z	d015a949-6220-4297-9f99-36f00179d4f5	{"timestamp": "2026-05-05T07:05:25.976485Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: confirmation_formatter", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "llm", "operation": "confirmation_formatter", "data": {"model": "gpt-4o-mini", "tier": "formatter", "input_tokens": 212, "output_tokens": 39, "cached_tokens": 0, "total_tokens": 251, "estimated_cost_usd": 5.5e-05, "duration_ms": 1323.76, "success": true, "prompt_summary": "Formatting confirmation: Create HelloTestTempandData902 from MinutesOfMeeti...", "cumulative_tokens": 5719, "cumulative_cost_usd": 0.000988}}
+1777964725983 OK [formatter] gpt-4o-mini | confirmation_formatter | in=212 out=39 | $0.0001 | 1324ms | cumulative: in=5451 out=268 total=5719 $0.0010
+1777964726045 {"timestamp": "2026-05-05T07:05:26.045388Z", "level": "INFO", "logger": "supervisor_agent", "message": "Request completed", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "system", "operation": "request_complete", "data": {"request_complete": true, "total_duration_ms": 7612.16, "token_summary": {"total_input_tokens": 5451, "total_output_tokens": 268, "total_tokens": 5719, "total_cached_tokens": 3840, "total_estimated_cost_usd": 0.000988, "cache_hit_rate": 0.704, "llm_call_count": 4, "calls": [{"model": "gpt-4o-mini", "input_tokens": 1013, "output_tokens": 43, "cached_tokens": 0, "total_tokens": 1056, "cost_usd": 0.000178, "duration_ms": 1175.5}, {"model": "gpt-4o-mini", "input_tokens": 1875, "output_tokens": 15, "cached_tokens": 1792, "total_tokens": 1890, "cost_usd": 0.000156, "duration_ms": 836.02}, {"model": "gpt-4.1-mini", "input_tokens": 2351, "output_tokens": 171, "cached_tokens": 2048, "total_tokens": 2522, "cost_usd": 0.0006, "duration_ms": 3478.51}, {"model": "gpt-4o-mini", "input_tokens": 212, "output_tokens": 39, "cached_tokens": 0, "total_tokens": 251, "cost_usd": 5.5e-05, "duration_ms": 1323.76}]}}}
+1777964726045 [INFO]	2026-05-05T07:05:26.045Z	d015a949-6220-4297-9f99-36f00179d4f5	{"timestamp": "2026-05-05T07:05:26.045388Z", "level": "INFO", "logger": "supervisor_agent", "message": "Request completed", "request_id": "req_20260505070518_323f840a", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "system", "operation": "request_complete", "data": {"request_complete": true, "total_duration_ms": 7612.16, "token_summary": {"total_input_tokens": 5451, "total_output_tokens": 268, "total_tokens": 5719, "total_cached_tokens": 3840, "total_estimated_cost_usd": 0.000988, "cache_hit_rate": 0.704, "llm_call_count": 4, "calls": [{"model": "gpt-4o-mini", "input_tokens": 1013, "output_tokens": 43, "cached_tokens": 0, "total_tokens": 1056, "cost_usd": 0.000178, "duration_ms": 1175.5}, {"model": "gpt-4o-mini", "input_tokens": 1875, "output_tokens": 15, "cached_tokens": 1792, "total_tokens": 1890, "cost_usd": 0.000156, "duration_ms": 836.02}, {"model": "gpt-4.1-mini", "input_tokens": 2351, "output_tokens": 171, "cached_tokens": 2048, "total_tokens": 2522, "cost_usd": 0.0006, "duration_ms": 3478.51}, {"model": "gpt-4o-mini", "input_tokens": 212, "output_tokens": 39, "cached_tokens": 0, "total_tokens": 251, "cost_usd": 5.5e-05, "duration_ms": 1323.76}]}}}
+1777964726045 ============================================================
+1777964726045 REQUEST TOKEN SUMMARY
+1777964726046 ============================================================
+1777964726046 LLM calls:        4
+1777964726046 Total input:      5,451 tokens
+1777964726046 Total output:     268 tokens
+1777964726046 Total tokens:     5,719 tokens
+1777964726046 Cached tokens:    3,840 (70.4% of input)
+1777964726046 Estimated cost:   $0.0010
+1777964726046 Total duration:   7612ms (7.6s)
+1777964726046 ────────────────────────────────────────────────────────
+1777964726046 Breakdown by call:
+1777964726046 1. gpt-4o-mini      in=1013   out=43    $0.0002 1176ms
+1777964726046 2. gpt-4o-mini      in=1875   out=15    (cached=1792) $0.0002 836ms
+1777964726046 3. gpt-4.1-mini     in=2351   out=171   (cached=2048) $0.0006 3479ms
+1777964726046 4. gpt-4o-mini      in=212    out=39    $0.0001 1324ms
+1777964726046 ============================================================
+1777964726054 END RequestId: d015a949-6220-4297-9f99-36f00179d4f5
+1777964726054 REPORT RequestId: d015a949-6220-4297-9f99-36f00179d4f5	Duration: 7680.72 ms	Billed Duration: 7681 ms	Memory Size: 2048 MB	Max Memory Used: 259 MB
+1777964733068 START RequestId: 432a61eb-a3c2-483d-95da-05052d49b519 Version: $LATEST
+1777964733151 ══════════════════════════════════════════════════════════════════════
+1777964733151 NEW MESSAGE  |  thread: c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d
+1777964733151 ══════════════════════════════════════════════════════════════════════
+1777964733151 User: yes
+1777964733152 ConversationState:
+1777964733152 extracted_info: {"_cached_tool_filter": {"docs_agent": ["create_from_template_and_data_ids", "list_my_docs"], "drive_agent": ["search_template_and_data", "upload_template", "search_files"]}, "template_name": "MinutesOfMeetingTEMP", "data_name": "TestData123", "new_title": "HelloTestTempandData902"}
+1777964733152 missing_fields: []
+1777964733152 intent: "ready_to_execute"
+1777964733152 clarification_question: null
+1777964733152 ready_for_execution: false
+1777964733152 execution_summary: "Create HelloTestTempandData902 from MinutesOfMeetingTEMP using TestData123 data"
+1777964733152 execution_mode: "standard"
+1777964733152 execution_history: []
+1777964733152 completed_tasks: []
+1777964733152 has_executed: false
+1777964733152 last_executed_at: null
+1777964733153 last_execution_status: null
+1777964733153 last_execution_message: null
+1777964733153 executing: false
+1777964733153 pending_actions: []
+1777964733153 workflow_paused: false
+1777964733153 remaining_steps: []
+1777964733153 workflow_context: null
+1777964733153 disambiguation_options: []
+1777964733153 disambiguation_variable: null
+1777964733153 ══════════════════════════════════════════════════════════════════════
+1777964735164 {"timestamp": "2026-05-05T07:05:35.163871Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: confirmation_formatter", "request_id": "req_20260505070533_0df1a053", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "llm", "operation": "confirmation_formatter", "data": {"model": "gpt-4o-mini", "tier": "formatter", "input_tokens": 212, "output_tokens": 42, "cached_tokens": 0, "total_tokens": 254, "estimated_cost_usd": 5.7e-05, "duration_ms": 1538.01, "success": true, "prompt_summary": "Formatting confirmation: Create HelloTestTempandData902 from MinutesOfMeeti...", "cumulative_tokens": 254, "cumulative_cost_usd": 5.7e-05}}
+1777964735164 [INFO]	2026-05-05T07:05:35.163Z	432a61eb-a3c2-483d-95da-05052d49b519	{"timestamp": "2026-05-05T07:05:35.163871Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: confirmation_formatter", "request_id": "req_20260505070533_0df1a053", "conversation_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "thread_id": "c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d", "component": "llm", "operation": "confirmation_formatter", "data": {"model": "gpt-4o-mini", "tier": "formatter", "input_tokens": 212, "output_tokens": 42, "cached_tokens": 0, "total_tokens": 254, "estimated_cost_usd": 5.7e-05, "duration_ms": 1538.01, "success": true, "prompt_summary": "Formatting confirmation: Create HelloTestTempandData902 from MinutesOfMeeti...", "cumulative_tokens": 254, "cumulative_cost_usd": 5.7e-05}}
+1777964735172 OK [formatter] gpt-4o-mini | confirmation_formatter | in=212 out=42 | $0.0001 | 1538ms | cumulative: in=212 out=42 total=254 $0.0001
+1777964735197 Thread c81b674b-12d6-4ef8-983a-52fb76b4e34a_0c5c9a6d ready - executing workflow...
+1777964735215 Date context: today=2026-05-05
+1777964735215 Starting workflow execution (mode=standard)...
+1777964735216 >>> RUNNING SUPERVISOR NODE VERSION 2 <<<
+1777964735216 ============================================================
+1777964735217 SUPERVISOR NODE - Planning Phase
+1777964735217 ============================================================
+1777964735217 User Input: Create HelloTestTempandData902 from MinutesOfMeetingTEMP using TestData123 data
+1777964735217 Parameters:
+1777964735217 - template_name: MinutesOfMeetingTEMP

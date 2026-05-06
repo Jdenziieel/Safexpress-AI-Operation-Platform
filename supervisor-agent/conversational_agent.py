@@ -1215,11 +1215,18 @@ Available agents and tools:
         if has_extracted_info and (is_awaiting_confirmation or is_awaiting_clarification):
             context_block = f"\nEXTRACTED: {json.dumps(conversation_state.extracted_info)}"
 
-        # File context (only when a file is attached)
+        # File context — explicit signal in BOTH directions so the LLM can
+        # safely decide between template_upload (file attached) and a Drive-
+        # search task_request (file referenced by name only). Without the
+        # explicit "NO_FILE_ATTACHED" line the LLM had no reliable signal
+        # and over-fired template_upload on phrases like "use X for the
+        # template, find it in my drive" — see Bug G in system-architecture.
         file_context = ""
         if uploaded_file:
             file_context = f"\nFILE: {uploaded_file.get('filename', 'unknown')} ({uploaded_file.get('mime_type', 'unknown')}, {uploaded_file.get('size', 0)} bytes)"
             file_context += f"\nNOTE: Uploaded file is source data. Any document name mentioned = what to CREATE."
+        else:
+            file_context = "\nNO_FILE_ATTACHED: User has NOT attached any file in this turn. Any file/document/template name mentioned refers to an EXISTING file in their Google Drive — classify as task_request so Tier 1 can plan a Drive lookup."
 
         # Log what we're feeding the LLM
         print(f"\n{'─'*50}")
@@ -1235,22 +1242,31 @@ Available agents and tools:
 
 CATEGORIES (pick ONE):
 1. confirmation — Approve/proceed ("yes", "ok", "go ahead")
-2. cancellation — Reject ONLY ("cancel", "forget it"). NOT when user suggests alternative.
+2. cancellation — User wants to ABORT the current pending request/workflow itself. ONLY when "cancel" / "stop" / "forget it" / "nevermind" appears alone OR with a discourse object that refers back to the conversation, not a domain entity ("cancel that", "cancel it", "cancel this", "cancel the request"). NOT when the verb operates on a NAMED DOMAIN RESOURCE (meeting / event / appointment / email / draft / message / document / doc / file / reservation / booking / task / reminder) — that is a task_request, even if the verb is the word "cancel".
 3. modification — Change field or approach ("change recipient", "send as regular email instead")
 4. followup_answer — Direct answer to bot's question ("john@example.com")
 5. casual_conversation — Chitchat, greetings
 6. unintelligible — Cannot understand
-7. template_upload — User uploaded a DOCUMENT (DOCX/PDF/DOC) AND explicitly wants to CREATE A NEW DOCUMENT from it as a template. NOT for simple file uploads to Drive.
-   - "Upload this DOCX and use it as a template" = template_upload
+7. template_upload — User HAS ATTACHED A FILE in this turn (DOCX/PDF/DOC visible as `FILE:` in context) AND wants to CREATE A NEW DOCUMENT from THAT FILE ALONE (single-source). NOT for simple file uploads to Drive. NOT when no file is attached — even if the user mentions the word "template". NOT when the user ALSO references a separate DATA FILE — that is a multi-source MERGE workflow, classify as task_request so Tier 1 can plan the merge.
+   - "Upload this DOCX and use it as a template" (FILE present, no data file mentioned) = template_upload
    - "Upload this image/file to my Drive folder" = task_request (NOT template_upload)
    - "Save this file in my folder" = task_request (NOT template_upload)
-8. task_request — New action request or redo
+   - "Use X as the template, find Y for the data, in my drive" (NO_FILE_ATTACHED) = task_request — Tier 1 will plan a Drive lookup. NEVER template_upload.
+   - "Create a doc from MyTemplate using MyData from Google Drive" (NO_FILE_ATTACHED) = task_request. NEVER template_upload.
+   - "Use this uploaded template and the data doc named X to create a new doc Y" (FILE present + data file mentioned) = task_request. NEVER template_upload — this is a MERGE workflow needing both the uploaded template AND the data file from Drive.
+   - "Use this template and find the data file Y, then create the merged doc Z" (FILE present + data file mentioned) = task_request. NEVER template_upload.
+8. task_request — New action request, redo, OR an action verb (cancel / delete / remove / stop / drop) operating on a NAMED DOMAIN RESOURCE.
+   - "cancel the meeting on May 9" / "cancel my 3pm appointment" → task_request (Tier 1 will plan a calendar event delete)
+   - "delete my last email about X" / "remove the draft to John" → task_request (gmail delete)
+   - "remove the document called Y" / "delete the file in Drive" → task_request (docs/drive delete)
+   - "stop sending the Friday digest" → task_request (modify a behavior — Tier 1 decides the right tool)
 9. status_update — Asking about previous result ("did it work?")
 10. file_query — User is asking to READ, summarize, analyze, or identify the content of an attached file WITHOUT requesting an action ("what does this say?", "summarize this", "can you identify this file?", "what's in this PDF?"). NOT file_query if user wants an action ("email this to John", "upload this to Drive", "create a doc from this").
 
 RULES:
 - "No, do X instead" or "just do X" = modification (NOT cancellation)
-- "cancel" with no alternative = cancellation
+- "cancel" / "stop" / "forget it" / "nevermind" alone or with a discourse object (it / that / this / the request) = cancellation
+- "cancel" / "delete" / "remove" / "stop" + a NAMED DOMAIN RESOURCE noun (meeting, event, appointment, email, draft, message, document, doc, file, reservation, booking, task, reminder) = task_request — even if the user's only verb is "cancel". The verb is operating on a real-world entity, not on the conversation.
 - query_scope only matters for task_request: "general" = asking capabilities, "specific" = wants action
 
 JSON OUTPUT — include ONLY relevant fields:
@@ -1660,7 +1676,80 @@ User: "{user_message}" """
             
             if category == "template_upload":
                 effective_file = uploaded_file or conversation_state.extracted_info.get("uploaded_file")
+
+                # SAFETY NET (Bug J/N companion): when the user attaches a file
+                # AND mentions a separate data file ("use this uploaded template
+                # + use the data doc named X + create a new doc Y"), Tier 0.5's
+                # category="template_upload" is too narrow — it routes to the
+                # single-source create_from_uploaded_template path which drops
+                # the data file entirely and (worse) collapses the data file
+                # name into document_title, producing a polluting doc titled
+                # after the data file. The fix: if the message has data-file
+                # phrasing, reclassify as task_request and defer to Tier 1.
+                # Tier 1 calls tool_filter.identify_agents_and_tools on the
+                # ORIGINAL user_message, which lets Block N inject the correct
+                # template+data merge tool chain (upload_template →
+                # search_files → create_from_template_and_data_ids).
+                # The phrase set mirrors tool_filter.py:_DATA_FOR_TEMPLATE_KEYWORDS
+                # but excludes the bare " data " token because by itself it
+                # over-fires on phrases like "data analysis" / "marketing data
+                # report" that are unrelated to merge workflows.
+                if effective_file:
+                    user_lower = (user_message or "").lower()
+                    data_file_markers = (
+                        "data doc", "data document", "data file",
+                        "data named", "data called", "data titled",
+                        "for the data", "with the data", "using the data",
+                        "content file", "the content file",
+                    )
+                    matched_data_marker = next(
+                        (m for m in data_file_markers if m in user_lower), None
+                    )
+                    if matched_data_marker:
+                        trace.step(
+                            "tier0.5",
+                            "template_upload reclassified to task_request — file attached AND data-file marker detected (this is a template+data MERGE workflow, not a single-source upload). Block N will inject the right tools in Tier 1.",
+                            {"matched_marker": matched_data_marker, "filename": effective_file.get("filename")}
+                        )
+                        return None, "specific", None  # defer to Tier 1
+
                 if not effective_file:
+                    # SAFETY NET (Bug G fix): the LLM may still misclassify a
+                    # "use X for the template, find it in my drive" request as
+                    # template_upload despite the strengthened prompt + the
+                    # NO_FILE_ATTACHED signal. Catch the false positive in
+                    # code: if the user message has explicit Drive-search
+                    # markers (any phrase referencing files inside Drive),
+                    # reclassify as task_request and defer to Tier 1 so the
+                    # planner can chain drive_agent.search_template_and_data
+                    # → docs_agent.create_from_template_and_data_ids instead
+                    # of asking the user to upload a file they already have
+                    # in Drive. Without this guard, Tier 0.5 short-circuits
+                    # the entire planning path and the user gets stuck on
+                    # "Please upload a template file to continue."
+                    user_lower = (user_message or "").lower()
+                    drive_markers = (
+                        "in my drive", "in my google drive", "in google drive",
+                        "from my drive", "from google drive", "from my google drive",
+                        "in drive", "on my drive", "on google drive",
+                        "from drive", "find in drive", "find it in drive",
+                        "find them in drive", "find them in my drive",
+                        "find it in my drive", "find them in google drive",
+                        "find it in google drive", "search drive", "search my drive",
+                        "look in my drive", "look in drive", "look in google drive",
+                        "located in drive", "located in my drive",
+                        "stored in drive", "stored in my drive", "stored in google drive",
+                        "you can find those files within my google drive",
+                        "you can find them in my drive", "you can find them in drive",
+                        "use a doc named", "use a document named",
+                    )
+                    if any(marker in user_lower for marker in drive_markers):
+                        trace.step(
+                            "tier0.5",
+                            "template_upload reclassified to task_request — Drive-search markers detected (no file attached)",
+                            {"matched_marker": next(m for m in drive_markers if m in user_lower)}
+                        )
+                        return None, "specific", None  # defer to Tier 1
                     trace.step("tier0.5", "template_upload detected but no file provided")
                     return ConversationAnalysis(
                         intent=ConversationIntent.NEEDS_CLARIFICATION,

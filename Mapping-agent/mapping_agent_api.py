@@ -76,8 +76,14 @@ class ToolResponse(BaseModel):
     no_results: Optional[bool] = None
 
 
-# In-memory storage for mapping templates (use Redis/DB in production)
-MAPPING_TEMPLATES = {}
+# Mapping template persistence is delegated to template_store. In Lambda
+# (`PERSISTENCE_BACKEND=dynamodb`) this writes to the `Sup_MappingTemplates`
+# DynamoDB table — survives cold starts AND is shared across concurrent
+# containers. Locally (env unset or `sqlite`) it falls back to an in-memory
+# dict so dev/unit-test behavior is unchanged. Per-user isolation is
+# enforced by the (user_id, template_id) compound key — a template saved
+# under user A is invisible to user B.
+import template_store  # noqa: E402  (import after module-level setup above)
 
 
 # ============================================================
@@ -750,78 +756,76 @@ def save_mapping_template(
     mappings: Dict[str, str],
     target_columns: Optional[List[str]] = None,
     metadata: Optional[Dict[str, Any]] = None,
+    user_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Save mapping configuration as a reusable template
+    Save mapping configuration as a reusable template.
+
+    Persisted to the per-user partition of `Sup_MappingTemplates` (DDB) when
+    `PERSISTENCE_BACKEND=dynamodb`, otherwise to an in-memory dict (local dev).
+    `user_id` is auto-injected by the lambda_function handler from the
+    supervisor's credentials_dict._user_id; callers don't pass it explicitly.
 
     Args:
-        template_name: Unique name for the template
-        mappings: Column mappings to save
-        target_columns: Optional target column list
-        metadata: Optional metadata (description, tags, etc.)
+        template_name: Human-readable name (e.g. "Q4 Delivery Mapping").
+        mappings: source_col → target_col dict to save.
+        target_columns: Optional target column list.
+        metadata: Optional metadata (description, tags, etc.).
+        user_id: Auto-injected; do NOT pass from the planner.
 
     Returns:
-        Success status and template ID
+        Success status, template_id, and persisted timestamps.
     """
     try:
-        template_id = f"template_{template_name.lower().replace(' ', '_')}"
-
-        template = {
-            "id": template_id,
-            "name": template_name,
-            "mappings": mappings,
-            "target_columns": target_columns or [],
-            "metadata": metadata or {},
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
-        }
-
-        # Store in memory (use Redis/DB in production)
-        MAPPING_TEMPLATES[template_id] = template
-
+        template = template_store.save_template(
+            user_id=user_id,
+            template_name=template_name,
+            mappings=mappings,
+            target_columns=target_columns,
+            metadata=metadata,
+        )
         return {
             "success": True,
-            "template_id": template_id,
-            "template_name": template_name,
+            "template_id": template["id"],
+            "template_name": template["name"],
+            "created_at": template["created_at"],
+            "updated_at": template["updated_at"],
             "message": f"Template '{template_name}' saved successfully",
         }
-
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {"success": False, "error": f"Failed to save template: {str(e)}"}
 
 
-def load_mapping_template(template_name: str) -> Dict[str, Any]:
+def load_mapping_template(
+    template_name: str,
+    user_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """
-    Load a saved mapping template
+    Load a saved mapping template.
+
+    Looks up by deterministic ID first (lowercased + underscores), then by
+    case-insensitive name within the same user's partition. Returns a
+    structured "not found" error rather than raising — so the orchestrator
+    can recover by listing templates or asking the user.
 
     Args:
-        template_name: Name or ID of the template to load
+        template_name: Name or template_id used at save time.
+        user_id: Auto-injected; do NOT pass from the planner.
 
     Returns:
-        Template configuration with mappings
+        Template configuration with mappings.
     """
     try:
-        # Try as ID first
-        template_id = f"template_{template_name.lower().replace(' ', '_')}"
-
-        if template_id in MAPPING_TEMPLATES:
-            template = MAPPING_TEMPLATES[template_id]
-        else:
-            # Try finding by name
-            found = None
-            for temp_id, temp in MAPPING_TEMPLATES.items():
-                if temp["name"].lower() == template_name.lower():
-                    found = temp
-                    break
-
-            if not found:
-                return {
-                    "success": False,
-                    "error": f"Template '{template_name}' not found",
-                }
-
-            template = found
-
+        template = template_store.load_template(
+            user_id=user_id, template_name=template_name
+        )
+        if not template:
+            return {
+                "success": False,
+                "error": f"Template '{template_name}' not found",
+            }
         return {
             "success": True,
             "template_id": template["id"],
@@ -832,34 +836,38 @@ def load_mapping_template(template_name: str) -> Dict[str, Any]:
             "created_at": template.get("created_at"),
             "updated_at": template.get("updated_at"),
         }
-
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {"success": False, "error": f"Failed to load template: {str(e)}"}
 
 
-def list_mapping_templates() -> Dict[str, Any]:
+def list_mapping_templates(user_id: Optional[str] = None) -> Dict[str, Any]:
     """
-    List all saved mapping templates
+    List the current user's saved mapping templates.
+
+    Args:
+        user_id: Auto-injected; do NOT pass from the planner.
 
     Returns:
-        List of available templates with metadata
+        List of available templates with metadata.
     """
     try:
-        templates = []
-        for template_id, template in MAPPING_TEMPLATES.items():
-            templates.append(
-                {
-                    "id": template["id"],
-                    "name": template["name"],
-                    "mapping_count": len(template.get("mappings", {})),
-                    "created_at": template.get("created_at"),
-                    "metadata": template.get("metadata", {}),
-                }
-            )
-
+        templates_raw = template_store.list_templates(user_id=user_id)
+        templates = [
+            {
+                "id": t["id"],
+                "name": t["name"],
+                "mapping_count": len(t.get("mappings", {})),
+                "created_at": t.get("created_at"),
+                "metadata": t.get("metadata", {}),
+            }
+            for t in templates_raw
+        ]
         return {"success": True, "templates": templates, "count": len(templates)}
-
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {"success": False, "error": f"Failed to list templates: {str(e)}"}
 
 

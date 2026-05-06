@@ -16,3 +16,17 @@ langchain-core>=0.1.0
 langchain-openai>=0.0.8
 langgraph>=0.0.40
 openai>=1.12.0
+# python-docx: required by tools._read_docx_from_drive and
+# document_format_extractor._extract_docx_structure /
+# create_from_uploaded_template. Both paths run when the user feeds a
+# .docx file (e.g. data file in template_with_data_workflow). Without
+# this dep cold-start succeeds but the first .docx invocation crashes
+# with `ModuleNotFoundError: No module named 'docx'`. See Bug L in
+# .cursor/rules/system-architecture.mdc.
+python-docx>=1.1.0
+# pdfplumber: required by tools._read_file_content for `.pdf` inputs to
+# `create_doc_with_content` / `create_from_template_and_data_ids`
+# (Drive-side .pdf data files). Same crash class as python-docx
+# (ModuleNotFoundError: 'pdfplumber') if a user supplies a PDF data
+# source.
+pdfplumber>=0.10.3

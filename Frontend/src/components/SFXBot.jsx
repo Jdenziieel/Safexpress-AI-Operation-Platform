@@ -5,14 +5,13 @@ import { useActivate, useUnactivate } from "react-activation";
 import { 
   Send, 
   Square,
-  User,
-  Bot,
   Edit2,
   Check,
   XCircle,
   Trash2,
   Menu,
-  MoreVertical
+  MoreVertical,
+  Sparkles
 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -560,6 +559,39 @@ function SFXBot() {
             tokenCount = data.tokens_used || data.tokens || 0;
             const finalContent = data.full_response || data.content || fullContent;
             fullContent = finalContent;
+
+            // ── Quota / deactivation pre-flight block (kb-lambda) ──────
+            // kb-lambda's ws_chat_stream sends quota / deactivation
+            // blocks as a normal `complete` event with `was_blocked: true`
+            // and `block_reason: 'quota_exhausted' | 'account_deactivated'`,
+            // not as a `type: error` event. Without this branch the
+            // friendly long-form text just renders inline as an
+            // assistant bubble (the screenshot the user sent). Mirror
+            // AIChatNew's pattern: replace the bubble with a short
+            // notice and trigger the shared QuotaExceededModal so the
+            // SFXBot UX matches the AI Assistant flow exactly.
+            if (data.was_blocked === true) {
+              const reason = data.block_reason === 'account_deactivated'
+                ? 'account_deactivated'
+                : 'quota_exceeded';
+              const shortText = reason === 'account_deactivated'
+                ? '⚠️ Your account has been deactivated. Please contact an administrator.'
+                : '⚠️ Your token quota has been exceeded. Please wait for your quota to reset or contact an administrator.';
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.message_id === assistantMessageId
+                    ? { ...msg, content: shortText, error: true, metadata: { tokens_used: 0 } }
+                    : msg
+                )
+              );
+              setQuotaInfo({ reason, message: finalContent });
+              setShowQuotaModal(true);
+              dispatchQuotaRefresh('sfxbot-quota-blocked');
+              clearTimeout(safetyTimeout);
+              ws.close();
+              return;
+            }
+
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.message_id === assistantMessageId
@@ -807,7 +839,7 @@ function SFXBot() {
               {messages.length === 0 ? (
                 <div className="chat-welcome">
                   <div className="welcome-icon">
-                    <Bot size={64} />
+                    <Sparkles size={56} strokeWidth={1.5} />
                   </div>
                   <h2>How can I help you find information?</h2>
                   <p>Ask me about company policies, procedures, or documentation</p>
@@ -835,13 +867,11 @@ function SFXBot() {
                         key={msg.message_id}
                         className={`message ${msg.role === "user" ? "user" : "assistant"}`}
                       >
-                        <div className="message-avatar">
-                          {msg.role === "user" ? (
-                            <User size={20} />
-                          ) : (
-                            <Bot size={20} />
-                          )}
-                        </div>
+                        {msg.role === "assistant" && (
+                          <div className="message-glyph" aria-hidden="true">
+                            <Sparkles size={18} strokeWidth={1.75} />
+                          </div>
+                        )}
                         <div className="message-content">
                           <div className="message-text">
                             {isEmptyAssistantWhileStreaming ? (

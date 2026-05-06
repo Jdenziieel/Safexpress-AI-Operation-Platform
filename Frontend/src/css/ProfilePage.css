@@ -627,6 +627,100 @@
   margin-top: 2px;
 }
 
+/* AI Assistant activity (per-user mirror of LogsPage) ---------
+   Same layout language as the Token Consumption History modal in
+   QuotaPage so the user sees the same panel in both places. Subdued
+   slate background (vs the white .totals-card) so the eye reads
+   it as a related-but-distinct grouping. The brand-navy header
+   threads visual consistency with the QuotaWidget + chat avatars. */
+.token-ai-activity {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px 12px 16px;
+}
+
+.token-ai-activity-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #26326e;
+  margin-bottom: 12px;
+}
+
+.token-ai-activity-hint {
+  color: #94a3b8;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-style: italic;
+}
+
+.token-ai-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.token-ai-activity-tile {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.token-ai-activity-period {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.token-ai-activity-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.token-ai-activity-num {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2937;
+  font-variant-numeric: tabular-nums;
+}
+
+.token-ai-activity-lbl {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+/* SFXBot variant — indigo accent so the SFX Bot activity block reads
+   as related-but-distinct from AI Assistant. Matches the SFXBot pie
+   slice color (SERVICE_COLORS['knowledge-base']) for visual continuity
+   with the chart. Only the icon tint and a 2px left rule change; the
+   numbers themselves stay neutral so the user can compare counts
+   between the two surfaces without bias. Kept in lockstep with
+   QuotaPage.css's .history-ai-activity--sfxbot rules. */
+.token-ai-activity--sfxbot .token-ai-activity-header {
+  color: #4f46e5;
+}
+.token-ai-activity--sfxbot {
+  border-left: 2px solid #6366f1;
+}
+
+@media (max-width: 720px) {
+  .token-ai-activity-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Daily chart ------------------------------------------------- */
 .token-chart-wrap {
   background: #ffffff;

@@ -3333,6 +3333,103 @@
   color: #64748b;
 }
 
+/* ── AI Assistant activity (per-user mirror of LogsPage) ────────────
+   Light-touch panel that sits between the KPI tiles and the charts
+   row so the eye reads top-to-bottom: "your overall consumption →
+   your AI Assistant volume → where the tokens go". Brand-navy accent
+   on the period labels matches the QuotaWidget, the SFXBot avatar,
+   and the AI Assistant Sparkles glyph (see Frontend/src/css/
+   AIChatNew.css and SFXChat.css).
+   Mobile breakpoint reuses .history-charts-row's @media rule below. */
+
+.history-ai-activity {
+  margin: 0 0 18px 0;
+  padding: 14px 16px 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.history-ai-activity-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #26326e;
+  margin-bottom: 12px;
+}
+
+.history-ai-activity-hint {
+  color: #94a3b8;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-style: italic;
+}
+
+.history-ai-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.history-ai-activity-tile {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-ai-activity-period {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.history-ai-activity-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.history-ai-activity-num {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-ai-activity-lbl {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+/* SFXBot variant — same layout, indigo accent so the two surface
+   blocks read as related-but-distinct (matches the indigo SFXBot
+   slice color in SERVICE_COLORS['knowledge-base']). Only the icon
+   tint and a 2px left rule change; numbers and tile chrome stay
+   neutral so quick comparison between AI Assistant and SFX Bot
+   counts isn't visually weighted toward one surface. */
+.history-ai-activity--sfxbot .history-ai-activity-header {
+  color: #4f46e5;
+}
+.history-ai-activity--sfxbot {
+  border-left: 2px solid #6366f1;
+}
+
+@media (max-width: 720px) {
+  .history-ai-activity-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Charts row ──────────────────────────────────────────────────── */
 
 .history-charts-row {

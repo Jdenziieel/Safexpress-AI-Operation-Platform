@@ -88,9 +88,20 @@ def sanitize_inputs(inputs: dict) -> dict:
 
 def resolve_calendar_id(calendar_name: str = None,
                          credentials_dict: dict = None) -> str:
-    """Resolve calendar name to ID. Returns 'primary' if not found."""
+    """Resolve calendar name to ID. Returns 'primary' if not found.
+
+    Special sentinel: ``"all"`` (case-insensitive) is passed through
+    untouched. Downstream `search_events_impl` recognises it and fans
+    out across every calendar in the user's calendarList. This sentinel
+    is intentionally NOT translated to a real calendar ID so a single
+    string can flow from the planner all the way to the Google API
+    boundary.
+    """
     if not calendar_name or calendar_name.lower() == "primary":
         return "primary"
+
+    if calendar_name.strip().lower() == "all":
+        return "all"
 
     calendar_id = find_calendar_id_by_name(calendar_name, credentials_dict)
     if calendar_id:

@@ -7,3 +7,16 @@ fastapi>=0.110.0
 # sheets_agent_api.py imports uvicorn at module level (dead in Lambda).
 uvicorn>=0.30.0
 pydantic>=2.5.0
+# pandas: required by sheets_agent_api.upload_mapped_data and
+# update_by_date_match (both lazy-import pandas to convert
+# transformed_data JSON into a DataFrame before writing rows). The
+# original SafExpressOps sheets-agent (deployed in production) imports
+# pandas at module level — so this is parity restoration, not a new
+# feature. Without it, the first delivery-order workflow that finishes
+# end-to-end on Lambda will crash with `ModuleNotFoundError: 'pandas'`.
+# See Bug L in .cursor/rules/system-architecture.mdc.
+#
+# Pinned to 2.x major: pandas 3.0 (June 2026) drops several long-deprecated
+# APIs and the source/dev environment ships 2.1.0. Stay on 2.x to avoid
+# surprise behavior changes in `read_json` / dtype handling at runtime.
+pandas>=2.1.0,<3.0

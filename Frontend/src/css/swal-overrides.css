@@ -1,0 +1,232 @@
+/*
+ * Gemini-clean SweetAlert2 overrides
+ * ----------------------------------
+ *
+ * Why a global override file instead of per-call `customClass`?
+ * We have 50+ Swal.fire() callsites across Accounts, AIChatNew,
+ * DynamicMapping, EditAccount, OnePageReportPage, SFXBot, and more
+ * (audit 2026-05-03). Hand-styling each one would be brittle and
+ * would re-introduce inconsistency every time a new modal is added.
+ * Imported once from main.jsx after index.css, this file restyles
+ * every Swal popup automatically — including modals that already
+ * declare their own customClass (specificity wins via shared
+ * .swal2-popup hooks). Per-modal customClass is still respected for
+ * additive layout tweaks (e.g. a wider table picker); this file
+ * only changes the default look.
+ *
+ * Design principles (matching the Gemini sparkle aesthetic we adopted
+ * for chat avatars):
+ *   1. Less chrome. Smaller border-radius (12px not 20px), lighter
+ *      shadow, tighter padding, no decorative borders on icons.
+ *   2. Subdued icons. Replace SweetAlert's bouncing 80px colored
+ *      icons with calm 40px monochrome glyphs that match the brand
+ *      palette. Animation reduced to a single fade-in — no scale
+ *      bounce, no shake.
+ *   3. Brand-consistent buttons. Confirm = brand navy (#26326e),
+ *      cancel = neutral border, both sized at 36px height to match
+ *      the chat composer button aesthetic.
+ *   4. Toast mode unchanged structurally but recolored. Toasts are
+ *      already minimal — we just align their look with modals.
+ */
+
+/* ---------- Container + base typography ---------- */
+
+.swal2-popup {
+  padding: 1.5rem 1.75rem !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.06),
+    0 4px 16px rgba(15, 23, 42, 0.08) !important;
+  border: 1px solid #e5e7eb !important;
+  background: #ffffff !important;
+  font-family: inherit !important;
+}
+
+.swal2-title {
+  color: #1e293b !important;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  padding: 0 0 0.25rem 0 !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.swal2-html-container,
+.swal2-content {
+  color: #475569 !important;
+  font-size: 0.9375rem !important;
+  line-height: 1.55 !important;
+  margin: 0.5rem 0 0 0 !important;
+  padding: 0 !important;
+}
+
+/* ---------- Calm icons (no bounce, no thick border) ---------- */
+
+.swal2-icon {
+  width: 44px !important;
+  height: 44px !important;
+  margin: 0 auto 0.875rem auto !important;
+  border-width: 1.5px !important;
+  font-size: 1.25rem !important;
+  /* Suppress the heartbeat / bounce keyframes; a fade-in via the
+     popup itself is enough to draw attention without the gif feel. */
+  animation: none !important;
+}
+
+.swal2-icon.swal2-warning {
+  border-color: #f59e0b !important;
+  color: #f59e0b !important;
+}
+
+.swal2-icon.swal2-error {
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+.swal2-icon.swal2-success {
+  border-color: #22c55e !important;
+  color: #22c55e !important;
+}
+
+.swal2-icon.swal2-info {
+  border-color: #26326e !important;
+  color: #26326e !important;
+}
+
+.swal2-icon.swal2-question {
+  border-color: #6366f1 !important;
+  color: #6366f1 !important;
+}
+
+/* Kill the various sub-element animations (X cross marks, success
+   ticks). They look noisy at the smaller icon size. */
+.swal2-icon .swal2-x-mark,
+.swal2-icon .swal2-success-line-tip,
+.swal2-icon .swal2-success-line-long,
+.swal2-icon .swal2-success-ring {
+  animation: none !important;
+}
+
+.swal2-icon .swal2-success-ring {
+  border-width: 1.5px !important;
+}
+
+/* ---------- Buttons ---------- */
+
+.swal2-actions {
+  margin: 1.25rem 0 0 0 !important;
+  gap: 0.5rem !important;
+}
+
+.swal2-styled {
+  border-radius: 8px !important;
+  padding: 0.5rem 1.125rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  height: 36px !important;
+  box-shadow: none !important;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease !important;
+}
+
+.swal2-styled:focus {
+  box-shadow: 0 0 0 3px rgba(38, 50, 110, 0.18) !important;
+}
+
+.swal2-styled.swal2-confirm {
+  background: #26326e !important;
+  color: #ffffff !important;
+  border: 1px solid #26326e !important;
+}
+
+.swal2-styled.swal2-confirm:hover {
+  background: #1c2557 !important;
+  border-color: #1c2557 !important;
+}
+
+.swal2-styled.swal2-cancel {
+  background: #ffffff !important;
+  color: #475569 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.swal2-styled.swal2-cancel:hover {
+  background: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+  color: #1e293b !important;
+}
+
+/* Destructive intent — when a confirm button is also the danger CTA
+   (delete chat, deactivate user) the parent SweetAlert config sets
+   its color via the `confirmButtonColor` option, which we override
+   to the brand navy above. Authors who need a red destructive
+   button should add `confirm-button-destructive` via customClass. */
+.swal2-styled.swal2-confirm.confirm-button-destructive {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+
+.swal2-styled.swal2-confirm.confirm-button-destructive:hover {
+  background: #b91c1c !important;
+  border-color: #b91c1c !important;
+}
+
+/* ---------- Inputs for the Swal input prompt mode ---------- */
+
+.swal2-input,
+.swal2-textarea,
+.swal2-select {
+  border-radius: 8px !important;
+  border: 1px solid #d1d5db !important;
+  font-size: 0.9375rem !important;
+  padding: 0.5rem 0.75rem !important;
+  height: 38px !important;
+  box-shadow: none !important;
+  margin: 0.75rem 0 0 0 !important;
+}
+
+.swal2-input:focus,
+.swal2-textarea:focus,
+.swal2-select:focus {
+  border-color: #26326e !important;
+  box-shadow: 0 0 0 3px rgba(38, 50, 110, 0.15) !important;
+}
+
+/* ---------- Toast mode ---------- */
+
+.swal2-toast {
+  padding: 0.875rem 1rem !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.06),
+    0 6px 20px rgba(15, 23, 42, 0.1) !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.swal2-toast .swal2-title {
+  font-size: 0.9375rem !important;
+  font-weight: 500 !important;
+}
+
+.swal2-toast .swal2-icon {
+  width: 24px !important;
+  height: 24px !important;
+  margin: 0 0.625rem 0 0 !important;
+  border-width: 1.25px !important;
+}
+
+/* ---------- Backdrop + reduced-motion ---------- */
+
+.swal2-backdrop-show {
+  background: rgba(15, 23, 42, 0.35) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swal2-popup,
+  .swal2-icon,
+  .swal2-toast {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -97,9 +97,31 @@ def _extract_text(file_path: str, max_chars: int) -> Optional[str]:
     return content if content.strip() else None
 
 
+def _normalize_enrichment_tasks(tasks: Any) -> List[str]:
+    """Coerce LLM-returned task list into a list of canonical task-name strings.
+
+    Tier 0.5 is supposed to return ["generate_subject", ...] but gpt-4o-mini
+    sometimes emits [{"type": "generate_subject"}, ...] instead. Both shapes
+    must work because reclassifying every misformed response costs an LLM
+    call we can avoid by tolerating both shapes here. Unrecognized shapes are
+    dropped silently — better to lose one task than crash the whole turn.
+    """
+    out: List[str] = []
+    for t in tasks or []:
+        if isinstance(t, str):
+            if t.strip():
+                out.append(t.strip())
+        elif isinstance(t, dict):
+            name = t.get("type") or t.get("name") or t.get("task")
+            if isinstance(name, str) and name.strip():
+                out.append(name.strip())
+        # All other shapes (None, list, int, ...) are silently dropped.
+    return out
+
+
 def enrich_message(
     user_message: str,
-    enrichment_tasks: List[str],
+    enrichment_tasks: List[Any],
     file_context: Optional[str] = None,
     openai_api_key: Optional[str] = None,
 ) -> EnrichmentResult:
@@ -113,8 +135,11 @@ def enrich_message(
     No conversation history. No entity memory. Only current message + file context.
 
     Returns EnrichmentResult with enriched_message and optional context_variables.
+
+    Note: enrichment_tasks accepts either a list of strings OR a list of
+    {"type": "..."} dicts (Tier 0.5 LLM is inconsistent on the shape).
     """
-    task_set = set(enrichment_tasks)
+    task_set = set(_normalize_enrichment_tasks(enrichment_tasks))
     context_variables = {}
 
     # Type B: passthrough — store file content as variable, don't send to LLM

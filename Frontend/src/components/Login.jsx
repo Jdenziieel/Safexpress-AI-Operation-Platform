@@ -11,6 +11,45 @@ const Login = ({ onLogin }) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // ── Google Workspace scopes the AI Assistant + sub-agents need ─────
+  // Without these the OAuth code exchange (auth-lambda/lambda_google_login.py)
+  // returns a token with only `openid email profile` — every Gmail / Drive /
+  // Sheets / Docs / Calendar API call then fails with HTTP 403 "Request had
+  // insufficient authentication scopes" (root cause of the 2026-05-03 bug
+  // where freshly-onboarded users hit a 403 on `search_emails` despite
+  // legacy users continuing to work). Set matches what the legacy
+  // admin@safexpressops.com token (minted via the old generate_gmail_tokens
+  // dev script) already carries — verified live against
+  // https://oauth2.googleapis.com/tokeninfo — so the GCP project's OAuth
+  // consent screen is already approved for every entry below; we are not
+  // adding any new permissions at the project level, just plumbing them
+  // through the in-app login flow that previously requested none of them.
+  //
+  // Existing users will see Google's consent screen ONCE on next login
+  // (incremental authorization) and click through. Affected (paul-type)
+  // users whose stored refresh_token already lacks these scopes need to
+  // either sign out + sign in (Google will prompt because the requested
+  // set changed) or revoke at myaccount.google.com/permissions and sign
+  // in again.
+  const GOOGLE_OAUTH_SCOPES = [
+    'openid',
+    'email',
+    'profile',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/gmail.modify',
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/drive.file',
+    'https://www.googleapis.com/auth/drive.metadata.readonly',
+    'https://www.googleapis.com/auth/documents',
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/calendar.events',
+    'https://www.googleapis.com/auth/calendar.readonly',
+  ].join(' ');
+
   // ← Replace handleGoogleSuccess with this useGoogleLogin hook
   const googleLogin = useGoogleLogin({
     onSuccess: async (codeResponse) => {
@@ -58,6 +97,7 @@ const Login = ({ onLogin }) => {
       setError("Google login failed. Please try again.");
     },
     flow: 'auth-code',
+    scope: GOOGLE_OAUTH_SCOPES,
     // Removed ux_mode popup - it causes redirect_uri_mismatch with Google OAuth
   });
 

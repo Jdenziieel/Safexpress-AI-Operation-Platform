@@ -1,0 +1,90 @@
+{
+    "events": [
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453484,
+            "message": "START RequestId: 379ecf37-d38d-459f-9c43-af84880175eb Version: $LATEST\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887647701039394581658174878110999817546125585350656"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453486,
+            "message": "Direct execution: create_from_template_and_data_ids\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887647745640884978719421161182436362842848597311489"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453486,
+            "message": "============================================================\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887647745640884978719421161182436362842848597311490"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453486,
+            "message": "CREATE FROM TEMPLATE & DATA (USING IDs)\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887647745640884978719421161182436362842848597311491"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453486,
+            "message": "============================================================\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887647745640884978719421161182436362842848597311492"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453486,
+            "message": "Template ID: 154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887647745640884978719421161182436362842848597311493"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453486,
+            "message": "Data ID: 1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887647745640884978719421161182436362842848597311494"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453486,
+            "message": "New Title: HelloTestTempandData\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887647745640884978719421161182436362842848597311495"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453486,
+            "message": "Output Format: google_docs\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887647745640884978719421161182436362842848597311496"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453486,
+            "message": "============================================================\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887647745640884978719421161182436362842848597311497"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453574,
+            "message": "Reading data file...\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887649708106462449414257616325644355898661123588106"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453959,
+            "message": "Data file: TestData123 (Type: application/vnd.google-apps.document)\n",
+            "ingestionTime": 1777962462498,
+            "eventId": "39649887658293893363883704167107577179325517840926048267"
+        },
+        {
+            "logStreamName": "2026/05/05/[$LATEST]7ce331d0500749d89ed088d4ece85f54",
+            "timestamp": 1777962453959,
+            "message": 

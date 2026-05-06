@@ -66,6 +66,36 @@ export const useWebSocketAgent = () => {
     const reconnectAttempts = useRef(0);
     const maxReconnectAttempts = 5;
     const intentionalCloseRef = useRef(false);
+    // Set true by `cancelStreaming()`, cleared by the next
+    // `sendAgentMessage()`. While true, inbound progress / paused /
+    // complete / error frames for the canceled run are dropped on the
+    // floor. The supervisor Lambda keeps running to completion (we have
+    // no server-side cancel endpoint today) but its eventual frames are
+    // ignored so the UI stays in the user-visible "stopped" state.
+    const cancelledRef = useRef(false);
+
+    // Pong-watchdog state. The 5-min heartbeat (see useEffect at the
+    // bottom) bumps `lastPingSentAtRef`; every inbound `pong` frame
+    // bumps `lastPongAtRef`. If a ping goes 30s without a matching
+    // pong, the socket is considered silently dead — common after a
+    // laptop sleep / network blip / NAT timeout where neither side
+    // gets a TCP RST and `onclose` never fires. We then force-close
+    // and rely on the existing exponential-backoff reconnect loop.
+    //
+    // Why this matters for the "5–15 min idle errors" the user reported:
+    // without this watchdog, a silently-dead socket stays in
+    // `readyState: OPEN` forever, so `sendAgentMessage()` cheerfully
+    // calls `.send()` which fires `onerror` → `onclose`, but ONLY
+    // after a long browser-controlled timeout (often 30–120s).
+    // During that window the user sees a hung "Sending…" or a generic
+    // "WebSocket is not connected" error. The watchdog cuts that
+    // window down to 30s and triggers a clean reconnect proactively.
+    const lastPingSentAtRef = useRef(0);
+    const lastPongAtRef = useRef(0);
+    // Pong-grace window. 30s comfortably covers cross-region API
+    // Gateway round-trips (typically <500ms) and survives transient
+    // packet loss without flapping the connection.
+    const PONG_GRACE_MS = 30 * 1000;
 
     // Caller-supplied callbacks. Stored in refs so we don't reconnect on
     // every render when callers redefine handlers inline.
@@ -85,6 +115,19 @@ export const useWebSocketAgent = () => {
      */
     const handleMessage = useCallback((data) => {
         const handlers = handlersRef.current;
+
+        // If the user clicked Stop, swallow every per-run frame until the
+        // next `sendAgentMessage()` clears the flag. Connection-level
+        // frames (connection_established / pong) still flow so the
+        // socket stays usable for the next message.
+        if (
+            cancelledRef.current &&
+            data.type !== 'connection_established' &&
+            data.type !== 'pong'
+        ) {
+            console.debug('[WS Agent] Dropping post-cancel frame:', data.type);
+            return;
+        }
 
         switch (data.type) {
             case 'connection_established':
@@ -138,6 +181,7 @@ export const useWebSocketAgent = () => {
                 break;
 
             case 'pong':
+                lastPongAtRef.current = Date.now();
                 if (handlers.onPong) handlers.onPong(data);
                 break;
 
@@ -258,9 +302,23 @@ export const useWebSocketAgent = () => {
      */
     const sendAgentMessage = useCallback((threadId, message, uploadedFile = null) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+            // Stale-socket recovery — common scenario after 5–15 min
+            // idle when a laptop wakes up or the network blinked. The
+            // old socket is in CLOSING/CLOSED but onclose may not have
+            // fired yet (or fired during sleep and the reconnect
+            // backoff hasn't kicked in). Kick off a fresh connect()
+            // and surface a transient "Reconnecting…" state instead of
+            // a hard error so the UI doesn't trap the user. We also
+            // force-close any zombie wsRef so the auto-reconnect loop
+            // takes over from a clean state.
+            if (wsRef.current) {
+                try { wsRef.current.close(4000, 'sendAgentMessage on stale socket'); }
+                catch (_) { /* noop */ }
+            }
+            connect();
             setError({
                 reason:  'NOT_CONNECTED',
-                message: 'WebSocket is not connected. Please wait for connection.',
+                message: 'Reconnecting — your message was not sent. Please try again in a moment.',
             });
             return false;
         }
@@ -277,7 +335,11 @@ export const useWebSocketAgent = () => {
         }
 
         // Reset per-request state. Anything leftover from a previous
-        // request (progress, error) would otherwise leak into the new one.
+        // request (progress, error, leftover cancel flag) would
+        // otherwise leak into the new one. Clearing `cancelledRef` here
+        // is what makes the user's next message immediately responsive
+        // again after they hit Stop on the previous one.
+        cancelledRef.current = false;
         setIsStreaming(true);
         setStatusMessage('Sending…');
         setProgress(null);
@@ -300,20 +362,45 @@ export const useWebSocketAgent = () => {
             setIsStreaming(false);
             return false;
         }
-    }, []);
+    }, [connect]);
 
     /**
      * Send a heartbeat ping. The supervisor responds with `{type:"pong"}`
      * via the kb-ws-default route — useful to keep the API Gateway idle
      * timeout from killing the socket between sparse user messages.
+     *
+     * Also stamps `lastPingSentAtRef` so the watchdog (in the heartbeat
+     * useEffect) can detect missing pongs.
      */
     const ping = useCallback(() => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
             try {
                 wsRef.current.send(JSON.stringify({ action: 'ping' }));
+                lastPingSentAtRef.current = Date.now();
             } catch (_) {
                 // Heartbeat failures are non-fatal — onclose will trigger reconnect.
             }
+        }
+    }, []);
+
+    /**
+     * Force-close the current socket without flagging it as intentional.
+     * Used by the pong-watchdog and the visibility/online listeners when
+     * we suspect the socket has gone silently dead. The existing
+     * `onclose` handler will then kick off the exponential-backoff
+     * reconnect loop.
+     */
+    const forceReconnect = useCallback((reason) => {
+        if (!wsRef.current) return;
+        console.warn(`[WS Agent] Force-reconnecting: ${reason}`);
+        try {
+            // Code 4000 is reserved for application use; not 1000 because
+            // 1000 is treated as "intentional close" by the onclose
+            // handler and would suppress reconnect.
+            wsRef.current.close(4000, reason);
+        } catch (_) {
+            // Already closing/closed — onclose will still fire and
+            // reconnect logic will pick it up.
         }
     }, []);
 
@@ -343,6 +430,34 @@ export const useWebSocketAgent = () => {
 
     const clearError = useCallback(() => setError(null), []);
 
+    /**
+     * Stop listening for the current in-flight `sendAgentMessage` run.
+     *
+     * Mirrors the SFXBot Stop-button UX. Implementation note: we do NOT
+     * close the WebSocket here. AI Assistant uses one persistent socket
+     * across many messages (unlike SFXBot which opens a fresh WS per
+     * message), so closing would force a fresh handshake before the
+     * user's next send. Instead we set a `cancelledRef` flag that
+     * `handleMessage` honors — every per-run frame after this point
+     * (progress / paused / complete / error) is dropped on the floor.
+     *
+     * Caveat the caller must understand: there is no server-side cancel
+     * endpoint in supervisor-ws-chat today. The supervisor Lambda keeps
+     * running to completion in the background and any tool actions that
+     * already executed (sent emails, created docs, calendar events) are
+     * NOT undone. This button stops the LISTENING, not the WORK. For
+     * the AI Assistant this is acceptable because DANGEROUS tools pause
+     * for explicit approval before executing anyway (see Sup
+     * approval-tier model in agent_capabilities_v3.py).
+     */
+    const cancelStreaming = useCallback(() => {
+        console.log('[WS Agent] 🛑 cancelStreaming() — dropping subsequent frames');
+        cancelledRef.current = true;
+        setIsStreaming(false);
+        setStatusMessage('');
+        setProgress(null);
+    }, []);
+
     // Callback registration helpers — stored in a ref so updating handlers
     // doesn't tear down the socket.
     const onStatus   = useCallback((cb) => { handlersRef.current.onStatus   = cb; }, []);
@@ -363,13 +478,99 @@ export const useWebSocketAgent = () => {
         };
     }, []);
 
-    // Heartbeat — keep the connection warm. API Gateway WebSocket APIs
-    // idle out at 10 minutes; we ping every 5 to stay well under.
+    // Heartbeat + watchdog — keep the connection warm AND detect when
+    // it has silently gone dead.
+    //
+    // Why two timers (heartbeat + watchdog) instead of one:
+    //   - Heartbeat sends a ping every 5 minutes (API Gateway WS idle
+    //     timeout is 10 min, so this stays well under).
+    //   - Watchdog fires every 30s and checks "did we get a pong within
+    //     PONG_GRACE_MS of the most recent ping?". If not, the socket
+    //     is silently dead — typical after laptop sleep / network blip
+    //     / NAT timeout. Force-reconnect proactively instead of waiting
+    //     for the user's next sendAgentMessage() to discover the
+    //     problem the hard way.
     useEffect(() => {
         if (!isConnected) return undefined;
-        const id = setInterval(ping, 5 * 60 * 1000);
-        return () => clearInterval(id);
-    }, [isConnected, ping]);
+
+        // Reset pong tracker on every fresh connection so the first
+        // 30s window doesn't trip the watchdog before any ping has
+        // been sent.
+        lastPongAtRef.current = Date.now();
+        lastPingSentAtRef.current = 0;
+
+        const heartbeatId = setInterval(ping, 5 * 60 * 1000);
+        const watchdogId = setInterval(() => {
+            // Only judge the connection if we've sent a ping at least
+            // once. The first 5 minutes after connect are pong-free
+            // by design.
+            const lastPing = lastPingSentAtRef.current;
+            if (!lastPing) return;
+            const lastPong = lastPongAtRef.current;
+            const sincePing = Date.now() - lastPing;
+            // Pong-grace expired AND the most recent pong is older
+            // than the most recent ping → we sent a ping that never
+            // came back. Force-reconnect.
+            if (sincePing > PONG_GRACE_MS && lastPong < lastPing) {
+                forceReconnect('pong-watchdog: no pong within grace window');
+            }
+        }, 30 * 1000);
+
+        return () => {
+            clearInterval(heartbeatId);
+            clearInterval(watchdogId);
+        };
+    }, [isConnected, ping, forceReconnect]);
+
+    // Tab/network resilience — when the user comes back from being
+    // away (tab refocus, network reconnect), proactively check the
+    // socket. Browsers sometimes hold a TCP connection open across
+    // sleep/suspend without firing onclose, leading to "looks
+    // connected but isn't" zombie sockets that only get exposed on
+    // the next user action.
+    useEffect(() => {
+        if (typeof window === 'undefined') return undefined;
+
+        const checkAndRecover = (trigger) => {
+            // No socket → connect() owns the recovery (App.jsx wires
+            // this on auth state). Nothing for us to do here.
+            if (!wsRef.current) return;
+            const rs = wsRef.current.readyState;
+            // Healthy — leave it alone.
+            if (rs === WebSocket.OPEN) {
+                // Send an immediate ping so the watchdog has fresh
+                // signal. If the socket is silently dead, the next
+                // 30s tick will catch it.
+                ping();
+                return;
+            }
+            // CLOSING / CLOSED → onclose has either fired or is about
+            // to; rely on the existing reconnect path. If for some
+            // reason onclose got swallowed, force the close so the
+            // handler runs.
+            if (rs === WebSocket.CLOSING || rs === WebSocket.CLOSED) {
+                forceReconnect(`${trigger}: socket in readyState=${rs}`);
+            }
+        };
+
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                checkAndRecover('visibilitychange');
+            }
+        };
+        const onOnline = () => checkAndRecover('online');
+        const onFocus = () => checkAndRecover('focus');
+
+        document.addEventListener('visibilitychange', onVisibility);
+        window.addEventListener('online', onOnline);
+        window.addEventListener('focus', onFocus);
+
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibility);
+            window.removeEventListener('online', onOnline);
+            window.removeEventListener('focus', onFocus);
+        };
+    }, [ping, forceReconnect]);
 
     return {
         // Connection state
@@ -388,6 +589,7 @@ export const useWebSocketAgent = () => {
         connect,
         disconnect,
         sendAgentMessage,
+        cancelStreaming,
         ping,
         clearError,
 

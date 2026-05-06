@@ -1,0 +1,135 @@
+1777962072549 START RequestId: f2b0f876-2e1c-419e-98cb-63e8d4596300 Version: $LATEST
+1777962074043 DynamoDB thread manager initialized (region=ap-southeast-1)
+1777962074072 Created thread (DDB): c81b674b-12d6-4ef8-983a-52fb76b4e34a_214a8d9c for user: c81b674b-12d6-4ef8-983a-52fb76b4e34a
+1777962076514 DynamoDB thread manager initialized (region=ap-southeast-1)
+1777962076585 Workflow graph compiled (FULL WORKFLOW)
+1777962076585 Flow: supervisor → orchestrator → END
+1777962076585 Plans saved to: /tmp/agent_outputs/supervisor_plan.json
+1777962076585 Agent endpoints: ['gmail_agent', 'docs_agent', 'sheets_agent', 'mapping_agent', 'calendar_agent', 'drive_agent']
+1777962076623 Saved conversation state to SQLite: c81b674b-12d6-4ef8-983a-52fb76b4e34a_214a8d9c
+1777962076623 ══════════════════════════════════════════════════════════════════════
+1777962076623 NEW MESSAGE  |  thread: c81b674b-12d6-4ef8-983a-52fb76b4e34a_214a8d9c
+1777962076623 ══════════════════════════════════════════════════════════════════════
+1777962076623 User: Hi can you create me a new document using this uploaded template, and for the data use the TestData123 document.
+1777962076623 File: MinutesOfMeetingTEMP.docx.pdf (61764 bytes)
+1777962076623 ConversationState:
+1777962076623 extracted_info: {}
+1777962076623 missing_fields: []
+1777962076623 intent: null
+1777962076624 clarification_question: null
+1777962076624 ready_for_execution: false
+1777962076624 execution_summary: null
+1777962076624 execution_mode: "standard"
+1777962076624 execution_history: []
+1777962076624 completed_tasks: []
+1777962076624 has_executed: false
+1777962076624 last_executed_at: null
+1777962076624 last_execution_status: null
+1777962076624 last_execution_message: null
+1777962076624 executing: false
+1777962076624 pending_actions: []
+1777962076624 workflow_paused: false
+1777962076624 remaining_steps: []
+1777962076625 workflow_context: null
+1777962076625 disambiguation_options: []
+1777962076625 disambiguation_variable: null
+1777962076625 ══════════════════════════════════════════════════════════════════════
+1777962081301 ──────────────────────────────────────────────────
+1777962081301 TIER 0.5 — Building prompt
+1777962081301 ──────────────────────────────────────────────────
+1777962081301 bot_signal : (none)
+1777962081301 state_block: (none)
+1777962081301 file_context: yes — MinutesOfMeetingTEMP.docx.pdf
+1777962081302 ──────────────────────────────────────────────────
+1777962084544 {"timestamp": "2026-05-05T06:21:24.543761Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_0.5_unified_check", "request_id": "req_20260505062112_b2da51b2", "component": "llm", "operation": "tier_0.5_unified_check", "data": {"model": "gpt-4o-mini", "tier": "0.5", "input_tokens": 859, "output_tokens": 72, "cached_tokens": 0, "total_tokens": 931, "estimated_cost_usd": 0.000172, "duration_ms": 3116.44, "success": true, "prompt_summary": "Classifying: Hi can you create me a new document using this upl...", "cumulative_tokens": 931, "cumulative_cost_usd": 0.000172}}
+1777962084544 [INFO]	2026-05-05T06:21:24.543Z	f2b0f876-2e1c-419e-98cb-63e8d4596300	{"timestamp": "2026-05-05T06:21:24.543761Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_0.5_unified_check", "request_id": "req_20260505062112_b2da51b2", "component": "llm", "operation": "tier_0.5_unified_check", "data": {"model": "gpt-4o-mini", "tier": "0.5", "input_tokens": 859, "output_tokens": 72, "cached_tokens": 0, "total_tokens": 931, "estimated_cost_usd": 0.000172, "duration_ms": 3116.44, "success": true, "prompt_summary": "Classifying: Hi can you create me a new document using this upl...", "cumulative_tokens": 931, "cumulative_cost_usd": 0.000172}}
+1777962084556 OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=859 out=72 | $0.0002 | 3116ms | cumulative: in=859 out=72 total=931 $0.0002
+1777962084592 Saved conversation state to SQLite: c81b674b-12d6-4ef8-983a-52fb76b4e34a_214a8d9c
+1777962085575 END RequestId: f2b0f876-2e1c-419e-98cb-63e8d4596300
+1777962085575 REPORT RequestId: f2b0f876-2e1c-419e-98cb-63e8d4596300	Duration: 13025.62 ms	Billed Duration: 13953 ms	Memory Size: 2048 MB	Max Memory Used: 261 MB	Init Duration: 927.38 ms
+1777962239159 START RequestId: 6a8e54b2-e1e4-413e-84d9-032cd12fae53 Version: $LATEST
+1777962239544 Created thread (DDB): c81b674b-12d6-4ef8-983a-52fb76b4e34a_ff755381 for user: c81b674b-12d6-4ef8-983a-52fb76b4e34a
+1777962239581 Saved conversation state to SQLite: c81b674b-12d6-4ef8-983a-52fb76b4e34a_ff755381
+1777962239581 ══════════════════════════════════════════════════════════════════════
+1777962239581 NEW MESSAGE  |  thread: c81b674b-12d6-4ef8-983a-52fb76b4e34a_ff755381
+1777962239581 ══════════════════════════════════════════════════════════════════════
+1777962239581 User: Hi can you create me a new document using this uploaded template, and I want you to search my google drive for a documen...
+1777962239581 File: MinutesOfMeetingTEMP.docx.pdf (61764 bytes)
+1777962239581 ConversationState:
+1777962239581 extracted_info: {}
+1777962239581 missing_fields: []
+1777962239581 intent: null
+1777962239581 clarification_question: null
+1777962239581 ready_for_execution: false
+1777962239581 execution_summary: null
+1777962239581 execution_mode: "standard"
+1777962239582 execution_history: []
+1777962239582 completed_tasks: []
+1777962239582 has_executed: false
+1777962239582 last_executed_at: null
+1777962239582 last_execution_status: null
+1777962239582 last_execution_message: null
+1777962239582 executing: false
+1777962239582 pending_actions: []
+1777962239582 workflow_paused: false
+1777962239582 remaining_steps: []
+1777962239582 workflow_context: null
+1777962239582 disambiguation_options: []
+1777962239582 disambiguation_variable: null
+1777962239582 ══════════════════════════════════════════════════════════════════════
+1777962241018 ──────────────────────────────────────────────────
+1777962241018 TIER 0.5 — Building prompt
+1777962241018 ──────────────────────────────────────────────────
+1777962241018 bot_signal : (none)
+1777962241018 state_block: (none)
+1777962241018 file_context: yes — MinutesOfMeetingTEMP.docx.pdf
+1777962241018 ──────────────────────────────────────────────────
+1777962243369 {"timestamp": "2026-05-05T06:24:03.369572Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_0.5_unified_check", "request_id": "req_20260505062359_a6c1f1da", "component": "llm", "operation": "tier_0.5_unified_check", "data": {"model": "gpt-4o-mini", "tier": "0.5", "input_tokens": 878, "output_tokens": 79, "cached_tokens": 0, "total_tokens": 957, "estimated_cost_usd": 0.000179, "duration_ms": 2315.01, "success": true, "prompt_summary": "Classifying: Hi can you create me a new document using this upl...", "cumulative_tokens": 957, "cumulative_cost_usd": 0.000179}}
+1777962243370 [INFO]	2026-05-05T06:24:03.369Z	6a8e54b2-e1e4-413e-84d9-032cd12fae53	{"timestamp": "2026-05-05T06:24:03.369572Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_0.5_unified_check", "request_id": "req_20260505062359_a6c1f1da", "component": "llm", "operation": "tier_0.5_unified_check", "data": {"model": "gpt-4o-mini", "tier": "0.5", "input_tokens": 878, "output_tokens": 79, "cached_tokens": 0, "total_tokens": 957, "estimated_cost_usd": 0.000179, "duration_ms": 2315.01, "success": true, "prompt_summary": "Classifying: Hi can you create me a new document using this upl...", "cumulative_tokens": 957, "cumulative_cost_usd": 0.000179}}
+1777962243386 OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=878 out=79 | $0.0002 | 2315ms | cumulative: in=878 out=79 total=957 $0.0002
+1777962243424 Saved conversation state to SQLite: c81b674b-12d6-4ef8-983a-52fb76b4e34a_ff755381
+1777962243556 END RequestId: 6a8e54b2-e1e4-413e-84d9-032cd12fae53
+1777962243556 REPORT RequestId: 6a8e54b2-e1e4-413e-84d9-032cd12fae53	Duration: 4397.08 ms	Billed Duration: 4398 ms	Memory Size: 2048 MB	Max Memory Used: 264 MB
+1777962314372 START RequestId: 7ab6a7cb-bc15-4394-b750-62c3d9d7811e Version: $LATEST
+1777962314564 Created thread (DDB): c81b674b-12d6-4ef8-983a-52fb76b4e34a_454544b6 for user: c81b674b-12d6-4ef8-983a-52fb76b4e34a
+1777962314576 Saved conversation state to SQLite: c81b674b-12d6-4ef8-983a-52fb76b4e34a_454544b6
+1777962314577 ══════════════════════════════════════════════════════════════════════
+1777962314577 NEW MESSAGE  |  thread: c81b674b-12d6-4ef8-983a-52fb76b4e34a_454544b6
+1777962314577 ══════════════════════════════════════════════════════════════════════
+1777962314577 User: Can you use this uploaded template? use the data doc named TestData123 and create a new doc out of it? Name the new docu...
+1777962314577 File: MinutesOfMeetingTEMP.docx.pdf (61764 bytes)
+1777962314577 ConversationState:
+1777962314577 extracted_info: {}
+1777962314577 missing_fields: []
+1777962314577 intent: null
+1777962314577 clarification_question: null
+1777962314577 ready_for_execution: false
+1777962314577 execution_summary: null
+1777962314577 execution_mode: "standard"
+1777962314577 execution_history: []
+1777962314577 completed_tasks: []
+1777962314578 has_executed: false
+1777962314578 last_executed_at: null
+1777962314578 last_execution_status: null
+1777962314578 last_execution_message: null
+1777962314578 executing: false
+1777962314578 pending_actions: []
+1777962314578 workflow_paused: false
+1777962314578 remaining_steps: []
+1777962314578 workflow_context: null
+1777962314578 disambiguation_options: []
+1777962314578 disambiguation_variable: null
+1777962314578 ══════════════════════════════════════════════════════════════════════
+1777962315131 ──────────────────────────────────────────────────
+1777962315131 TIER 0.5 — Building prompt
+1777962315131 ──────────────────────────────────────────────────
+1777962315131 bot_signal : (none)
+1777962315131 state_block: (none)
+1777962315131 file_context: yes — MinutesOfMeetingTEMP.docx.pdf
+1777962315132 ──────────────────────────────────────────────────
+1777962318306 {"timestamp": "2026-05-05T06:25:18.306714Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_0.5_unified_check", "request_id": "req_20260505062514_7bbc57d5", "component": "llm", "operation": "tier_0.5_unified_check", "data": {"model": "gpt-4o-mini", "tier": "0.5", "input_tokens": 870, "output_tokens": 77, "cached_tokens": 0, "total_tokens": 947, "estimated_cost_usd": 0.000177, "duration_ms": 3166.28, "success": true, "prompt_summary": "Classifying: Can you use this uploaded template? use the data d...", "cumulative_tokens": 947, "cumulative_cost_usd": 0.000177}}
+1777962318307 [INFO]	2026-05-05T06:25:18.306Z	7ab6a7cb-bc15-4394-b750-62c3d9d7811e	{"timestamp": "2026-05-05T06:25:18.306714Z", "level": "INFO", "logger": "conversational_agent", "message": "LLM call: tier_0.5_unified_check", "request_id": "req_20260505062514_7bbc57d5", "component": "llm", "operation": "tier_0.5_unified_check", "data": {"model": "gpt-4o-mini", "tier": "0.5", "input_tokens": 870, "output_tokens": 77, "cached_tokens": 0, "total_tokens": 947, "estimated_cost_usd": 0.000177, "duration_ms": 3166.28, "success": true, "prompt_summary": "Classifying: Can you use this uploaded template? use the data d...", "cumulative_tokens": 947, "cumulative_cost_usd": 0.000177}}
+1777962318314 OK [0.5] gpt-4o-mini | tier_0.5_unified_check | in=870 out=77 | $0.0002 | 3166ms | cumulative: in=870 out=77 total=947 $0.0002
+1777962318347 Saved conversation state to SQLite: c81b674b-12d6-4ef8-983a-52fb76b4e34a_454544b6
+1777962318411 END RequestId: 7ab6a7cb-bc15-4394-b750-62c3d9d7811e
+1777962318411 REPORT RequestId: 7ab6a7cb-bc15-4394-b750-62c3d9d7811e	Duration: 4039.63 ms	Billed Duration: 4040 ms	Memory Size: 2048 MB	Max Memory Used: 264 MB

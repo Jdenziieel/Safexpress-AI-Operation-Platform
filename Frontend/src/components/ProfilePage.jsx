@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   User, Mail, Calendar, Shield,
   Activity, RefreshCw, AlertCircle, TrendingUp,
-  Clock, BarChart3
+  Clock, BarChart3, Bot
 } from 'lucide-react';
 import '../css/ProfilePage.css';
 import { quotaApi } from '../api';
@@ -634,6 +634,105 @@ function TokenConsumptionPanel() {
                   <div className="totals-cap">est. cost</div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── AI Assistant activity (per-user mirror of admin LogsPage) ─
+            Same data source as the per-user modal in QuotaPage — both
+            read `data.ai_assistant_activity` from /api/quota/me/history.
+            Always rendered when the field is present so a user with
+            zero AI Assistant usage still sees the section (the empty
+            state is itself useful info). 24h/7d/30d windows are
+            independent of the page's window selector — these are
+            rolling totals, NOT slices of the chosen window. */}
+        {data?.ai_assistant_activity && (
+          <div className="token-ai-activity">
+            <div className="token-ai-activity-header">
+              <Activity size={14} />
+              AI Assistant activity
+              <span className="token-ai-activity-hint">
+                · rolling totals, independent of the window above
+              </span>
+            </div>
+            <div className="token-ai-activity-grid">
+              {[
+                { key: 'today',      label: 'Today (24h)' },
+                { key: 'this_week',  label: 'This Week (7d)' },
+                { key: 'this_month', label: 'This Month (30d)' },
+              ].map((p) => {
+                const a = data.ai_assistant_activity[p.key] || {};
+                return (
+                  <div key={p.key} className="token-ai-activity-tile">
+                    <div className="token-ai-activity-period">{p.label}</div>
+                    <div className="token-ai-activity-row">
+                      <span className="token-ai-activity-num">
+                        {(a.conversations || 0).toLocaleString()}
+                      </span>
+                      <span className="token-ai-activity-lbl">
+                        conversation{(a.conversations || 0) === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                    <div className="token-ai-activity-row">
+                      <span className="token-ai-activity-num">
+                        {(a.requests || 0).toLocaleString()}
+                      </span>
+                      <span className="token-ai-activity-lbl">
+                        request{(a.requests || 0) === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* SFXBot activity — same data source pattern as the AI Assistant
+            block above (`data.sfxbot_activity` from /api/quota/me/history,
+            backed by UsageLogs entries with service=knowledge-base).
+            The `--sfxbot` modifier shifts header tint to indigo and adds
+            a 2px left rule to mark this as a different surface, matching
+            the QuotaPage UserHistoryModal styling so the two locations
+            feel like the same widget. */}
+        {data?.sfxbot_activity && (
+          <div className="token-ai-activity token-ai-activity--sfxbot">
+            <div className="token-ai-activity-header">
+              <Bot size={14} />
+              SFX Bot activity
+              <span className="token-ai-activity-hint">
+                · rolling totals, independent of the window above
+              </span>
+            </div>
+            <div className="token-ai-activity-grid">
+              {[
+                { key: 'today',      label: 'Today (24h)' },
+                { key: 'this_week',  label: 'This Week (7d)' },
+                { key: 'this_month', label: 'This Month (30d)' },
+              ].map((p) => {
+                const a = data.sfxbot_activity[p.key] || {};
+                return (
+                  <div key={p.key} className="token-ai-activity-tile">
+                    <div className="token-ai-activity-period">{p.label}</div>
+                    <div className="token-ai-activity-row">
+                      <span className="token-ai-activity-num">
+                        {(a.conversations || 0).toLocaleString()}
+                      </span>
+                      <span className="token-ai-activity-lbl">
+                        conversation{(a.conversations || 0) === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                    <div className="token-ai-activity-row">
+                      <span className="token-ai-activity-num">
+                        {(a.requests || 0).toLocaleString()}
+                      </span>
+                      <span className="token-ai-activity-lbl">
+                        request{(a.requests || 0) === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

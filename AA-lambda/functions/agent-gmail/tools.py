@@ -17,7 +17,112 @@ import json
 import tempfile
 import shutil
 import httpx
+import uuid
 from datetime import datetime
+
+# ── S3 transport for inter-Lambda PDF/Excel handoff ──────────────────
+# Sub-agents (gmail / mapping / drive / docs / sheets) each run as
+# SEPARATE Lambda functions with isolated `/tmp` filesystems. Returning
+# a `/tmp/...` path from gmail to the supervisor and then forwarding it
+# to mapping_agent.parse_delivery_order_pdfs always fails: the path
+# only exists on the gmail Lambda's /tmp; the mapping Lambda's /tmp is
+# empty.
+#
+# Fix: when running in Lambda, upload each downloaded attachment to S3
+# under `gmail-attachments/<uuid>/<msg_id>/<filename>` and replace the
+# `file_path` field with an `s3://bucket/key` URL. The mapping agent
+# detects that scheme and downloads to its own /tmp before parsing
+# (see _resolve_to_local_path in mapping_agent_api.py).
+#
+# Bucket: defaults to `frontend-safexpress` (the only bucket the
+# AA-Lambda-Execution-Role has S3 r/w permissions on as of 2026-05-03).
+# Override via GMAIL_ATTACHMENTS_BUCKET env var when needed.
+GMAIL_ATTACHMENTS_BUCKET = os.environ.get(
+    "GMAIL_ATTACHMENTS_BUCKET", "frontend-safexpress"
+)
+GMAIL_ATTACHMENTS_PREFIX = os.environ.get(
+    "GMAIL_ATTACHMENTS_PREFIX", "gmail-attachments"
+)
+
+try:
+    import boto3
+    _s3_client = boto3.client("s3")
+except Exception as _boto_err:
+    _s3_client = None
+    print(f"[gmail.tools] boto3 unavailable, S3 transport disabled: {_boto_err}")
+
+
+def _is_running_in_lambda() -> bool:
+    return bool(os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+
+
+def _upload_attachment_to_s3(local_path: str, msg_id: str, filename: str) -> str:
+    """Upload a downloaded attachment to S3 and return its `s3://bucket/key` URL.
+
+    Returns "" on any failure so the caller can fall back to the local
+    path (which only works in single-Lambda local dev). Logs the error
+    once per failure — silently dropping uploads here would re-create
+    the original bug class (mapping_agent gets a /tmp path that isn't
+    on its filesystem).
+
+    Key layout: `<prefix>/<run-uuid>/<msg_id>/<filename>` — the per-run
+    UUID prevents two concurrent supervisor turns from clobbering each
+    other's downloads if they happen to hit the same Gmail message at
+    the same instant.
+    """
+    if _s3_client is None:
+        return ""
+    try:
+        run_id = uuid.uuid4().hex[:12]
+        # Sanitise filename — Gmail can return "Order #1.pdf" or unicode
+        # which is fine for keys but ugly for downstream debugging.
+        safe_name = filename.replace("/", "_").replace("\\", "_")
+        key = f"{GMAIL_ATTACHMENTS_PREFIX}/{run_id}/{msg_id}/{safe_name}"
+        upload_kwargs = {
+            "Filename": local_path,
+            "Bucket": GMAIL_ATTACHMENTS_BUCKET,
+            "Key": key,
+        }
+        if filename.lower().endswith(".pdf"):
+            upload_kwargs["ExtraArgs"] = {"ContentType": "application/pdf"}
+        _s3_client.upload_file(**upload_kwargs)
+        return f"s3://{GMAIL_ATTACHMENTS_BUCKET}/{key}"
+    except Exception as e:
+        print(f"[gmail.tools] S3 upload failed for {filename} (msg {msg_id}): {e}")
+        return ""
+
+
+def _resolve_to_local_path(file_path: str) -> str:
+    """Download an `s3://bucket/key` URL to /tmp and return the local path.
+
+    Mirrors `mapping_agent_api.py:_resolve_to_local_path` so user-uploaded
+    files (handed off via supervisor with an `s3://` URL pointing into
+    `temp-uploads/...`) resolve to a real /tmp file the gmail tool can
+    open. Non-s3 paths and already-local paths pass through unchanged.
+
+    Returns "" on download failure so the caller's `os.path.exists` check
+    surfaces a clear "File not found" error pointing at the empty string,
+    which is preferable to silently swallowing the failure.
+    """
+    if not isinstance(file_path, str) or not file_path.startswith("s3://"):
+        return file_path
+    if _s3_client is None:
+        print(f"[gmail.tools] s3:// path provided but boto3 unavailable: {file_path}")
+        return ""
+    try:
+        without_scheme = file_path[len("s3://"):]
+        bucket, _, key = without_scheme.partition("/")
+        if not bucket or not key:
+            print(f"[gmail.tools] malformed s3 url: {file_path}")
+            return ""
+        local_dir = "/tmp/gmail_s3_in"
+        os.makedirs(local_dir, exist_ok=True)
+        local_path = os.path.join(local_dir, os.path.basename(key))
+        _s3_client.download_file(Bucket=bucket, Key=key, Filename=local_path)
+        return local_path
+    except Exception as e:
+        print(f"[gmail.tools] S3 download failed for {file_path}: {e}")
+        return ""
 
 
 def get_google_service(service_name: str, version: str, credentials_dict: Dict):
@@ -263,10 +368,10 @@ def _send_email_with_attachments_impl(
 ) -> Dict[str, Any]:
     """Send email with attachment via Gmail"""
     try:
-        # get credentials
+        file_path = _resolve_to_local_path(file_path)
+
         gmail_service = get_google_service("gmail", "v1", credentials_dict)
 
-        # headers
         message = MIMEMultipart()
         message["to"] = to
         message["subject"] = subject
@@ -857,6 +962,114 @@ def _create_draft_email_impl(
             "body": body,
             "error": f"Unexpected error: {str(error)}"
         }
+
+
+def _create_draft_email_with_attachment_impl(
+    to: str, subject: str, body: str, file_path: str, credentials_dict: Dict
+) -> Dict[str, Any]:
+    """Create a Gmail DRAFT email with a single file attachment.
+
+    Mirrors `_send_email_with_attachments_impl` for MIME construction but
+    calls `drafts().create()` instead of `messages().send()` so the email
+    is staged for later review (and later send via `_send_draft_email_impl`)
+    rather than going out immediately. Closes the capability gap that made
+    the planner hallucinate `send_email_with_attachment(draft_id=...)` for
+    "create a draft and attach this PDF" requests — Gmail does not allow
+    attaching files to a draft after it has been created, so this needs to
+    be a single one-shot tool.
+
+    Returns the same shape as `_create_draft_email_impl` plus
+    `attachment_name` so the planner / response template can confirm the
+    attachment was included.
+    """
+    try:
+        file_path = _resolve_to_local_path(file_path)
+
+        gmail_service = get_google_service("gmail", "v1", credentials_dict)
+
+        message = MIMEMultipart()
+        message["to"] = to
+        message["subject"] = subject
+
+        message.attach(MIMEText(body or "", "plain"))
+
+        if not os.path.exists(file_path):
+            return {
+                "success": False,
+                "draft_id": None,
+                "message_id": None,
+                "to": to,
+                "subject": subject,
+                "body": body,
+                "attachment_name": None,
+                "attachment_path": file_path,
+                "error": f"File not found at {file_path}"
+            }
+
+        with open(file_path, "rb") as f:
+            file_data = f.read()
+
+        guessed_type, _ = mimetypes.guess_type(file_path)
+        main_type, _, sub_type = (guessed_type or "application/octet-stream").partition("/")
+        part = MIMEBase(main_type or "application", sub_type or "octet-stream")
+        part.set_payload(file_data)
+        encoders.encode_base64(part)
+        filename = os.path.basename(file_path)
+        part.add_header("Content-Disposition", f"attachment; filename={filename}")
+        message.attach(part)
+
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        draft = (
+            gmail_service.users()
+            .drafts()
+            .create(
+                userId="me",
+                body={"message": {"raw": raw_message}},
+            )
+            .execute()
+        )
+
+        draft_id = draft["id"]
+        message_id = draft["message"]["id"]
+
+        return {
+            "success": True,
+            "draft_id": draft_id,
+            "message_id": message_id,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "attachment_name": filename,
+            "attachment_path": file_path,
+            "error": None,
+        }
+
+    except HttpError as error:
+        return {
+            "success": False,
+            "draft_id": None,
+            "message_id": None,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "attachment_name": None,
+            "attachment_path": file_path,
+            "error": f"Gmail API error: {str(error)}",
+        }
+    except Exception as error:
+        return {
+            "success": False,
+            "draft_id": None,
+            "message_id": None,
+            "to": to,
+            "subject": subject,
+            "body": body,
+            "attachment_name": None,
+            "attachment_path": file_path,
+            "error": f"Unexpected error: {str(error)}",
+        }
+
 
 # checking - status: Done
 def _send_draft_email_impl(draft_id: str, credentials_dict: Dict) -> Dict[str, Any]:
@@ -1484,6 +1697,25 @@ def _search_emails_with_delivery_order_attachments_impl(
                                 
                                 attachment_info["file_path"] = save_path
                                 total_attachments_downloaded += 1
+
+                                # ── Cross-Lambda transport ──────────────────────
+                                # When running inside Lambda, the local /tmp path
+                                # is invisible to the next Lambda in the chain
+                                # (mapping_agent.parse_delivery_order_pdfs runs in
+                                # its own container with an empty /tmp). Upload to
+                                # S3 and rewrite `file_path` to the s3:// URL so
+                                # the downstream tool can fetch it. The local /tmp
+                                # copy is left in place — harmless, and useful for
+                                # any same-process reads (e.g. _save_attachment_metadata_impl
+                                # writing a SQLite mirror later in this same call).
+                                # See _upload_attachment_to_s3 docstring for the
+                                # bucket/prefix layout.
+                                if _is_running_in_lambda():
+                                    s3_url = _upload_attachment_to_s3(save_path, msg_id, filename)
+                                    if s3_url:
+                                        attachment_info["file_path"] = s3_url
+                                        attachment_info["local_path"] = save_path
+                                        attachment_info["s3_url"] = s3_url
                                 
                             except Exception as download_error:
                                 attachment_info["download_error"] = str(download_error)

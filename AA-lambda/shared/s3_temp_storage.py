@@ -107,15 +107,19 @@ def resolve_file_to_local_path(uploaded_file: Dict[str, Any]) -> str:
     If already local (temp_path exists on disk), returns that path.
     If stored in S3, downloads to /tmp and returns the local path.
 
+    Use this from IN-PROCESS callers that need to read file bytes themselves
+    (e.g. content_enrichment.py extracting text for an LLM). For CROSS-LAMBDA
+    dispatch where a sub-agent will open the file on its OWN container, use
+    `get_s3_url()` instead — sub-agents have their own `_resolve_to_local_path`
+    that downloads from s3:// URLs.
+
     Returns:
         Absolute local file path (caller is responsible for cleanup).
     """
-    # Already local?
     local = uploaded_file.get("temp_path")
     if local and os.path.exists(local):
         return local
 
-    # Need to download from S3
     s3_key = uploaded_file.get("s3_key")
     if not s3_key:
         raise FileNotFoundError(
@@ -129,9 +133,32 @@ def resolve_file_to_local_path(uploaded_file: Dict[str, Any]) -> str:
     trace.step("s3_download", f"Downloading {s3_key} → {local_path}")
     s3.download_file(S3_TEMP_BUCKET, s3_key, local_path)
 
-    # Update the dict so subsequent accesses use the local cache
     uploaded_file["temp_path"] = local_path
     return local_path
+
+
+def get_s3_url(uploaded_file: Dict[str, Any]) -> Optional[str]:
+    """Return an `s3://bucket/key` URL for a stored upload, or None.
+
+    This is the cross-Lambda transport handle: the orchestrator passes this
+    URL into a sub-agent's `file_path` argument, and the sub-agent (gmail,
+    drive, docs, mapping) downloads it on its own container via its local
+    `_resolve_to_local_path` helper. Mirrors the same pattern gmail-agent's
+    `_upload_attachment_to_s3` already uses for attachment handoff into
+    mapping-agent — see gmail/tools.py:59 and mapping_agent_api.py:60.
+
+    Returns None when the upload is local-only (no `s3_key`) — callers that
+    need the file delivered to a remote container should treat this as a
+    hard failure, since a local /tmp path won't exist on the sub-agent's
+    container. The current callsite (orchestrator substitution) falls back
+    to local `temp_path` only when running in single-container dev mode.
+    """
+    s3_key = uploaded_file.get("s3_key")
+    if not s3_key:
+        return None
+    if not S3_TEMP_BUCKET:
+        return None
+    return f"s3://{S3_TEMP_BUCKET}/{s3_key}"
 
 
 def delete_temp_file(uploaded_file: Dict[str, Any]) -> None:
@@ -203,9 +230,20 @@ def _store_s3(file_obj, filename: str, mime_type: str) -> Dict[str, Any]:
             f"limit of {MAX_FILE_SIZE_MB} MB"
         )
 
-    ext = os.path.splitext(filename)[-1]
+    # Embed the original filename in the key path so cross-Lambda consumers
+    # (gmail-agent / drive-agent / docs-agent / mapping-agent) that use
+    # `os.path.basename(key)` to derive the local /tmp filename get the
+    # ORIGINAL name back — not the uuid hex. Without this, Gmail attachment
+    # MIME headers carry `aa0bf1...pdf` instead of `NonFood_Requisition.pdf`,
+    # and the user sees an unrecognisable filename in the draft. Mirrors the
+    # established convention in agent-drive/api.py:_upload_download_to_s3
+    # (line ~79: `<prefix>/<run_id>/<safe_name>`) and agent-gmail/tools.py:
+    # _upload_attachment_to_s3 (`<prefix>/<run_id>/<msg_id>/<safe_name>`).
+    # The uuid stays in the path to guarantee uniqueness across same-named
+    # uploads. Slash sanitization mirrors agent-gmail/agent-drive.
+    safe_name = filename.replace("/", "_").replace("\\", "_") if filename else uuid.uuid4().hex
     date_prefix = datetime.utcnow().strftime("%Y/%m/%d")
-    s3_key = f"{S3_TEMP_PREFIX}{date_prefix}/{uuid.uuid4().hex}{ext}"
+    s3_key = f"{S3_TEMP_PREFIX}{date_prefix}/{uuid.uuid4().hex}/{safe_name}"
 
     s3 = _get_s3_client()
     s3.put_object(

@@ -195,6 +195,28 @@ Resources:
       KeySchema:
         - { AttributeName: key, KeyType: HASH }
 
+  # Per-user mapping templates for the agent-mapping Lambda.
+  # Replaces the in-memory MAPPING_TEMPLATES dict so save_mapping_template,
+  # load_mapping_template, and list_mapping_templates survive cold starts
+  # AND are visible across concurrent Lambda containers AND persist across
+  # user sessions. Per-user isolation is enforced by the (user_id,
+  # template_id) compound key — a template saved under user A is invisible
+  # to user B even if they pick the same template_name.
+  # PITR enabled because templates are user-generated content worth backing
+  # up; on-demand billing because save/load traffic is very low.
+  SupMappingTemplates:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Sup_MappingTemplates
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: user_id, AttributeType: S }
+        - { AttributeName: template_id, AttributeType: S }
+      KeySchema:
+        - { AttributeName: user_id, KeyType: HASH }
+        - { AttributeName: template_id, KeyType: RANGE }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+
 Outputs:
   ThreadsTableName:        { Value: !Ref SupThreads }
   ThreadStatesTableName:   { Value: !Ref SupThreadStates }
@@ -208,3 +230,4 @@ Outputs:
   PendingActionsName:      { Value: !Ref SupPendingActions }
   ModelPricingName:        { Value: !Ref SupModelPricing }
   SystemSettingsName:      { Value: !Ref SupSystemSettings }
+  MappingTemplatesName:    { Value: !Ref SupMappingTemplates }

@@ -1,0 +1,25 @@
+# Use Amazon Linux 2 with Python 3.11 (matches Lambda runtime)
+FROM public.ecr.aws/lambda/python:3.11
+
+# Set working directory
+WORKDIR /build
+
+# Install zip utility
+RUN yum install -y zip
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install dependencies to /build/package
+RUN pip install --no-cache-dir -r requirements.txt -t /build/package
+
+# Copy all Lambda functions
+COPY lambda_*.py /build/package/
+
+# Create ZIP file with all functions
+RUN cd /build/package && \
+    zip -r /build/auth-lambdas.zip . && \
+    echo "✅ ZIP file created successfully"
+
+# Set entrypoint to copy ZIP to host
+CMD ["sh", "-c", "echo 'ZIP file ready at /build/auth-lambdas.zip'"]

@@ -35,6 +35,63 @@ except ImportError:
     print("*  in the Mapping-agent environment, then restart this service.      *")
     print(_banner)
 
+# ── S3 transport for inter-Lambda PDF/Excel handoff ──────────────────
+# Counterpart to gmail-agent's _upload_attachment_to_s3. Sub-agents
+# each run as separate Lambda functions with isolated `/tmp`, so when
+# gmail downloads a delivery-order PDF and hands the path to mapping
+# via the supervisor, the path only exists on the gmail Lambda's
+# filesystem. The fix is two-sided:
+#   1. gmail uploads each attachment to S3 and rewrites `file_path` to
+#      `s3://bucket/key`.
+#   2. mapping detects the s3:// scheme below and downloads to its own
+#      /tmp before opening the file with pdfplumber/pandas.
+# Bucket access goes through the AA-Lambda-Execution-Role (which has
+# r/w on `frontend-safexpress` as of 2026-05-03).
+import tempfile as _tempfile_mod
+
+try:
+    import boto3 as _boto3_mod
+    _s3_client = _boto3_mod.client("s3")
+except Exception as _boto_err:
+    _s3_client = None
+    print(f"[mapping_agent] boto3 unavailable, S3 transport disabled: {_boto_err}")
+
+
+def _resolve_to_local_path(file_path: str) -> str:
+    """If file_path is an s3:// URL, download to /tmp and return the local path.
+
+    Returns the input unchanged for non-S3 paths (local OS paths,
+    relative paths, etc.). On any S3 download failure, returns an empty
+    string — the caller's existing `os.path.exists` check will then
+    flag the file as missing with the original error path so admins
+    can see WHICH s3 key failed.
+
+    The download lands in `/tmp/mapping_s3_in/<basename>`. Re-runs
+    with the same basename overwrite the previous copy; that's fine
+    because each sub-agent invocation runs in a fresh Lambda container
+    most of the time, and even on warm-container reuse the file is
+    re-downloaded so we always parse the latest bytes.
+    """
+    if not isinstance(file_path, str) or not file_path.startswith("s3://"):
+        return file_path
+    if _s3_client is None:
+        print(f"[mapping_agent] s3:// path provided but boto3 unavailable: {file_path}")
+        return ""
+    try:
+        without_scheme = file_path[len("s3://"):]
+        bucket, _, key = without_scheme.partition("/")
+        if not bucket or not key:
+            print(f"[mapping_agent] malformed s3 url: {file_path}")
+            return ""
+        local_dir = "/tmp/mapping_s3_in"
+        os.makedirs(local_dir, exist_ok=True)
+        local_path = os.path.join(local_dir, os.path.basename(key))
+        _s3_client.download_file(Bucket=bucket, Key=key, Filename=local_path)
+        return local_path
+    except Exception as e:
+        print(f"[mapping_agent] S3 download failed for {file_path}: {e}")
+        return ""
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -97,6 +154,21 @@ def parse_file(file_content: str, file_type: str = "csv") -> Dict[str, Any]:
         Dictionary with parsed data, columns, and metadata
     """
     try:
+        # Cross-Lambda s3:// transport (see _resolve_to_local_path).
+        # When gmail uploads spreadsheet attachments, file_content
+        # arrives as an `s3://bucket/key` URL — same handoff pattern as
+        # the PDF flow. Resolve to a local /tmp path here so the
+        # is_file_path branch below picks it up via pd.read_excel(path)
+        # without an in-memory base64 round-trip.
+        if isinstance(file_content, str) and file_content.startswith("s3://"):
+            resolved = _resolve_to_local_path(file_content)
+            if not resolved:
+                return {
+                    "success": False,
+                    "error": f"Could not retrieve file from S3 transport: {file_content}",
+                }
+            file_content = resolved
+
         # Check if file_content is actually a file path
         is_file_path = False
         if isinstance(file_content, str) and (
@@ -1519,13 +1591,31 @@ def _parse_single_pdf(file_path: str) -> Dict[str, Any]:
     if not PDFPLUMBER_AVAILABLE:
         return {"rejected": True, "file": os.path.basename(file_path), "reason": "pdfplumber not installed"}
 
+    # Capture the user-facing filename BEFORE we resolve s3:// URLs so
+    # downstream rejection messages reference "Order #1.pdf" rather
+    # than "Order #1.pdf" (in /tmp/mapping_s3_in/...).
+    display_name = os.path.basename(file_path)
+
     if not file_path.lower().endswith(".pdf"):
-        return {"rejected": True, "file": os.path.basename(file_path), "reason": "Not a PDF file"}
+        return {"rejected": True, "file": display_name, "reason": "Not a PDF file"}
+
+    # Resolve cross-Lambda s3:// transport produced by gmail-agent's
+    # _upload_attachment_to_s3 (see _resolve_to_local_path). This is a
+    # no-op for local OS paths so existing same-process callers (local
+    # dev, future direct-callers) keep working.
+    resolved_path = _resolve_to_local_path(file_path)
+    if not resolved_path:
+        return {
+            "rejected": True,
+            "file": display_name,
+            "reason": f"Could not retrieve PDF from S3 transport: {file_path}",
+        }
+    file_path = resolved_path
 
     if not os.path.exists(file_path):
-        return {"rejected": True, "file": os.path.basename(file_path), "reason": f"File not found: {file_path}"}
+        return {"rejected": True, "file": display_name, "reason": f"File not found: {file_path}"}
 
-    filename = os.path.basename(file_path)
+    filename = display_name
 
     try:
         with pdfplumber.open(file_path) as pdf:

@@ -46,6 +46,15 @@ _TABLE_NAMES = {
     "logs": os.environ.get("SUP_LOGS_TABLE", "Sup_Logs"),
     "llm_calls": os.environ.get("SUP_LLM_CALLS_TABLE", "Sup_LLMCalls"),
     "agent_calls": os.environ.get("SUP_AGENT_CALLS_TABLE", "Sup_AgentCalls"),
+    # UsageLogs is the quota service's billing audit table. AI Assistant
+    # rows are written here AS WELL AS to Sup_LLMCalls (every supervisor
+    # LLM call goes through quota_client.report_usage). Non-supervisor
+    # services (knowledge-base / SFXBot / pdf_parse / kb_upload) write
+    # ONLY here — they don't have a Sup_LLMCalls equivalent. So the
+    # admin Logs & Analytics token-summary scan needs to consume both
+    # tables to centralise cost/token visibility across surfaces.
+    # See dynamodb_log_storage.get_token_usage_stats for the dedupe.
+    "usage_logs": os.environ.get("USAGE_LOGS_TABLE", "UsageLogs"),
     "request_summaries": os.environ.get(
         "SUP_REQUEST_SUMMARIES_TABLE", "Sup_RequestSummaries"
     ),
@@ -119,6 +128,30 @@ def _ulid() -> str:
     return f"{ts:013x}{rand[:13]}"
 
 
+def _action_id_to_int(action_id: Any) -> int:
+    """Coerce an action_id (which may carry a non-hex prefix like
+    ``"action_<hex>"`` from supervisor_agent.generate_action_id) into a
+    stable int, matching the SQLite ``cursor.lastrowid`` shape that
+    legacy callers expect from ``insert_pending_action``.
+
+    Strategy:
+      1. If the input isn't a string, return 0.
+      2. Strip a single ``foo_`` prefix (so ``action_faeee123`` → ``faeee123``).
+      3. Try base-16 parse on the first 12 hex chars of the remainder.
+      4. On any ValueError, fall back to ``abs(hash(...))`` of the original
+         id. Stable per-id within the process; differs across runs because
+         Python's str hash is salted, but the only contract is "an int" —
+         no caller treats this as a DB primary key.
+    """
+    if not isinstance(action_id, str) or not action_id:
+        return 0
+    remainder = action_id.split("_", 1)[-1] if "_" in action_id else action_id
+    try:
+        return int(remainder[:12], 16)
+    except (ValueError, TypeError):
+        return abs(hash(action_id)) & 0x7FFFFFFF
+
+
 def _ddb_safe(obj):
     if isinstance(obj, float):
         return Decimal(str(obj))
@@ -168,6 +201,11 @@ class LogStorage:
         self.t_logs = self._ddb.Table(_TABLE_NAMES["logs"])
         self.t_llm = self._ddb.Table(_TABLE_NAMES["llm_calls"])
         self.t_agent = self._ddb.Table(_TABLE_NAMES["agent_calls"])
+        # See _TABLE_NAMES["usage_logs"] for the rationale. Lazy access
+        # via a try/except in get_token_usage_stats so a missing table
+        # (e.g. local dev without the quota stack) downgrades to
+        # AI-Assistant-only stats instead of crashing.
+        self.t_usage = self._ddb.Table(_TABLE_NAMES["usage_logs"])
         self.t_summary = self._ddb.Table(_TABLE_NAMES["request_summaries"])
         self.t_pending = self._ddb.Table(_TABLE_NAMES["pending_actions"])
         self.t_pricing = self._ddb.Table(_TABLE_NAMES["model_pricing"])
@@ -566,6 +604,91 @@ class LogStorage:
         # populated field) — falling back to `thread_id` only when the
         # row carries no conversation_id (legacy data).
         rows = [_from_ddb(i) for i in self._scan_paginated(self.t_llm)]
+
+        # ── KB / non-supervisor merge (added 2026-05-03) ───────────────
+        # Sup_LLMCalls only contains AI Assistant rows. Knowledge-base
+        # surfaces (pdf_parse, kb_upload, kb_query, ws_chat_stream chat,
+        # chat_message) write to UsageLogs INSTEAD via the quota service's
+        # /quota/report endpoint and never touch Sup_LLMCalls. So a
+        # token-summary scan that only reads Sup_LLMCalls leaves the
+        # entire SFXBot + document ingestion footprint invisible on the
+        # admin Logs & Analytics > Cost & Token tab.
+        #
+        # The merge:
+        #   1. Scan UsageLogs once (same paginated helper).
+        #   2. SKIP rows where service == 'supervisor' — those have a
+        #      twin in Sup_LLMCalls already (every supervisor LLM call
+        #      writes to BOTH tables via quota_client.report_usage), so
+        #      counting both would double the AI Assistant numbers.
+        #   3. Map UsageLogs field names into the Sup_LLMCalls shape so
+        #      the existing _group_by / totals logic works unchanged:
+        #        cost_usd          → estimated_cost_usd
+        #        session_id        → conversation_id (and thread_id)
+        #        input_tokens + output_tokens → total_tokens (recomputed
+        #          because UsageLogs payloads from kb-lambda don't ship
+        #          a precomputed total_tokens field).
+        #   4. INCLUDE record_only=True rows. The flag means "no quota
+        #      deduction" (kb upload/parse cost is on the company, not
+        #      the user's monthly limit), but the cost is REAL — admins
+        #      need to see it in the dashboard or the document
+        #      ingestion bill is invisible until OpenAI sends an
+        #      invoice. The tier label (`document` or `chat`) lets the
+        #      Logs & Analytics > Usage by Tier panel separate the two.
+        #   5. Best-effort: a UsageLogs scan failure is logged and
+        #      swallowed so the existing Sup_LLMCalls stats keep working
+        #      even if the quota stack is unavailable in this env.
+        try:
+            usage_rows = [_from_ddb(i) for i in self._scan_paginated(self.t_usage)]
+        except Exception as e:
+            print(f"[get_token_usage_stats] UsageLogs merge skipped: {e}")
+            usage_rows = []
+        for ur in usage_rows:
+            svc = (ur.get("service") or "").strip()
+            if svc == "supervisor":
+                continue
+            # Skip auto_reset / admin_reset / period_reset audit snapshots.
+            # `lambda_quota_report.py` writes a synthetic UsageLogs row at
+            # monthly rollover with `service='system'`, `model='N/A'`, no
+            # tier, and `cost_usd = previous_period_total` — purely for
+            # the QuotaPage / ProfilePage history modal which renders
+            # "Period reset" entries. These rows are NOT real LLM calls;
+            # the underlying calls from that period are already in the
+            # table. Including them in cost/token aggregations:
+            #   1. Duplicates the period cost (visible as "$0.0652" under
+            #      a phantom "N/A" model row in Cost by Model).
+            #   2. Pollutes Usage by Tier with an "Other / Unmapped"
+            #      bucket (these rows have no tier field).
+            #   3. Inflates totals (Total LLM Calls, Estimated Cost) by
+            #      the previous period's amount, every period.
+            # QuotaPage/ProfilePage already have their own filters
+            # (`isResetService` / `isHistoryResetService`) so excluding
+            # them here doesn't break the reset-history surface.
+            op = (ur.get("operation") or "").strip().lower()
+            if svc == "system" and op in ("auto_reset", "admin_reset", "period_reset"):
+                continue
+            in_tok = int(ur.get("input_tokens") or 0)
+            out_tok = int(ur.get("output_tokens") or 0)
+            sid = ur.get("session_id")
+            rows.append({
+                "model": ur.get("model"),
+                "input_tokens": in_tok,
+                "output_tokens": out_tok,
+                "total_tokens": in_tok + out_tok,
+                "estimated_cost_usd": float(ur.get("cost_usd") or 0.0),
+                "duration_ms": ur.get("duration_ms"),
+                # Most KB rows don't carry an explicit success boolean
+                # in older payloads — default to True so they don't
+                # poison the success-rate computation.
+                "success": ur.get("success") if ur.get("success") is not None else True,
+                "tier": ur.get("tier"),
+                "operation": ur.get("operation"),
+                "service": svc,
+                "timestamp": ur.get("timestamp") or "",
+                "conversation_id": sid,
+                "thread_id": sid,
+                "request_id": ur.get("request_id"),
+            })
+
         if start_time:
             rows = [r for r in rows if (r.get("timestamp") or "") >= start_time]
         if end_time:
@@ -934,23 +1057,41 @@ class LogStorage:
     def insert_pending_action(
         self,
         action_id: str,
-        thread_id: Optional[str],
-        conversation_id: Optional[str],
-        request_id: Optional[str],
-        step_number: Optional[int],
         agent_name: str,
         tool_name: str,
-        description: Optional[str],
-        inputs: Optional[Dict[str, Any]],
+        thread_id: Optional[str] = None,
+        conversation_id: Optional[str] = None,
+        request_id: Optional[str] = None,
+        step_number: Optional[int] = None,
+        description: Optional[str] = None,
+        inputs: Optional[Dict[str, Any]] = None,
         output_variables: Optional[Dict[str, Any]] = None,
         risk_level: str = "MODERATE",
         expires_at: Optional[str] = None,
+        expires_in_minutes: Optional[int] = None,
         connection_id: Optional[str] = None,
     ) -> int:
-        ttl_epoch = None
+        # Accept BOTH `expires_at` (ISO string — DDB-native) and
+        # `expires_in_minutes` (legacy SQLite-style int). The supervisor's
+        # store_pending_action() in supervisor_agent.py passes the legacy
+        # form because it shares the call site with the SQLite LogStorage.
+        # Without this alias, the Lambda crashes with
+        #   "insert_pending_action() got an unexpected keyword argument
+        #    'expires_in_minutes'"
+        # the moment a DANGEROUS-tier tool needs approval (which is
+        # ~every send_email request).
+        ttl_epoch: Optional[int] = None
         if expires_at:
             try:
                 ttl_epoch = int(datetime.fromisoformat(expires_at).timestamp())
+            except Exception:
+                ttl_epoch = _ttl_epoch(7)
+        elif expires_in_minutes is not None:
+            try:
+                ttl_epoch = int(
+                    (datetime.utcnow() + timedelta(minutes=int(expires_in_minutes)))
+                    .timestamp()
+                )
             except Exception:
                 ttl_epoch = _ttl_epoch(7)
         else:
@@ -984,7 +1125,21 @@ class LogStorage:
             item["connection_id"] = connection_id
 
         self.t_pending.put_item(Item=_ddb_safe(item))
-        return int(action_id[:12], 16) if isinstance(action_id, str) else 0
+        # Legacy callers expected an int autoincrement (SQLite cursor.lastrowid).
+        # The supervisor's caller in supervisor_agent.py:store_pending_action
+        # discards this value, but we still return *something* int-shaped so
+        # any future caller doesn't get a None/str surprise.
+        #
+        # Bug fix (2026-05-03): action_id is generated as
+        #   f"action_{uuid.uuid4().hex[:8]}"   (e.g. "action_faeee123")
+        # so a naive `int(action_id[:12], 16)` blows up with
+        #   "invalid literal for int() with base 16: 'action_faeee'"
+        # because the leading "action_" segment is not hex. The pending
+        # row IS already in DDB at this point — the crash hits on RETURN —
+        # so the user sees "Unable to complete your request" while the
+        # row sits there orphaned. Strip any non-hex prefix and fall back
+        # to a stable hash if the remainder still won't parse.
+        return _action_id_to_int(action_id)
 
     def get_pending_action(self, action_id: str) -> Optional[Dict[str, Any]]:
         resp = self.t_pending.get_item(Key={"action_id": action_id})

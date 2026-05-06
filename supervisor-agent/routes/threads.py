@@ -11,6 +11,7 @@ from typing import Tuple
 import asyncio
 import json
 import os
+import re
 import tempfile
 import shutil
 import traceback
@@ -201,6 +202,93 @@ async def _resume_remaining_steps(conversation_state, previous_result, response_
             response_prefix += _render_completed_so_far(completed)
 
             return response_prefix + "\n\n" + disambig_msg, conversation_state
+
+        # SOFT-STOP / NO-MORE-ITEMS branch — orchestrator returned early
+        # because pause-time (or execute-time) Jinja substitution raised
+        # UndefinedError on a remaining step. Two distinct sub-cases that
+        # MUST render differently:
+        #
+        #   (a) error_is_no_more_items=True — an input referenced an array
+        #       index larger than the available list (e.g. {{ emails[1] }}
+        #       when only emails[0] exists). This is the "user asked to
+        #       reply to all and we ran out of matching items" scenario;
+        #       render as success-completion with a reassuring message.
+        #       NEVER show "Could not continue the workflow" here — that
+        #       would tell the user their request failed when in fact it
+        #       succeeded for every item that actually existed.
+        #
+        #   (b) error_is_no_more_items=False — a referenced variable was
+        #       never set (e.g. an upstream search returned 0 results and
+        #       a downstream step needed the result). Render as a soft
+        #       stop with the orchestrator's error message so the user
+        #       understands which prior step came up empty.
+        #
+        # Without this branch, the existing "All remaining steps completed"
+        # block below would silently render "All steps completed!" for the
+        # skipped status — a false success — because the legacy filter only
+        # looked for status="success" / status="error" and ignored "skipped".
+        stopped_at = result_state.get("stopped_at_step") or final_context.get("stopped_at_step")
+        skipped_steps = [r for r in results if r.get("status") == "skipped"]
+        if stopped_at and skipped_steps:
+            no_more_items = bool(final_context.get("error_is_no_more_items", False))
+            err_str = result_state.get("error") or final_context.get("error", "")
+
+            conversation_state.remaining_steps = []
+            conversation_state.workflow_context = None
+
+            # Render any successful resume-batch steps the same way the
+            # full-completion branch below does (per-step block from
+            # response_templates). The just-approved step that triggered
+            # this resume is NOT in `results` — it was already rendered
+            # into response_prefix by the caller (_handle_pending_action_decision).
+            completed_in_resume = [r for r in results if r.get("status") == "success"]
+            if completed_in_resume:
+                try:
+                    from services.response_templates import format_step
+                except Exception as _imp_exc:
+                    format_step = None  # type: ignore[assignment]
+                    print(f"response_templates import failed in resume soft-stop: {_imp_exc}")
+
+                response_prefix += "\n"
+                for idx, r in enumerate(completed_in_resume, 1):
+                    raw_desc = r.get("description") or ""
+                    tool_name = r.get("tool", "")
+                    desc = raw_desc if (raw_desc.strip() and raw_desc.strip().lower() != "no description") else (tool_name or "step")
+                    agent_name = r.get("agent", "")
+                    output = r.get("output", {}) if isinstance(r.get("output"), dict) else {}
+                    rich_text = ""
+                    if format_step is not None and agent_name and tool_name:
+                        try:
+                            rendered = format_step(agent_name, tool_name, output)
+                            if rendered and rendered.strip():
+                                rich_text = rendered.strip()
+                        except Exception as _fmt_exc:
+                            print(f"format_step failed for {agent_name}.{tool_name}: {_fmt_exc}")
+                    body = rich_text if rich_text else f"{desc} — done"
+                    if len(completed_in_resume) == 1:
+                        response_prefix += f"\n{body}\n"
+                    else:
+                        response_prefix += f"\n**Step {idx} — {desc}:**\n{body}\n"
+
+            if no_more_items:
+                # The misleading "Continuing with N remaining step(s)..."
+                # banner was added to response_prefix by the caller before
+                # this resume started — strip it here so the user doesn't
+                # see "Continuing with 4..." right next to "no more items"
+                # (those two messages contradict each other).
+                response_prefix = re.sub(
+                    r"\nContinuing with \d+ remaining step\(s\)\.\.\.\n?",
+                    "\n",
+                    response_prefix,
+                )
+                response_prefix += "\nThat was the only matching item — no further action needed."
+            else:
+                response_prefix += (
+                    f"\n\n**Stopped early.** "
+                    f"{err_str or 'Required data from a previous step was not available.'}"
+                )
+
+            return response_prefix, conversation_state
 
         # All remaining steps completed
         conversation_state.remaining_steps = []

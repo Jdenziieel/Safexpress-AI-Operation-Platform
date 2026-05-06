@@ -1,0 +1,64 @@
+1777964675675 START RequestId: bd6d2521-fca1-4459-837f-502f8337aaf5 Version: $LATEST
+1777964675676 Direct execution: create_from_template_and_data_ids
+1777964675676 ============================================================
+1777964675676 CREATE FROM TEMPLATE & DATA (USING IDs)
+1777964675676 ============================================================
+1777964675676 Template ID: 154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0
+1777964675676 Data ID: 1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc
+1777964675676 New Title: HelloTestTempandData
+1777964675676 Output Format: google_docs
+1777964675676 ============================================================
+1777964675766 Reading data file...
+1777964676123 Data file: TestData123 (Type: application/vnd.google-apps.document)
+1777964676123 Format: Google Docs → Exporting as plain text
+1777964677250 Read 336 characters from data file
+1777964677750 File: MinutesOfMeetingTEMP
+1777964677750 MIME Type: application/vnd.google-apps.document
+1777964677750 Type: Google Docs (native) → Using Docs API
+1777964678762 Detected blank line placeholder: 'Date:____' → [DATE]
+1777964678762 Detected blank line placeholder: 'Time:____' → [TIME]
+1777964678762 Detected blank line placeholder: 'Department:____' → [DEPARTMENT]
+1777964678762 Detected blank line placeholder: 'Attendees:____' → [ATTENDEES]
+1777964678762 Total placeholders found: ['ATTENDEES', 'DATE', 'DEPARTMENT', 'TIME']
+1777964678762 Found placeholders in template: ['ATTENDEES', 'DATE', 'DEPARTMENT', 'TIME']
+1777964678762 Matched: [DATE] = ______
+1777964678762 Matched: [TIME] = _____
+1777964678762 Matched: [DEPARTMENT] = _____
+1777964678762 Matched: [ATTENDEES] = _______
+1777964678762 Final placeholder mapping: ['DATE', 'TIME', 'DEPARTMENT', 'ATTENDEES']
+1777964678762 SANITY CHECK FAILED: every placeholder (ATTENDEES, DEPARTMENT, TIME) resolved to an empty / underscore value. Data file 'TestData123' appears to be a template clone, not real data. Aborting.
+1777964678762 Direct execution result:
+1777964678762 Error: the data file 'TestData123' appears to be a template clone — every placeholder (ATTENDEES, DEPARTMENT, TIME) is blank or underscore-only in the file's content. The merge would produce an empty document.
+1777964678762 Common cause: Drive search returned a duplicate file with the same name as your intended data file (e.g., a previous run that copied the template and saved it under the data-file name).
+1777964678762 To fix:
+1777964678762 1. Open Drive and confirm there is exactly ONE file named 'TestData123'. If duplicates exist, delete or rename the empty one (it was likely placed in the Templates folder).
+1777964678762 2. Make sure your real data file has actual values, e.g. `Date: 2026-05-05`, `Time: 9:00 AM`, etc. — not just `Date:____`.
+1777964678765 END RequestId: bd6d2521-fca1-4459-837f-502f8337aaf5
+1777964678765 REPORT RequestId: bd6d2521-fca1-4459-837f-502f8337aaf5	Duration: 3089.77 ms	Billed Duration: 6616 ms	Memory Size: 2048 MB	Max Memory Used: 247 MB	Init Duration: 3525.58 ms
+1777964738133 START RequestId: b951ede9-6a1a-43c6-a4ac-3e6ab72ea56f Version: $LATEST
+1777964738134 Direct execution: create_from_template_and_data_ids
+1777964738134 ============================================================
+1777964738134 CREATE FROM TEMPLATE & DATA (USING IDs)
+1777964738134 ============================================================
+1777964738134 Template ID: 154TdbjYZSNtEoS5AZMsPbfOSFSKt92mUT0bG5-7Abu0
+1777964738135 Data ID: 1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc
+1777964738135 New Title: HelloTestTempandData902
+1777964738135 Output Format: google_docs
+1777964738135 ============================================================
+1777964738217 Reading data file...
+1777964738593 Data file: TestData123 (Type: application/vnd.google-apps.document)
+1777964738593 Format: Google Docs → Exporting as plain text
+1777964739488 Traceback (most recent call last):
+1777964739488 File "/var/task/tools.py", line 1185, in _create_from_template_and_data_ids_impl
+1777964739488 data_content = drive_service.files().export(fileId=data_file_id, mimeType='text/plain').execute().decode('utf-8')
+1777964739488 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1777964739488 File "/var/lang/lib/python3.12/site-packages/googleapiclient/_helpers.py", line 130, in positional_wrapper
+1777964739488 return wrapped(*args, **kwargs)
+1777964739488 ^^^^^^^^^^^^^^^^^^^^^^^^
+1777964739488 File "/var/lang/lib/python3.12/site-packages/googleapiclient/http.py", line 938, in execute
+1777964739488 raise HttpError(resp, content, uri=self.uri)
+1777964739488 googleapiclient.errors.HttpError: <HttpError 500 when requesting https://www.googleapis.com/drive/v3/files/1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc/export?mimeType=text%2Fplain returned "Internal Error". Details: "[{'message': 'Internal Error', 'domain': 'global', 'reason': 'internalError'}]">
+1777964739488 Direct execution result:
+1777964739488 Error creating document: <HttpError 500 when requesting https://www.googleapis.com/drive/v3/files/1IO2Oh_9klO4cS-yAN_SjuXRJCyALYjS4z5iNUJjGqHc/export?mimeType=text%2Fplain returned "Internal Error". Details: "[{'message': 'Internal Error', 'domain': 'global', 'reason': 'internalError'}]">
+1777964739491 END RequestId: b951ede9-6a1a-43c6-a4ac-3e6ab72ea56f
+1777964739491 REPORT RequestId: b951ede9-6a1a-43c6-a4ac-3e6ab72ea56f	Duration: 1357.29 ms	Billed Duration: 1358 ms	Memory Size: 2048 MB	Max Memory Used: 247 MB

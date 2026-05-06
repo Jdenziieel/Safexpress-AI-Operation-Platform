@@ -56,7 +56,7 @@ agent_capabilities = {
                 "can_be_derived_from": {"message_id": "search_emails"},
             },
             "create_draft_email": {
-                "description": "Create a draft email without sending (safer than direct send).",
+                "description": "Create a TEXT-ONLY draft email (no attachment) without sending. For drafts that include a file attachment use `create_draft_email_with_attachment` — Gmail does not allow attaching files to a draft after the fact, so a one-shot tool is required.",
                 "args": {
                     "to": "str (required) — recipient email",
                     "subject": "str (required) — subject line",
@@ -65,6 +65,16 @@ agent_capabilities = {
                     "bcc": "str (optional) — BCC recipients, comma-separated emails",
                 },
                 "returns": ["success", "draft_id", "message_id", "to", "subject", "error"],
+            },
+            "create_draft_email_with_attachment": {
+                "description": "Create a draft Gmail message WITH a single file attachment. Use this whenever the user wants to (a) prepare an email for review (draft) AND (b) attach a file in the same step. Gmail's Drafts API only accepts attachments at draft-creation time, so you cannot create a text-only draft first and then attach a file later — pick this tool up front. For send-immediately-with-attachment flows use `send_email_with_attachment`. file_path must be either an absolute LOCAL path or an `s3://bucket/key` URL produced by the supervisor for a user-uploaded file (the agent downloads s3:// URLs to /tmp on its own container before reading).",
+                "args": {
+                    "to": "str (required) — recipient email",
+                    "subject": "str (required) — subject line",
+                    "body": "str (required) — email body (may be empty string)",
+                    "file_path": "str (required) — absolute LOCAL path OR `s3://...` URL of an uploaded file. NOT an HTTP URL.",
+                },
+                "returns": ["success", "draft_id", "message_id", "to", "subject", "body", "attachment_name", "attachment_path", "error"],
             },
             "send_draft_email": {
                 "description": "Send a previously created draft by its draft_id.",
@@ -241,12 +251,13 @@ agent_capabilities = {
             },
         },
         "template_with_data_workflow": {
-            "when_to_use": "When user mentions BOTH a template AND data/content files. ALWAYS use this 2-step workflow.",
-            "workflow_steps": {
+            "when_to_use": "When user mentions BOTH a template AND data/content files. Choose PATH A (both in Drive) or PATH B (uploaded template + Drive data) based on whether `uploaded_file` is in AVAILABLE CONTEXT VARIABLES. See planner Rule 21 for the explicit decision guide.",
+            "path_a_both_in_drive": {
+                "trigger": "uploaded_file is NOT in context — user referenced both files by name",
                 "step_1": {
                     "agent": "drive_agent",
                     "tool": "search_template_and_data",
-                    "purpose": "Search Google Drive for both template and data files",
+                    "purpose": "Search Google Drive for both template and data files in one call",
                 },
                 "step_2": {
                     "agent": "docs_agent",
@@ -254,9 +265,27 @@ agent_capabilities = {
                     "purpose": "Create document using the file IDs found by Drive Agent",
                 },
             },
+            "path_b_uploaded_template": {
+                "trigger": "uploaded_file IS in context — user uploaded the template, data file is named in the message",
+                "step_1": {
+                    "agent": "drive_agent",
+                    "tool": "upload_template",
+                    "purpose": "Push the uploaded local template (uploaded_file.temp_path) into Drive's Templates folder so the merge tool can consume it by ID. NEVER skip this — the upload lives in /tmp, not Drive, so search_template_and_data with the upload's filename will return 'not found'.",
+                },
+                "step_2": {
+                    "agent": "drive_agent",
+                    "tool": "search_files",
+                    "purpose": "Resolve the named data file in Drive to a file ID (search_term=data_name)",
+                },
+                "step_3": {
+                    "agent": "docs_agent",
+                    "tool": "create_from_template_and_data_ids",
+                    "purpose": "Merge the now-Drive-side template with the data file. NEVER use create_from_uploaded_template here — it is single-source and ignores the data file.",
+                },
+            },
             "extraction_rules": {
-                "template_name": "Look for keywords: 'template', 'format', 'use X template' - extract the file name",
-                "data_name": "Look for keywords: 'data', 'content', 'use X document/file' - extract the file name",
+                "template_name": "Look for keywords: 'template', 'format', 'use X template' - extract the file name. When user says 'this uploaded template' / 'this template' (Path B), the template_name comes from the upload's filename.",
+                "data_name": "Look for keywords: 'data', 'content', 'use X document/file' - extract the file name. Always a Drive file in both Path A and Path B.",
                 "new_title": "Look for: 'titled X', 'call it X', 'name it X', or infer from context",
             },
         },
@@ -334,6 +363,45 @@ agent_capabilities = {
                 "returns": ["success", "parsed_orders", "rejected_files", "total_parsed", "total_rejected", "error"],
                 "returns_detail": "parsed_orders is array; each has: file, header {reference_number, date, category, allergen, cb_date, requested_by}, line_items [{item_code, item_description, qty, uom, cb_date}], warnings",
                 "can_be_derived_from": {"file_paths": "gmail_agent.search_emails_with_delivery_order_attachments"},
+            },
+            "validate_mapping": {
+                "description": "Pre-flight validator for a column-mapping dict before transform_data. Stateless — safe to call any time after smart_column_mapping returns a candidate `mappings`. Reports invalid target columns (mapped to columns that don't exist in target_columns), duplicate target mappings (multiple sources → same target), unmapped source columns (warning), and optionally unmapped target columns when require_all_targets=True. Use this between smart_column_mapping and transform_data when the user asks to 'verify the mapping' / 'check the mapping is correct' / 'is anything missing' before applying it. Skip when the user just wants the transform to run.",
+                "args": {
+                    "mappings": "dict (required) — {source_column: target_column} mapping dict, typically from smart_column_mapping.mappings.",
+                    "source_columns": "List[str] (required) — full list of columns present in the source data (typically parse_file.columns).",
+                    "target_columns": "List[str] (required) — full list of allowed target columns the data is being mapped INTO.",
+                    "sample_data": "List[dict] (optional) — sample rows for type-compatibility checks. Currently a no-op placeholder; safe to omit.",
+                    "require_all_targets": "bool (optional, default False) — when True, emits a warning for every target_columns entry that no source maps to. Use when the destination schema has hard-required columns.",
+                },
+                "returns": ["success", "is_valid", "errors", "warnings", "summary", "error"],
+                "returns_detail": "is_valid=True iff errors is empty (warnings do not block). errors[] entries: {type='invalid_target_columns', message, mappings: [{source, invalid_target}]}. warnings[] entries: {type, message, columns?, duplicates?}. summary={total_mappings, valid_mappings, error_count, warning_count}.",
+                "can_be_derived_from": {
+                    "mappings": "mapping_agent.smart_column_mapping",
+                    "source_columns": "mapping_agent.parse_file",
+                },
+            },
+            "save_mapping_template": {
+                "description": "Save a column-mapping configuration as a NAMED, REUSABLE template under the given template_name. EPHEMERAL STORAGE: templates are kept in the mapping_agent Lambda's in-memory MAPPING_TEMPLATES dict, NOT in DynamoDB or S3. They survive within a single Lambda container's lifetime (warm invocations), but are LOST on cold start and NOT shared across concurrent containers. Treat this as a same-conversation cache, NOT cross-session persistence — never tell the user the template will 'be available next time' unless the workflow re-saves it. Useful for: re-applying the same mapping across multiple files in a single multi-step workflow (save → transform file 1 → load → transform file 2).",
+                "args": {
+                    "template_name": "str (required) — human-readable name (e.g. 'Q4 Delivery Mapping'). The tool generates an internal template_id by lowercasing and replacing spaces with underscores: 'Q4 Delivery Mapping' → 'template_q4_delivery_mapping'.",
+                    "mappings": "dict (required) — {source_column: target_column} dict to persist.",
+                    "target_columns": "List[str] (optional) — target column ordering preserved with the template.",
+                    "metadata": "dict (optional) — free-form metadata (description, tags, etc.) stored alongside the template.",
+                },
+                "returns": ["success", "template_id", "template_name", "message", "error"],
+            },
+            "load_mapping_template": {
+                "description": "Retrieve a previously-saved mapping template by name or template_id. Looks up by template_id first (lowercased name with underscores), then falls back to a case-insensitive name search. Returns the saved mappings ready to feed into transform_data. EPHEMERAL: only finds templates saved earlier in the SAME container's lifetime — see save_mapping_template's caveat. If load fails with 'Template not found', the template was either never saved, was saved in a different container, or was lost on cold start.",
+                "args": {
+                    "template_name": "str (required) — the template_name passed to save_mapping_template (or the generated template_id, e.g. 'template_q4_delivery_mapping').",
+                },
+                "returns": ["success", "template_id", "template_name", "mappings", "target_columns", "metadata", "created_at", "updated_at", "error"],
+            },
+            "list_mapping_templates": {
+                "description": "Enumerate all mapping templates currently held in the mapping_agent Lambda's in-memory store. Returns name, id, and mapping count for each — use to disambiguate before load_mapping_template when the user is fuzzy about the template name. EPHEMERAL: lists ONLY templates saved earlier in the SAME container's lifetime; an empty list is the normal state right after a cold start.",
+                "args": {},
+                "returns": ["success", "templates", "count", "error"],
+                "returns_detail": "templates is an array of {id, name, mapping_count, created_at, metadata}.",
             },
         },
     },
@@ -513,15 +581,15 @@ agent_capabilities = {
         "description": "Manage Google Calendar: list, create, update, delete events. Supports Google Meet and multi-calendar.",
         "tools": {
             "list_events": {
-                "description": "List upcoming calendar events.",
+                "description": "List upcoming calendar events. Defaults to the user's primary calendar; pass calendar_name='all' to search across ALL calendars in the user's calendarList (fan-out + merge + dedupe by iCalUID).",
                 "args": {
                     "time_min": "str (optional) — start time (YYYY-MM-DD or ISO)",
                     "time_max": "str (optional) — end time (YYYY-MM-DD or ISO)",
                     "max_results": "int (optional) — default 10",
-                    "calendar_name": "str (optional) — default 'primary'",
+                    "calendar_name": "str (optional) — name of the target calendar; defaults to 'primary'. Pass the sentinel 'all' (case-insensitive) when the user asks to search across ALL of their calendars (e.g. 'in all my calendars', 'across my calendars', 'every calendar') — the agent will fan out across calendarList, merge results, dedupe shared meetings by iCalUID, and stamp each row with its source calendar_name.",
                 },
-                "returns": ["success", "events", "count", "message"],
-                "returns_detail": "events is array of {event_id, summary, start, end, location, attendees}",
+                "returns": ["success", "events", "count", "calendars_searched", "message"],
+                "returns_detail": "events is array of {event_id, summary, start, end, location, attendees, calendar_name?}; calendar_name is only present when calendar_name='all' was used. calendars_searched is only present in the fan-out path.",
             },
             "create_event": {
                 "description": "Create calendar event. Auto-sends invitations to attendees.",
@@ -722,13 +790,13 @@ agent_capabilities = {
                 "can_be_derived_from": {"file_id": "search_files"},
             },
             "download_file": {
-                "description": "Download a Google Drive file to a SERVER-SIDE temp path and return its local_path. Unblocks chains like 'Drive file → mapping_agent.parse_file'. Native Google files (Docs/Sheets/Slides/Drawings) are auto-exported to docx/xlsx/pptx/png; binary files are streamed as-is.",
+                "description": "Download a Google Drive file and return a `local_path` reference the next sub-agent can read. Unblocks chains like 'Drive file → mapping_agent.parse_file' and 'Drive file → gmail_agent.create_draft_email_with_attachment'. Native Google files (Docs/Sheets/Slides/Drawings) are auto-exported to docx/xlsx/pptx/png; binary files are streamed as-is.",
                 "args": {
                     "file_id": "str (optional) — Drive file ID (or a Drive/Docs/Sheets URL, auto-normalized). Prefer this when known from a prior search_files step.",
                     "drive_path": "str (optional) — Drive LOGICAL path (e.g. 'Data/customer_info.txt'). Resolved like drive_agent.read_file_content. NOT a local OS path.",
                 },
-                "returns": ["success", "local_path", "file_id", "file_name", "mime_type", "exported_as", "size_bytes", "message", "error"],
-                "note": "Exactly one of file_id or drive_path must be provided. Caller (next step) consumes local_path directly; temp dir lifecycle is per-call.",
+                "returns": ["success", "local_path", "local_path_internal", "s3_url", "file_id", "file_name", "mime_type", "exported_as", "size_bytes", "message", "error"],
+                "note": "Exactly one of file_id or drive_path must be provided. Wire the `local_path` output (NOT `local_path_internal`) into the next step's `file_path` arg via `{{ local_path }}` — on Lambda it is an `s3://` URL the downstream sub-agent transparently fetches; on single-container dev it is a literal /tmp path. Either way the planner's plan shape is the same.",
                 "can_be_derived_from": {"file_id": "drive_agent.search_files"},
             },
             "copy_file": {

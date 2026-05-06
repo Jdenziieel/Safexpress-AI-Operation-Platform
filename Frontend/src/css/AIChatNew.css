@@ -609,26 +609,34 @@
     }
   }
   
-  .chat-message-avatar {
+  /* Gemini-style assistant glyph — no bubble background, no border, just
+     a small sparkle floating to the left of the answer text. The
+     legacy .chat-message-avatar bubble (and its user-side mirror) has
+     been retired:
+       - User avatar bubble removed entirely (the right-aligned brand
+         pill already tells you which message is yours; the avatar was
+         redundant chrome that ate ~28px of horizontal real estate per
+         message).
+       - Bot icon swapped from a generic robot to lucide-react's
+         Sparkles, which reads as "AI assistant" rather than "bot" —
+         matches Gemini's four-pointed star aesthetic without
+         depending on a custom SVG asset. */
+  .chat-message-glyph {
     width: 28px;
     height: 28px;
-    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-weight: 600;
+    color: var(--aui-primary, #26326e);
+    margin-top: 2px; /* visual baseline-align with first text line */
   }
-  
-  .chat-message.user .chat-message-avatar {
-    background: var(--aui-primary);
-    color: white;
-  }
-  
-  .chat-message.assistant .chat-message-avatar {
-    background: var(--aui-background);
-    color: var(--aui-primary);
-    border: 2px solid var(--aui-border);
+
+  .chat-message-glyph svg {
+    /* A whisper of the brand orange, leaning closer to the navy primary,
+       so the sparkle reads as a "spark of intelligence" rather than a
+       full-saturation accent. Tweak via custom property for white-label. */
+    stroke: var(--aui-primary, #26326e);
   }
   
   .chat-message-content1 {
@@ -978,12 +986,18 @@
     opacity: 0.6;
   }
   
+  /* Send button — sized + styled to match SFXBot's `.chat-send-btn`
+     so both surfaces feel like the same product. Was 52x52 with the
+     theme radius; shrunk to 36x36 / 8px-radius / brand navy to be
+     visually identical to SFXBot. Hover scales 1.05 (matches SFXBot
+     too), disabled grays out instead of just lowering opacity so
+     interactivity is obvious at a glance. */
   .chat-composer-send {
-    width: 52px;
-    height: 52px;
-    border-radius: var(--aui-radius);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     border: none;
-    background: var(--aui-primary);
+    background: #26326e;
     color: white;
     cursor: pointer;
     transition: all 0.2s;
@@ -992,17 +1006,55 @@
     justify-content: center;
     flex-shrink: 0;
   }
-  
+
+  .chat-composer-send svg {
+    flex-shrink: 0;
+  }
+
   .chat-composer-send:hover:not(:disabled) {
-    background: var(--aui-primary-hover);
+    background: #1a2350;
     transform: scale(1.05);
   }
-  
+
   .chat-composer-send:disabled {
-    opacity: 0.4;
+    background: #d4d4d4;
     cursor: not-allowed;
+    opacity: 0.5;
   }
-  
+
+  /* Stop variant — shown while the supervisor run is in flight.
+     Mirrors SFXBot's chat-stop-btn styling: a calm dark background
+     that flips to an alarming red on hover so the user reads it as
+     "abort this" without it feeling like a panic button at rest. */
+  .chat-composer-stop {
+    background: #1a2350;
+    position: relative;
+  }
+
+  .chat-composer-stop::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 11px; /* 8px button + 3px outset */
+    border: 2px solid rgba(252, 177, 23, 0.35);
+    animation: aichat-stop-pulse 1.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .chat-composer-stop:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+  }
+
+  .chat-composer-stop:hover::after {
+    border-color: rgba(220, 38, 38, 0.4);
+  }
+
+  @keyframes aichat-stop-pulse {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
+  }
+
   .chat-composer-footer {
     margin-top: 0.75rem;
     text-align: center;
