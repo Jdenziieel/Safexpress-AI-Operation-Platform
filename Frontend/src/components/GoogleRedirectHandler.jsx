@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { GOOGLE_ACCESS_TOKEN } from "../token";
 
@@ -18,7 +18,9 @@ function RedirectGoogleAuth() {
       api
         .get('/api/auth/user')    
         .then(response => {
-          navigate('/dashboard')
+          const role = response.data?.user?.role || response.data?.role || null;
+          const landingPage = role === 'manager' ? '/logs' : role === 'user' ? '/sfx-bot' : '/dashboard';
+          navigate(landingPage)
         })
         .catch(error => {
           console.error(

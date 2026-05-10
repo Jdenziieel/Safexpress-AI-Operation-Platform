@@ -32,10 +32,10 @@ const ProtectedRoute = ({ children, allowedRoles, redirectTo }) => {
         // Users should go to SFX Bot (their primary accessible page)
         return '/sfx-bot';
       case 'manager':
-        // Managers should go to Dashboard
-        return '/dashboard';
+        // Managers should go to Logs & Analytics
+        return '/logs';
       default:
-        // Fallback to dashboard
+        // Fallback to the admin dashboard
         return '/dashboard';
     }
   };

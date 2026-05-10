@@ -26,7 +26,8 @@ import "../css/Sidebar.css";
  * - User: Can ONLY access SFXBot, Dynamic Mapping, Analysis Reports
  */
 const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/logs", allowedRoles: ["admin"] },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", allowedRoles: ["admin"] },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/logs", allowedRoles: ["admin", "manager"] },
   { label: "Accounts", icon: Users, path: "/accounts", allowedRoles: ["admin"] },
   { label: "AI Assistant", icon: Bot, path: "/ai-chat-new", allowedRoles: ["admin", "manager"] },
   { label: "SFX Bot", icon: Bot, path: "/sfx-bot", allowedRoles: ["admin", "manager", "user"] },
@@ -155,7 +156,7 @@ const Sidebar = React.memo(({ isOpen, toggleSidebar, onLogout }) => {
       <ul className="nav-list">
         {filteredNavItems.map((item) => (
           <NavItem
-            key={item.label}
+            key={item.path}
             item={item}
             isActive={pathname === item.path}
           />

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";  // ← Changed this import
 import { ACCESS_TOKEN } from "../token";
+import { getUserRole } from "../utils/tokenManager";
 import "../css/Login.css";
 import safexpressLogo from "../assets/sfxLogo.png";
 
@@ -78,7 +79,9 @@ const Login = ({ onLogin }) => {
         
         // Wait a bit to ensure state updates, then navigate
         setTimeout(() => {
-          navigate("/dashboard", { replace: true });
+          const role = getUserRole();
+          const landingPage = role === "manager" ? "/logs" : role === "user" ? "/sfx-bot" : "/dashboard";
+          navigate(landingPage, { replace: true });
         }, 100);
       } catch (error) {
         console.error("Google login error:", error);

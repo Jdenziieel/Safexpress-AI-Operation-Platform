@@ -24,6 +24,7 @@ import OPRHistory from "./components/OPRHistory.jsx";
 import WorkloadAnalysisPage from "./components/WorkloadAnalysisPage.jsx";
 import ProfilePage from "./components/ProfilePage.jsx";
 import EditAccount from "./components/EditAccount.jsx";
+import Dashboard from "./components/Dashboard.jsx";
 import ErrorModal from "./components/ErrorModal.jsx";
 import LogsPage from "./components/LogsPage.jsx";
 import KBAnalyticsPage from "./components/KBAnalyticsPage.jsx";
@@ -51,9 +52,10 @@ const RoleBasedRedirect = () => {
     case "user":
       return <Navigate to="/sfx-bot" replace />;
     case "manager":
+      return <Navigate to="/logs" replace />;
     case "admin":
     default:
-      return <Navigate to="/logs" replace />;
+      return <Navigate to="/dashboard" replace />;
   }
 };
 
@@ -222,6 +224,17 @@ function App() {
               <div className="main-content">
                 <AliveScope>
                   <Routes>
+                    {/* Admin Dashboard - Admin only */}
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute allowedRoles={["admin"]}>
+                          <KeepAlive id="dashboard">
+                            <Dashboard />
+                          </KeepAlive>
+                        </ProtectedRoute>
+                      }
+                    />
                     {/* Accounts - Admin only */}
                     <Route
                       path="/accounts"
@@ -396,11 +409,11 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
-                    {/* Logs & Analytics - Admin only */}
+                    {/* Logs & Analytics - Admin and Manager */}
                     <Route
                       path="/logs"
                       element={
-                        <ProtectedRoute allowedRoles={["admin"]}>
+                        <ProtectedRoute allowedRoles={["admin", "manager"]}>
                           <KeepAlive id="logs">
                             <LogsPage />
                           </KeepAlive>
