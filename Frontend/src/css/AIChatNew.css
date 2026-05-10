@@ -536,6 +536,7 @@
   .chat-welcome h2 {
     font-size: 1.5rem;
     font-weight: 700;
+    font-family: "Inter", sans-serif;
     color: var(--aui-text);
     margin: 0 0 0.5rem 0;
   }
@@ -556,24 +557,25 @@
   
   .chat-suggestion {
     padding: 0.75rem;
-    background: var(--aui-surface);
-    border: 1px solid var(--aui-border);
+    background: linear-gradient(135deg, #f8fbff 0%, #f1f7ff 100%);
+    border: 1px solid #dbeafe;
     border-radius: var(--aui-radius);
     cursor: pointer;
     transition: all 0.2s;
     text-align: left;
     display: flex;
     align-items: flex-start;
-    gap: 0.5rem;
+    justify-content: flex-start;
     color: var(--aui-text);
     font-size: 0.8rem;
-    font-weight: 500;
+    font-weight: 400;
+    font-family: "Inter", sans-serif;
     line-height: 1.4;
   }
   
   .chat-suggestion:hover {
-    background: var(--aui-surface);
-    border-color: var(--aui-primary);
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-color: #93c5fd;
     box-shadow: var(--aui-shadow-md);
     transform: translateY(-2px);
   }

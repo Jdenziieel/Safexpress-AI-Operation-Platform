@@ -20,6 +20,10 @@ export const fetchTargetTabs = async (targetSheetUrl) => {
 
 export const previewDynamicMapping = async (file, targetSheetUrl, options = {}) => {
   try {
+    console.log('Starting Dynamic Mapping Preview...');
+    console.log('   File:', file.name, `(${(file.size / 1024).toFixed(2)} KB)`);
+    console.log('   Target:', targetSheetUrl);
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('target_sheet_url', targetSheetUrl);
@@ -28,8 +32,36 @@ export const previewDynamicMapping = async (file, targetSheetUrl, options = {}) 
     if (options.sectionIndex !== undefined && options.sectionIndex !== null) {
       formData.append('section_index', String(options.sectionIndex));
     }
+    if (options.sheetName) {
+      formData.append('sheet_name', String(options.sheetName));
+    }
+    // Once the user picks a target tab from the multi-tab anchor-overlap
+    // picker, echo it back so the backend skips Step 0c and writes to the
+    // chosen tab instead of looping the picker.
+    if (options.targetTabChosen) {
+      formData.append('target_tab_chosen', String(options.targetTabChosen));
+    }
+    // Multi-sheet aggregate: once the user has resolved cross-sheet
+    // identifier conflicts in the new modal, echo their picks back so
+    // the backend can build the merged anchor map and skip the
+    // requires_conflict_resolution branch.
+    if (options.conflictChoices && typeof options.conflictChoices === 'object'
+        && Object.keys(options.conflictChoices).length > 0) {
+      formData.append('conflict_choices', JSON.stringify(options.conflictChoices));
+    }
+    // Same-section duplicate row resolution. Different shape from
+    // conflictChoices: keys are still anchor values, but the chosen value
+    // is "row_<N>" (0-indexed source row position) or "skip". The backend
+    // uses these to filter source rows BEFORE structure/transform so
+    // duplicates the user resolved never reach the writer.
+    if (options.intraSectionChoices && typeof options.intraSectionChoices === 'object'
+        && Object.keys(options.intraSectionChoices).length > 0) {
+      formData.append('intra_section_choices', JSON.stringify(options.intraSectionChoices));
+    }
 
+    console.log('   Sending preview request...');
     const result = await dynamicMappingApi.upload(formData);
+    console.log('   Preview complete:', result);
 
     if (!result.success) {
       throw new Error(result.error || 'Preview failed');
@@ -46,6 +78,10 @@ export const previewDynamicMapping = async (file, targetSheetUrl, options = {}) 
 
 export const runDynamicMapping = async (file, targetSheetUrl, options = {}) => {
   try {
+    console.log('Running Dynamic Mapping...');
+    console.log('   File:', file.name, `(${(file.size / 1024).toFixed(2)} KB)`);
+    console.log('   Target:', targetSheetUrl);
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('target_sheet_url', targetSheetUrl);
@@ -53,6 +89,26 @@ export const runDynamicMapping = async (file, targetSheetUrl, options = {}) => {
     formData.append('tool', 'run_dynamic_mapping');
     if (options.sectionIndex !== undefined && options.sectionIndex !== null) {
       formData.append('section_index', String(options.sectionIndex));
+    }
+    if (options.sheetName) {
+      formData.append('sheet_name', String(options.sheetName));
+    }
+    if (options.targetTabChosen) {
+      formData.append('target_tab_chosen', String(options.targetTabChosen));
+    }
+    // Aggregate confirm: caller already ran preview with conflict_choices
+    // and got an aggregate strategy_metadata back. Forward both so the
+    // backend can replay the merge identically without re-prompting.
+    if (options.conflictChoices && typeof options.conflictChoices === 'object'
+        && Object.keys(options.conflictChoices).length > 0) {
+      formData.append('conflict_choices', JSON.stringify(options.conflictChoices));
+    }
+    // Same-section duplicate-row resolution: forward to the run path so
+    // the cached confirm filters source rows identically to how preview
+    // built the filtered preview the user just approved.
+    if (options.intraSectionChoices && typeof options.intraSectionChoices === 'object'
+        && Object.keys(options.intraSectionChoices).length > 0) {
+      formData.append('intra_section_choices', JSON.stringify(options.intraSectionChoices));
     }
 
     if (options.previewCache) {
@@ -79,7 +135,23 @@ export const runDynamicMapping = async (file, targetSheetUrl, options = {}) => {
       if (pc.value_source_col) formData.append('value_source_col', pc.value_source_col);
     }
 
+    // Per-row write filter from the preview UI checkboxes. When present,
+    // the backend trims transformed rows to only those whose anchor /
+    // (anchor, column) tuple is in the allow-list. Omitted entirely on
+    // the "all selected" default path so legacy behavior is preserved.
+    if (options.writeOnly
+        && typeof options.writeOnly === 'object'
+        && (
+          (options.writeOnly.allowed_diff_cells || []).length > 0
+          || (options.writeOnly.allowed_append_anchors || []).length > 0
+        )
+    ) {
+      formData.append('write_only', JSON.stringify(options.writeOnly));
+    }
+
+    console.log('   Sending run request...');
     const result = await dynamicMappingApi.upload(formData);
+    console.log('   Mapping complete:', result);
 
     if (!result.success) {
       throw new Error(result.error || 'Dynamic mapping failed');

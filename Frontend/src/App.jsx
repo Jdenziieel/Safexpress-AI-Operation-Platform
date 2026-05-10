@@ -9,7 +9,6 @@ import { KeepAlive, AliveScope } from "react-activation";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Sidebar from "./components/Sidebar.jsx";
 import Login from "./components/Login.jsx";
-import Dashboard from "./components/Dashboard.jsx";
 import Accounts from "./components/Accounts.jsx";
 import AdminActivityLogs from "./components/AdminActivityLogs.jsx";
 import AIChatNew from "./components/AIChatNew.jsx";
@@ -42,7 +41,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 /**
  * Component to redirect users to their appropriate default page based on role
- * - Admin/Manager: Dashboard
+ * - Admin/Manager: Logs dashboard
  * - User: SFX Bot
  */
 const RoleBasedRedirect = () => {
@@ -54,7 +53,7 @@ const RoleBasedRedirect = () => {
     case "manager":
     case "admin":
     default:
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to="/logs" replace />;
   }
 };
 
@@ -223,17 +222,6 @@ function App() {
               <div className="main-content">
                 <AliveScope>
                   <Routes>
-                    {/* Dashboard - Admin and Manager only */}
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <ProtectedRoute allowedRoles={["admin", "manager"]}>
-                          <KeepAlive id="dashboard">
-                            <Dashboard />
-                          </KeepAlive>
-                        </ProtectedRoute>
-                      }
-                    />
                     {/* Accounts - Admin only */}
                     <Route
                       path="/accounts"

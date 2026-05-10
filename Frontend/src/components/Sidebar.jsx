@@ -10,7 +10,6 @@ import {
   FileScan,
   LogOut,
   BookOpen,
-  Activity,
   Zap,
 } from "lucide-react";
 import { isAdmin as checkIsAdmin, getUserRole, hasAccess, getUserFromToken } from "../utils/tokenManager";
@@ -27,7 +26,7 @@ import "../css/Sidebar.css";
  * - User: Can ONLY access SFXBot, Dynamic Mapping, Analysis Reports
  */
 const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", allowedRoles: ["admin", "manager"] },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/logs", allowedRoles: ["admin"] },
   { label: "Accounts", icon: Users, path: "/accounts", allowedRoles: ["admin"] },
   { label: "AI Assistant", icon: Bot, path: "/ai-chat-new", allowedRoles: ["admin", "manager"] },
   { label: "SFX Bot", icon: Bot, path: "/sfx-bot", allowedRoles: ["admin", "manager", "user"] },
@@ -47,7 +46,6 @@ const navItems = [
   { label: "KB Analytics", icon: BarChart3, path: "/kb-analytics", allowedRoles: ["admin"] },
   { label: "Dynamic Mapping", icon: BookOpen, path: "/dynamic-mapping", allowedRoles: ["admin", "manager", "user"] },
   { label: "Analysis Report", icon: BarChart3, path: "/analysis-report", allowedRoles: ["admin", "manager", "user"] },
-  { label: "Logs & Analytics", icon: Activity, path: "/logs", allowedRoles: ["admin"] },
   { label: "Token Management", icon: Zap, path: "/quota", allowedRoles: ["admin"]},
 ];
 

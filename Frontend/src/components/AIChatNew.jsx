@@ -265,6 +265,13 @@ const TIER_LABELS = {
   'summarization': 'Summarization',
 };
 
+const DEFAULT_AI_PROMPTS = [
+  "Draft a project status email with blockers and next steps",
+  "Summarize unread emails by urgency and suggested actions",
+  "Create meeting notes with decisions, owners, and deadlines",
+  "Plan my day into a prioritized task checklist",
+];
+
 const formatTokensShort = (t) => {
   const n = Number(t || 0);
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
@@ -723,6 +730,7 @@ function AIChatNew() {
   const [llmError, setLlmError] = useState(null);
   const [showLlmErrorModal, setShowLlmErrorModal] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState("");
+  const [preferredPrompts, setPreferredPrompts] = useState(DEFAULT_AI_PROMPTS);
   const [editingThreadId, setEditingThreadId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [openThreadMenuId, setOpenThreadMenuId] = useState(null);
@@ -746,6 +754,54 @@ function AIChatNew() {
   // it's unset (typical local dev), we fall through to the HTTP path
   // against the localhost supervisor.
   const isAgentWsConfigured = Boolean(import.meta.env.VITE_WS_URL);
+
+  const updatePreferredPromptsFromPayload = useCallback((payload) => {
+    if (!payload || typeof payload !== "object") return;
+
+    const candidateLists = [
+      payload.suggested_prompts,
+      payload.suggestedPrompts,
+      payload.prompt_suggestions,
+      payload.promptSuggestions,
+      payload.possible_prompts,
+      payload.possiblePrompts,
+      payload.recommended_prompts,
+      payload.recommendedPrompts,
+      payload.suggestions,
+      payload.metadata?.suggested_prompts,
+      payload.metadata?.prompt_suggestions,
+      payload.data?.suggested_prompts,
+      payload.data?.prompt_suggestions,
+      payload.data?.suggestions,
+    ];
+
+    const firstValidList = candidateLists.find(
+      (list) => Array.isArray(list) && list.some((item) => typeof item === "string" && item.trim())
+    );
+
+    if (!firstValidList) return;
+
+    const normalized = [...new Set(
+      firstValidList
+        .filter((item) => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    )].slice(0, 4);
+
+    if (normalized.length > 0) {
+      setPreferredPrompts(normalized);
+    }
+  }, []);
+
+  const visibleSuggestions = useMemo(() => {
+    const cleanedPreferred = preferredPrompts
+      .filter((item) => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    const merged = [...new Set([...cleanedPreferred, ...DEFAULT_AI_PROMPTS])];
+    return merged.slice(0, 4);
+  }, [preferredPrompts]);
 
   /**
    * Translate a supervisor `progress` frame into the shape InlineChatProgress
@@ -823,6 +879,7 @@ function AIChatNew() {
       setInlineProgress(null);
       setIsStreaming(false);
       applyGeneratedTitle(data);
+      updatePreferredPromptsFromPayload(data);
       // Pull the pending action so the existing approval UI picks it up.
       fetchPendingActions();
       // Pause still consumes tokens for Tier 0/0.5/1 + planner before the
@@ -846,6 +903,7 @@ function AIChatNew() {
       setInlineProgress(null);
       setIsStreaming(false);
       applyGeneratedTitle(data);
+      updatePreferredPromptsFromPayload(data);
       // Same cross-hook bridge as the paused branch above. Without this
       // the Token Usage widget stays stale until the next 2-minute
       // fallback poll fires (or the user refreshes the page). Reported
@@ -1817,6 +1875,8 @@ function AIChatNew() {
       if (responseData.request_id) {
         setCurrentRequestId(responseData.request_id);
       }
+
+      updatePreferredPromptsFromPayload(responseData);
       
       if (responseData.token_usage) {
         setTokenUsage({
@@ -2005,13 +2065,6 @@ function AIChatNew() {
     textareaRef.current?.focus();
   };
 
-  const suggestions = [
-    "Create a document called Meeting Notes",
-    "Send an email to my team about the project update",
-    "Read my recent emails",
-    "Help me organize my tasks for today",
-  ];
-
   return (
     <div className="aichat-page">
       <div className="aichat-container">
@@ -2193,13 +2246,12 @@ function AIChatNew() {
                   <p>I can help you with Gmail, Google Docs, Drive, and more</p>
 
                   <div className="chat-suggestions">
-                    {suggestions.map((suggestion, i) => (
+                    {visibleSuggestions.map((suggestion, i) => (
                       <button
                         key={i}
                         onClick={() => handleSuggestionClick(suggestion)}
                         className="chat-suggestion"
                       >
-                        <span className="chat-suggestion-icon">💡</span>
                         <span>{suggestion}</span>
                       </button>
                     ))}
