@@ -222,6 +222,7 @@ div:hover > .button-tooltip {
 .section-header {
   display: flex;
   align-items: center;
+  gap: 12px;
   color: #26326e;
 }
 
@@ -232,6 +233,10 @@ div:hover > .button-tooltip {
   margin: 0;
   font-family: "Inter", sans-serif;
 }
+
+/* (Was: .config-source-pill — removed when the Phase Rates panel was
+   renamed to "Standard Times" and the org-default pill was replaced by
+   inline copy that's friendlier to non-technical users.) */
 
 .section-description {
   color: #6b7280;
@@ -985,4 +990,815 @@ div:hover > .button-tooltip {
   .rates-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* =============================================================================
+   v2 UI: tabs, basis toggle, PDF dropzone, pallet cards
+   ============================================================================= */
+
+/* Offline-only banner under the header. The previous always-on "Backend
+   online/offline" pill was visual noise — we only mention it when we
+   genuinely can't reach the API. */
+.header-offline-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: "Inter", sans-serif;
+}
+
+/* Tabs */
+.workload-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 24px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+.workload-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.workload-tab:hover {
+  color: #26326e;
+}
+.workload-tab.is-active {
+  color: #26326e;
+  border-bottom-color: #26326e;
+}
+.tab-pill {
+  background: #26326e;
+  color: white;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Basis toggle */
+.basis-toggle {
+  display: inline-flex;
+  background: #f3f4f6;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  margin-top: 8px;
+}
+.basis-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.basis-btn:hover {
+  color: #26326e;
+}
+.basis-btn.is-active {
+  background: white;
+  color: #26326e;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* PDF dropzone */
+.pdf-dropzone {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding: 28px 20px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f9fafb;
+  text-align: center;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.pdf-dropzone:hover {
+  border-color: #26326e;
+  background: #f3f4f8;
+  color: #26326e;
+}
+.pdf-dropzone-uploading {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  cursor: progress;
+}
+.pdf-dropzone-text {
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+}
+.pdf-dropzone-status {
+  font-size: 13px;
+  color: #b45309;
+  margin-top: 4px;
+}
+
+/* Upload errors */
+.upload-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.upload-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #b91c1c;
+  background: #fef2f2;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-family: "Inter", sans-serif;
+}
+
+/* Pallet card list */
+.pallet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.pallet-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fafbfc;
+  padding: 14px;
+}
+.pallet-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pallet-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.pallet-id-chip {
+  background: #26326e;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: "Inter", sans-serif;
+}
+.pallet-card-filename {
+  font-size: 13px;
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: "Inter", sans-serif;
+}
+/* (Was: .pallet-card-audit — removed; the green "audit" pill on each
+   pallet card was confusing for non-technical users and the S3 receipt
+   is still kept server-side regardless.) */
+.pallet-card-counts {
+  font-size: 12px;
+  color: #6b7280;
+  font-family: "Inter", sans-serif;
+}
+.pallet-card-actions {
+  display: flex;
+  gap: 6px;
+}
+.pallet-card-toggle {
+  background: white;
+  color: #26326e;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: "Inter", sans-serif;
+}
+.pallet-card-toggle:hover {
+  background: #eef0ff;
+}
+.pallet-card-remove {
+  background: white;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pallet-card-remove:hover {
+  background: #fef2f2;
+}
+.pallet-card-warnings {
+  margin-bottom: 8px;
+}
+
+/* Pallet items table */
+.pallet-items-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.pallet-items-table th {
+  background: #f3f4f6;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  padding: 8px 10px;
+  font-family: "Inter", sans-serif;
+}
+.pallet-items-table td {
+  padding: 4px 6px;
+  border-top: 1px solid #f1f5f9;
+}
+.cell-input {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: "Inter", sans-serif;
+  transition: border 0.15s, background 0.15s;
+}
+.cell-input:focus {
+  outline: none;
+  border-color: #26326e;
+  background: #fafbff;
+}
+select.cell-input {
+  background: white;
+  border-color: #e5e7eb;
+}
+
+/* Add row / add pallet buttons */
+.add-item-inline {
+  margin-top: 8px;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+/* Rates panel actions */
+.rate-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+/* Results footer "saved as <id>" line */
+.results-footer {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #047857;
+  font-family: "Inter", sans-serif;
+}
+.results-footer code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .workload-grid {
+    grid-template-columns: 1fr;
+  }
+  .pallet-card-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* =====================================================================
+   New components introduced in the "design polish + per-user history"
+   pass. Kept at the bottom so the rest of the file stays diff-stable.
+   ===================================================================== */
+
+/* Duplicate-upload notice (appears between the dropzone and the cards). */
+.upload-duplicates {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.upload-duplicate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: "Inter", sans-serif;
+  line-height: 1.45;
+}
+.upload-duplicate strong  { color: #78350f; }
+.upload-duplicate em      { font-style: normal; color: #78350f; }
+
+/* Toggle-rates secondary status ("using your saved values"). */
+.toggle-rates-status {
+  font-weight: 400;
+  color: #047857;
+  font-size: 12px;
+  font-style: normal;
+}
+
+/* When the user has typed an override in a Standard-Times input, the row
+   gets a subtle highlight so they don't lose track of which numbers are
+   live edits vs. their saved defaults. */
+.rate-input-group.is-overridden {
+  background: #ecfeff;
+  border-color: #67e8f9;
+}
+.rate-input-group.is-overridden .rate-label { color: #155e75; }
+
+/* Rate-panel buttons — smaller pill style instead of the giant
+   "calculate" gradient buttons we had before. */
+.rate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.rate-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+.rate-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.rate-action-btn--primary {
+  background: #10b981;
+  color: #fff;
+  border-color: #059669;
+}
+.rate-action-btn--primary:hover:not(:disabled) {
+  background: #059669;
+}
+.rate-action-btn--ghost {
+  background: #fff;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+.rate-action-btn--ghost:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+.rate-action-btn--danger {
+  background: #fff;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+.rate-action-btn--danger:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+/* Solid-red variant for the primary action inside destructive ConfirmModals
+   (the "Delete" / "Clear everything" button). */
+.rate-action-btn--danger-solid {
+  background: #dc2626;
+  color: #fff;
+  border-color: #b91c1c;
+}
+.rate-action-btn--danger-solid:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+/* Workforce stepper (+ / − buttons around the workers count). */
+.workforce-input {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.workforce-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.workforce-step-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #1f2937;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.workforce-step-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+.workforce-step-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.workforce-stepper-value {
+  width: 84px;
+  height: 36px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 8px;
+  font-family: "Inter", sans-serif;
+  -moz-appearance: textfield;
+}
+.workforce-stepper-value::-webkit-outer-spin-button,
+.workforce-stepper-value::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.workforce-stepper-suffix {
+  font-size: 14px;
+  color: #475569;
+  font-weight: 500;
+  font-family: "Inter", sans-serif;
+}
+.workforce-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.4;
+  font-family: "Inter", sans-serif;
+}
+.workforce-hint strong { color: #0f172a; }
+
+/* Results card — per-worker impact callout */
+.results-staff-impact {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  margin: 12px 0;
+  background: linear-gradient(135deg, #eff6ff, #ecfdf5);
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1e3a8a;
+  font-family: "Inter", sans-serif;
+}
+.results-staff-impact strong { color: #0c4a6e; }
+
+/* "Saved to your history · View history" footer */
+.results-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: "Inter", sans-serif;
+}
+.results-footer-link {
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  color: #047857;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 13px;
+  font-family: "Inter", sans-serif;
+}
+.results-footer-link:hover { color: #065f46; }
+
+/* History list (now lives inside the HistoryModal popup). */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.history-row {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.history-row:hover { border-color: #cbd5e1; }
+.history-row.is-expanded {
+  border-color: #93c5fd;
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.08);
+}
+.history-row-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  color: #0f172a;
+  font-family: "Inter", sans-serif;
+}
+.history-row-head:hover { background: #f8fafc; }
+.history-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.history-row-title {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 14px;
+}
+.history-row-meta {
+  font-size: 12px;
+  color: #475569;
+}
+.history-row-when {
+  font-size: 11px;
+  color: #94a3b8;
+}
+.history-row-body {
+  padding: 12px 14px 14px;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.history-pallets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: #334155;
+  font-family: "Inter", sans-serif;
+}
+.history-row-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* =====================================================================
+   Modal popups (history + confirm dialogs). Floats over the form so the
+   user doesn't lose their place.
+   ===================================================================== */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: modal-fade-in 0.14s ease-out;
+}
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.25);
+  width: 100%;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: "Inter", sans-serif;
+  animation: modal-scale-in 0.18s ease-out;
+}
+@keyframes modal-scale-in {
+  from { transform: translateY(8px) scale(0.97); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* Confirm dialog: small, centered, icon + question + 2 buttons */
+.modal--confirm {
+  max-width: 440px;
+  padding: 24px 24px 20px;
+  text-align: left;
+}
+.modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.modal-icon--default {
+  background: #ecfdf5;
+  color: #047857;
+}
+.modal-icon--danger {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px;
+}
+.modal-message {
+  font-size: 14px;
+  color: #475569;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* History popup: wider, has its own scrollable body and head bar */
+.modal--history {
+  max-width: 760px;
+  padding: 20px 22px;
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.modal-head-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  background: #e0e7ff;
+  color: #3730a3;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.modal-close:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+.modal-body {
+  overflow-y: auto;
+  flex: 1;
+  margin: 0 -22px -20px;
+  padding: 8px 22px 20px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* History-count badge on the header calendar icon. */
+.header-history-btn {
+  position: relative;
+}
+.header-history-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  font-family: "Inter", sans-serif;
+}
+
+/* =====================================================================
+   Save-Calculation bar in the results card.
+   ===================================================================== */
+.results-save-bar {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.results-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.05s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+.results-save-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.results-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.results-save-hint {
+  font-size: 12px;
+  color: #6b7280;
+  font-family: "Inter", sans-serif;
 }

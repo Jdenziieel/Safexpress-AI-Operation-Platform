@@ -752,6 +752,13 @@ div:hover > .button-tooltip {
   animation: spin 1s linear infinite;
 }
 
+/* Header action button spinner (Dynamic Mapping Process button, etc.).
+   Reuses the @keyframes spin defined below. */
+.kb-action-spin {
+  animation: spin 1s linear infinite;
+  transform-origin: 50% 50%;
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);

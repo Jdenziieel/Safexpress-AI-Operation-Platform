@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 // `File` icon component shadows the global, and `new File([bytes], ...)`
 // in buildUploadableFile collapses to `new <ReactIcon>(...)` after
 // minification — which throws "Tx is not a constructor" at runtime.
-import { Upload, File as FileIcon, X, FileText, CheckCircle2, Search } from "lucide-react";
+import { Upload, File as FileIcon, X, FileText, CheckCircle2, Search, Loader2 } from "lucide-react";
 import Swal from "sweetalert2";
 import "../css/KnowledgeBase.css";
 import {
@@ -13,8 +13,12 @@ import {
   fetchTargetTabs,
 } from "../services/dynamicMappingService";
 
-const ActionButton = ({ icon: Icon, children, className = "", ...props }) => {
-  const isDisabled = Boolean(props.disabled);
+const ActionButton = ({ icon: Icon, children, className = "", loading = false, ...props }) => {
+  // When loading is true, the button is forced-disabled regardless of the
+  // caller's `disabled` prop so we cannot re-trigger the action while a
+  // request is in flight (defends against double-clicks racing the network).
+  const isDisabled = Boolean(props.disabled) || loading;
+  const RenderedIcon = loading ? Loader2 : Icon;
   return (
     <div style={{ position: "relative", display: "inline-block" }}>
       <button
@@ -26,10 +30,17 @@ const ActionButton = ({ icon: Icon, children, className = "", ...props }) => {
           padding: "12px",
           fontSize: "1.15rem",
           fontWeight: 800,
+          cursor: isDisabled ? "not-allowed" : "pointer",
+          opacity: isDisabled ? 0.65 : 1,
         }}
         {...props}
+        disabled={isDisabled}
+        aria-busy={loading ? "true" : undefined}
       >
-        <Icon size={20} />
+        <RenderedIcon
+          size={20}
+          className={loading ? "kb-action-spin" : undefined}
+        />
       </button>
       {!isDisabled && (
         <span
@@ -1056,8 +1067,19 @@ function DynamicMapping() {
         const wr = result.write_result || {};
         const appendMode = result.append_mode || wr.append_mode;
         const overflowReason = result.overflow_reason || wr.overflow_reason;
+        // Fallback = the writer tried something else first and had to
+        // compromise. Real fallbacks set `overflow_reason` (e.g. the
+        // section-aware insert overflowed and bottom-appended instead).
+        // Intentional bottom-append paths — multi-sheet aggregate-append,
+        // pure 'append' strategy, etc. — also set append_mode='sheet-bottom'
+        // but DO NOT set overflow_reason because nothing fell back. Without
+        // gating on overflow_reason the FE was rendering the warning header
+        // and "did not fit inside the target section" copy on every
+        // multi-sheet append, which the user correctly flagged as wrong.
         const fellBackToSheetBottom =
-          appendMode === "sheet-bottom" && (wr.rows_appended ?? 0) > 0;
+          !!overflowReason
+          && appendMode === "sheet-bottom"
+          && (wr.rows_appended ?? 0) > 0;
 
         const lines = [
           `<strong>Strategy:</strong> ${result.write_strategy?.replace(/_/g, " ")}`,
@@ -1128,9 +1150,10 @@ function DynamicMapping() {
               icon={CheckCircle2}
               className="knowledge-base-header-action-button-process"
               onClick={handleProcess}
-              disabled={!isTargetConnected || uploadedFiles.length === 0}
+              loading={isProcessing}
+              disabled={!isTargetConnected || uploadedFiles.length === 0 || isProcessing}
             >
-              Process Files
+              {isProcessing ? "Processing..." : "Process Files"}
             </ActionButton>
           </div>
         </div>

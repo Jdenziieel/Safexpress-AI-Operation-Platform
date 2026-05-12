@@ -58,3 +58,65 @@ export const loadDocumentFromStorage = () => {
   }
   return null;
 };
+
+// ---------------------------------------------------------------------
+// Workload Analysis state persistence
+// ---------------------------------------------------------------------
+//
+// Survives page refresh. Stores a single JSON blob:
+//   {
+//     version: 1,
+//     activeTab: 'inbound' | 'outbound',
+//     inbound:  { basis, workers, palletCards, rateOverrides, lastResults },
+//     outbound: { ... same shape ... },
+//     savedAt:  ISO timestamp
+//   }
+//
+// The blob is versioned so future schema changes can bump it and old data
+// is silently discarded instead of crashing the page.
+
+export const WORKLOAD_STATE_KEY = 'workload-analysis:v1:state';
+export const WORKLOAD_STATE_VERSION = 1;
+
+/**
+ * Persist the full workload analysis state. Writes are wrapped in try/catch
+ * so an exceeded localStorage quota only logs a warning instead of breaking
+ * the calculator.
+ */
+export const saveWorkloadState = (state) => {
+  try {
+    const payload = {
+      version: WORKLOAD_STATE_VERSION,
+      savedAt: new Date().toISOString(),
+      ...state,
+    };
+    localStorage.setItem(WORKLOAD_STATE_KEY, JSON.stringify(payload));
+    return true;
+  } catch (e) {
+    console.warn('[workload] Failed to persist state (likely quota exceeded):', e);
+    return false;
+  }
+};
+
+/**
+ * Load the workload analysis state. Returns `null` if there is no saved
+ * state, the version doesn't match, or the JSON is corrupted.
+ */
+export const loadWorkloadState = () => {
+  try {
+    const raw = localStorage.getItem(WORKLOAD_STATE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || parsed.version !== WORKLOAD_STATE_VERSION) {
+      return null;
+    }
+    return parsed;
+  } catch (e) {
+    console.warn('[workload] Failed to load saved state:', e);
+    return null;
+  }
+};
+
+export const clearWorkloadState = () => {
+  localStorage.removeItem(WORKLOAD_STATE_KEY);
+};
