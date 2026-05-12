@@ -204,13 +204,24 @@ def _load_xlsx_raw_values(file_content: str, sheet_name=None) -> list:
         return []
 
 
-def detect_source_sections(file_content: str, file_type: str = "xlsx", sheet_name=None) -> Dict[str, Any]:
+def detect_source_sections(file_content: str, file_type: str = "xlsx", sheet_name=None,
+                           include_single: bool = False) -> Dict[str, Any]:
     """Detect multiple stacked sections (title + header + data block) inside a source file.
 
     Returns { success, sections: [...], total_rows }.
     Only xlsx/xls return sections; csv/json always return an empty list.
     Each section carries enough metadata (header_row, data_start/end, headers, row_count)
     for parse_file to later slice that single section out cleanly.
+
+    ``include_single`` (default False): when True, single-section sheets ALSO
+    return their one detected section. _detect_sections normally suppresses
+    single-section detections (via the ``len(sections) >= 2`` filter) because
+    target-side detection should treat single-section sheets as flat layouts.
+    But for SOURCE-side cross-tab × per-section routing, a tab with one
+    explicit titled section is still structurally meaningful — it should
+    route into the matching target section, not be treated as flat-and-
+    orphaned. Pass include_single=True from the cross-tab × section
+    planner; leave False for legacy callers.
     """
     try:
         ft = (file_type or '').lower()
@@ -222,6 +233,8 @@ def detect_source_sections(file_content: str, file_type: str = "xlsx", sheet_nam
             return {"success": True, "sections": [], "total_rows": 0}
 
         detected = _detect_sections(raw_values)
+        if include_single and not detected:
+            detected = _detect_sections_single_pass(raw_values)
         sections = []
         for s in detected:
             hdrs = [str(h).strip() if h is not None else '' for h in s.get('headers', [])]
@@ -1472,6 +1485,63 @@ def _detect_sections(raw_values, min_section_rows=0):
         i += 1
 
     return sections if len(sections) >= 2 else []
+
+
+def _detect_sections_single_pass(raw_values, min_section_rows=0):
+    """Variant of _detect_sections that returns 1+ sections without the
+    ``>= 2 sections`` suppression. KEEP IN LOCK-STEP with _detect_sections's
+    inner loop body.
+    """
+    sections = []
+    i = 0
+    while i < len(raw_values):
+        row = raw_values[i]
+        non_empty = [c for c in row if c and str(c).strip()]
+        if len(non_empty) == 0:
+            i += 1
+            continue
+        if len(non_empty) == 1:
+            title = str(non_empty[0]).strip()
+            if i + 1 < len(raw_values):
+                header_row = raw_values[i + 1]
+                header_vals = [str(c).strip() for c in header_row if c and str(c).strip()]
+                if len(header_vals) >= 2 and any(_looks_like_header_value(v) for v in header_vals):
+                    sec_headers = [str(c).strip() if c is not None else '' for c in header_row]
+                    sec_header_index = {h: idx for idx, h in enumerate(sec_headers) if h}
+                    data_start = i + 2
+                    data_end = data_start
+                    while data_end < len(raw_values):
+                        r = raw_values[data_end]
+                        ne = [c for c in r if c and str(c).strip()]
+                        if len(ne) == 0:
+                            break
+                        if len(ne) == 1 and data_end > data_start:
+                            next_idx = data_end + 1
+                            if next_idx < len(raw_values):
+                                next_row = raw_values[next_idx]
+                                next_ne = [str(c).strip() for c in next_row if c and str(c).strip()]
+                                if (
+                                    len(next_ne) >= 2
+                                    and any(_looks_like_header_value(v) for v in next_ne)
+                                ):
+                                    break
+                            data_end += 1
+                            continue
+                        data_end += 1
+                    if data_end - data_start >= min_section_rows:
+                        sections.append({
+                            'title': title,
+                            'title_row': i,
+                            'header_row': i + 1,
+                            'data_start': data_start,
+                            'data_end': data_end,
+                            'headers': sec_headers,
+                            'header_index': sec_header_index,
+                        })
+                    i = max(data_end, i + 2)
+                    continue
+        i += 1
+    return sections
 
 
 def structure_target_data(raw_values: list, sheet_name: str = '', sample_size: int = 5) -> dict:

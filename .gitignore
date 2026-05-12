@@ -10,12 +10,10 @@ calendar-agent/
 gdocs-agent/
 gdrive-agent/
 gmail-agent/
-kb-lambda/
 knowledge-base/
 Mapping-agent/
 Sheets-agent/
 testing/
-quota-lambda/
 token-quota-service/
 zDocs/
 

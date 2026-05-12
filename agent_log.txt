@@ -1,0 +1,270 @@
+﻿=== /aws/lambda/safexpressops-dynamic-mapping-agent / 2026/05/11/[$LATEST]9773973071ab4c22b6af877c6d8b6358 ===
+2026-05-11T05:07:33.166000+00:00 | INIT_START Runtime Version: python:3.11.mainlinev2.v7	Runtime Version ARN: arn:aws:lambda:ap-southeast-1::runtime:a0dd170e909c9230a7e18f978320f0053271b75d0b703c836ab4f98f2e3f6a5a
+2026-05-11T05:07:33.722000+00:00 | START RequestId: 5d614a1e-eab2-460c-8e67-aa93d240ac16 Version: $LATEST
+2026-05-11T05:07:33.723000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:07:40.013000+00:00 | END RequestId: 5d614a1e-eab2-460c-8e67-aa93d240ac16
+2026-05-11T05:07:40.013000+00:00 | REPORT RequestId: 5d614a1e-eab2-460c-8e67-aa93d240ac16	Duration: 6289.62 ms	Billed Duration: 6843 ms	Memory Size: 512 MB	Max Memory Used: 96 MB	Init Duration: 552.96 ms
+2026-05-11T05:07:46.987000+00:00 | START RequestId: 3c2c6e8f-b56a-463e-a164-fcf7db420ed9 Version: $LATEST
+2026-05-11T05:07:46.987000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:07:46.987000+00:00 | Sanitizing file content (len=20464)...
+2026-05-11T05:07:46.988000+00:00 | File content OK (15347 bytes, valid ZIP)
+2026-05-11T05:07:46.988000+00:00 | Step 0: Resolving target sheet tab name...
+2026-05-11T05:07:48.515000+00:00 | Available tabs: ['Inbound tracker']
+2026-05-11T05:07:48.515000+00:00 | Tab 'Inbound tracker' found in spreadsheet
+2026-05-11T05:07:48.515000+00:00 | Step 1: Reading target sheet 'Inbound tracker'...
+2026-05-11T05:07:50.165000+00:00 | sheet_read keys: ['success', 'data', 'row_count', 'column_count']
+2026-05-11T05:07:50.165000+00:00 | sheet_read success: True
+2026-05-11T05:07:50.165000+00:00 | sheet_read error: None
+2026-05-11T05:07:50.165000+00:00 | 13 rows read from target sheet
+2026-05-11T05:07:50.165000+00:00 | Step 1b: Detecting formula columns...
+2026-05-11T05:07:51.942000+00:00 | Formula columns detected: 0
+2026-05-11T05:07:51.942000+00:00 | Step 2: Structuring target data...
+2026-05-11T05:07:58.270000+00:00 | target_schema success: True
+2026-05-11T05:07:58.270000+00:00 | target_schema error: None
+2026-05-11T05:07:58.270000+00:00 | Headers count: 21
+2026-05-11T05:07:58.270000+00:00 | Total formula columns: 0
+2026-05-11T05:07:58.270000+00:00 | Step 0a: Detecting source sheets...
+2026-05-11T05:07:58.830000+00:00 | aggregate-bail: worst-Jaccard-too-low (0.14 < 0.70) for pair ('Truck sheet', 'Inbound sheet')
+2026-05-11T05:07:58.830000+00:00 | column-merge-pass: anchor='date' on 2 sheet(s); per-sheet unique target cols: 'Truck sheet'=12; 'Inbound sheet'=10; overlap_cols=['product name', 'sku']
+2026-05-11T05:07:58.830000+00:00 | Step 0a-column-merge: 2 sheets ΓåÆ 'Inbound tracker' (shared anchor candidates: ['date'])
+2026-05-11T05:07:58.830000+00:00 | Column-merge preview: 2 sheets ΓåÆ 'Inbound tracker'
+2026-05-11T05:08:00.851000+00:00 | sheet 'Truck sheet' column_mappings: {'Product Name': 'Product Name', 'Unit Price': 'Unit Price', 'Stock': 'Stock', 'SKU': 'SKU', 'DATE': 'DATE', 'Booked Truck': 'Booked Truck', 'Actual Arrived': 'Actual Arrived', 'Truck Utilization': 'Truck Utilization', 'Load Availability': 'Load Availability', 'No. of Truck Dispatched': 'No. of Truck Dispatched', 'No. of Pallet Dispatched': 'No. of Pallet Dispatched', 'Expected Dispatched Qty': 'Expected Dispatched Qty', 'Discrepancy Qty Outbound': 'Discrepancy Qty Outbound'}
+2026-05-11T05:08:00.851000+00:00 | sheet 'Truck sheet' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:08:05.560000+00:00 | sheet 'Inbound sheet' column_mappings: {'Product Name': 'Product Name', 'SKU': 'SKU', 'DATE': 'DATE', 'No. of CV Received': 'No. of CV Received', 'No. of Truck Received': 'No. of Truck Received', 'No. of Pick up': 'No. of Pick up', 'No. of Pallet Received': 'No. of Pallet Received', 'Expected Receiving Qty': 'Expected Receiving Qty', 'Discrepancy Qty Inbound': 'Discrepancy Qty Inbound', 'Total Pallet Put-Away': 'Total Pallet Put-Away', 'Put-Away Total Hrs': 'Put-Away Total Hrs'}
+2026-05-11T05:08:05.560000+00:00 | sheet 'Inbound sheet' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:08:05.560000+00:00 | per-sheet parse+identify (parallel x2, cached=0/2): 6.73s for 2 sheet(s)
+2026-05-11T05:08:05.561000+00:00 | Column-merge intra-sheet duplicates detected: 1 across ['Truck sheet']
+2026-05-11T05:08:05.563000+00:00 | END RequestId: 3c2c6e8f-b56a-463e-a164-fcf7db420ed9
+2026-05-11T05:08:05.563000+00:00 | REPORT RequestId: 3c2c6e8f-b56a-463e-a164-fcf7db420ed9	Duration: 18575.14 ms	Billed Duration: 18576 ms	Memory Size: 512 MB	Max Memory Used: 97 MB
+2026-05-11T05:08:15.969000+00:00 | START RequestId: b8e82446-7c68-46d0-9d6c-ecb7ef915aba Version: $LATEST
+2026-05-11T05:08:15.970000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:08:15.970000+00:00 | Sanitizing file content (len=20464)...
+2026-05-11T05:08:15.970000+00:00 | File content OK (15347 bytes, valid ZIP)
+2026-05-11T05:08:15.970000+00:00 | Step 0: Resolving target sheet tab name...
+2026-05-11T05:08:17.749000+00:00 | Available tabs: ['Inbound tracker']
+2026-05-11T05:08:17.749000+00:00 | Tab 'Inbound tracker' found in spreadsheet
+2026-05-11T05:08:17.749000+00:00 | Step 1: Reading target sheet 'Inbound tracker'...
+2026-05-11T05:08:19.453000+00:00 | sheet_read keys: ['success', 'data', 'row_count', 'column_count']
+2026-05-11T05:08:19.453000+00:00 | sheet_read success: True
+2026-05-11T05:08:19.453000+00:00 | sheet_read error: None
+2026-05-11T05:08:19.453000+00:00 | 13 rows read from target sheet
+2026-05-11T05:08:19.453000+00:00 | Step 1b: Detecting formula columns...
+2026-05-11T05:08:20.911000+00:00 | Formula columns detected: 0
+2026-05-11T05:08:20.911000+00:00 | Step 2: Structuring target data...
+2026-05-11T05:08:20.931000+00:00 | target_schema success: True
+2026-05-11T05:08:20.931000+00:00 | target_schema error: None
+2026-05-11T05:08:20.931000+00:00 | Headers count: 21
+2026-05-11T05:08:20.931000+00:00 | Total formula columns: 0
+2026-05-11T05:08:20.931000+00:00 | Step 0a: Detecting source sheets...
+2026-05-11T05:08:20.986000+00:00 | aggregate-bail: worst-Jaccard-too-low (0.14 < 0.70) for pair ('Truck sheet', 'Inbound sheet')
+2026-05-11T05:08:20.986000+00:00 | column-merge-pass: anchor='date' on 2 sheet(s); per-sheet unique target cols: 'Truck sheet'=12; 'Inbound sheet'=10; overlap_cols=['product name', 'sku']
+2026-05-11T05:08:20.986000+00:00 | Step 0a-column-merge: 2 sheets ΓåÆ 'Inbound tracker' (shared anchor candidates: ['date'])
+2026-05-11T05:08:20.986000+00:00 | Column-merge preview: 2 sheets ΓåÆ 'Inbound tracker'
+2026-05-11T05:08:21.123000+00:00 | sheet 'Inbound sheet' column_mappings: {'Product Name': 'Product Name', 'SKU': 'SKU', 'DATE': 'DATE', 'No. of CV Received': 'No. of CV Received', 'No. of Truck Received': 'No. of Truck Received', 'No. of Pick up': 'No. of Pick up', 'No. of Pallet Received': 'No. of Pallet Received', 'Expected Receiving Qty': 'Expected Receiving Qty', 'Discrepancy Qty Inbound': 'Discrepancy Qty Inbound', 'Total Pallet Put-Away': 'Total Pallet Put-Away', 'Put-Away Total Hrs': 'Put-Away Total Hrs'}
+2026-05-11T05:08:21.123000+00:00 | sheet 'Inbound sheet' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:08:22.956000+00:00 | sheet 'Truck sheet' column_mappings: {'Product Name': 'Product Name', 'Unit Price': 'Unit Price', 'Stock': 'Stock', 'SKU': 'SKU', 'DATE': 'DATE', 'Booked Truck': 'Booked Truck', 'Actual Arrived': 'Actual Arrived', 'Truck Utilization': 'Truck Utilization', 'Load Availability': 'Load Availability', 'No. of Truck Dispatched': 'No. of Truck Dispatched', 'No. of Pallet Dispatched': 'No. of Pallet Dispatched', 'Expected Dispatched Qty': 'Expected Dispatched Qty', 'Discrepancy Qty Outbound': 'Discrepancy Qty Outbound'}
+2026-05-11T05:08:22.956000+00:00 | sheet 'Truck sheet' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:08:22.956000+00:00 | per-sheet parse+identify (parallel x2, cached=0/2): 1.97s for 2 sheet(s)
+2026-05-11T05:08:22.957000+00:00 | Applied intra_section_choices to sheet 'Truck sheet': 13 -> 12 rows
+2026-05-11T05:08:22.958000+00:00 | Column-merge diff: 0 overwrites + 230 fills + 10 no-ops + 12 matched anchors + 0 orphans (cells: 240, truncated: False)
+2026-05-11T05:08:22.961000+00:00 | END RequestId: b8e82446-7c68-46d0-9d6c-ecb7ef915aba
+2026-05-11T05:08:22.961000+00:00 | REPORT RequestId: b8e82446-7c68-46d0-9d6c-ecb7ef915aba	Duration: 6991.06 ms	Billed Duration: 6992 ms	Memory Size: 512 MB	Max Memory Used: 97 MB
+2026-05-11T05:08:56.542000+00:00 | START RequestId: cdd14ea9-5941-40eb-8236-c81b49991b9e Version: $LATEST
+2026-05-11T05:08:56.546000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:08:56.546000+00:00 | Sanitizing file content (len=20464)...
+2026-05-11T05:08:56.546000+00:00 | File content OK (15347 bytes, valid ZIP)
+2026-05-11T05:08:56.546000+00:00 | Step 0: Skipping target tab resolve (use_cache=True, target_tab_chosen=None); trusting target_sheet_name='Inbound tracker'
+2026-05-11T05:08:56.546000+00:00 | Column-merge write: 2 sheets ΓåÆ 'Inbound tracker'
+2026-05-11T05:09:00.037000+00:00 | column-merge confirm: replaying cached identification for 2 sheet(s) ΓÇö skipping find_identifier
+2026-05-11T05:09:00.146000+00:00 | sheet 'Inbound sheet' column_mappings: {'Product Name': 'Product Name', 'SKU': 'SKU', 'DATE': 'DATE', 'No. of CV Received': 'No. of CV Received', 'No. of Truck Received': 'No. of Truck Received', 'No. of Pick up': 'No. of Pick up', 'No. of Pallet Received': 'No. of Pallet Received', 'Expected Receiving Qty': 'Expected Receiving Qty', 'Discrepancy Qty Inbound': 'Discrepancy Qty Inbound', 'Total Pallet Put-Away': 'Total Pallet Put-Away', 'Put-Away Total Hrs': 'Put-Away Total Hrs'}
+2026-05-11T05:09:00.146000+00:00 | sheet 'Inbound sheet' identification.reasoning: [cached-from-preview: skipped find_identifier LLM call]
+2026-05-11T05:09:00.156000+00:00 | sheet 'Truck sheet' column_mappings: {'Product Name': 'Product Name', 'Unit Price': 'Unit Price', 'Stock': 'Stock', 'SKU': 'SKU', 'DATE': 'DATE', 'Booked Truck': 'Booked Truck', 'Actual Arrived': 'Actual Arrived', 'Truck Utilization': 'Truck Utilization', 'Load Availability': 'Load Availability', 'No. of Truck Dispatched': 'No. of Truck Dispatched', 'No. of Pallet Dispatched': 'No. of Pallet Dispatched', 'Expected Dispatched Qty': 'Expected Dispatched Qty', 'Discrepancy Qty Outbound': 'Discrepancy Qty Outbound'}
+2026-05-11T05:09:00.156000+00:00 | sheet 'Truck sheet' identification.reasoning: [cached-from-preview: skipped find_identifier LLM call]
+2026-05-11T05:09:00.156000+00:00 | per-sheet parse (parallel x2, cached=2/2): 0.12s
+2026-05-11T05:09:00.157000+00:00 | Run-side applied intra_section_choices to sheet 'Truck sheet': 13 -> 12 rows
+2026-05-11T05:09:00.157000+00:00 | Run-side explicit-empty injection: 10 cell(s) marked for clear-write from intra-section picks.
+2026-05-11T05:09:00.157000+00:00 | Column-merge prep: 12 rows ready, 0 orphan(s), 1 cell(s) deselected via write_only
+2026-05-11T05:09:02.614000+00:00 | END RequestId: cdd14ea9-5941-40eb-8236-c81b49991b9e
+2026-05-11T05:09:02.614000+00:00 | REPORT RequestId: cdd14ea9-5941-40eb-8236-c81b49991b9e	Duration: 6071.30 ms	Billed Duration: 6072 ms	Memory Size: 512 MB	Max Memory Used: 97 MB
+2026-05-11T05:11:00.611000+00:00 | START RequestId: d49eee06-5f03-4c5c-9872-200b5fb48763 Version: $LATEST
+2026-05-11T05:11:00.612000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:11:02.377000+00:00 | END RequestId: d49eee06-5f03-4c5c-9872-200b5fb48763
+2026-05-11T05:11:02.377000+00:00 | REPORT RequestId: d49eee06-5f03-4c5c-9872-200b5fb48763	Duration: 1765.54 ms	Billed Duration: 1766 ms	Memory Size: 512 MB	Max Memory Used: 97 MB
+2026-05-11T05:11:23.510000+00:00 | START RequestId: 2dcca832-05fd-4335-9c8b-7748af4ab3f6 Version: $LATEST
+2026-05-11T05:11:23.510000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:11:23.510000+00:00 | Sanitizing file content (len=13432)...
+2026-05-11T05:11:23.510000+00:00 | File content OK (10072 bytes, valid ZIP)
+2026-05-11T05:11:23.511000+00:00 | Step 0: Resolving target sheet tab name...
+2026-05-11T05:11:25.037000+00:00 | Available tabs: ['LOOKUP', 'OPR DB', 'WEEKLY SUMMARY', 'DATA ENTRY', 'TC-A02', 'APPEND', 'TC-A03', 'TC-A04 (ERROR)', 'TC-A05', 'TC-A06', 'TC-A07', 'TC-A08', 'TC-B01', 'TC-B02', 'TC-B03', 'TC-B04', 'TC-B05', 'TC-B06 (ERROR)', 'TC-C01', 'TC-C02', 'TC-C03', 'TC-C04', 'TC-C05', 'TC-C06', 'TC-C07', 'TC-C08 ', 'TC-C09', 'TC-C11 (ERROR?)', 'TC-D01', 'TC-D02', 'TC-D03', 'TC-D04', 'TC-D05', 'TC-D06', 'TC-D07', 'TC-D08', 'TC-D09', 'TC-D10', 'TC-E01', 'TC-E02', 'TC-F01 (ERROR)', 'TC-F02 (ERROR)', 'TC-F03', 'TC-F04', 'TC-G01', 'TC-G02', 'TC-G03', 'TC-H01', 'TC-H02', 'TC-H03', 'TC-H04 (ERROR?)', 'TC-H05', 'TC-I01', 'TC-I02', 'TC-I03', 'TC-I04 (ERROR)', 'TC-J01', 'TC-J02', 'TC-J03', 'TC-J04', 'TC-J05', 'TC-J06', 'TC-K01', 'TC-K02', 'TC-K03', 'TC-K04', 'TC-K05', 'TC-K06', 'TC-L01', 'TC-L02', 'TC-L03 - INBOUND METRICS', 'TC-L03 - OUTBOUND METRICS', 'TC-L04', 'TC-L05', 'TC-L06  MARCH DATA (ERROR)', 'TC-L06 APRIL DATA (ERROR)', 'TC-L06 NOTES', 'TC-L07 NorthRegion', 'TC-L07 SouthRegion', 'TC-L07 EastRegion', 'TC-L07 WestRegion', 'TC-L08 Archive', 'TC-L08  OPS_DATA', 'TC-L08 Legend', 'TC-L09 Q1_2025', 'TC-L09 Q2_2025', 'TC-L09 Q3_2025', 'TC-L09 Q4_2025', 'TC-L09 Annual_Summary', 'TC-L10 MarchData', 'TC-L10 AprilData', 'TC-L10 MayData', 'DAILY_COUNTS', 'Inbound Matrix', 'Outbound Matrix', 'PRICING', 'KPI', 'SHIPMENTS', 'SKU_MASTER', 'DAILY_SALES', 'AUDIT_LOG', 'KPI_DASHBOARD', 'CATEGORY_MATRIX', 'MONTHLY_KPI', 'OPS_DASHBOARD', 'MONTHLY SUMMARY', 'WOR + CONTIS', 'SOURCY', 'FRUIT GARDEN', 'COA + PRIORITIES']
+2026-05-11T05:11:25.037000+00:00 | Tab 'APPEND' found in spreadsheet
+2026-05-11T05:11:25.037000+00:00 | Step 1: Reading target sheet 'APPEND'...
+2026-05-11T05:11:26.575000+00:00 | sheet_read keys: ['success', 'data', 'row_count', 'column_count']
+2026-05-11T05:11:26.575000+00:00 | sheet_read success: True
+2026-05-11T05:11:26.575000+00:00 | sheet_read error: None
+2026-05-11T05:11:26.575000+00:00 | 13 rows read from target sheet
+2026-05-11T05:11:26.575000+00:00 | Step 1b: Detecting formula columns...
+2026-05-11T05:11:27.978000+00:00 | Formula columns detected: 0
+2026-05-11T05:11:27.978000+00:00 | Step 2: Structuring target data...
+2026-05-11T05:11:28.014000+00:00 | target_schema success: True
+2026-05-11T05:11:28.014000+00:00 | target_schema error: None
+2026-05-11T05:11:28.014000+00:00 | Headers count: 3
+2026-05-11T05:11:28.014000+00:00 | Total formula columns: 0
+2026-05-11T05:11:28.014000+00:00 | Step 0a: Detecting source sheets...
+2026-05-11T05:11:28.053000+00:00 | aggregate-pass: tier=homogeneous, worst_sim=1.00, per_sheet_overlaps=[('PRODUCTS', 3), ('PRODUCTS 2', 3)], target_section_index=None
+2026-05-11T05:11:28.053000+00:00 | Step 0a-aggregate: 2 sheets ΓåÆ single target tab/section (target_section_index=None)
+2026-05-11T05:11:28.053000+00:00 | Aggregate preview: 2 sheet(s) ΓåÆ 'APPEND' (target_section_index=None)
+2026-05-11T05:11:28.132000+00:00 | sheet 'PRODUCTS' column_mappings: {'Product Name': 'Product Name', 'Unit Price': 'Unit Price', 'Stock': 'Stock'}
+2026-05-11T05:11:28.132000+00:00 | sheet 'PRODUCTS' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:11:28.213000+00:00 | sheet 'PRODUCTS 2' column_mappings: {'Product Name': 'Product Name', 'Unit Price': 'Unit Price', 'Stock': 'Stock'}
+2026-05-11T05:11:28.213000+00:00 | sheet 'PRODUCTS 2' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:11:28.214000+00:00 | Aggregate-append diff: 12 new rows from 2 source(s) (total cells: 36, truncated: False)
+2026-05-11T05:11:28.215000+00:00 | END RequestId: 2dcca832-05fd-4335-9c8b-7748af4ab3f6
+2026-05-11T05:11:28.215000+00:00 | REPORT RequestId: 2dcca832-05fd-4335-9c8b-7748af4ab3f6	Duration: 4705.09 ms	Billed Duration: 4706 ms	Memory Size: 512 MB	Max Memory Used: 97 MB
+2026-05-11T05:11:58.472000+00:00 | START RequestId: a5d9a2bc-c323-495a-bd41-181bd5db9f5b Version: $LATEST
+2026-05-11T05:11:58.472000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:11:58.472000+00:00 | Sanitizing file content (len=13432)...
+2026-05-11T05:11:58.473000+00:00 | File content OK (10072 bytes, valid ZIP)
+2026-05-11T05:11:58.473000+00:00 | Step 0: Skipping target tab resolve (use_cache=False, target_tab_chosen=None); trusting target_sheet_name='APPEND'
+2026-05-11T05:11:58.473000+00:00 | Aggregate write: 2 sheet(s) ΓåÆ 'APPEND' (target_section_index=None)
+2026-05-11T05:12:01.592000+00:00 | sheet 'PRODUCTS' column_mappings: {'Product Name': 'Product Name', 'Unit Price': 'Unit Price', 'Stock': 'Stock'}
+2026-05-11T05:12:01.592000+00:00 | sheet 'PRODUCTS' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:12:01.670000+00:00 | sheet 'PRODUCTS 2' column_mappings: {'Product Name': 'Product Name', 'Unit Price': 'Unit Price', 'Stock': 'Stock'}
+2026-05-11T05:12:01.670000+00:00 | sheet 'PRODUCTS 2' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:12:01.670000+00:00 | Aggregate-append prep: 12 rows ready, 0 deselected via write_only (total cells: 36)
+2026-05-11T05:12:03.162000+00:00 | END RequestId: a5d9a2bc-c323-495a-bd41-181bd5db9f5b
+2026-05-11T05:12:03.162000+00:00 | REPORT RequestId: a5d9a2bc-c323-495a-bd41-181bd5db9f5b	Duration: 4689.66 ms	Billed Duration: 4690 ms	Memory Size: 512 MB	Max Memory Used: 97 MB
+2026-05-11T05:14:52.436000+00:00 | START RequestId: 1331099a-b229-4374-9fe2-21ac67532166 Version: $LATEST
+2026-05-11T05:14:52.437000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:14:52.437000+00:00 | Sanitizing file content (len=13420)...
+2026-05-11T05:14:52.437000+00:00 | File content OK (10064 bytes, valid ZIP)
+2026-05-11T05:14:52.437000+00:00 | Step 0: Resolving target sheet tab name...
+2026-05-11T05:14:54.194000+00:00 | Available tabs: ['LOOKUP', 'OPR DB', 'WEEKLY SUMMARY', 'DATA ENTRY', 'TC-A02', 'APPEND', 'TC-A03', 'TC-A04 (ERROR)', 'TC-A05', 'TC-A06', 'TC-A07', 'TC-A08', 'TC-B01', 'TC-B02', 'TC-B03', 'TC-B04', 'TC-B05', 'TC-B06 (ERROR)', 'TC-C01', 'TC-C02', 'TC-C03', 'TC-C04', 'TC-C05', 'TC-C06', 'TC-C07', 'TC-C08 ', 'TC-C09', 'TC-C11 (ERROR?)', 'TC-D01', 'TC-D02', 'TC-D03', 'TC-D04', 'TC-D05', 'TC-D06', 'TC-D07', 'TC-D08', 'TC-D09', 'TC-D10', 'TC-E01', 'TC-E02', 'TC-F01 (ERROR)', 'TC-F02 (ERROR)', 'TC-F03', 'TC-F04', 'TC-G01', 'TC-G02', 'TC-G03', 'TC-H01', 'TC-H02', 'TC-H03', 'TC-H04 (ERROR?)', 'TC-H05', 'TC-I01', 'TC-I02', 'TC-I03', 'TC-I04 (ERROR)', 'TC-J01', 'TC-J02', 'TC-J03', 'TC-J04', 'TC-J05', 'TC-J06', 'TC-K01', 'TC-K02', 'TC-K03', 'TC-K04', 'TC-K05', 'TC-K06', 'TC-L01', 'TC-L02', 'TC-L03 - INBOUND METRICS', 'TC-L03 - OUTBOUND METRICS', 'TC-L04', 'TC-L05', 'TC-L06  MARCH DATA (ERROR)', 'TC-L06 APRIL DATA (ERROR)', 'TC-L06 NOTES', 'TC-L07 NorthRegion', 'TC-L07 SouthRegion', 'TC-L07 EastRegion', 'TC-L07 WestRegion', 'TC-L08 Archive', 'TC-L08  OPS_DATA', 'TC-L08 Legend', 'TC-L09 Q1_2025', 'TC-L09 Q2_2025', 'TC-L09 Q3_2025', 'TC-L09 Q4_2025', 'TC-L09 Annual_Summary', 'TC-L10 MarchData', 'TC-L10 AprilData', 'TC-L10 MayData', 'DAILY_COUNTS', 'Inbound Matrix', 'Outbound Matrix', 'PRICING', 'KPI', 'SHIPMENTS', 'SKU_MASTER', 'DAILY_SALES', 'AUDIT_LOG', 'KPI_DASHBOARD', 'CATEGORY_MATRIX', 'MONTHLY_KPI', 'OPS_DASHBOARD', 'MONTHLY SUMMARY', 'WOR + CONTIS', 'SOURCY', 'FRUIT GARDEN', 'COA + PRIORITIES']
+2026-05-11T05:14:54.194000+00:00 | Tab 'APPEND' found in spreadsheet
+2026-05-11T05:14:54.194000+00:00 | Step 1: Reading target sheet 'APPEND'...
+2026-05-11T05:14:55.916000+00:00 | sheet_read keys: ['success', 'data', 'row_count', 'column_count']
+2026-05-11T05:14:55.916000+00:00 | sheet_read success: True
+2026-05-11T05:14:55.916000+00:00 | sheet_read error: None
+2026-05-11T05:14:55.916000+00:00 | 25 rows read from target sheet
+2026-05-11T05:14:55.916000+00:00 | Step 1b: Detecting formula columns...
+2026-05-11T05:14:57.431000+00:00 | Formula columns detected: 0
+2026-05-11T05:14:57.431000+00:00 | Step 2: Structuring target data...
+2026-05-11T05:14:57.474000+00:00 | target_schema success: True
+2026-05-11T05:14:57.474000+00:00 | target_schema error: None
+2026-05-11T05:14:57.474000+00:00 | Headers count: 3
+2026-05-11T05:14:57.474000+00:00 | Total formula columns: 0
+2026-05-11T05:14:57.474000+00:00 | Step 0a: Detecting source sheets...
+2026-05-11T05:14:57.530000+00:00 | aggregate-pass: tier=homogeneous, worst_sim=1.00, per_sheet_overlaps=[('PRODUCTS', 3), ('PRODUCTS 2', 3)], target_section_index=None
+2026-05-11T05:14:57.530000+00:00 | Step 0a-aggregate: 2 sheets ΓåÆ single target tab/section (target_section_index=None)
+2026-05-11T05:14:57.530000+00:00 | Aggregate preview: 2 sheet(s) ΓåÆ 'APPEND' (target_section_index=None)
+2026-05-11T05:14:57.613000+00:00 | sheet 'PRODUCTS' column_mappings: {'Unit Price': 'Unit Price', 'Stock': 'Stock', 'Product Name': 'Product Name'}
+2026-05-11T05:14:57.613000+00:00 | sheet 'PRODUCTS' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:14:57.698000+00:00 | sheet 'PRODUCTS 2' column_mappings: {'Product Name': 'Product Name', 'Unit Price': 'Unit Price', 'Stock': 'Stock'}
+2026-05-11T05:14:57.698000+00:00 | sheet 'PRODUCTS 2' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:14:57.698000+00:00 | Aggregate-append diff: 12 new rows from 2 source(s) (total cells: 36, truncated: False)
+2026-05-11T05:14:57.700000+00:00 | END RequestId: 1331099a-b229-4374-9fe2-21ac67532166
+2026-05-11T05:14:57.700000+00:00 | REPORT RequestId: 1331099a-b229-4374-9fe2-21ac67532166	Duration: 5263.55 ms	Billed Duration: 5264 ms	Memory Size: 512 MB	Max Memory Used: 98 MB
+2026-05-11T05:15:03.313000+00:00 | START RequestId: 71f597a1-bb0c-445c-809b-2be09ac291d4 Version: $LATEST
+2026-05-11T05:15:03.314000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:15:03.314000+00:00 | Sanitizing file content (len=13420)...
+2026-05-11T05:15:03.314000+00:00 | File content OK (10064 bytes, valid ZIP)
+2026-05-11T05:15:03.314000+00:00 | Step 0: Skipping target tab resolve (use_cache=False, target_tab_chosen=None); trusting target_sheet_name='APPEND'
+2026-05-11T05:15:03.314000+00:00 | Aggregate write: 2 sheet(s) ΓåÆ 'APPEND' (target_section_index=None)
+2026-05-11T05:15:06.452000+00:00 | sheet 'PRODUCTS' column_mappings: {'Unit Price': 'Unit Price', 'Stock': 'Stock', 'Product Name': 'Product Name'}
+2026-05-11T05:15:06.452000+00:00 | sheet 'PRODUCTS' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:15:06.541000+00:00 | sheet 'PRODUCTS 2' column_mappings: {'Product Name': 'Product Name', 'Unit Price': 'Unit Price', 'Stock': 'Stock'}
+2026-05-11T05:15:06.541000+00:00 | sheet 'PRODUCTS 2' identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:15:06.541000+00:00 | Aggregate-append prep: 12 rows ready, 0 deselected via write_only (total cells: 36)
+2026-05-11T05:15:07.974000+00:00 | END RequestId: 71f597a1-bb0c-445c-809b-2be09ac291d4
+2026-05-11T05:15:07.974000+00:00 | REPORT RequestId: 71f597a1-bb0c-445c-809b-2be09ac291d4	Duration: 4660.52 ms	Billed Duration: 4661 ms	Memory Size: 512 MB	Max Memory Used: 98 MB
+2026-05-11T05:15:32.855000+00:00 | START RequestId: 8cd64ef3-7e58-4052-be38-2d6b46e5ff74 Version: $LATEST
+2026-05-11T05:15:32.855000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:15:32.855000+00:00 | Sanitizing file content (len=12304)...
+2026-05-11T05:15:32.856000+00:00 | File content OK (9227 bytes, valid ZIP)
+2026-05-11T05:15:32.856000+00:00 | Step 0: Resolving target sheet tab name...
+2026-05-11T05:15:34.558000+00:00 | Available tabs: ['LOOKUP', 'OPR DB', 'WEEKLY SUMMARY', 'DATA ENTRY', 'TC-A02', 'APPEND', 'TC-A03', 'TC-A04 (ERROR)', 'TC-A05', 'TC-A06', 'TC-A07', 'TC-A08', 'TC-B01', 'TC-B02', 'TC-B03', 'TC-B04', 'TC-B05', 'TC-B06 (ERROR)', 'TC-C01', 'TC-C02', 'TC-C03', 'TC-C04', 'TC-C05', 'TC-C06', 'TC-C07', 'TC-C08 ', 'TC-C09', 'TC-C11 (ERROR?)', 'TC-D01', 'TC-D02', 'TC-D03', 'TC-D04', 'TC-D05', 'TC-D06', 'TC-D07', 'TC-D08', 'TC-D09', 'TC-D10', 'TC-E01', 'TC-E02', 'TC-F01 (ERROR)', 'TC-F02 (ERROR)', 'TC-F03', 'TC-F04', 'TC-G01', 'TC-G02', 'TC-G03', 'TC-H01', 'TC-H02', 'TC-H03', 'TC-H04 (ERROR?)', 'TC-H05', 'TC-I01', 'TC-I02', 'TC-I03', 'TC-I04 (ERROR)', 'TC-J01', 'TC-J02', 'TC-J03', 'TC-J04', 'TC-J05', 'TC-J06', 'TC-K01', 'TC-K02', 'TC-K03', 'TC-K04', 'TC-K05', 'TC-K06', 'TC-L01', 'TC-L02', 'TC-L03 - INBOUND METRICS', 'TC-L03 - OUTBOUND METRICS', 'TC-L04', 'TC-L05', 'TC-L06  MARCH DATA (ERROR)', 'TC-L06 APRIL DATA (ERROR)', 'TC-L06 NOTES', 'TC-L07 NorthRegion', 'TC-L07 SouthRegion', 'TC-L07 EastRegion', 'TC-L07 WestRegion', 'TC-L08 Archive', 'TC-L08  OPS_DATA', 'TC-L08 Legend', 'TC-L09 Q1_2025', 'TC-L09 Q2_2025', 'TC-L09 Q3_2025', 'TC-L09 Q4_2025', 'TC-L09 Annual_Summary', 'TC-L10 MarchData', 'TC-L10 AprilData', 'TC-L10 MayData', 'DAILY_COUNTS', 'Inbound Matrix', 'Outbound Matrix', 'PRICING', 'KPI', 'SHIPMENTS', 'SKU_MASTER', 'DAILY_SALES', 'AUDIT_LOG', 'KPI_DASHBOARD', 'CATEGORY_MATRIX', 'MONTHLY_KPI', 'OPS_DASHBOARD', 'MONTHLY SUMMARY', 'WOR + CONTIS', 'SOURCY', 'FRUIT GARDEN', 'COA + PRIORITIES']
+2026-05-11T05:15:34.558000+00:00 | Tab 'APPEND' found in spreadsheet
+2026-05-11T05:15:34.558000+00:00 | Step 1: Reading target sheet 'APPEND'...
+2026-05-11T05:15:36.161000+00:00 | sheet_read keys: ['success', 'data', 'row_count', 'column_count']
+2026-05-11T05:15:36.161000+00:00 | sheet_read success: True
+2026-05-11T05:15:36.161000+00:00 | sheet_read error: None
+2026-05-11T05:15:36.161000+00:00 | 37 rows read from target sheet
+2026-05-11T05:15:36.161000+00:00 | Step 1b: Detecting formula columns...
+2026-05-11T05:15:37.545000+00:00 | Formula columns detected: 0
+2026-05-11T05:15:37.545000+00:00 | Step 2: Structuring target data...
+2026-05-11T05:15:37.565000+00:00 | target_schema success: True
+2026-05-11T05:15:37.565000+00:00 | target_schema error: None
+2026-05-11T05:15:37.565000+00:00 | Headers count: 3
+2026-05-11T05:15:37.565000+00:00 | Total formula columns: 0
+2026-05-11T05:15:37.565000+00:00 | Step 0a: Detecting source sheets...
+2026-05-11T05:15:37.591000+00:00 | Single-sheet file, using 'Sheet1'
+2026-05-11T05:15:37.591000+00:00 | Step 0b: Detecting source sections...
+2026-05-11T05:15:37.630000+00:00 | Step 3: Parsing source file...
+2026-05-11T05:15:37.672000+00:00 | parse_result success: True
+2026-05-11T05:15:37.672000+00:00 | parse_result error: None
+2026-05-11T05:15:37.672000+00:00 | 6 rows parsed
+2026-05-11T05:15:37.672000+00:00 | Step 4: Structuring source data...
+2026-05-11T05:15:37.693000+00:00 | source_schema success: True
+2026-05-11T05:15:37.693000+00:00 | source_schema error: None
+2026-05-11T05:15:37.693000+00:00 | Source headers: ['Product Name', 'Unit Price', 'Stock']
+2026-05-11T05:15:37.693000+00:00 | Step 5: AI finding identifier...
+2026-05-11T05:15:37.711000+00:00 | identification success: True
+2026-05-11T05:15:37.711000+00:00 | identification error: None
+2026-05-11T05:15:37.711000+00:00 | write_strategy: append
+2026-05-11T05:15:37.711000+00:00 | anchor_column: None
+2026-05-11T05:15:37.711000+00:00 | column_mappings: {'Product Name': 'Product Name', 'Unit Price': 'Unit Price', 'Stock': 'Stock'}
+2026-05-11T05:15:37.711000+00:00 | identification.reasoning: All source columns matched target columns exactly.
+2026-05-11T05:15:37.711000+00:00 | Source anchor values (0): set()
+2026-05-11T05:15:37.711000+00:00 | is_date_anchor: False
+2026-05-11T05:15:37.711000+00:00 | Conflicts found: 0
+2026-05-11T05:15:37.711000+00:00 | Empty cells found: 0
+2026-05-11T05:15:37.711000+00:00 | Append strategy: 6 source row(s) will be appended (upsert split not applicable ΓÇö no anchor)
+2026-05-11T05:15:37.711000+00:00 | Diff preview: 0 overwrites + 0 fills + 6 new rows (total cells: 18, truncated: False)
+2026-05-11T05:15:37.713000+00:00 | END RequestId: 8cd64ef3-7e58-4052-be38-2d6b46e5ff74
+2026-05-11T05:15:37.713000+00:00 | REPORT RequestId: 8cd64ef3-7e58-4052-be38-2d6b46e5ff74	Duration: 4857.61 ms	Billed Duration: 4858 ms	Memory Size: 512 MB	Max Memory Used: 98 MB
+2026-05-11T05:15:46.672000+00:00 | START RequestId: d09514eb-758a-4ab9-8f2d-d74f7676a3d1 Version: $LATEST
+2026-05-11T05:15:46.672000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:15:46.672000+00:00 | Sanitizing file content (len=12304)...
+2026-05-11T05:15:46.672000+00:00 | File content OK (9227 bytes, valid ZIP)
+2026-05-11T05:15:46.672000+00:00 | Step 0: Resolving target sheet tab name...
+2026-05-11T05:15:48.187000+00:00 | Available tabs: ['LOOKUP', 'OPR DB', 'WEEKLY SUMMARY', 'DATA ENTRY', 'TC-A02', 'APPEND', 'TC-A03', 'TC-A04 (ERROR)', 'TC-A05', 'TC-A06', 'TC-A07', 'TC-A08', 'TC-B01', 'TC-B02', 'TC-B03', 'TC-B04', 'TC-B05', 'TC-B06 (ERROR)', 'TC-C01', 'TC-C02', 'TC-C03', 'TC-C04', 'TC-C05', 'TC-C06', 'TC-C07', 'TC-C08 ', 'TC-C09', 'TC-C11 (ERROR?)', 'TC-D01', 'TC-D02', 'TC-D03', 'TC-D04', 'TC-D05', 'TC-D06', 'TC-D07', 'TC-D08', 'TC-D09', 'TC-D10', 'TC-E01', 'TC-E02', 'TC-F01 (ERROR)', 'TC-F02 (ERROR)', 'TC-F03', 'TC-F04', 'TC-G01', 'TC-G02', 'TC-G03', 'TC-H01', 'TC-H02', 'TC-H03', 'TC-H04 (ERROR?)', 'TC-H05', 'TC-I01', 'TC-I02', 'TC-I03', 'TC-I04 (ERROR)', 'TC-J01', 'TC-J02', 'TC-J03', 'TC-J04', 'TC-J05', 'TC-J06', 'TC-K01', 'TC-K02', 'TC-K03', 'TC-K04', 'TC-K05', 'TC-K06', 'TC-L01', 'TC-L02', 'TC-L03 - INBOUND METRICS', 'TC-L03 - OUTBOUND METRICS', 'TC-L04', 'TC-L05', 'TC-L06  MARCH DATA (ERROR)', 'TC-L06 APRIL DATA (ERROR)', 'TC-L06 NOTES', 'TC-L07 NorthRegion', 'TC-L07 SouthRegion', 'TC-L07 EastRegion', 'TC-L07 WestRegion', 'TC-L08 Archive', 'TC-L08  OPS_DATA', 'TC-L08 Legend', 'TC-L09 Q1_2025', 'TC-L09 Q2_2025', 'TC-L09 Q3_2025', 'TC-L09 Q4_2025', 'TC-L09 Annual_Summary', 'TC-L10 MarchData', 'TC-L10 AprilData', 'TC-L10 MayData', 'DAILY_COUNTS', 'Inbound Matrix', 'Outbound Matrix', 'PRICING', 'KPI', 'SHIPMENTS', 'SKU_MASTER', 'DAILY_SALES', 'AUDIT_LOG', 'KPI_DASHBOARD', 'CATEGORY_MATRIX', 'MONTHLY_KPI', 'OPS_DASHBOARD', 'MONTHLY SUMMARY', 'WOR + CONTIS', 'SOURCY', 'FRUIT GARDEN', 'COA + PRIORITIES']
+2026-05-11T05:15:48.187000+00:00 | Tab 'APPEND' found in spreadsheet
+2026-05-11T05:15:48.188000+00:00 | Step 1: Parsing source file...
+2026-05-11T05:15:48.231000+00:00 | 6 rows parsed from source
+2026-05-11T05:15:48.231000+00:00 | Step 2: Reading target sheet...
+2026-05-11T05:15:49.784000+00:00 | Detecting formula columns...
+2026-05-11T05:15:51.211000+00:00 | Structuring target data...
+2026-05-11T05:15:51.233000+00:00 | Structuring source data...
+2026-05-11T05:15:51.254000+00:00 | AI finding identifier and mapping columns...
+2026-05-11T05:15:51.272000+00:00 | Strategy: append, Anchor: None
+2026-05-11T05:15:51.272000+00:00 | Write mappings: ['Product Name', 'Unit Price', 'Stock']
+2026-05-11T05:15:51.272000+00:00 | Transforming data...
+2026-05-11T05:15:51.296000+00:00 | 6 rows transformed
+2026-05-11T05:15:51.296000+00:00 | Writing via 'append'...
+2026-05-11T05:15:54.554000+00:00 | Write result: success=True rows_updated=0 rows_appended=6 cells_updated=18 strategy=append anchor=None append_mode=sheet-bottom
+2026-05-11T05:15:54.556000+00:00 | END RequestId: d09514eb-758a-4ab9-8f2d-d74f7676a3d1
+2026-05-11T05:15:54.556000+00:00 | REPORT RequestId: d09514eb-758a-4ab9-8f2d-d74f7676a3d1	Duration: 7883.81 ms	Billed Duration: 7884 ms	Memory Size: 512 MB	Max Memory Used: 98 MB
+2026-05-11T05:17:14.648000+00:00 | START RequestId: 4596a2f0-5bab-4d39-a8ed-d3b21b9b0ff4 Version: $LATEST
+2026-05-11T05:17:14.650000+00:00 | Dynamic Mapping Agent: ['tool', 'inputs']
+2026-05-11T05:17:14.650000+00:00 | Sanitizing file content (len=20640)...
+2026-05-11T05:17:14.650000+00:00 | File content OK (15478 bytes, valid ZIP)
+2026-05-11T05:17:14.650000+00:00 | Step 0: Resolving target sheet tab name...
+2026-05-11T05:17:16.192000+00:00 | Available tabs: ['LOOKUP', 'OPR DB', 'WEEKLY SUMMARY', 'DATA ENTRY', 'TC-A02', 'APPEND', 'TC-A03', 'TC-A04 (ERROR)', 'TC-A05', 'TC-A06', 'TC-A07', 'TC-A08', 'TC-B01', 'TC-B02', 'TC-B03', 'TC-B04', 'TC-B05', 'TC-B06 (ERROR)', 'TC-C01', 'TC-C02', 'TC-C03', 'TC-C04', 'TC-C05', 'TC-C06', 'TC-C07', 'TC-C08 ', 'TC-C09', 'TC-C11 (ERROR?)', 'TC-D01', 'TC-D02', 'TC-D03', 'TC-D04', 'TC-D05', 'TC-D06', 'TC-D07', 'TC-D08', 'TC-D09', 'TC-D10', 'TC-E01', 'TC-E02', 'TC-F01 (ERROR)', 'TC-F02 (ERROR)', 'TC-F03', 'TC-F04', 'TC-G01', 'TC-G02', 'TC-G03', 'TC-H01', 'TC-H02', 'TC-H03', 'TC-H04 (ERROR?)', 'TC-H05', 'TC-I01', 'TC-I02', 'TC-I03', 'TC-I04 (ERROR)', 'TC-J01', 'TC-J02', 'TC-J03', 'TC-J04', 'TC-J05', 'TC-J06', 'TC-K01', 'TC-K02', 'TC-K03', 'TC-K04', 'TC-K05', 'TC-K06', 'TC-L01', 'TC-L02', 'TC-L03 - INBOUND METRICS', 'TC-L03 - OUTBOUND METRICS', 'TC-L04', 'TC-L05', 'TC-L06  MARCH DATA (ERROR)', 'TC-L06 APRIL DATA (ERROR)', 'TC-L06 NOTES', 'TC-L07 NorthRegion', 'TC-L07 SouthRegion', 'TC-L07 EastRegion', 'TC-L07 WestRegion', 'TC-L08 Archive', 'TC-L08  OPS_DATA', 'TC-L08 Legend', 'TC-L09 Q1_2025', 'TC-L09 Q2_2025', 'TC-L09 Q3_2025', 'TC-L09 Q4_2025', 'TC-L09 Annual_Summary', 'TC-L10 MarchData', 'TC-L10 AprilData', 'TC-L10 MayData', 'DAILY_COUNTS', 'Inbound Matrix', 'Outbound Matrix', 'PRICING', 'KPI', 'SHIPMENTS', 'SKU_MASTER', 'DAILY_SALES', 'AUDIT_LOG', 'KPI_DASHBOARD', 'CATEGORY_MATRIX', 'MONTHLY_KPI', 'OPS_DASHBOARD', 'MONTHLY SUMMARY', 'WOR + CONTIS', 'SOURCY', 'FRUIT GARDEN', 'COA + PRIORITIES']
+2026-05-11T05:17:16.192000+00:00 | Tab 'Inbound Matrix' found in spreadsheet
+2026-05-11T05:17:16.192000+00:00 | Step 1: Reading target sheet 'Inbound Matrix'...
+2026-05-11T05:17:17.649000+00:00 | sheet_read keys: ['success', 'data', 'row_count', 'column_count']
+2026-05-11T05:17:17.649000+00:00 | sheet_read success: True
+2026-05-11T05:17:17.649000+00:00 | sheet_read error: None
+2026-05-11T05:17:17.649000+00:00 | 11 rows read from target sheet
+2026-05-11T05:17:17.649000+00:00 | Step 1b: Detecting formula columns...
+2026-05-11T05:17:19.023000+00:00 | Formula columns detected: 0
+2026-05-11T05:17:19.023000+00:00 | Step 2: Structuring target data...
+2026-05-11T05:17:19.044000+00:00 | target_schema success: True
+2026-05-11T05:17:19.044000+00:00 | target_schema error: None
+2026-05-11T05:17:19.044000+00:00 | Headers count: 3
+2026-05-11T05:17:19.044000+00:00 | Total formula columns: 0
+2026-05-11T05:17:19.044000+00:00 | Step 0a: Detecting source sheets...
+2026-05-11T05:17:19.130000+00:00 | aggregate-bail: too-few-usable-sheets after sidecar-filter (got 0 usable / 2 total; skipped sidecars=[('Inbound Metrics', 0, 7, 3), ('Outbound Metrics', 0, 7, 3)])
+2026-05-11T05:17:19.130000+00:00 | column-merge-bail: too-few-usable-sheets after sidecar-filter (got 0 usable / 2 total; skipped sidecars=[('Inbound Metrics', 0, 7, 3), ('Outbound Metrics', 0, 7, 3)])
+2026-05-11T05:17:19.130000+00:00 | no-useful-overlap: every sheet's target overlap is empty or anchor-only (date-like). target_tab='Inbound Matrix' target_cols=3 per_sheet=[{'name': 'Inbound Metrics', 'on_target': [], 'useful_cols': []}, {'name': 'Outbound Metrics', 'on_target': [], 'useful_cols': []}]
+2026-05-11T05:17:19.131000+00:00 | END RequestId: 4596a2f0-5bab-4d39-a8ed-d3b21b9b0ff4
+2026-05-11T05:17:19.131000+00:00 | REPORT RequestId: 4596a2f0-5bab-4d39-a8ed-d3b21b9b0ff4	Duration: 4483.10 ms	Billed Duration: 4484 ms	Memory Size: 512 MB	Max Memory Used: 98 MB

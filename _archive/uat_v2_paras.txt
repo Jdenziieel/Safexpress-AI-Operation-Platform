@@ -1,0 +1,46 @@
+﻿PARAS:
+P000|?             |SafexpressOps
+P001|?             |UAT Questionnaire v2.0.2
+P002|?             |Document version: 2026-05-08
+P003|?             |Scope: USER role ΓÇö full feature coverage
+P004|Heading 1     |Scope & Trimming Notes
+P006|Heading 1     |USER
+P008|Heading 2     |1. Login & Access Control (smoke)
+P010|Heading 2     |2. SFX Bot (primary tool ΓÇö full depth)
+P011|Heading 3     |2.1 Chat & Streaming
+P013|Heading 3     |2.2 RAG / Document Context
+P015|Heading 3     |2.3 Sessions
+P017|Heading 3     |2.4 Privacy & Limits
+P019|Heading 2     |3. Dynamic Mapping
+P021|Heading 3     |3.1 File Upload & Format Support
+P023|Heading 3     |3.2 Multi-Sheet Detection & Selection
+P025|Heading 3     |3.3 Multi-Section Detection & Selection
+P027|Heading 3     |3.4 Target Google Sheet Resolution
+P029|Heading 3     |3.5 AI Column Mapping
+P031|Heading 3     |3.6 Mapping Preview & Diff
+P033|Heading 3     |3.7 Confirm & Write
+P035|Heading 3     |3.8 Empty Target Sheet
+P037|Heading 3     |3.9 Template Save & Reload
+P039|Heading 3     |3.10 Error Handling
+P041|Heading 2     |4. Analysis Reports
+P042|Heading 3     |4.1 Hub
+P044|Heading 3     |4.2 ABC Analysis
+P046|Heading 3     |4.2.1 File Upload & Validation
+P048|Heading 3     |4.2.2 Column Configuration
+P050|Heading 3     |4.2.3 Threshold Configuration
+P052|Heading 3     |4.2.4 Month Auto-Detection
+P054|Heading 3     |4.2.5 ABC Classification & Results
+P056|Heading 3     |4.2.6 Google Sheets Export
+P058|Heading 3     |4.2.7 ABC History
+P060|Heading 3     |4.3 One-Page Report (OPR)
+P062|Heading 3     |4.3.1 File Upload & Format Validation
+P064|Heading 3     |4.3.2 Date Extraction
+P066|Heading 3     |4.3.3 AI Column Mapping ΓÇö 4-Tier Engine
+P069|Heading 3     |4.3.4 Mapping Preview
+P071|Heading 3     |4.3.5 Process / Write (after approval)
+P073|Heading 3     |4.3.6 Error Handling & Edge Cases
+P075|Heading 3     |4.3.7 OPR History
+P077|Heading 3     |4.4 Workload Analysis
+P079|Heading 2     |5. Profile & Quota
+P081|Heading 2     |6. Cross-cutting (User)
+P084|Heading 2     |Tester Sign-off

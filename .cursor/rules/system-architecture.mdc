@@ -1,6 +1,6 @@
 ---
-description: Authoritative mental model of the multi-agent supervisor system. Read this before assuming any cross-turn / memory / planner behavior.
-alwaysApply: true
+description:
+alwaysApply: false
 ---
 
 # Supervisor Agent Architecture — Source of Truth

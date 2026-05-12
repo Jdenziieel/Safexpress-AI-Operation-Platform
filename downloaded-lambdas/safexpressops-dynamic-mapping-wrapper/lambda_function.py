@@ -90,11 +90,42 @@ def lambda_handler(event, context):
             if parsed.get('section_index') is not None:
                 inputs['section_index'] = parsed['section_index']
 
+            # Fields the frontend may send on EITHER preview or run:
+            #   - target_tab_chosen: user's pick from the multi-tab anchor-overlap picker.
+            #   - conflict_choices: user's per-identifier picks from the multi-sheet
+            #     aggregate cross-sheet conflict resolution modal. JSON-encoded
+            #     {anchor_value: sheet_name|"skip"} on the wire — pass through as-is
+            #     and let the agent json.loads it (the agent already handles both
+            #     the dict and the string form for backwards compatibility).
+            #   - intra_section_choices: user's per-anchor row pick from the
+            #     same-section duplicate conflict modal. JSON-encoded
+            #     {anchor_value: "row_<N>"|"skip"} on the wire — same shape
+            #     contract as conflict_choices so the agent treats them the
+            #     same way (str-or-dict tolerant).
+            for shared_key in (
+                'target_tab_chosen',
+                'conflict_choices',
+                'intra_section_choices',
+            ):
+                val = parsed.get(shared_key)
+                if val is None or val == '':
+                    continue
+                try:
+                    inputs[shared_key] = json.loads(val)
+                except (json.JSONDecodeError, TypeError):
+                    inputs[shared_key] = val
+
             if tool == 'run_dynamic_mapping':
+                # Run-only fields: previewCache envelope + per-row write filter.
+                # write_only is the per-row checkbox state from the diff/append
+                # tables; the agent enforces it for row-keyed strategies (incl.
+                # multi_sheet_aggregate) and ignores it for matrix layouts.
                 for key in ('write_strategy', 'anchor_column', 'source_anchor',
                             'column_mappings', 'formula_cols',
                             'header_row_count', 'composite_to_col_index',
-                            'strategy_metadata'):
+                            'strategy_metadata',
+                            'pivot_source_col', 'value_source_col',
+                            'write_only'):
                     val = parsed.get(key)
                     if val:
                         try:

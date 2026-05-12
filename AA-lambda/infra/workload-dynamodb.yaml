@@ -1,0 +1,96 @@
+# CloudFormation snippet for the workload-analysis DynamoDB tables.
+#
+# Deploy via:
+#   aws cloudformation deploy \
+#     --stack-name safexpressops-workload-dynamodb \
+#     --template-file AA-lambda/infra/workload-dynamodb.yaml \
+#     --capabilities CAPABILITY_NAMED_IAM
+#
+# After the tables exist, run the seed script:
+#   python AA-lambda/scripts/seed_workload_tables.py
+# to insert the default rates + UOM list.
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: DynamoDB tables for the Workload Analysis feature (config, history, UOM)
+
+Resources:
+
+  WorkloadConfigTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: workload-config
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: configKey
+          AttributeType: S
+      KeySchema:
+        - AttributeName: configKey
+          KeyType: HASH
+      Tags:
+        - Key: app
+          Value: safexpressops
+        - Key: feature
+          Value: workload-analysis
+
+  WorkloadHistoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: workload-history
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: mode
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: byMode
+          # Listing & filtering by mode (inbound vs outbound) backed by this GSI;
+          # in-memory sort is fine at the volumes a capstone tool sees.
+          KeySchema:
+            - AttributeName: mode
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: app
+          Value: safexpressops
+        - Key: feature
+          Value: workload-analysis
+
+  WorkloadUomTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: workload-uom
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: uom
+          AttributeType: S
+      KeySchema:
+        - AttributeName: uom
+          KeyType: HASH
+      Tags:
+        - Key: app
+          Value: safexpressops
+        - Key: feature
+          Value: workload-analysis
+
+Outputs:
+  ConfigTableName:
+    Value: !Ref WorkloadConfigTable
+    Export:
+      Name: workload-config-table-name
+  HistoryTableName:
+    Value: !Ref WorkloadHistoryTable
+    Export:
+      Name: workload-history-table-name
+  UomTableName:
+    Value: !Ref WorkloadUomTable
+    Export:
+      Name: workload-uom-table-name

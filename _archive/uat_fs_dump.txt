@@ -1,0 +1,250 @@
+﻿PARAS: 107 TABLES: 20
+P000|Normal        |SafexpressOps
+P001|Normal        |User Acceptance Test - Feature-Based Scale Questionnaire
+P003|Normal        |Document type:  User Acceptance Test (Likert scale, feature-anchored)
+P004|Normal        |Companion documents:  QA-FunctionalTestPlan.docx (technical functional test plan), UAT-Real.docx (scenario-based deep UAT).
+P006|Normal        |This UAT measures user acceptance of every shipped feature in SafexpressOps using a 5-point Likert scale, administered AFTER each tester has completed a 30-45 minute hands-on session with the system. 
+P008|Normal        |Per the capstone's reference framing, UAT must answer two questions: "Does the software enable users to do their jobs?" and "Is the software designed well enough that they can do them effectively?" Th
+P010|Heading 2     |Why this is feature-based, not requirement-based
+P011|Normal        |The capstone's Chapter 3 Functional / Non-Functional Requirements list was the original specification, not the final shipped feature set. Some requirements were superseded, some were merged, and a few
+P013|Heading 2     |Administration protocol
+P014|Normal        |1. Tester receives a 30-45 minute hands-on session covering the features in their role's scope (Admin: all sections; Manager: all except 3.8 and 3.9; User: all except 3.3, 3.8, and 3.9). A demo-only w
+P015|Normal        |2. Tester completes this form independently. Time required: ~25-35 min. Items outside the tester's role are marked N/A.
+P016|Normal        |3. Project lead aggregates all forms, computes per-section means and standard deviations, and reports per Appendix B.
+P018|Heading 2     |Acceptance criteria
+P020|Heading 1     |Part 1 - Tester profile and workflow baseline
+P021|Normal        |Filled BEFORE the hands-on session.
+P023|Heading 2     |1.1  Tester information
+P024|Heading 2     |1.2  Workflow baseline (current process, no SafexpressOps)
+P026|Heading 1     |Part 2 - System Usability Scale (SUS)
+P027|Normal        |Industry-standard 10-item scale used in academic UAT for over 30 years. Trust your first reaction. The N/A column should NOT be used here - every SUS item applies to every tester.
+P030|Normal        |SUS scoring (computed by the project lead):  odd items: subtract 1; even items: subtract from 5; sum and multiply by 2.5 to get a 0-100 score. >= 68 industry average; >= 80 excellent; < 50 unusable.
+P032|Heading 1     |Part 3 - Functional acceptance scale (by feature area)
+P033|Normal        |Each feature area has its own short scale. Use N/A for any feature your role does not include or that you did not exercise during your hands-on session. Section role-applicability is shown in italics 
+P035|Heading 2     |3.1  Authentication, roles, and access
+P036|Normal        |Applies to: ALL roles (Administrator, Manager, User)
+P038|Heading 2     |3.2  SFX Bot - knowledge base question-answering
+P039|Normal        |Applies to: ALL roles
+P041|Heading 2     |3.3  AI Assistant - personal productivity (Google Workspace)
+P042|Normal        |Applies to: Administrator + Manager only.  Users: mark all items N/A.
+P044|Heading 2     |3.4  Dynamic Mapping
+P045|Normal        |Applies to: ALL roles
+P047|Heading 2     |3.5  ABC Analysis
+P048|Normal        |Applies to: ALL roles
+P050|Heading 2     |3.6  One-Page Report (OPR)
+P051|Normal        |Applies to: ALL roles
+P053|Heading 2     |3.7  Workload Analysis
+P054|Normal        |Applies to: ALL roles
+P056|Heading 2     |3.8  Knowledge Base management
+P057|Normal        |Applies to: Administrator only.  Manager + User: mark all items N/A.
+P059|Heading 2     |3.9  Account and activity management
+P060|Normal        |Applies to: Administrator only.  Manager + User: mark all items N/A.
+P062|Heading 1     |Part 4 - Quality scale (Reliability, Security, Compatibility, Efficiency)
+P063|Normal        |These items measure how well the system behaves overall. Maps to the Chapter 3 Non-Functional Requirements that are testable from a user's perspective. The remaining NFRs (Maintainability, Scalability
+P066|Heading 1     |Part 5 - Adoption and business outcome scale
+P067|Normal        |These items measure whether you would actually USE the system. The aggregate score here is the most important signal of whether SafexpressOps is ready to deploy at SLI.
+P070|Heading 1     |Part 6 - Open-ended feedback
+P071|Normal        |Free-text answers. The project lead will run thematic analysis across all testers' responses to surface recurring issues that the Likert scales alone cannot capture.
+P074|Heading 1     |Part 7 - Formal acceptance / sign-off
+P075|Normal        |By signing below, you confirm that you completed a hands-on session with SafexpressOps (not a demo only) and that the scale scores and feedback above reflect your honest first-time experience.
+P077|Heading 2     |7.1  Personal verdict
+P079|Heading 2     |7.2  Tester signature
+P080|Heading 2     |7.3  Witness / project lead signature
+P082|Heading 1     |Appendix A - Traceability matrix
+P083|Normal        |Maps each section of this UAT back to (a) the actual shipped feature it tests, and (b) the original Specific Objective from Chapter 1 of the capstone.
+P086|Heading 1     |Appendix B - Reporting template for Chapter 4
+P087|Normal        |When reporting results, fill in this template. The numbers below directly feed Chapter 4's 'Test Case and User Acceptance Test (UAT) Analysis' section, replacing the '___%' placeholders.
+P089|Heading 2     |B.1  Demographics
+P090|Normal        |  - Total testers (N) = ___ (Administrator: ___, Manager: ___, User: ___).
+  - Mean years at SLI = ___ . Mean hands-on session duration = ___ minutes.
+  - Devices: Desktop ___, Laptop ___, Tablet ___,
+P091|Heading 2     |B.2  System Usability Scale (SUS)
+P092|Normal        |  - Mean SUS score = ___ / 100   (interpretation: ___).
+  - Per-item means + standard deviations are tabulated in Table ___ (append to Chapter 4).
+P093|Heading 2     |B.3  Functional acceptance scale - per section
+P094|Normal        |  - 3.1 Authentication, Roles, Access:    mean = ___ / 5,  std dev = ___ , N = ___
+  - 3.2 SFX Bot:                          mean = ___ / 5,  std dev = ___ , N = ___
+  - 3.3 AI Assistant (Admin + Mana
+P095|Heading 2     |B.4  Quality scale (Reliability / Security / Efficiency / Compatibility)
+P096|Normal        |  - Mean across 8 items = ___ / 5.
+  - Highest-scoring item: Q__ (mean = ___ ).
+  - Lowest-scoring item:  Q__ (mean = ___ ).
+P097|Heading 2     |B.5  Adoption scale
+P098|Normal        |  - Mean across 6 items = ___ / 5.
+  - 'Would adopt tomorrow' (B3): mean = ___ , % who scored 4 or 5 = ___ %.
+  - 'Would recommend' (B5): mean = ___ , % who scored 4 or 5 = ___ %.
+P099|Heading 2     |B.6  Open-ended thematic analysis
+P100|Normal        |  - Top 3 recurring positive themes: ___, ___, ___.
+  - Top 3 recurring frustration themes: ___, ___, ___.
+  - Most-requested feature improvement: ___ (cited by ___ testers).
+P101|Heading 2     |B.7  Verdict distribution
+P102|Normal        |  - Accept: ___ testers (___%).
+  - Accept with Conditions: ___ testers (___%).
+  - Reject: ___ testers (___%).
+P103|Heading 2     |B.8  Overall acceptance decision
+P104|Normal        |Per the criteria stated on the cover page, the overall verdict is:  ΓÿÉ PASS    ΓÿÉ CONDITIONAL PASS    ΓÿÉ REJECT
+P106|Normal        |End of UAT-FeatureScale.docx. This is the recommended primary instrument for Chapter 4. Pair with UAT-Real.docx for a small group of deep testers if the panel asks for scenario-level evidence.
+---TABLES---
+T00 rows=4 cols=2
+  T00R00: Sample size || Minimum 10 testers (target 15-25), distributed across the three SLI roles (Administrator, Manager, User) in approximatel
+  T00R01: Pass || SUS mean >= 68 AND every functional sub-section mean >= 3.5/5 AND adoption scale mean >= 3.5/5 AND zero items with mean 
+  T00R02: Conditional pass || SUS mean 60-67 OR functional sub-section mean 3.0-3.49 OR adoption mean 3.0-3.49. Accepted with the requirement that the
+  T00R03: Reject || SUS mean < 60 OR any functional sub-section mean < 3.0 OR adoption mean < 3.0 OR any individual item with mean < 2.5.
+T01 rows=9 cols=2
+  T01R00: Name (or anonymized ID) || 
+  T01R01: Role at SLI || 
+  T01R02: Years at SLI || 
+  T01R03: Warehouse / department || 
+  T01R04: Date of test || 
+  T01R05: Hands-on session duration || _____ minutes
+  T01R06: UAT role assigned || ΓÿÉ Administrator   ΓÿÉ Manager   ΓÿÉ User
+  T01R07: Test environment || ΓÿÉ Desktop   ΓÿÉ Laptop   ΓÿÉ Tablet   ΓÿÉ Phone
+  T01R08: Browser & OS || 
+T02 rows=6 cols=2
+  T02R00: Q1.  Which one operational task do you do most often? Briefly describe it. || 
+  T02R01: Q2.  How long does that task usually take you (minutes)? || 
+  T02R02: Q3.  What is the SINGLE most frustrating step? || 
+  T02R03: Q4.  How many times per week do you ask a colleague for company info you cannot find yourself? || 
+  T02R04: Q5.  What % of your week is spent on repetitive copy-paste / manual data entry? || 
+  T02R05: Q6.  What is something you wish you could ask the system, but no tool does today? || 
+T03 rows=11 cols=7
+  T03R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T03R01: 1.  I think that I would like to use SafexpressOps frequently. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T03R02: 2.  I found SafexpressOps unnecessarily complex. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T03R03: 3.  I thought SafexpressOps was easy to use. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T03R04: 4.  I think that I would need the support of a technical person to use SafexpressOps. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T03R05: 5.  I found the various functions in SafexpressOps were well integrated. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T03R06: 6.  I thought there was too much inconsistency in SafexpressOps. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T03R07: 7.  I would imagine that most people would learn to use SafexpressOps very quickly. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T03R08: 8.  I found SafexpressOps very cumbersome to use. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T03R09: 9.  I felt very confident using SafexpressOps. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T03R10: 10. I needed to learn a lot of things before I could get going with SafexpressOps. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T04 rows=5 cols=7
+  T04R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T04R01: F1.1  I was able to sign in to SafexpressOps using my Google account without needing technical help. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T04R02: F1.2  My role's allowed features and pages matched my actual job responsibilities. I was not exposed to features outside || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T04R03: F1.3  I could find and read my profile, role badge, and current token / quota usage easily. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T04R04: F1.4  Logging out and logging back in worked cleanly, and my chat history and saved work were preserved. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T05 rows=7 cols=7
+  T05R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T05R01: F2.1  SFX Bot answered my company-knowledge questions accurately when the answer existed in the knowledge base. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T05R02: F2.2  SFX Bot's responses included citations (filename, page) that pointed to the correct source document. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T05R03: F2.3  When I asked something NOT in the knowledge base, SFX Bot said so instead of guessing. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T05R04: F2.4  SFX Bot kept the context of my conversation across multiple back-and-forth messages in the same thread. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T05R05: F2.5  I could create, switch between, rename, and delete chat sessions, and only my own sessions were visible to me. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T05R06: F2.6  SFX Bot streamed responses in real time, and I could stop a streaming response if I no longer needed it. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T06 rows=8 cols=7
+  T06R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T06R01: F3.1  The AI Assistant correctly performed the Gmail tasks I asked of it (draft, send, reply, forward, search). || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T06R02: F3.2  The AI Assistant correctly performed the Google Calendar tasks I asked of it (create, view, update, delete events; || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T06R03: F3.3  The AI Assistant correctly performed the Google Drive / Docs / Sheets tasks I asked of it (upload, create folders, || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T06R04: F3.4  The AI Assistant successfully completed multi-step workflows (e.g. 'find the latest delivery-order email, extract  || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T06R05: F3.5  Dangerous actions (sending emails, deleting events, etc.) were always shown to me for explicit approval before the || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T06R06: F3.6  After I approved (or rejected and redirected) an action, the AI Assistant continued the workflow correctly without || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T06R07: F3.7  The AI Assistant remembered my preferences and context across sessions / days, so I did not have to re-explain thi || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T07 rows=8 cols=7
+  T07R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T07R01: F4.1  I could upload Excel (.xlsx) and CSV source files and pick a target Google Sheet without errors. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T07R02: F4.2  When my source file had multiple sheets or stacked sections, the system correctly detected them and let me choose  || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T07R03: F4.3  The AI's suggested column mappings between source and target were accurate enough that I rarely had to override th || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T07R04: F4.4  Before any data was written, I could review a clear preview of what would change and override individual mappings  || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T07R05: F4.5  After confirming, the system wrote the data into the correct rows and columns of the target sheet, without overwri || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T07R06: F4.6  I could save a column-mapping template and reuse it for the same target on future runs. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T07R07: F4.7  When something went wrong (no columns matched, auth error, zero updates), the system gave me a clear, actionable m || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T08 rows=7 cols=7
+  T08R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T08R01: F5.1  I could upload an Excel inventory transactions file and run an ABC analysis with sensible defaults already filled  || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T08R02: F5.2  The classification result (A / B / C tiers) matched the actual high / mid / low movers in my data based on my own  || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T08R03: F5.3  I could change the column names and the A / B thresholds before running, and the result correctly reflected my cha || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T08R04: F5.4  The system auto-detected all months in my file and produced per-month tabs in the result. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T08R05: F5.5  The exported Google Sheet contained an Executive Summary, monthly comparison, complete classification, and per-cla || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T08R06: F5.6  I could view my past ABC analyses in a history list and only my own (not other users') were visible. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T09 rows=7 cols=7
+  T09R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T09R01: F6.1  I could upload a daily-operations Excel or CSV file and the system correctly extracted the dates and key columns. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T09R02: F6.2  The AI's column mapping was accurate, showed me a confidence score per column, and clearly flagged columns that ne || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T09R03: F6.3  I could override any proposed mapping or set it to skip before approving the write. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T09R04: F6.4  After approval, the system wrote the right data into the right cells of the destination sheet, and reported how ma || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T09R05: F6.5  I could view my past OPR processings in a history list and only my own were visible. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T09R06: F6.6  When errors occurred (no columns matched, zero date matches, auth errors), the system surfaced a clear, actionable || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T10 rows=5 cols=7
+  T10R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T10R01: F7.1  I could enter today's pallet items, items per pallet, and worker count, and the system calculated a per-phase work || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T10R02: F7.2  The system flagged missing or invalid inputs (no items, blank workers) before allowing me to calculate. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T10R03: F7.3  I could change the warehouse phase rates and the result correctly reflected my changes. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T10R04: F7.4  I could export the result to PDF (with summary, phase breakdown, and items breakdown), and save the calculation to || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T11 rows=5 cols=7
+  T11R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T11R01: F8.1  I could upload a PDF, see it parsed into chunks with proper structure (headings, tables, images), and edit chunks  || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T11R02: F8.2  The system detected duplicate uploads (by content hash and filename) and warned me before re-processing. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T11R03: F8.3  I could see KB analytics (queries per document, token usage, popular topics) in a clear dashboard. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T11R04: F8.4  After I pushed a new document, SFX Bot was able to answer questions about it and cite it correctly. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T12 rows=6 cols=7
+  T12R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T12R01: F9.1  I could onboard new accounts (set name, email, role) and the new user could sign in immediately. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T12R02: F9.2  I could edit, deactivate, and reactivate accounts cleanly, with chat history preserved across reactivation. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T12R03: F9.3  I could review activity logs by user, time window, or action type to support audit / compliance. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T12R04: F9.4  I could set per-user token quotas and confirm they were enforced when the user crossed the limit. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T12R05: F9.5  I could review and approve or reject pending dangerous actions from a single queue. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T13 rows=9 cols=7
+  T13R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T13R01: Q1.  The system gave me clear, actionable error messages when something went wrong - not technical jargon or stack trace || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T13R02: Q2.  When the system was unsure about my request, it asked me to clarify rather than guessing. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T13R03: Q3.  Dangerous actions never ran without my explicit approval. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T13R04: Q4.  I felt confident that my data and credentials were handled securely. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T13R05: Q5.  I was only able to see and act on what my role allows. I was never exposed to other users' data or features outside || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T13R06: Q6.  SafexpressOps worked properly on the device and browser I normally use at work. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T13R07: Q7.  The system responded fast enough that I did not lose my train of thought waiting for it. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T13R08: Q8.  Quota / usage indicators were clear, so I never ran out of capacity unexpectedly. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T14 rows=7 cols=7
+  T14R00: Statement || 1 - SD || 2 - D || 3 - N || 4 - A || 5 - SA || N/A
+  T14R01: B1.  I believe SafexpressOps would save me significant time on my recurring tasks. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T14R02: B2.  I would trust the system's outputs (reports, mapped data, drafted emails) for my real work. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T14R03: B3.  I would adopt SafexpressOps in my daily work if it were available tomorrow. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T14R04: B4.  I could learn to use SafexpressOps effectively WITHOUT formal training. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T14R05: B5.  I would recommend SafexpressOps to my SLI colleagues. || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+  T14R06: B6.  Compared to my current process, SafexpressOps is a meaningful improvement (not just a different way to do the same  || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ || ΓÿÉ
+T15 rows=6 cols=2
+  T15R00: Q1.  Top 3 things you LIKED about SafexpressOps: || 1.
+
+2.
+
+3.
+  T15R01: Q2.  Top 3 things that FRUSTRATED you while using SafexpressOps: || 1.
+
+2.
+
+3.
+  T15R02: Q3.  ONE feature that, if added or improved, would make SafexpressOps indispensable for your job: || 
+  T15R03: Q4.  Anything you would NOT trust the system to do automatically? Why? || 
+  T15R04: Q5.  Any feature in your role's scope that you avoided / did not use during the test? Why? || 
+  T15R05: Q6.  Any other feedback for the project team? || 
+T16 rows=3 cols=2
+  T16R00: ΓÿÉ ACCEPT || I would use SafexpressOps in my daily work and recommend it to my colleagues.
+  T16R01: ΓÿÉ ACCEPT WITH CONDITIONS || I would use SafexpressOps once the issues I noted above are addressed.
+  T16R02: ΓÿÉ REJECT || I would NOT use SafexpressOps in its current form. The reasons are documented in Part 6.
+T17 rows=5 cols=2
+  T17R00: Name (printed) || 
+  T17R01: Role at SLI || 
+  T17R02: UAT role assigned || 
+  T17R03: Signature || 
+  T17R04: Date || 
+T18 rows=4 cols=2
+  T18R00: Name (printed) || 
+  T18R01: Role || 
+  T18R02: Signature || 
+  T18R03: Date || 
+T19 rows=13 cols=3
+  T19R00: Scale section || Shipped feature(s) || Capstone Specific Objective
+  T19R01: Part 2 - SUS || All UI surfaces || NFR Usability
+  T19R02: Part 3.1 - Auth, Roles, Access || Login, Logout, RBAC, Profile, Sidebar nav || NFR Security; cross-cutting
+  T19R03: Part 3.2 - SFX Bot || SFX Bot chat, RAG, citations, sessions, streaming || SO1 - Knowledge Base + AI chat
+  T19R04: Part 3.3 - AI Assistant || Gmail / Calendar / Drive / Docs / Sheets agents, approvals, multi-step orchestration || SO3 + SO5
+  T19R05: Part 3.4 - Dynamic Mapping || Source upload, multi-sheet detection, AI column mapping, preview, write, templates || SO4
+  T19R06: Part 3.5 - ABC Analysis || Inventory upload, classification, monthly tabs, history || SO2
+  T19R07: Part 3.6 - OPR || Daily-ops upload, 4-tier mapping, preview, write, history || SO2
+  T19R08: Part 3.7 - Workload Analysis || Item entry, phase rates, calculation, PDF export, save || SO2
+  T19R09: Part 3.8 - KB Management || Document Extraction, chunk editing, push to KB, duplicate detection, KB analytics || SO1 (admin side)
+  T19R10: Part 3.9 - Account & Activity || Manage Accounts, Activity Logs, Token Quota Admin, Pending Tasks queue || Cross-cutting (Security, Audit, Cost)
+  T19R11: Part 4 - Quality scale || Error handling, security, RBAC, performance, compatibility, quotas || NFR Reliability + Security + Compatibility + Efficiency
+  T19R12: Part 5 - Adoption scale || Overall product readiness || Cross-cutting

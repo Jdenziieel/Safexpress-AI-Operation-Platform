@@ -1,0 +1,5 @@
+pdfplumber>=0.10.3
+# boto3 is already available in the Lambda runtime; pinned here so the
+# local Flask dev shim's pip install also gets it. NOT bundled in the
+# deploy zip - relies on the runtime's boto3.
+boto3>=1.34.0
