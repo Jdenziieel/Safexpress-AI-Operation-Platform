@@ -317,9 +317,6 @@ Ai-Agents/
 
 ## Key engineering decisions
 
-**Zero-behavior-change FastAPI → Lambda migration.**
-The original system was a FastAPI + SQLite monolith. Rather than rewrite the brain to be Lambda-native, the migration enforced a two-rule policy ([`AA-lambda/README.md`](AA-lambda/README.md) lines 42-51): files in `AA-lambda/shared/` are **byte-for-byte copies** of `supervisor-agent/`, and the only files allowed to differ are four named adapters (HTTP-to-`boto3.invoke`, env-var-driven dispatch, JWT-aware logging, DynamoDB persistence). This let us ship the migration in 8 phases without re-validating LLM behavior at every step.
-
 **Multi-gateway JWT authentication (with route-level differences).**
 The Python authorizer Lambda ([`auth-lambda/lambda_jwt_authorizer.py`](auth-lambda/lambda_jwt_authorizer.py), API Gateway authorizer name `jwt-api-authorizer`) is attached to **two gateways**: REST `AuthAPI` (TOKEN, `Authorization` header) and `kb-WebSocket` (REQUEST on `$connect`, reads `?token=` querystring because browsers cannot set custom headers on WS handshake). In `AuthAPI`, only routes configured as `CUSTOM` use it (for example `POST /api/abc/analysis`, `POST /api/opr/preview`, `POST /api/opr/process`); several sheets/mapping routes are currently `NONE`.
 
