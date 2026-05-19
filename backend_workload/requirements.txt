@@ -1,8 +1,0 @@
-Flask>=3.0.0
-Flask-CORS>=4.0.0
-# Optional: enables the local /api/workload/pdf-parse endpoint. Skip if you
-# only need config/uom/history/calculate in dev.
-pdfplumber>=0.11.0
-pypdfium2>=4.30.0
-# Optional: only needed if WORKLOAD_STORAGE=dynamodb for local DynamoDB usage.
-boto3>=1.34.0
