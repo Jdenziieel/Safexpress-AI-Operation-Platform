@@ -405,7 +405,6 @@ Live AWS state snapshot: [`AA-lambda/DEPLOYED_INVENTORY.md`](AA-lambda/DEPLOYED_
 - **Full-stack ownership.** Designed and shipped the React 19 SPA, the 109-Lambda backend, the DynamoDB schema, three API Gateways, the multi-agent supervisor brain, and the per-user token-quota microservice — end-to-end, from blank repo to handover.
 - **Multi-agent orchestration in production.** Built a Tier 0 / 0.5 / 1 planner over LangChain + LangGraph that routes between 6 specialized sub-agents while staying under per-message budget. The pattern survived three rounds of "add a new tool" requests without changes to the dispatch layer.
 - **AWS serverless at scale.** Operated 109 Lambdas across REST + HTTP + WebSocket API Gateways with shared JWT authorization, S3-backed file uploads, DynamoDB-backed state, and Secrets-Manager-backed credentials. Per-Lambda CloudWatch log streams plus a custom logs dashboard mean any user request can be traced to its exact Lambda invocations and token cost.
-- **Migration discipline.** Moved a FastAPI + SQLite monolith to Lambda + DynamoDB under a strict zero-behavior-change rule. The full migration shipped in 8 phases without a single LLM-output regression flagged by the validation suite.
 
 ---
 
