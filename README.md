@@ -34,7 +34,6 @@ Built and led by **Josh Denziel Joves** · Role: full-stack + AWS infrastructure
 
 [![Demo thumbnail](docs/demo-thumbnail.png)](https://YOUR-VIDEO-URL-HERE)
 
-<!-- DEMO LINK: replace https://YOUR-VIDEO-URL-HERE with the unlisted YouTube / Loom / Drive link once the recording (see DEMO_SCRIPT.md) is uploaded. -->
 
 **What you'll see in the 4-minute walkthrough**
 
@@ -169,10 +168,10 @@ flowchart TB
     Browser -->|HTTPS| WorkloadAPI
     Browser -->|HTTPS| OtherAPIs
 
-    AuthAPI -->|TOKEN auth| PyAuth
-    WSAPI -->|REQUEST auth<br/>(?token=)| PyAuth
-    WorkloadAPI -->|REQUEST auth| NodeAuth
-    OtherAPIs -->|REQUEST auth| NodeAuth
+    AuthAPI -->|"TOKEN auth"| PyAuth
+    WSAPI -->|"REQUEST auth<br/>(?token=)"| PyAuth
+    WorkloadAPI -->|"REQUEST auth"| NodeAuth
+    OtherAPIs -->|"REQUEST auth"| NodeAuth
 
     AuthAPI --> Supervisor
     AuthAPI --> KBStack
@@ -184,7 +183,7 @@ flowchart TB
     WorkloadAPI --> Supervisor
     OtherAPIs --> SfxOps
 
-    Supervisor -->|boto3.invoke| Agents
+    Supervisor -->|"boto3.invoke"| Agents
 
     Supervisor --> DDB
     Supervisor --> S3
@@ -213,8 +212,6 @@ Three "front doors", three authorizer flavors:
 | `AuthAPI` | `anf38iju12` | REST | `jwt-api-authorizer` (TOKEN, header) | 80 — supervisor, kb, chat, auth, quota, mapping, sheets, abc, opr, pdf |
 | `kb-WebSocket` | `rjhzxw8sqj` | WebSocket | `jwt-api-authorizer` (REQUEST, `?token=`) | 5 — `$connect`, `$disconnect`, `$default`, `sendMessage`, `sendAgentMessage` |
 | `safexpressops-workload-api` | `jwf4gfdzyd` | HTTP | `safexpressops-jwt-authorizer` (Node.js 24) | 2 — workload-agent + workload-pdf-agent |
-
-Full route × Lambda table lives in [`LAMBDA_INVENTORY_HANDOVER.md`](LAMBDA_INVENTORY_HANDOVER.md).
 
 ---
 
@@ -258,7 +255,7 @@ sequenceDiagram
     SV->>U: complete event { answer, citations, cost }
 ```
 
-Every supervisor function carries an `AGENT_LAMBDA_NAMES_JSON` env var that maps planner agent IDs to deployed Lambda names — the brain code is dispatcher-agnostic, so swapping a sub-agent is a one-line env-var change. Full per-Lambda config lives in [`AA-lambda/DEPLOYED_INVENTORY.md`](AA-lambda/DEPLOYED_INVENTORY.md).
+Every supervisor function carries an `AGENT_LAMBDA_NAMES_JSON` env var that maps planner agent IDs to deployed Lambda names — the brain code is dispatcher-agnostic, so swapping a sub-agent is a one-line env-var change.
 
 ---
 
@@ -301,13 +298,11 @@ Ai-Agents/
 └── requirements.txt                Pinned versions used by the local reference servers
 ```
 
-The `supervisor-agent/` and `*-agent/` folders at the repo root are **not** dead code — they are the local FastAPI/uvicorn versions that the Lambda fleet was migrated from. They're kept for behavioral diff during regression testing (see the two-rule policy in [`AA-lambda/README.md`](AA-lambda/README.md) lines 42-51).
-
 ---
 
 ## Lambda inventory
 
-**109 Lambda functions** live in account `055932374911` (region `ap-southeast-1`). 102 of them have local source in this repo; the remaining 7 are documented (some legacy, some still wired) in [`LAMBDA_INVENTORY_HANDOVER.md`](LAMBDA_INVENTORY_HANDOVER.md).
+**109 Lambda functions** live in account `055932374911` (region `ap-southeast-1`). 102 of them have local source in this repo; 
 
 | Stack | Count | Runtime | Local path |
 | --- | --- | --- | --- |
@@ -317,7 +312,6 @@ The `supervisor-agent/` and `*-agent/` folders at the repo root are **not** dead
 | Auth + JWT authorizer (Python) | 10 | Python 3.11 | [`auth-lambda/`](auth-lambda/) |
 | Safexpress ops sub-services | 11 | Python 3.11 / 3.12 | [`downloaded-lambdas/`](downloaded-lambdas/) |
 | Node.js JWT authorizer | 1 | Node.js 24.x | [`downloaded-lambdas/safexpressops-jwt-authorizer/`](downloaded-lambdas/safexpressops-jwt-authorizer/) |
-| Legacy / to-decide | 7 | mixed | see handover doc §8 |
 
 ---
 
@@ -345,40 +339,6 @@ Every LLM-firing Lambda calls [`quota-check`](quota-lambda/lambda_quota_check.py
 
 **WebSocket streaming for chat.**
 Chat is bi-directional: the browser sends `sendAgentMessage` over WSS, and the supervisor pushes `progress` / `paused` / `complete` events back via the API Gateway management API endpoint (HTTPS, not WSS — counterintuitive but correct). Connection state lives in `KB_WebSocketConnections`; the `$connect` Lambda stashes the JWT and the user's Gmail address so the chat Lambda has user context without re-decoding the token.
-
----
-
-## Local development
-
-### Prerequisites
-
-- **Node.js 20+** (Frontend uses Vite 7 which requires Node ≥ 20.19 or ≥ 22.12)
-- **Python 3.12** (matches the Lambda runtime for the supervisor stack)
-- **AWS CLI v2** (region `ap-southeast-1`, profile with Lambda + DynamoDB + API Gateway read access)
-- **Docker Desktop** (only needed to rebuild the 5 heavy supervisor brains or any sub-agent image)
-
-### Run the Frontend locally
-
-```bash
-cd Frontend
-npm install
-npm run dev
-```
-
-The dev server proxies API calls to the deployed `AuthAPI` by default — see [`Frontend/src/utils/tokenManager.js`](Frontend/src/utils/tokenManager.js) for the base URL.
-
-### Run a sub-agent locally (FastAPI reference mode)
-
-The original FastAPI versions of every sub-agent live at the repo root. They're useful for fast iteration on tool logic without a deploy cycle:
-
-```bash
-cd supervisor-agent
-python -m venv .venv && .venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-```
-
-Point the Frontend at `http://localhost:8000` by overriding the API base URL in `Frontend/.env.local`.
 
 ---
 
@@ -410,16 +370,11 @@ Live AWS state snapshot: [`AA-lambda/DEPLOYED_INVENTORY.md`](AA-lambda/DEPLOYED_
 
 ## Acknowledgments
 
-Built as the capstone project for the **AI Operations Platform** engagement with Safexpress (India's largest 3PL logistics company), Oct 2025 → May 2026.
+Built as the capstone project for the **AI Operations Platform** engagement with Safexpress, Oct 2025 → May 2026.
 
-Reference docs that travelled with the codebase: [`AA-lambda/DEPLOYMENT_GUIDE.md`](AA-lambda/DEPLOYMENT_GUIDE.md), [`AA-lambda/DEPLOYED_INVENTORY.md`](AA-lambda/DEPLOYED_INVENTORY.md), [`LAMBDA_INVENTORY_HANDOVER.md`](LAMBDA_INVENTORY_HANDOVER.md), [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md).
 
 ---
 
 <div align="center">
-
-**Denz** · [LinkedIn](https://linkedin.com/in/YOUR-HANDLE) · [GitHub](https://github.com/YOUR-HANDLE) · [Email](mailto:YOUR-EMAIL)
-
-<!-- Replace YOUR-HANDLE / YOUR-EMAIL with your actual contact details before publishing. -->
-
+**Denz** · [LinkedIn](https://www.linkedin.com/in/josh-denziel-joves-824769394/) · [GitHub](https://github.com/Jdenziieel/denz-portfolio) · [Email](denz.joves@gmail.com)
 </div>
